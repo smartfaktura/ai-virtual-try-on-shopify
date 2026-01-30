@@ -4,7 +4,9 @@ import type {
   GenerationJob, 
   DashboardMetrics,
   Shop,
-  BrandDefaults
+  BrandDefaults,
+  PricingPlan,
+  CreditPack
 } from '@/types';
 
 export const mockShop: Shop = {
