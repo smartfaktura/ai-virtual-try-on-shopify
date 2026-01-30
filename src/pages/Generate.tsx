@@ -74,6 +74,8 @@ export default function Generate() {
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedPose, setSelectedPose] = useState<TryOnPose | null>(null);
   const [modelGenderFilter, setModelGenderFilter] = useState<ModelGender | 'all'>('all');
+  const [modelBodyTypeFilter, setModelBodyTypeFilter] = useState<ModelBodyType | 'all'>('all');
+  const [modelAgeFilter, setModelAgeFilter] = useState<ModelAgeRange | 'all'>('all');
   
   // Brand settings - expanded by default on first use
   const [brandKitOpen, setBrandKitOpen] = useState(true);
