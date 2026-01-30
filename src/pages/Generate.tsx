@@ -365,17 +365,52 @@ export default function Generate() {
   };
 
   const getStepNumber = () => {
-    switch (currentStep) {
-      case 'product': return 1;
-      case 'template': return 2;
-      case 'settings': return 3;
-      case 'generating': return 4;
-      case 'results': return 4;
-      default: return 1;
+    if (generationMode === 'virtual-try-on') {
+      switch (currentStep) {
+        case 'product': return 1;
+        case 'mode': return 1;
+        case 'model': return 2;
+        case 'pose': return 3;
+        case 'settings': return 4;
+        case 'generating': return 5;
+        case 'results': return 5;
+        default: return 1;
+      }
+    } else {
+      switch (currentStep) {
+        case 'product': return 1;
+        case 'mode': return 1;
+        case 'template': return 2;
+        case 'settings': return 3;
+        case 'generating': return 4;
+        case 'results': return 4;
+        default: return 1;
+      }
     }
   };
 
-  const creditCost = parseInt(imageCount) * (quality === 'high' ? 2 : 1);
+  const getSteps = () => {
+    if (generationMode === 'virtual-try-on') {
+      return [
+        { name: 'Product', desc: 'Pick what you\'re selling' },
+        { name: 'Model', desc: 'Choose a model' },
+        { name: 'Pose', desc: 'Pick the style' },
+        { name: 'Settings', desc: 'Adjust details' },
+        { name: 'Results', desc: 'Review & publish' },
+      ];
+    }
+    return [
+      { name: 'Product', desc: 'Pick what you\'re selling' },
+      { name: 'Template', desc: 'Choose a style' },
+      { name: 'Settings', desc: 'Adjust details' },
+      { name: 'Results', desc: 'Review & publish' },
+    ];
+  };
+
+  // Virtual Try-On credit cost is higher
+  const creditCost = generationMode === 'virtual-try-on' 
+    ? parseInt(imageCount) * 3 
+    : parseInt(imageCount) * (quality === 'high' ? 2 : 1);
 
   return (
     <PageHeader
