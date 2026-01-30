@@ -357,6 +357,11 @@ export default function Generate() {
   const handleTryOnConfirmGenerate = async () => {
     if (!selectedProduct || !selectedModel || !selectedPose) return;
     
+    // Get the selected source image URL
+    const selectedImageId = Array.from(selectedSourceImages)[0];
+    const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
+    const sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
+    
     setTryOnConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
@@ -367,6 +372,7 @@ export default function Generate() {
       pose: selectedPose,
       aspectRatio,
       imageCount: parseInt(imageCount),
+      sourceImageUrl,
     });
     
     if (result && result.images.length > 0) {
