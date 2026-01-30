@@ -53,6 +53,7 @@ export default function Generate() {
   
   // Selections
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedSourceImages, setSelectedSourceImages] = useState<Set<string>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
     initialTemplateId ? mockTemplates.find(t => t.templateId === initialTemplateId) || null : null
   );
@@ -106,6 +107,12 @@ export default function Generate() {
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
     setProductPickerOpen(false);
+    // Auto-select first image as source by default
+    if (product.images.length > 0) {
+      setSelectedSourceImages(new Set([product.images[0].id]));
+    } else {
+      setSelectedSourceImages(new Set());
+    }
     // Auto-recommend category based on product type
     const productType = product.productType.toLowerCase();
     if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel')) {
@@ -120,6 +127,34 @@ export default function Generate() {
       setSelectedCategory('supplements');
     }
     setCurrentStep('template');
+  };
+
+  const toggleSourceImage = (imageId: string) => {
+    setSelectedSourceImages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(imageId)) {
+        // Don't allow deselecting if it's the only one
+        if (newSet.size > 1) {
+          newSet.delete(imageId);
+        }
+      } else {
+        newSet.add(imageId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllSourceImages = () => {
+    if (selectedProduct) {
+      setSelectedSourceImages(new Set(selectedProduct.images.map(img => img.id)));
+    }
+  };
+
+  const clearSourceImages = () => {
+    if (selectedProduct && selectedProduct.images.length > 0) {
+      // Keep at least the first image selected
+      setSelectedSourceImages(new Set([selectedProduct.images[0].id]));
+    }
   };
 
   const handleSelectTemplate = (template: Template) => {
@@ -449,16 +484,70 @@ export default function Generate() {
                   </BlockStack>
                 </InlineStack>
                 {selectedProduct.images.length > 0 && (
-                  <>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Current images ({selectedProduct.images.length})
-                    </Text>
-                    <InlineStack gap="200">
-                      {selectedProduct.images.map(img => (
-                        <Thumbnail key={img.id} source={img.url} alt={img.altText || ''} size="small" />
-                      ))}
+                  <BlockStack gap="300">
+                    <Divider />
+                    <BlockStack gap="200">
+                      <Text as="h4" variant="headingSm">
+                        Source images for generation
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Select which image(s) to use as reference for AI generation:
+                      </Text>
+                    </BlockStack>
+                    
+                    <div className="flex flex-wrap gap-3">
+                      {selectedProduct.images.map(img => {
+                        const isSelected = selectedSourceImages.has(img.id);
+                        return (
+                          <div
+                            key={img.id}
+                            onClick={() => toggleSourceImage(img.id)}
+                            className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
+                              isSelected 
+                                ? 'ring-2 ring-shopify-green ring-offset-2' 
+                                : 'ring-1 ring-border hover:ring-primary'
+                            }`}
+                          >
+                            <img 
+                              src={img.url} 
+                              alt={img.altText || ''} 
+                              className="w-16 h-16 object-cover"
+                            />
+                            {isSelected && (
+                              <div className="absolute inset-0 bg-shopify-green/20 flex items-center justify-center">
+                                <div className="w-6 h-6 bg-shopify-green rounded-full flex items-center justify-center">
+                                  <Icon source={CheckCircleIcon} tone="base" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <InlineStack align="space-between" blockAlign="center">
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {selectedSourceImages.size} of {selectedProduct.images.length} selected
+                      </Text>
+                      {selectedProduct.images.length > 1 && (
+                        <InlineStack gap="200">
+                          <Button variant="plain" size="micro" onClick={selectAllSourceImages}>
+                            Select All
+                          </Button>
+                          <Button variant="plain" size="micro" onClick={clearSourceImages}>
+                            Clear
+                          </Button>
+                        </InlineStack>
+                      )}
                     </InlineStack>
-                  </>
+                  </BlockStack>
+                )}
+                {selectedProduct.images.length === 0 && (
+                  <Banner tone="warning">
+                    <Text as="p" variant="bodySm">
+                      This product has no images. Please add product images in Shopify first.
+                    </Text>
+                  </Banner>
                 )}
               </BlockStack>
             </Card>
@@ -936,6 +1025,7 @@ export default function Generate() {
         onConfirm={handleConfirmGenerate}
         product={selectedProduct}
         template={selectedTemplate}
+        sourceImageIds={selectedSourceImages}
         imageCount={parseInt(imageCount)}
         aspectRatio={aspectRatio}
         quality={quality}
