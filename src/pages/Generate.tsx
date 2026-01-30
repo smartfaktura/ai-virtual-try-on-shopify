@@ -36,6 +36,8 @@ import { TemplatePreviewCard, getTemplateImage } from '@/components/app/Template
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
+import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
+import { useGenerateTryOn } from '@/hooks/useGenerateTryOn';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
 import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
