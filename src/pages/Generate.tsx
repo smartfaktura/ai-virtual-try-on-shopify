@@ -42,9 +42,12 @@ import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import { PoseSelectorCard } from '@/components/app/PoseSelectorCard';
 import { GenerationModeToggle } from '@/components/app/GenerationModeToggle';
+import { ModelFilterBar } from '@/components/app/ModelFilterBar';
+import { PoseCategorySection } from '@/components/app/PoseCategorySection';
+import { TryOnPreview } from '@/components/app/TryOnPreview';
+import { PopularCombinations, createPopularCombinations } from '@/components/app/PopularCombinations';
 import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
-import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender 
-} from '@/types';
+import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory } from '@/types';
 import { toast } from 'sonner';
 
 type Step = 'product' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
