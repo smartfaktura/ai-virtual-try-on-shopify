@@ -218,7 +218,7 @@ serve(async (req) => {
           ? prompt 
           : `${prompt}\n\nVariation ${i + 1}: Slightly different angle and lighting while maintaining the same high quality.`;
         
-        const imageUrl = await generateImage(variationPrompt, body.product.imageUrl, LOVABLE_API_KEY);
+        const imageUrl = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY);
         
         if (imageUrl) {
           images.push(imageUrl);
