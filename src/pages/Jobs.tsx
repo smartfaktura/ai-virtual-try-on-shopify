@@ -31,6 +31,7 @@ export default function Jobs() {
   // Publish modal state
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [selectedJobForPublish, setSelectedJobForPublish] = useState<GenerationJob | null>(null);
+  const [selectedImageUrlsForPublish, setSelectedImageUrlsForPublish] = useState<string[]>([]);
   
   // Job detail modal state
   const [detailModalOpen, setDetailModalOpen] = useState(false);
