@@ -812,7 +812,7 @@ export default function Generate() {
                             onClick={() => toggleSourceImage(img.id)}
                             className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
                               isSelected 
-                                ? 'ring-2 ring-shopify-green ring-offset-2' 
+                                ? 'ring-2 ring-primary ring-offset-2' 
                                 : 'ring-1 ring-border hover:ring-primary'
                             }`}
                           >
@@ -822,9 +822,11 @@ export default function Generate() {
                               className="w-16 h-16 object-cover"
                             />
                             {isSelected && (
-                              <div className="absolute inset-0 bg-shopify-green/20 flex items-center justify-center">
-                                <div className="w-6 h-6 bg-shopify-green rounded-full flex items-center justify-center">
-                                  <Icon source={CheckCircleIcon} tone="base" />
+                              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
                                 </div>
                               </div>
                             )}
