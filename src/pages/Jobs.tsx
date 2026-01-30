@@ -265,11 +265,14 @@ export default function Jobs() {
           setSelectedJobForDetail(null);
         }}
         job={selectedJobForDetail}
-        onPublish={(job) => {
+        onPublish={(job, selectedUrls) => {
           setDetailModalOpen(false);
           setSelectedJobForDetail(null);
+          toast.success(`${selectedUrls.length} image${selectedUrls.length !== 1 ? 's' : ''} ready to publish`);
           handlePublishClick(job);
         }}
+        onRetry={() => navigate('/generate')}
+      />
         onRetry={() => navigate('/generate')}
       />
     </PageHeader>
