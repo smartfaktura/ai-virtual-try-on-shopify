@@ -1119,9 +1119,9 @@ export default function Generate() {
                 {/* Top Picks - FIXED based on product type, not the category filter */}
                 {(() => {
                   // Determine product's category from its type
-                  const productType = selectedProduct.productType.toLowerCase();
+                  const productType = (selectedProduct?.productType || scratchUpload?.productInfo.productType || '').toLowerCase();
                   let productCategory: TemplateCategory = 'universal';
-                  if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel')) {
+                  if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel') || productType.includes('hoodie') || productType.includes('leggings') || productType.includes('tank') || productType.includes('jogger')) {
                     productCategory = 'clothing';
                   } else if (productType.includes('serum') || productType.includes('cream') || productType.includes('beauty')) {
                     productCategory = 'cosmetics';
@@ -1146,6 +1146,7 @@ export default function Generate() {
                   }
 
                   const topPickIds = topPicks.map(t => t.templateId);
+                  const displayTitle = selectedProduct?.productType || scratchUpload?.productInfo.productType || 'your product';
                   
                   return (
                     <>
@@ -1157,7 +1158,7 @@ export default function Generate() {
                               Top Picks for {categoryLabels[productCategory]}
                             </Text>
                             <Text as="p" variant="bodySm" tone="subdued">
-                              Best templates for {selectedProduct.productType.toLowerCase()} products
+                              Best templates for {displayTitle.toLowerCase()} products
                             </Text>
                           </BlockStack>
                           
