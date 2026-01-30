@@ -40,22 +40,22 @@ export function PoseCategorySection({
   if (poses.length === 0) return null;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2 sm:space-y-3">
       {/* Category Header */}
-      <div className="flex items-baseline gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2">
         <Text as="h3" variant="headingSm" fontWeight="bold">
           {info.title}
         </Text>
         <Text as="span" variant="bodySm" tone="subdued">
-          • {info.recommendation}
+          <span className="text-[10px] sm:text-xs">• {info.recommendation}</span>
         </Text>
       </div>
 
       {/* Horizontal Scroll Row */}
-      <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex gap-4 pb-4">
+      <ScrollArea className="w-full whitespace-nowrap -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-3 sm:gap-4 pb-3 sm:pb-4">
           {poses.map((pose) => (
-            <div key={pose.poseId} className="w-[180px] flex-shrink-0">
+            <div key={pose.poseId} className="w-[140px] sm:w-[180px] flex-shrink-0">
               <PoseSelectorCard
                 pose={pose}
                 isSelected={selectedPoseId === pose.poseId}

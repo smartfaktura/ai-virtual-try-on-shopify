@@ -113,10 +113,10 @@ export function UploadSourceCard({
   // Uploaded state with preview
   if (scratchUpload) {
     return (
-      <BlockStack gap="400">
-        {/* Image Preview */}
+      <BlockStack gap="300">
+        {/* Image Preview - Responsive sizing */}
         <div className="relative">
-          <div className="aspect-square max-w-xs rounded-lg overflow-hidden border border-border bg-surface">
+          <div className="aspect-square max-w-[200px] sm:max-w-xs rounded-lg overflow-hidden border border-border bg-surface">
             <img
               src={scratchUpload.previewUrl}
               alt="Uploaded product"
@@ -126,7 +126,7 @@ export function UploadSourceCard({
           <button
             type="button"
             onClick={onRemove}
-            className="absolute top-2 right-2 p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors border border-border"
+            className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 p-1 sm:p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors border border-border"
           >
             <Icon source={XIcon} />
           </button>
@@ -194,7 +194,7 @@ export function UploadSourceCard({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`
-          relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer
+          relative border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-8 text-center transition-all cursor-pointer
           ${dragOver
             ? 'border-primary bg-primary/5'
             : 'border-border hover:border-primary/50 hover:bg-surface-hovered'
@@ -208,24 +208,24 @@ export function UploadSourceCard({
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
         
-        <BlockStack gap="300" inlineAlign="center">
+        <BlockStack gap="200" inlineAlign="center">
           <div className={`
-            w-16 h-16 rounded-full flex items-center justify-center
+            w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center
             ${dragOver ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}
           `}>
             <Icon source={dragOver ? ImageIcon : UploadIcon} />
           </div>
           
           <BlockStack gap="100" inlineAlign="center">
-            <Text as="p" variant="bodyLg" fontWeight="semibold">
-              {dragOver ? 'Drop your image here' : 'Drag & drop or click to upload'}
+            <Text as="p" variant="bodyMd" fontWeight="semibold">
+              <span className="text-sm sm:text-base">{dragOver ? 'Drop your image here' : 'Drag & drop or tap to upload'}</span>
             </Text>
             <Text as="p" variant="bodySm" tone="subdued">
-              Supports JPG, PNG, WEBP • Max 10MB
+              <span className="text-xs sm:text-sm">JPG, PNG, WEBP • Max 10MB</span>
             </Text>
           </BlockStack>
           
-          <Button variant="secondary" disabled={dragOver}>
+          <Button variant="secondary" disabled={dragOver} size="slim">
             Choose File
           </Button>
         </BlockStack>

@@ -29,24 +29,24 @@ export function TryOnPreview({
     : 'Complete your selections to see preview';
 
   return (
-    <Card className="p-4 bg-gradient-to-br from-surface-subdued to-muted/30 border-2 border-dashed border-border">
-      <div className="space-y-4">
+    <Card className="p-3 sm:p-4 bg-gradient-to-br from-surface-subdued to-muted/30 border-2 border-dashed border-border">
+      <div className="space-y-3 sm:space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <Text as="h3" variant="headingSm" fontWeight="bold">
             Preview
           </Text>
           {creditCost > 0 && (
-            <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-shopify-green/10 text-shopify-green">
+            <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full bg-shopify-green/10 text-shopify-green">
               {creditCost} credits
             </span>
           )}
         </div>
 
-        {/* Visual Composite */}
-        <div className="flex items-center justify-center gap-3">
+        {/* Visual Composite - Responsive layout */}
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
           {/* Product Thumbnail */}
-          <div className={`w-20 h-20 rounded-xl overflow-hidden border-2 ${
+          <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden border-2 flex-shrink-0 ${
             hasProduct ? 'border-primary bg-white' : 'border-dashed border-muted-foreground/30 bg-muted'
           }`}>
             {productImageUrl ? (
@@ -57,18 +57,18 @@ export function TryOnPreview({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <span className="text-[10px] text-muted-foreground text-center px-1">Product</span>
+                <span className="text-[8px] sm:text-[10px] text-muted-foreground text-center px-1">Product</span>
               </div>
             )}
           </div>
 
           {/* Plus Icon */}
-          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
             <Icon source={PlusIcon} tone="subdued" />
           </div>
 
           {/* Model Thumbnail */}
-          <div className={`w-20 h-20 rounded-xl overflow-hidden border-2 ${
+          <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden border-2 flex-shrink-0 ${
             model ? 'border-primary' : 'border-dashed border-muted-foreground/30 bg-muted'
           }`}>
             {model ? (
@@ -79,18 +79,18 @@ export function TryOnPreview({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <span className="text-[10px] text-muted-foreground text-center px-1">Model</span>
+                <span className="text-[8px] sm:text-[10px] text-muted-foreground text-center px-1">Model</span>
               </div>
             )}
           </div>
 
           {/* Plus Icon */}
-          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
             <Icon source={PlusIcon} tone="subdued" />
           </div>
 
           {/* Pose Thumbnail */}
-          <div className={`w-20 h-20 rounded-xl overflow-hidden border-2 ${
+          <div className={`w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden border-2 flex-shrink-0 ${
             pose ? 'border-primary' : 'border-dashed border-muted-foreground/30 bg-muted'
           }`}>
             {pose ? (
@@ -101,37 +101,37 @@ export function TryOnPreview({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <span className="text-[10px] text-muted-foreground text-center px-1">Pose</span>
+                <span className="text-[8px] sm:text-[10px] text-muted-foreground text-center px-1">Pose</span>
               </div>
             )}
           </div>
 
-          {/* Arrow to Result */}
+          {/* Arrow to Result - Only on larger screens or when all selected */}
           {hasAllSelections && (
             <>
-              <div className="w-6 h-6 rounded-full bg-shopify-green/10 flex items-center justify-center">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-shopify-green/10 flex items-center justify-center flex-shrink-0">
                 <Icon source={ArrowRightIcon} tone="success" />
               </div>
-              <div className="w-20 h-20 rounded-xl border-2 border-shopify-green bg-shopify-green/5 flex items-center justify-center">
-                <span className="text-[10px] text-shopify-green font-medium text-center px-1">AI Generated</span>
+              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl border-2 border-shopify-green bg-shopify-green/5 flex items-center justify-center flex-shrink-0">
+                <span className="text-[8px] sm:text-[10px] text-shopify-green font-medium text-center px-1">AI Generated</span>
               </div>
             </>
           )}
         </div>
 
-        {/* Description */}
+        {/* Description - Hidden on very small screens when incomplete */}
         <div className="text-center">
           <Text as="p" variant="bodySm" tone={hasAllSelections ? undefined : 'subdued'}>
             {hasAllSelections ? (
-              <span className="font-medium">"{description}"</span>
+              <span className="font-medium text-xs sm:text-sm">"{description}"</span>
             ) : (
-              description
+              <span className="text-xs sm:text-sm">{description}</span>
             )}
           </Text>
         </div>
 
         {/* Selection Status */}
-        <div className="flex justify-center gap-4 pt-2 border-t border-border">
+        <div className="flex justify-center gap-3 sm:gap-4 pt-2 border-t border-border">
           <StatusPill label="Product" completed={hasProduct} />
           <StatusPill label="Model" completed={!!model} />
           <StatusPill label="Pose" completed={!!pose} />
