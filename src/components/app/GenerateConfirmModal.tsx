@@ -103,7 +103,7 @@ export function GenerateConfirmModal({
                   </Text>
                   <div className="flex flex-wrap gap-2">
                     {selectedSourceImages.map(img => (
-                      <div key={img.id} className="w-10 h-10 rounded-md overflow-hidden ring-1 ring-shopify-green">
+                      <div key={img.id} className="w-10 h-10 rounded-md overflow-hidden ring-1 ring-primary/50">
                         <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover" />
                       </div>
                     ))}

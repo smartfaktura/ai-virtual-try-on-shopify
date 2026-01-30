@@ -22,7 +22,7 @@ export function ModelSelectorCard({
       onClick={onSelect}
       className={`relative cursor-pointer rounded-xl overflow-hidden transition-all duration-200 group ${
         isSelected
-          ? 'ring-2 ring-shopify-green ring-offset-2 shadow-lg scale-[1.02]'
+          ? 'ring-2 ring-primary ring-offset-2 shadow-lg scale-[1.02]'
           : 'ring-1 ring-border hover:ring-primary hover:shadow-md hover:scale-[1.01]'
       }`}
     >
@@ -38,7 +38,7 @@ export function ModelSelectorCard({
       {/* AI Match Badge - Top Left */}
       {showAiMatch && (
         <div className="absolute top-2 left-2">
-          <Badge className="text-[10px] px-2 py-0.5 bg-shopify-purple text-white border-0 shadow-sm">
+          <Badge className="text-[10px] px-2 py-0.5 bg-foreground/80 text-background border-0 shadow-sm">
             AI Match
           </Badge>
         </div>
@@ -46,9 +46,11 @@ export function ModelSelectorCard({
 
       {/* Selected Overlay */}
       {isSelected && (
-        <div className="absolute inset-0 bg-shopify-green/10 pointer-events-none">
-          <div className="absolute top-2 right-2 w-7 h-7 bg-shopify-green rounded-full flex items-center justify-center shadow-md">
-            <Icon source={CheckCircleIcon} tone="base" />
+        <div className="absolute inset-0 bg-primary/10 pointer-events-none">
+          <div className="absolute top-2 right-2 w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-md">
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
         </div>
       )}

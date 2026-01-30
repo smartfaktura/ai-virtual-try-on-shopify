@@ -445,7 +445,7 @@ export default function Generate() {
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                       getStepNumber() > index + 1
-                        ? 'bg-shopify-green text-white'
+                        ? 'bg-primary text-primary-foreground'
                         : getStepNumber() === index + 1
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-muted-foreground'
@@ -465,7 +465,7 @@ export default function Generate() {
                     </Text>
                   </BlockStack>
                   {index < getSteps().length - 1 && (
-                    <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-shopify-green' : 'bg-muted'}`} />
+                    <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
                   )}
                 </InlineStack>
               ))}
@@ -811,7 +811,7 @@ export default function Generate() {
                             onClick={() => toggleSourceImage(img.id)}
                             className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
                               isSelected 
-                                ? 'ring-2 ring-shopify-green ring-offset-2' 
+                                ? 'ring-2 ring-primary ring-offset-2' 
                                 : 'ring-1 ring-border hover:ring-primary'
                             }`}
                           >
@@ -821,9 +821,11 @@ export default function Generate() {
                               className="w-16 h-16 object-cover"
                             />
                             {isSelected && (
-                              <div className="absolute inset-0 bg-shopify-green/20 flex items-center justify-center">
-                                <div className="w-6 h-6 bg-shopify-green rounded-full flex items-center justify-center">
-                                  <Icon source={CheckCircleIcon} tone="base" />
+                              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
                                 </div>
                               </div>
                             )}
@@ -1372,7 +1374,7 @@ export default function Generate() {
                     <div
                       key={index}
                       className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${
-                        selectedForPublish.has(index) ? 'ring-2 ring-shopify-green ring-offset-2' : ''
+                        selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''
                       }`}
                     >
                       <img 
@@ -1420,7 +1422,7 @@ export default function Generate() {
                       <div 
                         className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
                           selectedForPublish.has(index) 
-                            ? 'bg-shopify-green border-shopify-green scale-110' 
+                            ? 'bg-primary border-primary scale-110' 
                             : 'border-white bg-black/50 hover:bg-black/70'
                         }`}
                         onClick={() => toggleImageSelection(index)}
