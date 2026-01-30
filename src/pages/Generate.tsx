@@ -978,60 +978,8 @@ export default function Generate() {
           </BlockStack>
         )}
 
-        {/* Pose Selection Step - Virtual Try-On only */}
-        {currentStep === 'pose' && selectedProduct && selectedModel && (
-          <BlockStack gap="400">
-            {/* Live Preview */}
-            <TryOnPreview
-              product={selectedProduct}
-              model={selectedModel}
-              pose={selectedPose}
-              creditCost={creditCost}
-            />
-
-            <Card>
-              <BlockStack gap="500">
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Choose a Pose & Scene
-                  </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Select the photography style and setting for your virtual try-on shots with {selectedModel.name}.
-                  </Text>
-                </BlockStack>
-
-                {/* Poses by Category */}
-                <BlockStack gap="600">
-                  {(['studio', 'lifestyle', 'editorial', 'streetwear'] as PoseCategory[]).map(category => (
-                    <PoseCategorySection
-                      key={category}
-                      category={category}
-                      poses={posesByCategory[category] || []}
-                      selectedPoseId={selectedPose?.poseId || null}
-                      onSelectPose={handleSelectPose}
-                    />
-                  ))}
-                </BlockStack>
-
-                <InlineStack align="space-between">
-                  <Button onClick={() => setCurrentStep('model')}>
-                    Back
-                  </Button>
-                  <Button
-                    variant="primary"
-                    disabled={!selectedPose}
-                    onClick={() => setCurrentStep('settings')}
-                  >
-                    Continue to Settings
-                  </Button>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-          </BlockStack>
-        )}
-
         {/* Step 2: Template Selection (Product-Only mode) */}
-        {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && selectedProduct && (
+        {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && (selectedProduct || scratchUpload) && (
           <>
             {/* Selected Product Card */}
             <Card>
