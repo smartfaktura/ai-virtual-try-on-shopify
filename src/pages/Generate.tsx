@@ -1375,7 +1375,7 @@ export default function Generate() {
                     <div
                       key={index}
                       className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${
-                        selectedForPublish.has(index) ? 'ring-2 ring-shopify-green ring-offset-2' : ''
+                        selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''
                       }`}
                     >
                       <img 
