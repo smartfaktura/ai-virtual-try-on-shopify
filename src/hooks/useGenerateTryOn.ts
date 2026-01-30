@@ -8,6 +8,7 @@ interface GenerateTryOnParams {
   pose: TryOnPose;
   aspectRatio: AspectRatio;
   imageCount: number;
+  sourceImageUrl: string;  // The specific product image to use as reference
 }
 
 interface GenerateTryOnResult {
@@ -62,7 +63,7 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
             title: params.product.title,
             description: params.product.description,
             productType: params.product.productType,
-            imageUrl: params.product.images[0]?.url || '',
+            imageUrl: params.sourceImageUrl,  // Use the specific selected image
           },
           model: {
             name: params.model.name,

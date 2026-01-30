@@ -357,6 +357,11 @@ export default function Generate() {
   const handleTryOnConfirmGenerate = async () => {
     if (!selectedProduct || !selectedModel || !selectedPose) return;
     
+    // Get the selected source image URL
+    const selectedImageId = Array.from(selectedSourceImages)[0];
+    const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
+    const sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
+    
     setTryOnConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
@@ -367,6 +372,7 @@ export default function Generate() {
       pose: selectedPose,
       aspectRatio,
       imageCount: parseInt(imageCount),
+      sourceImageUrl,
     });
     
     if (result && result.images.length > 0) {
@@ -1293,6 +1299,63 @@ export default function Generate() {
               </BlockStack>
             </Card>
 
+            {/* Source Image Selection for Virtual Try-On */}
+            {selectedProduct.images.length > 0 && (
+              <Card>
+                <BlockStack gap="300">
+                  <BlockStack gap="200">
+                    <Text as="h3" variant="headingMd">
+                      Source Reference Image
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Select the product photo that shows your garment best. The AI will use this as reference to dress the model.
+                    </Text>
+                  </BlockStack>
+                  
+                  <div className="flex flex-wrap gap-3">
+                    {selectedProduct.images.map(img => {
+                      const isSelected = selectedSourceImages.has(img.id);
+                      return (
+                        <div
+                          key={img.id}
+                          onClick={() => {
+                            // For Virtual Try-On, only allow single selection
+                            setSelectedSourceImages(new Set([img.id]));
+                          }}
+                          className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
+                            isSelected 
+                              ? 'ring-2 ring-primary ring-offset-2' 
+                              : 'ring-1 ring-border hover:ring-primary'
+                          }`}
+                        >
+                          <img 
+                            src={img.url} 
+                            alt={img.altText || ''} 
+                            className="w-20 h-20 object-cover"
+                          />
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {selectedProduct.images.length > 1 && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Tip: Choose a clear, front-facing photo with good lighting for best results
+                    </Text>
+                  )}
+                </BlockStack>
+              </Card>
+            )}
+
             {/* Generation Settings */}
             <Card>
               <BlockStack gap="400">
@@ -1618,6 +1681,11 @@ export default function Generate() {
         aspectRatio={aspectRatio}
         creditsRemaining={mockShop.creditsBalance}
         isLoading={isTryOnGenerating}
+        sourceImageUrl={
+          selectedProduct && selectedSourceImages.size > 0
+            ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url
+            : undefined
+        }
       />
 
       <PublishModal
