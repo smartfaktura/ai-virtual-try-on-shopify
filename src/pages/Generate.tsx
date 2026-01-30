@@ -445,7 +445,7 @@ export default function Generate() {
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                       getStepNumber() > index + 1
-                        ? 'bg-shopify-green text-white'
+                        ? 'bg-primary text-primary-foreground'
                         : getStepNumber() === index + 1
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-muted-foreground'
@@ -465,7 +465,8 @@ export default function Generate() {
                     </Text>
                   </BlockStack>
                   {index < getSteps().length - 1 && (
-                    <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-shopify-green' : 'bg-muted'}`} />
+                    <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
+                  )}
                   )}
                 </InlineStack>
               ))}
