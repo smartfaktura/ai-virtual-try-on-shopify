@@ -1604,6 +1604,19 @@ export default function Generate() {
         creditsRemaining={mockShop.creditsBalance}
       />
 
+      <TryOnConfirmModal
+        open={tryOnConfirmModalOpen}
+        onClose={() => setTryOnConfirmModalOpen(false)}
+        onConfirm={handleTryOnConfirmGenerate}
+        product={selectedProduct}
+        model={selectedModel}
+        pose={selectedPose}
+        imageCount={parseInt(imageCount)}
+        aspectRatio={aspectRatio}
+        creditsRemaining={mockShop.creditsBalance}
+        isLoading={isTryOnGenerating}
+      />
+
       <PublishModal
         open={publishModalOpen}
         onClose={() => setPublishModalOpen(false)}
