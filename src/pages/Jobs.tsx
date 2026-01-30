@@ -242,9 +242,10 @@ export default function Jobs() {
         onClose={() => {
           setPublishModalOpen(false);
           setSelectedJobForPublish(null);
+          setSelectedImageUrlsForPublish([]);
         }}
         onPublish={handlePublish}
-        selectedImages={selectedJobForPublish?.results.filter(r => !r.publishedToShopify).map(r => r.imageUrl) || []}
+        selectedImages={selectedImageUrlsForPublish}
         product={selectedJobForPublish ? getProductForJob(selectedJobForPublish) : null}
         existingImages={selectedJobForPublish?.productSnapshot.images || []}
       />
@@ -260,8 +261,7 @@ export default function Jobs() {
         onPublish={(job, selectedUrls) => {
           setDetailModalOpen(false);
           setSelectedJobForDetail(null);
-          toast.success(`${selectedUrls.length} image${selectedUrls.length !== 1 ? 's' : ''} ready to publish`);
-          handlePublishClick(job);
+          handlePublishClick(job, selectedUrls);
         }}
         onRetry={() => navigate('/generate')}
       />
