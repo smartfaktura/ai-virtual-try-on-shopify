@@ -456,7 +456,9 @@ export default function Generate() {
   const getStepNumber = () => {
     if (generationMode === 'virtual-try-on') {
       switch (currentStep) {
+        case 'source': return 1;
         case 'product': return 1;
+        case 'upload': return 1;
         case 'mode': return 1;
         case 'model': return 2;
         case 'pose': return 3;
@@ -467,7 +469,9 @@ export default function Generate() {
       }
     } else {
       switch (currentStep) {
+        case 'source': return 1;
         case 'product': return 1;
+        case 'upload': return 1;
         case 'mode': return 1;
         case 'template': return 2;
         case 'settings': return 3;
@@ -481,7 +485,7 @@ export default function Generate() {
   const getSteps = () => {
     if (generationMode === 'virtual-try-on') {
       return [
-        { name: 'Product', desc: 'Pick what you\'re selling' },
+        { name: sourceType === 'scratch' ? 'Source' : 'Product', desc: sourceType === 'scratch' ? 'Upload your image' : 'Pick what you\'re selling' },
         { name: 'Model', desc: 'Choose a model' },
         { name: 'Pose', desc: 'Pick the style' },
         { name: 'Settings', desc: 'Adjust details' },
@@ -489,7 +493,7 @@ export default function Generate() {
       ];
     }
     return [
-      { name: 'Product', desc: 'Pick what you\'re selling' },
+      { name: sourceType === 'scratch' ? 'Source' : 'Product', desc: sourceType === 'scratch' ? 'Upload your image' : 'Pick what you\'re selling' },
       { name: 'Template', desc: 'Choose a style' },
       { name: 'Settings', desc: 'Adjust details' },
       { name: 'Results', desc: 'Review & publish' },
