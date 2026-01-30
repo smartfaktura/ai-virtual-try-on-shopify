@@ -113,10 +113,10 @@ export function UploadSourceCard({
   // Uploaded state with preview
   if (scratchUpload) {
     return (
-      <BlockStack gap="400">
-        {/* Image Preview */}
+      <BlockStack gap="300">
+        {/* Image Preview - Responsive sizing */}
         <div className="relative">
-          <div className="aspect-square max-w-xs rounded-lg overflow-hidden border border-border bg-surface">
+          <div className="aspect-square max-w-[200px] sm:max-w-xs rounded-lg overflow-hidden border border-border bg-surface">
             <img
               src={scratchUpload.previewUrl}
               alt="Uploaded product"
@@ -126,7 +126,7 @@ export function UploadSourceCard({
           <button
             type="button"
             onClick={onRemove}
-            className="absolute top-2 right-2 p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors border border-border"
+            className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 p-1 sm:p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors border border-border"
           >
             <Icon source={XIcon} />
           </button>
