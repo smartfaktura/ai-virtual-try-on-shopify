@@ -38,18 +38,14 @@
 
     --radius: 0.5rem;
 
-    /* Shopify-specific tokens */
-    --shopify-green: 161 100% 25%;
-    --shopify-blue: 213 96% 47%;
-    --shopify-purple: 270 50% 40%;
-    --shopify-yellow: 45 93% 47%;
-    --shopify-orange: 25 95% 53%;
+    /* Premium accent - using primary green only */
+    --accent-highlight: 161 100% 25%;
     
-    /* Status colors */
-    --status-success: 142 72% 29%;
-    --status-warning: 45 93% 47%;
-    --status-critical: 0 72% 51%;
-    --status-info: 213 96% 47%;
+    /* Status colors - muted, premium feel */
+    --status-success: 161 60% 35%;
+    --status-warning: 40 85% 50%;
+    --status-critical: 0 65% 50%;
+    --status-info: 210 60% 50%;
 
     /* Surface colors */
     --surface: 0 0% 100%;
