@@ -238,7 +238,23 @@ export default function Generate() {
   };
 
   const handleGenerateClick = () => {
-    if (!selectedProduct || !selectedTemplate) return;
+    if (!selectedProduct) return;
+    
+    // Virtual Try-On mode
+    if (generationMode === 'virtual-try-on') {
+      if (!selectedModel || !selectedPose) {
+        toast.error('Please select a model and pose first');
+        return;
+      }
+      setTryOnConfirmModalOpen(true);
+      return;
+    }
+    
+    // Product-only mode
+    if (!selectedTemplate) {
+      toast.error('Please select a template first');
+      return;
+    }
     setConfirmModalOpen(true);
   };
 
