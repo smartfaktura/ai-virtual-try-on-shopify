@@ -31,7 +31,7 @@ import {
   XIcon,
 } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
-import { TemplatePreviewCard } from '@/components/app/TemplatePreviewCard';
+import { TemplatePreviewCard, getTemplateImage } from '@/components/app/TemplatePreviewCard';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
