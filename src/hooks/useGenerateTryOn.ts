@@ -54,10 +54,13 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
         throw new Error('Supabase URL not configured');
       }
 
-      // Convert image to base64 so AI model can access it
-      console.log('[useGenerateTryOn] Converting image to base64:', params.sourceImageUrl.slice(0, 100));
-      const base64ImageUrl = await convertImageToBase64(params.sourceImageUrl);
-      console.log('[useGenerateTryOn] Image converted, sending to API');
+      // Convert both product and model images to base64 so AI model can access them
+      console.log('[useGenerateTryOn] Converting images to base64...');
+      const [base64ProductImage, base64ModelImage] = await Promise.all([
+        convertImageToBase64(params.sourceImageUrl),
+        convertImageToBase64(params.modelImageUrl),
+      ]);
+      console.log('[useGenerateTryOn] Images converted, sending to API');
 
       const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-tryon`, {
         method: 'POST',
