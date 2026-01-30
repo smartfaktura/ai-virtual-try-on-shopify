@@ -42,8 +42,11 @@ export default function Jobs() {
     setDetailModalOpen(true);
   };
 
-  const handlePublishClick = (job: GenerationJob) => {
+  const handlePublishClick = (job: GenerationJob, specificUrls?: string[]) => {
     setSelectedJobForPublish(job);
+    // If specific URLs provided (from Job Detail modal), use those; otherwise use all unpublished
+    const urlsToPublish = specificUrls || job.results.filter(r => !r.publishedToShopify).map(r => r.imageUrl);
+    setSelectedImageUrlsForPublish(urlsToPublish);
     setPublishModalOpen(true);
   };
 
