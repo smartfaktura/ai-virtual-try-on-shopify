@@ -1,5 +1,5 @@
 import { Text, Icon } from '@shopify/polaris';
-import { ImageIcon, PersonIcon, CheckIcon } from '@shopify/polaris-icons';
+import { ImageIcon, PersonIcon } from '@shopify/polaris-icons';
 import type { GenerationMode } from '@/types';
 import { Card } from '@/components/ui/card';
 
