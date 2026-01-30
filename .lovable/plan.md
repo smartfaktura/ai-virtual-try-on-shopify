@@ -1,354 +1,304 @@
 
-# UI/UX Improvement Plan for Product Image Generator
+# Critical UI/UX Bug Fix Plan
 
-## Executive Summary
-After thorough analysis of the Shopify Product Image Generator app, I've identified **23 critical UI/UX issues** across the product-to-e-commerce workflow. This plan addresses template preview images, e-commerce publishing clarity, wizard flow improvements, and overall polish.
-
----
-
-## Critical Issues Identified
-
-### 1. Template Selection - No Visual Examples (HIGH PRIORITY)
-**Problem:** Template cards show only text descriptions with no preview images. Merchants cannot visualize what each template style will produce before committing.
-
-**Impact:** Users cannot make informed decisions, leading to wasted credits on unwanted styles.
-
-**Solution:** Add example/preview images to each template card showing the photography style outcome.
+## Overview
+After thorough analysis of the screenshot and codebase, I've identified **12 critical bugs** that severely impact the e-commerce workflow. The most glaring issue is that users have **no idea WHICH product** their images will be published to on the Results page.
 
 ---
 
-### 2. Dashboard Quick Generate - Broken Flow
-**Problem:** The "Select Product" button navigates away to /generate, losing the selected template. The workflow doesn't carry template selection through.
+## Critical Bug #1: NO PRODUCT CONTEXT ON RESULTS PAGE (SEVERE)
 
-**Impact:** Users lose their template selection and must re-select on the Generate page.
+**Location:** `src/pages/Generate.tsx` (lines 647-780)
 
-**Solution:** Implement proper state passing between Dashboard and Generate page, or use a modal-based product picker on Dashboard.
+**Problem:** On the Results page (screenshot), users see "Publish 4 to Shopify" but there is:
+- No product name visible
+- No product thumbnail
+- No reminder of which product was selected
+- Users cannot verify they're about to publish to the correct product
 
----
+**Impact:** Merchants could accidentally publish generated images to the wrong product, corrupting their Shopify catalog.
 
-### 3. Product Selection Step - Empty State UX
-**Problem:** The product selection step shows only a "Browse Products" button with minimal guidance. No visual context or recent products shown.
-
-**Impact:** Extra clicks required, no quick-access to recently used or popular products.
-
-**Solution:** Show recent products inline, add product search preview, and improve empty state messaging.
-
----
-
-### 4. Template Cards Missing Visual Hierarchy
-**Problem:** Template cards during generation are text-only boxes without visual differentiation. Selected state uses subtle border changes.
-
-**Impact:** Hard to scan and compare templates quickly.
-
-**Solution:** Add thumbnail images, improve selection state with background color, add category icons.
+**Fix:** Add a persistent "Selected Product" summary card at the top of the Results step showing:
+- Product thumbnail
+- Product title
+- Vendor name
+- Current image count on that product
 
 ---
 
-### 5. E-commerce Publishing Flow - Unclear Options
-**Problem:** The results page shows "Publish to Shopify" but doesn't clarify whether images will ADD to or REPLACE existing product images.
+## Critical Bug #2: PUBLISH BUTTON TEXT IS AMBIGUOUS
 
-**Impact:** Merchants may accidentally overwrite important product images.
+**Location:** `src/pages/Generate.tsx` (line 776)
 
-**Solution:** Add explicit publishing mode selector (Add/Replace) with visual preview of the action.
+**Problem:** Button says "Publish 4 to Shopify" but doesn't specify:
+- Which product
+- Whether images will ADD or REPLACE
 
----
-
-### 6. Results Gallery - Missing Download Individual & Variant Assignment
-**Problem:** Users can "Download All" but cannot download individual images. No option to assign images to specific variants.
-
-**Impact:** Limited flexibility for merchants with complex product catalogs.
-
-**Solution:** Add per-image download buttons and variant assignment dropdown.
+**Fix:** Change button text to include product context, e.g., "Publish 4 to [Product Name]"
 
 ---
 
-### 7. Progress Stepper - "Generating" Step Hidden
-**Problem:** The progress indicator shows 4 steps (Product, Template, Settings, Results) but "Generating" is step 4 internally, creating a visual mismatch.
+## Critical Bug #3: PUBLISH MODAL MISSING PRODUCT IDENTITY
 
-**Impact:** Confusing progress tracking during generation.
+**Location:** `src/components/app/PublishModal.tsx`
 
-**Solution:** Show "Generating" as an intermediate loading state within step 3-4 transition, not as a separate step.
+**Problem:** The modal title says "Publish X Images to Shopify" but doesn't show:
+- Which product is being updated
+- Product thumbnail for verification
+- Clear warning about what will happen
 
----
-
-### 8. Settings Step - Brand Kit Collapsed by Default
-**Problem:** The valuable Brand Kit customization is hidden by default in a collapsible section.
-
-**Impact:** Many users won't discover brand customization options.
-
-**Solution:** Show Brand Kit expanded on first use, remember preference, add visual preview of brand settings.
+**Fix:** Add product card at the very top of the modal with:
+- Product thumbnail (large)
+- Product title prominently displayed
+- Current live images vs. what will happen after publish
 
 ---
 
-### 9. Credits Cost Not Visible Early Enough
-**Problem:** Credit cost only shows at the final Settings step. Users don't know costs while browsing templates.
+## Critical Bug #4: JOBS TABLE PUBLISH ACTION HAS NO CONTEXT
 
-**Impact:** Users may select expensive options then have to backtrack.
+**Location:** `src/pages/Jobs.tsx` (lines 98-109)
 
-**Solution:** Show estimated credits in template cards and maintain running total throughout wizard.
+**Problem:** The "Publish" button in the jobs table just shows a toast with count, but:
+- No modal confirmation
+- No product context shown
+- No add/replace choice offered
+- Could accidentally overwrite images
 
----
-
-### 10. No Bulk Generation from Dashboard
-**Problem:** Quick Generate only handles single product. No way to queue multiple products.
-
-**Impact:** Merchants with large catalogs cannot efficiently generate images for multiple products.
-
-**Solution:** Add "Bulk Generate" option and batch selection capability.
+**Fix:** Open a PublishModal with the job's product context instead of directly publishing.
 
 ---
 
-### 11. Jobs Table - Missing Inline Publishing
-**Problem:** Jobs with unpublished images show a "Publish" button that does nothing (no handler connected).
+## Critical Bug #5: GENERATED IMAGES DON'T MATCH ACTUAL PRODUCT
 
-**Impact:** Broken functionality, users cannot publish from Jobs page.
+**Location:** `src/pages/Generate.tsx` (lines 158-167)
 
-**Solution:** Implement publish handler with modal confirmation.
+**Problem:** The mock generated images are random fashion photos (hoodies, sweaters, t-shirts) that have nothing to do with the selected product (e.g., "Vitamin C Brightening Serum"). This creates massive UX confusion.
 
----
+**Impact:** Users see the prompt says "Vitamin C Brightening Serum by GlowLab" but the images show random clothing items - completely breaks mental model.
 
-### 12. Template Management Page - No Preview Images
-**Problem:** Templates table shows only text, no visual representation of template styles.
-
-**Impact:** Hard to manage and organize templates visually.
-
-**Solution:** Add thumbnail column with example output preview.
+**Fix:** Generate mock images that match the selected product's category (cosmetics → cosmetic images, clothing → clothing images, etc.)
 
 ---
 
-### 13. Search Icons Inconsistent
-**Problem:** Templates and Jobs pages use emoji (magnifying glass) for search prefix instead of Polaris Icon.
+## Critical Bug #6: PROMPT PREVIEW DOESN'T MATCH IMAGES
 
-**Impact:** Inconsistent design language, unprofessional appearance.
+**Location:** `src/pages/Generate.tsx` (lines 754-764)
 
-**Solution:** Replace emoji with SearchIcon from Polaris icons.
+**Problem:** The "Prompt Used" card shows a cosmetics prompt ("Fresh beauty product with water and moisture elements. Vitamin C Brightening Serum...") but the images above are clothing items.
 
----
-
-### 14. Mobile Responsiveness Issues
-**Problem:** Progress stepper uses fixed widths that may overflow on mobile. Template grid may be too dense.
-
-**Impact:** Poor mobile experience for on-the-go merchants.
-
-**Solution:** Make stepper responsive with abbreviated labels, adjust grid breakpoints.
+**Fix:** This is connected to Bug #5 - mock images must align with the product category.
 
 ---
 
-### 15. No Confirmation Before Generation
-**Problem:** Clicking "Generate X Images" immediately starts generation with no final review.
+## Critical Bug #7: NO PRODUCT REFERENCE IMAGE SHOWN
 
-**Impact:** Accidental credit consumption, no chance to verify settings.
+**Location:** `src/pages/Generate.tsx` (Results step)
 
-**Solution:** Add confirmation modal showing all selections before consuming credits.
+**Problem:** When generating images FOR a product, the original product image should be visible for comparison. Users need to verify:
+- The AI-generated images match their actual product
+- Color accuracy
+- Product shape/details
 
----
-
-### 16. Results Page - No Regeneration for Individual Images
-**Problem:** "Regenerate variation" mentioned in spec but not implemented. Users must regenerate entire batch.
-
-**Impact:** Wasted credits when only one image needs refinement.
-
-**Solution:** Add per-image "Regenerate" button with seed variation.
+**Fix:** Add a "Reference Product" section showing the original product image(s) alongside generated results.
 
 ---
 
-### 17. Missing Loading/Skeleton States
-**Problem:** Initial page loads show no skeleton states for async data.
+## Critical Bug #8: STEPPER SHOWS WRONG NUMBERS
 
-**Impact:** Jarring experience with content pop-in.
+**Location:** `src/pages/Generate.tsx` (lines 248-275)
 
-**Solution:** Implement skeleton loading patterns for metrics, tables, and template grids.
+**Problem:** Step 4 shows the number "4" even when on results, but the circle also contains a checkmark for completed steps. The "4" is visually confusing since it looks like image count (which is also "4" in the screenshot).
 
----
-
-### 18. Template Category Counts on Dashboard
-**Problem:** No visibility into which template categories have how many options.
-
-**Impact:** Users may not explore all available templates.
-
-**Solution:** Add category breakdown in Quick Generate section.
+**Fix:** Show "Results" label more prominently and use a different visual indicator (checkmark or icon) instead of number "4" for the final step.
 
 ---
 
-### 19. Error State Handling Gaps
-**Problem:** Failed jobs show error message but no detailed troubleshooting guidance.
+## Critical Bug #9: LIGHTBOX DOESN'T SHOW PRODUCT CONTEXT
 
-**Impact:** Users don't understand why generation failed or how to fix it.
+**Location:** `src/components/app/ImageLightbox.tsx`
 
-**Solution:** Add contextual help for common errors with suggested actions.
+**Problem:** When viewing images full-size, there's no reminder of which product these are for, making it easy to lose context in a multi-product workflow.
 
----
-
-### 20. No Image Zoom/Lightbox
-**Problem:** Generated images can only be viewed at thumbnail size in the results grid.
-
-**Impact:** Cannot evaluate image quality before publishing.
-
-**Solution:** Add lightbox/modal for full-size image preview.
+**Fix:** Add product name/thumbnail to the lightbox header.
 
 ---
 
-### 21. Aspect Ratio Preview Missing
-**Problem:** Users select aspect ratio from dropdown but see no visual representation.
+## Critical Bug #10: CONFIRMATION MODAL MISSING PRODUCT IMAGE
 
-**Impact:** Merchants may not understand how ratios affect their product display.
+**Location:** `src/components/app/GenerateConfirmModal.tsx` (lines 73-94)
 
-**Solution:** Add visual aspect ratio preview showing frame dimensions.
+**Problem:** The "Product" summary card shows only a tiny `small` thumbnail. For a generation confirmation, users need to see their product clearly to verify they selected the right one.
 
----
-
-### 22. No "Use Again" for Past Jobs
-**Problem:** Jobs history shows past generations but no easy way to reuse exact settings.
-
-**Impact:** Must manually recreate successful settings.
-
-**Solution:** Add "Use as template" or "Generate similar" action on completed jobs.
+**Fix:** Use a larger thumbnail or medium size for the product image in confirmation.
 
 ---
 
-### 23. Settings Page - No Visual Feedback on Save
-**Problem:** Save button shows toast but form doesn't indicate saved state.
+## Critical Bug #11: DASHBOARD "VIEW" ACTIONS DON'T SHOW PRODUCT
 
-**Impact:** Unclear if changes were persisted.
+**Location:** `src/pages/Dashboard.tsx` (line 51)
 
-**Solution:** Add visual confirmation and disable button when no changes made.
+**Problem:** Clicking "View" on a recent job navigates to `/jobs/:id` but there's no job detail page implemented - it will 404 or show nothing.
 
----
-
-## Implementation Plan
-
-### Phase 1: Critical E-commerce Fixes (Template Previews + Publishing)
-1. Add `exampleImageUrl` display to template cards in Generate flow
-2. Add preview images to all 17 seed templates in mockData
-3. Implement publishing mode selector (Add/Replace) in results
-4. Connect Jobs page Publish button handler
-5. Add generation confirmation modal
-
-### Phase 2: UX Flow Improvements
-6. Fix Dashboard Quick Generate state passing
-7. Show recent products in product selection step
-8. Expand Brand Kit by default on first use
-9. Show credit estimates in template cards
-10. Add image zoom/lightbox for results
-
-### Phase 3: Polish & Consistency
-11. Replace emoji search icons with Polaris SearchIcon
-12. Add skeleton loading states throughout
-13. Improve mobile responsive behavior
-14. Add per-image download and regenerate buttons
-15. Implement "Use settings again" on completed jobs
-
-### Phase 4: Advanced Features
-16. Add variant assignment in publishing flow
-17. Implement bulk generation capability
-18. Add aspect ratio visual preview
-19. Enhanced error state guidance
-20. Template preview images in management table
+**Fix:** Either implement job detail page or open a modal with job details.
 
 ---
 
-## Technical Changes Required
+## Critical Bug #12: NO LOADING/EMPTY STATES FOR PRODUCT IMAGES
+
+**Location:** Multiple files
+
+**Problem:** If a product has no images (empty images array), fallback is a generic Shopify placeholder. This should be more contextual.
+
+**Fix:** Use a better empty state that says "No product images yet" with appropriate icon.
+
+---
+
+## Implementation Summary
 
 ### Files to Modify:
 
+1. **`src/pages/Generate.tsx`**
+   - Add product summary card to Results step (top of step)
+   - Add product name to Publish button text
+   - Add product reference images section
+   - Fix mock generated images to match product category
+   - Improve stepper visual for step 4
+
+2. **`src/components/app/PublishModal.tsx`**
+   - Add prominent product card at modal top
+   - Show product thumbnail (larger)
+   - Add product title to modal title
+
+3. **`src/components/app/ImageLightbox.tsx`**
+   - Add product context to header
+
+4. **`src/components/app/GenerateConfirmModal.tsx`**
+   - Use larger product thumbnail
+   - Make product identity more prominent
+
+5. **`src/pages/Jobs.tsx`**
+   - Change Publish button to open PublishModal
+   - Add PublishModal import and state
+
+6. **`src/data/mockData.ts`**
+   - Add category-appropriate mock image URLs for generated results
+
+---
+
+## Code Changes Detail
+
+### 1. Generate.tsx - Add Product Context to Results
+
+Add a product summary card at the top of the Results step:
+
 ```text
-src/pages/Generate.tsx
-  - Add template preview images to template cards
-  - Add publishing mode selector to results
-  - Add confirmation modal before generation
-  - Add image lightbox component
-  - Show credits in template cards
-  - Expand Brand Kit by default
+Location: After line 648, inside Results BlockStack
 
-src/pages/Dashboard.tsx
-  - Fix Quick Generate flow with state passing
-  - Add recent products inline preview
+Add:
+- Card with product thumbnail (medium size)
+- Product title and vendor
+- Badge showing "Publishing to this product"
+- Current image count from product.images.length
+```
 
-src/pages/Templates.tsx
-  - Add thumbnail preview column
-  - Fix search icon to use Polaris Icon
+### 2. Generate.tsx - Update Publish Button
 
-src/pages/Jobs.tsx
-  - Connect Publish button handler
-  - Add "Use settings again" action
-  - Fix search icon
+Change line 776 from:
+```
+Publish {selectedForPublish.size > 0 ? `${selectedForPublish.size} ` : ''}to Shopify
+```
+To:
+```
+Publish {selectedForPublish.size} to "{selectedProduct?.title}"
+```
 
-src/data/mockData.ts
-  - Add exampleImageUrl to all 17 templates
+### 3. PublishModal.tsx - Add Product Header
 
-src/components/app/TemplatePreviewCard.tsx (NEW)
-  - Reusable template card with image preview
+Add at the very top of Modal.Section (after line 71):
+```text
+- Product card with:
+  - Large thumbnail (80x80)
+  - Product title (heading size)
+  - Vendor name
+  - Divider after
+```
 
-src/components/app/ImageLightbox.tsx (NEW)
-  - Full-size image preview modal
+### 4. Generate.tsx - Category-Based Mock Images
 
-src/components/app/PublishModal.tsx (NEW)
-  - Publishing confirmation with mode selection
+Create a mapping function that returns appropriate mock image URLs based on the selected template's category:
+```text
+- clothing → fashion/apparel images
+- cosmetics → beauty product images
+- food → food photography images
+- home → interior/decor images
+- supplements → health product images
+- universal → generic product images
+```
 
-src/components/app/GenerateConfirmModal.tsx (NEW)
-  - Pre-generation confirmation dialog
+### 5. Jobs.tsx - Add Publish Modal
+
+Add:
+- Import PublishModal component
+- State for publishModalOpen and selectedJobForPublish
+- Change onClick to set state and open modal
+- Add PublishModal component with proper props
+
+### 6. ImageLightbox.tsx - Add Product Prop
+
+Add:
+- `productName` prop to interface
+- Display product name in modal title
+```
+title={`Image ${currentIndex + 1} of ${images.length} • ${productName}`}
+```
+
+### 7. GenerateConfirmModal.tsx - Larger Product Thumbnail
+
+Change line 82:
+- From `size="small"` to `size="large"`
+- Add more visual emphasis to the product section
+
+---
+
+## Visual Changes Summary
+
+### Before (Results Page):
+```text
++---------------------------+
+| Generated Images          |
+| [img] [img] [img] [img]   |
+| Selected: 4 of 4          |
+| [Publish 4 to Shopify]    | ← WHERE?!
++---------------------------+
+```
+
+### After (Results Page):
+```text
++---------------------------+
+| Publishing to:            |
+| [PRODUCT IMG] Vitamin C   |
+|              Serum        |
+|              by GlowLab   |
+|              (2 existing) |
++---------------------------+
+| Generated Images          |
+| [matching cosmetic imgs]  |
+| Selected: 4 of 4          |
+| [Publish 4 to "Vitamin C  |
+|  Brightening Serum"]      |
++---------------------------+
 ```
 
 ---
 
-## Visual Mockup: Template Card Improvement
+## Testing Checklist
 
-```text
-Before:
-+---------------------------+
-| Premium Studio Apparel    |
-| High-end fashion...       |
-| [Premium] [Studio]        |
-+---------------------------+
-
-After:
-+---------------------------+
-|  +-------+                |
-|  | IMAGE |  Premium       |
-|  | PREV  |  Studio Apparel|
-|  +-------+                |
-| High-end fashion...       |
-| [Premium] [Studio] [2cr]  |
-+---------------------------+
-```
-
----
-
-## Credit Display Improvement
-
-Show running credit estimate throughout wizard:
-- Template card: "~2 credits/image"
-- Settings step: "Total: 8 credits (4 images x 2 high quality)"
-- Confirmation modal: Final cost with balance check
-
----
-
-## Publishing Flow Improvement
-
-```text
-Current:                    Improved:
-+-------------------+       +------------------------+
-| Publish to Shopify|       | Publish 3 images       |
-+-------------------+       |                        |
-                            | [x] Add to existing    |
-                            | [ ] Replace all        |
-                            |                        |
-                            | Current: 2 images      |
-                            | After: 5 images        |
-                            |                        |
-                            | [Cancel]  [Publish]    |
-                            +------------------------+
-```
-
----
-
-## Summary
-
-This plan addresses the core user journey from product selection through publishing, with special focus on:
-- **Visual decision-making**: Template preview images
-- **E-commerce clarity**: Publishing mode transparency  
-- **Credit awareness**: Cost visibility throughout
-- **Workflow efficiency**: Reduced clicks, better defaults
-- **Error prevention**: Confirmation before credit-consuming actions
-
-All changes maintain Shopify Polaris design patterns and enhance the native admin experience.
+After implementation, verify:
+1. Product name/image visible on Results page
+2. Publish button shows product name
+3. Publish modal shows which product will be updated
+4. Jobs page publish opens confirmation modal
+5. Generated mock images match product category
+6. Lightbox shows product context
+7. Confirmation modal shows product clearly
+8. All actions show appropriate product context before credit-consuming or data-modifying actions
