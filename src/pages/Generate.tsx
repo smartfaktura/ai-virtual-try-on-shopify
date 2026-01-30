@@ -1239,21 +1239,24 @@ export default function Generate() {
           <Card>
             <BlockStack gap="600" inlineAlign="center">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse-subtle">
-                <Icon source={ImageIcon} tone="primary" />
+                <Icon source={generationMode === 'virtual-try-on' ? PersonIcon : ImageIcon} tone="primary" />
               </div>
               <BlockStack gap="200" inlineAlign="center">
                 <Text as="h2" variant="headingLg">
-                  Creating Your Images...
+                  {generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}
                 </Text>
                 <Text as="p" variant="bodyMd" tone="subdued">
-                  Creating {imageCount} images of "{selectedProduct?.title}" with {selectedTemplate?.name}
+                  {generationMode === 'virtual-try-on' 
+                    ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}" with ${selectedPose?.name} pose`
+                    : `Creating ${imageCount} images of "${selectedProduct?.title}" with ${selectedTemplate?.name}`
+                  }
                 </Text>
               </BlockStack>
               <div className="w-full max-w-md">
                 <ProgressBar progress={Math.min(generatingProgress, 100)} size="small" />
               </div>
               <Text as="p" variant="bodySm" tone="subdued">
-                This usually takes 10-15 seconds
+                {generationMode === 'virtual-try-on' ? 'This usually takes 20-30 seconds' : 'This usually takes 10-15 seconds'}
               </Text>
               <Button 
                 variant="plain" 
