@@ -36,6 +36,8 @@ import { TemplatePreviewCard, getTemplateImage } from '@/components/app/Template
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
+import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
+import { useGenerateTryOn } from '@/hooks/useGenerateTryOn';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
 import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
@@ -97,9 +99,13 @@ export default function Generate() {
   
   // Modals
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [tryOnConfirmModalOpen, setTryOnConfirmModalOpen] = useState(false);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Virtual Try-On generation hook
+  const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
 
   const categories: Array<{ id: TemplateCategory | 'all'; label: string }> = [
     { id: 'all', label: 'All Templates' },
@@ -232,7 +238,23 @@ export default function Generate() {
   };
 
   const handleGenerateClick = () => {
-    if (!selectedProduct || !selectedTemplate) return;
+    if (!selectedProduct) return;
+    
+    // Virtual Try-On mode
+    if (generationMode === 'virtual-try-on') {
+      if (!selectedModel || !selectedPose) {
+        toast.error('Please select a model and pose first');
+        return;
+      }
+      setTryOnConfirmModalOpen(true);
+      return;
+    }
+    
+    // Product-only mode
+    if (!selectedTemplate) {
+      toast.error('Please select a template first');
+      return;
+    }
     setConfirmModalOpen(true);
   };
 
@@ -329,6 +351,36 @@ export default function Generate() {
       setCurrentStep('results');
       toast.success('Images generated successfully!');
     }, 4000);
+  };
+
+  // Virtual Try-On generation with real AI
+  const handleTryOnConfirmGenerate = async () => {
+    if (!selectedProduct || !selectedModel || !selectedPose) return;
+    
+    setTryOnConfirmModalOpen(false);
+    setCurrentStep('generating');
+    setGeneratingProgress(0);
+    
+    const result = await generateTryOn({
+      product: selectedProduct,
+      model: selectedModel,
+      pose: selectedPose,
+      aspectRatio,
+      imageCount: parseInt(imageCount),
+    });
+    
+    if (result && result.images.length > 0) {
+      setGeneratedImages(result.images);
+      setGeneratingProgress(100);
+      setCurrentStep('results');
+      
+      // Mock credit deduction
+      const creditCost = result.generatedCount * 3;
+      toast.success(`Generated ${result.generatedCount} images! Used ${creditCost} credits.`);
+    } else {
+      // Generation failed, go back to settings
+      setCurrentStep('settings');
+    }
   };
 
   const handlePublishClick = () => {
@@ -1326,7 +1378,10 @@ export default function Generate() {
                 </Text>
               </BlockStack>
               <div className="w-full max-w-md">
-                <ProgressBar progress={Math.min(generatingProgress, 100)} size="small" />
+                <ProgressBar 
+                  progress={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : generatingProgress, 100)} 
+                  size="small" 
+                />
               </div>
               <Text as="p" variant="bodySm" tone="subdued">
                 {generationMode === 'virtual-try-on' ? 'This usually takes 20-30 seconds' : 'This usually takes 10-15 seconds'}
@@ -1550,6 +1605,19 @@ export default function Generate() {
         aspectRatio={aspectRatio}
         quality={quality}
         creditsRemaining={mockShop.creditsBalance}
+      />
+
+      <TryOnConfirmModal
+        open={tryOnConfirmModalOpen}
+        onClose={() => setTryOnConfirmModalOpen(false)}
+        onConfirm={handleTryOnConfirmGenerate}
+        product={selectedProduct}
+        model={selectedModel}
+        pose={selectedPose}
+        imageCount={parseInt(imageCount)}
+        aspectRatio={aspectRatio}
+        creditsRemaining={mockShop.creditsBalance}
+        isLoading={isTryOnGenerating}
       />
 
       <PublishModal
