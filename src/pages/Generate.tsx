@@ -551,13 +551,122 @@ export default function Generate() {
           </BlockStack>
         </Card>
 
-        {/* Step 1: Product Selection */}
+        {/* Step 0: Source Type Selection */}
+        {currentStep === 'source' && (
+          <Card>
+            <BlockStack gap="500">
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingMd">
+                  How do you want to start?
+                </Text>
+                <Text as="p" variant="bodyMd" tone="subdued">
+                  Choose whether to use an existing Shopify product or upload your own image file.
+                </Text>
+              </BlockStack>
+
+              <SourceTypeSelector
+                sourceType={sourceType}
+                onChange={(type) => {
+                  setSourceType(type);
+                  // Reset relevant state when switching
+                  if (type === 'scratch') {
+                    setSelectedProduct(null);
+                    setScratchUpload(null);
+                  } else {
+                    setScratchUpload(null);
+                  }
+                }}
+              />
+
+              <InlineStack align="end">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    if (sourceType === 'product') {
+                      setCurrentStep('product');
+                    } else {
+                      setCurrentStep('upload');
+                    }
+                  }}
+                >
+                  Continue
+                </Button>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        )}
+
+        {/* Step 1a: Upload Image (From Scratch) */}
+        {currentStep === 'upload' && (
+          <Card>
+            <BlockStack gap="500">
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingMd">
+                  Upload Your Image
+                </Text>
+                <Text as="p" variant="bodyMd" tone="subdued">
+                  Upload a product image from your computer. Add details to help the AI generate better results.
+                </Text>
+              </BlockStack>
+
+              <UploadSourceCard
+                scratchUpload={scratchUpload}
+                onUpload={setScratchUpload}
+                onRemove={() => setScratchUpload(null)}
+                onUpdateProductInfo={(info) => {
+                  if (scratchUpload) {
+                    setScratchUpload({ ...scratchUpload, productInfo: info });
+                  }
+                }}
+                isUploading={isUploading}
+              />
+
+              <InlineStack align="space-between">
+                <Button onClick={() => setCurrentStep('source')}>
+                  Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
+                  onClick={async () => {
+                    if (!scratchUpload) return;
+                    
+                    // Upload the file to storage
+                    const uploadedUrl = await uploadFile(scratchUpload.file);
+                    if (uploadedUrl) {
+                      setScratchUpload({ ...scratchUpload, uploadedUrl });
+                      // Determine if it's a clothing product for mode selection
+                      const productType = scratchUpload.productInfo.productType.toLowerCase();
+                      const clothingKeywords = ['leggings', 'hoodie', 't-shirt', 'sports bra', 'jacket', 'tank top', 'joggers', 'shorts', 'dress', 'sweater'];
+                      const isClothing = clothingKeywords.some(kw => productType.includes(kw));
+                      
+                      if (isClothing) {
+                        setCurrentStep('mode');
+                      } else {
+                        setCurrentStep('template');
+                      }
+                    }
+                  }}
+                >
+                  {isUploading ? 'Uploading...' : 'Continue'}
+                </Button>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        )}
+
+        {/* Step 1b: Product Selection (From Product) */}
         {currentStep === 'product' && (
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">
-                Select a Product
-              </Text>
+              <InlineStack align="space-between">
+                <Text as="h2" variant="headingMd">
+                  Select a Product
+                </Text>
+                <Button variant="plain" onClick={() => setCurrentStep('source')}>
+                  Change source
+                </Button>
+              </InlineStack>
               <Text as="p" variant="bodyMd" tone="subdued">
                 Choose the product you want to generate images for. The AI will use your product details to create the perfect shots.
               </Text>
