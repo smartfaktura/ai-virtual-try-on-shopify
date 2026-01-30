@@ -1,65 +1,134 @@
 
 
-# Templates Page Cleanup Plan
+# Settings Page: Plans & Billing Section Implementation
 
-## Problema
+## Summary
 
-Dabartinis Templates puslapis turi veiksmų, kurie neturi prasmės produktui:
-- **"Create template"** mygtukas - templates yra sistemos paruošti stiliai, vartotojai jų nekuria
-- **"Edit"** veiksmas - vartotojai negali redaguoti sistemos templates
-- **"Duplicate"** veiksmas - nėra prasmės dublikuoti, nes templates yra standartiniai
-- **"Delete"** veiksmas - vartotojai negali ištrinti sistemos templates
-- **"Enable/Disable"** veiksmas - galbūt prasminga, jei norime leisti slėpti templates
+Replace the current simple "Billing & Credits" card in Settings with a comprehensive plan selection UI that showcases the pricing tiers, enables plan upgrades, and allows credit top-ups - all with a competitive angle highlighting the cost advantage.
 
-## Sprendimas
+## Business Model Recap
 
-Pakeisti Templates puslapį į **read-only galerijos režimą** su šiais veiksmais:
+| Item | Our Cost | Selling Price (100% markup) |
+|------|----------|---------------------------|
+| Standard image (1 credit) | $0.004 (0.4 ct) | $0.008 (0.8 ct) |
+| Virtual Try-On (3 credits) | $0.012 (1.2 ct) | $0.024 (2.4 ct) |
 
-### Nauji veiksmai
-1. **"Use in Generate"** - paspaudus nukreipia į Generate puslapį su pasirinktu template
-2. **"Preview"** - atidaro modalą su didesniu template paveikslu ir pilna informacija
-3. **"Add to Favorites"** (optional) - leidžia pažymėti mėgstamiausius templates
+**Free trial**: 5 credits per store (one-time)
 
-### UI pakeitimai
+## New UI Layout
 
-| Dabartinis | Naujas |
-|------------|--------|
-| "Create template" mygtukas | Pašalinti visiškai |
-| Actions popover su Edit/Delete | "Use" mygtukas + "Preview" |
-| DataTable formatas | Galima palikti arba pakeisti į kortelių galerija |
+The Settings page will get an expanded "Plans & Billing" section with:
 
-## Techniniai pakeitimai
+```text
++------------------------------------------------------------------+
+|  CURRENT PLAN STATUS                                              |
+|  [Free Trial]  5/5 credits remaining                              |
+|  "Upgrade to unlock more features and credits"                    |
++------------------------------------------------------------------+
 
-### `src/pages/Templates.tsx`
++------------------------------------------------------------------+
+|  CHOOSE YOUR PLAN                     [Monthly] [Annual -17%]     |
++------------------------------------------------------------------+
+|                                                                   |
+|  +-------------+  +---------------+  +-------------+  +---------+ |
+|  |   STARTER   |  |    GROWTH     |  |     PRO     |  |ENTERPRISE|
+|  |   $9/mo     |  |    $29/mo     |  |   $79/mo    |  | Custom  | |
+|  |             |  |  MOST POPULAR |  |             |  |         | |
+|  | 100 credits |  |  500 credits  |  | 2000 credits|  |Unlimited| |
+|  |             |  |  +Try-On      |  |  +API       |  |+SLA     | |
+|  |  [Select]   |  |   [Select]    |  |  [Select]   |  |[Contact]| |
+|  +-------------+  +---------------+  +-------------+  +---------+ |
+|                                                                   |
++------------------------------------------------------------------+
 
-1. **Pašalinti** `primaryAction` iš PageHeader (Create template mygtukas)
-2. **Pakeisti** ActionList items:
-   - Pašalinti: Edit, Duplicate, Delete, Enable/Disable
-   - Pridėti: "Use this template", "View details"
-3. **Pašalinti** delete modal ir susijusią logiką
-4. **Atnaujinti** actions stulpelį - vietoj popover menu, du aiškūs mygtukai
++------------------------------------------------------------------+
+|  NEED MORE CREDITS?  (Top-up packs, credits never expire)         |
+|                                                                   |
+|  [50 credits - $5]  [200 credits - $15]  [500 credits - $30]      |
+|       10 ct/ea           7.5 ct/ea            6 ct/ea             |
++------------------------------------------------------------------+
 
-### Naujas actions stulpelis:
-
++------------------------------------------------------------------+
+|  COMPETITOR COMPARISON                                            |
+|  "Save 60-80% compared to alternatives"                           |
+|  Us: $0.008/image | Competitor A: $0.03 | Competitor B: $0.05     |
++------------------------------------------------------------------+
 ```
-[Use] [Preview]
+
+## Technical Implementation
+
+### New Type Definitions (`src/types/index.ts`)
+
+```typescript
+export interface PricingPlan {
+  planId: string;
+  name: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  credits: number;
+  features: string[];
+  highlighted?: boolean;
+  badge?: string;
+}
+
+export interface CreditPack {
+  packId: string;
+  credits: number;
+  price: number;
+  pricePerCredit: number;
+  popular?: boolean;
+}
 ```
 
-- **Use** - Button primary, nukreipia į `/generate?template={templateId}`
-- **Preview** - Button plain, atidaro modalą su template info
+### New Mock Data (`src/data/mockData.ts`)
 
-### Naujas Preview Modal
+Add `pricingPlans` and `creditPacks` arrays with the pricing tiers.
 
-Atidaro modalą su:
-- Didelis template paveikslas
-- Pilnas aprašymas
-- Kategorija
-- Rekomenduojami produktų tipai
-- "Use this template" mygtukas
+### New Components
 
-## Failo pakeitimai
+| Component | Purpose |
+|-----------|---------|
+| `src/components/app/PlanCard.tsx` | Individual plan card with features, price, and CTA |
+| `src/components/app/CreditPackCard.tsx` | Credit top-up pack card |
+| `src/components/app/CompetitorComparison.tsx` | Side-by-side price comparison banner |
 
-| Failas | Veiksmas |
-|--------|----------|
-| `src/pages/Templates.tsx` | Pašalinti Create button, pakeisti actions į Use/Preview |
+### Settings Page Updates (`src/pages/Settings.tsx`)
+
+1. Replace "Billing & Credits" card with expanded "Plans & Billing" section
+2. Add state for billing period toggle (monthly/annual)
+3. Display current plan status prominently
+4. Show all plan cards in a responsive grid
+5. Add credit top-up section below plans
+6. Add competitor comparison for social proof
+
+## Visual Design
+
+- **Current plan**: Highlighted with `Badge tone="success"`
+- **Most Popular (Growth)**: Green border, "MOST POPULAR" badge
+- **Annual toggle**: Shows savings percentage
+- **Top-up cards**: Horizontal row with "Best Value" badge on largest pack
+- **Competitor comparison**: Subtle banner with checkmark icons
+
+## Plan Features Breakdown
+
+| Feature | Starter | Growth | Pro |
+|---------|---------|--------|-----|
+| Credits/month | 100 | 500 | 2,000 |
+| All templates | Yes | Yes | Yes |
+| Virtual Try-On | No | Yes | Yes |
+| Priority queue | No | Yes | Yes |
+| API access | No | No | Yes |
+| Bulk generation | No | No | Yes |
+| Support | Standard | Priority | Dedicated |
+
+## File Changes Summary
+
+| File | Action |
+|------|--------|
+| `src/types/index.ts` | Add PricingPlan and CreditPack interfaces |
+| `src/data/mockData.ts` | Add pricingPlans and creditPacks data |
+| `src/components/app/PlanCard.tsx` | Create new component |
+| `src/components/app/CreditPackCard.tsx` | Create new component |
+| `src/components/app/CompetitorComparison.tsx` | Create new component |
+| `src/pages/Settings.tsx` | Replace Billing section with full Plans UI |
 
