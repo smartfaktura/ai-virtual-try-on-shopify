@@ -52,10 +52,11 @@ export default function Jobs() {
 
   const handlePublish = (mode: 'add' | 'replace', variantId?: string) => {
     if (!selectedJobForPublish) return;
-    const unpublished = selectedJobForPublish.results.filter(r => !r.publishedToShopify).length;
-    toast.success(`${unpublished} image${unpublished !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${selectedJobForPublish.productSnapshot.title}"!`);
+    const count = selectedImageUrlsForPublish.length;
+    toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${selectedJobForPublish.productSnapshot.title}"!`);
     setPublishModalOpen(false);
     setSelectedJobForPublish(null);
+    setSelectedImageUrlsForPublish([]);
   };
 
   // Find matching product for job
