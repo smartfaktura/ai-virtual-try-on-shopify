@@ -66,6 +66,12 @@ export default function Generate() {
   );
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
   
+  // Virtual Try-On state
+  const [generationMode, setGenerationMode] = useState<GenerationMode>('product-only');
+  const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
+  const [selectedPose, setSelectedPose] = useState<TryOnPose | null>(null);
+  const [modelGenderFilter, setModelGenderFilter] = useState<ModelGender | 'all'>('all');
+  
   // Brand settings - expanded by default on first use
   const [brandKitOpen, setBrandKitOpen] = useState(true);
   const [brandTone, setBrandTone] = useState<BrandTone>('clean');
