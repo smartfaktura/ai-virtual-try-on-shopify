@@ -163,9 +163,17 @@ export default function Generate() {
   const isClothingProduct = (product: Product | null) => {
     if (!product) return false;
     const productType = product.productType.toLowerCase();
-    const clothingKeywords = ['sweater', 'shirt', 'apparel', 'dress', 'jacket', 'pants', 'jeans', 'coat', 'blouse', 'skirt', 'suit', 'hoodie', 't-shirt', 'clothing'];
+    // Expanded keywords to include all athleisure and athletic clothing
+    const clothingKeywords = [
+      'sweater', 'shirt', 'apparel', 'dress', 'jacket', 'pants', 'jeans', 'coat', 
+      'blouse', 'skirt', 'suit', 'hoodie', 't-shirt', 'clothing',
+      // Athletic/athleisure additions
+      'legging', 'bra', 'sports bra', 'tank', 'jogger', 'shorts', 'top', 
+      'long sleeve', 'crop', 'bodysuit', 'romper', 'jumpsuit', 'sweatshirt',
+      'pullover', 'cardigan', 'vest', 'active', 'athletic', 'yoga', 'workout'
+    ];
     return clothingKeywords.some(kw => productType.includes(kw)) || 
-           product.tags.some(tag => clothingKeywords.includes(tag.toLowerCase()));
+           product.tags.some(tag => clothingKeywords.some(kw => tag.toLowerCase().includes(kw)));
   };
 
   const handleSelectProduct = (product: Product) => {

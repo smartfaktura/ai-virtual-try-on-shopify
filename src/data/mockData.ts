@@ -492,6 +492,17 @@ export const mockTemplates: Template[] = [
   },
 ];
 
+// Import product images
+import leggingsBlack1 from '@/assets/products/leggings-black-1.jpg';
+import leggingsPink1 from '@/assets/products/leggings-pink-1.jpg';
+import hoodieGray1 from '@/assets/products/hoodie-gray-1.jpg';
+import sportsBraBlack1 from '@/assets/products/sports-bra-black-1.jpg';
+import joggersBeige1 from '@/assets/products/joggers-beige-1.jpg';
+import tankWhite1 from '@/assets/products/tank-white-1.jpg';
+import motoLeggings1 from '@/assets/products/moto-leggings-1.jpg';
+import croppedLongsleeve1 from '@/assets/products/cropped-longsleeve-1.jpg';
+import fauxFurJacket1 from '@/assets/products/faux-fur-jacket-1.jpg';
+
 export const mockProducts: Product[] = [
   // Alo Yoga Style Athletic Fashion Products
   {
@@ -502,8 +513,8 @@ export const mockProducts: Product[] = [
     tags: ['yoga', 'leggings', 'high-waist', 'athleisure', 'performance'],
     description: 'Sculpting high-waist leggings in signature Airlift fabric. Features a smoothing, lifting waistband, and buttery-soft stretch for studio to street style.',
     images: [
-      { id: 'img_f001', url: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=400&h=500&fit=crop' },
-      { id: 'img_f002', url: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=400&h=500&fit=crop' },
+      { id: 'img_f001', url: leggingsBlack1 },
+      { id: 'img_f002', url: leggingsPink1 },
     ],
     status: 'active',
     createdAt: '2024-01-15T10:00:00Z',
@@ -517,8 +528,7 @@ export const mockProducts: Product[] = [
     tags: ['hoodie', 'oversized', 'cozy', 'athleisure', 'streetwear'],
     description: 'Oversized cropped hoodie in super-soft fleece. Features a relaxed fit, kangaroo pocket, and brushed interior for ultimate comfort. Perfect post-workout or lounging.',
     images: [
-      { id: 'img_f003', url: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=500&fit=crop' },
-      { id: 'img_f004', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=500&fit=crop' },
+      { id: 'img_f003', url: hoodieGray1 },
     ],
     status: 'active',
     createdAt: '2024-01-14T09:00:00Z',
@@ -532,7 +542,7 @@ export const mockProducts: Product[] = [
     tags: ['sports bra', 'yoga', 'medium support', 'strappy', 'performance'],
     description: 'Strappy back sports bra with medium support. Crafted in signature Airlift fabric with moisture-wicking properties. Elegant enough for brunch, supportive enough for hot yoga.',
     images: [
-      { id: 'img_f005', url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=500&fit=crop' },
+      { id: 'img_f005', url: sportsBraBlack1 },
     ],
     status: 'active',
     createdAt: '2024-01-12T08:00:00Z',
@@ -546,8 +556,7 @@ export const mockProducts: Product[] = [
     tags: ['joggers', 'waffle knit', 'lounge', 'cozy', 'athleisure'],
     description: 'Ultra-soft micro waffle joggers with a relaxed, tapered silhouette. High-rise waistband and ribbed cuffs. The perfect blend of comfort and elevated casual style.',
     images: [
-      { id: 'img_f006', url: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=400&h=500&fit=crop' },
-      { id: 'img_f007', url: 'https://images.unsplash.com/photo-1483721310020-03333e577078?w=400&h=500&fit=crop' },
+      { id: 'img_f006', url: joggersBeige1 },
     ],
     status: 'active',
     createdAt: '2024-01-10T12:00:00Z',
@@ -561,8 +570,7 @@ export const mockProducts: Product[] = [
     tags: ['tank top', 'yoga', 'lightweight', 'breathable', 'layering'],
     description: 'Lightweight, flowy tank in soft, semi-sheer fabric. Drapes beautifully with a relaxed fit perfect for layering over your favorite bra. Studio essential.',
     images: [
-      { id: 'img_f008', url: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=400&h=500&fit=crop' },
-      { id: 'img_f009', url: 'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?w=400&h=500&fit=crop' },
+      { id: 'img_f008', url: tankWhite1 },
     ],
     status: 'active',
     createdAt: '2024-01-08T10:00:00Z',
@@ -576,7 +584,7 @@ export const mockProducts: Product[] = [
     tags: ['moto', 'leggings', 'high-waist', 'streetwear', 'performance'],
     description: 'Iconic moto-inspired leggings with quilted knee panels and mesh details. High-waist fit with sleek silhouette. Runway meets studio in this cult favorite.',
     images: [
-      { id: 'img_f010', url: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400&h=500&fit=crop' },
+      { id: 'img_f010', url: motoLeggings1 },
     ],
     status: 'active',
     createdAt: '2024-01-06T10:00:00Z',
@@ -590,8 +598,7 @@ export const mockProducts: Product[] = [
     tags: ['cropped', 'ribbed', 'long sleeve', 'fitted', 'layering'],
     description: 'Form-fitting ribbed long sleeve with cropped length. Thumbhole cuffs and seamless construction for a second-skin feel. Perfect for warm-ups and cool downs.',
     images: [
-      { id: 'img_f011', url: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=400&h=500&fit=crop' },
-      { id: 'img_f012', url: 'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=400&h=500&fit=crop' },
+      { id: 'img_f011', url: croppedLongsleeve1 },
     ],
     status: 'active',
     createdAt: '2024-01-04T09:00:00Z',
@@ -605,7 +612,7 @@ export const mockProducts: Product[] = [
     tags: ['jacket', 'faux fur', 'cropped', 'cozy', 'streetwear'],
     description: 'Luxe faux fur cropped jacket in neutral bone. Features a relaxed fit with snap front closure. Statement piece for post-studio street style.',
     images: [
-      { id: 'img_f013', url: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&h=500&fit=crop' },
+      { id: 'img_f013', url: fauxFurJacket1 },
     ],
     status: 'active',
     createdAt: '2024-01-02T08:00:00Z',
@@ -638,7 +645,7 @@ export const mockJobs: GenerationJob[] = [
       {
         assetId: 'asset_001',
         jobId: 'job_001',
-        imageUrl: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=800&h=1000&fit=crop',
+        imageUrl: leggingsBlack1,
         publishedToShopify: true,
         shopifyImageId: 'shopify_img_001',
         createdAt: '2024-01-15T14:35:00Z',
@@ -646,21 +653,21 @@ export const mockJobs: GenerationJob[] = [
       {
         assetId: 'asset_002',
         jobId: 'job_001',
-        imageUrl: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=800&h=1000&fit=crop',
+        imageUrl: leggingsPink1,
         publishedToShopify: false,
         createdAt: '2024-01-15T14:35:00Z',
       },
       {
         assetId: 'asset_003',
         jobId: 'job_001',
-        imageUrl: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=800&h=1000&fit=crop',
+        imageUrl: motoLeggings1,
         publishedToShopify: false,
         createdAt: '2024-01-15T14:35:00Z',
       },
       {
         assetId: 'asset_004',
         jobId: 'job_001',
-        imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=1000&fit=crop',
+        imageUrl: sportsBraBlack1,
         publishedToShopify: false,
         createdAt: '2024-01-15T14:35:00Z',
       },
@@ -692,7 +699,7 @@ export const mockJobs: GenerationJob[] = [
       {
         assetId: 'asset_005',
         jobId: 'job_002',
-        imageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=1000&fit=crop',
+        imageUrl: hoodieGray1,
         publishedToShopify: true,
         shopifyImageId: 'shopify_img_002',
         createdAt: '2024-01-14T10:20:00Z',
@@ -700,7 +707,7 @@ export const mockJobs: GenerationJob[] = [
       {
         assetId: 'asset_006',
         jobId: 'job_002',
-        imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&h=1000&fit=crop',
+        imageUrl: croppedLongsleeve1,
         publishedToShopify: false,
         createdAt: '2024-01-14T10:20:00Z',
       },
