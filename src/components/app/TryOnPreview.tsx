@@ -132,7 +132,7 @@ export function TryOnPreview({
 
         {/* Selection Status */}
         <div className="flex justify-center gap-4 pt-2 border-t border-border">
-          <StatusPill label="Product" completed={!!product} />
+          <StatusPill label="Product" completed={hasProduct} />
           <StatusPill label="Model" completed={!!model} />
           <StatusPill label="Pose" completed={!!pose} />
         </div>
