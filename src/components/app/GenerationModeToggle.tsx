@@ -53,14 +53,14 @@ export function GenerationModeToggle({
             onClick={() => onChange(option.id)}
             className={`relative cursor-pointer p-5 transition-all duration-200 group ${
               isSelected
-                ? 'ring-2 ring-shopify-green bg-surface-selected shadow-md'
-                : 'hover:shadow-lg hover:border-primary/50'
+                ? 'ring-2 ring-primary bg-primary/5 shadow-md'
+                : 'hover:shadow-lg hover:border-border'
             }`}
           >
             {/* Badge */}
             {option.badgeText && (
               <div className="absolute top-3 right-3">
-                <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-shopify-purple text-white">
+                <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-foreground/10 text-foreground/70">
                   {option.badgeText}
                 </span>
               </div>
@@ -69,8 +69,10 @@ export function GenerationModeToggle({
             {/* Selected checkmark */}
             {isSelected && (
               <div className="absolute top-3 left-3">
-                <div className="w-5 h-5 rounded-full bg-shopify-green flex items-center justify-center">
-                  <Icon source={CheckIcon} tone="base" />
+                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
               </div>
             )}
@@ -79,8 +81,8 @@ export function GenerationModeToggle({
               {/* Icon */}
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-colors ${
                 isSelected 
-                  ? 'bg-shopify-green/10' 
-                  : 'bg-muted group-hover:bg-primary/5'
+                  ? 'bg-primary/10' 
+                  : 'bg-muted group-hover:bg-muted'
               }`}>
                 <div className="scale-150">
                   <Icon 
@@ -101,10 +103,10 @@ export function GenerationModeToggle({
               </div>
 
               {/* Credit cost */}
-              <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
+              <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border ${
                 isSelected 
-                  ? 'bg-shopify-green/10 text-shopify-green' 
-                  : 'bg-muted text-muted-foreground'
+                  ? 'border-primary/30 bg-primary/5 text-primary' 
+                  : 'border-border bg-muted text-muted-foreground'
               }`}>
                 {option.creditCost}
               </div>
