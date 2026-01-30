@@ -154,17 +154,73 @@ export default function Generate() {
       clearInterval(progressInterval);
       setGeneratingProgress(100);
       
-      // Mock generated images
-      const mockGeneratedUrls = [
-        'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1485968579169-a6b47d3e24ed?w=800&h=800&fit=crop',
-      ].slice(0, parseInt(imageCount));
+      // Category-appropriate mock generated images
+      const categoryMockImages: Record<string, string[]> = {
+        clothing: [
+          'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1485968579169-a6b47d3e24ed?w=800&h=800&fit=crop',
+        ],
+        cosmetics: [
+          'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1570194065650-d99fb4b38b8f?w=800&h=800&fit=crop',
+        ],
+        food: [
+          'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1484723091917-5b05f5e5e8f7?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1517686748843-bb360cfc62b3?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&h=800&fit=crop',
+        ],
+        home: [
+          'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1565183997392-2f6f122e5912?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=800&fit=crop',
+        ],
+        supplements: [
+          'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1556227703-3c1e5c29e0a9?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1550572017-edd951b55104?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1607799279861-4dd421887fb3?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1576017194062-c3bb7ae8ec64?w=800&h=800&fit=crop',
+        ],
+        universal: [
+          'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1503602642458-232111445657?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1491553895911-0055uj06d9e4?w=800&h=800&fit=crop',
+          'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&h=800&fit=crop',
+        ],
+      };
+      
+      // Use template category to get matching mock images
+      const category = selectedTemplate?.category || 'universal';
+      const mockGeneratedUrls = (categoryMockImages[category] || categoryMockImages.universal).slice(0, parseInt(imageCount));
       
       setGeneratedImages(mockGeneratedUrls);
       setCurrentStep('results');
@@ -645,8 +701,52 @@ export default function Generate() {
         )}
 
         {/* Results */}
-        {currentStep === 'results' && (
+        {currentStep === 'results' && selectedProduct && (
           <BlockStack gap="400">
+            {/* Product Context Card - Critical for knowing where images will be published */}
+            <Card>
+              <BlockStack gap="300">
+                <InlineStack gap="200" blockAlign="center">
+                  <Badge tone="success">Publishing to</Badge>
+                </InlineStack>
+                <InlineStack gap="400" blockAlign="center">
+                  <Thumbnail
+                    source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                    alt={selectedProduct.title}
+                    size="large"
+                  />
+                  <BlockStack gap="100">
+                    <Text as="p" variant="headingMd" fontWeight="bold">
+                      {selectedProduct.title}
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {selectedProduct.vendor}
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Currently has {selectedProduct.images.length} image{selectedProduct.images.length !== 1 ? 's' : ''}
+                    </Text>
+                  </BlockStack>
+                </InlineStack>
+                {selectedProduct.images.length > 0 && (
+                  <>
+                    <Divider />
+                    <BlockStack gap="200">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">
+                        Existing product images (for reference)
+                      </Text>
+                      <InlineStack gap="200">
+                        {selectedProduct.images.map(img => (
+                          <div key={img.id} className="w-12 h-12 rounded-md overflow-hidden border border-border">
+                            <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </InlineStack>
+                    </BlockStack>
+                  </>
+                )}
+              </BlockStack>
+            </Card>
+
             <Card>
               <BlockStack gap="400">
                 <InlineStack align="space-between">
@@ -772,8 +872,9 @@ export default function Generate() {
                 variant="primary"
                 onClick={handlePublishClick}
                 disabled={selectedForPublish.size === 0}
+                size="large"
               >
-                Publish {selectedForPublish.size > 0 ? `${selectedForPublish.size} ` : ''}to Shopify
+                {`Publish ${selectedForPublish.size} to "${selectedProduct?.title}"`}
               </Button>
             </InlineStack>
           </BlockStack>
@@ -812,6 +913,7 @@ export default function Generate() {
         onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate}
         selectedIndices={selectedForPublish}
+        productName={selectedProduct?.title}
       />
     </PageHeader>
   );

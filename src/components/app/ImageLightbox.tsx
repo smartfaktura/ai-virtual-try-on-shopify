@@ -11,6 +11,7 @@ interface ImageLightboxProps {
   onRegenerate?: (index: number) => void;
   onDownload?: (index: number) => void;
   selectedIndices?: Set<number>;
+  productName?: string;
 }
 
 export function ImageLightbox({
@@ -23,6 +24,7 @@ export function ImageLightbox({
   onRegenerate,
   onDownload,
   selectedIndices = new Set(),
+  productName,
 }: ImageLightboxProps) {
   const currentImage = images[currentIndex];
   const isSelected = selectedIndices.has(currentIndex);
@@ -43,11 +45,15 @@ export function ImageLightbox({
     if (e.key === 'Escape') onClose();
   };
 
+  const modalTitle = productName 
+    ? `Image ${currentIndex + 1} of ${images.length} • ${productName}`
+    : `Image ${currentIndex + 1} of ${images.length}`;
+
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={`Image ${currentIndex + 1} of ${images.length}`}
+      title={modalTitle}
       size="large"
     >
       <Modal.Section>

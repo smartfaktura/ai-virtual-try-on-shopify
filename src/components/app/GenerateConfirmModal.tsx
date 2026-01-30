@@ -71,22 +71,25 @@ export function GenerateConfirmModal({
         <BlockStack gap="500">
           {/* Summary cards */}
           <InlineStack gap="400">
-            {/* Product */}
-            <div className="flex-1 p-4 rounded-lg border border-border bg-surface-subdued">
-              <BlockStack gap="200">
-                <Text as="p" variant="bodySm" tone="subdued">Product</Text>
-                <InlineStack gap="200" blockAlign="center">
+            {/* Product - Larger thumbnail for clear verification */}
+            <div className="flex-1 p-4 rounded-lg border-2 border-primary bg-primary/5">
+              <BlockStack gap="300">
+                <Text as="p" variant="bodySm" fontWeight="semibold">Generating for</Text>
+                <InlineStack gap="300" blockAlign="center">
                   <Thumbnail
                     source={product.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
                     alt={product.title}
-                    size="small"
+                    size="large"
                   />
-                  <BlockStack gap="050">
-                    <Text as="p" variant="bodyMd" fontWeight="semibold">
+                  <BlockStack gap="100">
+                    <Text as="p" variant="headingSm" fontWeight="bold">
                       {product.title}
                     </Text>
                     <Text as="p" variant="bodySm" tone="subdued">
                       {product.vendor}
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {product.images.length} existing image{product.images.length !== 1 ? 's' : ''}
                     </Text>
                   </BlockStack>
                 </InlineStack>
