@@ -122,10 +122,23 @@ export default function Generate() {
     p.vendor.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filter models by gender
-  const filteredModels = mockModels.filter(m => 
-    modelGenderFilter === 'all' || m.gender === modelGenderFilter
-  );
+  // Filter models by gender, body type, and age
+  const filteredModels = mockModels.filter(m => {
+    if (modelGenderFilter !== 'all' && m.gender !== modelGenderFilter) return false;
+    if (modelBodyTypeFilter !== 'all' && m.bodyType !== modelBodyTypeFilter) return false;
+    if (modelAgeFilter !== 'all' && m.ageRange !== modelAgeFilter) return false;
+    return true;
+  });
+
+  // Group poses by category
+  const posesByCategory = mockTryOnPoses.reduce((acc, pose) => {
+    if (!acc[pose.category]) acc[pose.category] = [];
+    acc[pose.category].push(pose);
+    return acc;
+  }, {} as Record<PoseCategory, TryOnPose[]>);
+
+  // Create popular combinations
+  const popularCombinations = createPopularCombinations(mockModels, mockTryOnPoses);
 
   // Check if product is clothing-related
   const isClothingProduct = (product: Product | null) => {
