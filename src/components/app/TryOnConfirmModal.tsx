@@ -81,10 +81,10 @@ export function TryOnConfirmModal({
             {/* Product */}
             <div className="flex-1 min-w-[140px] p-4 rounded-lg border-2 border-primary bg-primary/5">
               <BlockStack gap="200">
-                <Text as="p" variant="bodySm" fontWeight="semibold">Product</Text>
+                <Text as="p" variant="bodySm" fontWeight="semibold">Source Reference</Text>
                 <InlineStack gap="200" blockAlign="center">
                   <Thumbnail
-                    source={product.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                    source={displaySourceImage}
                     alt={product.title}
                     size="medium"
                   />
