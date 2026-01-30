@@ -430,6 +430,7 @@ export default function Generate() {
       aspectRatio,
       imageCount: parseInt(imageCount),
       sourceImageUrl,
+      modelImageUrl: selectedModel.previewUrl,
     });
     
     if (result && result.images.length > 0) {

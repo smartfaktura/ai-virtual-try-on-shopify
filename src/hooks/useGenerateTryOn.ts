@@ -10,6 +10,7 @@ interface GenerateTryOnParams {
   aspectRatio: AspectRatio;
   imageCount: number;
   sourceImageUrl: string;  // The specific product image to use as reference
+  modelImageUrl: string;   // The model's preview image for appearance reference
 }
 
 interface GenerateTryOnResult {
@@ -53,10 +54,13 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
         throw new Error('Supabase URL not configured');
       }
 
-      // Convert image to base64 so AI model can access it
-      console.log('[useGenerateTryOn] Converting image to base64:', params.sourceImageUrl.slice(0, 100));
-      const base64ImageUrl = await convertImageToBase64(params.sourceImageUrl);
-      console.log('[useGenerateTryOn] Image converted, sending to API');
+      // Convert both product and model images to base64 so AI model can access them
+      console.log('[useGenerateTryOn] Converting images to base64...');
+      const [base64ProductImage, base64ModelImage] = await Promise.all([
+        convertImageToBase64(params.sourceImageUrl),
+        convertImageToBase64(params.modelImageUrl),
+      ]);
+      console.log('[useGenerateTryOn] Images converted, sending to API');
 
       const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-tryon`, {
         method: 'POST',
@@ -69,7 +73,7 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
             title: params.product.title,
             description: params.product.description,
             productType: params.product.productType,
-            imageUrl: base64ImageUrl,  // Send base64 instead of relative path
+            imageUrl: base64ProductImage,  // Product clothing image
           },
           model: {
             name: params.model.name,
@@ -77,6 +81,7 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
             ethnicity: params.model.ethnicity,
             bodyType: params.model.bodyType,
             ageRange: params.model.ageRange,
+            imageUrl: base64ModelImage,  // Model appearance reference image
           },
           pose: {
             name: params.pose.name,

@@ -19,6 +19,7 @@ interface TryOnRequest {
     ethnicity: string;
     bodyType: string;
     ageRange: string;
+    imageUrl: string;  // Model's appearance reference image
   };
   pose: {
     name: string;
@@ -48,28 +49,33 @@ function buildPrompt(req: TryOnRequest): string {
   };
   const ageDesc = ageDescMap[req.model.ageRange] || "adult";
 
-  const prompt = `Professional high-end fashion photography of a ${req.model.gender} model (${req.model.ethnicity}, ${req.model.bodyType} build, ${ageDesc}) wearing ${req.product.title}.
+  const prompt = `Create a professional fashion photograph combining the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE].
 
-Product details: ${req.product.description || req.product.productType}
+CRITICAL REQUIREMENTS:
+1. The person MUST look exactly like the model in [MODEL IMAGE]:
+   - Keep the EXACT same face, facial features, skin tone, and hair
+   - Maintain their body type and proportions (${req.model.bodyType} build)
+   - This is ${req.model.name}, a ${req.model.gender} ${req.model.ethnicity} model in their ${ageDesc}
 
-Pose and scene: ${req.pose.name} - ${req.pose.description}
+2. The clothing MUST look exactly like the garment in [PRODUCT IMAGE]:
+   - Preserve 100% accurate colors, patterns, logos, and textures
+   - Show natural fabric draping on the model's body
+   - Product: ${req.product.title}
+   - Details: ${req.product.description || req.product.productType}
 
-Photography specifications:
-- Style: High-end e-commerce fashion editorial photography
-- Lighting: Professional studio lighting with soft key light, subtle fill, and rim light for depth
-- Camera: Shot on Canon EOS R5, 85mm f/1.4 lens, shallow depth of field, sharp focus on garment
-- Background: ${background}
+3. Photography style:
+   - Pose: ${req.pose.name} - ${req.pose.description}
+   - Background: ${background}
+   - Lighting: Professional studio lighting with soft key light and rim light for depth
+   - Camera: Shot on Canon EOS R5, 85mm f/1.4 lens, fashion editorial quality
 
-Critical quality requirements:
-- Photorealistic skin with natural texture, pores, and subtle highlights
-- Natural fabric draping that shows how the garment fits the model's body
-- Preserve exact product colors, patterns, logos, and all design details from the original
-- Professional fashion magazine editorial quality
-- Natural, confident, relaxed model expression
-- Perfect anatomy with natural hands and body proportions
-- No AI artifacts, no distortions, no unnatural elements
+4. Quality requirements:
+   - Photorealistic skin with natural texture
+   - Perfect anatomy with natural hands
+   - No AI artifacts or distortions
+   - Ultra high resolution
 
-The garment must look exactly as shown in the product photo - preserve all colors, patterns, textures, and details with 100% accuracy. Ultra high resolution.`;
+Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].`;
 
   return prompt;
 }
@@ -80,6 +86,7 @@ const negativePrompt =
 async function generateImage(
   prompt: string,
   productImageUrl: string,
+  modelImageUrl: string,
   apiKey: string
 ): Promise<string | null> {
   const maxRetries = 2;
@@ -108,6 +115,12 @@ async function generateImage(
                     type: "image_url",
                     image_url: {
                       url: productImageUrl,
+                    },
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: modelImageUrl,
                     },
                   },
                 ],
@@ -205,7 +218,7 @@ serve(async (req) => {
           ? prompt 
           : `${prompt}\n\nVariation ${i + 1}: Slightly different angle and lighting while maintaining the same high quality.`;
         
-        const imageUrl = await generateImage(variationPrompt, body.product.imageUrl, LOVABLE_API_KEY);
+        const imageUrl = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY);
         
         if (imageUrl) {
           images.push(imageUrl);
