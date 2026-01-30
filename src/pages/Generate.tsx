@@ -1681,6 +1681,11 @@ export default function Generate() {
         aspectRatio={aspectRatio}
         creditsRemaining={mockShop.creditsBalance}
         isLoading={isTryOnGenerating}
+        sourceImageUrl={
+          selectedProduct && selectedSourceImages.size > 0
+            ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url
+            : undefined
+        }
       />
 
       <PublishModal
