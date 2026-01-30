@@ -6,10 +6,10 @@ interface AspectRatioPreviewProps {
   size?: 'small' | 'medium' | 'large';
 }
 
-const ratioConfig: Record<AspectRatio, { width: number; height: number; label: string }> = {
-  '1:1': { width: 1, height: 1, label: 'Square' },
-  '4:5': { width: 4, height: 5, label: 'Portrait' },
-  '16:9': { width: 16, height: 9, label: 'Wide' },
+const ratioConfig: Record<AspectRatio, { width: number; height: number; label: string; useCase: string }> = {
+  '1:1': { width: 1, height: 1, label: 'Square', useCase: 'Instagram & Listings' },
+  '4:5': { width: 4, height: 5, label: 'Portrait', useCase: 'Stories & Pinterest' },
+  '16:9': { width: 16, height: 9, label: 'Wide', useCase: 'Banners & Facebook' },
 };
 
 const sizeConfig = {
@@ -47,9 +47,14 @@ export function AspectRatioPreview({ ratio, size = 'medium' }: AspectRatioPrevie
           {ratio}
         </Text>
       </div>
-      <Text as="span" variant="bodySm" tone="subdued">
-        {config.label}
-      </Text>
+      <BlockStack gap="050" inlineAlign="center">
+        <Text as="span" variant="bodySm" fontWeight="medium">
+          {config.label}
+        </Text>
+        <Text as="span" variant="bodySm" tone="subdued">
+          {config.useCase}
+        </Text>
+      </BlockStack>
     </BlockStack>
   );
 }
@@ -63,16 +68,21 @@ export function AspectRatioSelector({ value, onChange }: AspectRatioSelectorProp
   const ratios: AspectRatio[] = ['1:1', '4:5', '16:9'];
 
   return (
-    <BlockStack gap="200">
-      <Text as="p" variant="bodySm" fontWeight="semibold">
-        Aspect Ratio
-      </Text>
-      <div className="flex gap-3">
+    <BlockStack gap="300">
+      <BlockStack gap="100">
+        <Text as="p" variant="bodySm" fontWeight="semibold">
+          Image Size
+        </Text>
+        <Text as="p" variant="bodySm" tone="subdued">
+          Choose the best size for where you'll use the image
+        </Text>
+      </BlockStack>
+      <div className="flex gap-3 flex-wrap">
         {ratios.map((ratio) => (
           <button
             key={ratio}
             onClick={() => onChange(ratio)}
-            className={`p-3 rounded-lg border transition-all ${
+            className={`p-4 rounded-lg border transition-all flex-1 min-w-[120px] ${
               value === ratio
                 ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                 : 'border-border hover:border-muted-foreground'

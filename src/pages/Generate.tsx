@@ -28,6 +28,7 @@ import {
   ArrowDownIcon,
   RefreshIcon,
   MaximizeIcon,
+  XIcon,
 } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
 import { TemplatePreviewCard } from '@/components/app/TemplatePreviewCard';
@@ -36,6 +37,7 @@ import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
+import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
 import { mockProducts, mockTemplates, categoryLabels, mockShop } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality } from '@/types';
 import { toast } from 'sonner';
@@ -161,6 +163,13 @@ export default function Generate() {
     setSelectedTemplate(template);
     setAspectRatio(template.defaults.aspectRatio);
     setQuality(template.defaults.quality);
+    toast.success(`"${template.name}" selected! Click Continue when ready.`);
+  };
+
+  const handleCancelGeneration = () => {
+    setCurrentStep('settings');
+    setGeneratingProgress(0);
+    toast.info('Generation cancelled');
   };
 
   const handleGenerateClick = () => {
@@ -333,37 +342,49 @@ export default function Generate() {
       backAction={{ content: 'Dashboard', onAction: () => navigate('/') }}
     >
       <BlockStack gap="600">
-        {/* Progress indicator */}
+        {/* Progress indicator with step descriptions */}
         <Card>
-          <InlineStack gap="400" align="center" wrap={false}>
-            {['Product', 'Template', 'Settings', 'Results'].map((step, index) => (
-              <InlineStack key={step} gap="200" blockAlign="center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                    getStepNumber() > index + 1
-                      ? 'bg-shopify-green text-white'
-                      : getStepNumber() === index + 1
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {getStepNumber() > index + 1 ? '✓' : index + 1}
-                </div>
-                <Text
-                  as="span"
-                  variant="bodySm"
-                  fontWeight={getStepNumber() === index + 1 ? 'semibold' : 'regular'}
-                  tone={getStepNumber() >= index + 1 ? undefined : 'subdued'}
-                >
-                  <span className="hidden sm:inline">{step}</span>
-                  <span className="sm:hidden">{index + 1}</span>
-                </Text>
-                {index < 3 && (
-                  <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-shopify-green' : 'bg-muted'}`} />
-                )}
-              </InlineStack>
-            ))}
-          </InlineStack>
+          <BlockStack gap="200">
+            <InlineStack gap="400" align="center" wrap={false}>
+              {[
+                { name: 'Product', desc: 'Pick what you\'re selling' },
+                { name: 'Template', desc: 'Choose a style' },
+                { name: 'Settings', desc: 'Adjust details' },
+                { name: 'Results', desc: 'Review & publish' },
+              ].map((step, index) => (
+                <InlineStack key={step.name} gap="200" blockAlign="center">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                      getStepNumber() > index + 1
+                        ? 'bg-shopify-green text-white'
+                        : getStepNumber() === index + 1
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {getStepNumber() > index + 1 ? '✓' : index + 1}
+                  </div>
+                  <BlockStack gap="0">
+                    <Text
+                      as="span"
+                      variant="bodySm"
+                      fontWeight={getStepNumber() === index + 1 ? 'semibold' : 'regular'}
+                      tone={getStepNumber() >= index + 1 ? undefined : 'subdued'}
+                    >
+                      <span className="hidden sm:inline">{step.name}</span>
+                      <span className="sm:hidden">{index + 1}</span>
+                    </Text>
+                  </BlockStack>
+                  {index < 3 && (
+                    <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-shopify-green' : 'bg-muted'}`} />
+                  )}
+                </InlineStack>
+              ))}
+            </InlineStack>
+            <Text as="p" variant="bodySm" tone="subdued" alignment="center">
+              About 2-3 minutes total
+            </Text>
+          </BlockStack>
         </Card>
 
         {/* Step 1: Product Selection */}
@@ -676,7 +697,7 @@ export default function Generate() {
                   </BlockStack>
                 </Card>
 
-                {/* Brand Kit - Expanded by default */}
+                {/* Brand Customization - Expanded by default */}
                 <Card>
                   <BlockStack gap="400">
                     <div
@@ -687,12 +708,12 @@ export default function Generate() {
                         <BlockStack gap="100">
                           <InlineStack gap="200" blockAlign="center">
                             <Text as="h3" variant="headingMd">
-                              Brand Kit
+                              Make It Match Your Brand
                             </Text>
                             <Badge tone="info">Recommended</Badge>
                           </InlineStack>
                           <Text as="p" variant="bodySm" tone="subdued">
-                            Customize the look to match your brand identity
+                            Choose colors and styles that feel like your store
                           </Text>
                         </BlockStack>
                         <Icon source={brandKitOpen ? ChevronUpIcon : ChevronDownIcon} />
@@ -728,12 +749,9 @@ export default function Generate() {
                             onChange={(v) => setBackgroundStyle(v as BackgroundStyle)}
                           />
                         </InlineGrid>
-                        <TextField
-                          label="Things to Avoid (comma separated)"
-                          value={negatives.join(', ')}
-                          onChange={(v) => setNegatives(v.split(',').map(s => s.trim()))}
-                          autoComplete="off"
-                          helpText="E.g., hands, text overlays, busy backgrounds"
+                        <NegativesChipSelector
+                          value={negatives}
+                          onChange={setNegatives}
                         />
                         <Checkbox
                           label="Keep style consistent across all generations"
@@ -777,10 +795,10 @@ export default function Generate() {
                     <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
                     
                     <Checkbox
-                      label="Preserve product accuracy (strongly recommended)"
+                      label="Keep my product looking exactly like it does"
                       checked={preserveAccuracy}
                       onChange={setPreserveAccuracy}
-                      helpText="Ensures the generated images closely match your actual product"
+                      helpText="When on, the AI won't change your product's colors, shape, or key details"
                     />
                   </BlockStack>
                 </Card>
@@ -821,18 +839,25 @@ export default function Generate() {
               </div>
               <BlockStack gap="200" inlineAlign="center">
                 <Text as="h2" variant="headingLg">
-                  Generating Images...
+                  Creating Your Images...
                 </Text>
                 <Text as="p" variant="bodyMd" tone="subdued">
-                  This usually takes 10-15 seconds
+                  Creating {imageCount} images of "{selectedProduct?.title}" with {selectedTemplate?.name}
                 </Text>
               </BlockStack>
               <div className="w-full max-w-md">
                 <ProgressBar progress={Math.min(generatingProgress, 100)} size="small" />
               </div>
               <Text as="p" variant="bodySm" tone="subdued">
-                Creating {imageCount} images with {selectedTemplate?.name}
+                This usually takes 10-15 seconds
               </Text>
+              <Button 
+                variant="plain" 
+                onClick={handleCancelGeneration}
+                icon={XIcon}
+              >
+                Cancel and go back
+              </Button>
             </BlockStack>
           </Card>
         )}
@@ -892,18 +917,23 @@ export default function Generate() {
                       Generated Images
                     </Text>
                     <Text as="p" variant="bodySm" tone="subdued">
-                      Click an image to view full size. Select images to publish to Shopify.
+                      👆 Click images to select them for publishing
                     </Text>
                   </BlockStack>
-                  <Button onClick={() => {
-                    setCurrentStep('product');
-                    setSelectedProduct(null);
-                    setSelectedTemplate(null);
-                    setGeneratedImages([]);
-                    setSelectedForPublish(new Set());
-                  }}>
-                    Generate More
-                  </Button>
+                  <InlineStack gap="200">
+                    <Button onClick={() => setCurrentStep('settings')}>
+                      ← Adjust Settings
+                    </Button>
+                    <Button onClick={() => {
+                      setCurrentStep('product');
+                      setSelectedProduct(null);
+                      setSelectedTemplate(null);
+                      setGeneratedImages([]);
+                      setSelectedForPublish(new Set());
+                    }}>
+                      Start Over
+                    </Button>
+                  </InlineStack>
                 </InlineStack>
                 
                 <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
@@ -955,23 +985,33 @@ export default function Generate() {
                         </button>
                       </div>
                       
-                      {/* Selection indicator */}
+                      {/* Selection indicator - more visible */}
                       <div 
-                        className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
                           selectedForPublish.has(index) 
-                            ? 'bg-shopify-green border-shopify-green' 
-                            : 'border-white bg-black/30'
+                            ? 'bg-shopify-green border-shopify-green scale-110' 
+                            : 'border-white bg-black/50 hover:bg-black/70'
                         }`}
                         onClick={() => toggleImageSelection(index)}
                       >
-                        {selectedForPublish.has(index) && (
+                        {selectedForPublish.has(index) ? (
                           <Icon source={CheckCircleIcon} tone="base" />
+                        ) : (
+                          <span className="text-white text-xs font-bold">{index + 1}</span>
                         )}
                       </div>
                     </div>
                   ))}
                 </InlineGrid>
 
+                {/* Selection helper banner */}
+                {selectedForPublish.size === 0 && (
+                  <Banner tone="info">
+                    <Text as="p" variant="bodySm">
+                      👆 Click on images above to select them for publishing. You can select multiple images.
+                    </Text>
+                  </Banner>
+                )}
                 <InlineStack align="space-between" blockAlign="center">
                   <Text as="p" variant="bodySm" tone="subdued">
                     Selected: {selectedForPublish.size} of {generatedImages.length} images

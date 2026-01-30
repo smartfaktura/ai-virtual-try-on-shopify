@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BlockStack,
@@ -5,7 +6,6 @@ import {
   Card,
   Text,
   Button,
-  Select,
   DataTable,
   Badge,
   InlineStack,
@@ -16,10 +16,18 @@ import { PageHeader } from '@/components/app/PageHeader';
 import { MetricCard } from '@/components/app/MetricCard';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
-import { mockMetrics, mockJobs, mockTemplates, categoryLabels } from '@/data/mockData';
+import { JobDetailModal } from '@/components/app/JobDetailModal';
+import { mockMetrics, mockJobs, categoryLabels } from '@/data/mockData';
+import type { GenerationJob } from '@/types';
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<GenerationJob | null>(null);
 
+  const handleViewJob = (job: GenerationJob) => {
+    setSelectedJob(job);
+    setDetailModalOpen(true);
+  };
   const recentJobs = mockJobs.slice(0, 5);
 
   const rows = recentJobs.map(job => [
@@ -37,7 +45,7 @@ export default function Dashboard() {
     <StatusBadge key={`status-${job.jobId}`} status={job.status} />,
     new Date(job.createdAt).toLocaleDateString(),
     <InlineStack gap="200" key={`actions-${job.jobId}`}>
-      <Button size="slim" onClick={() => navigate(`/jobs/${job.jobId}`)}>
+      <Button size="slim" onClick={() => handleViewJob(job)}>
         View
       </Button>
       {job.status === 'failed' && (
@@ -147,6 +155,17 @@ export default function Dashboard() {
           </BlockStack>
         </Card>
       </BlockStack>
+
+      {/* Job Detail Modal */}
+      <JobDetailModal
+        open={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+          setSelectedJob(null);
+        }}
+        job={selectedJob}
+        onRetry={() => navigate('/generate')}
+      />
     </PageHeader>
   );
 }

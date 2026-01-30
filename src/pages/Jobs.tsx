@@ -9,18 +9,16 @@ import {
   DataTable,
   TextField,
   Select,
-  DatePicker,
-  Popover,
   Thumbnail,
   InlineGrid,
-  Filters,
   Icon,
 } from '@shopify/polaris';
-import { SearchIcon, CalendarIcon, RefreshIcon } from '@shopify/polaris-icons';
+import { SearchIcon } from '@shopify/polaris-icons';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/app/PageHeader';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { PublishModal } from '@/components/app/PublishModal';
+import { JobDetailModal } from '@/components/app/JobDetailModal';
 import { mockJobs, mockProducts, categoryLabels } from '@/data/mockData';
 import type { JobStatus, GenerationJob, Product } from '@/types';
 
@@ -33,6 +31,15 @@ export default function Jobs() {
   // Publish modal state
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [selectedJobForPublish, setSelectedJobForPublish] = useState<GenerationJob | null>(null);
+  
+  // Job detail modal state
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedJobForDetail, setSelectedJobForDetail] = useState<GenerationJob | null>(null);
+
+  const handleViewJob = (job: GenerationJob) => {
+    setSelectedJobForDetail(job);
+    setDetailModalOpen(true);
+  };
 
   const handlePublishClick = (job: GenerationJob) => {
     setSelectedJobForPublish(job);
@@ -110,7 +117,7 @@ export default function Jobs() {
     </BlockStack>,
     new Date(job.createdAt).toLocaleString(),
     <InlineStack key={`actions-${job.jobId}`} gap="200">
-      <Button size="slim" onClick={() => navigate(`/jobs/${job.jobId}`)}>
+      <Button size="slim" onClick={() => handleViewJob(job)}>
         View
       </Button>
       {job.status === 'failed' && (
@@ -248,6 +255,22 @@ export default function Jobs() {
         selectedImages={selectedJobForPublish?.results.filter(r => !r.publishedToShopify).map(r => r.imageUrl) || []}
         product={selectedJobForPublish ? getProductForJob(selectedJobForPublish) : null}
         existingImages={selectedJobForPublish?.productSnapshot.images || []}
+      />
+
+      {/* Job Detail Modal */}
+      <JobDetailModal
+        open={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+          setSelectedJobForDetail(null);
+        }}
+        job={selectedJobForDetail}
+        onPublish={(job) => {
+          setDetailModalOpen(false);
+          setSelectedJobForDetail(null);
+          handlePublishClick(job);
+        }}
+        onRetry={() => navigate('/generate')}
       />
     </PageHeader>
   );
