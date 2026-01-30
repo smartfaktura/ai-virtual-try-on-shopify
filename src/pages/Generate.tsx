@@ -1691,51 +1691,85 @@ export default function Generate() {
         )}
 
         {/* Results */}
-        {currentStep === 'results' && selectedProduct && (
+        {currentStep === 'results' && (selectedProduct || scratchUpload) && (
           <BlockStack gap="400">
-            {/* Product Context Card - Critical for knowing where images will be published */}
-            <Card>
-              <BlockStack gap="300">
-                <InlineStack gap="200" blockAlign="center">
-                  <Badge tone="success">Publishing to</Badge>
-                </InlineStack>
-                <InlineStack gap="400" blockAlign="center">
-                  <Thumbnail
-                    source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                    alt={selectedProduct.title}
-                    size="large"
-                  />
-                  <BlockStack gap="100">
-                    <Text as="p" variant="headingMd" fontWeight="bold">
-                      {selectedProduct.title}
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      {selectedProduct.vendor}
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Currently has {selectedProduct.images.length} image{selectedProduct.images.length !== 1 ? 's' : ''}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-                {selectedProduct.images.length > 0 && (
-                  <>
-                    <Divider />
+            {/* Product Context Card - Different for scratch vs product */}
+            {sourceType === 'scratch' && scratchUpload ? (
+              <Card>
+                <BlockStack gap="300">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Badge tone="info">Generated from uploaded image</Badge>
+                  </InlineStack>
+                  <InlineStack gap="400" blockAlign="center">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                      <img src={scratchUpload.previewUrl} alt={scratchUpload.productInfo.title} className="w-full h-full object-cover" />
+                    </div>
+                    <BlockStack gap="100">
+                      <Text as="p" variant="headingMd" fontWeight="bold">
+                        {scratchUpload.productInfo.title}
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {scratchUpload.productInfo.productType}
+                      </Text>
+                    </BlockStack>
+                  </InlineStack>
+                  <Divider />
+                  <Banner tone="info">
                     <BlockStack gap="200">
                       <Text as="p" variant="bodySm" fontWeight="semibold">
-                        Existing product images (for reference)
+                        Assign to a Shopify Product
                       </Text>
-                      <InlineStack gap="200">
-                        {selectedProduct.images.map(img => (
-                          <div key={img.id} className="w-12 h-12 rounded-md overflow-hidden border border-border">
-                            <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                      </InlineStack>
+                      <Text as="p" variant="bodySm">
+                        Select images below and publish them to any product in your store.
+                      </Text>
                     </BlockStack>
-                  </>
-                )}
-              </BlockStack>
-            </Card>
+                  </Banner>
+                </BlockStack>
+              </Card>
+            ) : selectedProduct && (
+              <Card>
+                <BlockStack gap="300">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Badge tone="success">Publishing to</Badge>
+                  </InlineStack>
+                  <InlineStack gap="400" blockAlign="center">
+                    <Thumbnail
+                      source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                      alt={selectedProduct.title}
+                      size="large"
+                    />
+                    <BlockStack gap="100">
+                      <Text as="p" variant="headingMd" fontWeight="bold">
+                        {selectedProduct.title}
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {selectedProduct.vendor}
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Currently has {selectedProduct.images.length} image{selectedProduct.images.length !== 1 ? 's' : ''}
+                      </Text>
+                    </BlockStack>
+                  </InlineStack>
+                  {selectedProduct.images.length > 0 && (
+                    <>
+                      <Divider />
+                      <BlockStack gap="200">
+                        <Text as="p" variant="bodySm" fontWeight="semibold">
+                          Existing product images (for reference)
+                        </Text>
+                        <InlineStack gap="200">
+                          {selectedProduct.images.map(img => (
+                            <div key={img.id} className="w-12 h-12 rounded-md overflow-hidden border border-border">
+                              <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                        </InlineStack>
+                      </BlockStack>
+                    </>
+                  )}
+                </BlockStack>
+              </Card>
+            )}
 
             <Card>
               <BlockStack gap="400">
@@ -1753,8 +1787,9 @@ export default function Generate() {
                       ← Adjust Settings
                     </Button>
                     <Button onClick={() => {
-                      setCurrentStep('product');
+                      setCurrentStep('source');
                       setSelectedProduct(null);
+                      setScratchUpload(null);
                       setSelectedTemplate(null);
                       setGeneratedImages([]);
                       setSelectedForPublish(new Set());
@@ -1857,30 +1892,47 @@ export default function Generate() {
             </Card>
 
             {/* Prompt Preview */}
-            <Card>
-              <BlockStack gap="200">
-                <Text as="h3" variant="headingSm">
-                  Prompt Used
-                </Text>
-                <div className="p-3 bg-surface-subdued rounded-lg font-mono text-sm">
-                  {selectedTemplate?.promptBlueprint.sceneDescription}. {selectedProduct?.title} by {selectedProduct?.vendor}. {selectedTemplate?.promptBlueprint.lighting}. {selectedTemplate?.promptBlueprint.cameraStyle}.
-                </div>
-              </BlockStack>
-            </Card>
+            {(selectedTemplate || generationMode === 'virtual-try-on') && (
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h3" variant="headingSm">
+                    Generation Summary
+                  </Text>
+                  <div className="p-3 bg-surface-subdued rounded-lg font-mono text-sm">
+                    {generationMode === 'virtual-try-on' ? (
+                      <>Virtual Try-On: {selectedModel?.name} wearing {scratchUpload?.productInfo.title || selectedProduct?.title} in {selectedPose?.name} pose</>
+                    ) : (
+                      <>{selectedTemplate?.promptBlueprint.sceneDescription}. {scratchUpload?.productInfo.title || selectedProduct?.title}. {selectedTemplate?.promptBlueprint.lighting}.</>
+                    )}
+                  </div>
+                </BlockStack>
+              </Card>
+            )}
 
             {/* Actions */}
             <InlineStack align="end" gap="200">
               <Button onClick={handleDownloadAll} icon={ArrowDownIcon}>
                 Download All
               </Button>
-              <Button
-                variant="primary"
-                onClick={handlePublishClick}
-                disabled={selectedForPublish.size === 0}
-                size="large"
-              >
-                {`Publish ${selectedForPublish.size} to "${selectedProduct?.title}"`}
-              </Button>
+              {sourceType === 'scratch' ? (
+                <Button
+                  variant="primary"
+                  onClick={() => setProductAssignmentModalOpen(true)}
+                  disabled={selectedForPublish.size === 0}
+                  size="large"
+                >
+                  Assign {selectedForPublish.size} to Product
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  onClick={handlePublishClick}
+                  disabled={selectedForPublish.size === 0}
+                  size="large"
+                >
+                  {`Publish ${selectedForPublish.size} to "${selectedProduct?.title}"`}
+                </Button>
+              )}
             </InlineStack>
           </BlockStack>
         )}
