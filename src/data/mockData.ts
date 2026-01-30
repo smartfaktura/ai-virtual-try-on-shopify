@@ -645,7 +645,7 @@ export const mockJobs: GenerationJob[] = [
       {
         assetId: 'asset_001',
         jobId: 'job_001',
-        imageUrl: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=800&h=1000&fit=crop',
+        imageUrl: leggingsBlack1,
         publishedToShopify: true,
         shopifyImageId: 'shopify_img_001',
         createdAt: '2024-01-15T14:35:00Z',
@@ -653,21 +653,21 @@ export const mockJobs: GenerationJob[] = [
       {
         assetId: 'asset_002',
         jobId: 'job_001',
-        imageUrl: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=800&h=1000&fit=crop',
+        imageUrl: leggingsPink1,
         publishedToShopify: false,
         createdAt: '2024-01-15T14:35:00Z',
       },
       {
         assetId: 'asset_003',
         jobId: 'job_001',
-        imageUrl: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?w=800&h=1000&fit=crop',
+        imageUrl: motoLeggings1,
         publishedToShopify: false,
         createdAt: '2024-01-15T14:35:00Z',
       },
       {
         assetId: 'asset_004',
         jobId: 'job_001',
-        imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=1000&fit=crop',
+        imageUrl: sportsBraBlack1,
         publishedToShopify: false,
         createdAt: '2024-01-15T14:35:00Z',
       },
