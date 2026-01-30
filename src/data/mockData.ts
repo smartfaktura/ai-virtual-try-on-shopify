@@ -731,6 +731,13 @@ import modelMaleSlimMiddleeast from '@/assets/models/model-male-slim-middleeast.
 import modelMaleAthleticBlack from '@/assets/models/model-male-athletic-black.jpg';
 import modelMaleAverageAsian from '@/assets/models/model-male-average-asian.jpg';
 import modelMalePlussizeEuropean from '@/assets/models/model-male-plussize-european.jpg';
+// New diverse female models
+import modelFemaleMatureEuropean from '@/assets/models/model-female-mature-european.jpg';
+import modelFemaleAthleticIndian from '@/assets/models/model-female-athletic-indian.jpg';
+import modelFemaleSlimNordic from '@/assets/models/model-female-slim-nordic.jpg';
+import modelFemaleAverageMiddleeast from '@/assets/models/model-female-average-middleeast.jpg';
+import modelFemalePlussizeAfrican from '@/assets/models/model-female-plussize-african.jpg';
+import modelFemalePetiteKorean from '@/assets/models/model-female-petite-korean.jpg';
 
 // Pose preview images
 import poseStudioFront from '@/assets/poses/pose-studio-front.jpg';
@@ -739,6 +746,11 @@ import poseEditorialDramatic from '@/assets/poses/pose-editorial-dramatic.jpg';
 import poseStreetwearUrban from '@/assets/poses/pose-streetwear-urban.jpg';
 import poseLifestyleSeated from '@/assets/poses/pose-lifestyle-seated.jpg';
 import poseStudioProfile from '@/assets/poses/pose-studio-profile.jpg';
+// New pose images
+import poseStudioMovement from '@/assets/poses/pose-studio-movement.jpg';
+import poseLifestyleGarden from '@/assets/poses/pose-lifestyle-garden.jpg';
+import poseEditorialMinimal from '@/assets/poses/pose-editorial-minimal.jpg';
+import poseStreetwearStairs from '@/assets/poses/pose-streetwear-stairs.jpg';
 
 export const mockModels: ModelProfile[] = [
   {
