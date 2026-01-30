@@ -1921,7 +1921,7 @@ export default function Generate() {
                   disabled={selectedForPublish.size === 0}
                   size="large"
                 >
-                  Assign {selectedForPublish.size} to Product
+                  {`Assign ${selectedForPublish.size} to Product`}
                 </Button>
               ) : (
                 <Button
