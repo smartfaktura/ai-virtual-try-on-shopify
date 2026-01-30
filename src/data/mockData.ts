@@ -493,6 +493,82 @@ export const mockTemplates: Template[] = [
 ];
 
 export const mockProducts: Product[] = [
+  // Fashion Products
+  {
+    id: 'prod_fashion_001',
+    title: 'Silk Midi Wrap Dress',
+    vendor: 'Maison Élégance',
+    productType: 'Dresses',
+    tags: ['silk', 'midi', 'wrap dress', 'elegant', 'evening'],
+    description: 'Luxurious 100% mulberry silk wrap dress with a flattering V-neckline and adjustable waist tie. Perfect for cocktail parties and special occasions.',
+    images: [
+      { id: 'img_f001', url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=500&fit=crop' },
+      { id: 'img_f002', url: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=500&fit=crop' },
+    ],
+    status: 'active',
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-20T14:30:00Z',
+  },
+  {
+    id: 'prod_fashion_002',
+    title: 'Oversized Linen Blazer',
+    vendor: 'Nordic Atelier',
+    productType: 'Blazers',
+    tags: ['linen', 'blazer', 'oversized', 'summer', 'workwear'],
+    description: 'Relaxed-fit linen blazer in sand beige. Features notched lapels, single-button closure, and patch pockets. Perfect for effortless summer styling.',
+    images: [
+      { id: 'img_f003', url: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=500&fit=crop' },
+      { id: 'img_f004', url: 'https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=400&h=500&fit=crop' },
+    ],
+    status: 'active',
+    createdAt: '2024-01-14T09:00:00Z',
+    updatedAt: '2024-01-18T11:20:00Z',
+  },
+  {
+    id: 'prod_fashion_003',
+    title: 'Satin Slip Blouse',
+    vendor: 'Velvet Rose',
+    productType: 'Blouses',
+    tags: ['satin', 'blouse', 'slip style', 'romantic', 'evening'],
+    description: 'Delicate satin camisole top with adjustable spaghetti straps and cowl neckline. A versatile piece that transitions from day to night effortlessly.',
+    images: [
+      { id: 'img_f005', url: 'https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=400&h=500&fit=crop' },
+    ],
+    status: 'active',
+    createdAt: '2024-01-12T08:00:00Z',
+    updatedAt: '2024-01-16T15:45:00Z',
+  },
+  {
+    id: 'prod_fashion_004',
+    title: 'High-Waist Pleated Trousers',
+    vendor: 'Studio Minimal',
+    productType: 'Pants',
+    tags: ['trousers', 'pleated', 'high-waist', 'workwear', 'classic'],
+    description: 'Tailored wide-leg trousers with front pleats and high waist. Made from premium wool blend for a structured, elegant silhouette.',
+    images: [
+      { id: 'img_f006', url: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=400&h=500&fit=crop' },
+      { id: 'img_f007', url: 'https://images.unsplash.com/photo-1551854838-212c50b4c184?w=400&h=500&fit=crop' },
+    ],
+    status: 'active',
+    createdAt: '2024-01-10T12:00:00Z',
+    updatedAt: '2024-01-14T09:15:00Z',
+  },
+  {
+    id: 'prod_fashion_005',
+    title: 'Cashmere Turtleneck Sweater',
+    vendor: 'Maison Élégance',
+    productType: 'Sweaters',
+    tags: ['cashmere', 'turtleneck', 'luxury', 'winter', 'classic'],
+    description: 'Ultra-soft 100% cashmere turtleneck in rich burgundy. Relaxed fit with ribbed cuffs and hem. The ultimate winter essential.',
+    images: [
+      { id: 'img_f008', url: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=400&h=500&fit=crop' },
+      { id: 'img_f009', url: 'https://images.unsplash.com/photo-1608234807905-4466023792f5?w=400&h=500&fit=crop' },
+    ],
+    status: 'active',
+    createdAt: '2024-01-08T10:00:00Z',
+    updatedAt: '2024-01-12T16:30:00Z',
+  },
+  // Original products
   {
     id: 'prod_001',
     title: 'Premium Cotton Crewneck Sweater',
