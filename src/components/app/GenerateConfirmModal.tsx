@@ -20,6 +20,7 @@ interface GenerateConfirmModalProps {
   onConfirm: () => void;
   product: Product | null;
   template: Template | null;
+  sourceImageIds: Set<string>;
   imageCount: number;
   aspectRatio: AspectRatio;
   quality: ImageQuality;
@@ -32,6 +33,7 @@ export function GenerateConfirmModal({
   onConfirm,
   product,
   template,
+  sourceImageIds,
   imageCount,
   aspectRatio,
   quality,
@@ -42,6 +44,9 @@ export function GenerateConfirmModal({
   const creditsPerImage = quality === 'high' ? 2 : 1;
   const totalCredits = imageCount * creditsPerImage;
   const hasEnoughCredits = creditsRemaining >= totalCredits;
+  
+  // Get selected source images from product
+  const selectedSourceImages = product?.images.filter(img => sourceImageIds.has(img.id)) || [];
   const templateImage = getTemplateImage(template.templateId);
 
   const aspectRatioLabels: Record<AspectRatio, string> = {
@@ -77,7 +82,7 @@ export function GenerateConfirmModal({
                 <Text as="p" variant="bodySm" fontWeight="semibold">Generating for</Text>
                 <InlineStack gap="300" blockAlign="center">
                   <Thumbnail
-                    source={product.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                    source={selectedSourceImages[0]?.url || product.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
                     alt={product.title}
                     size="large"
                   />
@@ -88,11 +93,22 @@ export function GenerateConfirmModal({
                     <Text as="p" variant="bodySm" tone="subdued">
                       {product.vendor}
                     </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      {product.images.length} existing image{product.images.length !== 1 ? 's' : ''}
-                    </Text>
                   </BlockStack>
                 </InlineStack>
+                
+                {/* Source images used for reference */}
+                <BlockStack gap="200">
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    Source reference ({selectedSourceImages.length} image{selectedSourceImages.length !== 1 ? 's' : ''})
+                  </Text>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSourceImages.map(img => (
+                      <div key={img.id} className="w-10 h-10 rounded-md overflow-hidden ring-1 ring-shopify-green">
+                        <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                </BlockStack>
               </BlockStack>
             </div>
 
