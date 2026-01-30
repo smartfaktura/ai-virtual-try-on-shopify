@@ -166,6 +166,20 @@ export interface DashboardMetrics {
   errorRate: number;
 }
 
+// Generation Source Types
+export type GenerationSourceType = 'product' | 'scratch';
+
+export interface ScratchUpload {
+  file: File;
+  previewUrl: string;
+  uploadedUrl?: string;
+  productInfo: {
+    title: string;
+    productType: string;
+    description: string;
+  };
+}
+
 // Pricing types
 export interface PricingPlan {
   planId: string;

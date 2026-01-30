@@ -48,20 +48,33 @@ import { ModelFilterBar } from '@/components/app/ModelFilterBar';
 import { PoseCategorySection } from '@/components/app/PoseCategorySection';
 import { TryOnPreview } from '@/components/app/TryOnPreview';
 import { PopularCombinations, createPopularCombinations } from '@/components/app/PopularCombinations';
+import { SourceTypeSelector } from '@/components/app/SourceTypeSelector';
+import { UploadSourceCard } from '@/components/app/UploadSourceCard';
+import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal';
+import { useFileUpload } from '@/hooks/useFileUpload';
 import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
-import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory } from '@/types';
+import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
 
-type Step = 'product' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
+type Step = 'source' | 'product' | 'upload' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
 export default function Generate() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialTemplateId = searchParams.get('template');
   
-  const [currentStep, setCurrentStep] = useState<Step>('product');
+  const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Source type for generation
+  const [sourceType, setSourceType] = useState<GenerationSourceType>('product');
+  const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
+  const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
+  const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
+  
+  // File upload hook
+  const { upload: uploadFile, isUploading } = useFileUpload();
   
   // Selections
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -355,19 +368,55 @@ export default function Generate() {
 
   // Virtual Try-On generation with real AI
   const handleTryOnConfirmGenerate = async () => {
-    if (!selectedProduct || !selectedModel || !selectedPose) return;
+    if (!selectedModel || !selectedPose) return;
     
-    // Get the selected source image URL
-    const selectedImageId = Array.from(selectedSourceImages)[0];
-    const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
-    const sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
+    // Get the source image URL - from product or scratch upload
+    let sourceImageUrl = '';
+    let productData: { title: string; productType: string; description: string } | null = null;
+    
+    if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
+      sourceImageUrl = scratchUpload.uploadedUrl;
+      productData = {
+        title: scratchUpload.productInfo.title,
+        productType: scratchUpload.productInfo.productType,
+        description: scratchUpload.productInfo.description,
+      };
+    } else if (selectedProduct) {
+      const selectedImageId = Array.from(selectedSourceImages)[0];
+      const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
+      sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
+      productData = {
+        title: selectedProduct.title,
+        productType: selectedProduct.productType,
+        description: selectedProduct.description,
+      };
+    }
+    
+    if (!sourceImageUrl || !productData) {
+      toast.error('No source image available');
+      return;
+    }
     
     setTryOnConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
     
+    // Create a pseudo-product for the generation
+    const pseudoProduct: Product = selectedProduct || {
+      id: 'scratch-' + Date.now(),
+      title: productData.title,
+      vendor: 'Custom Upload',
+      productType: productData.productType,
+      tags: [],
+      description: productData.description,
+      images: [{ id: 'scratch-img', url: sourceImageUrl }],
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
     const result = await generateTryOn({
-      product: selectedProduct,
+      product: pseudoProduct,
       model: selectedModel,
       pose: selectedPose,
       aspectRatio,
@@ -443,7 +492,9 @@ export default function Generate() {
   const getStepNumber = () => {
     if (generationMode === 'virtual-try-on') {
       switch (currentStep) {
+        case 'source': return 1;
         case 'product': return 1;
+        case 'upload': return 1;
         case 'mode': return 1;
         case 'model': return 2;
         case 'pose': return 3;
@@ -454,7 +505,9 @@ export default function Generate() {
       }
     } else {
       switch (currentStep) {
+        case 'source': return 1;
         case 'product': return 1;
+        case 'upload': return 1;
         case 'mode': return 1;
         case 'template': return 2;
         case 'settings': return 3;
@@ -468,7 +521,7 @@ export default function Generate() {
   const getSteps = () => {
     if (generationMode === 'virtual-try-on') {
       return [
-        { name: 'Product', desc: 'Pick what you\'re selling' },
+        { name: sourceType === 'scratch' ? 'Source' : 'Product', desc: sourceType === 'scratch' ? 'Upload your image' : 'Pick what you\'re selling' },
         { name: 'Model', desc: 'Choose a model' },
         { name: 'Pose', desc: 'Pick the style' },
         { name: 'Settings', desc: 'Adjust details' },
@@ -476,7 +529,7 @@ export default function Generate() {
       ];
     }
     return [
-      { name: 'Product', desc: 'Pick what you\'re selling' },
+      { name: sourceType === 'scratch' ? 'Source' : 'Product', desc: sourceType === 'scratch' ? 'Upload your image' : 'Pick what you\'re selling' },
       { name: 'Template', desc: 'Choose a style' },
       { name: 'Settings', desc: 'Adjust details' },
       { name: 'Results', desc: 'Review & publish' },
@@ -534,13 +587,122 @@ export default function Generate() {
           </BlockStack>
         </Card>
 
-        {/* Step 1: Product Selection */}
+        {/* Step 0: Source Type Selection */}
+        {currentStep === 'source' && (
+          <Card>
+            <BlockStack gap="500">
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingMd">
+                  How do you want to start?
+                </Text>
+                <Text as="p" variant="bodyMd" tone="subdued">
+                  Choose whether to use an existing Shopify product or upload your own image file.
+                </Text>
+              </BlockStack>
+
+              <SourceTypeSelector
+                sourceType={sourceType}
+                onChange={(type) => {
+                  setSourceType(type);
+                  // Reset relevant state when switching
+                  if (type === 'scratch') {
+                    setSelectedProduct(null);
+                    setScratchUpload(null);
+                  } else {
+                    setScratchUpload(null);
+                  }
+                }}
+              />
+
+              <InlineStack align="end">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    if (sourceType === 'product') {
+                      setCurrentStep('product');
+                    } else {
+                      setCurrentStep('upload');
+                    }
+                  }}
+                >
+                  Continue
+                </Button>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        )}
+
+        {/* Step 1a: Upload Image (From Scratch) */}
+        {currentStep === 'upload' && (
+          <Card>
+            <BlockStack gap="500">
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingMd">
+                  Upload Your Image
+                </Text>
+                <Text as="p" variant="bodyMd" tone="subdued">
+                  Upload a product image from your computer. Add details to help the AI generate better results.
+                </Text>
+              </BlockStack>
+
+              <UploadSourceCard
+                scratchUpload={scratchUpload}
+                onUpload={setScratchUpload}
+                onRemove={() => setScratchUpload(null)}
+                onUpdateProductInfo={(info) => {
+                  if (scratchUpload) {
+                    setScratchUpload({ ...scratchUpload, productInfo: info });
+                  }
+                }}
+                isUploading={isUploading}
+              />
+
+              <InlineStack align="space-between">
+                <Button onClick={() => setCurrentStep('source')}>
+                  Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
+                  onClick={async () => {
+                    if (!scratchUpload) return;
+                    
+                    // Upload the file to storage
+                    const uploadedUrl = await uploadFile(scratchUpload.file);
+                    if (uploadedUrl) {
+                      setScratchUpload({ ...scratchUpload, uploadedUrl });
+                      // Determine if it's a clothing product for mode selection
+                      const productType = scratchUpload.productInfo.productType.toLowerCase();
+                      const clothingKeywords = ['leggings', 'hoodie', 't-shirt', 'sports bra', 'jacket', 'tank top', 'joggers', 'shorts', 'dress', 'sweater'];
+                      const isClothing = clothingKeywords.some(kw => productType.includes(kw));
+                      
+                      if (isClothing) {
+                        setCurrentStep('mode');
+                      } else {
+                        setCurrentStep('template');
+                      }
+                    }
+                  }}
+                >
+                  {isUploading ? 'Uploading...' : 'Continue'}
+                </Button>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        )}
+
+        {/* Step 1b: Product Selection (From Product) */}
         {currentStep === 'product' && (
           <Card>
             <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">
-                Select a Product
-              </Text>
+              <InlineStack align="space-between">
+                <Text as="h2" variant="headingMd">
+                  Select a Product
+                </Text>
+                <Button variant="plain" onClick={() => setCurrentStep('source')}>
+                  Change source
+                </Button>
+              </InlineStack>
               <Text as="p" variant="bodyMd" tone="subdued">
                 Choose the product you want to generate images for. The AI will use your product details to create the perfect shots.
               </Text>
@@ -617,8 +779,8 @@ export default function Generate() {
           </Modal.Section>
         </Modal>
 
-        {/* Mode Selection - Only for clothing products */}
-        {currentStep === 'mode' && selectedProduct && (
+        {/* Mode Selection - Works for both product and scratch uploads */}
+        {currentStep === 'mode' && (selectedProduct || scratchUpload) && (
           <Card>
             <BlockStack gap="500">
               <BlockStack gap="200">
@@ -626,7 +788,7 @@ export default function Generate() {
                   Choose Generation Mode
                 </Text>
                 <Text as="p" variant="bodyMd" tone="subdued">
-                  How would you like to showcase your {selectedProduct.title}?
+                  How would you like to showcase your {selectedProduct?.title || scratchUpload?.productInfo.title}?
                 </Text>
               </BlockStack>
 
@@ -659,7 +821,7 @@ export default function Generate() {
               )}
 
               <InlineStack align="end">
-                <Button onClick={() => setCurrentStep('product')}>
+                <Button onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>
                   Back
                 </Button>
                 <Button
@@ -680,11 +842,12 @@ export default function Generate() {
         )}
 
         {/* Model Selection Step - Virtual Try-On only */}
-        {currentStep === 'model' && selectedProduct && (
+        {currentStep === 'model' && (selectedProduct || scratchUpload) && (
           <BlockStack gap="400">
             {/* Live Preview */}
             <TryOnPreview
               product={selectedProduct}
+              scratchUpload={scratchUpload}
               model={selectedModel}
               pose={selectedPose}
               creditCost={creditCost}
@@ -711,7 +874,7 @@ export default function Generate() {
                     Select a Model
                   </Text>
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    Choose who will wear your {selectedProduct.title}. We offer diverse representation across genders, body types, and ethnicities.
+                    Choose who will wear your {selectedProduct?.title || scratchUpload?.productInfo.title}. We offer diverse representation across genders, body types, and ethnicities.
                   </Text>
                 </BlockStack>
 
@@ -763,11 +926,12 @@ export default function Generate() {
         )}
 
         {/* Pose Selection Step - Virtual Try-On only */}
-        {currentStep === 'pose' && selectedProduct && selectedModel && (
+        {currentStep === 'pose' && (selectedProduct || scratchUpload) && selectedModel && (
           <BlockStack gap="400">
             {/* Live Preview */}
             <TryOnPreview
               product={selectedProduct}
+              scratchUpload={scratchUpload}
               model={selectedModel}
               pose={selectedPose}
               creditCost={creditCost}
@@ -815,106 +979,129 @@ export default function Generate() {
         )}
 
         {/* Step 2: Template Selection (Product-Only mode) */}
-        {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && selectedProduct && (
+        {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && (selectedProduct || scratchUpload) && (
           <>
-            {/* Selected Product Card */}
+            {/* Selected Product/Upload Card */}
             <Card>
               <BlockStack gap="300">
                 <InlineStack align="space-between">
                   <Text as="h3" variant="headingSm" tone="subdued">
-                    Selected Product
+                    {sourceType === 'scratch' ? 'Uploaded Image' : 'Selected Product'}
                   </Text>
-                  <Button variant="plain" onClick={() => setProductPickerOpen(true)}>
+                  <Button variant="plain" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>
                     Change
                   </Button>
                 </InlineStack>
-                <InlineStack gap="400" blockAlign="center">
-                  <Thumbnail
-                    source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                    alt={selectedProduct.title}
-                    size="large"
-                  />
-                  <BlockStack gap="100">
-                    <Text as="p" variant="bodyLg" fontWeight="semibold">
-                      {selectedProduct.title}
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      {selectedProduct.vendor} • {selectedProduct.productType}
-                    </Text>
-                    <InlineStack gap="100">
-                      {selectedProduct.tags.map(tag => (
-                        <Badge key={tag}>{tag}</Badge>
-                      ))}
-                    </InlineStack>
-                  </BlockStack>
-                </InlineStack>
-                {selectedProduct.images.length > 0 && (
-                  <BlockStack gap="300">
-                    <Divider />
-                    <BlockStack gap="200">
-                      <Text as="h4" variant="headingSm">
-                        Source images for generation
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Select which image(s) to use as reference for AI generation:
-                      </Text>
-                    </BlockStack>
-                    
-                    <div className="flex flex-wrap gap-3">
-                      {selectedProduct.images.map(img => {
-                        const isSelected = selectedSourceImages.has(img.id);
-                        return (
-                          <div
-                            key={img.id}
-                            onClick={() => toggleSourceImage(img.id)}
-                            className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
-                              isSelected 
-                                ? 'ring-2 ring-primary ring-offset-2' 
-                                : 'ring-1 ring-border hover:ring-primary'
-                            }`}
-                          >
-                            <img 
-                              src={img.url} 
-                              alt={img.altText || ''} 
-                              className="w-16 h-16 object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                {sourceType === 'scratch' && scratchUpload ? (
+                  <InlineStack gap="400" blockAlign="center">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                      <img src={scratchUpload.previewUrl} alt={scratchUpload.productInfo.title} className="w-full h-full object-cover" />
                     </div>
-                    
-                    <InlineStack align="space-between" blockAlign="center">
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        {selectedSourceImages.size} of {selectedProduct.images.length} selected
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodyLg" fontWeight="semibold">
+                        {scratchUpload.productInfo.title}
                       </Text>
-                      {selectedProduct.images.length > 1 && (
-                        <InlineStack gap="200">
-                          <Button variant="plain" size="micro" onClick={selectAllSourceImages}>
-                            Select All
-                          </Button>
-                          <Button variant="plain" size="micro" onClick={clearSourceImages}>
-                            Clear
-                          </Button>
-                        </InlineStack>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Custom Upload • {scratchUpload.productInfo.productType}
+                      </Text>
+                      {scratchUpload.productInfo.description && (
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          {scratchUpload.productInfo.description.slice(0, 80)}...
+                        </Text>
                       )}
+                    </BlockStack>
+                  </InlineStack>
+                ) : selectedProduct && (
+                  <>
+                    <InlineStack gap="400" blockAlign="center">
+                      <Thumbnail
+                        source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                        alt={selectedProduct.title}
+                        size="large"
+                      />
+                      <BlockStack gap="100">
+                        <Text as="p" variant="bodyLg" fontWeight="semibold">
+                          {selectedProduct.title}
+                        </Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          {selectedProduct.vendor} • {selectedProduct.productType}
+                        </Text>
+                        <InlineStack gap="100">
+                          {selectedProduct.tags.map(tag => (
+                            <Badge key={tag}>{tag}</Badge>
+                          ))}
+                        </InlineStack>
+                      </BlockStack>
                     </InlineStack>
-                  </BlockStack>
-                )}
-                {selectedProduct.images.length === 0 && (
-                  <Banner tone="warning">
-                    <Text as="p" variant="bodySm">
-                      This product has no images. Please add product images in Shopify first.
-                    </Text>
-                  </Banner>
+                    {selectedProduct.images.length > 0 && (
+                      <BlockStack gap="300">
+                        <Divider />
+                        <BlockStack gap="200">
+                          <Text as="h4" variant="headingSm">
+                            Source images for generation
+                          </Text>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            Select which image(s) to use as reference for AI generation:
+                          </Text>
+                        </BlockStack>
+                        
+                        <div className="flex flex-wrap gap-3">
+                          {selectedProduct.images.map(img => {
+                            const isSelected = selectedSourceImages.has(img.id);
+                            return (
+                              <div
+                                key={img.id}
+                                onClick={() => toggleSourceImage(img.id)}
+                                className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
+                                  isSelected 
+                                    ? 'ring-2 ring-primary ring-offset-2' 
+                                    : 'ring-1 ring-border hover:ring-primary'
+                                }`}
+                              >
+                                <img 
+                                  src={img.url} 
+                                  alt={img.altText || ''} 
+                                  className="w-16 h-16 object-cover"
+                                />
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        <InlineStack align="space-between" blockAlign="center">
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            {selectedSourceImages.size} of {selectedProduct.images.length} selected
+                          </Text>
+                          {selectedProduct.images.length > 1 && (
+                            <InlineStack gap="200">
+                              <Button variant="plain" size="micro" onClick={selectAllSourceImages}>
+                                Select All
+                              </Button>
+                              <Button variant="plain" size="micro" onClick={clearSourceImages}>
+                                Clear
+                              </Button>
+                            </InlineStack>
+                          )}
+                        </InlineStack>
+                      </BlockStack>
+                    )}
+                    {selectedProduct.images.length === 0 && (
+                      <Banner tone="warning">
+                        <Text as="p" variant="bodySm">
+                          This product has no images. Please add product images in Shopify first.
+                        </Text>
+                      </Banner>
+                    )}
+                  </>
                 )}
               </BlockStack>
             </Card>
@@ -932,9 +1119,9 @@ export default function Generate() {
                 {/* Top Picks - FIXED based on product type, not the category filter */}
                 {(() => {
                   // Determine product's category from its type
-                  const productType = selectedProduct.productType.toLowerCase();
+                  const productType = (selectedProduct?.productType || scratchUpload?.productInfo.productType || '').toLowerCase();
                   let productCategory: TemplateCategory = 'universal';
-                  if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel')) {
+                  if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel') || productType.includes('hoodie') || productType.includes('leggings') || productType.includes('tank') || productType.includes('jogger')) {
                     productCategory = 'clothing';
                   } else if (productType.includes('serum') || productType.includes('cream') || productType.includes('beauty')) {
                     productCategory = 'cosmetics';
@@ -959,6 +1146,7 @@ export default function Generate() {
                   }
 
                   const topPickIds = topPicks.map(t => t.templateId);
+                  const displayTitle = selectedProduct?.productType || scratchUpload?.productInfo.productType || 'your product';
                   
                   return (
                     <>
@@ -970,7 +1158,7 @@ export default function Generate() {
                               Top Picks for {categoryLabels[productCategory]}
                             </Text>
                             <Text as="p" variant="bodySm" tone="subdued">
-                              Best templates for {selectedProduct.productType.toLowerCase()} products
+                              Best templates for {displayTitle.toLowerCase()} products
                             </Text>
                           </BlockStack>
                           
@@ -1249,7 +1437,7 @@ export default function Generate() {
         )}
 
         {/* Settings Step - Virtual Try-On Mode */}
-        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && selectedProduct && (
+        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (selectedProduct || scratchUpload) && (
           <BlockStack gap="400">
             {/* Summary Card */}
             <Card>
@@ -1262,14 +1450,25 @@ export default function Generate() {
                   <BlockStack gap="200">
                     <Text as="p" variant="bodySm" tone="subdued">Product</Text>
                     <InlineStack gap="200" blockAlign="center">
-                      <Thumbnail
-                        source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                        alt={selectedProduct.title}
-                        size="small"
-                      />
-                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedProduct.title}</Text>
+                      {sourceType === 'scratch' && scratchUpload ? (
+                        <>
+                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-border">
+                            <img src={scratchUpload.previewUrl} alt={scratchUpload.productInfo.title} className="w-full h-full object-cover" />
+                          </div>
+                          <Text as="p" variant="bodySm" fontWeight="semibold">{scratchUpload.productInfo.title}</Text>
+                        </>
+                      ) : selectedProduct && (
+                        <>
+                          <Thumbnail
+                            source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                            alt={selectedProduct.title}
+                            size="small"
+                          />
+                          <Text as="p" variant="bodySm" fontWeight="semibold">{selectedProduct.title}</Text>
+                        </>
+                      )}
                     </InlineStack>
-                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('product')}>Change</Button>
+                    <Button variant="plain" size="micro" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Change</Button>
                   </BlockStack>
 
                   {/* Model */}
@@ -1299,8 +1498,8 @@ export default function Generate() {
               </BlockStack>
             </Card>
 
-            {/* Source Image Selection for Virtual Try-On */}
-            {selectedProduct.images.length > 0 && (
+            {/* Source Image Selection for Virtual Try-On - Only show for product source */}
+            {sourceType === 'product' && selectedProduct && selectedProduct.images.length > 0 && (
               <Card>
                 <BlockStack gap="300">
                   <BlockStack gap="200">
@@ -1352,6 +1551,37 @@ export default function Generate() {
                       Tip: Choose a clear, front-facing photo with good lighting for best results
                     </Text>
                   )}
+                </BlockStack>
+              </Card>
+            )}
+
+            {/* Source Image Preview for Scratch Upload */}
+            {sourceType === 'scratch' && scratchUpload && (
+              <Card>
+                <BlockStack gap="300">
+                  <BlockStack gap="200">
+                    <Text as="h3" variant="headingMd">
+                      Source Reference Image
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Your uploaded image will be used as reference to dress the model.
+                    </Text>
+                  </BlockStack>
+                  
+                  <div className="relative w-24 h-24 rounded-lg overflow-hidden ring-2 ring-primary ring-offset-2">
+                    <img 
+                      src={scratchUpload.previewUrl} 
+                      alt={scratchUpload.productInfo.title} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
                 </BlockStack>
               </Card>
             )}
@@ -1461,51 +1691,85 @@ export default function Generate() {
         )}
 
         {/* Results */}
-        {currentStep === 'results' && selectedProduct && (
+        {currentStep === 'results' && (selectedProduct || scratchUpload) && (
           <BlockStack gap="400">
-            {/* Product Context Card - Critical for knowing where images will be published */}
-            <Card>
-              <BlockStack gap="300">
-                <InlineStack gap="200" blockAlign="center">
-                  <Badge tone="success">Publishing to</Badge>
-                </InlineStack>
-                <InlineStack gap="400" blockAlign="center">
-                  <Thumbnail
-                    source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                    alt={selectedProduct.title}
-                    size="large"
-                  />
-                  <BlockStack gap="100">
-                    <Text as="p" variant="headingMd" fontWeight="bold">
-                      {selectedProduct.title}
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      {selectedProduct.vendor}
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Currently has {selectedProduct.images.length} image{selectedProduct.images.length !== 1 ? 's' : ''}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-                {selectedProduct.images.length > 0 && (
-                  <>
-                    <Divider />
+            {/* Product Context Card - Different for scratch vs product */}
+            {sourceType === 'scratch' && scratchUpload ? (
+              <Card>
+                <BlockStack gap="300">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Badge tone="info">Generated from uploaded image</Badge>
+                  </InlineStack>
+                  <InlineStack gap="400" blockAlign="center">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                      <img src={scratchUpload.previewUrl} alt={scratchUpload.productInfo.title} className="w-full h-full object-cover" />
+                    </div>
+                    <BlockStack gap="100">
+                      <Text as="p" variant="headingMd" fontWeight="bold">
+                        {scratchUpload.productInfo.title}
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {scratchUpload.productInfo.productType}
+                      </Text>
+                    </BlockStack>
+                  </InlineStack>
+                  <Divider />
+                  <Banner tone="info">
                     <BlockStack gap="200">
                       <Text as="p" variant="bodySm" fontWeight="semibold">
-                        Existing product images (for reference)
+                        Assign to a Shopify Product
                       </Text>
-                      <InlineStack gap="200">
-                        {selectedProduct.images.map(img => (
-                          <div key={img.id} className="w-12 h-12 rounded-md overflow-hidden border border-border">
-                            <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                      </InlineStack>
+                      <Text as="p" variant="bodySm">
+                        Select images below and publish them to any product in your store.
+                      </Text>
                     </BlockStack>
-                  </>
-                )}
-              </BlockStack>
-            </Card>
+                  </Banner>
+                </BlockStack>
+              </Card>
+            ) : selectedProduct && (
+              <Card>
+                <BlockStack gap="300">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Badge tone="success">Publishing to</Badge>
+                  </InlineStack>
+                  <InlineStack gap="400" blockAlign="center">
+                    <Thumbnail
+                      source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                      alt={selectedProduct.title}
+                      size="large"
+                    />
+                    <BlockStack gap="100">
+                      <Text as="p" variant="headingMd" fontWeight="bold">
+                        {selectedProduct.title}
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {selectedProduct.vendor}
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Currently has {selectedProduct.images.length} image{selectedProduct.images.length !== 1 ? 's' : ''}
+                      </Text>
+                    </BlockStack>
+                  </InlineStack>
+                  {selectedProduct.images.length > 0 && (
+                    <>
+                      <Divider />
+                      <BlockStack gap="200">
+                        <Text as="p" variant="bodySm" fontWeight="semibold">
+                          Existing product images (for reference)
+                        </Text>
+                        <InlineStack gap="200">
+                          {selectedProduct.images.map(img => (
+                            <div key={img.id} className="w-12 h-12 rounded-md overflow-hidden border border-border">
+                              <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                        </InlineStack>
+                      </BlockStack>
+                    </>
+                  )}
+                </BlockStack>
+              </Card>
+            )}
 
             <Card>
               <BlockStack gap="400">
@@ -1523,8 +1787,9 @@ export default function Generate() {
                       ← Adjust Settings
                     </Button>
                     <Button onClick={() => {
-                      setCurrentStep('product');
+                      setCurrentStep('source');
                       setSelectedProduct(null);
+                      setScratchUpload(null);
                       setSelectedTemplate(null);
                       setGeneratedImages([]);
                       setSelectedForPublish(new Set());
@@ -1627,30 +1892,47 @@ export default function Generate() {
             </Card>
 
             {/* Prompt Preview */}
-            <Card>
-              <BlockStack gap="200">
-                <Text as="h3" variant="headingSm">
-                  Prompt Used
-                </Text>
-                <div className="p-3 bg-surface-subdued rounded-lg font-mono text-sm">
-                  {selectedTemplate?.promptBlueprint.sceneDescription}. {selectedProduct?.title} by {selectedProduct?.vendor}. {selectedTemplate?.promptBlueprint.lighting}. {selectedTemplate?.promptBlueprint.cameraStyle}.
-                </div>
-              </BlockStack>
-            </Card>
+            {(selectedTemplate || generationMode === 'virtual-try-on') && (
+              <Card>
+                <BlockStack gap="200">
+                  <Text as="h3" variant="headingSm">
+                    Generation Summary
+                  </Text>
+                  <div className="p-3 bg-surface-subdued rounded-lg font-mono text-sm">
+                    {generationMode === 'virtual-try-on' ? (
+                      <>Virtual Try-On: {selectedModel?.name} wearing {scratchUpload?.productInfo.title || selectedProduct?.title} in {selectedPose?.name} pose</>
+                    ) : (
+                      <>{selectedTemplate?.promptBlueprint.sceneDescription}. {scratchUpload?.productInfo.title || selectedProduct?.title}. {selectedTemplate?.promptBlueprint.lighting}.</>
+                    )}
+                  </div>
+                </BlockStack>
+              </Card>
+            )}
 
             {/* Actions */}
             <InlineStack align="end" gap="200">
               <Button onClick={handleDownloadAll} icon={ArrowDownIcon}>
                 Download All
               </Button>
-              <Button
-                variant="primary"
-                onClick={handlePublishClick}
-                disabled={selectedForPublish.size === 0}
-                size="large"
-              >
-                {`Publish ${selectedForPublish.size} to "${selectedProduct?.title}"`}
-              </Button>
+              {sourceType === 'scratch' ? (
+                <Button
+                  variant="primary"
+                  onClick={() => setProductAssignmentModalOpen(true)}
+                  disabled={selectedForPublish.size === 0}
+                  size="large"
+                >
+                  {`Assign ${selectedForPublish.size} to Product`}
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  onClick={handlePublishClick}
+                  disabled={selectedForPublish.size === 0}
+                  size="large"
+                >
+                  {`Publish ${selectedForPublish.size} to "${selectedProduct?.title}"`}
+                </Button>
+              )}
             </InlineStack>
           </BlockStack>
         )}
@@ -1697,6 +1979,21 @@ export default function Generate() {
         existingImages={selectedProduct?.images || []}
       />
 
+      <ProductAssignmentModal
+        open={productAssignmentModalOpen}
+        onClose={() => setProductAssignmentModalOpen(false)}
+        products={mockProducts}
+        selectedProduct={assignToProduct}
+        onSelectProduct={setAssignToProduct}
+        onPublish={(product, mode) => {
+          const count = selectedForPublish.size;
+          toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`);
+          setProductAssignmentModalOpen(false);
+          navigate('/jobs');
+        }}
+        selectedImageCount={selectedForPublish.size}
+      />
+
       <ImageLightbox
         images={generatedImages}
         currentIndex={lightboxIndex}
@@ -1707,7 +2004,7 @@ export default function Generate() {
         onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate}
         selectedIndices={selectedForPublish}
-        productName={selectedProduct?.title}
+        productName={selectedProduct?.title || scratchUpload?.productInfo.title}
       />
     </PageHeader>
   );
