@@ -1437,7 +1437,7 @@ export default function Generate() {
         )}
 
         {/* Settings Step - Virtual Try-On Mode */}
-        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && selectedProduct && (
+        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (selectedProduct || scratchUpload) && (
           <BlockStack gap="400">
             {/* Summary Card */}
             <Card>
@@ -1450,14 +1450,25 @@ export default function Generate() {
                   <BlockStack gap="200">
                     <Text as="p" variant="bodySm" tone="subdued">Product</Text>
                     <InlineStack gap="200" blockAlign="center">
-                      <Thumbnail
-                        source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                        alt={selectedProduct.title}
-                        size="small"
-                      />
-                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedProduct.title}</Text>
+                      {sourceType === 'scratch' && scratchUpload ? (
+                        <>
+                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-border">
+                            <img src={scratchUpload.previewUrl} alt={scratchUpload.productInfo.title} className="w-full h-full object-cover" />
+                          </div>
+                          <Text as="p" variant="bodySm" fontWeight="semibold">{scratchUpload.productInfo.title}</Text>
+                        </>
+                      ) : selectedProduct && (
+                        <>
+                          <Thumbnail
+                            source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                            alt={selectedProduct.title}
+                            size="small"
+                          />
+                          <Text as="p" variant="bodySm" fontWeight="semibold">{selectedProduct.title}</Text>
+                        </>
+                      )}
                     </InlineStack>
-                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('product')}>Change</Button>
+                    <Button variant="plain" size="micro" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Change</Button>
                   </BlockStack>
 
                   {/* Model */}
