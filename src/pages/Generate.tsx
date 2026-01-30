@@ -42,9 +42,12 @@ import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
 import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
 import { PoseSelectorCard } from '@/components/app/PoseSelectorCard';
 import { GenerationModeToggle } from '@/components/app/GenerationModeToggle';
+import { ModelFilterBar } from '@/components/app/ModelFilterBar';
+import { PoseCategorySection } from '@/components/app/PoseCategorySection';
+import { TryOnPreview } from '@/components/app/TryOnPreview';
+import { PopularCombinations, createPopularCombinations } from '@/components/app/PopularCombinations';
 import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
-import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender 
-} from '@/types';
+import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory } from '@/types';
 import { toast } from 'sonner';
 
 type Step = 'product' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
@@ -71,6 +74,8 @@ export default function Generate() {
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedPose, setSelectedPose] = useState<TryOnPose | null>(null);
   const [modelGenderFilter, setModelGenderFilter] = useState<ModelGender | 'all'>('all');
+  const [modelBodyTypeFilter, setModelBodyTypeFilter] = useState<ModelBodyType | 'all'>('all');
+  const [modelAgeFilter, setModelAgeFilter] = useState<ModelAgeRange | 'all'>('all');
   
   // Brand settings - expanded by default on first use
   const [brandKitOpen, setBrandKitOpen] = useState(true);
@@ -117,10 +122,23 @@ export default function Generate() {
     p.vendor.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filter models by gender
-  const filteredModels = mockModels.filter(m => 
-    modelGenderFilter === 'all' || m.gender === modelGenderFilter
-  );
+  // Filter models by gender, body type, and age
+  const filteredModels = mockModels.filter(m => {
+    if (modelGenderFilter !== 'all' && m.gender !== modelGenderFilter) return false;
+    if (modelBodyTypeFilter !== 'all' && m.bodyType !== modelBodyTypeFilter) return false;
+    if (modelAgeFilter !== 'all' && m.ageRange !== modelAgeFilter) return false;
+    return true;
+  });
+
+  // Group poses by category
+  const posesByCategory = mockTryOnPoses.reduce((acc, pose) => {
+    if (!acc[pose.category]) acc[pose.category] = [];
+    acc[pose.category].push(pose);
+    return acc;
+  }, {} as Record<PoseCategory, TryOnPose[]>);
+
+  // Create popular combinations
+  const popularCombinations = createPopularCombinations(mockModels, mockTryOnPoses);
 
   // Check if product is clothing-related
   const isClothingProduct = (product: Product | null) => {
@@ -606,20 +624,27 @@ export default function Generate() {
         {/* Model Selection Step - Virtual Try-On only */}
         {currentStep === 'model' && selectedProduct && (
           <BlockStack gap="400">
-            {/* Selected Product Mini Card */}
-            <Card>
-              <InlineStack gap="400" blockAlign="center">
-                <Thumbnail
-                  source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                  alt={selectedProduct.title}
-                  size="medium"
+            {/* Live Preview */}
+            <TryOnPreview
+              product={selectedProduct}
+              model={selectedModel}
+              pose={selectedPose}
+              creditCost={creditCost}
+            />
+
+            {/* Popular Combinations Quick Start */}
+            {!selectedModel && popularCombinations.length > 0 && (
+              <Card>
+                <PopularCombinations
+                  combinations={popularCombinations}
+                  onSelect={(model, pose) => {
+                    setSelectedModel(model);
+                    setSelectedPose(pose);
+                    setCurrentStep('settings');
+                  }}
                 />
-                <BlockStack gap="050">
-                  <Text as="p" variant="bodySm" tone="subdued">Dressing model in:</Text>
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">{selectedProduct.title}</Text>
-                </BlockStack>
-              </InlineStack>
-            </Card>
+              </Card>
+            )}
 
             <Card>
               <BlockStack gap="400">
@@ -632,30 +657,35 @@ export default function Generate() {
                   </Text>
                 </BlockStack>
 
-                {/* Gender Filter */}
-                <InlineStack gap="200">
-                  {(['all', 'female', 'male'] as const).map(g => (
-                    <Button
-                      key={g}
-                      pressed={modelGenderFilter === g}
-                      onClick={() => setModelGenderFilter(g)}
-                    >
-                      {g === 'all' ? 'All Models' : genderLabels[g]}
-                    </Button>
-                  ))}
-                </InlineStack>
+                {/* Enhanced Filter Bar */}
+                <ModelFilterBar
+                  genderFilter={modelGenderFilter}
+                  bodyTypeFilter={modelBodyTypeFilter}
+                  ageFilter={modelAgeFilter}
+                  onGenderChange={setModelGenderFilter}
+                  onBodyTypeChange={setModelBodyTypeFilter}
+                  onAgeChange={setModelAgeFilter}
+                />
 
                 {/* Model Grid */}
-                <InlineGrid columns={{ xs: 2, sm: 3, md: 4 }} gap="400">
-                  {filteredModels.map(model => (
-                    <ModelSelectorCard
-                      key={model.modelId}
-                      model={model}
-                      isSelected={selectedModel?.modelId === model.modelId}
-                      onSelect={() => handleSelectModel(model)}
-                    />
-                  ))}
-                </InlineGrid>
+                {filteredModels.length > 0 ? (
+                  <InlineGrid columns={{ xs: 2, sm: 3, md: 4 }} gap="400">
+                    {filteredModels.map(model => (
+                      <ModelSelectorCard
+                        key={model.modelId}
+                        model={model}
+                        isSelected={selectedModel?.modelId === model.modelId}
+                        onSelect={() => handleSelectModel(model)}
+                      />
+                    ))}
+                  </InlineGrid>
+                ) : (
+                  <Banner tone="warning">
+                    <Text as="p" variant="bodySm">
+                      No models match your filters. Try adjusting the filters above.
+                    </Text>
+                  </Banner>
+                )}
 
                 <InlineStack align="space-between">
                   <Button onClick={() => setCurrentStep('mode')}>
@@ -677,43 +707,37 @@ export default function Generate() {
         {/* Pose Selection Step - Virtual Try-On only */}
         {currentStep === 'pose' && selectedProduct && selectedModel && (
           <BlockStack gap="400">
-            {/* Context Card */}
-            <Card>
-              <InlineStack gap="400" blockAlign="center">
-                <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-shopify-green">
-                  <img src={selectedModel.previewUrl} alt={selectedModel.name} className="w-full h-full object-cover" />
-                </div>
-                <BlockStack gap="050">
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    {selectedModel.name} wearing:
-                  </Text>
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">{selectedProduct.title}</Text>
-                </BlockStack>
-              </InlineStack>
-            </Card>
+            {/* Live Preview */}
+            <TryOnPreview
+              product={selectedProduct}
+              model={selectedModel}
+              pose={selectedPose}
+              creditCost={creditCost}
+            />
 
             <Card>
-              <BlockStack gap="400">
+              <BlockStack gap="500">
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
                     Choose a Pose & Scene
                   </Text>
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    Select the photography style and setting for your virtual try-on shots.
+                    Select the photography style and setting for your virtual try-on shots with {selectedModel.name}.
                   </Text>
                 </BlockStack>
 
-                {/* Pose Grid */}
-                <InlineGrid columns={{ xs: 2, sm: 3, md: 3 }} gap="400">
-                  {mockTryOnPoses.map(pose => (
-                    <PoseSelectorCard
-                      key={pose.poseId}
-                      pose={pose}
-                      isSelected={selectedPose?.poseId === pose.poseId}
-                      onSelect={() => handleSelectPose(pose)}
+                {/* Poses by Category */}
+                <BlockStack gap="600">
+                  {(['studio', 'lifestyle', 'editorial', 'streetwear'] as PoseCategory[]).map(category => (
+                    <PoseCategorySection
+                      key={category}
+                      category={category}
+                      poses={posesByCategory[category] || []}
+                      selectedPoseId={selectedPose?.poseId || null}
+                      onSelectPose={handleSelectPose}
                     />
                   ))}
-                </InlineGrid>
+                </BlockStack>
 
                 <InlineStack align="space-between">
                   <Button onClick={() => setCurrentStep('model')}>
