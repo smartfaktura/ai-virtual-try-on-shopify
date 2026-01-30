@@ -8,6 +8,7 @@ interface GenerateTryOnParams {
   pose: TryOnPose;
   aspectRatio: AspectRatio;
   imageCount: number;
+  sourceImageUrl: string;  // The specific product image to use as reference
 }
 
 interface GenerateTryOnResult {
