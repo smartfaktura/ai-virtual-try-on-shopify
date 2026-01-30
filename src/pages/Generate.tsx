@@ -541,8 +541,199 @@ export default function Generate() {
           </Modal.Section>
         </Modal>
 
-        {/* Step 2: Template Selection */}
-        {(currentStep === 'template' || currentStep === 'settings') && selectedProduct && (
+        {/* Mode Selection - Only for clothing products */}
+        {currentStep === 'mode' && selectedProduct && (
+          <Card>
+            <BlockStack gap="500">
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingMd">
+                  Choose Generation Mode
+                </Text>
+                <Text as="p" variant="bodyMd" tone="subdued">
+                  How would you like to showcase your {selectedProduct.title}?
+                </Text>
+              </BlockStack>
+
+              <InlineStack align="center">
+                <GenerationModeToggle mode={generationMode} onChange={setGenerationMode} />
+              </InlineStack>
+
+              {generationMode === 'virtual-try-on' && (
+                <Banner tone="info">
+                  <BlockStack gap="200">
+                    <Text as="p" variant="bodySm" fontWeight="semibold">
+                      ✨ Virtual Try-On Mode
+                    </Text>
+                    <Text as="p" variant="bodySm">
+                      AI will digitally dress your selected model in your garment — creating realistic "model wearing product" images without a photoshoot.
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Uses 3 credits per image (vs 1-2 for standard shots)
+                    </Text>
+                  </BlockStack>
+                </Banner>
+              )}
+
+              {generationMode === 'product-only' && (
+                <Banner tone="info">
+                  <Text as="p" variant="bodySm">
+                    Standard product photography — flat lay, studio, or lifestyle shots focusing on the garment itself.
+                  </Text>
+                </Banner>
+              )}
+
+              <InlineStack align="end">
+                <Button onClick={() => setCurrentStep('product')}>
+                  Back
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    if (generationMode === 'virtual-try-on') {
+                      setCurrentStep('model');
+                    } else {
+                      setCurrentStep('template');
+                    }
+                  }}
+                >
+                  Continue
+                </Button>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        )}
+
+        {/* Model Selection Step - Virtual Try-On only */}
+        {currentStep === 'model' && selectedProduct && (
+          <BlockStack gap="400">
+            {/* Selected Product Mini Card */}
+            <Card>
+              <InlineStack gap="400" blockAlign="center">
+                <Thumbnail
+                  source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                  alt={selectedProduct.title}
+                  size="medium"
+                />
+                <BlockStack gap="050">
+                  <Text as="p" variant="bodySm" tone="subdued">Dressing model in:</Text>
+                  <Text as="p" variant="bodyMd" fontWeight="semibold">{selectedProduct.title}</Text>
+                </BlockStack>
+              </InlineStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="400">
+                <BlockStack gap="200">
+                  <Text as="h2" variant="headingMd">
+                    Select a Model
+                  </Text>
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Choose who will wear your {selectedProduct.title}. We offer diverse representation across genders, body types, and ethnicities.
+                  </Text>
+                </BlockStack>
+
+                {/* Gender Filter */}
+                <InlineStack gap="200">
+                  {(['all', 'female', 'male'] as const).map(g => (
+                    <Button
+                      key={g}
+                      pressed={modelGenderFilter === g}
+                      onClick={() => setModelGenderFilter(g)}
+                    >
+                      {g === 'all' ? 'All Models' : genderLabels[g]}
+                    </Button>
+                  ))}
+                </InlineStack>
+
+                {/* Model Grid */}
+                <InlineGrid columns={{ xs: 2, sm: 3, md: 4 }} gap="400">
+                  {filteredModels.map(model => (
+                    <ModelSelectorCard
+                      key={model.modelId}
+                      model={model}
+                      isSelected={selectedModel?.modelId === model.modelId}
+                      onSelect={() => handleSelectModel(model)}
+                    />
+                  ))}
+                </InlineGrid>
+
+                <InlineStack align="space-between">
+                  <Button onClick={() => setCurrentStep('mode')}>
+                    Back
+                  </Button>
+                  <Button
+                    variant="primary"
+                    disabled={!selectedModel}
+                    onClick={() => setCurrentStep('pose')}
+                  >
+                    Continue to Pose Selection
+                  </Button>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+          </BlockStack>
+        )}
+
+        {/* Pose Selection Step - Virtual Try-On only */}
+        {currentStep === 'pose' && selectedProduct && selectedModel && (
+          <BlockStack gap="400">
+            {/* Context Card */}
+            <Card>
+              <InlineStack gap="400" blockAlign="center">
+                <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-shopify-green">
+                  <img src={selectedModel.previewUrl} alt={selectedModel.name} className="w-full h-full object-cover" />
+                </div>
+                <BlockStack gap="050">
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {selectedModel.name} wearing:
+                  </Text>
+                  <Text as="p" variant="bodyMd" fontWeight="semibold">{selectedProduct.title}</Text>
+                </BlockStack>
+              </InlineStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="400">
+                <BlockStack gap="200">
+                  <Text as="h2" variant="headingMd">
+                    Choose a Pose & Scene
+                  </Text>
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Select the photography style and setting for your virtual try-on shots.
+                  </Text>
+                </BlockStack>
+
+                {/* Pose Grid */}
+                <InlineGrid columns={{ xs: 2, sm: 3, md: 3 }} gap="400">
+                  {mockTryOnPoses.map(pose => (
+                    <PoseSelectorCard
+                      key={pose.poseId}
+                      pose={pose}
+                      isSelected={selectedPose?.poseId === pose.poseId}
+                      onSelect={() => handleSelectPose(pose)}
+                    />
+                  ))}
+                </InlineGrid>
+
+                <InlineStack align="space-between">
+                  <Button onClick={() => setCurrentStep('model')}>
+                    Back
+                  </Button>
+                  <Button
+                    variant="primary"
+                    disabled={!selectedPose}
+                    onClick={() => setCurrentStep('settings')}
+                  >
+                    Continue to Settings
+                  </Button>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+          </BlockStack>
+        )}
+
+        {/* Step 2: Template Selection (Product-Only mode) */}
+        {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && selectedProduct && (
           <>
             {/* Selected Product Card */}
             <Card>
