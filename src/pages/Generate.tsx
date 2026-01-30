@@ -422,12 +422,7 @@ export default function Generate() {
         <Card>
           <BlockStack gap="200">
             <InlineStack gap="400" align="center" wrap={false}>
-              {[
-                { name: 'Product', desc: 'Pick what you\'re selling' },
-                { name: 'Template', desc: 'Choose a style' },
-                { name: 'Settings', desc: 'Adjust details' },
-                { name: 'Results', desc: 'Review & publish' },
-              ].map((step, index) => (
+              {getSteps().map((step, index) => (
                 <InlineStack key={step.name} gap="200" blockAlign="center">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
@@ -451,14 +446,14 @@ export default function Generate() {
                       <span className="sm:hidden">{index + 1}</span>
                     </Text>
                   </BlockStack>
-                  {index < 3 && (
+                  {index < getSteps().length - 1 && (
                     <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-shopify-green' : 'bg-muted'}`} />
                   )}
                 </InlineStack>
               ))}
             </InlineStack>
             <Text as="p" variant="bodySm" tone="subdued" alignment="center">
-              About 2-3 minutes total
+              {generationMode === 'virtual-try-on' ? 'About 3-4 minutes total' : 'About 2-3 minutes total'}
             </Text>
           </BlockStack>
         </Card>
