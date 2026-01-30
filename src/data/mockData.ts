@@ -699,7 +699,7 @@ export const mockJobs: GenerationJob[] = [
       {
         assetId: 'asset_005',
         jobId: 'job_002',
-        imageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=1000&fit=crop',
+        imageUrl: hoodieGray1,
         publishedToShopify: true,
         shopifyImageId: 'shopify_img_002',
         createdAt: '2024-01-14T10:20:00Z',
@@ -707,7 +707,7 @@ export const mockJobs: GenerationJob[] = [
       {
         assetId: 'asset_006',
         jobId: 'job_002',
-        imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&h=1000&fit=crop',
+        imageUrl: croppedLongsleeve1,
         publishedToShopify: false,
         createdAt: '2024-01-14T10:20:00Z',
       },
