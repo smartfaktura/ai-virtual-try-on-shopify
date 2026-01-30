@@ -465,54 +465,102 @@ export default function Generate() {
 
             {/* Template Selection */}
             {currentStep === 'template' && (
-              <Card>
-                <BlockStack gap="400">
-                  <BlockStack gap="200">
-                    <Text as="h2" variant="headingMd">
-                      Choose a Template
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Each template creates a distinct photography style. Preview images show example results.
-                    </Text>
-                  </BlockStack>
+              <BlockStack gap="400">
+                {/* Educational Banner */}
+                <Banner tone="info">
+                  <Text as="p" variant="bodySm">
+                    Templates define the photography style for your images. Each template produces a different look — preview images show example results.
+                  </Text>
+                </Banner>
+
+                {/* Recommended Templates for this product */}
+                {(() => {
+                  const recommendedCategory = selectedCategory !== 'all' ? selectedCategory : 'universal';
+                  const recommendedTemplates = mockTemplates
+                    .filter(t => t.enabled && (t.category === recommendedCategory || t.category === 'universal'))
+                    .slice(0, 3);
                   
-                  {/* Category tabs */}
-                  <InlineStack gap="200" wrap>
-                    {categories.map(cat => (
+                  return recommendedTemplates.length > 0 ? (
+                    <Card>
+                      <BlockStack gap="400">
+                        <BlockStack gap="100">
+                          <InlineStack gap="200" blockAlign="center">
+                            <Text as="h2" variant="headingMd">
+                              Recommended for "{selectedProduct.title}"
+                            </Text>
+                            <Badge tone="success">Best match</Badge>
+                          </InlineStack>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            Based on your product type ({categoryLabels[recommendedCategory] || 'General'}), these templates work best:
+                          </Text>
+                        </BlockStack>
+                        
+                        <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
+                          {recommendedTemplates.map(template => (
+                            <TemplatePreviewCard
+                              key={template.templateId}
+                              template={{ ...template, recommended: true }}
+                              isSelected={selectedTemplate?.templateId === template.templateId}
+                              onSelect={() => handleSelectTemplate(template)}
+                              showCredits
+                            />
+                          ))}
+                        </InlineGrid>
+                      </BlockStack>
+                    </Card>
+                  ) : null;
+                })()}
+
+                {/* All Templates */}
+                <Card>
+                  <BlockStack gap="400">
+                    <BlockStack gap="200">
+                      <Text as="h2" variant="headingMd">
+                        All Templates
+                      </Text>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Browse all available photography styles
+                      </Text>
+                    </BlockStack>
+                    
+                    {/* Category tabs */}
+                    <InlineStack gap="200" wrap>
+                      {categories.map(cat => (
+                        <Button
+                          key={cat.id}
+                          pressed={selectedCategory === cat.id}
+                          onClick={() => setSelectedCategory(cat.id)}
+                        >
+                          {cat.label}
+                        </Button>
+                      ))}
+                    </InlineStack>
+
+                    {/* Template grid with preview images */}
+                    <InlineGrid columns={{ xs: 1, sm: 2, md: 3, lg: 4 }} gap="400">
+                      {filteredTemplates.map(template => (
+                        <TemplatePreviewCard
+                          key={template.templateId}
+                          template={template}
+                          isSelected={selectedTemplate?.templateId === template.templateId}
+                          onSelect={() => handleSelectTemplate(template)}
+                          showCredits
+                        />
+                      ))}
+                    </InlineGrid>
+
+                    <InlineStack align="end">
                       <Button
-                        key={cat.id}
-                        pressed={selectedCategory === cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
+                        variant="primary"
+                        disabled={!selectedTemplate}
+                        onClick={() => setCurrentStep('settings')}
                       >
-                        {cat.label}
+                        Continue to Settings
                       </Button>
-                    ))}
-                  </InlineStack>
-
-                  {/* Template grid with preview images */}
-                  <InlineGrid columns={{ xs: 1, sm: 2, md: 3, lg: 4 }} gap="400">
-                    {filteredTemplates.map(template => (
-                      <TemplatePreviewCard
-                        key={template.templateId}
-                        template={template}
-                        isSelected={selectedTemplate?.templateId === template.templateId}
-                        onSelect={() => handleSelectTemplate(template)}
-                        showCredits
-                      />
-                    ))}
-                  </InlineGrid>
-
-                  <InlineStack align="end">
-                    <Button
-                      variant="primary"
-                      disabled={!selectedTemplate}
-                      onClick={() => setCurrentStep('settings')}
-                    >
-                      Continue to Settings
-                    </Button>
-                  </InlineStack>
-                </BlockStack>
-              </Card>
+                    </InlineStack>
+                  </BlockStack>
+                </Card>
+              </BlockStack>
             )}
 
             {/* Settings Step */}
