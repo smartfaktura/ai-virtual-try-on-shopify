@@ -31,6 +31,7 @@ export default function Jobs() {
   // Publish modal state
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [selectedJobForPublish, setSelectedJobForPublish] = useState<GenerationJob | null>(null);
+  const [selectedImageUrlsForPublish, setSelectedImageUrlsForPublish] = useState<string[]>([]);
   
   // Job detail modal state
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -41,17 +42,21 @@ export default function Jobs() {
     setDetailModalOpen(true);
   };
 
-  const handlePublishClick = (job: GenerationJob) => {
+  const handlePublishClick = (job: GenerationJob, specificUrls?: string[]) => {
     setSelectedJobForPublish(job);
+    // If specific URLs provided (from Job Detail modal), use those; otherwise use all unpublished
+    const urlsToPublish = specificUrls || job.results.filter(r => !r.publishedToShopify).map(r => r.imageUrl);
+    setSelectedImageUrlsForPublish(urlsToPublish);
     setPublishModalOpen(true);
   };
 
   const handlePublish = (mode: 'add' | 'replace', variantId?: string) => {
     if (!selectedJobForPublish) return;
-    const unpublished = selectedJobForPublish.results.filter(r => !r.publishedToShopify).length;
-    toast.success(`${unpublished} image${unpublished !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${selectedJobForPublish.productSnapshot.title}"!`);
+    const count = selectedImageUrlsForPublish.length;
+    toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${selectedJobForPublish.productSnapshot.title}"!`);
     setPublishModalOpen(false);
     setSelectedJobForPublish(null);
+    setSelectedImageUrlsForPublish([]);
   };
 
   // Find matching product for job
@@ -237,9 +242,10 @@ export default function Jobs() {
         onClose={() => {
           setPublishModalOpen(false);
           setSelectedJobForPublish(null);
+          setSelectedImageUrlsForPublish([]);
         }}
         onPublish={handlePublish}
-        selectedImages={selectedJobForPublish?.results.filter(r => !r.publishedToShopify).map(r => r.imageUrl) || []}
+        selectedImages={selectedImageUrlsForPublish}
         product={selectedJobForPublish ? getProductForJob(selectedJobForPublish) : null}
         existingImages={selectedJobForPublish?.productSnapshot.images || []}
       />
@@ -255,8 +261,7 @@ export default function Jobs() {
         onPublish={(job, selectedUrls) => {
           setDetailModalOpen(false);
           setSelectedJobForDetail(null);
-          toast.success(`${selectedUrls.length} image${selectedUrls.length !== 1 ? 's' : ''} ready to publish`);
-          handlePublishClick(job);
+          handlePublishClick(job, selectedUrls);
         }}
         onRetry={() => navigate('/generate')}
       />
