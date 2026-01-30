@@ -707,43 +707,37 @@ export default function Generate() {
         {/* Pose Selection Step - Virtual Try-On only */}
         {currentStep === 'pose' && selectedProduct && selectedModel && (
           <BlockStack gap="400">
-            {/* Context Card */}
-            <Card>
-              <InlineStack gap="400" blockAlign="center">
-                <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-shopify-green">
-                  <img src={selectedModel.previewUrl} alt={selectedModel.name} className="w-full h-full object-cover" />
-                </div>
-                <BlockStack gap="050">
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    {selectedModel.name} wearing:
-                  </Text>
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">{selectedProduct.title}</Text>
-                </BlockStack>
-              </InlineStack>
-            </Card>
+            {/* Live Preview */}
+            <TryOnPreview
+              product={selectedProduct}
+              model={selectedModel}
+              pose={selectedPose}
+              creditCost={creditCost}
+            />
 
             <Card>
-              <BlockStack gap="400">
+              <BlockStack gap="500">
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
                     Choose a Pose & Scene
                   </Text>
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    Select the photography style and setting for your virtual try-on shots.
+                    Select the photography style and setting for your virtual try-on shots with {selectedModel.name}.
                   </Text>
                 </BlockStack>
 
-                {/* Pose Grid */}
-                <InlineGrid columns={{ xs: 2, sm: 3, md: 3 }} gap="400">
-                  {mockTryOnPoses.map(pose => (
-                    <PoseSelectorCard
-                      key={pose.poseId}
-                      pose={pose}
-                      isSelected={selectedPose?.poseId === pose.poseId}
-                      onSelect={() => handleSelectPose(pose)}
+                {/* Poses by Category */}
+                <BlockStack gap="600">
+                  {(['studio', 'lifestyle', 'editorial', 'streetwear'] as PoseCategory[]).map(category => (
+                    <PoseCategorySection
+                      key={category}
+                      category={category}
+                      poses={posesByCategory[category] || []}
+                      selectedPoseId={selectedPose?.poseId || null}
+                      onSelectPose={handleSelectPose}
                     />
                   ))}
-                </InlineGrid>
+                </BlockStack>
 
                 <InlineStack align="space-between">
                   <Button onClick={() => setCurrentStep('model')}>
