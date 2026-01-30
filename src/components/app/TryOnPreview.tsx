@@ -1,10 +1,11 @@
 import { Text, Icon } from '@shopify/polaris';
 import { PlusIcon, ArrowRightIcon } from '@shopify/polaris-icons';
-import type { Product, ModelProfile, TryOnPose } from '@/types';
+import type { Product, ModelProfile, TryOnPose, ScratchUpload } from '@/types';
 import { Card } from '@/components/ui/card';
 
 interface TryOnPreviewProps {
-  product: Product | null;
+  product?: Product | null;
+  scratchUpload?: ScratchUpload | null;
   model: ModelProfile | null;
   pose: TryOnPose | null;
   creditCost?: number;
@@ -12,13 +13,19 @@ interface TryOnPreviewProps {
 
 export function TryOnPreview({
   product,
+  scratchUpload,
   model,
   pose,
   creditCost = 0,
 }: TryOnPreviewProps) {
-  const hasAllSelections = product && model && pose;
+  // Get product info from either source
+  const productImageUrl = product?.images[0]?.url || scratchUpload?.previewUrl;
+  const productTitle = product?.title || scratchUpload?.productInfo.title || '';
+  const hasProduct = !!(product || scratchUpload);
+  
+  const hasAllSelections = hasProduct && model && pose;
   const description = hasAllSelections
-    ? `${model.name} in ${pose.name} wearing ${product.title}`
+    ? `${model.name} in ${pose.name} wearing ${productTitle}`
     : 'Complete your selections to see preview';
 
   return (
@@ -40,12 +47,12 @@ export function TryOnPreview({
         <div className="flex items-center justify-center gap-3">
           {/* Product Thumbnail */}
           <div className={`w-20 h-20 rounded-xl overflow-hidden border-2 ${
-            product ? 'border-primary bg-white' : 'border-dashed border-muted-foreground/30 bg-muted'
+            hasProduct ? 'border-primary bg-white' : 'border-dashed border-muted-foreground/30 bg-muted'
           }`}>
-            {product ? (
+            {productImageUrl ? (
               <img
-                src={product.images[0]?.url}
-                alt={product.title}
+                src={productImageUrl}
+                alt={productTitle}
                 className="w-full h-full object-cover"
               />
             ) : (
