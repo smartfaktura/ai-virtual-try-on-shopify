@@ -31,7 +31,7 @@ import {
   XIcon,
 } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
-import { TemplatePreviewCard } from '@/components/app/TemplatePreviewCard';
+import { TemplatePreviewCard, getTemplateImage } from '@/components/app/TemplatePreviewCard';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
@@ -678,7 +678,7 @@ export default function Generate() {
               <BlockStack gap="400">
                 {/* Selected Template */}
                 <Card>
-                  <BlockStack gap="200">
+                  <BlockStack gap="300">
                     <InlineStack align="space-between">
                       <Text as="h3" variant="headingSm" tone="subdued">
                         Selected Template
@@ -687,12 +687,37 @@ export default function Generate() {
                         Change
                       </Button>
                     </InlineStack>
-                    <InlineStack gap="200" blockAlign="center">
-                      <Icon source={ImageIcon} />
-                      <Text as="p" variant="bodyMd" fontWeight="semibold">
-                        {selectedTemplate.name}
-                      </Text>
-                      <Badge>{categoryLabels[selectedTemplate.category]}</Badge>
+                    <InlineStack gap="400" blockAlign="center">
+                      {(() => {
+                        const templateImage = getTemplateImage(selectedTemplate.templateId);
+                        return templateImage ? (
+                          <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border">
+                            <img
+                              src={templateImage}
+                              alt={selectedTemplate.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                            <Icon source={ImageIcon} tone="subdued" />
+                          </div>
+                        );
+                      })()}
+                      <BlockStack gap="100">
+                        <Text as="p" variant="bodyMd" fontWeight="semibold">
+                          {selectedTemplate.name}
+                        </Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          {selectedTemplate.description.length > 80 
+                            ? `${selectedTemplate.description.slice(0, 80)}...` 
+                            : selectedTemplate.description}
+                        </Text>
+                        <InlineStack gap="200">
+                          <Badge>{categoryLabels[selectedTemplate.category]}</Badge>
+                          <Badge tone="attention">{`~${selectedTemplate.defaults.quality === 'high' ? 2 : 1} cr/img`}</Badge>
+                        </InlineStack>
+                      </BlockStack>
                     </InlineStack>
                   </BlockStack>
                 </Card>
