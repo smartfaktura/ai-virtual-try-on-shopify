@@ -13,12 +13,14 @@ import {
   InlineGrid,
   ProgressBar,
   Badge,
-  Link,
-  Icon,
+  ButtonGroup,
 } from '@shopify/polaris';
-import { ExternalIcon, QuestionCircleIcon, ChatIcon } from '@shopify/polaris-icons';
+import { QuestionCircleIcon, ChatIcon } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
-import { mockShop } from '@/data/mockData';
+import { PlanCard } from '@/components/app/PlanCard';
+import { CreditPackCard } from '@/components/app/CreditPackCard';
+import { CompetitorComparison } from '@/components/app/CompetitorComparison';
+import { mockShop, pricingPlans, creditPacks } from '@/data/mockData';
 import type { BrandTone, BackgroundStyle } from '@/types';
 import { toast } from 'sonner';
 
