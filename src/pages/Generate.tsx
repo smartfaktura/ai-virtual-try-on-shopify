@@ -353,6 +353,36 @@ export default function Generate() {
     }, 4000);
   };
 
+  // Virtual Try-On generation with real AI
+  const handleTryOnConfirmGenerate = async () => {
+    if (!selectedProduct || !selectedModel || !selectedPose) return;
+    
+    setTryOnConfirmModalOpen(false);
+    setCurrentStep('generating');
+    setGeneratingProgress(0);
+    
+    const result = await generateTryOn({
+      product: selectedProduct,
+      model: selectedModel,
+      pose: selectedPose,
+      aspectRatio,
+      imageCount: parseInt(imageCount),
+    });
+    
+    if (result && result.images.length > 0) {
+      setGeneratedImages(result.images);
+      setGeneratingProgress(100);
+      setCurrentStep('results');
+      
+      // Mock credit deduction
+      const creditCost = result.generatedCount * 3;
+      toast.success(`Generated ${result.generatedCount} images! Used ${creditCost} credits.`);
+    } else {
+      // Generation failed, go back to settings
+      setCurrentStep('settings');
+    }
+  };
+
   const handlePublishClick = () => {
     if (selectedForPublish.size === 0) {
       toast.error('Please select at least one image to publish');
