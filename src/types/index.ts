@@ -130,6 +130,33 @@ export interface BrandSettings {
   consistencyEnabled: boolean;
 }
 
+// Generation Mode
+export type GenerationMode = 'product-only' | 'virtual-try-on';
+
+// Virtual Try-On Types
+export type ModelGender = 'male' | 'female' | 'non-binary';
+export type ModelBodyType = 'slim' | 'athletic' | 'average' | 'plus-size';
+export type ModelAgeRange = 'young-adult' | 'adult' | 'mature';
+export type PoseCategory = 'studio' | 'lifestyle' | 'editorial' | 'streetwear';
+
+export interface ModelProfile {
+  modelId: string;
+  name: string;
+  gender: ModelGender;
+  bodyType: ModelBodyType;
+  ethnicity: string;
+  ageRange: ModelAgeRange;
+  previewUrl: string;
+}
+
+export interface TryOnPose {
+  poseId: string;
+  name: string;
+  category: PoseCategory;
+  description: string;
+  previewUrl: string;
+}
+
 // Dashboard metrics
 export interface DashboardMetrics {
   imagesGenerated30d: number;

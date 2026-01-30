@@ -29,6 +29,7 @@ import {
   RefreshIcon,
   MaximizeIcon,
   XIcon,
+  PersonIcon,
 } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
 import { TemplatePreviewCard, getTemplateImage } from '@/components/app/TemplatePreviewCard';
@@ -38,11 +39,15 @@ import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
 import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
-import { mockProducts, mockTemplates, categoryLabels, mockShop } from '@/data/mockData';
-import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality } from '@/types';
+import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
+import { PoseSelectorCard } from '@/components/app/PoseSelectorCard';
+import { GenerationModeToggle } from '@/components/app/GenerationModeToggle';
+import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
+import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender 
+} from '@/types';
 import { toast } from 'sonner';
 
-type Step = 'product' | 'template' | 'settings' | 'generating' | 'results';
+type Step = 'product' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
 export default function Generate() {
   const navigate = useNavigate();
@@ -60,6 +65,12 @@ export default function Generate() {
     initialTemplateId ? mockTemplates.find(t => t.templateId === initialTemplateId) || null : null
   );
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
+  
+  // Virtual Try-On state
+  const [generationMode, setGenerationMode] = useState<GenerationMode>('product-only');
+  const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
+  const [selectedPose, setSelectedPose] = useState<TryOnPose | null>(null);
+  const [modelGenderFilter, setModelGenderFilter] = useState<ModelGender | 'all'>('all');
   
   // Brand settings - expanded by default on first use
   const [brandKitOpen, setBrandKitOpen] = useState(true);
@@ -106,6 +117,20 @@ export default function Generate() {
     p.vendor.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Filter models by gender
+  const filteredModels = mockModels.filter(m => 
+    modelGenderFilter === 'all' || m.gender === modelGenderFilter
+  );
+
+  // Check if product is clothing-related
+  const isClothingProduct = (product: Product | null) => {
+    if (!product) return false;
+    const productType = product.productType.toLowerCase();
+    const clothingKeywords = ['sweater', 'shirt', 'apparel', 'dress', 'jacket', 'pants', 'jeans', 'coat', 'blouse', 'skirt', 'suit', 'hoodie', 't-shirt', 'clothing'];
+    return clothingKeywords.some(kw => productType.includes(kw)) || 
+           product.tags.some(tag => clothingKeywords.includes(tag.toLowerCase()));
+  };
+
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
     setProductPickerOpen(false);
@@ -128,7 +153,13 @@ export default function Generate() {
     } else if (productType.includes('supplement') || productType.includes('vitamin')) {
       setSelectedCategory('supplements');
     }
-    setCurrentStep('template');
+    
+    // If clothing product, show mode selection first
+    if (isClothingProduct(product)) {
+      setCurrentStep('mode');
+    } else {
+      setCurrentStep('template');
+    }
   };
 
   const toggleSourceImage = (imageId: string) => {
@@ -164,6 +195,16 @@ export default function Generate() {
     setAspectRatio(template.defaults.aspectRatio);
     setQuality(template.defaults.quality);
     toast.success(`"${template.name}" selected! Click Continue when ready.`);
+  };
+
+  const handleSelectModel = (model: ModelProfile) => {
+    setSelectedModel(model);
+    toast.success(`Model "${model.name}" selected!`);
+  };
+
+  const handleSelectPose = (pose: TryOnPose) => {
+    setSelectedPose(pose);
+    toast.success(`Pose "${pose.name}" selected!`);
   };
 
   const handleCancelGeneration = () => {
@@ -324,17 +365,52 @@ export default function Generate() {
   };
 
   const getStepNumber = () => {
-    switch (currentStep) {
-      case 'product': return 1;
-      case 'template': return 2;
-      case 'settings': return 3;
-      case 'generating': return 4;
-      case 'results': return 4;
-      default: return 1;
+    if (generationMode === 'virtual-try-on') {
+      switch (currentStep) {
+        case 'product': return 1;
+        case 'mode': return 1;
+        case 'model': return 2;
+        case 'pose': return 3;
+        case 'settings': return 4;
+        case 'generating': return 5;
+        case 'results': return 5;
+        default: return 1;
+      }
+    } else {
+      switch (currentStep) {
+        case 'product': return 1;
+        case 'mode': return 1;
+        case 'template': return 2;
+        case 'settings': return 3;
+        case 'generating': return 4;
+        case 'results': return 4;
+        default: return 1;
+      }
     }
   };
 
-  const creditCost = parseInt(imageCount) * (quality === 'high' ? 2 : 1);
+  const getSteps = () => {
+    if (generationMode === 'virtual-try-on') {
+      return [
+        { name: 'Product', desc: 'Pick what you\'re selling' },
+        { name: 'Model', desc: 'Choose a model' },
+        { name: 'Pose', desc: 'Pick the style' },
+        { name: 'Settings', desc: 'Adjust details' },
+        { name: 'Results', desc: 'Review & publish' },
+      ];
+    }
+    return [
+      { name: 'Product', desc: 'Pick what you\'re selling' },
+      { name: 'Template', desc: 'Choose a style' },
+      { name: 'Settings', desc: 'Adjust details' },
+      { name: 'Results', desc: 'Review & publish' },
+    ];
+  };
+
+  // Virtual Try-On credit cost is higher
+  const creditCost = generationMode === 'virtual-try-on' 
+    ? parseInt(imageCount) * 3 
+    : parseInt(imageCount) * (quality === 'high' ? 2 : 1);
 
   return (
     <PageHeader
@@ -346,12 +422,7 @@ export default function Generate() {
         <Card>
           <BlockStack gap="200">
             <InlineStack gap="400" align="center" wrap={false}>
-              {[
-                { name: 'Product', desc: 'Pick what you\'re selling' },
-                { name: 'Template', desc: 'Choose a style' },
-                { name: 'Settings', desc: 'Adjust details' },
-                { name: 'Results', desc: 'Review & publish' },
-              ].map((step, index) => (
+              {getSteps().map((step, index) => (
                 <InlineStack key={step.name} gap="200" blockAlign="center">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
@@ -375,14 +446,14 @@ export default function Generate() {
                       <span className="sm:hidden">{index + 1}</span>
                     </Text>
                   </BlockStack>
-                  {index < 3 && (
+                  {index < getSteps().length - 1 && (
                     <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-shopify-green' : 'bg-muted'}`} />
                   )}
                 </InlineStack>
               ))}
             </InlineStack>
             <Text as="p" variant="bodySm" tone="subdued" alignment="center">
-              About 2-3 minutes total
+              {generationMode === 'virtual-try-on' ? 'About 3-4 minutes total' : 'About 2-3 minutes total'}
             </Text>
           </BlockStack>
         </Card>
@@ -470,8 +541,199 @@ export default function Generate() {
           </Modal.Section>
         </Modal>
 
-        {/* Step 2: Template Selection */}
-        {(currentStep === 'template' || currentStep === 'settings') && selectedProduct && (
+        {/* Mode Selection - Only for clothing products */}
+        {currentStep === 'mode' && selectedProduct && (
+          <Card>
+            <BlockStack gap="500">
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingMd">
+                  Choose Generation Mode
+                </Text>
+                <Text as="p" variant="bodyMd" tone="subdued">
+                  How would you like to showcase your {selectedProduct.title}?
+                </Text>
+              </BlockStack>
+
+              <InlineStack align="center">
+                <GenerationModeToggle mode={generationMode} onChange={setGenerationMode} />
+              </InlineStack>
+
+              {generationMode === 'virtual-try-on' && (
+                <Banner tone="info">
+                  <BlockStack gap="200">
+                    <Text as="p" variant="bodySm" fontWeight="semibold">
+                      ✨ Virtual Try-On Mode
+                    </Text>
+                    <Text as="p" variant="bodySm">
+                      AI will digitally dress your selected model in your garment — creating realistic "model wearing product" images without a photoshoot.
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Uses 3 credits per image (vs 1-2 for standard shots)
+                    </Text>
+                  </BlockStack>
+                </Banner>
+              )}
+
+              {generationMode === 'product-only' && (
+                <Banner tone="info">
+                  <Text as="p" variant="bodySm">
+                    Standard product photography — flat lay, studio, or lifestyle shots focusing on the garment itself.
+                  </Text>
+                </Banner>
+              )}
+
+              <InlineStack align="end">
+                <Button onClick={() => setCurrentStep('product')}>
+                  Back
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    if (generationMode === 'virtual-try-on') {
+                      setCurrentStep('model');
+                    } else {
+                      setCurrentStep('template');
+                    }
+                  }}
+                >
+                  Continue
+                </Button>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        )}
+
+        {/* Model Selection Step - Virtual Try-On only */}
+        {currentStep === 'model' && selectedProduct && (
+          <BlockStack gap="400">
+            {/* Selected Product Mini Card */}
+            <Card>
+              <InlineStack gap="400" blockAlign="center">
+                <Thumbnail
+                  source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                  alt={selectedProduct.title}
+                  size="medium"
+                />
+                <BlockStack gap="050">
+                  <Text as="p" variant="bodySm" tone="subdued">Dressing model in:</Text>
+                  <Text as="p" variant="bodyMd" fontWeight="semibold">{selectedProduct.title}</Text>
+                </BlockStack>
+              </InlineStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="400">
+                <BlockStack gap="200">
+                  <Text as="h2" variant="headingMd">
+                    Select a Model
+                  </Text>
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Choose who will wear your {selectedProduct.title}. We offer diverse representation across genders, body types, and ethnicities.
+                  </Text>
+                </BlockStack>
+
+                {/* Gender Filter */}
+                <InlineStack gap="200">
+                  {(['all', 'female', 'male'] as const).map(g => (
+                    <Button
+                      key={g}
+                      pressed={modelGenderFilter === g}
+                      onClick={() => setModelGenderFilter(g)}
+                    >
+                      {g === 'all' ? 'All Models' : genderLabels[g]}
+                    </Button>
+                  ))}
+                </InlineStack>
+
+                {/* Model Grid */}
+                <InlineGrid columns={{ xs: 2, sm: 3, md: 4 }} gap="400">
+                  {filteredModels.map(model => (
+                    <ModelSelectorCard
+                      key={model.modelId}
+                      model={model}
+                      isSelected={selectedModel?.modelId === model.modelId}
+                      onSelect={() => handleSelectModel(model)}
+                    />
+                  ))}
+                </InlineGrid>
+
+                <InlineStack align="space-between">
+                  <Button onClick={() => setCurrentStep('mode')}>
+                    Back
+                  </Button>
+                  <Button
+                    variant="primary"
+                    disabled={!selectedModel}
+                    onClick={() => setCurrentStep('pose')}
+                  >
+                    Continue to Pose Selection
+                  </Button>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+          </BlockStack>
+        )}
+
+        {/* Pose Selection Step - Virtual Try-On only */}
+        {currentStep === 'pose' && selectedProduct && selectedModel && (
+          <BlockStack gap="400">
+            {/* Context Card */}
+            <Card>
+              <InlineStack gap="400" blockAlign="center">
+                <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-shopify-green">
+                  <img src={selectedModel.previewUrl} alt={selectedModel.name} className="w-full h-full object-cover" />
+                </div>
+                <BlockStack gap="050">
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {selectedModel.name} wearing:
+                  </Text>
+                  <Text as="p" variant="bodyMd" fontWeight="semibold">{selectedProduct.title}</Text>
+                </BlockStack>
+              </InlineStack>
+            </Card>
+
+            <Card>
+              <BlockStack gap="400">
+                <BlockStack gap="200">
+                  <Text as="h2" variant="headingMd">
+                    Choose a Pose & Scene
+                  </Text>
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Select the photography style and setting for your virtual try-on shots.
+                  </Text>
+                </BlockStack>
+
+                {/* Pose Grid */}
+                <InlineGrid columns={{ xs: 2, sm: 3, md: 3 }} gap="400">
+                  {mockTryOnPoses.map(pose => (
+                    <PoseSelectorCard
+                      key={pose.poseId}
+                      pose={pose}
+                      isSelected={selectedPose?.poseId === pose.poseId}
+                      onSelect={() => handleSelectPose(pose)}
+                    />
+                  ))}
+                </InlineGrid>
+
+                <InlineStack align="space-between">
+                  <Button onClick={() => setCurrentStep('model')}>
+                    Back
+                  </Button>
+                  <Button
+                    variant="primary"
+                    disabled={!selectedPose}
+                    onClick={() => setCurrentStep('settings')}
+                  >
+                    Continue to Settings
+                  </Button>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+          </BlockStack>
+        )}
+
+        {/* Step 2: Template Selection (Product-Only mode) */}
+        {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && selectedProduct && (
           <>
             {/* Selected Product Card */}
             <Card>
@@ -673,8 +935,8 @@ export default function Generate() {
               </BlockStack>
             )}
 
-            {/* Settings Step */}
-            {currentStep === 'settings' && selectedTemplate && (
+            {/* Settings Step - Product Only Mode */}
+            {currentStep === 'settings' && selectedTemplate && generationMode === 'product-only' && (
               <BlockStack gap="400">
                 {/* Selected Template */}
                 <Card>
@@ -855,26 +1117,146 @@ export default function Generate() {
           </>
         )}
 
+        {/* Settings Step - Virtual Try-On Mode */}
+        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && selectedProduct && (
+          <BlockStack gap="400">
+            {/* Summary Card */}
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h3" variant="headingSm" tone="subdued">
+                  Virtual Try-On Summary
+                </Text>
+                <InlineStack gap="600" wrap>
+                  {/* Product */}
+                  <BlockStack gap="200">
+                    <Text as="p" variant="bodySm" tone="subdued">Product</Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <Thumbnail
+                        source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                        alt={selectedProduct.title}
+                        size="small"
+                      />
+                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedProduct.title}</Text>
+                    </InlineStack>
+                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('product')}>Change</Button>
+                  </BlockStack>
+
+                  {/* Model */}
+                  <BlockStack gap="200">
+                    <Text as="p" variant="bodySm" tone="subdued">Model</Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <img src={selectedModel.previewUrl} alt={selectedModel.name} className="w-full h-full object-cover" />
+                      </div>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedModel.name}</Text>
+                    </InlineStack>
+                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('model')}>Change</Button>
+                  </BlockStack>
+
+                  {/* Pose */}
+                  <BlockStack gap="200">
+                    <Text as="p" variant="bodySm" tone="subdued">Pose</Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden">
+                        <img src={selectedPose.previewUrl} alt={selectedPose.name} className="w-full h-full object-cover" />
+                      </div>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedPose.name}</Text>
+                    </InlineStack>
+                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('pose')}>Change</Button>
+                  </BlockStack>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+
+            {/* Generation Settings */}
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h3" variant="headingMd">
+                  Generation Settings
+                </Text>
+                <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+                  <Select
+                    label="Number of Images"
+                    options={[
+                      { label: '1 image (saves credits)', value: '1' },
+                      { label: '4 images (recommended)', value: '4' },
+                      { label: '8 images (maximum variety)', value: '8' },
+                    ]}
+                    value={imageCount}
+                    onChange={(v) => setImageCount(v as '1' | '4' | '8')}
+                  />
+                  <div>
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Output Quality</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Virtual Try-On uses High quality by default
+                    </Text>
+                  </div>
+                </InlineGrid>
+                
+                {/* Visual Aspect Ratio Selector */}
+                <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                
+                <Checkbox
+                  label="Keep my product looking exactly like it does"
+                  checked={preserveAccuracy}
+                  onChange={setPreserveAccuracy}
+                  helpText="When on, the AI won't change your garment's colors, patterns, or details"
+                />
+              </BlockStack>
+            </Card>
+
+            {/* Credits Notice */}
+            <Banner tone="warning">
+              <InlineStack align="space-between" blockAlign="center">
+                <BlockStack gap="100">
+                  <Text as="p" fontWeight="semibold">
+                    Virtual Try-On uses <strong>{creditCost} credits</strong>
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {parseInt(imageCount)} images × 3 credits each (premium AI processing)
+                  </Text>
+                </BlockStack>
+                <Text as="p" fontWeight="semibold">
+                  {mockShop.creditsBalance} credits available
+                </Text>
+              </InlineStack>
+            </Banner>
+
+            {/* Generate Button */}
+            <InlineStack align="end" gap="200">
+              <Button onClick={() => setCurrentStep('pose')}>
+                Back
+              </Button>
+              <Button variant="primary" onClick={handleGenerateClick}>
+                Generate {imageCount} Try-On Images
+              </Button>
+            </InlineStack>
+          </BlockStack>
+        )}
+
         {/* Generating State */}
         {currentStep === 'generating' && (
           <Card>
             <BlockStack gap="600" inlineAlign="center">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse-subtle">
-                <Icon source={ImageIcon} tone="primary" />
+                <Icon source={generationMode === 'virtual-try-on' ? PersonIcon : ImageIcon} tone="primary" />
               </div>
               <BlockStack gap="200" inlineAlign="center">
                 <Text as="h2" variant="headingLg">
-                  Creating Your Images...
+                  {generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}
                 </Text>
                 <Text as="p" variant="bodyMd" tone="subdued">
-                  Creating {imageCount} images of "{selectedProduct?.title}" with {selectedTemplate?.name}
+                  {generationMode === 'virtual-try-on' 
+                    ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}" with ${selectedPose?.name} pose`
+                    : `Creating ${imageCount} images of "${selectedProduct?.title}" with ${selectedTemplate?.name}`
+                  }
                 </Text>
               </BlockStack>
               <div className="w-full max-w-md">
                 <ProgressBar progress={Math.min(generatingProgress, 100)} size="small" />
               </div>
               <Text as="p" variant="bodySm" tone="subdued">
-                This usually takes 10-15 seconds
+                {generationMode === 'virtual-try-on' ? 'This usually takes 20-30 seconds' : 'This usually takes 10-15 seconds'}
               </Text>
               <Button 
                 variant="plain" 
