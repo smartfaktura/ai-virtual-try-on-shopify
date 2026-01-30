@@ -54,8 +54,27 @@ export default function Settings() {
   const [inAppFailed, setInAppFailed] = useState(true);
   const [inAppTips, setInAppTips] = useState(true);
 
+  // Billing
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const currentPlanId = 'growth'; // Mock current plan
+
   const handleSave = () => {
     toast.success('Settings saved successfully!');
+  };
+
+  const handlePlanSelect = (planId: string) => {
+    if (planId === 'enterprise') {
+      toast.info('Our team will reach out to discuss your needs!');
+    } else {
+      toast.success(`Switched to ${planId} plan!`);
+    }
+  };
+
+  const handleCreditPurchase = (packId: string) => {
+    const pack = creditPacks.find(p => p.packId === packId);
+    if (pack) {
+      toast.success(`Purchased ${pack.credits} credits for $${pack.price}!`);
+    }
   };
 
   const creditsUsed = 1000 - mockShop.creditsBalance;
