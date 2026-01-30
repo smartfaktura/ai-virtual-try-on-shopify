@@ -981,104 +981,127 @@ export default function Generate() {
         {/* Step 2: Template Selection (Product-Only mode) */}
         {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && (selectedProduct || scratchUpload) && (
           <>
-            {/* Selected Product Card */}
+            {/* Selected Product/Upload Card */}
             <Card>
               <BlockStack gap="300">
                 <InlineStack align="space-between">
                   <Text as="h3" variant="headingSm" tone="subdued">
-                    Selected Product
+                    {sourceType === 'scratch' ? 'Uploaded Image' : 'Selected Product'}
                   </Text>
-                  <Button variant="plain" onClick={() => setProductPickerOpen(true)}>
+                  <Button variant="plain" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>
                     Change
                   </Button>
                 </InlineStack>
-                <InlineStack gap="400" blockAlign="center">
-                  <Thumbnail
-                    source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                    alt={selectedProduct.title}
-                    size="large"
-                  />
-                  <BlockStack gap="100">
-                    <Text as="p" variant="bodyLg" fontWeight="semibold">
-                      {selectedProduct.title}
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      {selectedProduct.vendor} • {selectedProduct.productType}
-                    </Text>
-                    <InlineStack gap="100">
-                      {selectedProduct.tags.map(tag => (
-                        <Badge key={tag}>{tag}</Badge>
-                      ))}
-                    </InlineStack>
-                  </BlockStack>
-                </InlineStack>
-                {selectedProduct.images.length > 0 && (
-                  <BlockStack gap="300">
-                    <Divider />
-                    <BlockStack gap="200">
-                      <Text as="h4" variant="headingSm">
-                        Source images for generation
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Select which image(s) to use as reference for AI generation:
-                      </Text>
-                    </BlockStack>
-                    
-                    <div className="flex flex-wrap gap-3">
-                      {selectedProduct.images.map(img => {
-                        const isSelected = selectedSourceImages.has(img.id);
-                        return (
-                          <div
-                            key={img.id}
-                            onClick={() => toggleSourceImage(img.id)}
-                            className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
-                              isSelected 
-                                ? 'ring-2 ring-primary ring-offset-2' 
-                                : 'ring-1 ring-border hover:ring-primary'
-                            }`}
-                          >
-                            <img 
-                              src={img.url} 
-                              alt={img.altText || ''} 
-                              className="w-16 h-16 object-cover"
-                            />
-                            {isSelected && (
-                              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                {sourceType === 'scratch' && scratchUpload ? (
+                  <InlineStack gap="400" blockAlign="center">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                      <img src={scratchUpload.previewUrl} alt={scratchUpload.productInfo.title} className="w-full h-full object-cover" />
                     </div>
-                    
-                    <InlineStack align="space-between" blockAlign="center">
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        {selectedSourceImages.size} of {selectedProduct.images.length} selected
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodyLg" fontWeight="semibold">
+                        {scratchUpload.productInfo.title}
                       </Text>
-                      {selectedProduct.images.length > 1 && (
-                        <InlineStack gap="200">
-                          <Button variant="plain" size="micro" onClick={selectAllSourceImages}>
-                            Select All
-                          </Button>
-                          <Button variant="plain" size="micro" onClick={clearSourceImages}>
-                            Clear
-                          </Button>
-                        </InlineStack>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Custom Upload • {scratchUpload.productInfo.productType}
+                      </Text>
+                      {scratchUpload.productInfo.description && (
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          {scratchUpload.productInfo.description.slice(0, 80)}...
+                        </Text>
                       )}
+                    </BlockStack>
+                  </InlineStack>
+                ) : selectedProduct && (
+                  <>
+                    <InlineStack gap="400" blockAlign="center">
+                      <Thumbnail
+                        source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                        alt={selectedProduct.title}
+                        size="large"
+                      />
+                      <BlockStack gap="100">
+                        <Text as="p" variant="bodyLg" fontWeight="semibold">
+                          {selectedProduct.title}
+                        </Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          {selectedProduct.vendor} • {selectedProduct.productType}
+                        </Text>
+                        <InlineStack gap="100">
+                          {selectedProduct.tags.map(tag => (
+                            <Badge key={tag}>{tag}</Badge>
+                          ))}
+                        </InlineStack>
+                      </BlockStack>
                     </InlineStack>
-                  </BlockStack>
-                )}
-                {selectedProduct.images.length === 0 && (
-                  <Banner tone="warning">
-                    <Text as="p" variant="bodySm">
-                      This product has no images. Please add product images in Shopify first.
-                    </Text>
-                  </Banner>
+                    {selectedProduct.images.length > 0 && (
+                      <BlockStack gap="300">
+                        <Divider />
+                        <BlockStack gap="200">
+                          <Text as="h4" variant="headingSm">
+                            Source images for generation
+                          </Text>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            Select which image(s) to use as reference for AI generation:
+                          </Text>
+                        </BlockStack>
+                        
+                        <div className="flex flex-wrap gap-3">
+                          {selectedProduct.images.map(img => {
+                            const isSelected = selectedSourceImages.has(img.id);
+                            return (
+                              <div
+                                key={img.id}
+                                onClick={() => toggleSourceImage(img.id)}
+                                className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
+                                  isSelected 
+                                    ? 'ring-2 ring-primary ring-offset-2' 
+                                    : 'ring-1 ring-border hover:ring-primary'
+                                }`}
+                              >
+                                <img 
+                                  src={img.url} 
+                                  alt={img.altText || ''} 
+                                  className="w-16 h-16 object-cover"
+                                />
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        <InlineStack align="space-between" blockAlign="center">
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            {selectedSourceImages.size} of {selectedProduct.images.length} selected
+                          </Text>
+                          {selectedProduct.images.length > 1 && (
+                            <InlineStack gap="200">
+                              <Button variant="plain" size="micro" onClick={selectAllSourceImages}>
+                                Select All
+                              </Button>
+                              <Button variant="plain" size="micro" onClick={clearSourceImages}>
+                                Clear
+                              </Button>
+                            </InlineStack>
+                          )}
+                        </InlineStack>
+                      </BlockStack>
+                    )}
+                    {selectedProduct.images.length === 0 && (
+                      <Banner tone="warning">
+                        <Text as="p" variant="bodySm">
+                          This product has no images. Please add product images in Shopify first.
+                        </Text>
+                      </Banner>
+                    )}
+                  </>
                 )}
               </BlockStack>
             </Card>
