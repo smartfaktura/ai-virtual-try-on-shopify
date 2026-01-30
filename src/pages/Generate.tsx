@@ -556,42 +556,43 @@ export default function Generate() {
       backAction={{ content: 'Dashboard', onAction: () => navigate('/') }}
     >
       <BlockStack gap="600">
-        {/* Progress indicator with step descriptions */}
+        {/* Progress indicator with step descriptions - Mobile optimized */}
         <Card>
           <BlockStack gap="200">
-            <InlineStack gap="400" align="center" wrap={false}>
-              {getSteps().map((step, index) => (
-                <InlineStack key={step.name} gap="200" blockAlign="center">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                      getStepNumber() > index + 1
-                        ? 'bg-primary text-primary-foreground'
-                        : getStepNumber() === index + 1
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {getStepNumber() > index + 1 ? '✓' : index + 1}
-                  </div>
-                  <BlockStack gap="0">
-                    <Text
-                      as="span"
-                      variant="bodySm"
-                      fontWeight={getStepNumber() === index + 1 ? 'semibold' : 'regular'}
-                      tone={getStepNumber() >= index + 1 ? undefined : 'subdued'}
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <InlineStack gap="200" align="center" wrap={false}>
+                {getSteps().map((step, index) => (
+                  <InlineStack key={step.name} gap="100" blockAlign="center">
+                    <div
+                      className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors flex-shrink-0 ${
+                        getStepNumber() > index + 1
+                          ? 'bg-primary text-primary-foreground'
+                          : getStepNumber() === index + 1
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
                     >
-                      <span className="hidden sm:inline">{step.name}</span>
-                      <span className="sm:hidden">{index + 1}</span>
-                    </Text>
-                  </BlockStack>
-                  {index < getSteps().length - 1 && (
-                    <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
-                  )}
-                </InlineStack>
-              ))}
-            </InlineStack>
+                      {getStepNumber() > index + 1 ? '✓' : index + 1}
+                    </div>
+                    <BlockStack gap="0">
+                      <Text
+                        as="span"
+                        variant="bodySm"
+                        fontWeight={getStepNumber() === index + 1 ? 'semibold' : 'regular'}
+                        tone={getStepNumber() >= index + 1 ? undefined : 'subdued'}
+                      >
+                        <span className="hidden md:inline">{step.name}</span>
+                      </Text>
+                    </BlockStack>
+                    {index < getSteps().length - 1 && (
+                      <div className={`w-4 sm:w-8 md:w-12 h-0.5 flex-shrink-0 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
+                    )}
+                  </InlineStack>
+                ))}
+              </InlineStack>
+            </div>
             <Text as="p" variant="bodySm" tone="subdued" alignment="center">
-              {generationMode === 'virtual-try-on' ? 'About 3-4 minutes total' : 'About 2-3 minutes total'}
+              <span className="text-xs sm:text-sm">{generationMode === 'virtual-try-on' ? 'About 3-4 minutes total' : 'About 2-3 minutes total'}</span>
             </Text>
           </BlockStack>
         </Card>
