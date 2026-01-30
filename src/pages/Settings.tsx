@@ -13,12 +13,14 @@ import {
   InlineGrid,
   ProgressBar,
   Badge,
-  Link,
-  Icon,
+  ButtonGroup,
 } from '@shopify/polaris';
-import { ExternalIcon, QuestionCircleIcon, ChatIcon } from '@shopify/polaris-icons';
+import { QuestionCircleIcon, ChatIcon } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
-import { mockShop } from '@/data/mockData';
+import { PlanCard } from '@/components/app/PlanCard';
+import { CreditPackCard } from '@/components/app/CreditPackCard';
+import { CompetitorComparison } from '@/components/app/CompetitorComparison';
+import { mockShop, pricingPlans, creditPacks } from '@/data/mockData';
 import type { BrandTone, BackgroundStyle } from '@/types';
 import { toast } from 'sonner';
 
@@ -52,8 +54,27 @@ export default function Settings() {
   const [inAppFailed, setInAppFailed] = useState(true);
   const [inAppTips, setInAppTips] = useState(true);
 
+  // Billing
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const currentPlanId = 'growth'; // Mock current plan
+
   const handleSave = () => {
     toast.success('Settings saved successfully!');
+  };
+
+  const handlePlanSelect = (planId: string) => {
+    if (planId === 'enterprise') {
+      toast.info('Our team will reach out to discuss your needs!');
+    } else {
+      toast.success(`Switched to ${planId} plan!`);
+    }
+  };
+
+  const handleCreditPurchase = (packId: string) => {
+    const pack = creditPacks.find(p => p.packId === packId);
+    if (pack) {
+      toast.success(`Purchased ${pack.credits} credits for $${pack.price}!`);
+    }
   };
 
   const creditsUsed = 1000 - mockShop.creditsBalance;
@@ -268,39 +289,94 @@ export default function Settings() {
           </BlockStack>
         </Card>
 
-        {/* Billing & Credits */}
-        <Card>
-          <BlockStack gap="400">
-            <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">Billing & Credits</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Manage your subscription and view credit usage</Text>
-            </BlockStack>
-            
-            <InlineStack align="space-between" blockAlign="center">
-              <BlockStack gap="100">
-                <Text as="p" variant="bodyMd">Current Plan</Text>
-                <InlineStack gap="200" blockAlign="center">
-                  <Badge tone="success">Pro</Badge>
-                  <Text as="p" variant="bodySm" tone="subdued">1,000 credits/month</Text>
-                </InlineStack>
-              </BlockStack>
-              <Button>Upgrade Plan</Button>
-            </InlineStack>
-
-            <Divider />
-            
-            <BlockStack gap="200">
-              <InlineStack align="space-between">
-                <Text as="p" variant="bodyMd">Credits Remaining</Text>
-                <Text as="p" variant="bodyMd" fontWeight="semibold">{mockShop.creditsBalance} / {creditsTotal}</Text>
-              </InlineStack>
-              <ProgressBar progress={creditsPercentage} size="small" tone="primary" />
-              <Text as="p" variant="bodySm" tone="subdued">Resets on the 1st of each month</Text>
-            </BlockStack>
-
-            <Banner tone="info">Need more credits? Upgrade your plan or purchase additional credits.</Banner>
+        {/* Plans & Billing */}
+        <BlockStack gap="400">
+          <BlockStack gap="100">
+            <Text as="h2" variant="headingLg">Plans & Billing</Text>
+            <Text as="p" variant="bodySm" tone="subdued">Choose the plan that's right for your business</Text>
           </BlockStack>
-        </Card>
+
+          {/* Current Plan Status */}
+          <Card>
+            <BlockStack gap="400">
+              <InlineStack align="space-between" blockAlign="center">
+                <BlockStack gap="100">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Text as="h3" variant="headingMd">Current Plan</Text>
+                    <Badge tone="success">Growth</Badge>
+                  </InlineStack>
+                  <Text as="p" variant="bodySm" tone="subdued">500 credits/month • Renews Feb 15, 2026</Text>
+                </BlockStack>
+              </InlineStack>
+              
+              <Divider />
+              
+              <BlockStack gap="200">
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd">Credits Remaining</Text>
+                  <Text as="p" variant="bodyMd" fontWeight="semibold">{mockShop.creditsBalance} / {creditsTotal}</Text>
+                </InlineStack>
+                <ProgressBar progress={creditsPercentage} size="small" tone="primary" />
+                <Text as="p" variant="bodySm" tone="subdued">Resets on the 1st of each month</Text>
+              </BlockStack>
+            </BlockStack>
+          </Card>
+
+          {/* Billing Period Toggle */}
+          <InlineStack align="space-between" blockAlign="center">
+            <Text as="h3" variant="headingMd">Choose Your Plan</Text>
+            <ButtonGroup variant="segmented">
+              <Button 
+                pressed={billingPeriod === 'monthly'} 
+                onClick={() => setBillingPeriod('monthly')}
+              >
+                Monthly
+              </Button>
+              <Button 
+                pressed={billingPeriod === 'annual'} 
+                onClick={() => setBillingPeriod('annual')}
+              >
+                Annual (Save 17%)
+              </Button>
+            </ButtonGroup>
+          </InlineStack>
+
+          {/* Plan Cards */}
+          <InlineGrid columns={{ xs: 1, sm: 2, lg: 4 }} gap="400">
+            {pricingPlans.map((plan) => (
+              <PlanCard
+                key={plan.planId}
+                plan={plan}
+                isAnnual={billingPeriod === 'annual'}
+                isCurrentPlan={plan.planId === currentPlanId}
+                onSelect={handlePlanSelect}
+              />
+            ))}
+          </InlineGrid>
+
+          {/* Credit Top-ups */}
+          <Card>
+            <BlockStack gap="400">
+              <BlockStack gap="100">
+                <Text as="h3" variant="headingMd">Need More Credits?</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Purchase additional credits anytime • Credits never expire</Text>
+              </BlockStack>
+              
+              <InlineGrid columns={{ xs: 1, sm: 3 }} gap="400">
+                {creditPacks.map((pack) => (
+                  <CreditPackCard
+                    key={pack.packId}
+                    pack={pack}
+                    onPurchase={handleCreditPurchase}
+                  />
+                ))}
+              </InlineGrid>
+            </BlockStack>
+          </Card>
+
+          {/* Competitor Comparison */}
+          <CompetitorComparison />
+        </BlockStack>
 
         {/* Team & Permissions */}
         <Card>
