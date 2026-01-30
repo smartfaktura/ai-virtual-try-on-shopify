@@ -10,28 +10,30 @@ import {
   Badge,
   TextField,
   Select,
-  Popover,
-  ActionList,
-  Modal,
   InlineGrid,
-  Tabs,
   Icon,
-  Thumbnail,
 } from '@shopify/polaris';
-import { SearchIcon, PlusIcon, MenuHorizontalIcon, ImageIcon } from '@shopify/polaris-icons';
+import { SearchIcon, ImageIcon, ViewIcon, PlayIcon } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
 import { mockTemplates, categoryLabels } from '@/data/mockData';
 import { getTemplateImage } from '@/components/app/TemplatePreviewCard';
 import type { Template, TemplateCategory } from '@/types';
-import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button as ShadcnButton } from '@/components/ui/button';
+import { Badge as ShadcnBadge } from '@/components/ui/badge';
 
 export default function Templates() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
-  const [activePopover, setActivePopover] = useState<string | null>(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
 
   const categories = [
     { id: 'all', content: 'All' },
@@ -49,22 +51,8 @@ export default function Templates() {
     return true;
   });
 
-  const handleDuplicate = (template: Template) => {
-    toast.success(`Template "${template.name}" duplicated`);
-    setActivePopover(null);
-  };
-
-  const handleToggleEnabled = (template: Template) => {
-    toast.success(`Template "${template.name}" ${template.enabled ? 'disabled' : 'enabled'}`);
-    setActivePopover(null);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (templateToDelete) {
-      toast.success(`Template "${templateToDelete.name}" deleted`);
-      setDeleteModalOpen(false);
-      setTemplateToDelete(null);
-    }
+  const handleUseTemplate = (templateId: string) => {
+    navigate(`/generate?template=${templateId}`);
   };
 
   const rows = filteredTemplates.map(template => {
@@ -96,59 +84,26 @@ export default function Templates() {
         {template.enabled ? 'Active' : 'Disabled'}
       </Badge>,
       new Date(template.updatedAt).toLocaleDateString(),
-    <Popover
-      key={`actions-${template.templateId}`}
-      active={activePopover === template.templateId}
-      activator={
+      <InlineStack key={`actions-${template.templateId}`} gap="200">
         <Button
-          icon={MenuHorizontalIcon}
+          icon={PlayIcon}
+          onClick={() => handleUseTemplate(template.templateId)}
+        >
+          Use
+        </Button>
+        <Button
+          icon={ViewIcon}
           variant="plain"
-          onClick={() => setActivePopover(activePopover === template.templateId ? null : template.templateId)}
-        />
-      }
-      onClose={() => setActivePopover(null)}
-    >
-      <ActionList
-        items={[
-          {
-            content: 'Edit',
-            onAction: () => {
-              navigate(`/templates/${template.templateId}`);
-              setActivePopover(null);
-            },
-          },
-          {
-            content: 'Duplicate',
-            onAction: () => handleDuplicate(template),
-          },
-          {
-            content: template.enabled ? 'Disable' : 'Enable',
-            onAction: () => handleToggleEnabled(template),
-          },
-          {
-            content: 'Delete',
-            destructive: true,
-            onAction: () => {
-              setTemplateToDelete(template);
-              setDeleteModalOpen(true);
-              setActivePopover(null);
-            },
-          },
-        ]}
-      />
-    </Popover>,
+          onClick={() => setPreviewTemplate(template)}
+        >
+          Preview
+        </Button>
+      </InlineStack>,
     ];
   });
 
   return (
-    <PageHeader
-      title="Templates"
-      primaryAction={{
-        content: 'Create template',
-        icon: PlusIcon,
-        onAction: () => navigate('/templates/new'),
-      }}
-    >
+    <PageHeader title="Templates">
       <BlockStack gap="400">
         <Card>
           <BlockStack gap="400">
@@ -201,29 +156,69 @@ export default function Templates() {
         </InlineGrid>
       </BlockStack>
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        open={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        title="Delete template?"
-        primaryAction={{
-          content: 'Delete',
-          destructive: true,
-          onAction: handleDeleteConfirm,
-        }}
-        secondaryActions={[
-          {
-            content: 'Cancel',
-            onAction: () => setDeleteModalOpen(false),
-          },
-        ]}
-      >
-        <Modal.Section>
-          <Text as="p">
-            Are you sure you want to delete "{templateToDelete?.name}"? This action cannot be undone.
-          </Text>
-        </Modal.Section>
-      </Modal>
+      {/* Preview Modal */}
+      <Dialog open={!!previewTemplate} onOpenChange={() => setPreviewTemplate(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{previewTemplate?.name}</DialogTitle>
+            <DialogDescription>
+              Template preview and details
+            </DialogDescription>
+          </DialogHeader>
+          
+          {previewTemplate && (
+            <div className="space-y-4">
+              {/* Large Preview Image */}
+              <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+                {getTemplateImage(previewTemplate.templateId) ? (
+                  <img 
+                    src={getTemplateImage(previewTemplate.templateId)} 
+                    alt={previewTemplate.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Icon source={ImageIcon} tone="subdued" />
+                  </div>
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <ShadcnBadge variant="secondary">
+                    {categoryLabels[previewTemplate.category]}
+                  </ShadcnBadge>
+                  <ShadcnBadge variant={previewTemplate.enabled ? 'default' : 'outline'}>
+                    {previewTemplate.enabled ? 'Active' : 'Disabled'}
+                  </ShadcnBadge>
+                </div>
+                
+                <p className="text-sm text-muted-foreground">
+                  {previewTemplate.description}
+                </p>
+
+                <div className="text-xs text-muted-foreground">
+                  Last updated: {new Date(previewTemplate.updatedAt).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <ShadcnButton variant="outline" onClick={() => setPreviewTemplate(null)}>
+              Close
+            </ShadcnButton>
+            <ShadcnButton onClick={() => {
+              if (previewTemplate) {
+                handleUseTemplate(previewTemplate.templateId);
+              }
+            }}>
+              Use this template
+            </ShadcnButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageHeader>
   );
 }
