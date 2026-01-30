@@ -129,7 +129,7 @@ export default function Jobs() {
         )}
         {job.status === 'completed' && unpublishedCount > 0 && (
           <Button size="slim" variant="primary" onClick={() => handlePublishClick(job)}>
-            Publish {unpublishedCount}
+            {`Publish ${unpublishedCount}`}
           </Button>
         )}
       </InlineStack>,
