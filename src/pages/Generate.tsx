@@ -1206,7 +1206,7 @@ export default function Generate() {
             </Card>
 
             {/* Credits Notice */}
-            <Banner tone="attention">
+            <Banner tone="warning">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
                   <Text as="p" fontWeight="semibold">
