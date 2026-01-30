@@ -1498,8 +1498,8 @@ export default function Generate() {
               </BlockStack>
             </Card>
 
-            {/* Source Image Selection for Virtual Try-On */}
-            {selectedProduct.images.length > 0 && (
+            {/* Source Image Selection for Virtual Try-On - Only show for product source */}
+            {sourceType === 'product' && selectedProduct && selectedProduct.images.length > 0 && (
               <Card>
                 <BlockStack gap="300">
                   <BlockStack gap="200">
@@ -1551,6 +1551,37 @@ export default function Generate() {
                       Tip: Choose a clear, front-facing photo with good lighting for best results
                     </Text>
                   )}
+                </BlockStack>
+              </Card>
+            )}
+
+            {/* Source Image Preview for Scratch Upload */}
+            {sourceType === 'scratch' && scratchUpload && (
+              <Card>
+                <BlockStack gap="300">
+                  <BlockStack gap="200">
+                    <Text as="h3" variant="headingMd">
+                      Source Reference Image
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Your uploaded image will be used as reference to dress the model.
+                    </Text>
+                  </BlockStack>
+                  
+                  <div className="relative w-24 h-24 rounded-lg overflow-hidden ring-2 ring-primary ring-offset-2">
+                    <img 
+                      src={scratchUpload.previewUrl} 
+                      alt={scratchUpload.productInfo.title} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
                 </BlockStack>
               </Card>
             )}
