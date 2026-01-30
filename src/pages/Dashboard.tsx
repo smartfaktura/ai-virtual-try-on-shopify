@@ -99,20 +99,16 @@ export default function Dashboard() {
         {/* Quick Generate Card */}
         <Card>
           <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">
-              Quick Generate
-            </Text>
+            <InlineStack align="space-between">
+              <Text as="h2" variant="headingMd">
+                Quick Generate
+              </Text>
+              <Badge tone="info">{`${mockMetrics.creditsRemaining} credits`}</Badge>
+            </InlineStack>
             <Text as="p" variant="bodyMd" tone="subdued">
-              Start generating product images in seconds. Select a product and template to begin.
+              Start generating product images in seconds. Select a template and click generate.
             </Text>
             <InlineGrid columns={{ xs: 1, md: 3 }} gap="400" alignItems="end">
-              <Button
-                size="large"
-                onClick={() => navigate('/generate')}
-                variant="secondary"
-              >
-                Select Product
-              </Button>
               <Select
                 label="Template"
                 labelHidden
@@ -123,10 +119,16 @@ export default function Dashboard() {
               <Button
                 variant="primary"
                 size="large"
-                onClick={() => navigate('/generate')}
-                disabled={!selectedTemplate}
+                onClick={() => navigate(selectedTemplate ? `/generate?template=${selectedTemplate}` : '/generate')}
               >
-                Generate 4 Images
+                {selectedTemplate ? 'Select Product & Generate' : 'Start Generating'}
+              </Button>
+              <Button
+                size="large"
+                onClick={() => navigate('/generate')}
+                variant="plain"
+              >
+                Browse all templates
               </Button>
             </InlineGrid>
           </BlockStack>
