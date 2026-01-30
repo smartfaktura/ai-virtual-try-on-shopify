@@ -716,3 +716,164 @@ export const categoryLabels: Record<string, string> = {
   supplements: 'Supplements',
   universal: 'Universal',
 };
+
+// Virtual Try-On Mock Data
+import type { ModelProfile, TryOnPose } from '@/types';
+
+// Model preview images
+import modelFemaleSlimAsian from '@/assets/models/model-female-slim-asian.jpg';
+import modelFemaleAthleticBlack from '@/assets/models/model-female-athletic-black.jpg';
+import modelFemalePlussizeLatina from '@/assets/models/model-female-plussize-latina.jpg';
+import modelFemaleAverageEuropean from '@/assets/models/model-female-average-european.jpg';
+import modelMaleSlimMiddleeast from '@/assets/models/model-male-slim-middleeast.jpg';
+import modelMaleAthleticBlack from '@/assets/models/model-male-athletic-black.jpg';
+import modelMaleAverageAsian from '@/assets/models/model-male-average-asian.jpg';
+import modelMalePlussizeEuropean from '@/assets/models/model-male-plussize-european.jpg';
+
+// Pose preview images
+import poseStudioFront from '@/assets/poses/pose-studio-front.jpg';
+import poseLifestyleWalking from '@/assets/poses/pose-lifestyle-walking.jpg';
+import poseEditorialDramatic from '@/assets/poses/pose-editorial-dramatic.jpg';
+import poseStreetwearUrban from '@/assets/poses/pose-streetwear-urban.jpg';
+import poseLifestyleSeated from '@/assets/poses/pose-lifestyle-seated.jpg';
+import poseStudioProfile from '@/assets/poses/pose-studio-profile.jpg';
+
+export const mockModels: ModelProfile[] = [
+  {
+    modelId: 'model_001',
+    name: 'Yuki',
+    gender: 'female',
+    bodyType: 'slim',
+    ethnicity: 'East Asian',
+    ageRange: 'young-adult',
+    previewUrl: modelFemaleSlimAsian,
+  },
+  {
+    modelId: 'model_002',
+    name: 'Amara',
+    gender: 'female',
+    bodyType: 'athletic',
+    ethnicity: 'Black African',
+    ageRange: 'adult',
+    previewUrl: modelFemaleAthleticBlack,
+  },
+  {
+    modelId: 'model_003',
+    name: 'Isabella',
+    gender: 'female',
+    bodyType: 'plus-size',
+    ethnicity: 'Latina',
+    ageRange: 'young-adult',
+    previewUrl: modelFemalePlussizeLatina,
+  },
+  {
+    modelId: 'model_004',
+    name: 'Charlotte',
+    gender: 'female',
+    bodyType: 'average',
+    ethnicity: 'European',
+    ageRange: 'mature',
+    previewUrl: modelFemaleAverageEuropean,
+  },
+  {
+    modelId: 'model_005',
+    name: 'Omar',
+    gender: 'male',
+    bodyType: 'slim',
+    ethnicity: 'Middle Eastern',
+    ageRange: 'young-adult',
+    previewUrl: modelMaleSlimMiddleeast,
+  },
+  {
+    modelId: 'model_006',
+    name: 'Marcus',
+    gender: 'male',
+    bodyType: 'athletic',
+    ethnicity: 'Black African',
+    ageRange: 'adult',
+    previewUrl: modelMaleAthleticBlack,
+  },
+  {
+    modelId: 'model_007',
+    name: 'Jin',
+    gender: 'male',
+    bodyType: 'average',
+    ethnicity: 'East Asian',
+    ageRange: 'young-adult',
+    previewUrl: modelMaleAverageAsian,
+  },
+  {
+    modelId: 'model_008',
+    name: 'Henrik',
+    gender: 'male',
+    bodyType: 'plus-size',
+    ethnicity: 'European',
+    ageRange: 'mature',
+    previewUrl: modelMalePlussizeEuropean,
+  },
+];
+
+export const mockTryOnPoses: TryOnPose[] = [
+  {
+    poseId: 'pose_001',
+    name: 'Studio Front',
+    category: 'studio',
+    description: 'Classic lookbook pose, full body front view with clean white background',
+    previewUrl: poseStudioFront,
+  },
+  {
+    poseId: 'pose_002',
+    name: 'Studio Profile',
+    category: 'studio',
+    description: 'Elegant three-quarter turn, professional studio lighting',
+    previewUrl: poseStudioProfile,
+  },
+  {
+    poseId: 'pose_003',
+    name: 'Urban Walking',
+    category: 'lifestyle',
+    description: 'Candid street style, walking in city with golden hour light',
+    previewUrl: poseLifestyleWalking,
+  },
+  {
+    poseId: 'pose_004',
+    name: 'Relaxed Seated',
+    category: 'lifestyle',
+    description: 'Casual seated pose in modern interior with natural light',
+    previewUrl: poseLifestyleSeated,
+  },
+  {
+    poseId: 'pose_005',
+    name: 'Editorial Dramatic',
+    category: 'editorial',
+    description: 'High-fashion pose with dramatic lighting and concrete backdrop',
+    previewUrl: poseEditorialDramatic,
+  },
+  {
+    poseId: 'pose_006',
+    name: 'Street Lean',
+    category: 'streetwear',
+    description: 'Urban street style against graffiti wall, hip-hop inspired',
+    previewUrl: poseStreetwearUrban,
+  },
+];
+
+export const poseCategoryLabels: Record<string, string> = {
+  studio: 'Studio',
+  lifestyle: 'Lifestyle',
+  editorial: 'Editorial',
+  streetwear: 'Streetwear',
+};
+
+export const bodyTypeLabels: Record<string, string> = {
+  slim: 'Slim',
+  athletic: 'Athletic',
+  average: 'Average',
+  'plus-size': 'Plus Size',
+};
+
+export const genderLabels: Record<string, string> = {
+  male: 'Male',
+  female: 'Female',
+  'non-binary': 'Non-Binary',
+};
