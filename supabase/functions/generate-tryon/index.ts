@@ -19,6 +19,7 @@ interface TryOnRequest {
     ethnicity: string;
     bodyType: string;
     ageRange: string;
+    imageUrl: string;  // Model's appearance reference image
   };
   pose: {
     name: string;
