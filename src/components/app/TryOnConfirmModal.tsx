@@ -24,6 +24,7 @@ interface TryOnConfirmModalProps {
   aspectRatio: AspectRatio;
   creditsRemaining: number;
   isLoading?: boolean;
+  sourceImageUrl?: string;
 }
 
 export function TryOnConfirmModal({
@@ -37,8 +38,12 @@ export function TryOnConfirmModal({
   aspectRatio,
   creditsRemaining,
   isLoading = false,
+  sourceImageUrl,
 }: TryOnConfirmModalProps) {
   if (!product || !model || !pose) return null;
+
+  // Use provided source image or fallback to first product image
+  const displaySourceImage = sourceImageUrl || product.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png';
 
   const creditsPerImage = 3; // Virtual Try-On is always 3 credits
   const totalCredits = imageCount * creditsPerImage;
