@@ -779,8 +779,8 @@ export default function Generate() {
           </Modal.Section>
         </Modal>
 
-        {/* Mode Selection - Only for clothing products */}
-        {currentStep === 'mode' && selectedProduct && (
+        {/* Mode Selection - Works for both product and scratch uploads */}
+        {currentStep === 'mode' && (selectedProduct || scratchUpload) && (
           <Card>
             <BlockStack gap="500">
               <BlockStack gap="200">
@@ -788,7 +788,7 @@ export default function Generate() {
                   Choose Generation Mode
                 </Text>
                 <Text as="p" variant="bodyMd" tone="subdued">
-                  How would you like to showcase your {selectedProduct.title}?
+                  How would you like to showcase your {selectedProduct?.title || scratchUpload?.productInfo.title}?
                 </Text>
               </BlockStack>
 
@@ -821,7 +821,7 @@ export default function Generate() {
               )}
 
               <InlineStack align="end">
-                <Button onClick={() => setCurrentStep('product')}>
+                <Button onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>
                   Back
                 </Button>
                 <Button
