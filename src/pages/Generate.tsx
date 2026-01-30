@@ -63,9 +63,18 @@ export default function Generate() {
   const [searchParams] = useSearchParams();
   const initialTemplateId = searchParams.get('template');
   
-  const [currentStep, setCurrentStep] = useState<Step>('product');
+  const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Source type for generation
+  const [sourceType, setSourceType] = useState<GenerationSourceType>('product');
+  const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
+  const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
+  const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
+  
+  // File upload hook
+  const { upload: uploadFile, isUploading } = useFileUpload();
   
   // Selections
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
