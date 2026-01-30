@@ -118,11 +118,8 @@ export function TemplatePreviewCard({
           
           <InlineStack gap="100" wrap>
             {template.tags.slice(0, 2).map(tag => (
-              <Badge key={tag} tone="info">{tag}</Badge>
+              <Badge key={tag}>{tag}</Badge>
             ))}
-            {showCredits && (
-              <Badge tone="attention">{`~${creditCost} cr/img`}</Badge>
-            )}
           </InlineStack>
         </BlockStack>
       </div>
