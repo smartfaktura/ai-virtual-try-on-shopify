@@ -368,19 +368,55 @@ export default function Generate() {
 
   // Virtual Try-On generation with real AI
   const handleTryOnConfirmGenerate = async () => {
-    if (!selectedProduct || !selectedModel || !selectedPose) return;
+    if (!selectedModel || !selectedPose) return;
     
-    // Get the selected source image URL
-    const selectedImageId = Array.from(selectedSourceImages)[0];
-    const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
-    const sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
+    // Get the source image URL - from product or scratch upload
+    let sourceImageUrl = '';
+    let productData: { title: string; productType: string; description: string } | null = null;
+    
+    if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
+      sourceImageUrl = scratchUpload.uploadedUrl;
+      productData = {
+        title: scratchUpload.productInfo.title,
+        productType: scratchUpload.productInfo.productType,
+        description: scratchUpload.productInfo.description,
+      };
+    } else if (selectedProduct) {
+      const selectedImageId = Array.from(selectedSourceImages)[0];
+      const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
+      sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
+      productData = {
+        title: selectedProduct.title,
+        productType: selectedProduct.productType,
+        description: selectedProduct.description,
+      };
+    }
+    
+    if (!sourceImageUrl || !productData) {
+      toast.error('No source image available');
+      return;
+    }
     
     setTryOnConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
     
+    // Create a pseudo-product for the generation
+    const pseudoProduct: Product = selectedProduct || {
+      id: 'scratch-' + Date.now(),
+      title: productData.title,
+      vendor: 'Custom Upload',
+      productType: productData.productType,
+      tags: [],
+      description: productData.description,
+      images: [{ id: 'scratch-img', url: sourceImageUrl }],
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
     const result = await generateTryOn({
-      product: selectedProduct,
+      product: pseudoProduct,
       model: selectedModel,
       pose: selectedPose,
       aspectRatio,
