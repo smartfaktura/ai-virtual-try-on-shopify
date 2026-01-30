@@ -29,6 +29,7 @@ import {
   RefreshIcon,
   MaximizeIcon,
   XIcon,
+  PersonIcon,
 } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
 import { TemplatePreviewCard, getTemplateImage } from '@/components/app/TemplatePreviewCard';
@@ -38,11 +39,15 @@ import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
 import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
-import { mockProducts, mockTemplates, categoryLabels, mockShop } from '@/data/mockData';
-import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality } from '@/types';
+import { ModelSelectorCard } from '@/components/app/ModelSelectorCard';
+import { PoseSelectorCard } from '@/components/app/PoseSelectorCard';
+import { GenerationModeToggle } from '@/components/app/GenerationModeToggle';
+import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
+import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender 
+} from '@/types';
 import { toast } from 'sonner';
 
-type Step = 'product' | 'template' | 'settings' | 'generating' | 'results';
+type Step = 'product' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
 export default function Generate() {
   const navigate = useNavigate();
