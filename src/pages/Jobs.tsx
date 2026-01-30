@@ -20,14 +20,37 @@ import { SearchIcon, CalendarIcon, RefreshIcon } from '@shopify/polaris-icons';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/app/PageHeader';
 import { StatusBadge } from '@/components/app/StatusBadge';
-import { mockJobs, categoryLabels } from '@/data/mockData';
-import type { JobStatus } from '@/types';
+import { PublishModal } from '@/components/app/PublishModal';
+import { mockJobs, mockProducts, categoryLabels } from '@/data/mockData';
+import type { JobStatus, GenerationJob, Product } from '@/types';
 
 export default function Jobs() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  
+  // Publish modal state
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [selectedJobForPublish, setSelectedJobForPublish] = useState<GenerationJob | null>(null);
+
+  const handlePublishClick = (job: GenerationJob) => {
+    setSelectedJobForPublish(job);
+    setPublishModalOpen(true);
+  };
+
+  const handlePublish = (mode: 'add' | 'replace', variantId?: string) => {
+    if (!selectedJobForPublish) return;
+    const unpublished = selectedJobForPublish.results.filter(r => !r.publishedToShopify).length;
+    toast.success(`${unpublished} image${unpublished !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${selectedJobForPublish.productSnapshot.title}"!`);
+    setPublishModalOpen(false);
+    setSelectedJobForPublish(null);
+  };
+
+  // Find matching product for job
+  const getProductForJob = (job: GenerationJob): Product | null => {
+    return mockProducts.find(p => p.id === job.productId) || null;
+  };
 
   const filteredJobs = mockJobs.filter(job => {
     if (statusFilter !== 'all' && job.status !== statusFilter) return false;
@@ -99,12 +122,9 @@ export default function Jobs() {
         <Button 
           size="slim" 
           variant="secondary"
-          onClick={() => {
-            const unpublished = job.results.filter(r => !r.publishedToShopify).length;
-            toast.success(`${unpublished} image${unpublished !== 1 ? 's' : ''} published to Shopify!`);
-          }}
+          onClick={() => handlePublishClick(job)}
         >
-          Publish
+          {`Publish ${job.results.filter(r => !r.publishedToShopify).length}`}
         </Button>
       )}
       {job.status === 'completed' && (
@@ -216,6 +236,19 @@ export default function Jobs() {
           </BlockStack>
         </Card>
       </BlockStack>
+
+      {/* Publish Modal with product context */}
+      <PublishModal
+        open={publishModalOpen}
+        onClose={() => {
+          setPublishModalOpen(false);
+          setSelectedJobForPublish(null);
+        }}
+        onPublish={handlePublish}
+        selectedImages={selectedJobForPublish?.results.filter(r => !r.publishedToShopify).map(r => r.imageUrl) || []}
+        product={selectedJobForPublish ? getProductForJob(selectedJobForPublish) : null}
+        existingImages={selectedJobForPublish?.productSnapshot.images || []}
+      />
     </PageHeader>
   );
 }

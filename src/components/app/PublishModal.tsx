@@ -55,9 +55,9 @@ export function PublishModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={`Publish ${selectedImages.length} Image${selectedImages.length > 1 ? 's' : ''} to Shopify`}
+      title={`Publish ${selectedImages.length} Image${selectedImages.length > 1 ? 's' : ''}`}
       primaryAction={{
-        content: 'Publish to Shopify',
+        content: `Publish to "${product?.title}"`,
         onAction: handlePublish,
       }}
       secondaryActions={[
@@ -68,6 +68,31 @@ export function PublishModal({
       ]}
     >
       <Modal.Section>
+        {/* Product Identity - Critical for verification */}
+        {product && (
+          <BlockStack gap="400">
+            <div className="p-4 rounded-lg border-2 border-primary bg-primary/5">
+              <InlineStack gap="400" blockAlign="center">
+                <Thumbnail
+                  source={product.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                  alt={product.title}
+                  size="large"
+                />
+                <BlockStack gap="100">
+                  <Text as="p" variant="bodySm" tone="subdued">Publishing to</Text>
+                  <Text as="p" variant="headingMd" fontWeight="bold">
+                    {product.title}
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    by {product.vendor}
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+            </div>
+
+            <Divider />
+          </BlockStack>
+        )}
         <BlockStack gap="500">
           {/* Selected images preview */}
           <BlockStack gap="200">
