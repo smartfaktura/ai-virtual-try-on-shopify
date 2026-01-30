@@ -1979,6 +1979,21 @@ export default function Generate() {
         existingImages={selectedProduct?.images || []}
       />
 
+      <ProductAssignmentModal
+        open={productAssignmentModalOpen}
+        onClose={() => setProductAssignmentModalOpen(false)}
+        products={mockProducts}
+        selectedProduct={assignToProduct}
+        onSelectProduct={setAssignToProduct}
+        onPublish={(product, mode) => {
+          const count = selectedForPublish.size;
+          toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`);
+          setProductAssignmentModalOpen(false);
+          navigate('/jobs');
+        }}
+        selectedImageCount={selectedForPublish.size}
+      />
+
       <ImageLightbox
         images={generatedImages}
         currentIndex={lightboxIndex}
@@ -1989,7 +2004,7 @@ export default function Generate() {
         onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate}
         selectedIndices={selectedForPublish}
-        productName={selectedProduct?.title}
+        productName={selectedProduct?.title || scratchUpload?.productInfo.title}
       />
     </PageHeader>
   );
