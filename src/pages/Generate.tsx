@@ -871,91 +871,106 @@ export default function Generate() {
                   </Text>
                 </Banner>
 
-                {/* Recommended Templates for this product */}
+                {/* Top Picks - based on product category */}
                 {(() => {
                   const recommendedCategory = selectedCategory !== 'all' ? selectedCategory : 'universal';
-                  const recommendedTemplates = mockTemplates
+                  const topPicks = mockTemplates
                     .filter(t => t.enabled && (t.category === recommendedCategory || t.category === 'universal'))
                     .slice(0, 3);
                   
-                  return recommendedTemplates.length > 0 ? (
+                  return topPicks.length > 0 ? (
                     <Card>
                       <BlockStack gap="400">
                         <BlockStack gap="100">
-                          <InlineStack gap="200" blockAlign="center">
-                            <Text as="h2" variant="headingMd">
-                              Recommended for "{selectedProduct.title}"
-                            </Text>
-                            <Badge tone="success">Best match</Badge>
-                          </InlineStack>
+                          <Text as="h2" variant="headingMd">
+                            Top Picks for {categoryLabels[recommendedCategory] || 'Your Product'}
+                          </Text>
                           <Text as="p" variant="bodySm" tone="subdued">
-                            Based on your product type ({categoryLabels[recommendedCategory] || 'General'}), these templates work best:
+                            Curated templates that work great with {selectedProduct.productType.toLowerCase()} products
                           </Text>
                         </BlockStack>
                         
                         <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
-                          {recommendedTemplates.map(template => (
+                          {topPicks.map(template => (
                             <TemplatePreviewCard
                               key={template.templateId}
-                              template={{ ...template, recommended: true }}
+                              template={{ ...template, recommended: false }}
                               isSelected={selectedTemplate?.templateId === template.templateId}
                               onSelect={() => handleSelectTemplate(template)}
-                              showCredits
+                              showCredits={false}
                             />
                           ))}
                         </InlineGrid>
+                        
+                        {selectedTemplate && (
+                          <InlineStack align="end">
+                            <Button
+                              variant="primary"
+                              onClick={() => setCurrentStep('settings')}
+                            >
+                              Continue with "{selectedTemplate.name}"
+                            </Button>
+                          </InlineStack>
+                        )}
                       </BlockStack>
                     </Card>
                   ) : null;
                 })()}
 
-                {/* All Templates */}
+                {/* Browse More Styles - collapsible, shows other categories */}
                 <Card>
                   <BlockStack gap="400">
                     <BlockStack gap="200">
                       <Text as="h2" variant="headingMd">
-                        All Templates
+                        Browse More Styles
                       </Text>
                       <Text as="p" variant="bodySm" tone="subdued">
-                        Browse all available photography styles
+                        Explore templates from other categories
                       </Text>
                     </BlockStack>
                     
                     {/* Category tabs */}
                     <InlineStack gap="200" wrap>
-                      {categories.map(cat => (
+                      {categories.filter(cat => cat.id !== 'all').map(cat => (
                         <Button
                           key={cat.id}
                           pressed={selectedCategory === cat.id}
                           onClick={() => setSelectedCategory(cat.id)}
+                          size="slim"
                         >
                           {cat.label}
                         </Button>
                       ))}
                     </InlineStack>
 
-                    {/* Template grid with preview images */}
-                    <InlineGrid columns={{ xs: 1, sm: 2, md: 3, lg: 4 }} gap="400">
-                      {filteredTemplates.map(template => (
-                        <TemplatePreviewCard
-                          key={template.templateId}
-                          template={template}
-                          isSelected={selectedTemplate?.templateId === template.templateId}
-                          onSelect={() => handleSelectTemplate(template)}
-                          showCredits
-                        />
-                      ))}
-                    </InlineGrid>
-
-                    <InlineStack align="end">
-                      <Button
-                        variant="primary"
-                        disabled={!selectedTemplate}
-                        onClick={() => setCurrentStep('settings')}
-                      >
-                        Continue to Settings
-                      </Button>
-                    </InlineStack>
+                    {/* Template grid - only show templates NOT already in top picks */}
+                    {(() => {
+                      const recommendedCategory = selectedCategory !== 'all' ? selectedCategory : 'universal';
+                      const topPickIds = mockTemplates
+                        .filter(t => t.enabled && (t.category === recommendedCategory || t.category === 'universal'))
+                        .slice(0, 3)
+                        .map(t => t.templateId);
+                      
+                      const otherTemplates = filteredTemplates.filter(t => !topPickIds.includes(t.templateId));
+                      
+                      return otherTemplates.length > 0 ? (
+                        <InlineGrid columns={{ xs: 2, sm: 3, md: 4, lg: 5 }} gap="300">
+                          {otherTemplates.map(template => (
+                            <TemplatePreviewCard
+                              key={template.templateId}
+                              template={{ ...template, recommended: false }}
+                              isSelected={selectedTemplate?.templateId === template.templateId}
+                              onSelect={() => handleSelectTemplate(template)}
+                              showCredits={false}
+                            />
+                          ))}
+                        </InlineGrid>
+                      ) : (
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          All templates in this category are shown above.
+                        </Text>
+                      );
+                    })()}
                   </BlockStack>
                 </Card>
               </BlockStack>
