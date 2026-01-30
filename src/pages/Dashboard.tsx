@@ -17,19 +17,8 @@ import { MetricCard } from '@/components/app/MetricCard';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { mockMetrics, mockJobs, mockTemplates, categoryLabels } from '@/data/mockData';
-import { useState } from 'react';
-
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [selectedTemplate, setSelectedTemplate] = useState('');
-
-  const templateOptions = [
-    { label: 'Select a template...', value: '' },
-    ...mockTemplates.filter(t => t.enabled).map(t => ({
-      label: `${t.name} (${categoryLabels[t.category]})`,
-      value: t.templateId,
-    })),
-  ];
 
   const recentJobs = mockJobs.slice(0, 5);
 
@@ -106,31 +95,24 @@ export default function Dashboard() {
               <Badge tone="info">{`${mockMetrics.creditsRemaining} credits`}</Badge>
             </InlineStack>
             <Text as="p" variant="bodyMd" tone="subdued">
-              Start generating product images in seconds. Select a template and click generate.
+              Generate professional product images in seconds. Select a product and we'll recommend the best photography styles.
             </Text>
-            <InlineGrid columns={{ xs: 1, md: 3 }} gap="400" alignItems="end">
-              <Select
-                label="Template"
-                labelHidden
-                options={templateOptions}
-                value={selectedTemplate}
-                onChange={setSelectedTemplate}
-              />
+            <InlineStack gap="300" wrap>
               <Button
                 variant="primary"
                 size="large"
-                onClick={() => navigate(selectedTemplate ? `/generate?template=${selectedTemplate}` : '/generate')}
+                onClick={() => navigate('/generate')}
               >
-                {selectedTemplate ? 'Select Product & Generate' : 'Start Generating'}
+                Select Product to Generate
               </Button>
               <Button
                 size="large"
-                onClick={() => navigate('/generate')}
+                onClick={() => navigate('/templates')}
                 variant="plain"
               >
-                Browse all templates
+                Explore Templates
               </Button>
-            </InlineGrid>
+            </InlineStack>
           </BlockStack>
         </Card>
 
