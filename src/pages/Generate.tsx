@@ -1423,7 +1423,7 @@ export default function Generate() {
                       <div 
                         className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
                           selectedForPublish.has(index) 
-                            ? 'bg-shopify-green border-shopify-green scale-110' 
+                            ? 'bg-primary border-primary scale-110' 
                             : 'border-white bg-black/50 hover:bg-black/70'
                         }`}
                         onClick={() => toggleImageSelection(index)}
