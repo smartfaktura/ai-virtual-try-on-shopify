@@ -1378,7 +1378,10 @@ export default function Generate() {
                 </Text>
               </BlockStack>
               <div className="w-full max-w-md">
-                <ProgressBar progress={Math.min(generatingProgress, 100)} size="small" />
+                <ProgressBar 
+                  progress={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : generatingProgress, 100)} 
+                  size="small" 
+                />
               </div>
               <Text as="p" variant="bodySm" tone="subdued">
                 {generationMode === 'virtual-try-on' ? 'This usually takes 20-30 seconds' : 'This usually takes 10-15 seconds'}
