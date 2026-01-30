@@ -871,39 +871,47 @@ export default function Generate() {
                   </Text>
                 </Banner>
 
-                {/* Recommended Templates for this product */}
+                {/* Top Picks - based on product category */}
                 {(() => {
                   const recommendedCategory = selectedCategory !== 'all' ? selectedCategory : 'universal';
-                  const recommendedTemplates = mockTemplates
+                  const topPicks = mockTemplates
                     .filter(t => t.enabled && (t.category === recommendedCategory || t.category === 'universal'))
                     .slice(0, 3);
                   
-                  return recommendedTemplates.length > 0 ? (
+                  return topPicks.length > 0 ? (
                     <Card>
                       <BlockStack gap="400">
                         <BlockStack gap="100">
-                          <InlineStack gap="200" blockAlign="center">
-                            <Text as="h2" variant="headingMd">
-                              Recommended for "{selectedProduct.title}"
-                            </Text>
-                            <Badge tone="success">Best match</Badge>
-                          </InlineStack>
+                          <Text as="h2" variant="headingMd">
+                            Top Picks for {categoryLabels[recommendedCategory] || 'Your Product'}
+                          </Text>
                           <Text as="p" variant="bodySm" tone="subdued">
-                            Based on your product type ({categoryLabels[recommendedCategory] || 'General'}), these templates work best:
+                            Curated templates that work great with {selectedProduct.productType.toLowerCase()} products
                           </Text>
                         </BlockStack>
                         
                         <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
-                          {recommendedTemplates.map(template => (
+                          {topPicks.map(template => (
                             <TemplatePreviewCard
                               key={template.templateId}
-                              template={{ ...template, recommended: true }}
+                              template={{ ...template, recommended: false }}
                               isSelected={selectedTemplate?.templateId === template.templateId}
                               onSelect={() => handleSelectTemplate(template)}
-                              showCredits
+                              showCredits={false}
                             />
                           ))}
                         </InlineGrid>
+                        
+                        {selectedTemplate && (
+                          <InlineStack align="end">
+                            <Button
+                              variant="primary"
+                              onClick={() => setCurrentStep('settings')}
+                            >
+                              Continue with "{selectedTemplate.name}"
+                            </Button>
+                          </InlineStack>
+                        )}
                       </BlockStack>
                     </Card>
                   ) : null;
