@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { Product, ModelProfile, TryOnPose, AspectRatio } from '@/types';
+import { convertImageToBase64 } from '@/lib/imageUtils';
 
 interface GenerateTryOnParams {
   product: Product;
