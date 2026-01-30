@@ -86,6 +86,7 @@ const negativePrompt =
 async function generateImage(
   prompt: string,
   productImageUrl: string,
+  modelImageUrl: string,
   apiKey: string
 ): Promise<string | null> {
   const maxRetries = 2;
