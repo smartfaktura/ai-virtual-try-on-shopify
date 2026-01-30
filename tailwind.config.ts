@@ -57,6 +57,27 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Shopify-specific colors
+        shopify: {
+          green: "hsl(var(--shopify-green))",
+          blue: "hsl(var(--shopify-blue))",
+          purple: "hsl(var(--shopify-purple))",
+          yellow: "hsl(var(--shopify-yellow))",
+          orange: "hsl(var(--shopify-orange))",
+        },
+        status: {
+          success: "hsl(var(--status-success))",
+          warning: "hsl(var(--status-warning))",
+          critical: "hsl(var(--status-critical))",
+          info: "hsl(var(--status-info))",
+        },
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          subdued: "hsl(var(--surface-subdued))",
+          hovered: "hsl(var(--surface-hovered))",
+          pressed: "hsl(var(--surface-pressed))",
+          selected: "hsl(var(--surface-selected))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,25 +86,22 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 1.5s infinite",
       },
     },
   },

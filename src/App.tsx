@@ -1,26 +1,38 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import '@shopify/polaris/build/esm/styles.css';
+import { AppProvider } from '@shopify/polaris';
+import enTranslations from '@shopify/polaris/locales/en.json';
+import { Toaster } from 'sonner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AppShell } from '@/components/app/AppShell';
+import Dashboard from '@/pages/Dashboard';
+import Generate from '@/pages/Generate';
+import Templates from '@/pages/Templates';
+import Jobs from '@/pages/Jobs';
+import Settings from '@/pages/Settings';
+import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+    <AppProvider i18n={enTranslations}>
+      <Toaster position="top-right" richColors closeButton />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppShell>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/generate" element={<Generate />} />
+            <Route path="/templates" element={<Templates />} />
+            <Route path="/templates/:id" element={<Templates />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/jobs/:id" element={<Jobs />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AppShell>
       </BrowserRouter>
-    </TooltipProvider>
+    </AppProvider>
   </QueryClientProvider>
 );
 
