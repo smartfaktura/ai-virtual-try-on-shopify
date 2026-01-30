@@ -99,9 +99,13 @@ export default function Generate() {
   
   // Modals
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [tryOnConfirmModalOpen, setTryOnConfirmModalOpen] = useState(false);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Virtual Try-On generation hook
+  const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
 
   const categories: Array<{ id: TemplateCategory | 'all'; label: string }> = [
     { id: 'all', label: 'All Templates' },
