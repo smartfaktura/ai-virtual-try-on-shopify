@@ -165,3 +165,25 @@ export interface DashboardMetrics {
   publishRate: number;
   errorRate: number;
 }
+
+// Pricing types
+export interface PricingPlan {
+  planId: string;
+  name: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  credits: number | 'unlimited';
+  features: string[];
+  highlighted?: boolean;
+  badge?: string;
+  ctaText: string;
+  isEnterprise?: boolean;
+}
+
+export interface CreditPack {
+  packId: string;
+  credits: number;
+  price: number;
+  pricePerCredit: number;
+  popular?: boolean;
+}
