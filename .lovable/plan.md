@@ -1,147 +1,126 @@
 
-# "Generate from Scratch" Feature Implementation Plan
+# Problemos Diagnozė ir Sprendimas: Neteisingas AI Generavimo Rezultatas
 
-## Kas tai?
+## Problema
+Pasirinkote **Airlift High-Waist Legging**, bet sugeneruota **hoodie** nuotrauka. Tai rimtas bug.
 
-Nauja galimybė Generate puslapyje, leidžianti vartotojui:
-1. **Įkelti nuotrauką iš kompiuterio** (ne iš esamo Shopify produkto)
-2. **Sugeneruoti AI nuotraukas** (Virtual Try-On arba Product-Only mode)
-3. **Priskirti sugeneruotas nuotraukas** prie pasirinkto Shopify produkto
+## Priežasties Analizė
 
-## User Flow
+Problema yra tame, kad produktų nuotraukos yra **local assets** (importuoti iš `src/assets/products/`), kurie po Vite kompiliavimo tampa relative paths kaip `/assets/leggings-black-1.jpg`. 
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                  Step 1: Choose Source                       │
-├─────────────────────────────────────────────────────────────┤
-│  ┌──────────────────┐    ┌──────────────────┐               │
-│  │ From Product     │    │ From Scratch     │               │
-│  │ ─────────────    │    │ ─────────────    │               │
-│  │ Select existing  │    │ Upload your own  │               │
-│  │ Shopify product  │    │ image file       │               │
-│  └──────────────────┘    └──────────────────┘               │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Step 2: Upload Image (From Scratch)             │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────┐                │
-│  │  Drag & drop or click to upload         │                │
-│  │  ─────────────────────────────────      │                │
-│  │  Supports: JPG, PNG, WEBP (max 10MB)    │                │
-│  └─────────────────────────────────────────┘                │
-│                                                              │
-│  [Preview of uploaded image]                                 │
-│                                                              │
-│  Product details (optional):                                 │
-│  - Title: "My Custom Product"                                │
-│  - Type: Leggings, Hoodie, etc.                             │
-│  - Description: "Black yoga pants..."                        │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-       ┌──────────────────────────────────────────┐
-       │         Normal Generation Flow           │
-       │  (Mode → Model → Pose → Settings)        │
-       └──────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  Results Step (Modified)                     │
-├─────────────────────────────────────────────────────────────┤
-│  [Generated images...]                                       │
-│                                                              │
-│  ┌────────────────────────────────────────┐                 │
-│  │ Assign to Shopify Product              │                 │
-│  │ ────────────────────────────           │                 │
-│  │ Select product: [Dropdown ▼]           │                 │
-│  │   - Airlift High-Waist Legging         │                 │
-│  │   - Alo Accolade Hoodie                │                 │
-│  │   - Airlift Intrigue Bra               │                 │
-│  │                                         │                 │
-│  │ [Publish to Selected Product]           │                 │
-│  └────────────────────────────────────────┘                 │
-└─────────────────────────────────────────────────────────────┘
-```
+Kai edge function siunčia šį URL į AI modelį (Gemini), **AI negali pasiekti šio URL** nes:
+- Tai nėra pilnas HTTPS URL
+- AI serveris negali prisijungti prie jūsų vietinio preview serverio
 
-## Komponentai ir Pakeitimai
+Todėl AI modelis tiesiog sugeneruoja atsitiktinę nuotrauką pagal tekstinį prompt'ą, ignoruodamas produkto nuotrauką.
 
-### 1. Naujas Source Type State
-Pridėsiu naują state kintamąjį `sourceType`:
-- `'product'` - dabartinis flow (pasirinkti iš produktų)
-- `'scratch'` - naujas flow (įkelti nuotrauką)
+## Sprendimas
 
-### 2. Naujas Komponentas: `UploadSourceCard`
-Drag-and-drop upload zona su:
-- Failų priėmimas (JPG, PNG, WEBP)
-- Preview įkeltos nuotraukos
-- Galimybė pakeisti nuotrauką
-- Maksimalus dydis: 10MB
+Reikia padaryti, kad produktų nuotraukos būtų pasiekiamos per pilną HTTPS URL. Yra du būdai:
 
-### 3. Naujas Komponentas: `ProductAssignmentModal`
-Modalas rezultatų puslapyje leidžiantis:
-- Ieškoti produktų pagal pavadinimą
-- Pasirinkti produktą kuriam priskirti nuotraukas
-- Publish Add/Replace opcijos
+### Variantas A: Konvertuoti local images į Base64 (Rekomenduojama)
+Frontend'e konvertuoti nuotrauką į base64 prieš siunčiant į edge function:
 
-### 4. Modifikuotas Flow
-- **Step 1**: "Choose Source" - Product arba From Scratch
-- **Step 2a** (From Scratch): Upload image + basic product info
-- **Step 2b** (Product): Dabartinis produkto pasirinkimas
-- **Rest**: Normalus generation flow
-- **Results** (From Scratch): Produkto priskyrimo UI
-
-### 5. Storage Bucket
-Sukurti `scratch-uploads` bucket Lovable Cloud Storage, kad:
-- Laikinai saugoti įkeltas nuotraukas
-- Edge function galėtų pasiekti nuotraukos URL
-- Automatinis valymas po 24h
-
----
-
-## Techniniai Detaliai
-
-### Nauji Tipai (`src/types/index.ts`)
 ```typescript
-export type GenerationSourceType = 'product' | 'scratch';
-
-export interface ScratchUpload {
-  file: File;
-  previewUrl: string;  // blob URL for display
-  uploadedUrl?: string; // storage URL for AI
-  productInfo: {
-    title: string;
-    productType: string;
-    description: string;
-  };
+// Prieš siunčiant į generate-tryon
+async function imageToBase64(imageUrl: string): Promise<string> {
+  const response = await fetch(imageUrl);
+  const blob = await response.blob();
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.readAsDataURL(blob);
+  });
 }
 ```
 
-### Failai kuriuos reikės sukurti:
-1. `src/components/app/SourceTypeSelector.tsx` - UI pasirinkti source type
-2. `src/components/app/UploadSourceCard.tsx` - Upload drag-drop zona
-3. `src/components/app/ProductAssignmentModal.tsx` - Priskirti prie produkto
-4. `src/hooks/useFileUpload.ts` - Upload logika į storage
-5. SQL migration: Storage bucket `scratch-uploads`
+Tada siųsti base64 data URL vietoj relative path.
 
-### Failai kuriuos reikės modifikuoti:
-1. `src/pages/Generate.tsx` - Pridėti naujus step'us ir flow logiką
-2. `src/types/index.ts` - Nauji tipai
-3. `supabase/functions/generate-tryon/index.ts` - Palaikyti storage URLs
+### Variantas B: Uploadinti į Storage prieš generavimą
+Prieš generavimą, uploadinti produkto nuotrauką į Supabase Storage ir gauti public URL.
 
-### Database / Storage
-- Sukurti `scratch-uploads` public bucket
-- RLS: Bet kas gali upload'inti (anonymous), bet tik skaityti po upload
-- Automatinis cleanup per Supabase lifecycle rules
+---
 
-### Flow modifikacijos Generate.tsx
+## Implementacijos Planas
+
+### 1. Sukurti utility funkciją Base64 konvertavimui
+- Failas: `src/lib/imageUtils.ts`
+- Funkcija: `convertImageToBase64(url: string): Promise<string>`
+
+### 2. Atnaujinti `useGenerateTryOn` hook
+- Prieš siunčiant request, konvertuoti `sourceImageUrl` į base64
+- Siųsti base64 data URL vietoj relative path
+
+### 3. Patikrinti Edge Function
+- Gemini API palaiko base64 images formatu `data:image/jpeg;base64,...`
+- Jokių pakeitimų edge function nereikia
+
+### 4. Pridėti logging
+- Pridėti console.log, kad būtų galima matyti kas siunčiama į API debugging tikslais
+
+---
+
+## Pakeitimai failuose
+
+| Failas | Veiksmas |
+|--------|----------|
+| `src/lib/imageUtils.ts` | SUKURTI - Base64 konvertavimo utility |
+| `src/hooks/useGenerateTryOn.ts` | MODIFIKUOTI - Konvertuoti image prieš siuntimą |
+| `src/pages/Generate.tsx` | MODIFIKUOTI - Pridėti loading state konvertavimui |
+
+---
+
+## Kodas
+
+### `src/lib/imageUtils.ts` (Naujas failas)
 ```typescript
-// Nauji state
-const [sourceType, setSourceType] = useState<'product' | 'scratch'>('product');
-const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
-const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
-
-// Step flow:
-// 'source' → 'upload' (if scratch) → 'mode' → 'model' → 'pose' → 'settings' → 'generating' → 'results'
+export async function convertImageToBase64(imageUrl: string): Promise<string> {
+  // Jei jau base64 arba data URL - grąžinti kaip yra
+  if (imageUrl.startsWith('data:')) {
+    return imageUrl;
+  }
+  
+  // Jei tai pilnas HTTPS URL (ne local) - grąžinti kaip yra
+  if (imageUrl.startsWith('https://') && !imageUrl.includes('localhost')) {
+    return imageUrl;
+  }
+  
+  // Konvertuoti local/relative URL į base64
+  const response = await fetch(imageUrl);
+  const blob = await response.blob();
+  
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 ```
+
+### `useGenerateTryOn.ts` pakeitimai
+Hook'e, prieš siunčiant request, konvertuoti image:
+
+```typescript
+import { convertImageToBase64 } from '@/lib/imageUtils';
+
+// generate funkcijoje:
+const base64Image = await convertImageToBase64(params.sourceImageUrl);
+
+// Siųsti base64Image vietoj params.sourceImageUrl
+body: JSON.stringify({
+  product: {
+    ...
+    imageUrl: base64Image,  // Base64 vietoj relative path
+  },
+  ...
+})
+```
+
+---
+
+## Rezultatas
+Po šių pakeitimų:
+- AI modelis gaus tikrą produkto nuotrauką kaip base64 data
+- Generuotas rezultatas atitiks pasirinktą produktą (leggings → leggings, ne hoodie)
+- Tiek local assets, tiek uploaded images, tiek external URLs veiks korektiškai
