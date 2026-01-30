@@ -879,3 +879,95 @@ export const genderLabels: Record<string, string> = {
   female: 'Female',
   'non-binary': 'Non-Binary',
 };
+
+// Pricing Plans
+export const pricingPlans: PricingPlan[] = [
+  {
+    planId: 'starter',
+    name: 'Starter',
+    monthlyPrice: 9,
+    annualPrice: 90, // 2 months free
+    credits: 100,
+    features: [
+      '100 credits/month',
+      'All templates included',
+      'Standard image quality',
+      'Email support',
+    ],
+    ctaText: 'Start with Starter',
+  },
+  {
+    planId: 'growth',
+    name: 'Growth',
+    monthlyPrice: 29,
+    annualPrice: 290,
+    credits: 500,
+    features: [
+      '500 credits/month',
+      'All Starter features',
+      'Virtual Try-On access',
+      'Priority generation queue',
+      'Brand consistency',
+      'Priority support',
+    ],
+    highlighted: true,
+    badge: 'Most Popular',
+    ctaText: 'Start with Growth',
+  },
+  {
+    planId: 'pro',
+    name: 'Pro',
+    monthlyPrice: 79,
+    annualPrice: 790,
+    credits: 2000,
+    features: [
+      '2,000 credits/month',
+      'All Growth features',
+      'API access',
+      'Bulk generation',
+      'Custom templates (soon)',
+      'Dedicated support',
+    ],
+    ctaText: 'Start with Pro',
+  },
+  {
+    planId: 'enterprise',
+    name: 'Enterprise',
+    monthlyPrice: 0,
+    annualPrice: 0,
+    credits: 'unlimited',
+    features: [
+      'Unlimited credits',
+      'All Pro features',
+      'Custom SLA',
+      'White-label options',
+      'Dedicated account manager',
+      'Custom integrations',
+    ],
+    isEnterprise: true,
+    ctaText: 'Contact Sales',
+  },
+];
+
+// Credit Top-up Packs
+export const creditPacks: CreditPack[] = [
+  {
+    packId: 'pack_50',
+    credits: 50,
+    price: 5,
+    pricePerCredit: 0.10,
+  },
+  {
+    packId: 'pack_200',
+    credits: 200,
+    price: 15,
+    pricePerCredit: 0.075,
+    popular: true,
+  },
+  {
+    packId: 'pack_500',
+    credits: 500,
+    price: 30,
+    pricePerCredit: 0.06,
+  },
+];
