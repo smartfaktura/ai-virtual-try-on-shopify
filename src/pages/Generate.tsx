@@ -48,11 +48,15 @@ import { ModelFilterBar } from '@/components/app/ModelFilterBar';
 import { PoseCategorySection } from '@/components/app/PoseCategorySection';
 import { TryOnPreview } from '@/components/app/TryOnPreview';
 import { PopularCombinations, createPopularCombinations } from '@/components/app/PopularCombinations';
+import { SourceTypeSelector } from '@/components/app/SourceTypeSelector';
+import { UploadSourceCard } from '@/components/app/UploadSourceCard';
+import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal';
+import { useFileUpload } from '@/hooks/useFileUpload';
 import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
-import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory } from '@/types';
+import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
 
-type Step = 'product' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
+type Step = 'source' | 'product' | 'upload' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
 export default function Generate() {
   const navigate = useNavigate();
