@@ -273,8 +273,6 @@ export default function Jobs() {
         }}
         onRetry={() => navigate('/generate')}
       />
-        onRetry={() => navigate('/generate')}
-      />
     </PageHeader>
   );
 }

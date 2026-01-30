@@ -60,7 +60,7 @@ export default function Dashboard() {
     <PageHeader title="Dashboard">
       <BlockStack gap="600">
         {/* Metrics Row */}
-        <InlineGrid columns={{ xs: 1, sm: 2, md: 4, lg: 5 }} gap="400">
+        <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
           <MetricCard
             title="Images Generated"
             value={mockMetrics.imagesGenerated30d}
@@ -84,12 +84,6 @@ export default function Dashboard() {
             value={`${mockMetrics.publishRate}%`}
             icon={CheckCircleIcon}
             trend={{ value: 5, direction: 'up' }}
-          />
-          <MetricCard
-            title="Error Rate"
-            value={`${mockMetrics.errorRate}%`}
-            icon={AlertCircleIcon}
-            trend={{ value: 0.5, direction: 'down' }}
           />
         </InlineGrid>
 
