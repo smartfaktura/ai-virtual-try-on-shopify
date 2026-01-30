@@ -624,20 +624,27 @@ export default function Generate() {
         {/* Model Selection Step - Virtual Try-On only */}
         {currentStep === 'model' && selectedProduct && (
           <BlockStack gap="400">
-            {/* Selected Product Mini Card */}
-            <Card>
-              <InlineStack gap="400" blockAlign="center">
-                <Thumbnail
-                  source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                  alt={selectedProduct.title}
-                  size="medium"
+            {/* Live Preview */}
+            <TryOnPreview
+              product={selectedProduct}
+              model={selectedModel}
+              pose={selectedPose}
+              creditCost={creditCost}
+            />
+
+            {/* Popular Combinations Quick Start */}
+            {!selectedModel && popularCombinations.length > 0 && (
+              <Card>
+                <PopularCombinations
+                  combinations={popularCombinations}
+                  onSelect={(model, pose) => {
+                    setSelectedModel(model);
+                    setSelectedPose(pose);
+                    setCurrentStep('settings');
+                  }}
                 />
-                <BlockStack gap="050">
-                  <Text as="p" variant="bodySm" tone="subdued">Dressing model in:</Text>
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">{selectedProduct.title}</Text>
-                </BlockStack>
-              </InlineStack>
-            </Card>
+              </Card>
+            )}
 
             <Card>
               <BlockStack gap="400">
@@ -650,30 +657,35 @@ export default function Generate() {
                   </Text>
                 </BlockStack>
 
-                {/* Gender Filter */}
-                <InlineStack gap="200">
-                  {(['all', 'female', 'male'] as const).map(g => (
-                    <Button
-                      key={g}
-                      pressed={modelGenderFilter === g}
-                      onClick={() => setModelGenderFilter(g)}
-                    >
-                      {g === 'all' ? 'All Models' : genderLabels[g]}
-                    </Button>
-                  ))}
-                </InlineStack>
+                {/* Enhanced Filter Bar */}
+                <ModelFilterBar
+                  genderFilter={modelGenderFilter}
+                  bodyTypeFilter={modelBodyTypeFilter}
+                  ageFilter={modelAgeFilter}
+                  onGenderChange={setModelGenderFilter}
+                  onBodyTypeChange={setModelBodyTypeFilter}
+                  onAgeChange={setModelAgeFilter}
+                />
 
                 {/* Model Grid */}
-                <InlineGrid columns={{ xs: 2, sm: 3, md: 4 }} gap="400">
-                  {filteredModels.map(model => (
-                    <ModelSelectorCard
-                      key={model.modelId}
-                      model={model}
-                      isSelected={selectedModel?.modelId === model.modelId}
-                      onSelect={() => handleSelectModel(model)}
-                    />
-                  ))}
-                </InlineGrid>
+                {filteredModels.length > 0 ? (
+                  <InlineGrid columns={{ xs: 2, sm: 3, md: 4 }} gap="400">
+                    {filteredModels.map(model => (
+                      <ModelSelectorCard
+                        key={model.modelId}
+                        model={model}
+                        isSelected={selectedModel?.modelId === model.modelId}
+                        onSelect={() => handleSelectModel(model)}
+                      />
+                    ))}
+                  </InlineGrid>
+                ) : (
+                  <Banner tone="warning">
+                    <Text as="p" variant="bodySm">
+                      No models match your filters. Try adjusting the filters above.
+                    </Text>
+                  </Banner>
+                )}
 
                 <InlineStack align="space-between">
                   <Button onClick={() => setCurrentStep('mode')}>
