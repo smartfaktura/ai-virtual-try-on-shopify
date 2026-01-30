@@ -1,184 +1,202 @@
 
-# UX Workflow Fix: Product-First Generation Flow
 
-## The Problem You Identified
+# Source Image Selection Feature
 
-The current Dashboard "Quick Generate" flow asks users to select a template **before** they've:
-1. Understood what templates are
-2. Seen visual examples of each template style
-3. Selected their product (which determines which templates are relevant)
+## Problem Identified
 
-This is backwards and confusing for new users. They see a dropdown with cryptic names like "Premium Studio Apparel (Clothing)" but have no idea what visual style this will produce.
+When a Shopify product has multiple images (1, 5, 10, or more), users currently have **no control over which image(s) the AI uses as the reference source** for generation. The system just shows thumbnails but doesn't let merchants choose.
 
-## Current vs. Improved Flow
+This matters because:
+- Different product images show different angles/details
+- Some images may have better quality for AI reference
+- Users may want to generate lifestyle shots based on a specific product angle
+- Color variants may have different hero images
 
-```text
-CURRENT (Broken):
-Dashboard: [Select Template Dropdown] → [Start Generating]
-                    ↓
-         Generate Page: Product → Template → Settings → Results
+## Solution: Add Source Image Selection
 
-PROPOSED (Better):
-Dashboard: [Select Product] → [Start Generating]
-                    ↓
-         Generate Page: Product → Template (with visual previews + auto-recommendations) → Settings → Results
-```
+Allow users to select one or more product images to use as the reference for AI generation.
 
-## Changes Required
+---
 
-### 1. Dashboard Quick Generate - Remove Template Selector
+## Implementation Plan
 
-**File:** `src/pages/Dashboard.tsx`
-
-Replace the template dropdown with a product-focused entry point:
-
-**Before:**
-- Text: "Select a template and click generate"
-- Select dropdown with 17 template options
-- Button: "Start Generating" / "Select Product & Generate"
-
-**After:**
-- Text: "Select a product to get started. We'll recommend the best photography styles for your product type."
-- Button: "Select Product to Generate" (primary)
-- Button: "Explore Templates" (secondary, goes to /templates for browsing)
-
-### 2. Generate Page - Add Template Recommendations
+### 1. Add State for Selected Source Images
 
 **File:** `src/pages/Generate.tsx`
 
-After product selection, the template step should:
+Add new state to track which product images are selected as sources:
 
-1. **Auto-recommend templates** based on product type (already partially implemented)
-2. **Show "Recommended for you" section** with 2-3 top templates matching the product category
-3. **Show "All Templates" section** below for browsing
-4. **Each template card shows preview image** (already implemented)
+```typescript
+const [selectedSourceImages, setSelectedSourceImages] = useState<Set<string>>(new Set());
+```
 
-### 3. Add "First Time User" Education
+When a product is selected, auto-select the first image by default (so existing workflow still works).
 
-When the template step loads, show a subtle Banner explaining:
-> "Templates define the photography style for your images. Each template produces a different look - preview images show example results."
+---
 
-### 4. Template Categories Should Auto-Filter
+### 2. Update "Current Images" Display in Selected Product Card
 
-When a product is selected:
-- If it's a "Serum" (cosmetics), auto-filter to Cosmetics + Universal templates
-- If it's a "Hoodie" (clothing), auto-filter to Clothing + Universal templates
-- Show other categories as secondary options
+**File:** `src/pages/Generate.tsx` (lines 451-461)
 
-## Detailed Code Changes
+Transform the static thumbnail display into an interactive image selector:
 
-### Dashboard.tsx Changes
+**Current (read-only):**
+```text
+Current images (1)
+[thumbnail]
+```
+
+**Improved (selectable):**
+```text
+Source images for generation (select 1 or more)
+[✓ thumbnail] [thumbnail] [thumbnail] ...
+Selected: 2 of 5 images
+```
+
+Changes:
+- Add header text explaining the selection purpose
+- Make each thumbnail clickable with selection indicator (checkmark overlay)
+- Add visual feedback for selected vs unselected state
+- Show count of selected images
+- Add "Select All" / "Deselect All" quick actions for products with many images
+
+---
+
+### 3. Update Product Card UI Design
+
+The product card section will become:
 
 ```text
-Location: Lines 99-135 (Quick Generate Card)
-
-Replace:
-- Remove Select component for template selection
-- Remove selectedTemplate state
-- Change button text to "Select Product to Generate"
-- Change description text to focus on product selection
-- Add "Explore Templates" as secondary action
+┌─────────────────────────────────────────────────────┐
+│ Selected Product                           [Change] │
+├─────────────────────────────────────────────────────┤
+│ [LARGE THUMB] Artisan Honey Granola                 │
+│               Morning Harvest • Cereals             │
+│               [organic] [breakfast] [honey]         │
+├─────────────────────────────────────────────────────┤
+│ Source images for generation                        │
+│ Select which image(s) to use as reference:          │
+│                                                     │
+│ ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐   │
+│ │  ✓   │  │      │  │  ✓   │  │      │  │      │   │
+│ │ IMG1 │  │ IMG2 │  │ IMG3 │  │ IMG4 │  │ IMG5 │   │
+│ └──────┘  └──────┘  └──────┘  └──────┘  └──────┘   │
+│                                                     │
+│ 2 of 5 selected          [Select All] [Clear All]  │
+└─────────────────────────────────────────────────────┘
 ```
 
-**New Content:**
-```
-Quick Generate
---------------
-Generate professional product images in seconds.
-Select a product and we'll recommend the best photography styles.
+---
 
-[Select Product to Generate] (primary button → goes to /generate)
-[Explore Templates] (plain button → goes to /templates)
+### 4. Update Types (Optional Enhancement)
+
+**File:** `src/types/index.ts`
+
+Add to `GenerationSettings` or create new interface:
+
+```typescript
+export interface GenerationSettings {
+  count: 1 | 4 | 8;
+  aspectRatio: AspectRatio;
+  quality: ImageQuality;
+  preserveAccuracy: boolean;
+  sourceImageIds?: string[];  // NEW: Which product images to use as reference
+}
 ```
 
-### Generate.tsx - Add Template Recommendations
+---
+
+### 5. Pass Selected Images to Generation
+
+**File:** `src/pages/Generate.tsx`
+
+Update `handleConfirmGenerate` and `GenerateConfirmModal` to include the selected source images in the generation request. The confirmation modal should show:
+
+- Which product
+- Which source image(s) will be used
+- Which template
+- How many images to generate
+- Credit cost
+
+---
+
+### 6. Update Confirmation Modal
+
+**File:** `src/components/app/GenerateConfirmModal.tsx`
+
+Add a section showing the selected source images:
 
 ```text
-Location: Lines 466-516 (Template Selection step)
-
-Add before template grid:
-1. Recommendation section with heading "Recommended for [Product Title]"
-2. Show 2-3 templates matching product category with "Recommended" badge
-3. Add explanatory Banner for first-time users
-4. Keep "All Templates" grid below
+Source Reference
+[Selected thumbnails displayed here]
+Using 2 images as reference
 ```
 
-### Types Enhancement
+This gives users final confirmation of what the AI will use.
 
-Add to types if not present:
-- `recommendedForProductType?: string[]` on Template type
+---
 
-## Visual Mockups
+### 7. Handle Edge Cases
 
-### Dashboard After Fix:
+1. **Single image product**: Auto-select the only image, hide selection UI complexity
+2. **No images product**: Show informative message that user needs to upload product images first
+3. **Many images (10+)**: Add scroll container or pagination
+4. **Reset on product change**: Clear selection and auto-select first image when switching products
 
-```text
-+-------------------------------------------+
-| Quick Generate                   847 cr   |
-+-------------------------------------------+
-| Generate professional product images in   |
-| seconds. Select a product and we'll       |
-| recommend the best photography styles.    |
-|                                           |
-| [Select Product to Generate]              |
-| [Explore Templates]                       |
-+-------------------------------------------+
-```
+---
 
-### Generate Page - Template Step After Fix:
+## Code Changes Summary
 
-```text
-+-------------------------------------------+
-| Recommended for "Vitamin C Serum"         |
-+-------------------------------------------+
-| Based on your product type (Cosmetics),   |
-| these templates work best:                |
-|                                           |
-| [IMG] Luxury      [IMG] Glossy    [IMG]   |
-|       Skincare         + Water     Soft   |
-|       Studio           Drops       Pastel |
-|       ★ Best match                        |
-+-------------------------------------------+
-| All Templates                             |
-+-------------------------------------------+
-| [Clothing] [Cosmetics] [Food] [Home]...   |
-|                                           |
-| [Template Grid...]                        |
-+-------------------------------------------+
-```
+### Files to Modify:
 
-## Files to Modify
+1. **`src/pages/Generate.tsx`**
+   - Add `selectedSourceImages` state
+   - Update product card section (lines 451-461) to show selectable images
+   - Add image selection toggle handler
+   - Auto-select first image on product selection
+   - Pass selected images to confirmation modal and generation logic
 
-1. **`src/pages/Dashboard.tsx`**
-   - Remove template selection from Quick Generate
-   - Update copy to be product-focused
-   - Add "Explore Templates" secondary action
-
-2. **`src/pages/Generate.tsx`**
-   - Add "Recommended Templates" section after product selection
-   - Add educational Banner for template step
-   - Improve auto-filtering logic to show recommended category first
-   - Add "Best match" indicator on recommended templates
+2. **`src/components/app/GenerateConfirmModal.tsx`**
+   - Add `sourceImages` prop to interface
+   - Display selected source images in the confirmation summary
 
 3. **`src/types/index.ts`** (optional)
-   - Add `productTypeMatch?: string[]` to Template for smarter recommendations
+   - Add `sourceImageIds` to GenerationSettings type
 
-## User Journey After Fix
+---
 
-1. **New User on Dashboard**: Sees "Select Product to Generate" - clear, simple action
-2. **Selects Product**: Goes to Generate page, product step auto-completes
-3. **Template Step**: Sees "Recommended for [Product]" with 2-3 visual template cards that match their product type
-4. **Understands Templates**: Preview images show exactly what style each template produces
-5. **Makes Informed Choice**: Clicks on template card with visual they like
-6. **Proceeds to Settings**: Confident they've chosen the right style
+## Visual Behavior
 
-## Technical Notes
+### Selection Interaction:
+- Click thumbnail → toggle selection
+- Checkbox overlay appears on selected images
+- Selected images have a colored border (shopify-green)
+- Unselected images have standard border with hover effect
 
-- No breaking changes to existing functionality
-- Uses existing `TemplatePreviewCard` component with preview images
-- Uses existing category auto-detection logic (lines 110-121 in Generate.tsx)
-- Banner component already imported from Polaris
+### Default Behavior:
+- First image auto-selected when product is chosen
+- At least one image must be selected to proceed
+- Validation message if user tries to continue with zero images selected
 
-## Summary
+---
 
-The core insight is correct: **users should select a product first**, then see **visually-rich template recommendations** tailored to their product type. This removes the cognitive burden of understanding 17 abstract template names upfront and makes the workflow intuitive.
+## User Flow After Implementation
+
+1. User selects product "Artisan Honey Granola" (has 5 images)
+2. Product card expands showing all 5 images as selectable thumbnails
+3. Image 1 is auto-selected by default
+4. User clicks images 2 and 4 to add them as additional references
+5. Counter shows "3 of 5 selected"
+6. User proceeds to template selection
+7. Confirmation modal shows the 3 selected source images
+8. AI generates using those specific product angles
+
+---
+
+## Benefits
+
+- **Better AI results**: Users can pick the clearest, best-lit product photo
+- **Variant support**: Generate from specific color/style variant images
+- **Multi-angle generation**: Select front + side view for comprehensive AI input
+- **User confidence**: Clear visibility into what AI will reference
+
