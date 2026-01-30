@@ -80,74 +80,61 @@ export default function Jobs() {
     failed: mockJobs.filter(j => j.status === 'failed').length,
   };
 
-  const rows = filteredJobs.map(job => [
-    <InlineStack key={job.jobId} gap="300" blockAlign="center">
-      <Thumbnail
-        source={job.productSnapshot.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-        alt={job.productSnapshot.title}
-        size="small"
-      />
-      <BlockStack gap="050">
-        <Text as="span" variant="bodyMd" fontWeight="semibold">
-          {job.productSnapshot.title}
-        </Text>
-        <Text as="span" variant="bodySm" tone="subdued">
-          {job.productSnapshot.vendor}
-        </Text>
-      </BlockStack>
-    </InlineStack>,
-    <BlockStack key={`template-${job.jobId}`} gap="050">
-      <Text as="span" variant="bodyMd">
-        {job.templateSnapshot.name}
-      </Text>
-      <Text as="span" variant="bodySm" tone="subdued">
-        {categoryLabels[job.templateSnapshot.category]}
-      </Text>
-    </BlockStack>,
-    <StatusBadge key={`status-${job.jobId}`} status={job.status} />,
-    <BlockStack key={`details-${job.jobId}`} gap="050">
-      <Text as="span" variant="bodySm">
-        {job.requestedCount} images • {job.ratio} • {job.quality}
-      </Text>
-      {job.results.length > 0 && (
-        <Text as="span" variant="bodySm" tone="subdued">
-          {job.results.filter(r => r.publishedToShopify).length}/{job.results.length} published
-        </Text>
-      )}
-    </BlockStack>,
-    new Date(job.createdAt).toLocaleString(),
-    <InlineStack key={`actions-${job.jobId}`} gap="200">
-      <Button size="slim" onClick={() => handleViewJob(job)}>
-        View
-      </Button>
-      {job.status === 'failed' && (
-        <Button size="slim" variant="primary" onClick={() => navigate('/generate')}>
-          Retry
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const rows = filteredJobs.map(job => {
+    const unpublishedCount = job.results.filter(r => !r.publishedToShopify).length;
+    const publishedCount = job.results.filter(r => r.publishedToShopify).length;
+    
+    return [
+      // Product & Template combined
+      <InlineStack key={job.jobId} gap="300" blockAlign="center" wrap={false}>
+        <Thumbnail
+          source={job.productSnapshot.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+          alt={job.productSnapshot.title}
+          size="small"
+        />
+        <BlockStack gap="100">
+          <Text as="span" variant="bodyMd" fontWeight="semibold" truncate>
+            {job.productSnapshot.title}
+          </Text>
+          <Text as="span" variant="bodySm" tone="subdued">
+            {job.templateSnapshot.name}
+          </Text>
+        </BlockStack>
+      </InlineStack>,
+      // Status
+      <StatusBadge key={`status-${job.jobId}`} status={job.status} />,
+      // Details - simplified
+      <Text key={`details-${job.jobId}`} as="span" variant="bodySm" tone="subdued">
+        {job.requestedCount} × {job.ratio}
+        {publishedCount > 0 && ` • ${publishedCount}/${job.results.length} ✓`}
+      </Text>,
+      // Date - compact
+      <Text key={`date-${job.jobId}`} as="span" variant="bodySm" tone="subdued">
+        {formatDate(job.createdAt)}
+      </Text>,
+      // Actions - simplified
+      <InlineStack key={`actions-${job.jobId}`} gap="100">
+        <Button size="slim" onClick={() => handleViewJob(job)}>
+          View
         </Button>
-      )}
-      {job.status === 'completed' && job.results.some(r => !r.publishedToShopify) && (
-        <Button 
-          size="slim" 
-          variant="secondary"
-          onClick={() => handlePublishClick(job)}
-        >
-          {`Publish ${job.results.filter(r => !r.publishedToShopify).length}`}
-        </Button>
-      )}
-      {job.status === 'completed' && (
-        <Button 
-          size="slim" 
-          variant="plain"
-          onClick={() => {
-            toast.info('Navigating to generate with same settings...');
-            navigate(`/generate?template=${job.templateId}`);
-          }}
-        >
-          Use Again
-        </Button>
-      )}
-    </InlineStack>,
-  ]);
+        {job.status === 'failed' && (
+          <Button size="slim" variant="primary" onClick={() => navigate('/generate')}>
+            Retry
+          </Button>
+        )}
+        {job.status === 'completed' && unpublishedCount > 0 && (
+          <Button size="slim" variant="primary" onClick={() => handlePublishClick(job)}>
+            Publish {unpublishedCount}
+          </Button>
+        )}
+      </InlineStack>,
+    ];
+  });
 
   return (
     <PageHeader title="Jobs">
