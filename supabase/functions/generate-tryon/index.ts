@@ -117,6 +117,12 @@ async function generateImage(
                       url: productImageUrl,
                     },
                   },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: modelImageUrl,
+                    },
+                  },
                 ],
               },
             ],
