@@ -1,126 +1,79 @@
 
-# Problemos Diagnozė ir Sprendimas: Neteisingas AI Generavimo Rezultatas
+# Problema: AI neatsižvelgia į pasirinkto modelio išvaizdą
 
-## Problema
-Pasirinkote **Airlift High-Waist Legging**, bet sugeneruota **hoodie** nuotrauka. Tai rimtas bug.
+## Diagnozė
 
-## Priežasties Analizė
+Patikrinau visą generavimo flow ir radau pagrindinę problemą:
 
-Problema yra tame, kad produktų nuotraukos yra **local assets** (importuoti iš `src/assets/products/`), kurie po Vite kompiliavimo tampa relative paths kaip `/assets/leggings-black-1.jpg`. 
+### Kas dabar vyksta:
+1. Frontend siunčia modelio **tekstinius duomenis**: `gender`, `ethnicity`, `bodyType`, `ageRange`
+2. Edge function sudaro prompt'ą: *"Professional fashion photography of a female model (Nordic, slim build, early 20s)..."*
+3. AI gauna **tik produkto nuotrauką** kaip vizualinę reference
+4. AI sukuria modelį pagal **tekstinį aprašymą** - bet tai labai netikslua
 
-Kai edge function siunčia šį URL į AI modelį (Gemini), **AI negali pasiekti šio URL** nes:
-- Tai nėra pilnas HTTPS URL
-- AI serveris negali prisijungti prie jūsų vietinio preview serverio
+### Problema:
+**Modelio nuotrauka (`previewUrl`) niekur nesiunčiama į AI!**
 
-Todėl AI modelis tiesiog sugeneruoja atsitiktinę nuotrauką pagal tekstinį prompt'ą, ignoruodamas produkto nuotrauką.
+AI modelis nežino kaip tiksliai atrodo Ingrid - jis tik žino kad tai "Nordic, slim, young-adult female". Todėl AI sugeneruoja atsitiktinę moterį atitinkančią šiuos parametrus.
 
 ## Sprendimas
 
-Reikia padaryti, kad produktų nuotraukos būtų pasiekiamos per pilną HTTPS URL. Yra du būdai:
+Reikia siųsti **dvi nuotraukas** į AI:
+1. **Produkto nuotrauką** - rūbas kurį modelis turi dėvėti
+2. **Modelio nuotrauką** - kaip turėtų atrodyti modelis
 
-### Variantas A: Konvertuoti local images į Base64 (Rekomenduojama)
-Frontend'e konvertuoti nuotrauką į base64 prieš siunčiant į edge function:
-
-```typescript
-// Prieš siunčiant į generate-tryon
-async function imageToBase64(imageUrl: string): Promise<string> {
-  const response = await fetch(imageUrl);
-  const blob = await response.blob();
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
-  });
-}
+### Prompt'o struktūra po pakeitimo:
+```text
+"Generate a photo where the model from [Image 2] wears the clothing from [Image 1].
+Keep the model's exact face, skin tone, and body type.
+..."
 ```
 
-Tada siųsti base64 data URL vietoj relative path.
+## Techniniai pakeitimai
 
-### Variantas B: Uploadinti į Storage prieš generavimą
-Prieš generavimą, uploadinti produkto nuotrauką į Supabase Storage ir gauti public URL.
+### 1. Atnaujinti `useGenerateTryOn.ts`
+- Konvertuoti ir modelio nuotrauką į base64
+- Siųsti `modelImageUrl` į edge function
 
----
+### 2. Atnaujinti Edge Function `generate-tryon/index.ts`
+- Pridėti `modelImageUrl` į request interface
+- Siųsti **dvi nuotraukas** į Gemini API
+- Atnaujinti prompt'ą kad nurodytų AI naudoti abi nuotraukas
 
-## Implementacijos Planas
+### 3. Modifikuoti API request struktūrą
+Dabartinis:
+```typescript
+content: [
+  { type: "text", text: prompt },
+  { type: "image_url", image_url: { url: productImage } }
+]
+```
 
-### 1. Sukurti utility funkciją Base64 konvertavimui
-- Failas: `src/lib/imageUtils.ts`
-- Funkcija: `convertImageToBase64(url: string): Promise<string>`
+Po pakeitimo:
+```typescript
+content: [
+  { type: "text", text: prompt },
+  { type: "image_url", image_url: { url: productImage } },  // Rūbas
+  { type: "image_url", image_url: { url: modelImage } }     // Modelis
+]
+```
 
-### 2. Atnaujinti `useGenerateTryOn` hook
-- Prieš siunčiant request, konvertuoti `sourceImageUrl` į base64
-- Siųsti base64 data URL vietoj relative path
-
-### 3. Patikrinti Edge Function
-- Gemini API palaiko base64 images formatu `data:image/jpeg;base64,...`
-- Jokių pakeitimų edge function nereikia
-
-### 4. Pridėti logging
-- Pridėti console.log, kad būtų galima matyti kas siunčiama į API debugging tikslais
-
----
-
-## Pakeitimai failuose
+## Failų pakeitimai
 
 | Failas | Veiksmas |
 |--------|----------|
-| `src/lib/imageUtils.ts` | SUKURTI - Base64 konvertavimo utility |
-| `src/hooks/useGenerateTryOn.ts` | MODIFIKUOTI - Konvertuoti image prieš siuntimą |
-| `src/pages/Generate.tsx` | MODIFIKUOTI - Pridėti loading state konvertavimui |
+| `src/hooks/useGenerateTryOn.ts` | Pridėti modelio nuotraukos konvertavimą ir siuntimą |
+| `supabase/functions/generate-tryon/index.ts` | Pridėti modelio nuotrauką į API request |
 
----
+## Tikėtinas rezultatas
 
-## Kodas
-
-### `src/lib/imageUtils.ts` (Naujas failas)
-```typescript
-export async function convertImageToBase64(imageUrl: string): Promise<string> {
-  // Jei jau base64 arba data URL - grąžinti kaip yra
-  if (imageUrl.startsWith('data:')) {
-    return imageUrl;
-  }
-  
-  // Jei tai pilnas HTTPS URL (ne local) - grąžinti kaip yra
-  if (imageUrl.startsWith('https://') && !imageUrl.includes('localhost')) {
-    return imageUrl;
-  }
-  
-  // Konvertuoti local/relative URL į base64
-  const response = await fetch(imageUrl);
-  const blob = await response.blob();
-  
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-```
-
-### `useGenerateTryOn.ts` pakeitimai
-Hook'e, prieš siunčiant request, konvertuoti image:
-
-```typescript
-import { convertImageToBase64 } from '@/lib/imageUtils';
-
-// generate funkcijoje:
-const base64Image = await convertImageToBase64(params.sourceImageUrl);
-
-// Siųsti base64Image vietoj params.sourceImageUrl
-body: JSON.stringify({
-  product: {
-    ...
-    imageUrl: base64Image,  // Base64 vietoj relative path
-  },
-  ...
-})
-```
-
----
-
-## Rezultatas
 Po šių pakeitimų:
-- AI modelis gaus tikrą produkto nuotrauką kaip base64 data
-- Generuotas rezultatas atitiks pasirinktą produktą (leggings → leggings, ne hoodie)
-- Tiek local assets, tiek uploaded images, tiek external URLs veiks korektiškai
+- Pasirinkus **Ingrid** - sugeneruota nuotrauka rodys moterį su **Ingrid veido bruožais ir odos spalva**
+- Pasirinkus **Amara** (Black African) - sugeneruota nuotrauka rodys atitinkamą modelį
+- Modelių įvairovė bus tikra ir atitiks pasirinkimą
+
+## Svarbu!
+
+Gemini Flash Image palaiko kelias nuotraukas viename request'e. Prompt'e reikės aiškiai nurodyti:
+- Pirma nuotrauka = rūbas (reference for clothing)
+- Antra nuotrauka = modelis (reference for person's appearance)
