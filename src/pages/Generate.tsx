@@ -689,7 +689,6 @@ export default function Generate() {
                     </InlineStack>
                     <InlineStack gap="400" blockAlign="center">
                       {(() => {
-                        const { getTemplateImage } = require('./TemplatePreviewCard');
                         const templateImage = getTemplateImage(selectedTemplate.templateId);
                         return templateImage ? (
                           <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border">
