@@ -1,134 +1,143 @@
 
 
-# Settings Page: Plans & Billing Section Implementation
+# Virtual Try-On AI Image Generation Implementation
 
-## Summary
+## Problem Summary
 
-Replace the current simple "Billing & Credits" card in Settings with a comprehensive plan selection UI that showcases the pricing tiers, enables plan upgrades, and allows credit top-ups - all with a competitive angle highlighting the cost advantage.
+The "Generate Try-On Images" button on the Virtual Try-On settings page doesn't work because:
+1. The `handleGenerateClick()` function checks for `selectedTemplate` which is `null` in Virtual Try-On mode (we use model + pose instead)
+2. There's no confirmation modal designed for Virtual Try-On - the existing `GenerateConfirmModal` is template-based
+3. No backend integration exists - currently only mock/simulated generation with stock photos
 
-## Business Model Recap
+## Solution Overview
 
-| Item | Our Cost | Selling Price (100% markup) |
-|------|----------|---------------------------|
-| Standard image (1 credit) | $0.004 (0.4 ct) | $0.008 (0.8 ct) |
-| Virtual Try-On (3 credits) | $0.012 (1.2 ct) | $0.024 (2.4 ct) |
+Implement real AI-powered Virtual Try-On image generation using the Lovable AI Gateway (already configured with `LOVABLE_API_KEY`). This will:
+1. Fix the broken button by properly handling Virtual Try-On mode
+2. Create a new confirmation modal for Virtual Try-On
+3. Build a backend edge function with carefully crafted prompts
+4. Generate actual AI images using `google/gemini-2.5-flash-image` model
 
-**Free trial**: 5 credits per store (one-time)
+## Backend Prompt Strategy
 
-## New UI Layout
+The quality of Virtual Try-On results depends heavily on prompt engineering. Here's the approach:
 
-The Settings page will get an expanded "Plans & Billing" section with:
-
+### Core Prompt Template
 ```text
-+------------------------------------------------------------------+
-|  CURRENT PLAN STATUS                                              |
-|  [Free Trial]  5/5 credits remaining                              |
-|  "Upgrade to unlock more features and credits"                    |
-+------------------------------------------------------------------+
+Professional fashion photography of a [model.gender] model ([model.ethnicity], [model.bodyType] build, [model.ageRange] age) 
+wearing [product.title] - [product.description].
 
-+------------------------------------------------------------------+
-|  CHOOSE YOUR PLAN                     [Monthly] [Annual -17%]     |
-+------------------------------------------------------------------+
-|                                                                   |
-|  +-------------+  +---------------+  +-------------+  +---------+ |
-|  |   STARTER   |  |    GROWTH     |  |     PRO     |  |ENTERPRISE|
-|  |   $9/mo     |  |    $29/mo     |  |   $79/mo    |  | Custom  | |
-|  |             |  |  MOST POPULAR |  |             |  |         | |
-|  | 100 credits |  |  500 credits  |  | 2000 credits|  |Unlimited| |
-|  |             |  |  +Try-On      |  |  +API       |  |+SLA     | |
-|  |  [Select]   |  |   [Select]    |  |  [Select]   |  |[Contact]| |
-|  +-------------+  +---------------+  +-------------+  +---------+ |
-|                                                                   |
-+------------------------------------------------------------------+
+Pose: [pose.name] - [pose.description]
 
-+------------------------------------------------------------------+
-|  NEED MORE CREDITS?  (Top-up packs, credits never expire)         |
-|                                                                   |
-|  [50 credits - $5]  [200 credits - $15]  [500 credits - $30]      |
-|       10 ct/ea           7.5 ct/ea            6 ct/ea             |
-+------------------------------------------------------------------+
+Photography style: High-end e-commerce fashion photography
+Lighting: Professional studio lighting with soft fill and subtle rim light
+Camera: Shot on Canon EOS R5, 85mm f/1.4 lens, shallow depth of field
+Background: [pose.category-based: clean white studio / urban outdoor / editorial minimal / street setting]
 
-+------------------------------------------------------------------+
-|  COMPETITOR COMPARISON                                            |
-|  "Save 60-80% compared to alternatives"                           |
-|  Us: $0.008/image | Competitor A: $0.03 | Competitor B: $0.05     |
-+------------------------------------------------------------------+
+Quality requirements:
+- Photorealistic skin texture with natural pores and highlights
+- Natural fabric draping and realistic garment fit
+- High detail on product colors, patterns, and textures
+- Professional fashion editorial quality
+- No AI artifacts, no distorted hands, no unnatural poses
+
+The garment must look exactly as in the product image - preserve all colors, patterns, logos, and details exactly.
+```
+
+### Negative Prompt
+```text
+blurry, low quality, distorted, deformed hands, extra fingers, bad anatomy, 
+unnatural pose, cartoon, illustration, text, watermark, logo overlay, 
+mannequin, flat lay, product only without model
 ```
 
 ## Technical Implementation
 
-### New Type Definitions (`src/types/index.ts`)
+### 1. New Edge Function: `supabase/functions/generate-tryon/index.ts`
 
-```typescript
-export interface PricingPlan {
-  planId: string;
-  name: string;
-  monthlyPrice: number;
-  annualPrice: number;
-  credits: number;
-  features: string[];
-  highlighted?: boolean;
-  badge?: string;
-}
+Creates AI-generated Virtual Try-On images with:
+- Receives: product info, model profile, pose details, aspect ratio, image count
+- Builds optimized prompts from templates
+- Calls Lovable AI Gateway with `google/gemini-2.5-flash-image`
+- Returns: Array of base64 encoded images
 
-export interface CreditPack {
-  packId: string;
-  credits: number;
-  price: number;
-  pricePerCredit: number;
-  popular?: boolean;
-}
+### 2. New Component: `TryOnConfirmModal.tsx`
+
+Similar to `GenerateConfirmModal` but designed for Virtual Try-On:
+- Shows Product + Model + Pose summary (not Template)
+- Displays 3 credits per image cost
+- Preview of what will be generated
+
+### 3. Updated `Generate.tsx`
+
+- Fix `handleGenerateClick()` to work for both modes
+- Add `handleTryOnGenerate()` for Virtual Try-On flow
+- Replace simulation with real API calls
+- Add loading states and error handling for API failures (429/402)
+
+### 4. New Hook: `useGenerateTryOn.ts`
+
+Encapsulates the API call logic:
+- Sends generation request to edge function
+- Handles streaming/polling for multiple images
+- Manages loading and error states
+- Returns generated image URLs
+
+## File Changes
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `supabase/functions/generate-tryon/index.ts` | Create | Edge function for AI image generation |
+| `src/components/app/TryOnConfirmModal.tsx` | Create | Confirmation modal for Virtual Try-On |
+| `src/hooks/useGenerateTryOn.ts` | Create | API call hook with error handling |
+| `src/pages/Generate.tsx` | Update | Fix button logic, integrate real API calls |
+
+## Flow Diagram
+
+```text
+User clicks "Generate 4 Try-On Images"
+          ↓
+[TryOnConfirmModal opens]
+  - Shows: Product + Model + Pose
+  - Shows: 12 credits (4 × 3)
+  - Confirm / Cancel
+          ↓
+User clicks "Generate"
+          ↓
+[Frontend calls edge function]
+  POST /functions/v1/generate-tryon
+  {
+    product: { title, description, imageUrl },
+    model: { gender, ethnicity, bodyType, ageRange },
+    pose: { name, description, category },
+    aspectRatio: "1:1",
+    imageCount: 4
+  }
+          ↓
+[Edge function builds prompt]
+  Combines all info into optimized prompt
+          ↓
+[Lovable AI Gateway]
+  model: google/gemini-2.5-flash-image
+  → Returns 4 generated images
+          ↓
+[Edge function returns]
+  { images: ["data:image/png;base64,...", ...] }
+          ↓
+[Frontend displays results]
+  User can select and publish to Shopify
 ```
 
-### New Mock Data (`src/data/mockData.ts`)
+## Error Handling
 
-Add `pricingPlans` and `creditPacks` arrays with the pricing tiers.
+- **429 Rate Limit**: Show toast "Please wait a moment and try again"
+- **402 Payment Required**: Show toast "Please add credits to continue"
+- **Generation failures**: Retry up to 2 times, then show helpful error message
+- **Partial success**: If 3 of 4 images succeed, show what's available with regenerate option
 
-### New Components
+## Credit Deduction
 
-| Component | Purpose |
-|-----------|---------|
-| `src/components/app/PlanCard.tsx` | Individual plan card with features, price, and CTA |
-| `src/components/app/CreditPackCard.tsx` | Credit top-up pack card |
-| `src/components/app/CompetitorComparison.tsx` | Side-by-side price comparison banner |
-
-### Settings Page Updates (`src/pages/Settings.tsx`)
-
-1. Replace "Billing & Credits" card with expanded "Plans & Billing" section
-2. Add state for billing period toggle (monthly/annual)
-3. Display current plan status prominently
-4. Show all plan cards in a responsive grid
-5. Add credit top-up section below plans
-6. Add competitor comparison for social proof
-
-## Visual Design
-
-- **Current plan**: Highlighted with `Badge tone="success"`
-- **Most Popular (Growth)**: Green border, "MOST POPULAR" badge
-- **Annual toggle**: Shows savings percentage
-- **Top-up cards**: Horizontal row with "Best Value" badge on largest pack
-- **Competitor comparison**: Subtle banner with checkmark icons
-
-## Plan Features Breakdown
-
-| Feature | Starter | Growth | Pro |
-|---------|---------|--------|-----|
-| Credits/month | 100 | 500 | 2,000 |
-| All templates | Yes | Yes | Yes |
-| Virtual Try-On | No | Yes | Yes |
-| Priority queue | No | Yes | Yes |
-| API access | No | No | Yes |
-| Bulk generation | No | No | Yes |
-| Support | Standard | Priority | Dedicated |
-
-## File Changes Summary
-
-| File | Action |
-|------|--------|
-| `src/types/index.ts` | Add PricingPlan and CreditPack interfaces |
-| `src/data/mockData.ts` | Add pricingPlans and creditPacks data |
-| `src/components/app/PlanCard.tsx` | Create new component |
-| `src/components/app/CreditPackCard.tsx` | Create new component |
-| `src/components/app/CompetitorComparison.tsx` | Create new component |
-| `src/pages/Settings.tsx` | Replace Billing section with full Plans UI |
+In production, credits would be deducted server-side. For now:
+- Mock credit deduction on frontend after successful generation
+- Update `mockShop.creditsBalance` in state
+- Show toast with credits used
 
