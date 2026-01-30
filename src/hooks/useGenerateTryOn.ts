@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { Product, ModelProfile, TryOnPose, AspectRatio } from '@/types';
+import { convertImageToBase64 } from '@/lib/imageUtils';
 
 interface GenerateTryOnParams {
   product: Product;
@@ -52,6 +53,11 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
         throw new Error('Supabase URL not configured');
       }
 
+      // Convert image to base64 so AI model can access it
+      console.log('[useGenerateTryOn] Converting image to base64:', params.sourceImageUrl.slice(0, 100));
+      const base64ImageUrl = await convertImageToBase64(params.sourceImageUrl);
+      console.log('[useGenerateTryOn] Image converted, sending to API');
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-tryon`, {
         method: 'POST',
         headers: {
@@ -63,7 +69,7 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
             title: params.product.title,
             description: params.product.description,
             productType: params.product.productType,
-            imageUrl: params.sourceImageUrl,  // Use the specific selected image
+            imageUrl: base64ImageUrl,  // Send base64 instead of relative path
           },
           model: {
             name: params.model.name,
