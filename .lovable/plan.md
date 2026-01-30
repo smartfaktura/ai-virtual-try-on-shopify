@@ -1,114 +1,143 @@
-# UX Improvement Plan: Making the App Super Intuitive
 
-## ✅ IMPLEMENTATION COMPLETE
 
-All 15 UX issues have been addressed across the codebase.
+# Fashion Virtual Try-On Feature Plan
 
----
+## Summary
 
-## CATEGORY 1: Confusing Terminology & Jargon ✅
+Add a new "Virtual Try-On" generation mode specifically for fashion/clothing brands. This allows merchants to select a human model, choose a pose/scene style, and have their garment product digitally placed on the model - creating realistic "model wearing product" images without actual photoshoots.
 
-### Issue #1: "Brand Kit" is Abstract ✅
-**Fix:** Renamed to "Make It Match Your Brand" with friendlier description.
+## Current State Analysis
 
-### Issue #2: "Negatives" Is Technical AI Jargon ✅
-**Fix:** Created `NegativesChipSelector` component with:
-- Label: "Don't show these things"
-- Clickable chip UI for common items
-- Custom input for additional items
+The current Generate workflow follows this pattern:
+1. Select a Product
+2. Choose a Template (photography style)
+3. Configure settings (count, ratio, quality)
+4. Generate product images
 
-### Issue #3: "Aspect Ratio" Is Photographer Jargon ✅
-**Fix:** Updated `AspectRatioPreview` with:
-- Label changed to "Image Size"
-- Platform use-case labels added (e.g., "Instagram & Listings")
+This works well for product-only shots but doesn't support "on-model" fashion photography.
 
-### Issue #4: "Preserve Product Accuracy" Is Vague ✅
-**Fix:** Changed to "Keep my product looking exactly like it does" with clearer help text.
+## Proposed Workflow
 
----
+```text
++------------------+     +------------------+     +------------------+     +------------------+
+|   1. Product     | --> |   2. Model       | --> |   3. Style       | --> |   4. Settings    |
+|   (Garment)      |     |   Selection      |     |   & Pose         |     |   & Generate     |
++------------------+     +------------------+     +------------------+     +------------------+
+        |                        |                        |                        |
+   Upload/Select           Choose from:              Choose from:            Same as now:
+   clothing item           - Gender                  - Studio poses          - Count (1,4,8)
+                           - Body type               - Lifestyle             - Aspect ratio
+                           - Ethnicity               - Editorial             - Quality
+                           - Age range               - Streetwear            
+```
 
-## CATEGORY 2: Missing Feedback & Guidance ✅
+## Implementation Details
 
-### Issue #5: No Indication Why Template Is Selected ✅
-**Fix:** Added toast notification when template is selected.
+### 1. New Type Definitions
 
-### Issue #6: Progress Steps Missing Time Estimates ✅
-**Fix:** Added "About 2-3 minutes total" estimate to stepper.
+Add to `src/types/index.ts`:
 
-### Issue #7: Generating State Has No Cancel Button ✅
-**Fix:** Added "Cancel and go back" button during generation.
+- `GenerationMode`: 'product-only' | 'virtual-try-on'
+- `ModelProfile` interface with:
+  - `modelId`: string
+  - `name`: string
+  - `gender`: 'male' | 'female' | 'non-binary'
+  - `bodyType`: 'slim' | 'athletic' | 'average' | 'plus-size'
+  - `ethnicity`: string (diverse options)
+  - `ageRange`: 'young-adult' | 'adult' | 'mature'
+  - `previewUrl`: string
 
-### Issue #8: No Success Celebration After Publishing
-**Status:** Partially addressed via improved toast feedback. Full celebration modal can be added in future iteration.
+- `TryOnPose` interface with:
+  - `poseId`: string
+  - `name`: string
+  - `category`: 'studio' | 'lifestyle' | 'editorial' | 'streetwear'
+  - `description`: string
+  - `previewUrl`: string
 
----
+### 2. Mock Data for Models and Poses
 
-## CATEGORY 3: Navigation & Dead Ends ✅
+Add to `src/data/mockData.ts`:
 
-### Issue #9: "View" Button on Jobs Goes to 404 ✅
-**Fix:** Created `JobDetailModal` component. View buttons now open a modal with full job details.
+- `mockModels`: Array of 8-12 diverse model profiles with preview images
+- `mockTryOnPoses`: Array of pose/scene options (e.g., "Walking Urban", "Studio Front", "Casual Lifestyle")
 
-### Issue #10: No Way to Go Back from Results Page ✅
-**Fix:** Added "← Adjust Settings" button on Results page.
+### 3. Model Preview Assets
 
-### Issue #11: Empty State on Product Step Is Confusing
-**Status:** Existing empty states are adequate for MVP.
+Create `src/assets/models/` directory with placeholder model silhouette previews:
+- `model-female-slim.jpg`
+- `model-female-athletic.jpg`
+- `model-male-slim.jpg`
+- `model-male-athletic.jpg`
+- etc.
 
----
+### 4. New Components
 
-## CATEGORY 4: Unclear Actions & Consequences ✅
+**ModelSelectorCard** (`src/components/app/ModelSelectorCard.tsx`):
+- Visual card showing model preview
+- Gender, body type, ethnicity badges
+- Selected state with checkmark overlay
 
-### Issue #12: "Replace All" Warning Is Too Subtle ✅
-**Fix:** Enhanced `PublishModal` with:
-- Visual "Danger Zone" styling
-- Type-to-confirm "REPLACE" input
-- Disabled publish button until confirmed
+**PoseSelectorCard** (`src/components/app/PoseSelectorCard.tsx`):
+- Preview of pose/scene style
+- Category badge
+- Description tooltip
 
-### Issue #13: Credits Cost Not Visible Until Settings Step
-**Status:** Already showing on template cards and in settings. Additional visibility can be added later.
+**GenerationModeToggle** (`src/components/app/GenerationModeToggle.tsx`):
+- Toggle between "Product Shot" and "Virtual Try-On"
+- Only shows for clothing category products
 
-### Issue #14: Image Selection Checkboxes Are Not Obvious ✅
-**Fix:** 
-- Larger, more visible selection indicators
-- Numbers shown on unselected images
-- Helper banner: "Click on images above to select them"
+### 5. Generate Page Updates
 
-### Issue #15: Source Image Selection Is Hidden Until Expanded
-**Status:** Already visible in product card after selection.
+Modify `src/pages/Generate.tsx`:
 
----
+**New State Variables**:
+```typescript
+const [generationMode, setGenerationMode] = useState<'product-only' | 'virtual-try-on'>('product-only');
+const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
+const [selectedPose, setSelectedPose] = useState<TryOnPose | null>(null);
+```
 
-## Files Modified
+**Conditional Step Flow**:
+- After product selection, if product category is "clothing", show mode toggle
+- If "Virtual Try-On" selected, show Model Selection step
+- Then show Pose Selection step
+- Finally, standard settings and generate
 
-1. **`src/pages/Generate.tsx`**
-   - Renamed Brand Kit → "Make It Match Your Brand"
-   - Added Cancel button to generating state
-   - Added "← Adjust Settings" button to Results
-   - Improved image selection visibility with helper banner
-   - Updated step descriptions with time estimate
-   - Integrated NegativesChipSelector
+**Updated Step Indicator**:
+For virtual try-on mode, steps become:
+1. Product
+2. Model
+3. Pose
+4. Settings
+5. Results
 
-2. **`src/components/app/AspectRatioPreview.tsx`**
-   - Added platform use-case labels to each ratio
-   - Changed header to "Image Size"
+### 6. Visual Design Principles
 
-3. **`src/components/app/PublishModal.tsx`**
-   - Enhanced Replace warning with danger styling
-   - Added type-to-confirm "REPLACE" requirement
-   - Disabled publish button until confirmed
+- Model selection cards in a 2x3 or 3x4 grid
+- Diverse representation is essential (gender, ethnicity, body types)
+- Clear visual distinction between modes
+- Pose previews show silhouettes/example compositions
+- Banner explaining the feature: "AI will digitally dress the model in your garment"
 
-4. **`src/pages/Jobs.tsx`**
-   - Added JobDetailModal integration
-   - View button now opens modal instead of broken route
+## File Changes Summary
 
-5. **`src/pages/Dashboard.tsx`**
-   - Added JobDetailModal integration
-   - Fixed View button functionality
+| File | Action |
+|------|--------|
+| `src/types/index.ts` | Add ModelProfile, TryOnPose, GenerationMode types |
+| `src/data/mockData.ts` | Add mockModels and mockTryOnPoses arrays |
+| `src/components/app/ModelSelectorCard.tsx` | Create new component |
+| `src/components/app/PoseSelectorCard.tsx` | Create new component |
+| `src/components/app/GenerationModeToggle.tsx` | Create new component |
+| `src/pages/Generate.tsx` | Add mode toggle, model/pose selection steps |
+| `src/assets/models/` | Create directory with model preview images |
 
-6. **NEW: `src/components/app/JobDetailModal.tsx`**
-   - Full job detail view with images, settings, status
-   - Publish and retry actions
+## Technical Considerations
 
-7. **NEW: `src/components/app/NegativesChipSelector.tsx`**
-   - Chip-based UI for selecting things to avoid
-   - Common suggestions + custom input
+1. **AI Integration**: The virtual try-on feature would use the existing Lovable AI gateway with specialized prompts for clothing overlay/inpainting
+
+2. **Credit Cost**: Virtual try-on generations may cost more credits (e.g., 3 credits per image vs 1-2 for standard) - this should be displayed clearly
+
+3. **Product Type Detection**: Auto-detect when a product is clothing-related to surface the try-on option
+
+4. **Fallback**: If try-on fails or produces poor results, offer easy fallback to standard product photography
+
