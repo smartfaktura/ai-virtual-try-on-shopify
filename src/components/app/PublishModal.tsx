@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Modal,
   BlockStack,
@@ -9,7 +9,10 @@ import {
   Thumbnail,
   Divider,
   Select,
+  TextField,
+  Icon,
 } from '@shopify/polaris';
+import { AlertTriangleIcon } from '@shopify/polaris-icons';
 import type { Product, ProductImage } from '@/types';
 
 type PublishMode = 'add' | 'replace';
@@ -33,8 +36,20 @@ export function PublishModal({
 }: PublishModalProps) {
   const [publishMode, setPublishMode] = useState<PublishMode>('add');
   const [selectedVariant, setSelectedVariant] = useState<string>('all');
+  const [replaceConfirmation, setReplaceConfirmation] = useState('');
+
+  // Reset confirmation when modal closes or mode changes
+  useEffect(() => {
+    if (!open || publishMode !== 'replace') {
+      setReplaceConfirmation('');
+    }
+  }, [open, publishMode]);
+
+  const canPublish = publishMode === 'add' || 
+    (publishMode === 'replace' && (existingImages.length === 0 || replaceConfirmation === 'REPLACE'));
 
   const handlePublish = () => {
+    if (!canPublish) return;
     onPublish(publishMode, selectedVariant === 'all' ? undefined : selectedVariant);
   };
 
@@ -59,6 +74,7 @@ export function PublishModal({
       primaryAction={{
         content: `Publish to "${product?.title}"`,
         onAction: handlePublish,
+        disabled: !canPublish,
       }}
       secondaryActions={[
         {
@@ -157,7 +173,7 @@ export function PublishModal({
               <div
                 className={`p-4 rounded-lg border cursor-pointer transition-colors ${
                   publishMode === 'replace'
-                    ? 'border-primary bg-primary/5'
+                    ? 'border-destructive bg-destructive/5'
                     : 'border-border hover:border-muted-foreground'
                 }`}
                 onClick={() => setPublishMode('replace')}
@@ -171,9 +187,14 @@ export function PublishModal({
                     name="publishMode"
                   />
                   <BlockStack gap="100">
-                    <Text as="p" variant="bodyMd" fontWeight="semibold">
-                      Replace all existing images
-                    </Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <Text as="p" variant="bodyMd" fontWeight="semibold">
+                        Replace all existing images
+                      </Text>
+                      {existingImages.length > 0 && (
+                        <Icon source={AlertTriangleIcon} tone="caution" />
+                      )}
+                    </InlineStack>
                     <Text as="p" variant="bodySm" tone="subdued">
                       Remove current images and use only the {selectedImages.length} new one{selectedImages.length !== 1 ? 's' : ''}.
                     </Text>
@@ -181,6 +202,31 @@ export function PublishModal({
                 </InlineStack>
               </div>
             </div>
+
+            {/* Danger zone confirmation for Replace mode */}
+            {publishMode === 'replace' && existingImages.length > 0 && (
+              <div className="p-4 rounded-lg border-2 border-destructive bg-destructive/5">
+                <BlockStack gap="300">
+                  <InlineStack gap="200" blockAlign="center">
+                    <Icon source={AlertTriangleIcon} tone="critical" />
+                    <Text as="p" variant="headingSm" tone="critical">
+                      ⚠️ Danger Zone
+                    </Text>
+                  </InlineStack>
+                  <Text as="p" variant="bodySm">
+                    This will <strong>permanently delete all {existingImages.length} current product images</strong>. This cannot be undone.
+                  </Text>
+                  <TextField
+                    label={`Type "REPLACE" to confirm deletion`}
+                    value={replaceConfirmation}
+                    onChange={setReplaceConfirmation}
+                    autoComplete="off"
+                    placeholder="REPLACE"
+                    error={replaceConfirmation.length > 0 && replaceConfirmation !== 'REPLACE' ? 'Type exactly "REPLACE" to confirm' : undefined}
+                  />
+                </BlockStack>
+              </div>
+            )}
           </BlockStack>
 
           {/* Variant assignment */}
