@@ -117,6 +117,20 @@ export default function Generate() {
     p.vendor.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Filter models by gender
+  const filteredModels = mockModels.filter(m => 
+    modelGenderFilter === 'all' || m.gender === modelGenderFilter
+  );
+
+  // Check if product is clothing-related
+  const isClothingProduct = (product: Product | null) => {
+    if (!product) return false;
+    const productType = product.productType.toLowerCase();
+    const clothingKeywords = ['sweater', 'shirt', 'apparel', 'dress', 'jacket', 'pants', 'jeans', 'coat', 'blouse', 'skirt', 'suit', 'hoodie', 't-shirt', 'clothing'];
+    return clothingKeywords.some(kw => productType.includes(kw)) || 
+           product.tags.some(tag => clothingKeywords.includes(tag.toLowerCase()));
+  };
+
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
     setProductPickerOpen(false);
@@ -139,7 +153,13 @@ export default function Generate() {
     } else if (productType.includes('supplement') || productType.includes('vitamin')) {
       setSelectedCategory('supplements');
     }
-    setCurrentStep('template');
+    
+    // If clothing product, show mode selection first
+    if (isClothingProduct(product)) {
+      setCurrentStep('mode');
+    } else {
+      setCurrentStep('template');
+    }
   };
 
   const toggleSourceImage = (imageId: string) => {
