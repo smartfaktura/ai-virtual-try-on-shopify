@@ -208,8 +208,8 @@ export default function Jobs() {
             </InlineGrid>
 
             <DataTable
-              columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text']}
-              headings={['Product', 'Template', 'Status', 'Details', 'Created', 'Actions']}
+              columnContentTypes={['text', 'text', 'text', 'text', 'text']}
+              headings={['Product & Template', 'Status', 'Details', 'Date', 'Actions']}
               rows={rows}
             />
 
