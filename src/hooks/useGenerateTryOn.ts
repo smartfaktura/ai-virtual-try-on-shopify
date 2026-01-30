@@ -10,6 +10,7 @@ interface GenerateTryOnParams {
   aspectRatio: AspectRatio;
   imageCount: number;
   sourceImageUrl: string;  // The specific product image to use as reference
+  modelImageUrl: string;   // The model's preview image for appearance reference
 }
 
 interface GenerateTryOnResult {
