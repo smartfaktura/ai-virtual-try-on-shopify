@@ -731,6 +731,13 @@ import modelMaleSlimMiddleeast from '@/assets/models/model-male-slim-middleeast.
 import modelMaleAthleticBlack from '@/assets/models/model-male-athletic-black.jpg';
 import modelMaleAverageAsian from '@/assets/models/model-male-average-asian.jpg';
 import modelMalePlussizeEuropean from '@/assets/models/model-male-plussize-european.jpg';
+// New diverse female models
+import modelFemaleMatureEuropean from '@/assets/models/model-female-mature-european.jpg';
+import modelFemaleAthleticIndian from '@/assets/models/model-female-athletic-indian.jpg';
+import modelFemaleSlimNordic from '@/assets/models/model-female-slim-nordic.jpg';
+import modelFemaleAverageMiddleeast from '@/assets/models/model-female-average-middleeast.jpg';
+import modelFemalePlussizeAfrican from '@/assets/models/model-female-plussize-african.jpg';
+import modelFemalePetiteKorean from '@/assets/models/model-female-petite-korean.jpg';
 
 // Pose preview images
 import poseStudioFront from '@/assets/poses/pose-studio-front.jpg';
@@ -739,6 +746,11 @@ import poseEditorialDramatic from '@/assets/poses/pose-editorial-dramatic.jpg';
 import poseStreetwearUrban from '@/assets/poses/pose-streetwear-urban.jpg';
 import poseLifestyleSeated from '@/assets/poses/pose-lifestyle-seated.jpg';
 import poseStudioProfile from '@/assets/poses/pose-studio-profile.jpg';
+// New pose images
+import poseStudioMovement from '@/assets/poses/pose-studio-movement.jpg';
+import poseLifestyleGarden from '@/assets/poses/pose-lifestyle-garden.jpg';
+import poseEditorialMinimal from '@/assets/poses/pose-editorial-minimal.jpg';
+import poseStreetwearStairs from '@/assets/poses/pose-streetwear-stairs.jpg';
 
 export const mockModels: ModelProfile[] = [
   {
@@ -774,9 +786,65 @@ export const mockModels: ModelProfile[] = [
     gender: 'female',
     bodyType: 'average',
     ethnicity: 'European',
-    ageRange: 'mature',
+    ageRange: 'adult',
     previewUrl: modelFemaleAverageEuropean,
   },
+  // New diverse female models
+  {
+    modelId: 'model_009',
+    name: 'Victoria',
+    gender: 'female',
+    bodyType: 'slim',
+    ethnicity: 'European',
+    ageRange: 'mature',
+    previewUrl: modelFemaleMatureEuropean,
+  },
+  {
+    modelId: 'model_010',
+    name: 'Priya',
+    gender: 'female',
+    bodyType: 'athletic',
+    ethnicity: 'South Asian',
+    ageRange: 'young-adult',
+    previewUrl: modelFemaleAthleticIndian,
+  },
+  {
+    modelId: 'model_011',
+    name: 'Ingrid',
+    gender: 'female',
+    bodyType: 'slim',
+    ethnicity: 'Nordic',
+    ageRange: 'young-adult',
+    previewUrl: modelFemaleSlimNordic,
+  },
+  {
+    modelId: 'model_012',
+    name: 'Layla',
+    gender: 'female',
+    bodyType: 'average',
+    ethnicity: 'Middle Eastern',
+    ageRange: 'adult',
+    previewUrl: modelFemaleAverageMiddleeast,
+  },
+  {
+    modelId: 'model_013',
+    name: 'Nia',
+    gender: 'female',
+    bodyType: 'plus-size',
+    ethnicity: 'Black African',
+    ageRange: 'young-adult',
+    previewUrl: modelFemalePlussizeAfrican,
+  },
+  {
+    modelId: 'model_014',
+    name: 'Soo-Min',
+    gender: 'female',
+    bodyType: 'slim',
+    ethnicity: 'Korean',
+    ageRange: 'young-adult',
+    previewUrl: modelFemalePetiteKorean,
+  },
+  // Male models
   {
     modelId: 'model_005',
     name: 'Omar',
@@ -831,6 +899,13 @@ export const mockTryOnPoses: TryOnPose[] = [
     previewUrl: poseStudioProfile,
   },
   {
+    poseId: 'pose_007',
+    name: 'Studio Movement',
+    category: 'studio',
+    description: 'Dynamic walking motion with flowing fabric, clean background',
+    previewUrl: poseStudioMovement,
+  },
+  {
     poseId: 'pose_003',
     name: 'Urban Walking',
     category: 'lifestyle',
@@ -845,11 +920,25 @@ export const mockTryOnPoses: TryOnPose[] = [
     previewUrl: poseLifestyleSeated,
   },
   {
+    poseId: 'pose_008',
+    name: 'Garden Natural',
+    category: 'lifestyle',
+    description: 'Relaxed outdoor pose in beautiful botanical garden setting',
+    previewUrl: poseLifestyleGarden,
+  },
+  {
     poseId: 'pose_005',
     name: 'Editorial Dramatic',
     category: 'editorial',
-    description: 'High-fashion pose with dramatic lighting and concrete backdrop',
+    description: 'High-fashion pose with dramatic lighting and dark backdrop',
     previewUrl: poseEditorialDramatic,
+  },
+  {
+    poseId: 'pose_009',
+    name: 'Editorial Minimal',
+    category: 'editorial',
+    description: 'Elegant minimal pose with geometric window shadows',
+    previewUrl: poseEditorialMinimal,
   },
   {
     poseId: 'pose_006',
@@ -857,6 +946,13 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Urban street style against graffiti wall, hip-hop inspired',
     previewUrl: poseStreetwearUrban,
+  },
+  {
+    poseId: 'pose_010',
+    name: 'Urban Stairs',
+    category: 'streetwear',
+    description: 'Cool casual pose sitting on concrete stairs, industrial vibe',
+    previewUrl: poseStreetwearStairs,
   },
 ];
 
