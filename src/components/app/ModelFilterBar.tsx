@@ -45,11 +45,11 @@ export function ModelFilterBar({
   onAgeChange,
 }: ModelFilterBarProps) {
   return (
-    <div className="flex flex-col gap-4 p-4 bg-surface-subdued rounded-xl border border-border">
+    <div className="flex flex-col gap-3 sm:gap-4 p-3 sm:p-4 bg-surface-subdued rounded-xl border border-border">
       {/* Gender Filter */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-muted-foreground min-w-[80px]">Gender:</span>
-        <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <span className="text-xs sm:text-sm font-medium text-muted-foreground sm:min-w-[80px]">Gender:</span>
+        <div className="flex flex-wrap gap-1 sm:gap-1.5">
           {genderOptions.map((option) => (
             <Button
               key={option.value}
@@ -64,9 +64,9 @@ export function ModelFilterBar({
       </div>
 
       {/* Body Type Filter */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-muted-foreground min-w-[80px]">Body Type:</span>
-        <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <span className="text-xs sm:text-sm font-medium text-muted-foreground sm:min-w-[80px]">Body Type:</span>
+        <div className="flex flex-wrap gap-1 sm:gap-1.5">
           {bodyTypeOptions.map((option) => (
             <Button
               key={option.value}
@@ -81,9 +81,9 @@ export function ModelFilterBar({
       </div>
 
       {/* Age Filter */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-muted-foreground min-w-[80px]">Age:</span>
-        <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <span className="text-xs sm:text-sm font-medium text-muted-foreground sm:min-w-[80px]">Age:</span>
+        <div className="flex flex-wrap gap-1 sm:gap-1.5">
           {ageOptions.map((option) => (
             <Button
               key={option.value}
