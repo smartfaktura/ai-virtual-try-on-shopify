@@ -467,7 +467,6 @@ export default function Generate() {
                   {index < getSteps().length - 1 && (
                     <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
                   )}
-                  )}
                 </InlineStack>
               ))}
             </InlineStack>

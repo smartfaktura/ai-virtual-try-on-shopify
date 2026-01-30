@@ -113,7 +113,7 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
                   </Banner>
                 )}
                 {selectedForPublish.size > 0 && (
-                  <div className="p-3 rounded-lg bg-shopify-green/10 border border-shopify-green">
+                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
                     <Text as="p" variant="bodySm" fontWeight="semibold">{`✓ ${selectedForPublish.size} selected`}</Text>
                   </div>
                 )}
@@ -123,13 +123,13 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
                       key={result.assetId}
                       onClick={() => !result.publishedToShopify && toggleSelection(index)}
                       className={`relative group cursor-pointer rounded-lg overflow-hidden transition-all ${
-                        selectedForPublish.has(index) ? 'ring-3 ring-shopify-green ring-offset-2' : result.publishedToShopify ? 'opacity-60' : 'hover:ring-2 hover:ring-primary/50'
+                        selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : result.publishedToShopify ? 'opacity-60' : 'hover:ring-2 hover:ring-primary/50'
                       }`}
                     >
                       <img src={result.imageUrl} alt={`Generated ${index + 1}`} className="w-full aspect-square object-cover" />
-                      {result.publishedToShopify && <div className="absolute top-2 left-2 bg-shopify-green text-white text-xs px-2 py-1 rounded-full">Published</div>}
+                      {result.publishedToShopify && <div className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded-full">Published</div>}
                       {!result.publishedToShopify && (
-                        <div className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center ${selectedForPublish.has(index) ? 'bg-shopify-green border-shopify-green' : 'border-white bg-black/50'}`}>
+                        <div className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center ${selectedForPublish.has(index) ? 'bg-primary border-primary' : 'border-white bg-black/50'}`}>
                           {selectedForPublish.has(index) ? <Icon source={CheckCircleIcon} tone="base" /> : <span className="text-white text-xs font-bold">{String(index + 1)}</span>}
                         </div>
                       )}
