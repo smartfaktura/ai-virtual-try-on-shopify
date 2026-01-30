@@ -15,10 +15,13 @@ import {
   Modal,
   InlineGrid,
   Tabs,
+  Icon,
+  Thumbnail,
 } from '@shopify/polaris';
-import { SearchIcon, PlusIcon, MenuHorizontalIcon } from '@shopify/polaris-icons';
+import { SearchIcon, PlusIcon, MenuHorizontalIcon, ImageIcon } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
 import { mockTemplates, categoryLabels } from '@/data/mockData';
+import { getTemplateImage } from '@/components/app/TemplatePreviewCard';
 import type { Template, TemplateCategory } from '@/types';
 import { toast } from 'sonner';
 
@@ -64,22 +67,35 @@ export default function Templates() {
     }
   };
 
-  const rows = filteredTemplates.map(template => [
-    <BlockStack key={template.templateId} gap="100">
-      <Text as="span" variant="bodyMd" fontWeight="semibold">
-        {template.name}
-      </Text>
-      <Text as="span" variant="bodySm" tone="subdued">
-        {template.description.slice(0, 60)}...
-      </Text>
-    </BlockStack>,
-    <Badge key={`cat-${template.templateId}`}>
-      {categoryLabels[template.category]}
-    </Badge>,
-    <Badge key={`status-${template.templateId}`} tone={template.enabled ? 'success' : undefined}>
-      {template.enabled ? 'Active' : 'Disabled'}
-    </Badge>,
-    new Date(template.updatedAt).toLocaleDateString(),
+  const rows = filteredTemplates.map(template => {
+    const previewImage = getTemplateImage(template.templateId);
+    return [
+      <InlineStack key={template.templateId} gap="300" blockAlign="center">
+        {previewImage ? (
+          <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
+            <img src={previewImage} alt={template.name} className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+            <Icon source={ImageIcon} tone="subdued" />
+          </div>
+        )}
+        <BlockStack gap="050">
+          <Text as="span" variant="bodyMd" fontWeight="semibold">
+            {template.name}
+          </Text>
+          <Text as="span" variant="bodySm" tone="subdued">
+            {template.description.slice(0, 50)}...
+          </Text>
+        </BlockStack>
+      </InlineStack>,
+      <Badge key={`cat-${template.templateId}`}>
+        {categoryLabels[template.category]}
+      </Badge>,
+      <Badge key={`status-${template.templateId}`} tone={template.enabled ? 'success' : undefined}>
+        {template.enabled ? 'Active' : 'Disabled'}
+      </Badge>,
+      new Date(template.updatedAt).toLocaleDateString(),
     <Popover
       key={`actions-${template.templateId}`}
       active={activePopover === template.templateId}
@@ -121,7 +137,8 @@ export default function Templates() {
         ]}
       />
     </Popover>,
-  ]);
+    ];
+  });
 
   return (
     <PageHeader
@@ -143,7 +160,7 @@ export default function Templates() {
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={setSearchQuery}
-                prefix={<span className="text-muted-foreground">🔍</span>}
+                prefix={<Icon source={SearchIcon} />}
                 autoComplete="off"
               />
               <Select

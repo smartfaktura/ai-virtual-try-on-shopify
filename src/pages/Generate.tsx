@@ -1,12 +1,11 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   BlockStack,
   InlineStack,
   Card,
   Text,
   Button,
-  Tabs,
   Modal,
   TextField,
   Thumbnail,
@@ -26,9 +25,18 @@ import {
   ChevronUpIcon,
   ImageIcon,
   CheckCircleIcon,
+  ArrowDownIcon,
+  RefreshIcon,
+  MaximizeIcon,
 } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
-import { mockProducts, mockTemplates, categoryLabels } from '@/data/mockData';
+import { TemplatePreviewCard } from '@/components/app/TemplatePreviewCard';
+import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { PublishModal } from '@/components/app/PublishModal';
+import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
+import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
+import { RecentProductsList } from '@/components/app/RecentProductsList';
+import { mockProducts, mockTemplates, categoryLabels, mockShop } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality } from '@/types';
 import { toast } from 'sonner';
 
@@ -36,17 +44,22 @@ type Step = 'product' | 'template' | 'settings' | 'generating' | 'results';
 
 export default function Generate() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTemplateId = searchParams.get('template');
+  
   const [currentStep, setCurrentStep] = useState<Step>('product');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Selections
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
+    initialTemplateId ? mockTemplates.find(t => t.templateId === initialTemplateId) || null : null
+  );
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
   
-  // Brand settings
-  const [brandKitOpen, setBrandKitOpen] = useState(false);
+  // Brand settings - expanded by default on first use
+  const [brandKitOpen, setBrandKitOpen] = useState(true);
   const [brandTone, setBrandTone] = useState<BrandTone>('clean');
   const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('studio');
   const [negatives, setNegatives] = useState<string[]>(['text overlays', 'busy backgrounds']);
@@ -62,6 +75,12 @@ export default function Generate() {
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedForPublish, setSelectedForPublish] = useState<Set<number>>(new Set());
+  
+  // Modals
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const categories: Array<{ id: TemplateCategory | 'all'; label: string }> = [
     { id: 'all', label: 'All Templates' },
@@ -109,9 +128,13 @@ export default function Generate() {
     setQuality(template.defaults.quality);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerateClick = () => {
     if (!selectedProduct || !selectedTemplate) return;
-    
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirmGenerate = async () => {
+    setConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
     
@@ -137,6 +160,10 @@ export default function Generate() {
         'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=800&fit=crop',
         'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&h=800&fit=crop',
         'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop',
+        'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=800&fit=crop',
+        'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&h=800&fit=crop',
+        'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&h=800&fit=crop',
+        'https://images.unsplash.com/photo-1485968579169-a6b47d3e24ed?w=800&h=800&fit=crop',
       ].slice(0, parseInt(imageCount));
       
       setGeneratedImages(mockGeneratedUrls);
@@ -145,12 +172,18 @@ export default function Generate() {
     }, 4000);
   };
 
-  const handlePublish = () => {
+  const handlePublishClick = () => {
     if (selectedForPublish.size === 0) {
       toast.error('Please select at least one image to publish');
       return;
     }
-    toast.success(`${selectedForPublish.size} image(s) published to Shopify!`);
+    setPublishModalOpen(true);
+  };
+
+  const handlePublish = (mode: 'add' | 'replace', variantId?: string) => {
+    const count = selectedForPublish.size;
+    toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} Shopify!`);
+    setPublishModalOpen(false);
     navigate('/jobs');
   };
 
@@ -166,16 +199,42 @@ export default function Generate() {
     });
   };
 
+  const handleImageClick = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const handleDownloadImage = (index: number) => {
+    const url = generatedImages[index];
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `generated-image-${index + 1}.jpg`;
+    link.click();
+    toast.success('Image downloaded');
+  };
+
+  const handleDownloadAll = () => {
+    generatedImages.forEach((_, idx) => handleDownloadImage(idx));
+    toast.success(`${generatedImages.length} images downloaded`);
+  };
+
+  const handleRegenerate = (index: number) => {
+    toast.info('Regenerating variation... (this would cost 1 credit)');
+    // In a real app, this would call the API with the same seed + variation
+  };
+
   const getStepNumber = () => {
     switch (currentStep) {
       case 'product': return 1;
       case 'template': return 2;
       case 'settings': return 3;
       case 'generating': return 4;
-      case 'results': return 5;
+      case 'results': return 4;
       default: return 1;
     }
   };
+
+  const creditCost = parseInt(imageCount) * (quality === 'high' ? 2 : 1);
 
   return (
     <PageHeader
@@ -185,13 +244,13 @@ export default function Generate() {
       <BlockStack gap="600">
         {/* Progress indicator */}
         <Card>
-          <InlineStack gap="400" align="center">
+          <InlineStack gap="400" align="center" wrap={false}>
             {['Product', 'Template', 'Settings', 'Results'].map((step, index) => (
               <InlineStack key={step} gap="200" blockAlign="center">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                     getStepNumber() > index + 1
-                      ? 'bg-primary text-primary-foreground'
+                      ? 'bg-shopify-green text-white'
                       : getStepNumber() === index + 1
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted text-muted-foreground'
@@ -205,10 +264,11 @@ export default function Generate() {
                   fontWeight={getStepNumber() === index + 1 ? 'semibold' : 'regular'}
                   tone={getStepNumber() >= index + 1 ? undefined : 'subdued'}
                 >
-                  {step}
+                  <span className="hidden sm:inline">{step}</span>
+                  <span className="sm:hidden">{index + 1}</span>
                 </Text>
                 {index < 3 && (
-                  <div className={`w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
+                  <div className={`w-8 sm:w-12 h-0.5 ${getStepNumber() > index + 1 ? 'bg-shopify-green' : 'bg-muted'}`} />
                 )}
               </InlineStack>
             ))}
@@ -223,14 +283,24 @@ export default function Generate() {
                 Select a Product
               </Text>
               <Text as="p" variant="bodyMd" tone="subdued">
-                Choose the product you want to generate images for.
+                Choose the product you want to generate images for. The AI will use your product details to create the perfect shots.
               </Text>
+              
+              {/* Recent products */}
+              <RecentProductsList
+                products={mockProducts}
+                onSelect={handleSelectProduct}
+                maxItems={3}
+              />
+              
+              <Divider />
+              
               <Button
                 variant="secondary"
                 size="large"
                 onClick={() => setProductPickerOpen(true)}
               >
-                Browse Products
+                Browse All Products
               </Button>
             </BlockStack>
           </Card>
@@ -341,9 +411,14 @@ export default function Generate() {
             {currentStep === 'template' && (
               <Card>
                 <BlockStack gap="400">
-                  <Text as="h2" variant="headingMd">
-                    Choose a Template
-                  </Text>
+                  <BlockStack gap="200">
+                    <Text as="h2" variant="headingMd">
+                      Choose a Template
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Each template creates a distinct photography style. Preview images show example results.
+                    </Text>
+                  </BlockStack>
                   
                   {/* Category tabs */}
                   <InlineStack gap="200" wrap>
@@ -358,37 +433,16 @@ export default function Generate() {
                     ))}
                   </InlineStack>
 
-                  {/* Template grid */}
-                  <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
+                  {/* Template grid with preview images */}
+                  <InlineGrid columns={{ xs: 1, sm: 2, md: 3, lg: 4 }} gap="400">
                     {filteredTemplates.map(template => (
-                      <div
+                      <TemplatePreviewCard
                         key={template.templateId}
-                        className={`template-card p-4 rounded-lg border cursor-pointer transition-all ${
-                          selectedTemplate?.templateId === template.templateId
-                            ? 'template-card--selected border-primary'
-                            : 'border-border hover:border-muted-foreground'
-                        }`}
-                        onClick={() => handleSelectTemplate(template)}
-                      >
-                        <BlockStack gap="200">
-                          <InlineStack align="space-between">
-                            <Text as="h3" variant="bodyMd" fontWeight="semibold">
-                              {template.name}
-                            </Text>
-                            {template.recommended && (
-                              <Badge tone="success">Recommended</Badge>
-                            )}
-                          </InlineStack>
-                          <Text as="p" variant="bodySm" tone="subdued">
-                            {template.description}
-                          </Text>
-                          <InlineStack gap="100">
-                            {template.tags.map(tag => (
-                              <Badge key={tag} tone="info">{tag}</Badge>
-                            ))}
-                          </InlineStack>
-                        </BlockStack>
-                      </div>
+                        template={template}
+                        isSelected={selectedTemplate?.templateId === template.templateId}
+                        onSelect={() => handleSelectTemplate(template)}
+                        showCredits
+                      />
                     ))}
                   </InlineGrid>
 
@@ -429,7 +483,7 @@ export default function Generate() {
                   </BlockStack>
                 </Card>
 
-                {/* Brand Kit */}
+                {/* Brand Kit - Expanded by default */}
                 <Card>
                   <BlockStack gap="400">
                     <div
@@ -438,11 +492,14 @@ export default function Generate() {
                     >
                       <InlineStack align="space-between" blockAlign="center">
                         <BlockStack gap="100">
-                          <Text as="h3" variant="headingMd">
-                            Brand Kit (Optional)
-                          </Text>
+                          <InlineStack gap="200" blockAlign="center">
+                            <Text as="h3" variant="headingMd">
+                              Brand Kit
+                            </Text>
+                            <Badge tone="info">Recommended</Badge>
+                          </InlineStack>
                           <Text as="p" variant="bodySm" tone="subdued">
-                            Customize the look to match your brand
+                            Customize the look to match your brand identity
                           </Text>
                         </BlockStack>
                         <Icon source={brandKitOpen ? ChevronUpIcon : ChevronDownIcon} />
@@ -501,37 +558,31 @@ export default function Generate() {
                     <Text as="h3" variant="headingMd">
                       Generation Settings
                     </Text>
-                    <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
+                    <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
                       <Select
                         label="Number of Images"
                         options={[
-                          { label: '1 image', value: '1' },
-                          { label: '4 images', value: '4' },
-                          { label: '8 images', value: '8' },
+                          { label: '1 image (saves credits)', value: '1' },
+                          { label: '4 images (recommended)', value: '4' },
+                          { label: '8 images (maximum variety)', value: '8' },
                         ]}
                         value={imageCount}
                         onChange={(v) => setImageCount(v as '1' | '4' | '8')}
                       />
                       <Select
-                        label="Aspect Ratio"
-                        options={[
-                          { label: 'Square (1:1)', value: '1:1' },
-                          { label: 'Portrait (4:5)', value: '4:5' },
-                          { label: 'Wide (16:9)', value: '16:9' },
-                        ]}
-                        value={aspectRatio}
-                        onChange={(v) => setAspectRatio(v as AspectRatio)}
-                      />
-                      <Select
                         label="Output Quality"
                         options={[
                           { label: 'Standard (1 credit/image)', value: 'standard' },
-                          { label: 'High (2 credits/image)', value: 'high' },
+                          { label: 'High (2 credits/image) - More detail', value: 'high' },
                         ]}
                         value={quality}
                         onChange={(v) => setQuality(v as ImageQuality)}
                       />
                     </InlineGrid>
+                    
+                    {/* Visual Aspect Ratio Selector */}
+                    <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                    
                     <Checkbox
                       label="Preserve product accuracy (strongly recommended)"
                       checked={preserveAccuracy}
@@ -543,11 +594,15 @@ export default function Generate() {
 
                 {/* Credits Notice */}
                 <Banner tone="info">
-                  This generation will use{' '}
-                  <strong>
-                    {parseInt(imageCount) * (quality === 'high' ? 2 : 1)} credits
-                  </strong>
-                  . You have 847 credits remaining.
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="p">
+                      This generation will use <strong>{creditCost} credits</strong>
+                      {' '}({parseInt(imageCount)} images × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''} each)
+                    </Text>
+                    <Text as="p" fontWeight="semibold">
+                      {mockShop.creditsBalance} credits available
+                    </Text>
+                  </InlineStack>
                 </Banner>
 
                 {/* Generate Button */}
@@ -555,7 +610,7 @@ export default function Generate() {
                   <Button onClick={() => setCurrentStep('template')}>
                     Back
                   </Button>
-                  <Button variant="primary" onClick={handleGenerate}>
+                  <Button variant="primary" onClick={handleGenerateClick}>
                     Generate {imageCount} Images
                   </Button>
                 </InlineStack>
@@ -595,10 +650,21 @@ export default function Generate() {
             <Card>
               <BlockStack gap="400">
                 <InlineStack align="space-between">
-                  <Text as="h2" variant="headingMd">
-                    Generated Images
-                  </Text>
-                  <Button onClick={() => navigate('/generate')}>
+                  <BlockStack gap="100">
+                    <Text as="h2" variant="headingMd">
+                      Generated Images
+                    </Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Click an image to view full size. Select images to publish to Shopify.
+                    </Text>
+                  </BlockStack>
+                  <Button onClick={() => {
+                    setCurrentStep('product');
+                    setSelectedProduct(null);
+                    setSelectedTemplate(null);
+                    setGeneratedImages([]);
+                    setSelectedForPublish(new Set());
+                  }}>
                     Generate More
                   </Button>
                 </InlineStack>
@@ -607,29 +673,81 @@ export default function Generate() {
                   {generatedImages.map((url, index) => (
                     <div
                       key={index}
-                      className={`generation-preview cursor-pointer ${
-                        selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''
+                      className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${
+                        selectedForPublish.has(index) ? 'ring-2 ring-shopify-green ring-offset-2' : ''
                       }`}
-                      onClick={() => toggleImageSelection(index)}
                     >
-                      <img src={url} alt={`Generated ${index + 1}`} className="w-full aspect-square object-cover rounded-lg" />
-                      <div className="generation-preview-overlay rounded-lg">
-                        <InlineStack gap="100">
-                          {selectedForPublish.has(index) && (
-                            <Icon source={CheckCircleIcon} tone="success" />
-                          )}
-                          <Text as="span" variant="bodySm" fontWeight="semibold">
-                            {selectedForPublish.has(index) ? 'Selected' : 'Click to select'}
-                          </Text>
-                        </InlineStack>
+                      <img 
+                        src={url} 
+                        alt={`Generated ${index + 1}`} 
+                        className="w-full aspect-square object-cover"
+                        onClick={() => toggleImageSelection(index)}
+                      />
+                      
+                      {/* Overlay with actions */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleImageClick(index);
+                          }}
+                          className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white transition-colors"
+                          title="View full size"
+                        >
+                          <Icon source={MaximizeIcon} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadImage(index);
+                          }}
+                          className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white transition-colors"
+                          title="Download"
+                        >
+                          <Icon source={ArrowDownIcon} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRegenerate(index);
+                          }}
+                          className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white transition-colors"
+                          title="Regenerate variation"
+                        >
+                          <Icon source={RefreshIcon} />
+                        </button>
+                      </div>
+                      
+                      {/* Selection indicator */}
+                      <div 
+                        className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          selectedForPublish.has(index) 
+                            ? 'bg-shopify-green border-shopify-green' 
+                            : 'border-white bg-black/30'
+                        }`}
+                        onClick={() => toggleImageSelection(index)}
+                      >
+                        {selectedForPublish.has(index) && (
+                          <Icon source={CheckCircleIcon} tone="base" />
+                        )}
                       </div>
                     </div>
                   ))}
                 </InlineGrid>
 
-                <Text as="p" variant="bodySm" tone="subdued">
-                  Click images to select them for publishing. Selected: {selectedForPublish.size} of {generatedImages.length}
-                </Text>
+                <InlineStack align="space-between" blockAlign="center">
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    Selected: {selectedForPublish.size} of {generatedImages.length} images
+                  </Text>
+                  <InlineStack gap="200">
+                    <Button onClick={() => setSelectedForPublish(new Set(generatedImages.map((_, i) => i)))}>
+                      Select All
+                    </Button>
+                    <Button onClick={() => setSelectedForPublish(new Set())}>
+                      Clear Selection
+                    </Button>
+                  </InlineStack>
+                </InlineStack>
               </BlockStack>
             </Card>
 
@@ -647,20 +765,54 @@ export default function Generate() {
 
             {/* Actions */}
             <InlineStack align="end" gap="200">
-              <Button variant="plain">
+              <Button onClick={handleDownloadAll} icon={ArrowDownIcon}>
                 Download All
               </Button>
               <Button
                 variant="primary"
-                onClick={handlePublish}
+                onClick={handlePublishClick}
                 disabled={selectedForPublish.size === 0}
               >
-                Publish {String(selectedForPublish.size)} to Shopify
+                Publish {selectedForPublish.size > 0 ? `${selectedForPublish.size} ` : ''}to Shopify
               </Button>
             </InlineStack>
           </BlockStack>
         )}
       </BlockStack>
+
+      {/* Modals */}
+      <GenerateConfirmModal
+        open={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        onConfirm={handleConfirmGenerate}
+        product={selectedProduct}
+        template={selectedTemplate}
+        imageCount={parseInt(imageCount)}
+        aspectRatio={aspectRatio}
+        quality={quality}
+        creditsRemaining={mockShop.creditsBalance}
+      />
+
+      <PublishModal
+        open={publishModalOpen}
+        onClose={() => setPublishModalOpen(false)}
+        onPublish={handlePublish}
+        selectedImages={Array.from(selectedForPublish).map(i => generatedImages[i])}
+        product={selectedProduct}
+        existingImages={selectedProduct?.images || []}
+      />
+
+      <ImageLightbox
+        images={generatedImages}
+        currentIndex={lightboxIndex}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        onNavigate={setLightboxIndex}
+        onSelect={toggleImageSelection}
+        onDownload={handleDownloadImage}
+        onRegenerate={handleRegenerate}
+        selectedIndices={selectedForPublish}
+      />
     </PageHeader>
   );
 }

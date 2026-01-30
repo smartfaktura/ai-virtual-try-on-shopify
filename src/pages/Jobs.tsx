@@ -14,8 +14,10 @@ import {
   Thumbnail,
   InlineGrid,
   Filters,
+  Icon,
 } from '@shopify/polaris';
-import { SearchIcon, CalendarIcon } from '@shopify/polaris-icons';
+import { SearchIcon, CalendarIcon, RefreshIcon } from '@shopify/polaris-icons';
+import { toast } from 'sonner';
 import { PageHeader } from '@/components/app/PageHeader';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { mockJobs, categoryLabels } from '@/data/mockData';
@@ -94,8 +96,27 @@ export default function Jobs() {
         </Button>
       )}
       {job.status === 'completed' && job.results.some(r => !r.publishedToShopify) && (
-        <Button size="slim" variant="secondary">
+        <Button 
+          size="slim" 
+          variant="secondary"
+          onClick={() => {
+            const unpublished = job.results.filter(r => !r.publishedToShopify).length;
+            toast.success(`${unpublished} image${unpublished !== 1 ? 's' : ''} published to Shopify!`);
+          }}
+        >
           Publish
+        </Button>
+      )}
+      {job.status === 'completed' && (
+        <Button 
+          size="slim" 
+          variant="plain"
+          onClick={() => {
+            toast.info('Navigating to generate with same settings...');
+            navigate(`/generate?template=${job.templateId}`);
+          }}
+        >
+          Use Again
         </Button>
       )}
     </InlineStack>,
@@ -141,7 +162,7 @@ export default function Jobs() {
                 placeholder="Search by product or template..."
                 value={searchQuery}
                 onChange={setSearchQuery}
-                prefix={<span>🔍</span>}
+                prefix={<Icon source={SearchIcon} />}
                 autoComplete="off"
               />
               <Select
