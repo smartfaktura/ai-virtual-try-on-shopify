@@ -935,8 +935,8 @@ export default function Generate() {
               </BlockStack>
             )}
 
-            {/* Settings Step */}
-            {currentStep === 'settings' && selectedTemplate && (
+            {/* Settings Step - Product Only Mode */}
+            {currentStep === 'settings' && selectedTemplate && generationMode === 'product-only' && (
               <BlockStack gap="400">
                 {/* Selected Template */}
                 <Card>
@@ -1115,6 +1115,123 @@ export default function Generate() {
               </BlockStack>
             )}
           </>
+        )}
+
+        {/* Settings Step - Virtual Try-On Mode */}
+        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && selectedProduct && (
+          <BlockStack gap="400">
+            {/* Summary Card */}
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h3" variant="headingSm" tone="subdued">
+                  Virtual Try-On Summary
+                </Text>
+                <InlineStack gap="600" wrap>
+                  {/* Product */}
+                  <BlockStack gap="200">
+                    <Text as="p" variant="bodySm" tone="subdued">Product</Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <Thumbnail
+                        source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+                        alt={selectedProduct.title}
+                        size="small"
+                      />
+                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedProduct.title}</Text>
+                    </InlineStack>
+                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('product')}>Change</Button>
+                  </BlockStack>
+
+                  {/* Model */}
+                  <BlockStack gap="200">
+                    <Text as="p" variant="bodySm" tone="subdued">Model</Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <img src={selectedModel.previewUrl} alt={selectedModel.name} className="w-full h-full object-cover" />
+                      </div>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedModel.name}</Text>
+                    </InlineStack>
+                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('model')}>Change</Button>
+                  </BlockStack>
+
+                  {/* Pose */}
+                  <BlockStack gap="200">
+                    <Text as="p" variant="bodySm" tone="subdued">Pose</Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden">
+                        <img src={selectedPose.previewUrl} alt={selectedPose.name} className="w-full h-full object-cover" />
+                      </div>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedPose.name}</Text>
+                    </InlineStack>
+                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('pose')}>Change</Button>
+                  </BlockStack>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+
+            {/* Generation Settings */}
+            <Card>
+              <BlockStack gap="400">
+                <Text as="h3" variant="headingMd">
+                  Generation Settings
+                </Text>
+                <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
+                  <Select
+                    label="Number of Images"
+                    options={[
+                      { label: '1 image (saves credits)', value: '1' },
+                      { label: '4 images (recommended)', value: '4' },
+                      { label: '8 images (maximum variety)', value: '8' },
+                    ]}
+                    value={imageCount}
+                    onChange={(v) => setImageCount(v as '1' | '4' | '8')}
+                  />
+                  <div>
+                    <Text as="p" variant="bodySm" fontWeight="semibold">Output Quality</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      Virtual Try-On uses High quality by default
+                    </Text>
+                  </div>
+                </InlineGrid>
+                
+                {/* Visual Aspect Ratio Selector */}
+                <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                
+                <Checkbox
+                  label="Keep my product looking exactly like it does"
+                  checked={preserveAccuracy}
+                  onChange={setPreserveAccuracy}
+                  helpText="When on, the AI won't change your garment's colors, patterns, or details"
+                />
+              </BlockStack>
+            </Card>
+
+            {/* Credits Notice */}
+            <Banner tone="attention">
+              <InlineStack align="space-between" blockAlign="center">
+                <BlockStack gap="100">
+                  <Text as="p" fontWeight="semibold">
+                    Virtual Try-On uses <strong>{creditCost} credits</strong>
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {parseInt(imageCount)} images × 3 credits each (premium AI processing)
+                  </Text>
+                </BlockStack>
+                <Text as="p" fontWeight="semibold">
+                  {mockShop.creditsBalance} credits available
+                </Text>
+              </InlineStack>
+            </Banner>
+
+            {/* Generate Button */}
+            <InlineStack align="end" gap="200">
+              <Button onClick={() => setCurrentStep('pose')}>
+                Back
+              </Button>
+              <Button variant="primary" onClick={handleGenerateClick}>
+                Generate {imageCount} Try-On Images
+              </Button>
+            </InlineStack>
+          </BlockStack>
         )}
 
         {/* Generating State */}
