@@ -67,6 +67,7 @@ export interface GenerationJob {
   promptFinal: string;
   status: JobStatus;
   requestedCount: number;
+  creditsUsed: number;
   ratio: AspectRatio;
   quality: ImageQuality;
   results: GeneratedAsset[];
