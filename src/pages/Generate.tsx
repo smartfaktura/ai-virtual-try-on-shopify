@@ -1137,150 +1137,183 @@ export default function Generate() {
 
             {/* Template Selection */}
             {currentStep === 'template' && (
-              <BlockStack gap="400">
-                {/* Educational Banner */}
-                <Banner tone="info">
-                  <Text as="p" variant="bodySm">
-                    Templates define the photography style for your images. Each template produces a different look — preview images show example results.
-                  </Text>
-                </Banner>
+              <div className={selectedTemplate ? 'pb-24' : ''}>
+                <BlockStack gap="400">
+                  {/* Educational Banner */}
+                  <Banner tone="info">
+                    <Text as="p" variant="bodySm">
+                      Templates define the photography style for your images. Each template produces a different look — preview images show example results.
+                    </Text>
+                  </Banner>
 
-                {/* Top Picks - FIXED based on product type, not the category filter */}
-                {(() => {
-                  // Determine product's category from its type
-                  const productType = (selectedProduct?.productType || scratchUpload?.productInfo.productType || '').toLowerCase();
-                  let productCategory: TemplateCategory = 'universal';
-                  if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel') || productType.includes('hoodie') || productType.includes('leggings') || productType.includes('tank') || productType.includes('jogger')) {
-                    productCategory = 'clothing';
-                  } else if (productType.includes('serum') || productType.includes('cream') || productType.includes('beauty')) {
-                    productCategory = 'cosmetics';
-                  } else if (productType.includes('food') || productType.includes('cereal')) {
-                    productCategory = 'food';
-                  } else if (productType.includes('decor') || productType.includes('home')) {
-                    productCategory = 'home';
-                  } else if (productType.includes('supplement') || productType.includes('vitamin')) {
-                    productCategory = 'supplements';
-                  }
-                  
-                  const topPicks = mockTemplates
-                    .filter(t => t.enabled && t.category === productCategory)
-                    .slice(0, 3);
-                  
-                  // If not enough in category, add universal templates
-                  if (topPicks.length < 3) {
-                    const universalTemplates = mockTemplates
-                      .filter(t => t.enabled && t.category === 'universal')
-                      .slice(0, 3 - topPicks.length);
-                    topPicks.push(...universalTemplates);
-                  }
+                  {/* Top Picks - FIXED based on product type, not the category filter */}
+                  {(() => {
+                    // Determine product's category from its type
+                    const productType = (selectedProduct?.productType || scratchUpload?.productInfo.productType || '').toLowerCase();
+                    let productCategory: TemplateCategory = 'universal';
+                    if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel') || productType.includes('hoodie') || productType.includes('leggings') || productType.includes('tank') || productType.includes('jogger')) {
+                      productCategory = 'clothing';
+                    } else if (productType.includes('serum') || productType.includes('cream') || productType.includes('beauty')) {
+                      productCategory = 'cosmetics';
+                    } else if (productType.includes('food') || productType.includes('cereal')) {
+                      productCategory = 'food';
+                    } else if (productType.includes('decor') || productType.includes('home')) {
+                      productCategory = 'home';
+                    } else if (productType.includes('supplement') || productType.includes('vitamin')) {
+                      productCategory = 'supplements';
+                    }
+                    
+                    const topPicks = mockTemplates
+                      .filter(t => t.enabled && t.category === productCategory)
+                      .slice(0, 3);
+                    
+                    // If not enough in category, add universal templates
+                    if (topPicks.length < 3) {
+                      const universalTemplates = mockTemplates
+                        .filter(t => t.enabled && t.category === 'universal')
+                        .slice(0, 3 - topPicks.length);
+                      topPicks.push(...universalTemplates);
+                    }
 
-                  const topPickIds = topPicks.map(t => t.templateId);
-                  const displayTitle = selectedProduct?.productType || scratchUpload?.productInfo.productType || 'your product';
-                  
-                  return (
-                    <>
-                      {/* Top Picks Card */}
-                      <Card>
-                        <BlockStack gap="400">
-                          <BlockStack gap="100">
-                            <Text as="h2" variant="headingMd">
-                              Top Picks for {categoryLabels[productCategory]}
-                            </Text>
-                            <Text as="p" variant="bodySm" tone="subdued">
-                              Best templates for {displayTitle.toLowerCase()} products
-                            </Text>
-                          </BlockStack>
-                          
-                          <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
-                            {topPicks.map(template => (
-                              <TemplatePreviewCard
-                                key={template.templateId}
-                                template={{ ...template, recommended: false }}
-                                isSelected={selectedTemplate?.templateId === template.templateId}
-                                onSelect={() => handleSelectTemplate(template)}
-                                showCredits={false}
-                              />
-                            ))}
-                          </InlineGrid>
-                          
-                          {selectedTemplate && (
-                            <InlineStack align="end">
-                              <Button
-                                variant="primary"
-                                onClick={() => setCurrentStep('settings')}
-                              >
-                                Continue with "{selectedTemplate.name}"
-                              </Button>
-                            </InlineStack>
-                          )}
-                        </BlockStack>
-                      </Card>
-
-                      {/* Browse More Styles - independent category browsing */}
-                      <Card>
-                        <BlockStack gap="400">
-                          <BlockStack gap="200">
-                            <Text as="h2" variant="headingMd">
-                              Browse All Templates
-                            </Text>
-                            <Text as="p" variant="bodySm" tone="subdued">
-                              Explore all available photography styles
-                            </Text>
-                          </BlockStack>
-                          
-                          {/* Category tabs */}
-                          <InlineStack gap="200" wrap>
-                            {categories.map(cat => (
-                              <Button
-                                key={cat.id}
-                                pressed={selectedCategory === cat.id}
-                                onClick={() => setSelectedCategory(cat.id)}
-                                size="slim"
-                              >
-                                {cat.label}
-                              </Button>
-                            ))}
-                          </InlineStack>
-
-                          {/* Template grid - show based on selected category, exclude top picks */}
-                          {(() => {
-                            const browseTemplates = mockTemplates.filter(t => {
-                              if (!t.enabled) return false;
-                              // Filter by selected category
-                              if (selectedCategory !== 'all' && t.category !== selectedCategory) return false;
-                              // Exclude templates already shown in Top Picks
-                              if (topPickIds.includes(t.templateId)) return false;
-                              return true;
-                            });
+                    const topPickIds = topPicks.map(t => t.templateId);
+                    const displayTitle = selectedProduct?.productType || scratchUpload?.productInfo.productType || 'your product';
+                    
+                    return (
+                      <>
+                        {/* Top Picks Card */}
+                        <Card>
+                          <BlockStack gap="400">
+                            <BlockStack gap="100">
+                              <Text as="h2" variant="headingMd">
+                                Top Picks for {categoryLabels[productCategory]}
+                              </Text>
+                              <Text as="p" variant="bodySm" tone="subdued">
+                                Best templates for {displayTitle.toLowerCase()} products
+                              </Text>
+                            </BlockStack>
                             
-                            return browseTemplates.length > 0 ? (
-                              <InlineGrid columns={{ xs: 2, sm: 3, md: 4, lg: 5 }} gap="300">
-                                {browseTemplates.map(template => (
-                                  <TemplatePreviewCard
-                                    key={template.templateId}
-                                    template={{ ...template, recommended: false }}
-                                    isSelected={selectedTemplate?.templateId === template.templateId}
-                                    onSelect={() => handleSelectTemplate(template)}
-                                    showCredits={false}
-                                  />
-                                ))}
-                              </InlineGrid>
+                            <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
+                              {topPicks.map(template => (
+                                <TemplatePreviewCard
+                                  key={template.templateId}
+                                  template={{ ...template, recommended: false }}
+                                  isSelected={selectedTemplate?.templateId === template.templateId}
+                                  onSelect={() => handleSelectTemplate(template)}
+                                  showCredits={false}
+                                />
+                              ))}
+                            </InlineGrid>
+                          </BlockStack>
+                        </Card>
+
+                        {/* Browse More Styles - independent category browsing */}
+                        <Card>
+                          <BlockStack gap="400">
+                            <BlockStack gap="200">
+                              <Text as="h2" variant="headingMd">
+                                Browse All Templates
+                              </Text>
+                              <Text as="p" variant="bodySm" tone="subdued">
+                                Explore all available photography styles
+                              </Text>
+                            </BlockStack>
+                            
+                            {/* Category tabs */}
+                            <InlineStack gap="200" wrap>
+                              {categories.map(cat => (
+                                <Button
+                                  key={cat.id}
+                                  pressed={selectedCategory === cat.id}
+                                  onClick={() => setSelectedCategory(cat.id)}
+                                  size="slim"
+                                >
+                                  {cat.label}
+                                </Button>
+                              ))}
+                            </InlineStack>
+
+                            {/* Template grid - show based on selected category, exclude top picks */}
+                            {(() => {
+                              const browseTemplates = mockTemplates.filter(t => {
+                                if (!t.enabled) return false;
+                                // Filter by selected category
+                                if (selectedCategory !== 'all' && t.category !== selectedCategory) return false;
+                                // Exclude templates already shown in Top Picks
+                                if (topPickIds.includes(t.templateId)) return false;
+                                return true;
+                              });
+                              
+                              return browseTemplates.length > 0 ? (
+                                <InlineGrid columns={{ xs: 2, sm: 3, md: 4, lg: 5 }} gap="300">
+                                  {browseTemplates.map(template => (
+                                    <TemplatePreviewCard
+                                      key={template.templateId}
+                                      template={{ ...template, recommended: false }}
+                                      isSelected={selectedTemplate?.templateId === template.templateId}
+                                      onSelect={() => handleSelectTemplate(template)}
+                                      showCredits={false}
+                                    />
+                                  ))}
+                                </InlineGrid>
+                              ) : (
+                                <div className="py-8 text-center">
+                                  <Text as="p" variant="bodySm" tone="subdued">
+                                    {selectedCategory === 'all' 
+                                      ? 'All templates are shown in Top Picks above.' 
+                                      : `No additional ${categoryLabels[selectedCategory as TemplateCategory]} templates available.`}
+                                  </Text>
+                                </div>
+                              );
+                            })()}
+                          </BlockStack>
+                        </Card>
+                      </>
+                    );
+                  })()}
+                </BlockStack>
+
+                {/* Sticky Continue Footer - Shows when template selected */}
+                {selectedTemplate && (
+                  <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-lg p-4">
+                    <div className="max-w-5xl mx-auto">
+                      <InlineStack align="space-between" blockAlign="center">
+                        <InlineStack gap="300" blockAlign="center">
+                          {/* Template thumbnail */}
+                          <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0">
+                            {getTemplateImage(selectedTemplate.templateId) ? (
+                              <img 
+                                src={getTemplateImage(selectedTemplate.templateId)} 
+                                alt="" 
+                                className="w-full h-full object-cover" 
+                              />
                             ) : (
-                              <div className="py-8 text-center">
-                                <Text as="p" variant="bodySm" tone="subdued">
-                                  {selectedCategory === 'all' 
-                                    ? 'All templates are shown in Top Picks above.' 
-                                    : `No additional ${categoryLabels[selectedCategory as TemplateCategory]} templates available.`}
-                                </Text>
+                              <div className="w-full h-full bg-muted flex items-center justify-center">
+                                <Icon source={ImageIcon} tone="subdued" />
                               </div>
-                            );
-                          })()}
-                        </BlockStack>
-                      </Card>
-                    </>
-                  );
-                })()}
-              </BlockStack>
+                            )}
+                          </div>
+                          <BlockStack gap="050">
+                            <Text as="p" variant="bodySm" fontWeight="semibold">
+                              {selectedTemplate.name}
+                            </Text>
+                            <Text as="p" variant="bodySm" tone="subdued">
+                              {selectedTemplate.defaults.quality === 'high' ? '2' : '1'} credits per image
+                            </Text>
+                          </BlockStack>
+                        </InlineStack>
+                        <InlineStack gap="200">
+                          <Button onClick={() => setSelectedTemplate(null)}>
+                            Clear
+                          </Button>
+                          <Button variant="primary" onClick={() => setCurrentStep('settings')}>
+                            Continue to Settings
+                          </Button>
+                        </InlineStack>
+                      </InlineStack>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Settings Step - Product Only Mode */}
