@@ -2064,6 +2064,11 @@ export default function Generate() {
         selectedIndices={selectedForPublish}
         productName={selectedProduct?.title || scratchUpload?.productInfo.title}
       />
+
+      <NoCreditsModal
+        open={noCreditsModalOpen}
+        onClose={() => setNoCreditsModalOpen(false)}
+      />
     </PageHeader>
   );
 }
