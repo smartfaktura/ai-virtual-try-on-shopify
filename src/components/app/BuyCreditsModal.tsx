@@ -100,7 +100,7 @@ export function BuyCreditsModal() {
           
           <Divider />
           
-          <div className="p-4 rounded-lg bg-surface-subdued border border-border">
+          <div className="p-4 rounded-lg bg-muted border border-border">
             <InlineStack align="space-between" blockAlign="center">
               <BlockStack gap="100">
                 <Text as="p" variant="bodyMd" fontWeight="semibold">
