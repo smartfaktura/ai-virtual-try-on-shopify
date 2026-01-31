@@ -792,6 +792,26 @@ import modelFemaleSlimNordic from '@/assets/models/model-female-slim-nordic.jpg'
 import modelFemaleAverageMiddleeast from '@/assets/models/model-female-average-middleeast.jpg';
 import modelFemalePlussizeAfrican from '@/assets/models/model-female-plussize-african.jpg';
 import modelFemalePetiteKorean from '@/assets/models/model-female-petite-korean.jpg';
+// New expanded male models (10)
+import modelMaleAthleticEuropean from '@/assets/models/model-male-athletic-european.jpg';
+import modelMaleAthleticLatino from '@/assets/models/model-male-athletic-latino.jpg';
+import modelMaleAthleticJapanese from '@/assets/models/model-male-athletic-japanese.jpg';
+import modelMaleSlimNordic from '@/assets/models/model-male-slim-nordic.jpg';
+import modelMaleAverageLatino from '@/assets/models/model-male-average-latino.jpg';
+import modelMalePlussizeAfrican from '@/assets/models/model-male-plussize-african.jpg';
+import modelMaleSlimIndian from '@/assets/models/model-male-slim-indian.jpg';
+import modelMaleAverageChinese from '@/assets/models/model-male-average-chinese.jpg';
+import modelMaleAthleticMixed from '@/assets/models/model-male-athletic-mixed.jpg';
+import modelMalePlussizeLatino from '@/assets/models/model-male-plussize-latino.jpg';
+// New expanded female models (8)
+import modelFemaleAthleticEuropean from '@/assets/models/model-female-athletic-european.jpg';
+import modelFemaleAthleticLatina from '@/assets/models/model-female-athletic-latina.jpg';
+import modelFemaleAverageAfrican from '@/assets/models/model-female-average-african.jpg';
+import modelFemalePlussizeJapanese from '@/assets/models/model-female-plussize-japanese.jpg';
+import modelFemaleAverageNordic from '@/assets/models/model-female-average-nordic.jpg';
+import modelFemaleSlimChinese from '@/assets/models/model-female-slim-chinese.jpg';
+import modelFemaleAthleticMixed from '@/assets/models/model-female-athletic-mixed.jpg';
+import modelFemalePlussizeMiddleeast from '@/assets/models/model-female-plussize-middleeast.jpg';
 
 // Pose preview images
 import poseStudioFront from '@/assets/poses/pose-studio-front.jpg';
@@ -934,6 +954,170 @@ export const mockModels: ModelProfile[] = [
     ethnicity: 'European',
     ageRange: 'mature',
     previewUrl: modelMalePlussizeEuropean,
+  },
+  // === NEW MALE MODELS (10) ===
+  {
+    modelId: 'model_015',
+    name: 'Liam',
+    gender: 'male',
+    bodyType: 'athletic',
+    ethnicity: 'European',
+    ageRange: 'adult',
+    previewUrl: modelMaleAthleticEuropean,
+  },
+  {
+    modelId: 'model_016',
+    name: 'Rafael',
+    gender: 'male',
+    bodyType: 'athletic',
+    ethnicity: 'Latino',
+    ageRange: 'young-adult',
+    previewUrl: modelMaleAthleticLatino,
+  },
+  {
+    modelId: 'model_017',
+    name: 'Kenji',
+    gender: 'male',
+    bodyType: 'athletic',
+    ethnicity: 'Japanese',
+    ageRange: 'adult',
+    previewUrl: modelMaleAthleticJapanese,
+  },
+  {
+    modelId: 'model_018',
+    name: 'Anders',
+    gender: 'male',
+    bodyType: 'slim',
+    ethnicity: 'Nordic',
+    ageRange: 'young-adult',
+    previewUrl: modelMaleSlimNordic,
+  },
+  {
+    modelId: 'model_019',
+    name: 'Diego',
+    gender: 'male',
+    bodyType: 'average',
+    ethnicity: 'Latino',
+    ageRange: 'adult',
+    previewUrl: modelMaleAverageLatino,
+  },
+  {
+    modelId: 'model_020',
+    name: 'Jamal',
+    gender: 'male',
+    bodyType: 'plus-size',
+    ethnicity: 'Black African',
+    ageRange: 'adult',
+    previewUrl: modelMalePlussizeAfrican,
+  },
+  {
+    modelId: 'model_021',
+    name: 'Ravi',
+    gender: 'male',
+    bodyType: 'slim',
+    ethnicity: 'South Asian',
+    ageRange: 'adult',
+    previewUrl: modelMaleSlimIndian,
+  },
+  {
+    modelId: 'model_022',
+    name: 'Chen Wei',
+    gender: 'male',
+    bodyType: 'average',
+    ethnicity: 'Chinese',
+    ageRange: 'mature',
+    previewUrl: modelMaleAverageChinese,
+  },
+  {
+    modelId: 'model_023',
+    name: 'Tyler',
+    gender: 'male',
+    bodyType: 'athletic',
+    ethnicity: 'Mixed',
+    ageRange: 'young-adult',
+    previewUrl: modelMaleAthleticMixed,
+  },
+  {
+    modelId: 'model_024',
+    name: 'Mateo',
+    gender: 'male',
+    bodyType: 'plus-size',
+    ethnicity: 'Latino',
+    ageRange: 'adult',
+    previewUrl: modelMalePlussizeLatino,
+  },
+  // === NEW FEMALE MODELS (8) ===
+  {
+    modelId: 'model_025',
+    name: 'Sofia',
+    gender: 'female',
+    bodyType: 'athletic',
+    ethnicity: 'European',
+    ageRange: 'adult',
+    previewUrl: modelFemaleAthleticEuropean,
+  },
+  {
+    modelId: 'model_026',
+    name: 'Elena',
+    gender: 'female',
+    bodyType: 'athletic',
+    ethnicity: 'Latina',
+    ageRange: 'young-adult',
+    previewUrl: modelFemaleAthleticLatina,
+  },
+  {
+    modelId: 'model_027',
+    name: 'Maya',
+    gender: 'female',
+    bodyType: 'average',
+    ethnicity: 'Black African',
+    ageRange: 'adult',
+    previewUrl: modelFemaleAverageAfrican,
+  },
+  {
+    modelId: 'model_028',
+    name: 'Akiko',
+    gender: 'female',
+    bodyType: 'plus-size',
+    ethnicity: 'Japanese',
+    ageRange: 'adult',
+    previewUrl: modelFemalePlussizeJapanese,
+  },
+  {
+    modelId: 'model_029',
+    name: 'Freya',
+    gender: 'female',
+    bodyType: 'average',
+    ethnicity: 'Nordic',
+    ageRange: 'young-adult',
+    previewUrl: modelFemaleAverageNordic,
+  },
+  {
+    modelId: 'model_030',
+    name: 'Mei',
+    gender: 'female',
+    bodyType: 'slim',
+    ethnicity: 'Chinese',
+    ageRange: 'mature',
+    previewUrl: modelFemaleSlimChinese,
+  },
+  {
+    modelId: 'model_031',
+    name: 'Zara',
+    gender: 'female',
+    bodyType: 'athletic',
+    ethnicity: 'Mixed',
+    ageRange: 'young-adult',
+    previewUrl: modelFemaleAthleticMixed,
+  },
+  {
+    modelId: 'model_032',
+    name: 'Fatima',
+    gender: 'female',
+    bodyType: 'plus-size',
+    ethnicity: 'Middle Eastern',
+    ageRange: 'adult',
+    previewUrl: modelFemalePlussizeMiddleeast,
   },
 ];
 
