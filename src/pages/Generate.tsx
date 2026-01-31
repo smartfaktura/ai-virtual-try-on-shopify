@@ -1455,7 +1455,7 @@ export default function Generate() {
                       {' '}({parseInt(imageCount)} images × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''} each)
                     </Text>
                     <Text as="p" fontWeight="semibold">
-                      {mockShop.creditsBalance} credits available
+                      {balance} credits available
                     </Text>
                   </InlineStack>
                 </Banner>
