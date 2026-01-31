@@ -1673,7 +1673,7 @@ export default function Generate() {
                   </Text>
                 </BlockStack>
                 <Text as="p" fontWeight="semibold">
-                  {mockShop.creditsBalance} credits available
+                  {balance} credits available
                 </Text>
               </InlineStack>
             </Banner>
