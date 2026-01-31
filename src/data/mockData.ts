@@ -1122,6 +1122,25 @@ export const mockModels: ModelProfile[] = [
     ageRange: 'adult',
     previewUrl: modelFemalePlussizeMiddleeast,
   },
+  // === REDHEAD MODELS (2) ===
+  {
+    modelId: 'model_033',
+    name: 'Sienna',
+    gender: 'female',
+    bodyType: 'average',
+    ethnicity: 'Irish',
+    ageRange: 'young-adult',
+    previewUrl: modelFemaleAverageIrish,
+  },
+  {
+    modelId: 'model_034',
+    name: 'Rowan',
+    gender: 'male',
+    bodyType: 'athletic',
+    ethnicity: 'Scottish',
+    ageRange: 'adult',
+    previewUrl: modelMaleAthleticScottish,
+  },
 ];
 
 export const mockTryOnPoses: TryOnPose[] = [
