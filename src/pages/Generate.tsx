@@ -748,7 +748,19 @@ export default function Generate() {
                         setCurrentStep('template');
                       }
                     } else {
-                      // Multiple products - go to bulk flow
+                      // Multiple products - check for category consistency
+                      const categories = new Set(
+                        selectedProducts.map(p => detectProductCategory(p)).filter(Boolean)
+                      );
+                      
+                      if (categories.size > 1) {
+                        toast.warning(
+                          'Products from different categories selected. The same template will be applied to all.',
+                          { duration: 5000 }
+                        );
+                      }
+                      
+                      // Go to bulk flow
                       navigate('/generate/bulk', { 
                         state: { selectedProducts } 
                       });
