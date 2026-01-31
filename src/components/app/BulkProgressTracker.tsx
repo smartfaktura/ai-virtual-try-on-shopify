@@ -5,11 +5,10 @@ import {
   Text,
   Button,
   Badge,
-  ProgressBar,
   Thumbnail,
   Spinner,
 } from '@shopify/polaris';
-import { PauseIcon, PlayIcon, XIcon, CheckCircleIcon, AlertCircleIcon } from '@shopify/polaris-icons';
+import { PlayIcon, XIcon, CheckCircleIcon, AlertCircleIcon, PauseCircleIcon } from '@shopify/polaris-icons';
 import type { BulkGenerationState, BulkQueueItem } from '@/types/bulk';
 import { Progress } from '@/components/ui/progress';
 
@@ -23,9 +22,9 @@ interface BulkProgressTrackerProps {
 function getStatusIcon(status: BulkQueueItem['status']) {
   switch (status) {
     case 'completed':
-      return <span className="text-green-600"><CheckCircleIcon /></span>;
+      return <span className="text-emerald-600"><CheckCircleIcon /></span>;
     case 'failed':
-      return <span className="text-red-600"><AlertCircleIcon /></span>;
+      return <span className="text-destructive"><AlertCircleIcon /></span>;
     case 'generating':
     case 'converting':
       return <Spinner size="small" />;
