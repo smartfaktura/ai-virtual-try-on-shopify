@@ -38,6 +38,9 @@ import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
 import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
+import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
+import { useCredits } from '@/contexts/CreditContext';
 import { useGenerateTryOn } from '@/hooks/useGenerateTryOn';
 import { useGenerateProduct } from '@/hooks/useGenerateProduct';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
@@ -56,7 +59,7 @@ import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal'
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { detectProductCategory } from '@/lib/categoryUtils';
-import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
+import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
 
@@ -66,6 +69,7 @@ export default function Generate() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialTemplateId = searchParams.get('template');
+  const { balance, isEmpty, openBuyModal, deductCredits, calculateCost } = useCredits();
   
   const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
@@ -121,6 +125,7 @@ export default function Generate() {
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
 
   // Virtual Try-On generation hook
   const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
@@ -296,6 +301,18 @@ export default function Generate() {
 
   const handleGenerateClick = () => {
     if (!selectedProduct) return;
+    
+    // Check credits first
+    const cost = calculateCost({ 
+      count: parseInt(imageCount), 
+      quality, 
+      mode: generationMode 
+    });
+    
+    if (balance < cost) {
+      setNoCreditsModalOpen(true);
+      return;
+    }
     
     // Virtual Try-On mode
     if (generationMode === 'virtual-try-on') {
@@ -546,6 +563,9 @@ export default function Generate() {
       backAction={{ content: 'Dashboard', onAction: () => navigate('/') }}
     >
       <BlockStack gap="600">
+        {/* Low credits warning */}
+        <LowCreditsBanner />
+
         {/* Progress indicator with step descriptions - Mobile optimized */}
         <Card>
           <BlockStack gap="200">
@@ -1450,7 +1470,7 @@ export default function Generate() {
                       {' '}({parseInt(imageCount)} images × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''} each)
                     </Text>
                     <Text as="p" fontWeight="semibold">
-                      {mockShop.creditsBalance} credits available
+                      {balance} credits available
                     </Text>
                   </InlineStack>
                 </Banner>
@@ -1668,7 +1688,7 @@ export default function Generate() {
                   </Text>
                 </BlockStack>
                 <Text as="p" fontWeight="semibold">
-                  {mockShop.creditsBalance} credits available
+                  {balance} credits available
                 </Text>
               </InlineStack>
             </Banner>
@@ -1985,7 +2005,8 @@ export default function Generate() {
         imageCount={parseInt(imageCount)}
         aspectRatio={aspectRatio}
         quality={quality}
-        creditsRemaining={mockShop.creditsBalance}
+        creditsRemaining={balance}
+        onBuyCredits={openBuyModal}
       />
 
       <TryOnConfirmModal
@@ -1997,8 +2018,9 @@ export default function Generate() {
         pose={selectedPose}
         imageCount={parseInt(imageCount)}
         aspectRatio={aspectRatio}
-        creditsRemaining={mockShop.creditsBalance}
+        creditsRemaining={balance}
         isLoading={isTryOnGenerating}
+        onBuyCredits={openBuyModal}
         sourceImageUrl={
           selectedProduct && selectedSourceImages.size > 0
             ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url
@@ -2041,6 +2063,11 @@ export default function Generate() {
         onRegenerate={handleRegenerate}
         selectedIndices={selectedForPublish}
         productName={selectedProduct?.title || scratchUpload?.productInfo.title}
+      />
+
+      <NoCreditsModal
+        open={noCreditsModalOpen}
+        onClose={() => setNoCreditsModalOpen(false)}
       />
     </PageHeader>
   );

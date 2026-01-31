@@ -17,10 +17,14 @@ import { MetricCard } from '@/components/app/MetricCard';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { JobDetailModal } from '@/components/app/JobDetailModal';
+import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
+import { useCredits } from '@/contexts/CreditContext';
 import { mockMetrics, mockJobs, categoryLabels } from '@/data/mockData';
 import type { GenerationJob } from '@/types';
+
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { balance, openBuyModal } = useCredits();
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<GenerationJob | null>(null);
 
@@ -62,6 +66,9 @@ export default function Dashboard() {
   return (
     <PageHeader title="Dashboard">
       <BlockStack gap="600">
+        {/* Low credits banner */}
+        <LowCreditsBanner />
+
         {/* Metrics Row */}
         <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
           <MetricCard
@@ -73,8 +80,9 @@ export default function Dashboard() {
           />
           <MetricCard
             title="Credits Remaining"
-            value={mockMetrics.creditsRemaining}
+            value={balance}
             icon={WalletIcon}
+            onClick={openBuyModal}
           />
           <MetricCard
             title="Avg. Generation Time"
@@ -97,7 +105,7 @@ export default function Dashboard() {
               <Text as="h2" variant="headingMd">
                 Quick Generate
               </Text>
-              <Badge tone="info">{`${mockMetrics.creditsRemaining} credits`}</Badge>
+              <Badge tone="info">{`${balance} credits`}</Badge>
             </InlineStack>
             <Text as="p" variant="bodyMd" tone="subdued">
               Generate professional product images in seconds. Select a product and we'll recommend the best photography styles.

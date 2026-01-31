@@ -4,6 +4,8 @@ import enTranslations from '@shopify/polaris/locales/en.json';
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { CreditProvider } from '@/contexts/CreditContext';
+import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { AppShell } from '@/components/app/AppShell';
 import Dashboard from '@/pages/Dashboard';
 import Generate from '@/pages/Generate';
@@ -19,21 +21,24 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AppProvider i18n={enTranslations}>
       <Toaster position="top-right" richColors closeButton />
-      <BrowserRouter>
-        <AppShell>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/generate" element={<Generate />} />
-            <Route path="/generate/bulk" element={<BulkGenerate />} />
-            <Route path="/templates" element={<Templates />} />
-            <Route path="/templates/:id" element={<Templates />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/jobs/:id" element={<Jobs />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppShell>
-      </BrowserRouter>
+      <CreditProvider>
+        <BrowserRouter>
+          <AppShell>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/generate" element={<Generate />} />
+              <Route path="/generate/bulk" element={<BulkGenerate />} />
+              <Route path="/templates" element={<Templates />} />
+              <Route path="/templates/:id" element={<Templates />} />
+              <Route path="/jobs" element={<Jobs />} />
+              <Route path="/jobs/:id" element={<Jobs />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppShell>
+        </BrowserRouter>
+        <BuyCreditsModal />
+      </CreditProvider>
     </AppProvider>
   </QueryClientProvider>
 );

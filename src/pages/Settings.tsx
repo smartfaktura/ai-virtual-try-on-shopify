@@ -20,16 +20,19 @@ import { PageHeader } from '@/components/app/PageHeader';
 import { PlanCard } from '@/components/app/PlanCard';
 import { CreditPackCard } from '@/components/app/CreditPackCard';
 import { CompetitorComparison } from '@/components/app/CompetitorComparison';
-import { mockShop, pricingPlans, creditPacks } from '@/data/mockData';
+import { useCredits } from '@/contexts/CreditContext';
+import { pricingPlans, creditPacks } from '@/data/mockData';
 import type { BrandTone, BackgroundStyle } from '@/types';
 import { toast } from 'sonner';
 
 export default function Settings() {
+  const { balance, addCredits } = useCredits();
+  
   // Brand defaults
-  const [brandTone, setBrandTone] = useState<BrandTone>(mockShop.brandDefaults.tone);
-  const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>(mockShop.brandDefaults.backgroundStyle);
-  const [negatives, setNegatives] = useState(mockShop.brandDefaults.negatives.join(', '));
-  const [consistencyEnabled, setConsistencyEnabled] = useState(mockShop.brandDefaults.consistencyEnabled);
+  const [brandTone, setBrandTone] = useState<BrandTone>('clean');
+  const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('studio');
+  const [negatives, setNegatives] = useState('text overlays, busy backgrounds, watermarks');
+  const [consistencyEnabled, setConsistencyEnabled] = useState(true);
 
   // Publishing defaults
   const [publishMode, setPublishMode] = useState<'add' | 'replace'>('add');
@@ -73,13 +76,13 @@ export default function Settings() {
   const handleCreditPurchase = (packId: string) => {
     const pack = creditPacks.find(p => p.packId === packId);
     if (pack) {
+      addCredits(pack.credits);
       toast.success(`Purchased ${pack.credits} credits for $${pack.price}!`);
     }
   };
 
-  const creditsUsed = 1000 - mockShop.creditsBalance;
   const creditsTotal = 1000;
-  const creditsPercentage = (mockShop.creditsBalance / creditsTotal) * 100;
+  const creditsPercentage = (balance / creditsTotal) * 100;
 
   const appVersion = '1.2.0';
   const lastUpdated = '2026-01-28';
@@ -314,7 +317,7 @@ export default function Settings() {
               <BlockStack gap="200">
                 <InlineStack align="space-between">
                   <Text as="p" variant="bodyMd">Credits Remaining</Text>
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">{mockShop.creditsBalance} / {creditsTotal}</Text>
+                  <Text as="p" variant="bodyMd" fontWeight="semibold">{balance} / {creditsTotal}</Text>
                 </InlineStack>
                 <ProgressBar progress={creditsPercentage} size="small" tone="primary" />
                 <Text as="p" variant="bodySm" tone="subdued">Resets on the 1st of each month</Text>

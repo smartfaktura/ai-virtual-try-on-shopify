@@ -8,6 +8,7 @@ import {
   Divider,
   Banner,
   Icon,
+  Button,
 } from '@shopify/polaris';
 import { ImageIcon, WalletIcon } from '@shopify/polaris-icons';
 import type { Product, Template, AspectRatio, ImageQuality } from '@/types';
@@ -25,6 +26,7 @@ interface GenerateConfirmModalProps {
   aspectRatio: AspectRatio;
   quality: ImageQuality;
   creditsRemaining: number;
+  onBuyCredits?: () => void;
 }
 
 export function GenerateConfirmModal({
@@ -38,6 +40,7 @@ export function GenerateConfirmModal({
   aspectRatio,
   quality,
   creditsRemaining,
+  onBuyCredits,
 }: GenerateConfirmModalProps) {
   if (!product || !template) return null;
 
@@ -185,9 +188,16 @@ export function GenerateConfirmModal({
           {/* Warning if not enough credits */}
           {!hasEnoughCredits && (
             <Banner tone="critical">
-              <Text as="p">
-                You don't have enough credits. You need {totalCredits} credits but only have {creditsRemaining}.
-              </Text>
+              <BlockStack gap="300">
+                <Text as="p">
+                  You don't have enough credits. You need {totalCredits} credits but only have {creditsRemaining}.
+                </Text>
+                {onBuyCredits && (
+                  <Button variant="primary" onClick={onBuyCredits}>
+                    Buy Credits
+                  </Button>
+                )}
+              </BlockStack>
             </Banner>
           )}
         </BlockStack>

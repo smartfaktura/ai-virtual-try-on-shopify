@@ -13,6 +13,7 @@ import {
   ClockIcon,
   SettingsIcon,
 } from '@shopify/polaris-icons';
+import { CreditIndicator } from '@/components/app/CreditIndicator';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -110,6 +111,14 @@ export function AppShell({ children }: AppShellProps) {
           },
         ]}
       />
+      <Navigation.Section
+        title=""
+        items={[]}
+        fill
+      />
+      <div className="p-3">
+        <CreditIndicator />
+      </div>
     </Navigation>
   );
 
