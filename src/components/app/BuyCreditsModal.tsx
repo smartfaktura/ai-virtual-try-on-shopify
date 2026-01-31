@@ -61,8 +61,8 @@ export function BuyCreditsModal() {
                 key={pack.packId}
                 className={`relative p-4 rounded-lg border-2 text-center transition-all hover:shadow-md ${
                   pack.popular 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-border bg-surface-subdued hover:border-primary/50'
+                    ? 'border-primary bg-accent' 
+                    : 'border-border bg-muted hover:border-primary'
                 }`}
               >
                 {pack.popular && (
