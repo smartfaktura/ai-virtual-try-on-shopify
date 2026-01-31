@@ -302,6 +302,18 @@ export default function Generate() {
   const handleGenerateClick = () => {
     if (!selectedProduct) return;
     
+    // Check credits first
+    const cost = calculateCost({ 
+      count: parseInt(imageCount), 
+      quality, 
+      mode: generationMode 
+    });
+    
+    if (balance < cost) {
+      setNoCreditsModalOpen(true);
+      return;
+    }
+    
     // Virtual Try-On mode
     if (generationMode === 'virtual-try-on') {
       if (!selectedModel || !selectedPose) {
