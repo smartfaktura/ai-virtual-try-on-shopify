@@ -38,15 +38,13 @@ export function BuyCreditsModal() {
       <Modal.Section>
         <BlockStack gap="500">
           {/* Current balance */}
-          <div className="p-4 rounded-lg bg-surface-subdued border border-border">
-            <InlineStack gap="200" blockAlign="center">
-              <Icon source={WalletIcon} />
-              <BlockStack gap="050">
-                <Text as="p" variant="bodySm" tone="subdued">Current Balance</Text>
-                <Text as="p" variant="headingMd" fontWeight="bold">
-                  {balance} credits
-                </Text>
-              </BlockStack>
+          <div className="p-3 rounded-lg bg-muted border border-border">
+            <InlineStack gap="200" blockAlign="center" align="center">
+              <Icon source={WalletIcon} tone="subdued" />
+              <Text as="p" variant="bodySm" tone="subdued">Current Balance:</Text>
+              <Text as="p" variant="headingMd" fontWeight="bold">
+                {balance} credits
+              </Text>
             </InlineStack>
           </div>
           
@@ -63,8 +61,8 @@ export function BuyCreditsModal() {
                 key={pack.packId}
                 className={`relative p-4 rounded-lg border-2 text-center transition-all hover:shadow-md ${
                   pack.popular 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-border bg-surface-subdued hover:border-primary/50'
+                    ? 'border-primary bg-accent' 
+                    : 'border-border bg-muted hover:border-primary'
                 }`}
               >
                 {pack.popular && (
@@ -102,7 +100,7 @@ export function BuyCreditsModal() {
           
           <Divider />
           
-          <div className="p-4 rounded-lg bg-surface-subdued border border-border">
+          <div className="p-4 rounded-lg bg-muted border border-border">
             <InlineStack align="space-between" blockAlign="center">
               <BlockStack gap="100">
                 <Text as="p" variant="bodyMd" fontWeight="semibold">
