@@ -8,6 +8,7 @@ import {
   Divider,
   Banner,
   Icon,
+  Button,
 } from '@shopify/polaris';
 import { ImageIcon, WalletIcon } from '@shopify/polaris-icons';
 import type { Product, Template, AspectRatio, ImageQuality } from '@/types';
@@ -25,6 +26,7 @@ interface GenerateConfirmModalProps {
   aspectRatio: AspectRatio;
   quality: ImageQuality;
   creditsRemaining: number;
+  onBuyCredits?: () => void;
 }
 
 export function GenerateConfirmModal({
@@ -38,6 +40,7 @@ export function GenerateConfirmModal({
   aspectRatio,
   quality,
   creditsRemaining,
+  onBuyCredits,
 }: GenerateConfirmModalProps) {
   if (!product || !template) return null;
 
