@@ -30,6 +30,7 @@ import {
   MaximizeIcon,
   XIcon,
   PersonIcon,
+  ListBulletedIcon,
 } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
 import { TemplatePreviewCard, getTemplateImage } from '@/components/app/TemplatePreviewCard';
