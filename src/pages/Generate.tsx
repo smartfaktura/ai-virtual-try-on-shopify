@@ -223,18 +223,11 @@ export default function Generate() {
     } else {
       setSelectedSourceImages(new Set());
     }
-    // Auto-recommend category based on product type
-    const productType = product.productType.toLowerCase();
-    if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel')) {
-      setSelectedCategory('clothing');
-    } else if (productType.includes('serum') || productType.includes('cream') || productType.includes('beauty')) {
-      setSelectedCategory('cosmetics');
-    } else if (productType.includes('food') || productType.includes('cereal')) {
-      setSelectedCategory('food');
-    } else if (productType.includes('decor') || productType.includes('home')) {
-      setSelectedCategory('home');
-    } else if (productType.includes('supplement') || productType.includes('vitamin')) {
-      setSelectedCategory('supplements');
+    
+    // Auto-recommend category based on detected product type
+    const detectedCategory = detectProductCategory(product);
+    if (detectedCategory) {
+      setSelectedCategory(detectedCategory);
     }
     
     // If clothing product, show mode selection first
