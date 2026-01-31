@@ -258,13 +258,13 @@ export function BulkResultsView({
       {/* Action buttons */}
       <InlineStack gap="300">
         <Button variant="primary" onClick={onPublishAll} icon={ExternalIcon}>
-          Publish All ({results.summary.totalImages})
+          {`Publish All (${results.summary.totalImages})`}
         </Button>
         <Button 
           onClick={handlePublishSelected} 
           disabled={getTotalSelectedCount() === 0}
         >
-          Publish Selected ({getTotalSelectedCount()})
+          {`Publish Selected (${getTotalSelectedCount()})`}
         </Button>
         <Button onClick={onStartNew}>
           Start New Batch

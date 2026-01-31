@@ -164,7 +164,7 @@ export function BulkProgressTracker({
                       </div>
                     )}
                     {item.status === 'completed' && item.results && (
-                      <Badge tone="success">{String(item.results.length)} images</Badge>
+                      <Badge tone="success">{`${item.results.length} images`}</Badge>
                     )}
                     {item.status === 'failed' && (
                       <Badge tone="critical">Error</Badge>
