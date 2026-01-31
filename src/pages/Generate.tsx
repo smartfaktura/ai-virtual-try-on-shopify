@@ -39,6 +39,7 @@ import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
 import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
 import { useGenerateTryOn } from '@/hooks/useGenerateTryOn';
+import { useGenerateProduct } from '@/hooks/useGenerateProduct';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
 import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
