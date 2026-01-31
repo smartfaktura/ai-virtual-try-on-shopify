@@ -38,6 +38,9 @@ import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
 import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
+import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
+import { NoCreditsModal } from '@/components/app/NoCreditsModal';
+import { useCredits } from '@/contexts/CreditContext';
 import { useGenerateTryOn } from '@/hooks/useGenerateTryOn';
 import { useGenerateProduct } from '@/hooks/useGenerateProduct';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
@@ -56,7 +59,7 @@ import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal'
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { detectProductCategory } from '@/lib/categoryUtils';
-import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
+import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
 
