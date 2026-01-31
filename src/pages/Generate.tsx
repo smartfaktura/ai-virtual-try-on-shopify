@@ -1848,7 +1848,10 @@ export default function Generate() {
                       />
                       
                       {/* Overlay with actions */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <div 
+                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
+                        onClick={() => toggleImageSelection(index)}
+                      >
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
