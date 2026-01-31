@@ -317,7 +317,7 @@ export default function Settings() {
               <BlockStack gap="200">
                 <InlineStack align="space-between">
                   <Text as="p" variant="bodyMd">Credits Remaining</Text>
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">{mockShop.creditsBalance} / {creditsTotal}</Text>
+                  <Text as="p" variant="bodyMd" fontWeight="semibold">{balance} / {creditsTotal}</Text>
                 </InlineStack>
                 <ProgressBar progress={creditsPercentage} size="small" tone="primary" />
                 <Text as="p" variant="bodySm" tone="subdued">Resets on the 1st of each month</Text>
