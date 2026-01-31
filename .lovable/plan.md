@@ -1,100 +1,169 @@
 
-# Add More Poses & Scenes - Expand Library to 24 Poses
 
-## Current State
-10 existing poses preserved across 4 categories.
+# Expand E-commerce Product Library for Full Market Coverage
 
-## New Poses to Add (14 new)
+## Problem Summary
+The app currently only has sample products for **clothing/athleisure** (8 Alo Yoga items). All other supported categories (Cosmetics, Food, Home, Supplements) have templates but **zero sample products** - making it impossible for merchants in those industries to demo the app properly.
 
-### Studio Category (+3 = 6 total)
-| Pose Name | Description |
-|-----------|-------------|
-| **Studio Back View** | Elegant back pose showing garment rear details, shoulders angled |
-| **Studio Close-Up** | Torso-focused crop highlighting fabric texture and fit |
-| **Studio Crossed Arms** | Confident pose with crossed arms, direct eye contact |
+---
 
-### Lifestyle Category (+4 = 7 total)
-| Pose Name | Description |
-|-----------|-------------|
-| **Coffee Shop Casual** | Relaxed pose at cafe table with natural morning light |
-| **Beach Sunset** | Coastal lifestyle scene with golden sunset backdrop |
-| **Park Bench** | Casual outdoor pose on wooden park bench with greenery |
-| **Rooftop City** | Urban rooftop with city skyline in background at dusk |
+## Solution Overview
 
-### Editorial Category (+4 = 6 total)
-| Pose Name | Description |
-|-----------|-------------|
-| **Editorial Window** | Silhouette against floor-to-ceiling window with natural light |
-| **Editorial Moody** | Low-key studio lighting with single dramatic side light |
-| **Editorial Artistic** | High-fashion pose with abstract geometric backdrop |
-| **Editorial Movement** | Dynamic motion blur effect with flowing hair/fabric |
+### Part 1: Add Sample Products for Existing Categories (20 new products)
 
-### Streetwear Category (+3 = 5 total)
-| Pose Name | Description |
-|-----------|-------------|
-| **Street Basketball Court** | Urban playground with chain-link fence backdrop |
-| **Street Underpass** | Industrial tunnel with dramatic overhead lighting |
-| **Street Night Neon** | Night scene with neon signs and urban glow |
+#### Cosmetics (5 products)
+| Product | Type | Brand Style |
+|---------|------|-------------|
+| Vitamin C Brightening Serum | Serums | The Ordinary |
+| Hydrating Hyaluronic Acid Cream | Moisturizers | CeraVe |
+| Matte Liquid Lipstick | Lip Products | Fenty Beauty |
+| Retinol Night Treatment | Treatments | Drunk Elephant |
+| Setting Powder Compact | Face Powder | Charlotte Tilbury |
+
+#### Food & Beverage (5 products)
+| Product | Type | Brand Style |
+|---------|------|-------------|
+| Organic Granola Mix | Cereal | Bear Naked |
+| Cold-Pressed Green Juice | Beverages | Pressed |
+| Artisan Chocolate Bar | Confectionery | Hu Kitchen |
+| Premium Coffee Beans | Coffee | Blue Bottle |
+| Organic Honey Jar | Spreads | Bee & Flower |
+
+#### Home & Interior (5 products)
+| Product | Type | Brand Style |
+|---------|------|-------------|
+| Ceramic Pour-Over Carafe | Kitchen | Fellow |
+| Soy Wax Candle | Candles | Byredo |
+| Linen Throw Pillow | Textiles | Parachute |
+| Concrete Planter | Planters | West Elm |
+| Brass Table Lamp | Lighting | CB2 |
+
+#### Supplements & Wellness (5 products)
+| Product | Type | Brand Style |
+|---------|------|-------------|
+| Daily Multivitamin Gummies | Vitamins | Ritual |
+| Collagen Peptides Powder | Collagen | Vital Proteins |
+| Magnesium Sleep Capsules | Sleep | Moon Juice |
+| Greens Superfood Blend | Greens | Athletic Greens |
+| Omega-3 Fish Oil Softgels | Omega-3 | Nordic Naturals |
+
+---
+
+### Part 2: Generate Product Images (20 images)
+
+Create professional product photography for each item:
+
+```text
+src/assets/products/
+├── [EXISTING 9 clothing images]
+├── serum-vitamin-c.jpg
+├── cream-hyaluronic.jpg
+├── lipstick-matte.jpg
+├── retinol-treatment.jpg
+├── powder-setting.jpg
+├── granola-organic.jpg
+├── juice-green.jpg
+├── chocolate-artisan.jpg
+├── coffee-beans.jpg
+├── honey-organic.jpg
+├── carafe-ceramic.jpg
+├── candle-soy.jpg
+├── pillow-linen.jpg
+├── planter-concrete.jpg
+├── lamp-brass.jpg
+├── vitamins-gummy.jpg
+├── collagen-powder.jpg
+├── magnesium-capsules.jpg
+├── greens-superfood.jpg
+├── omega-fish-oil.jpg
+```
+
+---
+
+### Part 3: Expand Product Type Detection
+
+Update `Generate.tsx` to recognize more product keywords:
+
+```text
+Current Detection Keywords:
+- Clothing: leggings, hoodie, t-shirt, sports bra, jacket, tank top, joggers, shorts, dress, sweater...
+
+NEW Keywords to Add:
+- Cosmetics: serum, moisturizer, lipstick, foundation, mascara, eyeshadow, cleanser, toner, essence, sunscreen, primer, concealer, blush, bronzer, highlighter
+- Food: cereal, granola, chocolate, coffee, tea, honey, jam, sauce, snack, bar, cookie, candy, nuts, dried fruit
+- Home: candle, vase, planter, pillow, blanket, lamp, clock, frame, mirror, rug, curtain, towel, mug, bowl, plate
+- Supplements: vitamin, supplement, capsule, powder, gummy, protein, collagen, probiotic, omega, mineral, herb, extract
+```
+
+---
+
+### Part 4: Add New Categories (Optional Expansion)
+
+Consider adding 3 new high-demand categories:
+
+| Category | Templates to Add | Sample Products |
+|----------|------------------|-----------------|
+| **Jewelry** | Elegant Studio, Lifestyle Wear, Detail Macro | Rings, Necklaces, Earrings |
+| **Electronics** | Tech Clean, Lifestyle Context, Unboxing | Phone Cases, Headphones, Chargers |
+| **Pet** | Studio Clean, Lifestyle Happy, Natural Outdoor | Pet Food, Toys, Accessories |
+
+---
 
 ## Implementation Steps
 
-### Step 1: Generate 14 New Pose Images
-Create high-quality scene/pose reference images using AI image generation:
-- Bright, clear compositions
-- Professional fashion photography style
-- Consistent quality with existing poses
+### Step 1: Generate Product Images
+Create 20 AI-generated product photos with:
+- Clean white/gradient backgrounds
+- Professional product photography lighting
+- Consistent style matching existing clothing images
 
-### Step 2: Save Image Assets
-```text
-src/assets/poses/
-├── [KEEP] pose-studio-front.jpg
-├── [KEEP] pose-studio-profile.jpg
-├── [KEEP] pose-studio-movement.jpg
-├── [KEEP] pose-lifestyle-walking.jpg
-├── [KEEP] pose-lifestyle-seated.jpg
-├── [KEEP] pose-lifestyle-garden.jpg
-├── [KEEP] pose-editorial-dramatic.jpg
-├── [KEEP] pose-editorial-minimal.jpg
-├── [KEEP] pose-streetwear-urban.jpg
-├── [KEEP] pose-streetwear-stairs.jpg
-├── [NEW] pose-studio-back.jpg
-├── [NEW] pose-studio-closeup.jpg
-├── [NEW] pose-studio-arms.jpg
-├── [NEW] pose-lifestyle-coffee.jpg
-├── [NEW] pose-lifestyle-beach.jpg
-├── [NEW] pose-lifestyle-park.jpg
-├── [NEW] pose-lifestyle-rooftop.jpg
-├── [NEW] pose-editorial-window.jpg
-├── [NEW] pose-editorial-moody.jpg
-├── [NEW] pose-editorial-artistic.jpg
-├── [NEW] pose-editorial-motion.jpg
-├── [NEW] pose-streetwear-basketball.jpg
-├── [NEW] pose-streetwear-underpass.jpg
-├── [NEW] pose-streetwear-neon.jpg
-```
+### Step 2: Update mockData.ts
+- Import 20 new product images
+- Add 20 new Product entries organized by category
+- Ensure proper productType values for detection
 
-### Step 3: Update mockData.ts
-- Add 14 new image imports
-- Add 14 new TryOnPose entries to mockTryOnPoses array
-- Preserve all 10 existing poses
+### Step 3: Expand Detection Keywords
+- Update `isClothingProduct()` function with more clothing terms
+- Add detection functions for cosmetics, food, home, supplements
+- Improve category auto-selection logic
 
-## AI Image Generation Approach
-Each pose preview will show:
-- Female model in neutral clothing (simple tank top/jeans)
-- The specific scene/setting/lighting
-- Full body or 3/4 shot depending on pose type
-- Professional fashion photography quality
+---
 
-## Technical Details
+## Files to Modify
 
-**Files to modify:**
-- `src/data/mockData.ts` - Add 14 new pose entries with imports
+**New files (20):**
+- `src/assets/products/serum-vitamin-c.jpg`
+- `src/assets/products/cream-hyaluronic.jpg`
+- `src/assets/products/lipstick-matte.jpg`
+- `src/assets/products/retinol-treatment.jpg`
+- `src/assets/products/powder-setting.jpg`
+- `src/assets/products/granola-organic.jpg`
+- `src/assets/products/juice-green.jpg`
+- `src/assets/products/chocolate-artisan.jpg`
+- `src/assets/products/coffee-beans.jpg`
+- `src/assets/products/honey-organic.jpg`
+- `src/assets/products/carafe-ceramic.jpg`
+- `src/assets/products/candle-soy.jpg`
+- `src/assets/products/pillow-linen.jpg`
+- `src/assets/products/planter-concrete.jpg`
+- `src/assets/products/lamp-brass.jpg`
+- `src/assets/products/vitamins-gummy.jpg`
+- `src/assets/products/collagen-powder.jpg`
+- `src/assets/products/magnesium-capsules.jpg`
+- `src/assets/products/greens-superfood.jpg`
+- `src/assets/products/omega-fish-oil.jpg`
 
-**Files to create:**
-- 14 new pose image files in `src/assets/poses/`
+**Files to update:**
+- `src/data/mockData.ts` - Add imports and product entries
+- `src/pages/Generate.tsx` - Expand detection keywords
+
+---
 
 ## Result
-- **24 total poses** (up from 10)
-- **6 Studio** | **7 Lifestyle** | **6 Editorial** | **5 Streetwear**
-- Much richer variety for users
-- All existing poses preserved
+
+After implementation:
+- **28 total sample products** (8 clothing + 20 new)
+- **4 product categories fully populated** with realistic demo products
+- **Better category detection** for accurate template recommendations
+- **Complete demo experience** for merchants across major e-commerce verticals
+
