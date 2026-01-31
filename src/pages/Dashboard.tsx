@@ -135,8 +135,8 @@ export default function Dashboard() {
             
             {recentJobs.length > 0 ? (
               <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-                headings={['Product', 'Template', 'Status', 'Created', 'Actions']}
+                columnContentTypes={['text', 'text', 'text', 'numeric', 'text', 'text']}
+                headings={['Product', 'Template', 'Status', 'Credits', 'Created', 'Actions']}
                 rows={rows}
               />
             ) : (
