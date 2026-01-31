@@ -603,12 +603,22 @@ export default function Generate() {
           <Card>
             <BlockStack gap="500">
               <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">
-                  How do you want to start?
-                </Text>
-                <Text as="p" variant="bodyMd" tone="subdued">
-                  Choose whether to use an existing Shopify product or upload your own image file.
-                </Text>
+                <InlineStack align="space-between" blockAlign="start">
+                  <BlockStack gap="100">
+                    <Text as="h2" variant="headingMd">
+                      How do you want to start?
+                    </Text>
+                    <Text as="p" variant="bodyMd" tone="subdued">
+                      Choose whether to use an existing Shopify product or upload your own image file.
+                    </Text>
+                  </BlockStack>
+                  <Button
+                    icon={ListBulletedIcon}
+                    onClick={() => navigate('/generate/bulk')}
+                  >
+                    Bulk Generate
+                  </Button>
+                </InlineStack>
               </BlockStack>
 
               <SourceTypeSelector
