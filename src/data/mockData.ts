@@ -503,6 +503,34 @@ import motoLeggings1 from '@/assets/products/moto-leggings-1.jpg';
 import croppedLongsleeve1 from '@/assets/products/cropped-longsleeve-1.jpg';
 import fauxFurJacket1 from '@/assets/products/faux-fur-jacket-1.jpg';
 
+// Cosmetics product images
+import serumVitaminC from '@/assets/products/serum-vitamin-c.jpg';
+import creamHyaluronic from '@/assets/products/cream-hyaluronic.jpg';
+import lipstickMatte from '@/assets/products/lipstick-matte.jpg';
+import retinolTreatment from '@/assets/products/retinol-treatment.jpg';
+import powderSetting from '@/assets/products/powder-setting.jpg';
+
+// Food & Beverage product images
+import granolaOrganic from '@/assets/products/granola-organic.jpg';
+import juiceGreen from '@/assets/products/juice-green.jpg';
+import chocolateArtisan from '@/assets/products/chocolate-artisan.jpg';
+import coffeeBeans from '@/assets/products/coffee-beans.jpg';
+import honeyOrganic from '@/assets/products/honey-organic.jpg';
+
+// Home & Interior product images
+import carafeCeramic from '@/assets/products/carafe-ceramic.jpg';
+import candleSoy from '@/assets/products/candle-soy.jpg';
+import pillowLinen from '@/assets/products/pillow-linen.jpg';
+import planterConcrete from '@/assets/products/planter-concrete.jpg';
+import lampBrass from '@/assets/products/lamp-brass.jpg';
+
+// Supplements product images
+import vitaminsGummy from '@/assets/products/vitamins-gummy.jpg';
+import collagenPowder from '@/assets/products/collagen-powder.jpg';
+import magnesiumCapsules from '@/assets/products/magnesium-capsules.jpg';
+import greensSuperfood from '@/assets/products/greens-superfood.jpg';
+import omegaFishOil from '@/assets/products/omega-fish-oil.jpg';
+
 export const mockProducts: Product[] = [
   // Alo Yoga Style Athletic Fashion Products
   {
