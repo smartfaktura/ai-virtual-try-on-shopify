@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppShell } from '@/components/app/AppShell';
 import Dashboard from '@/pages/Dashboard';
 import Generate from '@/pages/Generate';
+import BulkGenerate from '@/pages/BulkGenerate';
 import Templates from '@/pages/Templates';
 import Jobs from '@/pages/Jobs';
 import Settings from '@/pages/Settings';
@@ -23,6 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/generate" element={<Generate />} />
+            <Route path="/generate/bulk" element={<BulkGenerate />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/templates/:id" element={<Templates />} />
             <Route path="/jobs" element={<Jobs />} />
