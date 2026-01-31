@@ -20,16 +20,19 @@ import { PageHeader } from '@/components/app/PageHeader';
 import { PlanCard } from '@/components/app/PlanCard';
 import { CreditPackCard } from '@/components/app/CreditPackCard';
 import { CompetitorComparison } from '@/components/app/CompetitorComparison';
-import { mockShop, pricingPlans, creditPacks } from '@/data/mockData';
+import { useCredits } from '@/contexts/CreditContext';
+import { pricingPlans, creditPacks } from '@/data/mockData';
 import type { BrandTone, BackgroundStyle } from '@/types';
 import { toast } from 'sonner';
 
 export default function Settings() {
+  const { balance, addCredits } = useCredits();
+  
   // Brand defaults
-  const [brandTone, setBrandTone] = useState<BrandTone>(mockShop.brandDefaults.tone);
-  const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>(mockShop.brandDefaults.backgroundStyle);
-  const [negatives, setNegatives] = useState(mockShop.brandDefaults.negatives.join(', '));
-  const [consistencyEnabled, setConsistencyEnabled] = useState(mockShop.brandDefaults.consistencyEnabled);
+  const [brandTone, setBrandTone] = useState<BrandTone>('clean');
+  const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('studio');
+  const [negatives, setNegatives] = useState('text overlays, busy backgrounds, watermarks');
+  const [consistencyEnabled, setConsistencyEnabled] = useState(true);
 
   // Publishing defaults
   const [publishMode, setPublishMode] = useState<'add' | 'replace'>('add');
