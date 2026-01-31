@@ -1,169 +1,95 @@
 
 
-# Expand E-commerce Product Library for Full Market Coverage
+# Fix Missing Continue Button on Template Selection
 
-## Problem Summary
-The app currently only has sample products for **clothing/athleisure** (8 Alo Yoga items). All other supported categories (Cosmetics, Food, Home, Supplements) have templates but **zero sample products** - making it impossible for merchants in those industries to demo the app properly.
+## Problem
+After selecting a product and viewing templates, there's no visible "Continue" button at the bottom of the screen. The current Continue button is hidden inside the "Top Picks" card and disappears when users scroll down to browse more templates.
 
----
+## Solution
+Add a sticky footer bar that appears when a template is selected, ensuring users always have a clear path forward regardless of scroll position.
 
-## Solution Overview
+## Implementation
 
-### Part 1: Add Sample Products for Existing Categories (20 new products)
+### Step 1: Create Sticky Footer Component
+Add a fixed-position footer bar at the bottom of the template step that:
+- Appears only when a template has been selected
+- Shows the selected template name
+- Has a prominent Continue button
+- Stays visible while scrolling
 
-#### Cosmetics (5 products)
-| Product | Type | Brand Style |
-|---------|------|-------------|
-| Vitamin C Brightening Serum | Serums | The Ordinary |
-| Hydrating Hyaluronic Acid Cream | Moisturizers | CeraVe |
-| Matte Liquid Lipstick | Lip Products | Fenty Beauty |
-| Retinol Night Treatment | Treatments | Drunk Elephant |
-| Setting Powder Compact | Face Powder | Charlotte Tilbury |
+### Step 2: Update Template Step Layout
+Modify the template selection step to include:
+- A sticky footer bar when `selectedTemplate` is set
+- Add bottom padding to prevent content from being hidden behind the footer
 
-#### Food & Beverage (5 products)
-| Product | Type | Brand Style |
-|---------|------|-------------|
-| Organic Granola Mix | Cereal | Bear Naked |
-| Cold-Pressed Green Juice | Beverages | Pressed |
-| Artisan Chocolate Bar | Confectionery | Hu Kitchen |
-| Premium Coffee Beans | Coffee | Blue Bottle |
-| Organic Honey Jar | Spreads | Bee & Flower |
+### Changes to `src/pages/Generate.tsx`
 
-#### Home & Interior (5 products)
-| Product | Type | Brand Style |
-|---------|------|-------------|
-| Ceramic Pour-Over Carafe | Kitchen | Fellow |
-| Soy Wax Candle | Candles | Byredo |
-| Linen Throw Pillow | Textiles | Parachute |
-| Concrete Planter | Planters | West Elm |
-| Brass Table Lamp | Lighting | CB2 |
+**Location**: After the "Browse All Templates" card closes (around line 1280), add a sticky footer:
 
-#### Supplements & Wellness (5 products)
-| Product | Type | Brand Style |
-|---------|------|-------------|
-| Daily Multivitamin Gummies | Vitamins | Ritual |
-| Collagen Peptides Powder | Collagen | Vital Proteins |
-| Magnesium Sleep Capsules | Sleep | Moon Juice |
-| Greens Superfood Blend | Greens | Athletic Greens |
-| Omega-3 Fish Oil Softgels | Omega-3 | Nordic Naturals |
-
----
-
-### Part 2: Generate Product Images (20 images)
-
-Create professional product photography for each item:
-
-```text
-src/assets/products/
-├── [EXISTING 9 clothing images]
-├── serum-vitamin-c.jpg
-├── cream-hyaluronic.jpg
-├── lipstick-matte.jpg
-├── retinol-treatment.jpg
-├── powder-setting.jpg
-├── granola-organic.jpg
-├── juice-green.jpg
-├── chocolate-artisan.jpg
-├── coffee-beans.jpg
-├── honey-organic.jpg
-├── carafe-ceramic.jpg
-├── candle-soy.jpg
-├── pillow-linen.jpg
-├── planter-concrete.jpg
-├── lamp-brass.jpg
-├── vitamins-gummy.jpg
-├── collagen-powder.jpg
-├── magnesium-capsules.jpg
-├── greens-superfood.jpg
-├── omega-fish-oil.jpg
+```jsx
+{/* Sticky Continue Footer - Shows when template selected */}
+{selectedTemplate && (
+  <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-lg p-4">
+    <div className="max-w-5xl mx-auto">
+      <InlineStack align="space-between" blockAlign="center">
+        <InlineStack gap="300" blockAlign="center">
+          {/* Template thumbnail */}
+          <div className="w-10 h-10 rounded-md overflow-hidden border border-border">
+            <img src={getTemplateImage(selectedTemplate.templateId)} alt="" className="w-full h-full object-cover" />
+          </div>
+          <BlockStack gap="050">
+            <Text as="p" variant="bodySm" fontWeight="semibold">
+              {selectedTemplate.name}
+            </Text>
+            <Text as="p" variant="bodySm" tone="subdued">
+              {creditCost} credits
+            </Text>
+          </BlockStack>
+        </InlineStack>
+        <InlineStack gap="200">
+          <Button onClick={() => setSelectedTemplate(null)}>
+            Clear
+          </Button>
+          <Button variant="primary" onClick={() => setCurrentStep('settings')}>
+            Continue to Settings
+          </Button>
+        </InlineStack>
+      </InlineStack>
+    </div>
+  </div>
+)}
 ```
 
----
-
-### Part 3: Expand Product Type Detection
-
-Update `Generate.tsx` to recognize more product keywords:
-
-```text
-Current Detection Keywords:
-- Clothing: leggings, hoodie, t-shirt, sports bra, jacket, tank top, joggers, shorts, dress, sweater...
-
-NEW Keywords to Add:
-- Cosmetics: serum, moisturizer, lipstick, foundation, mascara, eyeshadow, cleanser, toner, essence, sunscreen, primer, concealer, blush, bronzer, highlighter
-- Food: cereal, granola, chocolate, coffee, tea, honey, jam, sauce, snack, bar, cookie, candy, nuts, dried fruit
-- Home: candle, vase, planter, pillow, blanket, lamp, clock, frame, mirror, rug, curtain, towel, mug, bowl, plate
-- Supplements: vitamin, supplement, capsule, powder, gummy, protein, collagen, probiotic, omega, mineral, herb, extract
+**Also add bottom padding** to the template step container to prevent content being hidden:
+```jsx
+{/* Add padding when footer is visible */}
+<div className={selectedTemplate ? 'pb-24' : ''}>
+  {/* Existing template content */}
+</div>
 ```
 
----
+### Visual Result
+```text
++------------------------------------------+
+|  Top Picks for Clothing                  |
+|  [Template 1] [Template 2] [Template 3]  |
++------------------------------------------+
+|  Browse All Templates                    |
+|  [All] [Clothing] [Cosmetics] ...        |
+|  [Template] [Template] [Template] ...    |
++------------------------------------------+
+                    |
+                    | User scrolls down
+                    v
++==========================================+
+| [img] Minimal Packaging     [Clear] [Continue to Settings]  | <-- STICKY FOOTER
+|       3 credits                                              |
++==========================================+
+```
 
-### Part 4: Add New Categories (Optional Expansion)
-
-Consider adding 3 new high-demand categories:
-
-| Category | Templates to Add | Sample Products |
-|----------|------------------|-----------------|
-| **Jewelry** | Elegant Studio, Lifestyle Wear, Detail Macro | Rings, Necklaces, Earrings |
-| **Electronics** | Tech Clean, Lifestyle Context, Unboxing | Phone Cases, Headphones, Chargers |
-| **Pet** | Studio Clean, Lifestyle Happy, Natural Outdoor | Pet Food, Toys, Accessories |
-
----
-
-## Implementation Steps
-
-### Step 1: Generate Product Images
-Create 20 AI-generated product photos with:
-- Clean white/gradient backgrounds
-- Professional product photography lighting
-- Consistent style matching existing clothing images
-
-### Step 2: Update mockData.ts
-- Import 20 new product images
-- Add 20 new Product entries organized by category
-- Ensure proper productType values for detection
-
-### Step 3: Expand Detection Keywords
-- Update `isClothingProduct()` function with more clothing terms
-- Add detection functions for cosmetics, food, home, supplements
-- Improve category auto-selection logic
-
----
-
-## Files to Modify
-
-**New files (20):**
-- `src/assets/products/serum-vitamin-c.jpg`
-- `src/assets/products/cream-hyaluronic.jpg`
-- `src/assets/products/lipstick-matte.jpg`
-- `src/assets/products/retinol-treatment.jpg`
-- `src/assets/products/powder-setting.jpg`
-- `src/assets/products/granola-organic.jpg`
-- `src/assets/products/juice-green.jpg`
-- `src/assets/products/chocolate-artisan.jpg`
-- `src/assets/products/coffee-beans.jpg`
-- `src/assets/products/honey-organic.jpg`
-- `src/assets/products/carafe-ceramic.jpg`
-- `src/assets/products/candle-soy.jpg`
-- `src/assets/products/pillow-linen.jpg`
-- `src/assets/products/planter-concrete.jpg`
-- `src/assets/products/lamp-brass.jpg`
-- `src/assets/products/vitamins-gummy.jpg`
-- `src/assets/products/collagen-powder.jpg`
-- `src/assets/products/magnesium-capsules.jpg`
-- `src/assets/products/greens-superfood.jpg`
-- `src/assets/products/omega-fish-oil.jpg`
-
-**Files to update:**
-- `src/data/mockData.ts` - Add imports and product entries
-- `src/pages/Generate.tsx` - Expand detection keywords
-
----
+## Files Changed
+- `src/pages/Generate.tsx` - Add sticky footer bar and bottom padding
 
 ## Result
-
-After implementation:
-- **28 total sample products** (8 clothing + 20 new)
-- **4 product categories fully populated** with realistic demo products
-- **Better category detection** for accurate template recommendations
-- **Complete demo experience** for merchants across major e-commerce verticals
+Users will always see a clear "Continue to Settings" button at the bottom of the screen when they've selected a template, regardless of how far they've scrolled.
 
