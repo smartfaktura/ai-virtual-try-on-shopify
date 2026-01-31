@@ -812,6 +812,9 @@ import modelFemaleAverageNordic from '@/assets/models/model-female-average-nordi
 import modelFemaleSlimChinese from '@/assets/models/model-female-slim-chinese.jpg';
 import modelFemaleAthleticMixed from '@/assets/models/model-female-athletic-mixed.jpg';
 import modelFemalePlussizeMiddleeast from '@/assets/models/model-female-plussize-middleeast.jpg';
+// Redhead models (2)
+import modelFemaleAverageIrish from '@/assets/models/model-female-average-irish.jpg';
+import modelMaleAthleticScottish from '@/assets/models/model-male-athletic-scottish.jpg';
 
 // Pose preview images
 import poseStudioFront from '@/assets/poses/pose-studio-front.jpg';
@@ -1118,6 +1121,25 @@ export const mockModels: ModelProfile[] = [
     ethnicity: 'Middle Eastern',
     ageRange: 'adult',
     previewUrl: modelFemalePlussizeMiddleeast,
+  },
+  // === REDHEAD MODELS (2) ===
+  {
+    modelId: 'model_033',
+    name: 'Sienna',
+    gender: 'female',
+    bodyType: 'average',
+    ethnicity: 'Irish',
+    ageRange: 'young-adult',
+    previewUrl: modelFemaleAverageIrish,
+  },
+  {
+    modelId: 'model_034',
+    name: 'Rowan',
+    gender: 'male',
+    bodyType: 'athletic',
+    ethnicity: 'Scottish',
+    ageRange: 'adult',
+    previewUrl: modelMaleAthleticScottish,
   },
 ];
 
