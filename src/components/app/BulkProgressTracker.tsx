@@ -77,7 +77,7 @@ export function BulkProgressTracker({
           
           <InlineStack gap="200">
             {isRunning && (
-              <Button icon={PauseIcon} onClick={onPause} size="slim">
+              <Button icon={PauseCircleIcon} onClick={onPause} size="slim">
                 Pause
               </Button>
             )}
