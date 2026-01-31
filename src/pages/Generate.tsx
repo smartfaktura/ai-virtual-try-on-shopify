@@ -69,6 +69,7 @@ export default function Generate() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialTemplateId = searchParams.get('template');
+  const { balance, isEmpty, openBuyModal, deductCredits, calculateCost } = useCredits();
   
   const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
@@ -124,6 +125,7 @@ export default function Generate() {
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
 
   // Virtual Try-On generation hook
   const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
