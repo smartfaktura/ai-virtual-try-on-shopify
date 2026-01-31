@@ -76,13 +76,13 @@ export default function Settings() {
   const handleCreditPurchase = (packId: string) => {
     const pack = creditPacks.find(p => p.packId === packId);
     if (pack) {
+      addCredits(pack.credits);
       toast.success(`Purchased ${pack.credits} credits for $${pack.price}!`);
     }
   };
 
-  const creditsUsed = 1000 - mockShop.creditsBalance;
   const creditsTotal = 1000;
-  const creditsPercentage = (mockShop.creditsBalance / creditsTotal) * 100;
+  const creditsPercentage = (balance / creditsTotal) * 100;
 
   const appVersion = '1.2.0';
   const lastUpdated = '2026-01-28';
