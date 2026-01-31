@@ -828,6 +828,21 @@ import poseStudioMovement from '@/assets/poses/pose-studio-movement.jpg';
 import poseLifestyleGarden from '@/assets/poses/pose-lifestyle-garden.jpg';
 import poseEditorialMinimal from '@/assets/poses/pose-editorial-minimal.jpg';
 import poseStreetwearStairs from '@/assets/poses/pose-streetwear-stairs.jpg';
+// Expanded pose library (14 new poses)
+import poseStudioBack from '@/assets/poses/pose-studio-back.jpg';
+import poseStudioCloseup from '@/assets/poses/pose-studio-closeup.jpg';
+import poseStudioArms from '@/assets/poses/pose-studio-arms.jpg';
+import poseLifestyleCoffee from '@/assets/poses/pose-lifestyle-coffee.jpg';
+import poseLifestyleBeach from '@/assets/poses/pose-lifestyle-beach.jpg';
+import poseLifestylePark from '@/assets/poses/pose-lifestyle-park.jpg';
+import poseLifestyleRooftop from '@/assets/poses/pose-lifestyle-rooftop.jpg';
+import poseEditorialWindow from '@/assets/poses/pose-editorial-window.jpg';
+import poseEditorialMoody from '@/assets/poses/pose-editorial-moody.jpg';
+import poseEditorialArtistic from '@/assets/poses/pose-editorial-artistic.jpg';
+import poseEditorialMotion from '@/assets/poses/pose-editorial-motion.jpg';
+import poseStreetwearBasketball from '@/assets/poses/pose-streetwear-basketball.jpg';
+import poseStreetwearUnderpass from '@/assets/poses/pose-streetwear-underpass.jpg';
+import poseStreetwearNeon from '@/assets/poses/pose-streetwear-neon.jpg';
 
 export const mockModels: ModelProfile[] = [
   {
@@ -1213,6 +1228,109 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Cool casual pose sitting on concrete stairs, industrial vibe',
     previewUrl: poseStreetwearStairs,
+  },
+  // === EXPANDED POSE LIBRARY (14 new poses) ===
+  // Studio Category (+3)
+  {
+    poseId: 'pose_011',
+    name: 'Studio Back View',
+    category: 'studio',
+    description: 'Elegant back pose showing garment rear details, shoulders angled',
+    previewUrl: poseStudioBack,
+  },
+  {
+    poseId: 'pose_012',
+    name: 'Studio Close-Up',
+    category: 'studio',
+    description: 'Torso-focused crop highlighting fabric texture and fit',
+    previewUrl: poseStudioCloseup,
+  },
+  {
+    poseId: 'pose_013',
+    name: 'Studio Crossed Arms',
+    category: 'studio',
+    description: 'Confident pose with crossed arms, direct eye contact',
+    previewUrl: poseStudioArms,
+  },
+  // Lifestyle Category (+4)
+  {
+    poseId: 'pose_014',
+    name: 'Coffee Shop Casual',
+    category: 'lifestyle',
+    description: 'Relaxed pose at cafe table with natural morning light',
+    previewUrl: poseLifestyleCoffee,
+  },
+  {
+    poseId: 'pose_015',
+    name: 'Beach Sunset',
+    category: 'lifestyle',
+    description: 'Coastal lifestyle scene with golden sunset backdrop',
+    previewUrl: poseLifestyleBeach,
+  },
+  {
+    poseId: 'pose_016',
+    name: 'Park Bench',
+    category: 'lifestyle',
+    description: 'Casual outdoor pose on wooden park bench with greenery',
+    previewUrl: poseLifestylePark,
+  },
+  {
+    poseId: 'pose_017',
+    name: 'Rooftop City',
+    category: 'lifestyle',
+    description: 'Urban rooftop with city skyline in background at dusk',
+    previewUrl: poseLifestyleRooftop,
+  },
+  // Editorial Category (+4)
+  {
+    poseId: 'pose_018',
+    name: 'Editorial Window',
+    category: 'editorial',
+    description: 'Silhouette against floor-to-ceiling window with natural light',
+    previewUrl: poseEditorialWindow,
+  },
+  {
+    poseId: 'pose_019',
+    name: 'Editorial Moody',
+    category: 'editorial',
+    description: 'Low-key studio lighting with single dramatic side light',
+    previewUrl: poseEditorialMoody,
+  },
+  {
+    poseId: 'pose_020',
+    name: 'Editorial Artistic',
+    category: 'editorial',
+    description: 'High-fashion pose with abstract geometric backdrop',
+    previewUrl: poseEditorialArtistic,
+  },
+  {
+    poseId: 'pose_021',
+    name: 'Editorial Movement',
+    category: 'editorial',
+    description: 'Dynamic motion blur effect with flowing hair/fabric',
+    previewUrl: poseEditorialMotion,
+  },
+  // Streetwear Category (+3)
+  {
+    poseId: 'pose_022',
+    name: 'Basketball Court',
+    category: 'streetwear',
+    description: 'Urban playground with chain-link fence backdrop',
+    previewUrl: poseStreetwearBasketball,
+  },
+  {
+    poseId: 'pose_023',
+    name: 'Industrial Underpass',
+    category: 'streetwear',
+    description: 'Industrial tunnel with dramatic overhead lighting',
+    previewUrl: poseStreetwearUnderpass,
+  },
+  {
+    poseId: 'pose_024',
+    name: 'Night Neon',
+    category: 'streetwear',
+    description: 'Night scene with neon signs and urban glow',
+    previewUrl: poseStreetwearNeon,
   },
 ];
 
