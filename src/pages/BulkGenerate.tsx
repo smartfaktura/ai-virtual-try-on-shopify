@@ -9,15 +9,14 @@ import {
   Banner,
   Divider,
 } from '@shopify/polaris';
-import { ArrowLeftIcon, PlayIcon } from '@shopify/polaris-icons';
+import { PlayIcon } from '@shopify/polaris-icons';
 import { PageHeader } from '@/components/app/PageHeader';
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
-import { BulkSettingsModal } from '@/components/app/BulkSettingsModal';
+import { BulkSettingsCard } from '@/components/app/BulkSettingsCard';
 import { BulkProgressTracker } from '@/components/app/BulkProgressTracker';
 import { BulkResultsView } from '@/components/app/BulkResultsView';
 import { useBulkGeneration } from '@/hooks/useBulkGeneration';
 import { mockProducts, mockTemplates, mockModels, mockTryOnPoses, mockShop } from '@/data/mockData';
-import type { Product } from '@/types';
 import type { BulkGenerationConfig } from '@/types/bulk';
 import { calculateBulkCredits, MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 import { toast } from 'sonner';
@@ -29,7 +28,6 @@ export default function BulkGenerate() {
   const [currentStep, setCurrentStep] = useState<BulkStep>('select');
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   const bulkGeneration = useBulkGeneration({
     models: mockModels,
@@ -64,16 +62,19 @@ export default function BulkGenerate() {
 
   const selectedProducts = mockProducts.filter(p => selectedProductIds.has(p.id));
 
-  const handleOpenSettings = () => {
+  const handleProceedToSettings = () => {
     if (selectedProductIds.size < 2) {
       toast.error('Select at least 2 products for bulk generation');
       return;
     }
-    setSettingsModalOpen(true);
+    setCurrentStep('settings');
+  };
+
+  const handleBackToSelection = () => {
+    setCurrentStep('select');
   };
 
   const handleStartGeneration = (config: BulkGenerationConfig) => {
-    setSettingsModalOpen(false);
     bulkGeneration.startBulkGeneration(selectedProducts, config);
     setCurrentStep('processing');
   };
@@ -164,14 +165,27 @@ export default function BulkGenerate() {
                 <Button
                   variant="primary"
                   icon={PlayIcon}
-                  onClick={handleOpenSettings}
+                  onClick={handleProceedToSettings}
                   disabled={selectedProductIds.size < 2}
                 >
-                  {`Configure Generation (${selectedProductIds.size} products)`}
+                  {`Continue to Settings (${selectedProductIds.size} products)`}
                 </Button>
               </InlineStack>
             </BlockStack>
           </Card>
+        )}
+
+        {/* Step: Settings (Inline) */}
+        {currentStep === 'settings' && (
+          <BulkSettingsCard
+            onBack={handleBackToSelection}
+            onConfirm={handleStartGeneration}
+            selectedProducts={selectedProducts}
+            templates={mockTemplates}
+            models={mockModels}
+            poses={mockTryOnPoses}
+            creditsBalance={mockShop.creditsBalance}
+          />
         )}
 
         {/* Step: Processing */}
@@ -193,18 +207,6 @@ export default function BulkGenerate() {
             onStartNew={handleStartNew}
           />
         )}
-
-        {/* Settings Modal */}
-        <BulkSettingsModal
-          open={settingsModalOpen}
-          onClose={() => setSettingsModalOpen(false)}
-          onConfirm={handleStartGeneration}
-          selectedProducts={selectedProducts}
-          templates={mockTemplates}
-          models={mockModels}
-          poses={mockTryOnPoses}
-          creditsBalance={mockShop.creditsBalance}
-        />
       </BlockStack>
     </PageHeader>
   );
