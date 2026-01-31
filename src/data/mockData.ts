@@ -792,6 +792,26 @@ import modelFemaleSlimNordic from '@/assets/models/model-female-slim-nordic.jpg'
 import modelFemaleAverageMiddleeast from '@/assets/models/model-female-average-middleeast.jpg';
 import modelFemalePlussizeAfrican from '@/assets/models/model-female-plussize-african.jpg';
 import modelFemalePetiteKorean from '@/assets/models/model-female-petite-korean.jpg';
+// New expanded male models (10)
+import modelMaleAthleticEuropean from '@/assets/models/model-male-athletic-european.jpg';
+import modelMaleAthleticLatino from '@/assets/models/model-male-athletic-latino.jpg';
+import modelMaleAthleticJapanese from '@/assets/models/model-male-athletic-japanese.jpg';
+import modelMaleSlimNordic from '@/assets/models/model-male-slim-nordic.jpg';
+import modelMaleAverageLatino from '@/assets/models/model-male-average-latino.jpg';
+import modelMalePlussizeAfrican from '@/assets/models/model-male-plussize-african.jpg';
+import modelMaleSlimIndian from '@/assets/models/model-male-slim-indian.jpg';
+import modelMaleAverageChinese from '@/assets/models/model-male-average-chinese.jpg';
+import modelMaleAthleticMixed from '@/assets/models/model-male-athletic-mixed.jpg';
+import modelMalePlussizeLatino from '@/assets/models/model-male-plussize-latino.jpg';
+// New expanded female models (8)
+import modelFemaleAthleticEuropean from '@/assets/models/model-female-athletic-european.jpg';
+import modelFemaleAthleticLatina from '@/assets/models/model-female-athletic-latina.jpg';
+import modelFemaleAverageAfrican from '@/assets/models/model-female-average-african.jpg';
+import modelFemalePlussizeJapanese from '@/assets/models/model-female-plussize-japanese.jpg';
+import modelFemaleAverageNordic from '@/assets/models/model-female-average-nordic.jpg';
+import modelFemaleSlimChinese from '@/assets/models/model-female-slim-chinese.jpg';
+import modelFemaleAthleticMixed from '@/assets/models/model-female-athletic-mixed.jpg';
+import modelFemalePlussizeMiddleeast from '@/assets/models/model-female-plussize-middleeast.jpg';
 
 // Pose preview images
 import poseStudioFront from '@/assets/poses/pose-studio-front.jpg';
