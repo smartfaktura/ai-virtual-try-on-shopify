@@ -123,6 +123,9 @@ export default function Generate() {
 
   // Virtual Try-On generation hook
   const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
+  
+  // Product-only generation hook
+  const { generate: generateProduct, isLoading: isProductGenerating, progress: productProgress } = useGenerateProduct();
 
   const categories: Array<{ id: TemplateCategory | 'all'; label: string }> = [
     { id: 'all', label: 'All Templates' },
