@@ -24,8 +24,8 @@ export function SourceTypeSelector({ sourceType, onChange }: SourceTypeSelectorP
   }> = [
     {
       id: 'product',
-      title: 'From Product',
-      description: 'Select an existing Shopify product with images',
+      title: 'From Product(s)',
+      description: 'Select one or multiple Shopify products',
       icon: ProductIcon,
     },
     {
