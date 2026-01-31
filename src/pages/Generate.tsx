@@ -707,90 +707,78 @@ export default function Generate() {
         {/* Step 1b: Product Selection (From Product) */}
         {currentStep === 'product' && (
           <Card>
-            <BlockStack gap="400">
+            <BlockStack gap="500">
               <InlineStack align="space-between">
-                <Text as="h2" variant="headingMd">
-                  Select a Product
-                </Text>
+                <BlockStack gap="100">
+                  <Text as="h2" variant="headingMd">
+                    Select Product(s)
+                  </Text>
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Choose one or multiple products. Selecting 2+ will use bulk generation with shared settings.
+                  </Text>
+                </BlockStack>
                 <Button variant="plain" onClick={() => setCurrentStep('source')}>
                   Change source
                 </Button>
               </InlineStack>
-              <Text as="p" variant="bodyMd" tone="subdued">
-                Choose the product you want to generate images for. The AI will use your product details to create the perfect shots.
-              </Text>
               
-              {/* Recent products */}
-              <RecentProductsList
+              <ProductMultiSelect
                 products={mockProducts}
-                onSelect={handleSelectProduct}
-                maxItems={3}
+                selectedIds={selectedProductIds}
+                onSelectionChange={setSelectedProductIds}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
               />
-              
-              <Divider />
-              
-              <Button
-                variant="secondary"
-                size="large"
-                onClick={() => setProductPickerOpen(true)}
-              >
-                Browse All Products
-              </Button>
+
+              <InlineStack align="space-between">
+                <Button onClick={() => setCurrentStep('source')}>
+                  Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={selectedProductIds.size === 0}
+                  onClick={() => {
+                    const selectedProducts = mockProducts.filter(p => selectedProductIds.has(p.id));
+                    
+                    if (selectedProducts.length === 1) {
+                      // Single product - continue with single flow
+                      const product = selectedProducts[0];
+                      setSelectedProduct(product);
+                      // Auto-select first image as source
+                      if (product.images.length > 0) {
+                        setSelectedSourceImages(new Set([product.images[0].id]));
+                      }
+                      // Auto-recommend category
+                      const productType = product.productType.toLowerCase();
+                      if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel')) {
+                        setSelectedCategory('clothing');
+                      } else if (productType.includes('serum') || productType.includes('cream') || productType.includes('beauty')) {
+                        setSelectedCategory('cosmetics');
+                      }
+                      
+                      if (isClothingProduct(product)) {
+                        setCurrentStep('mode');
+                      } else {
+                        setCurrentStep('template');
+                      }
+                    } else {
+                      // Multiple products - go to bulk flow
+                      navigate('/generate/bulk', { 
+                        state: { selectedProducts } 
+                      });
+                    }
+                  }}
+                >
+                  {selectedProductIds.size === 0 
+                    ? 'Select at least 1 product' 
+                    : selectedProductIds.size === 1 
+                      ? 'Continue with 1 product' 
+                      : `Continue with ${selectedProductIds.size} products`}
+                </Button>
+              </InlineStack>
             </BlockStack>
           </Card>
         )}
-
-        {/* Product Picker Modal */}
-        <Modal
-          open={productPickerOpen}
-          onClose={() => setProductPickerOpen(false)}
-          title="Select a Product"
-          size="large"
-        >
-          <Modal.Section>
-            <BlockStack gap="400">
-              <TextField
-                label="Search products"
-                labelHidden
-                placeholder="Search by name or vendor..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-                prefix={<Icon source={SearchIcon} />}
-                autoComplete="off"
-              />
-              <BlockStack gap="200">
-                {filteredProducts.map(product => (
-                  <div
-                    key={product.id}
-                    className="p-3 border border-border rounded-lg cursor-pointer hover:bg-surface-hovered transition-colors"
-                    onClick={() => handleSelectProduct(product)}
-                  >
-                    <InlineStack gap="400" blockAlign="center">
-                      <Thumbnail
-                        source={product.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                        alt={product.title}
-                        size="medium"
-                      />
-                      <BlockStack gap="100">
-                        <Text as="p" variant="bodyMd" fontWeight="semibold">
-                          {product.title}
-                        </Text>
-                        <Text as="p" variant="bodySm" tone="subdued">
-                          {product.vendor} • {product.productType}
-                        </Text>
-                        <InlineStack gap="100">
-                          {product.tags.slice(0, 3).map(tag => (
-                            <Badge key={tag} tone="info">{tag}</Badge>
-                          ))}
-                        </InlineStack>
-                      </BlockStack>
-                    </InlineStack>
-                  </div>
-                ))}
-              </BlockStack>
-            </BlockStack>
-          </Modal.Section>
-        </Modal>
 
         {/* Mode Selection - Works for both product and scratch uploads */}
         {currentStep === 'mode' && (selectedProduct || scratchUpload) && (
