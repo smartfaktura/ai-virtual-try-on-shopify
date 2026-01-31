@@ -1990,7 +1990,8 @@ export default function Generate() {
         imageCount={parseInt(imageCount)}
         aspectRatio={aspectRatio}
         quality={quality}
-        creditsRemaining={mockShop.creditsBalance}
+        creditsRemaining={balance}
+        onBuyCredits={openBuyModal}
       />
 
       <TryOnConfirmModal
@@ -2002,8 +2003,9 @@ export default function Generate() {
         pose={selectedPose}
         imageCount={parseInt(imageCount)}
         aspectRatio={aspectRatio}
-        creditsRemaining={mockShop.creditsBalance}
+        creditsRemaining={balance}
         isLoading={isTryOnGenerating}
+        onBuyCredits={openBuyModal}
         sourceImageUrl={
           selectedProduct && selectedSourceImages.size > 0
             ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url
