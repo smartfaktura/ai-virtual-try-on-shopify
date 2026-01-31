@@ -38,15 +38,13 @@ export function BuyCreditsModal() {
       <Modal.Section>
         <BlockStack gap="500">
           {/* Current balance */}
-          <div className="p-4 rounded-lg bg-surface-subdued border border-border">
-            <InlineStack gap="200" blockAlign="center">
-              <Icon source={WalletIcon} />
-              <BlockStack gap="050">
-                <Text as="p" variant="bodySm" tone="subdued">Current Balance</Text>
-                <Text as="p" variant="headingMd" fontWeight="bold">
-                  {balance} credits
-                </Text>
-              </BlockStack>
+          <div className="p-3 rounded-lg bg-muted border border-border">
+            <InlineStack gap="200" blockAlign="center" align="center">
+              <Icon source={WalletIcon} tone="subdued" />
+              <Text as="p" variant="bodySm" tone="subdued">Current Balance:</Text>
+              <Text as="p" variant="headingMd" fontWeight="bold">
+                {balance} credits
+              </Text>
             </InlineStack>
           </div>
           
