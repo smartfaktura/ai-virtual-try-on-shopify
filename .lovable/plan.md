@@ -1,95 +1,149 @@
 
+# Implement Real Product Image Generation
 
-# Fix Missing Continue Button on Template Selection
+## Current Problem
 
-## Problem
-After selecting a product and viewing templates, there's no visible "Continue" button at the bottom of the screen. The current Continue button is hidden inside the "Top Picks" card and disappears when users scroll down to browse more templates.
+The "Product-Only" generation mode is completely mocked:
+- `handleConfirmGenerate` in Generate.tsx (lines 313-406) simulates a 4-second delay
+- Returns random Unsplash stock images based on template category
+- No actual AI is called - unlike Virtual Try-On which works perfectly
+
+**Result**: The generated image shows random unrelated photos (like a smartwatch for Magnesium Sleep Capsules)
 
 ## Solution
-Add a sticky footer bar that appears when a template is selected, ensuring users always have a clear path forward regardless of scroll position.
 
-## Implementation
+Create a real AI generation flow for product photography, mirroring the working Virtual Try-On implementation.
 
-### Step 1: Create Sticky Footer Component
-Add a fixed-position footer bar at the bottom of the template step that:
-- Appears only when a template has been selected
-- Shows the selected template name
-- Has a prominent Continue button
-- Stays visible while scrolling
+### Architecture Overview
 
-### Step 2: Update Template Step Layout
-Modify the template selection step to include:
-- A sticky footer bar when `selectedTemplate` is set
-- Add bottom padding to prevent content from being hidden behind the footer
-
-### Changes to `src/pages/Generate.tsx`
-
-**Location**: After the "Browse All Templates" card closes (around line 1280), add a sticky footer:
-
-```jsx
-{/* Sticky Continue Footer - Shows when template selected */}
-{selectedTemplate && (
-  <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-lg p-4">
-    <div className="max-w-5xl mx-auto">
-      <InlineStack align="space-between" blockAlign="center">
-        <InlineStack gap="300" blockAlign="center">
-          {/* Template thumbnail */}
-          <div className="w-10 h-10 rounded-md overflow-hidden border border-border">
-            <img src={getTemplateImage(selectedTemplate.templateId)} alt="" className="w-full h-full object-cover" />
-          </div>
-          <BlockStack gap="050">
-            <Text as="p" variant="bodySm" fontWeight="semibold">
-              {selectedTemplate.name}
-            </Text>
-            <Text as="p" variant="bodySm" tone="subdued">
-              {creditCost} credits
-            </Text>
-          </BlockStack>
-        </InlineStack>
-        <InlineStack gap="200">
-          <Button onClick={() => setSelectedTemplate(null)}>
-            Clear
-          </Button>
-          <Button variant="primary" onClick={() => setCurrentStep('settings')}>
-            Continue to Settings
-          </Button>
-        </InlineStack>
-      </InlineStack>
-    </div>
-  </div>
-)}
-```
-
-**Also add bottom padding** to the template step container to prevent content being hidden:
-```jsx
-{/* Add padding when footer is visible */}
-<div className={selectedTemplate ? 'pb-24' : ''}>
-  {/* Existing template content */}
-</div>
-```
-
-### Visual Result
 ```text
-+------------------------------------------+
-|  Top Picks for Clothing                  |
-|  [Template 1] [Template 2] [Template 3]  |
-+------------------------------------------+
-|  Browse All Templates                    |
-|  [All] [Clothing] [Cosmetics] ...        |
-|  [Template] [Template] [Template] ...    |
-+------------------------------------------+
-                    |
-                    | User scrolls down
-                    v
-+==========================================+
-| [img] Minimal Packaging     [Clear] [Continue to Settings]  | <-- STICKY FOOTER
-|       3 credits                                              |
-+==========================================+
++----------------+     +-------------------+     +------------------+
+| Generate.tsx   | --> | useGenerateProduct| --> | generate-product |
+| (Settings UI)  |     | (React Hook)      |     | (Edge Function)  |
++----------------+     +-------------------+     +------------------+
+        |                       |                        |
+        v                       v                        v
+  Product + Template     Convert to Base64        Build prompt from
+  + Brand Settings       Call Edge Function       template blueprint
+                                                  Call Lovable AI
+                                                  Return images
 ```
 
-## Files Changed
-- `src/pages/Generate.tsx` - Add sticky footer bar and bottom padding
+### Files to Create
+
+**1. Edge Function: `supabase/functions/generate-product/index.ts`**
+
+New edge function that:
+- Accepts product image, template promptBlueprint, brand settings
+- Builds comprehensive prompt using template data (sceneDescription, lighting, cameraStyle, backgroundRules)
+- Includes brand tone and style preferences
+- Calls Lovable AI Gateway (`google/gemini-2.5-flash-image`)
+- Returns generated product photography
+
+Request payload:
+```typescript
+{
+  product: {
+    title: string;
+    productType: string;
+    description: string;
+    imageUrl: string;  // Base64 encoded
+  };
+  template: {
+    name: string;
+    promptBlueprint: {
+      sceneDescription: string;
+      lighting: string;
+      cameraStyle: string;
+      backgroundRules: string;
+      constraints: { do: string[]; dont: string[] };
+    };
+    negativePrompt: string;
+  };
+  brandSettings: {
+    tone: string;
+    backgroundStyle: string;
+  };
+  aspectRatio: "1:1" | "4:5" | "16:9";
+  imageCount: number;
+}
+```
+
+**2. React Hook: `src/hooks/useGenerateProduct.ts`**
+
+New hook (similar to useGenerateTryOn) that:
+- Manages loading and progress state
+- Converts product image to Base64
+- Calls the edge function
+- Returns generated images
+- Handles errors (429 rate limit, 402 payment required)
+
+### Files to Modify
+
+**3. Update: `src/pages/Generate.tsx`**
+
+Replace mock `handleConfirmGenerate` function:
+- Import and use `useGenerateProduct` hook
+- Pass real template promptBlueprint data
+- Pass brand settings (tone, backgroundStyle)
+- Handle the response and update generatedImages state
+
+---
+
+## Technical Details
+
+### Prompt Engineering for Product Photography
+
+The edge function will build prompts like:
+
+```text
+Create a professional e-commerce product photograph of [PRODUCT IMAGE].
+
+PRODUCT DETAILS:
+- Product: Collagen Peptides Powder
+- Type: Supplements/Health
+- Description: Premium collagen peptides for beauty and wellness
+
+PHOTOGRAPHY STYLE:
+- Scene: {template.sceneDescription}
+- Lighting: {template.lighting}  
+- Camera: {template.cameraStyle}
+- Background: {template.backgroundRules}
+
+BRAND GUIDELINES:
+- Tone: Clean and minimal
+- Style: Studio lighting with neutral backdrop
+
+REQUIREMENTS:
+- DO: {constraints.do.join(', ')}
+- DON'T: {constraints.dont.join(', ')}
+
+The product must match [PRODUCT IMAGE] exactly - same packaging, colors, labels.
+```
+
+### Edge Function Config
+
+Update `supabase/config.toml`:
+```toml
+[functions.generate-product]
+verify_jwt = false
+```
+
+---
+
+## Implementation Summary
+
+| Step | File | Action |
+|------|------|--------|
+| 1 | `supabase/functions/generate-product/index.ts` | Create new edge function |
+| 2 | `src/hooks/useGenerateProduct.ts` | Create new hook |
+| 3 | `src/pages/Generate.tsx` | Replace mock generation with real AI |
+| 4 | `supabase/config.toml` | Add function config |
 
 ## Result
-Users will always see a clear "Continue to Settings" button at the bottom of the screen when they've selected a template, regardless of how far they've scrolled.
 
+After implementation:
+- Product photography generation will use real AI (same as Virtual Try-On)
+- Images will be generated based on the selected template style
+- Product appearance will be preserved while applying new backgrounds/lighting
+- Brand settings will influence the final aesthetic
