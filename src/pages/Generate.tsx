@@ -166,17 +166,52 @@ export default function Generate() {
   const isClothingProduct = (product: Product | null) => {
     if (!product) return false;
     const productType = product.productType.toLowerCase();
-    // Expanded keywords to include all athleisure and athletic clothing
     const clothingKeywords = [
       'sweater', 'shirt', 'apparel', 'dress', 'jacket', 'pants', 'jeans', 'coat', 
       'blouse', 'skirt', 'suit', 'hoodie', 't-shirt', 'clothing',
-      // Athletic/athleisure additions
       'legging', 'bra', 'sports bra', 'tank', 'jogger', 'shorts', 'top', 
       'long sleeve', 'crop', 'bodysuit', 'romper', 'jumpsuit', 'sweatshirt',
       'pullover', 'cardigan', 'vest', 'active', 'athletic', 'yoga', 'workout'
     ];
     return clothingKeywords.some(kw => productType.includes(kw)) || 
            product.tags.some(tag => clothingKeywords.some(kw => tag.toLowerCase().includes(kw)));
+  };
+
+  // Detect product category for template recommendations
+  const detectProductCategory = (product: Product | null): TemplateCategory | null => {
+    if (!product) return null;
+    const type = product.productType.toLowerCase();
+    const tags = product.tags.map(t => t.toLowerCase()).join(' ');
+    const combined = `${type} ${tags}`;
+
+    // Cosmetics keywords
+    const cosmeticsKeywords = ['serum', 'moisturizer', 'lipstick', 'foundation', 'mascara', 'eyeshadow', 
+      'cleanser', 'toner', 'essence', 'sunscreen', 'primer', 'concealer', 'blush', 'bronzer', 
+      'highlighter', 'skincare', 'beauty', 'makeup', 'cream', 'treatment', 'powder', 'lip'];
+    if (cosmeticsKeywords.some(kw => combined.includes(kw))) return 'cosmetics';
+
+    // Food keywords
+    const foodKeywords = ['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'jam', 'sauce', 
+      'snack', 'bar', 'cookie', 'candy', 'nuts', 'dried fruit', 'beverage', 'juice', 'food', 
+      'organic', 'artisan', 'spread', 'confectionery'];
+    if (foodKeywords.some(kw => combined.includes(kw))) return 'food';
+
+    // Home keywords
+    const homeKeywords = ['candle', 'vase', 'planter', 'pillow', 'blanket', 'lamp', 'clock', 'frame', 
+      'mirror', 'rug', 'curtain', 'towel', 'mug', 'bowl', 'plate', 'decor', 'home', 'interior', 
+      'kitchen', 'lighting', 'textile', 'carafe', 'ceramic'];
+    if (homeKeywords.some(kw => combined.includes(kw))) return 'home';
+
+    // Supplements keywords
+    const supplementKeywords = ['vitamin', 'supplement', 'capsule', 'powder', 'gummy', 'protein', 
+      'collagen', 'probiotic', 'omega', 'mineral', 'herb', 'extract', 'wellness', 'health', 
+      'greens', 'superfood', 'sleep', 'energy'];
+    if (supplementKeywords.some(kw => combined.includes(kw))) return 'supplements';
+
+    // Clothing check
+    if (isClothingProduct(product)) return 'clothing';
+
+    return null;
   };
 
   const handleSelectProduct = (product: Product) => {
