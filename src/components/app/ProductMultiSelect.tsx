@@ -98,6 +98,7 @@ export function ProductMultiSelect({
           
           return (
             <div
+              key={productKey}
               key={product.id}
               onClick={() => !isDisabled && handleToggle(product.id)}
               className={`

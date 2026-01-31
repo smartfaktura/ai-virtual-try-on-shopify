@@ -100,7 +100,7 @@ function ProductResultSection({
                   const isSelected = selectedImages.has(index);
                   return (
                     <div 
-                      key={index}
+                      key={String(index)}
                       onClick={() => onImageToggle(index)}
                       className={`
                         relative aspect-square rounded-lg overflow-hidden cursor-pointer

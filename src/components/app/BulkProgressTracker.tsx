@@ -183,7 +183,7 @@ export function BulkProgressTracker({
                 {item.status === 'completed' && item.results && item.results.length > 0 && (
                   <div className="mt-2 flex gap-1 overflow-x-auto">
                     {item.results.slice(0, 4).map((imgUrl, imgIndex) => (
-                      <div key={imgIndex} className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                      <div key={String(imgIndex)} className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
                         <img 
                           src={imgUrl} 
                           alt={`Generated ${imgIndex + 1}`}

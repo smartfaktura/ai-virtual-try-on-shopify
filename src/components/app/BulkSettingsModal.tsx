@@ -265,13 +265,13 @@ export function BulkSettingsModal({
           <Divider />
 
           {/* Credit summary */}
-          <Card>
+          <div className="p-4 rounded-lg border border-border bg-muted/30">
             <BlockStack gap="200">
               <InlineStack align="space-between">
                 <Text as="span" variant="bodyMd">Estimated cost:</Text>
                 <InlineStack gap="200" align="center">
                   <Badge tone={hasEnoughCredits ? 'success' : 'critical'}>
-                    {estimatedCredits} credits
+                    {String(estimatedCredits)} credits
                   </Badge>
                 </InlineStack>
               </InlineStack>
@@ -287,7 +287,7 @@ export function BulkSettingsModal({
                 </Banner>
               )}
             </BlockStack>
-          </Card>
+          </div>
         </BlockStack>
       </Modal.Section>
     </Modal>
