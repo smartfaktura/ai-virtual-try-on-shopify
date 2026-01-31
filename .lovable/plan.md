@@ -1,80 +1,82 @@
 
-# Bulk Generation Settings - Inline Step (be popup)
+# Bulk Generation Integration į Product Selection
 
 ## Problema
-Dabartinis modal popup:
-- Perdengia puslapį ir sukelia "context switch"
-- Sunku naviguoti tarp žingsnių
-- Nepatogu mobiliuose
-- Nenuoseklu su kitais app flow
+Dabartinis "Bulk Generate" mygtukas yra atskiras entry point, kuris sukuria nereikalingą kompleksiškumą. Logiškiau integruoti multi-select tiesiai į produktų pasirinkimo žingsnį.
 
 ## Sprendimas
-Pakeisti modal į **inline step** tame pačiame puslapyje:
-- Step 1: Produktų pasirinkimas → Step 2: Nustatymai (inline) → Step 3: Processing → Step 4: Results
+Pakeisti produktų picker'į, kad leistų pasirinkti vieną ARBA kelis produktus, ir automatiškai nukreipti į atitinkamą flow.
 
 ## UI Flow po pakeitimo
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│  BULK GENERATION                                             │
-│  ← Back to Generate                                          │
-├─────────────────────────────────────────────────────────────┤
+│  How do you want to start?                                   │
 │                                                              │
-│  ● Step 1: Select Products  ──── ○ Step 2: Settings         │
+│  ┌─────────────────────┐  ┌─────────────────────┐           │
+│  │  From Product(s)    │  │  From Scratch       │           │
+│  │  Select products    │  │  Upload your own    │           │
+│  └─────────────────────┘  └─────────────────────┘           │
 │                                                              │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  [Settings Card - INLINE]                              │ │
-│  │                                                        │ │
-│  │  Summary: 2 products selected                          │ │
-│  │                                                        │ │
-│  │  Generation Mode                                       │ │
-│  │  ○ Product Photography    ● Virtual Try-On             │ │
-│  │                                                        │ │
-│  │  Select Model                                          │ │
-│  │  [Grid of models...]                                   │ │
-│  │                                                        │ │
-│  │  Select Pose                                           │ │
-│  │  [Grid of poses...]                                    │ │
-│  │                                                        │ │
-│  │  Options: 4 images | 1:1 | Standard                    │ │
-│  │                                                        │ │
-│  │  Cost: 24 credits    Balance: 500 credits              │ │
-│  │                                                        │ │
-│  │  [← Back]                      [Generate 8 Images →]   │ │
-│  └────────────────────────────────────────────────────────┘ │
-│                                                              │
+│  [Continue]                                                  │
 └─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Select Product(s)                                           │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  [Search products...]                                 │   │
+│  │                                                       │   │
+│  │  ○ 1 selected = Single mode                          │   │
+│  │  ○ 2-20 selected = Bulk mode (same settings for all) │   │
+│  │                                                       │   │
+│  │  [✓] Tank Top White     [ ] Leggings Black           │   │
+│  │  [✓] Sports Bra         [ ] Hoodie Gray              │   │
+│  │                                                       │   │
+│  │  Selected: 2 products                                 │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                              │
+│  [← Back]                          [Continue with 2 →]      │
+└─────────────────────────────────────────────────────────────┘
+                           │
+           ┌───────────────┴───────────────┐
+           │                               │
+     1 product                       2+ products
+           │                               │
+           ▼                               ▼
+   [Single Flow]                   [Bulk Flow]
+   (Template/Model...)             (Settings for all...)
 ```
 
 ## Techniniai pakeitimai
 
 | Failas | Pakeitimas |
 |--------|------------|
-| `src/components/app/BulkSettingsModal.tsx` | Pervadinti į `BulkSettingsCard.tsx`, pašalinti Modal wrapper, palikti turinį kaip Card |
-| `src/pages/BulkGenerate.tsx` | Pakeisti step flow - vietoj modal atidarymo rodyti settings Card inline |
+| `src/pages/Generate.tsx` | Pašalinti "Bulk Generate" mygtuką, pridėti multi-select logiką produktų žingsnyje |
+| `src/components/app/SourceTypeSelector.tsx` | Pakeisti "From Product" į "From Product(s)" su description apie bulk |
+| `src/components/app/ProductMultiSelect.tsx` | Panaudoti jau sukurtą komponentą produktų pasirinkimui |
 
 ## Detali implementacija
 
-### 1. Sukurti `BulkSettingsCard.tsx`
-- Paimti visą turinį iš `BulkSettingsModal.tsx`
-- Pašalinti `<Modal>` wrapper
-- Apgaubti į `<Card>` su proper spacing
-- Pridėti "Back" mygtuką grįžti į produktų pasirinkimą
-- Pridėti step indicator viršuje
+### 1. Atnaujinti `SourceTypeSelector.tsx`
+- Pakeisti "From Product" label į "From Product(s)"
+- Atnaujinti description: "Select one or multiple Shopify products"
 
-### 2. Atnaujinti `BulkGenerate.tsx`
-- Pašalinti `settingsModalOpen` state
-- Pridėti `currentStep === 'settings'` atvejį
-- Rodyti `BulkSettingsCard` inline vietoj modal
-- Atnaujinti step navigaciją
+### 2. Atnaujinti `Generate.tsx`
+- Pašalinti "Bulk Generate" mygtuką iš source step
+- Pakeisti `selectedProduct: Product | null` į `selectedProducts: Product[]`
+- Produktų pasirinkimo žingsnyje naudoti `ProductMultiSelect` komponentą
+- Po produktų pasirinkimo:
+  - Jei `selectedProducts.length === 1` → tęsti single flow (template/model selection)
+  - Jei `selectedProducts.length >= 2` → redirect į `/generate/bulk` su pasirinktais produktais
 
-### 3. Step indicator
-- Vizualus progress: `Select Products → Configure Settings → Processing → Results`
-- Galimybė grįžti atgal per žingsnius
+### 3. State perdavimas
+- Perduoti pasirinktus produktus į BulkGenerate per URL state arba context
+- Arba: integruoti bulk flow tiesiai į Generate.tsx kaip papildomą step variantą
 
 ## Privalumai
 
-1. **Nuoseklus flow** - vartotojas mato visą procesą vienoje vietoje
-2. **Lengvesnė navigacija** - Back/Next mygtukai vietoj modal close
-3. **Geresnis mobile UX** - nėra overlay, viskas scrollable
-4. **Shopify Admin pattern** - atitinka Polaris wizard guidelines
+1. **Vienas entry point** - viskas prasideda nuo "From Product(s)"
+2. **Intuityvus UX** - checkboxai produktų sąraše yra natūralus pattern
+3. **Mažiau UI clutter** - nereikia atskiro "Bulk Generate" mygtuko
+4. **Nuoseklus flow** - vartotojas pats pasirenka ar nori single ar bulk
