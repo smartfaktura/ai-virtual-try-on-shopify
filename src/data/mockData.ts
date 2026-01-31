@@ -828,6 +828,21 @@ import poseStudioMovement from '@/assets/poses/pose-studio-movement.jpg';
 import poseLifestyleGarden from '@/assets/poses/pose-lifestyle-garden.jpg';
 import poseEditorialMinimal from '@/assets/poses/pose-editorial-minimal.jpg';
 import poseStreetwearStairs from '@/assets/poses/pose-streetwear-stairs.jpg';
+// Expanded pose library (14 new poses)
+import poseStudioBack from '@/assets/poses/pose-studio-back.jpg';
+import poseStudioCloseup from '@/assets/poses/pose-studio-closeup.jpg';
+import poseStudioArms from '@/assets/poses/pose-studio-arms.jpg';
+import poseLifestyleCoffee from '@/assets/poses/pose-lifestyle-coffee.jpg';
+import poseLifestyleBeach from '@/assets/poses/pose-lifestyle-beach.jpg';
+import poseLifestylePark from '@/assets/poses/pose-lifestyle-park.jpg';
+import poseLifestyleRooftop from '@/assets/poses/pose-lifestyle-rooftop.jpg';
+import poseEditorialWindow from '@/assets/poses/pose-editorial-window.jpg';
+import poseEditorialMoody from '@/assets/poses/pose-editorial-moody.jpg';
+import poseEditorialArtistic from '@/assets/poses/pose-editorial-artistic.jpg';
+import poseEditorialMotion from '@/assets/poses/pose-editorial-motion.jpg';
+import poseStreetwearBasketball from '@/assets/poses/pose-streetwear-basketball.jpg';
+import poseStreetwearUnderpass from '@/assets/poses/pose-streetwear-underpass.jpg';
+import poseStreetwearNeon from '@/assets/poses/pose-streetwear-neon.jpg';
 
 export const mockModels: ModelProfile[] = [
   {
