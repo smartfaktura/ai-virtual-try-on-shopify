@@ -55,6 +55,7 @@ import { UploadSourceCard } from '@/components/app/UploadSourceCard';
 import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal';
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { detectProductCategory } from '@/lib/categoryUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
