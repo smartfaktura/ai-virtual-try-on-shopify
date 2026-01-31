@@ -955,6 +955,7 @@ export const mockJobs: GenerationJob[] = [
     promptFinal: 'Professional athleisure photography. Airlift High-Waist Legging by Alo Yoga. Soft diffused studio lighting with subtle rim light. Full body shot showcasing fabric stretch and fit. Clean white seamless backdrop.',
     status: 'completed',
     requestedCount: 4,
+    creditsUsed: 4,
     ratio: '4:5',
     quality: 'high',
     results: [
@@ -1009,6 +1010,7 @@ export const mockJobs: GenerationJob[] = [
     promptFinal: 'Lifestyle streetwear photography. Alo Accolade Hoodie by Alo Yoga. Golden hour natural light with soft shadows. Urban street setting with modern architecture.',
     status: 'completed',
     requestedCount: 4,
+    creditsUsed: 4,
     ratio: '4:5',
     quality: 'high',
     results: [
@@ -1049,6 +1051,7 @@ export const mockJobs: GenerationJob[] = [
     promptFinal: 'Studio athleisure photography. Airlift Intrigue Bra by Alo Yoga. Clean studio lighting highlighting strappy back design.',
     status: 'generating',
     requestedCount: 4,
+    creditsUsed: 4,
     ratio: '4:5',
     quality: 'high',
     results: [],
@@ -1072,6 +1075,7 @@ export const mockJobs: GenerationJob[] = [
     promptFinal: 'Lifestyle photography. Micro Waffle Sundown Jogger by Alo Yoga. Cozy home environment with natural light.',
     status: 'failed',
     requestedCount: 4,
+    creditsUsed: 0,
     ratio: '4:5',
     quality: 'standard',
     results: [],

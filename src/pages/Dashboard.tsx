@@ -43,6 +43,9 @@ export default function Dashboard() {
     </InlineStack>,
     job.templateSnapshot.name,
     <StatusBadge key={`status-${job.jobId}`} status={job.status} />,
+    <Text as="span" variant="bodyMd" key={`credits-${job.jobId}`}>
+      {job.creditsUsed > 0 ? job.creditsUsed : '—'}
+    </Text>,
     new Date(job.createdAt).toLocaleDateString(),
     <InlineStack gap="200" key={`actions-${job.jobId}`}>
       <Button size="slim" onClick={() => handleViewJob(job)}>
@@ -132,8 +135,8 @@ export default function Dashboard() {
             
             {recentJobs.length > 0 ? (
               <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-                headings={['Product', 'Template', 'Status', 'Created', 'Actions']}
+                columnContentTypes={['text', 'text', 'text', 'numeric', 'text', 'text']}
+                headings={['Product', 'Template', 'Status', 'Credits', 'Created', 'Actions']}
                 rows={rows}
               />
             ) : (

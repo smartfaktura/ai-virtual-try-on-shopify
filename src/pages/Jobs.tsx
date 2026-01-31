@@ -113,9 +113,9 @@ export default function Jobs() {
       </InlineStack>,
       // Status
       <StatusBadge key={`status-${job.jobId}`} status={job.status} />,
-      // Details - simplified
+      // Details - simplified with credits
       <Text key={`details-${job.jobId}`} as="span" variant="bodySm" tone="subdued">
-        {job.requestedCount} × {job.ratio}
+        {job.requestedCount} × {job.ratio} • {job.creditsUsed > 0 ? `${job.creditsUsed} cr` : '—'}
         {publishedCount > 0 && ` • ${publishedCount}/${job.results.length} ✓`}
       </Text>,
       // Date - compact
