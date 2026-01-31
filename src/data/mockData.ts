@@ -812,6 +812,9 @@ import modelFemaleAverageNordic from '@/assets/models/model-female-average-nordi
 import modelFemaleSlimChinese from '@/assets/models/model-female-slim-chinese.jpg';
 import modelFemaleAthleticMixed from '@/assets/models/model-female-athletic-mixed.jpg';
 import modelFemalePlussizeMiddleeast from '@/assets/models/model-female-plussize-middleeast.jpg';
+// Redhead models (2)
+import modelFemaleAverageIrish from '@/assets/models/model-female-average-irish.jpg';
+import modelMaleAthleticScottish from '@/assets/models/model-male-athletic-scottish.jpg';
 
 // Pose preview images
 import poseStudioFront from '@/assets/poses/pose-studio-front.jpg';
