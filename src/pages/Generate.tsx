@@ -1692,7 +1692,7 @@ export default function Generate() {
               </BlockStack>
               <div className="w-full max-w-md">
                 <ProgressBar 
-                  progress={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : generatingProgress, 100)} 
+                  progress={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : productProgress, 100)} 
                   size="small" 
                 />
               </div>
