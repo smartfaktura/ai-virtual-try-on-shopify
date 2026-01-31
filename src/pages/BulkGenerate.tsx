@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   BlockStack,
   InlineStack,
@@ -18,6 +18,7 @@ import { BulkResultsView } from '@/components/app/BulkResultsView';
 import { useBulkGeneration } from '@/hooks/useBulkGeneration';
 import { mockProducts, mockTemplates, mockModels, mockTryOnPoses, mockShop } from '@/data/mockData';
 import type { BulkGenerationConfig } from '@/types/bulk';
+import type { Product } from '@/types';
 import { calculateBulkCredits, MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 import { toast } from 'sonner';
 
@@ -25,8 +26,16 @@ type BulkStep = 'select' | 'settings' | 'processing' | 'results';
 
 export default function BulkGenerate() {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState<BulkStep>('select');
-  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+  const location = useLocation();
+  
+  // Check if products were passed from Generate page
+  const passedProducts = (location.state as { selectedProducts?: Product[] })?.selectedProducts;
+  const hasPassedProducts = passedProducts && passedProducts.length >= 2;
+  
+  const [currentStep, setCurrentStep] = useState<BulkStep>(hasPassedProducts ? 'settings' : 'select');
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(
+    hasPassedProducts ? new Set(passedProducts.map(p => p.id)) : new Set()
+  );
   const [searchQuery, setSearchQuery] = useState('');
 
   const bulkGeneration = useBulkGeneration({
