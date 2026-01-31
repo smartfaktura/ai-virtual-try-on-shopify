@@ -55,6 +55,7 @@ import { UploadSourceCard } from '@/components/app/UploadSourceCard';
 import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal';
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { detectProductCategory } from '@/lib/categoryUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockShop, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
@@ -748,7 +749,19 @@ export default function Generate() {
                         setCurrentStep('template');
                       }
                     } else {
-                      // Multiple products - go to bulk flow
+                      // Multiple products - check for category consistency
+                      const categories = new Set(
+                        selectedProducts.map(p => detectProductCategory(p)).filter(Boolean)
+                      );
+                      
+                      if (categories.size > 1) {
+                        toast.warning(
+                          'Products from different categories selected. The same template will be applied to all.',
+                          { duration: 5000 }
+                        );
+                      }
+                      
+                      // Go to bulk flow
                       navigate('/generate/bulk', { 
                         state: { selectedProducts } 
                       });
