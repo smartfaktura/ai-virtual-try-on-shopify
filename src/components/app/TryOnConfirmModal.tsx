@@ -216,9 +216,16 @@ export function TryOnConfirmModal({
           {/* Warning if not enough credits */}
           {!hasEnoughCredits && (
             <Banner tone="critical">
-              <Text as="p">
-                You don't have enough credits. You need {totalCredits} credits but only have {creditsRemaining}.
-              </Text>
+              <BlockStack gap="300">
+                <Text as="p">
+                  You don't have enough credits. You need {totalCredits} credits but only have {creditsRemaining}.
+                </Text>
+                {onBuyCredits && (
+                  <Button variant="primary" onClick={onBuyCredits}>
+                    Buy Credits
+                  </Button>
+                )}
+              </BlockStack>
             </Banner>
           )}
         </BlockStack>

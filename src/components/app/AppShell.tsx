@@ -111,6 +111,14 @@ export function AppShell({ children }: AppShellProps) {
           },
         ]}
       />
+      <Navigation.Section
+        title=""
+        items={[]}
+        fill
+      />
+      <div className="p-3">
+        <CreditIndicator />
+      </div>
     </Navigation>
   );
 
