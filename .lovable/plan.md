@@ -1,149 +1,166 @@
 
-# Implement Real Product Image Generation
 
-## Current Problem
+# Prevent Mixed Category Conflicts in Bulk Generation
 
-The "Product-Only" generation mode is completely mocked:
-- `handleConfirmGenerate` in Generate.tsx (lines 313-406) simulates a 4-second delay
-- Returns random Unsplash stock images based on template category
-- No actual AI is called - unlike Virtual Try-On which works perfectly
+## Problem Analysis
 
-**Result**: The generated image shows random unrelated photos (like a smartwatch for Magnesium Sleep Capsules)
+The current system allows selecting products from completely different categories in bulk mode (e.g., Leggings + Vitamins + Candles). While each product is processed individually (no actual mixing), they ALL share the same template settings - which causes issues:
 
-## Solution
+- A "Clothing Studio" template applied to supplements looks wrong
+- A "Food Rustic" template applied to cosmetics is inappropriate  
+- Virtual Try-On mode selected for non-wearable items will fail
 
-Create a real AI generation flow for product photography, mirroring the working Virtual Try-On implementation.
+## Solution: Category Validation with Smart Warnings
 
-### Architecture Overview
+### Approach 1: Same-Category Enforcement (Recommended)
+
+Add validation to ensure all selected products belong to compatible categories:
 
 ```text
-+----------------+     +-------------------+     +------------------+
-| Generate.tsx   | --> | useGenerateProduct| --> | generate-product |
-| (Settings UI)  |     | (React Hook)      |     | (Edge Function)  |
-+----------------+     +-------------------+     +------------------+
-        |                       |                        |
-        v                       v                        v
-  Product + Template     Convert to Base64        Build prompt from
-  + Brand Settings       Call Edge Function       template blueprint
-                                                  Call Lovable AI
-                                                  Return images
+User selects: Leggings + Hoodie + Sports Bra → ALLOWED (all Clothing)
+User selects: Leggings + Vitamin C Serum → BLOCKED with explanation
 ```
 
-### Files to Create
+### Implementation
 
-**1. Edge Function: `supabase/functions/generate-product/index.ts`**
+**File: `src/components/app/ProductMultiSelect.tsx`**
 
-New edge function that:
-- Accepts product image, template promptBlueprint, brand settings
-- Builds comprehensive prompt using template data (sceneDescription, lighting, cameraStyle, backgroundRules)
-- Includes brand tone and style preferences
-- Calls Lovable AI Gateway (`google/gemini-2.5-flash-image`)
-- Returns generated product photography
+Add category validation logic:
 
-Request payload:
-```typescript
-{
-  product: {
-    title: string;
-    productType: string;
-    description: string;
-    imageUrl: string;  // Base64 encoded
-  };
-  template: {
-    name: string;
-    promptBlueprint: {
-      sceneDescription: string;
-      lighting: string;
-      cameraStyle: string;
-      backgroundRules: string;
-      constraints: { do: string[]; dont: string[] };
-    };
-    negativePrompt: string;
-  };
-  brandSettings: {
-    tone: string;
-    backgroundStyle: string;
-  };
-  aspectRatio: "1:1" | "4:5" | "16:9";
-  imageCount: number;
+1. Detect the category of first selected product
+2. When selecting additional products, check if they match
+3. Show warning banner if mismatched category is attempted
+4. Disable selection of incompatible products (gray them out)
+
+```tsx
+// Add category detection helper
+const getProductCategory = (product: Product): string => {
+  const type = product.productType.toLowerCase();
+  if (type.includes('legging') || type.includes('hoodie') || type.includes('bra') || ...) return 'clothing';
+  if (type.includes('serum') || type.includes('cream') || type.includes('lipstick')) return 'cosmetics';
+  // etc.
+  return 'unknown';
+};
+
+// In ProductMultiSelect component:
+// - Track dominant category from first selection
+// - Show warning banner when mixing categories
+// - Visually indicate which products are compatible
+```
+
+**File: `src/pages/Generate.tsx`**
+
+Add category mismatch detection before navigating to bulk:
+
+```tsx
+// Before navigate('/generate/bulk', { state: { selectedProducts } }):
+const categories = new Set(selectedProducts.map(p => detectProductCategory(p)));
+if (categories.size > 1) {
+  toast.warning('Selected products are from different categories. Using shared template may produce inconsistent results.');
 }
 ```
 
-**2. React Hook: `src/hooks/useGenerateProduct.ts`**
+**Visual Changes:**
 
-New hook (similar to useGenerateTryOn) that:
-- Manages loading and progress state
-- Converts product image to Base64
-- Calls the edge function
-- Returns generated images
-- Handles errors (429 rate limit, 402 payment required)
+1. Show category badge next to selection count: `3 selected (Clothing)`
+2. Gray out products from other categories after first selection
+3. Add "Mix categories" toggle for power users who understand the trade-off
 
-### Files to Modify
+### Alternative Approach: Warning Only
 
-**3. Update: `src/pages/Generate.tsx`**
-
-Replace mock `handleConfirmGenerate` function:
-- Import and use `useGenerateProduct` hook
-- Pass real template promptBlueprint data
-- Pass brand settings (tone, backgroundStyle)
-- Handle the response and update generatedImages state
-
----
-
-## Technical Details
-
-### Prompt Engineering for Product Photography
-
-The edge function will build prompts like:
+Instead of blocking, show a clear warning:
 
 ```text
-Create a professional e-commerce product photograph of [PRODUCT IMAGE].
-
-PRODUCT DETAILS:
-- Product: Collagen Peptides Powder
-- Type: Supplements/Health
-- Description: Premium collagen peptides for beauty and wellness
-
-PHOTOGRAPHY STYLE:
-- Scene: {template.sceneDescription}
-- Lighting: {template.lighting}  
-- Camera: {template.cameraStyle}
-- Background: {template.backgroundRules}
-
-BRAND GUIDELINES:
-- Tone: Clean and minimal
-- Style: Studio lighting with neutral backdrop
-
-REQUIREMENTS:
-- DO: {constraints.do.join(', ')}
-- DON'T: {constraints.dont.join(', ')}
-
-The product must match [PRODUCT IMAGE] exactly - same packaging, colors, labels.
++---------------------------------------------------+
+| ⚠️ Mixed Categories Detected                       |
+|                                                   |
+| You've selected products from different           |
+| categories: Clothing, Supplements                 |
+|                                                   |
+| The same template will be applied to all          |
+| products. For best results, select products       |
+| from the same category.                           |
+|                                                   |
+| [Continue Anyway] [Clear Selection]              |
++---------------------------------------------------+
 ```
 
-### Edge Function Config
+## Files to Modify
 
-Update `supabase/config.toml`:
-```toml
-[functions.generate-product]
-verify_jwt = false
+| File | Change |
+|------|--------|
+| `src/components/app/ProductMultiSelect.tsx` | Add category validation, visual feedback |
+| `src/pages/Generate.tsx` | Add warning before bulk navigation |
+| `src/pages/BulkGenerate.tsx` | Show category info in settings step |
+
+## Implementation Details
+
+### ProductMultiSelect.tsx Changes
+
+```tsx
+interface ProductMultiSelectProps {
+  products: Product[];
+  selectedIds: Set<string>;
+  onSelectionChange: (ids: Set<string>) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  enforceSameCategory?: boolean; // NEW: Option to enforce matching
+}
+
+// Inside component:
+const selectedProducts = products.filter(p => selectedIds.has(p.id));
+const dominantCategory = selectedProducts.length > 0 
+  ? detectProductCategory(selectedProducts[0]) 
+  : null;
+
+const isCategoryMismatch = selectedProducts.length > 1 && 
+  new Set(selectedProducts.map(p => detectProductCategory(p))).size > 1;
+
+// In render:
+{isCategoryMismatch && (
+  <Banner tone="warning">
+    <Text as="p" variant="bodySm">
+      Products from different categories selected. Templates may not suit all items.
+    </Text>
+  </Banner>
+)}
+
+// When rendering product cards:
+const productCategory = detectProductCategory(product);
+const isIncompatible = dominantCategory && productCategory !== dominantCategory && !selectedIds.has(product.id);
+
+<div className={`... ${isIncompatible ? 'opacity-50' : ''}`}>
 ```
 
----
+### Generate.tsx Changes
 
-## Implementation Summary
-
-| Step | File | Action |
-|------|------|--------|
-| 1 | `supabase/functions/generate-product/index.ts` | Create new edge function |
-| 2 | `src/hooks/useGenerateProduct.ts` | Create new hook |
-| 3 | `src/pages/Generate.tsx` | Replace mock generation with real AI |
-| 4 | `supabase/config.toml` | Add function config |
+```tsx
+// In the "Continue" button onClick (around line 750):
+onClick={() => {
+  const selectedProducts = mockProducts.filter(p => selectedProductIds.has(p.id));
+  
+  if (selectedProducts.length >= 2) {
+    // Check category consistency
+    const categories = new Set(selectedProducts.map(p => detectProductCategory(p)));
+    if (categories.size > 1) {
+      toast.warning(
+        'Products from different categories selected. The same template will be applied to all.',
+        { duration: 5000 }
+      );
+    }
+    
+    navigate('/generate/bulk', { state: { selectedProducts } });
+  } else {
+    // Single product flow...
+  }
+}}
+```
 
 ## Result
 
 After implementation:
-- Product photography generation will use real AI (same as Virtual Try-On)
-- Images will be generated based on the selected template style
-- Product appearance will be preserved while applying new backgrounds/lighting
-- Brand settings will influence the final aesthetic
+- Clear visual feedback showing which products are compatible
+- Warning when mixing categories (user can still proceed)
+- Better user understanding of how bulk generation works
+- Prevents confusion about "conflicting" products
+
