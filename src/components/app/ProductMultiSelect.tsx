@@ -94,6 +94,7 @@ export function ProductMultiSelect({
         {filteredProducts.map(product => {
           const isSelected = selectedIds.has(product.id);
           const isDisabled = !isSelected && selectedIds.size >= MAX_PRODUCTS_PER_BATCH;
+          const productKey = product.id;
           
           return (
             <div
