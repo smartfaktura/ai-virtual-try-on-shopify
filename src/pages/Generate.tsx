@@ -563,6 +563,9 @@ export default function Generate() {
       backAction={{ content: 'Dashboard', onAction: () => navigate('/') }}
     >
       <BlockStack gap="600">
+        {/* Low credits warning */}
+        <LowCreditsBanner />
+
         {/* Progress indicator with step descriptions - Mobile optimized */}
         <Card>
           <BlockStack gap="200">
