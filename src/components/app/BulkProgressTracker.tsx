@@ -107,7 +107,7 @@ export function BulkProgressTracker({
           {state.config.mode === 'virtual-try-on' && (
             <Badge>Virtual Try-On</Badge>
           )}
-          <Badge>{state.config.imageCount} images/product</Badge>
+          <Badge>{`${state.config.imageCount} images/product`}</Badge>
         </InlineStack>
 
         {/* Queue items */}

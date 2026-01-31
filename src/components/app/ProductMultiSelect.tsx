@@ -82,7 +82,7 @@ export function ProductMultiSelect({
       {/* Selection summary */}
       <InlineStack gap="200" align="center">
         <Badge tone={selectedIds.size >= 2 ? 'success' : 'attention'}>
-          {selectedIds.size} selected
+          {`${selectedIds.size} selected`}
         </Badge>
         <Text as="span" variant="bodySm" tone="subdued">
           (max {MAX_PRODUCTS_PER_BATCH})
@@ -94,11 +94,9 @@ export function ProductMultiSelect({
         {filteredProducts.map(product => {
           const isSelected = selectedIds.has(product.id);
           const isDisabled = !isSelected && selectedIds.size >= MAX_PRODUCTS_PER_BATCH;
-          const productKey = product.id;
           
           return (
             <div
-              key={productKey}
               key={product.id}
               onClick={() => !isDisabled && handleToggle(product.id)}
               className={`

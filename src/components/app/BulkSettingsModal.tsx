@@ -271,7 +271,7 @@ export function BulkSettingsModal({
                 <Text as="span" variant="bodyMd">Estimated cost:</Text>
                 <InlineStack gap="200" align="center">
                   <Badge tone={hasEnoughCredits ? 'success' : 'critical'}>
-                    {String(estimatedCredits)} credits
+                    {`${estimatedCredits} credits`}
                   </Badge>
                 </InlineStack>
               </InlineStack>
