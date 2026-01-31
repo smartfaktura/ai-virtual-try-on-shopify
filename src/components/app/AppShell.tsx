@@ -13,6 +13,7 @@ import {
   ClockIcon,
   SettingsIcon,
 } from '@shopify/polaris-icons';
+import { CreditIndicator } from '@/components/app/CreditIndicator';
 
 interface AppShellProps {
   children: React.ReactNode;
