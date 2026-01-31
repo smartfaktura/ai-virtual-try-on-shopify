@@ -315,98 +315,52 @@ export default function Generate() {
   };
 
   const handleConfirmGenerate = async () => {
+    if (!selectedProduct || !selectedTemplate) return;
+    
+    // Get the source image URL
+    let sourceImageUrl = '';
+    
+    if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
+      sourceImageUrl = scratchUpload.uploadedUrl;
+    } else if (selectedProduct) {
+      const selectedImageId = Array.from(selectedSourceImages)[0];
+      const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
+      sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
+    }
+    
+    if (!sourceImageUrl) {
+      toast.error('No source image available');
+      return;
+    }
+    
     setConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
     
-    // Simulate generation progress
-    const progressInterval = setInterval(() => {
-      setGeneratingProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 500);
-
-    // Simulate generation completion
-    setTimeout(() => {
-      clearInterval(progressInterval);
+    const result = await generateProduct({
+      product: selectedProduct,
+      template: selectedTemplate,
+      brandSettings: {
+        tone: brandTone,
+        backgroundStyle,
+      },
+      aspectRatio,
+      imageCount: parseInt(imageCount),
+      sourceImageUrl,
+    });
+    
+    if (result && result.images.length > 0) {
+      setGeneratedImages(result.images);
       setGeneratingProgress(100);
-      
-      // Category-appropriate mock generated images
-      const categoryMockImages: Record<string, string[]> = {
-        clothing: [
-          'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1485968579169-a6b47d3e24ed?w=800&h=800&fit=crop',
-        ],
-        cosmetics: [
-          'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1570194065650-d99fb4b38b8f?w=800&h=800&fit=crop',
-        ],
-        food: [
-          'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1484723091917-5b05f5e5e8f7?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1517686748843-bb360cfc62b3?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&h=800&fit=crop',
-        ],
-        home: [
-          'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1565183997392-2f6f122e5912?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=800&fit=crop',
-        ],
-        supplements: [
-          'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1556227703-3c1e5c29e0a9?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1550572017-edd951b55104?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1607799279861-4dd421887fb3?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1576017194062-c3bb7ae8ec64?w=800&h=800&fit=crop',
-        ],
-        universal: [
-          'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1503602642458-232111445657?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1491553895911-0055uj06d9e4?w=800&h=800&fit=crop',
-          'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&h=800&fit=crop',
-        ],
-      };
-      
-      // Use template category to get matching mock images
-      const category = selectedTemplate?.category || 'universal';
-      const mockGeneratedUrls = (categoryMockImages[category] || categoryMockImages.universal).slice(0, parseInt(imageCount));
-      
-      setGeneratedImages(mockGeneratedUrls);
       setCurrentStep('results');
-      toast.success('Images generated successfully!');
-    }, 4000);
+      
+      // Credit deduction feedback
+      const creditCost = result.generatedCount * 3;
+      toast.success(`Generated ${result.generatedCount} images! Used ${creditCost} credits.`);
+    } else {
+      // Generation failed, go back to settings
+      setCurrentStep('settings');
+    }
   };
 
   // Virtual Try-On generation with real AI
