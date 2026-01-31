@@ -158,13 +158,13 @@ export function BulkProgressTracker({
                   
                   {/* Progress or results */}
                   <div className="flex-shrink-0">
-                    {(item.status === 'generating' || item.status === 'converting') && (
+                  {(item.status === 'generating' || item.status === 'converting') && (
                       <div className="w-24">
                         <Progress value={item.progress} className="h-1.5" />
                       </div>
                     )}
                     {item.status === 'completed' && item.results && (
-                      <Badge tone="success">{item.results.length} images</Badge>
+                      <Badge tone="success">{String(item.results.length)} images</Badge>
                     )}
                     {item.status === 'failed' && (
                       <Badge tone="critical">Error</Badge>
