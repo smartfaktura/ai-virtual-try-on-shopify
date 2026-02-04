@@ -83,6 +83,7 @@ export default function Dashboard() {
             suffix="available"
             icon={WalletIcon}
             onClick={openBuyModal}
+            trend={{ value: 15, direction: 'down' }}
           />
           <MetricCard
             title="Avg. Generation Time"
