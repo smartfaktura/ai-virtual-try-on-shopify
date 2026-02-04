@@ -1,70 +1,109 @@
 
+# Dashboard Design Fixes
 
-# Fix Buy Credits Modal Design
-
-## Issues Identified
-
-1. **Balance section layout**: The wallet icon is positioned on the far left with text on the right, creating awkward empty space in the middle
-2. **Undefined Tailwind tokens**: Classes like `bg-surface-subdued`, `border-border`, `border-primary` may not exist in Tailwind config
-3. **Overall spacing**: The balance box is too sparse for its minimal content
+## Problem Summary
+The metric cards have inconsistent heights and styling because some have trends, some have suffixes, and some have neither. This creates visual imbalance.
 
 ## Solution
 
-Replace custom Tailwind classes with standard Tailwind utilities and improve the layout of the balance section.
+### 1. Standardize Metric Cards
+Give all 4 cards consistent structure:
 
-### File: `src/components/app/BuyCreditsModal.tsx`
+| Card | Current | Fix |
+|------|---------|-----|
+| Images Generated | trend ✓, suffix ✓ | Keep as-is |
+| Credits Remaining | no trend, no suffix | Add suffix "available" |
+| Avg. Generation Time | suffix ✓, no trend | Add trend (e.g., -8% faster) |
+| Publish Rate | trend ✓, no suffix | Add suffix "of generated" |
 
-**Changes:**
+### 2. Remove Duplicate Credit Badge
+Remove `<Badge tone="info">847 credits</Badge>` from Quick Generate card since credits are already visible in sidebar indicator.
 
-1. **Balance section** - Make it more compact with icon and text properly aligned:
-   - Change from `InlineStack` with spread content to centered content
-   - Use standard gray background (`bg-gray-50 border-gray-200`)
+### 3. Add Usage Chart Section (Optional Enhancement)
+Add a simple usage visualization between metrics and Quick Generate:
 
-2. **Credit pack cards** - Fix border colors:
-   - Replace `border-primary` with `border-green-600` 
-   - Replace `bg-primary/5` with `bg-green-50`
-   - Replace `border-border` with `border-gray-200`
-   - Replace `bg-surface-subdued` with `bg-gray-50`
-
-3. **Upsell section** - Same color fixes
-
-### Visual Result
-
-**Before (current):**
 ```text
-+------------------------------------------+
-| [wallet icon]         Current Balance    |
-|                       847 credits        |
-+------------------------------------------+
+┌─────────────────────────────────────────────────────┐
+│  Usage This Month                                   │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━░░░░░░  78% of quota │
+│  234 / 300 images generated                        │
+└─────────────────────────────────────────────────────┘
 ```
 
-**After (fixed):**
-```text
-+------------------------------------------+
-|    [wallet] Current Balance              |
-|             847 credits                  |
-+------------------------------------------+
+### 4. Improve Quick Generate Card
+- Remove redundant credits badge
+- Add "New to AI Generation?" tip for first-time users (conditional)
+
+## Files to Modify
+
+1. **src/pages/Dashboard.tsx**
+   - Update MetricCard props to include suffix/trend for all cards
+   - Remove Badge from Quick Generate card
+   - Optionally add usage progress section
+
+2. **src/data/mockData.ts** (minor)
+   - Add `avgGenerationTimeTrend` metric if needed
+
+## Implementation Details
+
+### Updated Metrics Section
+```tsx
+<MetricCard
+  title="Images Generated"
+  value={mockMetrics.imagesGenerated30d}
+  suffix="last 30 days"
+  icon={ImageIcon}
+  trend={{ value: 12, direction: 'up' }}
+/>
+<MetricCard
+  title="Credits Remaining"
+  value={balance}
+  suffix="available"
+  icon={WalletIcon}
+  onClick={openBuyModal}
+/>
+<MetricCard
+  title="Avg. Generation Time"
+  value={mockMetrics.avgGenerationTime}
+  suffix="seconds"
+  icon={ClockIcon}
+  trend={{ value: 8, direction: 'down' }}  // faster is better
+/>
+<MetricCard
+  title="Publish Rate"
+  value={`${mockMetrics.publishRate}%`}
+  suffix="of generated"
+  icon={CheckCircleIcon}
+  trend={{ value: 5, direction: 'up' }}
+/>
 ```
 
-Or alternatively, right-aligned:
-```text
-+------------------------------------------+
-|                    Current Balance       |
-|    [wallet icon]   847 credits           |
-+------------------------------------------+
+### Simplified Quick Generate Card
+```tsx
+<Card>
+  <BlockStack gap="400">
+    <Text as="h2" variant="headingMd">
+      Quick Generate
+    </Text>
+    <Text as="p" variant="bodyMd" tone="subdued">
+      Generate professional product images in seconds. 
+      Select a product and we'll recommend the best photography styles.
+    </Text>
+    <InlineStack gap="300" wrap>
+      <Button variant="primary" size="large" onClick={() => navigate('/generate')}>
+        Select Product to Generate
+      </Button>
+      <Button size="large" onClick={() => navigate('/templates')} variant="plain">
+        Explore Templates
+      </Button>
+    </InlineStack>
+  </BlockStack>
+</Card>
 ```
 
-### CSS Token Replacements
-
-| Current (broken) | Replacement |
-|-----------------|-------------|
-| `bg-surface-subdued` | `bg-gray-50` |
-| `border-border` | `border-gray-200` |
-| `border-primary` | `border-green-600` |
-| `bg-primary/5` | `bg-green-50` |
-| `hover:border-primary/50` | `hover:border-green-400` |
-
-### Implementation
-
-Update the component to use standard Tailwind classes and improve the balance section layout to be more compact and visually balanced.
-
+## Visual Result
+All four metric cards will have:
+- Same title positioning
+- Same value display area
+- Consistent suffix line
+- Consistent trend line (equal card heights)
