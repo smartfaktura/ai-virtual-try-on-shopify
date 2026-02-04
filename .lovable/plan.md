@@ -1,60 +1,18 @@
 
-# Dashboard Design Fixes
+# Fix Credits Remaining Card Height
 
-## Problem Summary
-The metric cards have inconsistent heights and styling because some have trends, some have suffixes, and some have neither. This creates visual imbalance.
+## Problem
+The "Credits Remaining" metric card is shorter than the other three cards because it lacks a trend indicator line, while all other cards display trend data.
 
 ## Solution
+Add a trend prop to the Credits Remaining MetricCard to match the height of other cards.
 
-### 1. Standardize Metric Cards
-Give all 4 cards consistent structure:
+## File to Modify
+**src/pages/Dashboard.tsx** - Line ~82
 
-| Card | Current | Fix |
-|------|---------|-----|
-| Images Generated | trend ✓, suffix ✓ | Keep as-is |
-| Credits Remaining | no trend, no suffix | Add suffix "available" |
-| Avg. Generation Time | suffix ✓, no trend | Add trend (e.g., -8% faster) |
-| Publish Rate | trend ✓, no suffix | Add suffix "of generated" |
-
-### 2. Remove Duplicate Credit Badge
-Remove `<Badge tone="info">847 credits</Badge>` from Quick Generate card since credits are already visible in sidebar indicator.
-
-### 3. Add Usage Chart Section (Optional Enhancement)
-Add a simple usage visualization between metrics and Quick Generate:
-
-```text
-┌─────────────────────────────────────────────────────┐
-│  Usage This Month                                   │
-│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━░░░░░░  78% of quota │
-│  234 / 300 images generated                        │
-└─────────────────────────────────────────────────────┘
-```
-
-### 4. Improve Quick Generate Card
-- Remove redundant credits badge
-- Add "New to AI Generation?" tip for first-time users (conditional)
-
-## Files to Modify
-
-1. **src/pages/Dashboard.tsx**
-   - Update MetricCard props to include suffix/trend for all cards
-   - Remove Badge from Quick Generate card
-   - Optionally add usage progress section
-
-2. **src/data/mockData.ts** (minor)
-   - Add `avgGenerationTimeTrend` metric if needed
-
-## Implementation Details
-
-### Updated Metrics Section
+## Change
 ```tsx
-<MetricCard
-  title="Images Generated"
-  value={mockMetrics.imagesGenerated30d}
-  suffix="last 30 days"
-  icon={ImageIcon}
-  trend={{ value: 12, direction: 'up' }}
-/>
+// Before
 <MetricCard
   title="Credits Remaining"
   value={balance}
@@ -62,48 +20,22 @@ Add a simple usage visualization between metrics and Quick Generate:
   icon={WalletIcon}
   onClick={openBuyModal}
 />
+
+// After
 <MetricCard
-  title="Avg. Generation Time"
-  value={mockMetrics.avgGenerationTime}
-  suffix="seconds"
-  icon={ClockIcon}
-  trend={{ value: 8, direction: 'down' }}  // faster is better
-/>
-<MetricCard
-  title="Publish Rate"
-  value={`${mockMetrics.publishRate}%`}
-  suffix="of generated"
-  icon={CheckCircleIcon}
-  trend={{ value: 5, direction: 'up' }}
+  title="Credits Remaining"
+  value={balance}
+  suffix="available"
+  icon={WalletIcon}
+  onClick={openBuyModal}
+  trend={{ value: 0, direction: 'up' }}  // Neutral trend for consistent height
 />
 ```
 
-### Simplified Quick Generate Card
-```tsx
-<Card>
-  <BlockStack gap="400">
-    <Text as="h2" variant="headingMd">
-      Quick Generate
-    </Text>
-    <Text as="p" variant="bodyMd" tone="subdued">
-      Generate professional product images in seconds. 
-      Select a product and we'll recommend the best photography styles.
-    </Text>
-    <InlineStack gap="300" wrap>
-      <Button variant="primary" size="large" onClick={() => navigate('/generate')}>
-        Select Product to Generate
-      </Button>
-      <Button size="large" onClick={() => navigate('/templates')} variant="plain">
-        Explore Templates
-      </Button>
-    </InlineStack>
-  </BlockStack>
-</Card>
-```
+## Alternative Option
+If showing "0% from last month" looks odd for credits, we could instead show actual credit usage trend. For example:
+- `trend={{ value: 15, direction: 'down' }}` meaning "15% fewer credits than last month" (user is saving)
+- Or hide the trend text but keep the space reserved via CSS
 
-## Visual Result
-All four metric cards will have:
-- Same title positioning
-- Same value display area
-- Consistent suffix line
-- Consistent trend line (equal card heights)
+## Recommendation
+Use a meaningful trend like credits spent comparison, e.g., `{ value: 15, direction: 'down' }` with text "↓ 15% spent vs last month" - this provides useful information while fixing the height issue.
