@@ -7,7 +7,6 @@ import {
   Text,
   Button,
   DataTable,
-  Badge,
   InlineStack,
   Thumbnail,
 } from '@shopify/polaris';
@@ -81,6 +80,7 @@ export default function Dashboard() {
           <MetricCard
             title="Credits Remaining"
             value={balance}
+            suffix="available"
             icon={WalletIcon}
             onClick={openBuyModal}
           />
@@ -89,24 +89,44 @@ export default function Dashboard() {
             value={mockMetrics.avgGenerationTime}
             suffix="seconds"
             icon={ClockIcon}
+            trend={{ value: 8, direction: 'down' }}
           />
           <MetricCard
             title="Publish Rate"
             value={`${mockMetrics.publishRate}%`}
+            suffix="of generated"
             icon={CheckCircleIcon}
             trend={{ value: 5, direction: 'up' }}
           />
         </InlineGrid>
 
+        {/* Usage Progress */}
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack align="space-between">
+              <Text as="h2" variant="headingMd">Usage This Month</Text>
+              <Text as="span" variant="bodyMd" tone="subdued">
+                {mockMetrics.imagesGenerated30d} / 300 images
+              </Text>
+            </InlineStack>
+            <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all rounded-full"
+                style={{ width: `${Math.min((mockMetrics.imagesGenerated30d / 300) * 100, 100)}%` }}
+              />
+            </div>
+            <Text as="p" variant="bodySm" tone="subdued">
+              {Math.round((mockMetrics.imagesGenerated30d / 300) * 100)}% of monthly quota used
+            </Text>
+          </BlockStack>
+        </Card>
+
         {/* Quick Generate Card */}
         <Card>
           <BlockStack gap="400">
-            <InlineStack align="space-between">
-              <Text as="h2" variant="headingMd">
-                Quick Generate
-              </Text>
-              <Badge tone="info">{`${balance} credits`}</Badge>
-            </InlineStack>
+            <Text as="h2" variant="headingMd">
+              Quick Generate
+            </Text>
             <Text as="p" variant="bodyMd" tone="subdued">
               Generate professional product images in seconds. Select a product and we'll recommend the best photography styles.
             </Text>
