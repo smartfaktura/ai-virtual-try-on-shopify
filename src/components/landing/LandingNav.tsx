@@ -87,7 +87,7 @@ export function LandingNav() {
                 {link.label}
               </button>
             ))}
-            <Button size="sm" className="rounded-full mt-2 font-semibold">
+            <Button size="sm" className="rounded-full mt-2 font-semibold" onClick={() => navigate('/auth')}>
               Start Free
             </Button>
           </div>

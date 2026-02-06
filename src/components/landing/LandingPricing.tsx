@@ -93,6 +93,7 @@ export function LandingPricing() {
                 <Button
                   variant={plan.highlighted ? 'default' : 'outline'}
                   className="rounded-full font-semibold w-full gap-2"
+                  onClick={() => navigate('/auth')}
                 >
                   {plan.ctaText}
                   <ArrowRight className="w-4 h-4" />
