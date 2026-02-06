@@ -1,129 +1,167 @@
 
 
-# Public Landing Page for nanobanna - CRO Optimized
+# Transform nanobanna into a Standalone SaaS Platform
 
 ## Overview
-Create a standalone, public-facing marketing landing page at `/landing` that targets a broader audience beyond Shopify users. This page will NOT use Shopify Polaris components -- instead it will use pure Tailwind CSS for a modern, conversion-optimized design that appeals to anyone needing AI product images (photographers, marketers, DTC brands, social media managers, etc.).
 
-## Architecture
+This plan converts nanobanna from a Shopify-embedded app into a standalone SaaS platform where anyone can sign up, upload product images, and generate professional AI photography. The landing page becomes the entry point, authentication gates access to the dashboard, and "Publish to Shopify" becomes "Download" with optional shop connections.
 
-The landing page will live outside the `AppShell` (no Shopify admin sidebar/topbar) and will be a standalone route with its own layout and components.
+## What Changes
 
-**Routing change in `App.tsx`:**
-- Add `/landing` route that renders OUTSIDE the `AppShell` wrapper
-- The landing page will have its own navbar and footer
+### Phase 1: Authentication System
 
-## Page Sections (Top to Bottom)
+Add user signup/login so the "Start Free" buttons on the landing page actually work.
 
-### 1. Navigation Bar
-- Logo + brand name "nanobanna"
-- Nav links: Features, How It Works, Pricing, FAQ
-- CTA button: "Start Free" (smooth scroll or link to signup)
-- Sticky on scroll with backdrop blur
+**Database tables needed:**
+- `profiles` table (id, email, display_name, avatar_url, plan, credits_balance, created_at)
+- `user_products` table (id, user_id, title, product_type, description, image_url, created_at) -- replaces mock Shopify products
+- `generation_jobs` table (id, user_id, product_id, template_id, status, credits_used, results, created_at) -- persists job history
 
-### 2. Hero Section
-- Bold headline: "AI Product Photography in Seconds"
-- Subheadline addressing pain points (expensive studios, slow turnaround)
-- Two CTAs: "Start Free - 5 Credits" (primary) and "See Examples" (secondary)
-- Before/after product image showcase (using existing product assets)
-- Trust badges: "No credit card required", "5 free credits", "Cancel anytime"
+**New pages/components:**
+- `/auth` page with signup and login forms (email + password via built-in authentication)
+- Auth context/provider wrapping the app
+- Protected route wrapper for dashboard routes
 
-### 3. Social Proof Bar
-- Logo cloud of use-case types: "Trusted by 2,000+ brands"
-- Key metrics: images generated, avg. time saved, cost savings
+**Flow:**
+```text
+Landing Page (/landing)
+     |
+     | "Start Free" button
+     v
+Auth Page (/auth)
+     |
+     | Sign up / Log in
+     v
+Dashboard (/)
+```
 
-### 4. Feature Grid - "What You Can Create"
-- Product Photography card (using template images)
-- Virtual Try-On card (using model/pose images)
-- Bulk Generation card
-- Each card with image preview, title, description
+### Phase 2: Route Restructuring
 
-### 5. How It Works - 3 Steps
-- Step 1: Upload your product image (or connect your shop)
-- Step 2: Choose a style template
-- Step 3: Get professional images in seconds
-- Visual flow with numbered steps and connecting elements
+- Make `/landing` the default route (`/`)
+- Move the dashboard app routes under `/app/*`
+- Update all internal navigation accordingly
 
-### 6. Before/After Gallery
-- Side-by-side comparisons showing raw product photo vs AI-generated result
-- Multiple examples across categories (clothing, cosmetics, food, supplements)
-- Interactive slider or toggle
+**New route structure:**
+```text
+/              -> Landing page (public)
+/auth          -> Login / Signup (public)
+/app           -> Dashboard (protected)
+/app/generate  -> Generate page (protected)
+/app/templates -> Templates (protected)
+/app/jobs      -> Job history (protected)
+/app/settings  -> Settings (protected)
+```
 
-### 7. Integration Section
-- "Works With Your Existing Tools"
-- Shopify, WooCommerce, upload icons
-- Emphasis on "No ecommerce store needed - just upload any image"
+### Phase 3: De-Shopify the App Shell
 
-### 8. Pricing Section
-- Reuse existing pricing data from `mockData.ts` (pricingPlans + creditPacks)
-- Monthly/Annual toggle
-- Highlight the Growth plan
-- Competitor comparison (reuse data from CompetitorComparison)
+The app shell (sidebar, topbar) currently uses Shopify Polaris `Frame`, `Navigation`, and `TopBar`. These need to be replaced with a custom layout since this is no longer a Shopify embedded app.
 
-### 9. FAQ Accordion
-- Common questions about credits, image quality, integrations, etc.
-- Using Radix accordion component
+**Changes to AppShell:**
+- Replace Polaris `Frame`/`Navigation`/`TopBar` with custom Tailwind sidebar + header
+- Show the authenticated user's name/email instead of "My Store" / "mystore.myshopify.com"
+- Add a "Sign Out" action that actually signs the user out
+- Keep the same navigation items (Dashboard, Generate, Templates, Jobs, Settings)
 
-### 10. Final CTA Section
-- "Ready to Transform Your Product Images?"
-- Email capture or "Start Free" button
-- Trust reinforcement
+### Phase 4: Replace "Products" with User Uploads
 
-### 11. Footer
-- Links: Product, Company, Legal, Support
-- Social media links
-- Copyright
+Currently the Generate flow starts with "From Product(s)" which loads mock Shopify products. This needs to become upload-first.
 
-## New Files to Create
+**Changes:**
+- Remove `SourceTypeSelector` distinction between "From Product(s)" and "From Scratch" -- everything is now upload-based
+- The Generate flow starts with "Upload your product image" as the primary path
+- Add a secondary "My Products" library where users can save previously uploaded products for reuse
+- Store uploaded products in `user_products` database table
+- Update `UploadSourceCard` to be the default (and primary) entry point
+
+### Phase 5: Replace "Publish to Shopify" with Download
+
+Currently generated images go through a "Publish to Shopify" modal. This needs to become:
+
+**Changes:**
+- Replace `PublishModal` with a `DownloadModal` or inline download buttons
+- "Publish" becomes "Download" (single/bulk download as ZIP)
+- Remove `ProductAssignmentModal` (Shopify product assignment)
+- Remove Shopify-specific references from `GeneratedAsset` type (`publishedToShopify`, `shopifyImageId`)
+- Add "Save to My Library" option to save generated images for later
+
+### Phase 6: De-Shopify Text and References
+
+Update all Shopify-specific copy across the app:
+
+| Current | New |
+|---------|-----|
+| "Publish to Shopify" | "Download Images" |
+| "Select Shopify products" | "Upload your product" |
+| "mystore.myshopify.com" | User's email/name |
+| "Publishing defaults: Shopify" | "Export defaults" |
+| Settings > "Publishing Defaults" to Shopify | "Download & Export Settings" |
+| "Assign to Shopify Product" modal | Remove entirely |
+
+### Phase 7: Connect Credits to Real User
+
+- Move credits from mock `CreditContext` to database-backed `profiles.credits_balance`
+- New users get 5 free credits on signup (as promised on landing page)
+- Credit deductions persist to the database
+- Buy Credits modal stays (mock for now, ready for Stripe later)
+
+### Phase 8: Landing Page CTA Wiring
+
+Wire all "Start Free" buttons to navigate to `/auth`:
+
+- `LandingNav` "Start Free" button -> `/auth`
+- `HeroSection` "Start Free -- 5 Credits" button -> `/auth`
+- `LandingPricing` plan CTA buttons -> `/auth`
+- `FinalCTA` "Start Free -- 5 Credits" button -> `/auth`
+
+---
+
+## Technical Details
+
+### Files to Create
 
 | File | Purpose |
 |------|---------|
-| `src/pages/Landing.tsx` | Main landing page composing all sections |
-| `src/components/landing/LandingNav.tsx` | Sticky navigation bar |
-| `src/components/landing/HeroSection.tsx` | Hero with headline, CTAs, image showcase |
-| `src/components/landing/SocialProofBar.tsx` | Trust metrics and brand logos |
-| `src/components/landing/FeatureGrid.tsx` | Feature cards grid |
-| `src/components/landing/HowItWorks.tsx` | 3-step process visualization |
-| `src/components/landing/BeforeAfterGallery.tsx` | Product comparison gallery |
-| `src/components/landing/IntegrationSection.tsx` | Platform integrations |
-| `src/components/landing/LandingPricing.tsx` | Pricing section with plans |
-| `src/components/landing/LandingFAQ.tsx` | FAQ accordion |
-| `src/components/landing/FinalCTA.tsx` | Bottom CTA with email capture |
-| `src/components/landing/LandingFooter.tsx` | Footer with links |
+| `src/pages/Auth.tsx` | Login/signup page with email + password forms |
+| `src/contexts/AuthContext.tsx` | Authentication state management (wraps Supabase auth) |
+| `src/components/app/ProtectedRoute.tsx` | Route guard that redirects unauthenticated users to `/auth` |
+| `src/components/app/DownloadModal.tsx` | Replaces PublishModal -- download single/multiple images |
+| `src/components/app/UserMenu.tsx` | User avatar + dropdown with account/sign out |
 
-## Files to Modify
+### Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Add `/landing` route outside `AppShell` |
+| File | Changes |
+|------|---------|
+| `src/App.tsx` | Restructure routes: `/` = Landing, `/auth` = Auth, `/app/*` = protected app |
+| `src/components/app/AppShell.tsx` | Replace Polaris Frame with custom Tailwind sidebar layout, show user info |
+| `src/pages/Generate.tsx` | Remove Shopify product picker, make upload the default, replace publish with download |
+| `src/pages/Dashboard.tsx` | Load real user data from DB, remove Shopify references |
+| `src/pages/Settings.tsx` | Remove "Publishing Defaults" Shopify section, update copy |
+| `src/contexts/CreditContext.tsx` | Connect to database for real credit persistence |
+| `src/types/index.ts` | Remove `shopifyImageId`, `publishedToShopify`, update `Shop` type to `UserProfile` |
+| `src/data/mockData.ts` | Keep as sample data but remove Shopify domain references |
+| `src/components/app/SourceTypeSelector.tsx` | Simplify or remove -- upload becomes default |
+| `src/components/landing/LandingNav.tsx` | Wire "Start Free" to `/auth` |
+| `src/components/landing/HeroSection.tsx` | Wire CTA to `/auth` |
+| `src/components/landing/FinalCTA.tsx` | Wire CTA to `/auth` |
+| `src/components/landing/LandingPricing.tsx` | Wire plan CTAs to `/auth` |
+| `src/pages/BulkGenerate.tsx` | Replace "Publish to Shopify" with download |
 
-## Technical Approach
+### Database Migrations
 
-### Styling
-- Pure Tailwind CSS (NO Polaris components on this page)
-- Uses existing CSS variables and design tokens from `index.css`
-- Responsive: mobile-first, optimized for all breakpoints
-- Smooth scroll behavior for anchor links
-- Intersection Observer for scroll-triggered animations
+1. Create `profiles` table with trigger on auth.users insert
+2. Create `user_products` table for saved uploads
+3. Create `generation_jobs` table for persisted history
+4. RLS policies: users can only access their own data
+5. Default credits: new profiles start with 5 credits
 
-### CRO Best Practices
-- Single clear CTA repeated throughout the page
-- Social proof near every CTA
-- Specific numbers (cost per image, time saved, percentage savings)
-- Urgency/scarcity elements ("5 free credits to start")
-- Minimal friction: no signup form on landing, just "Start Free" buttons
-- Fast loading: uses existing imported assets, no external image fetches
+### Implementation Order
 
-### Data Reuse
-- Pricing plans from `mockData.ts` (pricingPlans, creditPacks)
-- Product images from `src/assets/products/`
-- Template images from `src/assets/templates/`
-- Model images from `src/assets/models/`
-- Pose images from `src/assets/poses/`
+Due to the size of these changes, they should be implemented in this sequence:
 
-### Accessibility
-- Semantic HTML (header, main, section, footer)
-- Proper heading hierarchy
-- Alt text on all images
-- Keyboard navigation for interactive elements
+1. **Database + Auth** -- Create tables, auth context, login/signup page, protected routes
+2. **Route restructure** -- Move landing to `/`, app to `/app/*`, wire CTAs
+3. **AppShell redesign** -- Replace Polaris Frame with custom Tailwind layout
+4. **Generate flow update** -- Upload-first, remove Shopify product picker, download instead of publish
+5. **Dashboard + Settings cleanup** -- Remove Shopify copy, connect to real user data
+6. **Credit system wiring** -- Database-backed credits with 5 free on signup
 
