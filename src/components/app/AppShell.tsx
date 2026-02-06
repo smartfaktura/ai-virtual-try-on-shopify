@@ -4,7 +4,6 @@ import {
   Frame,
   Navigation,
   TopBar,
-  Text,
 } from '@shopify/polaris';
 import {
   HomeIcon,
@@ -12,8 +11,10 @@ import {
   LayoutBlockIcon,
   ClockIcon,
   SettingsIcon,
+  ExitIcon,
 } from '@shopify/polaris-icons';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -22,6 +23,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
   const [mobileNavigationActive, setMobileNavigationActive] = useState(false);
   const [userMenuActive, setUserMenuActive] = useState(false);
 
@@ -39,24 +41,32 @@ export function AppShell({ children }: AppShellProps) {
     setMobileNavigationActive(false);
   }, []);
 
+  const handleSignOut = useCallback(async () => {
+    await signOut();
+    navigate('/');
+  }, [signOut, navigate]);
+
+  const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'User';
+  const userEmail = user?.email || '';
+  const initials = displayName.charAt(0).toUpperCase();
+
   const userMenuMarkup = (
     <TopBar.UserMenu
       actions={[
         {
           items: [
-            { content: 'Account settings', onAction: () => navigate('/settings') },
-            { content: 'Help center', onAction: () => window.open('https://help.example.com', '_blank') },
+            { content: 'Account settings', onAction: () => navigate('/app/settings') },
           ],
         },
         {
           items: [
-            { content: 'Sign out', onAction: () => console.log('Sign out') },
+            { content: 'Sign out', icon: ExitIcon, onAction: handleSignOut },
           ],
         },
       ]}
-      name="My Store"
-      detail="mystore.myshopify.com"
-      initials="M"
+      name={displayName}
+      detail={userEmail}
+      initials={initials}
       open={userMenuActive}
       onToggle={toggleUserMenu}
     />
@@ -77,26 +87,26 @@ export function AppShell({ children }: AppShellProps) {
           {
             label: 'Dashboard',
             icon: HomeIcon,
-            selected: location.pathname === '/',
-            onClick: () => navigate('/'),
+            selected: location.pathname === '/app' || location.pathname === '/app/',
+            onClick: () => navigate('/app'),
           },
           {
             label: 'Generate',
             icon: ImageIcon,
-            selected: location.pathname.startsWith('/generate'),
-            onClick: () => navigate('/generate'),
+            selected: location.pathname.startsWith('/app/generate'),
+            onClick: () => navigate('/app/generate'),
           },
           {
             label: 'Templates',
             icon: LayoutBlockIcon,
-            selected: location.pathname.startsWith('/templates'),
-            onClick: () => navigate('/templates'),
+            selected: location.pathname.startsWith('/app/templates'),
+            onClick: () => navigate('/app/templates'),
           },
           {
             label: 'Jobs',
             icon: ClockIcon,
-            selected: location.pathname.startsWith('/jobs'),
-            onClick: () => navigate('/jobs'),
+            selected: location.pathname.startsWith('/app/jobs'),
+            onClick: () => navigate('/app/jobs'),
           },
         ]}
       />
@@ -106,8 +116,8 @@ export function AppShell({ children }: AppShellProps) {
           {
             label: 'Settings',
             icon: SettingsIcon,
-            selected: location.pathname.startsWith('/settings'),
-            onClick: () => navigate('/settings'),
+            selected: location.pathname.startsWith('/app/settings'),
+            onClick: () => navigate('/app/settings'),
           },
         ]}
       />
@@ -131,7 +141,8 @@ export function AppShell({ children }: AppShellProps) {
         <path d="M10 24L16 18L22 24L28 18" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     `),
-    accessibilityLabel: 'Product Image Generator',
+    accessibilityLabel: 'nanobanna',
+    url: '/app',
   };
 
   return (
