@@ -14,6 +14,7 @@ const trustBadges = [
 ];
 
 export function HeroSection() {
+  const navigate = useNavigate();
   return (
     <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 overflow-hidden">
       {/* Background gradient */}
