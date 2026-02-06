@@ -1,17 +1,10 @@
 import { useState, useMemo } from 'react';
-import {
-  Modal,
-  BlockStack,
-  InlineStack,
-  Text,
-  TextField,
-  Thumbnail,
-  Badge,
-  Button,
-  Banner,
-  Icon,
-} from '@shopify/polaris';
-import { SearchIcon, CheckCircleIcon } from '@shopify/polaris-icons';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Search, CheckCircle } from 'lucide-react';
 import type { Product } from '@/types';
 
 interface ProductAssignmentModalProps {
@@ -24,210 +17,88 @@ interface ProductAssignmentModalProps {
   selectedImageCount: number;
 }
 
-export function ProductAssignmentModal({
-  open,
-  onClose,
-  products,
-  selectedProduct,
-  onSelectProduct,
-  onPublish,
-  selectedImageCount,
-}: ProductAssignmentModalProps) {
+export function ProductAssignmentModal({ open, onClose, products, selectedProduct, onSelectProduct, onPublish, selectedImageCount }: ProductAssignmentModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [publishMode, setPublishMode] = useState<'add' | 'replace'>('add');
-
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
     const query = searchQuery.toLowerCase();
-    return products.filter(
-      (p) =>
-        p.title.toLowerCase().includes(query) ||
-        p.vendor.toLowerCase().includes(query) ||
-        p.productType.toLowerCase().includes(query)
-    );
+    return products.filter(p => p.title.toLowerCase().includes(query) || p.vendor.toLowerCase().includes(query) || p.productType.toLowerCase().includes(query));
   }, [products, searchQuery]);
 
-  const handlePublish = () => {
-    if (selectedProduct) {
-      onPublish(selectedProduct, publishMode);
-    }
-  };
-
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Assign to Shopify Product"
-      primaryAction={{
-        content: `Publish ${selectedImageCount} Image${selectedImageCount !== 1 ? 's' : ''}`,
-        onAction: handlePublish,
-        disabled: !selectedProduct,
-      }}
-      secondaryActions={[
-        {
-          content: 'Cancel',
-          onAction: onClose,
-        },
-      ]}
-      size="large"
-    >
-      <Modal.Section>
-        <BlockStack gap="500">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Assign to Product</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5">
           {!selectedProduct ? (
             <>
-              <Text as="p" variant="bodyMd" tone="subdued">
-                Search and select a Shopify product to assign your generated images to.
-              </Text>
-
-              <TextField
-                label="Search products"
-                labelHidden
-                placeholder="Search by name, vendor, or type..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-                prefix={<Icon source={SearchIcon} />}
-                autoComplete="off"
-              />
-
-              <BlockStack gap="200">
+              <p className="text-muted-foreground">Search and select a product to assign your generated images to.</p>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Search by name, vendor, or type..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+              </div>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {filteredProducts.length === 0 ? (
-                  <Banner tone="warning">
-                    <Text as="p" variant="bodySm">
-                      No products found matching "{searchQuery}"
-                    </Text>
-                  </Banner>
-                ) : (
-                  filteredProducts.slice(0, 10).map((product) => (
-                    <button
-                      key={product.id}
-                      type="button"
-                      onClick={() => onSelectProduct(product)}
-                      className="w-full p-3 border border-border rounded-lg cursor-pointer hover:bg-surface-hovered transition-colors text-left"
-                    >
-                      <InlineStack gap="400" blockAlign="center">
-                        <Thumbnail
-                          source={
-                            product.images[0]?.url ||
-                            'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'
-                          }
-                          alt={product.title}
-                          size="medium"
-                        />
-                        <BlockStack gap="100">
-                          <Text as="p" variant="bodyMd" fontWeight="semibold">
-                            {product.title}
-                          </Text>
-                          <Text as="p" variant="bodySm" tone="subdued">
-                            {product.vendor} • {product.productType}
-                          </Text>
-                          <InlineStack gap="100">
-                            {product.tags.slice(0, 3).map((tag) => (
-                              <Badge key={tag} tone="info">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </InlineStack>
-                        </BlockStack>
-                      </InlineStack>
-                    </button>
-                  ))
-                )}
-              </BlockStack>
+                  <Alert><AlertDescription>No products found matching "{searchQuery}"</AlertDescription></Alert>
+                ) : filteredProducts.slice(0, 10).map(product => (
+                  <button key={product.id} type="button" onClick={() => onSelectProduct(product)} className="w-full p-3 border border-border rounded-lg hover:bg-muted transition-colors text-left flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 border border-border">
+                      <img src={product.images[0]?.url || '/placeholder.svg'} alt={product.title} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm">{product.title}</p>
+                      <p className="text-xs text-muted-foreground">{product.vendor} • {product.productType}</p>
+                      <div className="flex gap-1 mt-1">{product.tags.slice(0, 3).map(tag => <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>)}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </>
           ) : (
             <>
-              {/* Selected product preview */}
-              <div className="p-4 border border-primary rounded-lg bg-primary/5">
-                <InlineStack gap="400" blockAlign="center" align="space-between">
-                  <InlineStack gap="400" blockAlign="center">
-                    <Thumbnail
-                      source={
-                        selectedProduct.images[0]?.url ||
-                        'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'
-                      }
-                      alt={selectedProduct.title}
-                      size="medium"
-                    />
-                    <BlockStack gap="100">
-                      <InlineStack gap="200" blockAlign="center">
-                        <Icon source={CheckCircleIcon} tone="success" />
-                        <Text as="p" variant="bodyMd" fontWeight="semibold">
-                          {selectedProduct.title}
-                        </Text>
-                      </InlineStack>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        {selectedProduct.vendor} • {selectedProduct.productType}
-                      </Text>
-                    </BlockStack>
-                  </InlineStack>
-                  <Button variant="plain" onClick={() => onSelectProduct(null as unknown as Product)}>
-                    Change
-                  </Button>
-                </InlineStack>
+              <div className="p-4 border border-primary rounded-lg bg-primary/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 border border-border">
+                    <img src={selectedProduct.images[0]?.url || '/placeholder.svg'} alt={selectedProduct.title} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1"><CheckCircle className="w-4 h-4 text-primary" /><p className="font-semibold text-sm">{selectedProduct.title}</p></div>
+                    <p className="text-xs text-muted-foreground">{selectedProduct.vendor}</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => onSelectProduct(null as unknown as Product)}>Change</Button>
               </div>
-
-              {/* Publish mode selection */}
-              <BlockStack gap="300">
-                <Text as="h4" variant="headingSm">
-                  Publish Mode
-                </Text>
-
-                <InlineStack gap="300">
-                  <button
-                    type="button"
-                    onClick={() => setPublishMode('add')}
-                    className={`
-                      flex-1 p-4 rounded-lg border-2 transition-all text-left
-                      ${publishMode === 'add'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                      }
-                    `}
-                  >
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodyMd" fontWeight="semibold">
-                        Add to Product
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Keep existing images and add new ones
-                      </Text>
-                    </BlockStack>
+              <div className="space-y-2">
+                <h4 className="font-semibold">Download Mode</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setPublishMode('add')} className={`p-4 rounded-lg border-2 text-left ${publishMode === 'add' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                    <p className="font-semibold text-sm">Add to Product</p>
+                    <p className="text-xs text-muted-foreground">Keep existing images</p>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPublishMode('replace')}
-                    className={`
-                      flex-1 p-4 rounded-lg border-2 transition-all text-left
-                      ${publishMode === 'replace'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                      }
-                    `}
-                  >
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodyMd" fontWeight="semibold">
-                        Replace All
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Remove existing and use only new images
-                      </Text>
-                    </BlockStack>
+                  <button type="button" onClick={() => setPublishMode('replace')} className={`p-4 rounded-lg border-2 text-left ${publishMode === 'replace' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
+                    <p className="font-semibold text-sm">Replace All</p>
+                    <p className="text-xs text-muted-foreground">Use only new images</p>
                   </button>
-                </InlineStack>
-              </BlockStack>
-
-              <Banner tone="info">
-                <Text as="p" variant="bodySm">
-                  {selectedImageCount} image{selectedImageCount !== 1 ? 's' : ''} will be{' '}
-                  {publishMode === 'add' ? 'added to' : 'set as the images for'}{' '}
-                  <strong>{selectedProduct.title}</strong>
-                </Text>
-              </Banner>
+                </div>
+              </div>
+              <Alert>
+                <AlertDescription>
+                  {selectedImageCount} image{selectedImageCount !== 1 ? 's' : ''} will be {publishMode === 'add' ? 'added to' : 'set as the images for'} <strong>{selectedProduct.title}</strong>
+                </AlertDescription>
+              </Alert>
             </>
           )}
-        </BlockStack>
-      </Modal.Section>
-    </Modal>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => selectedProduct && onPublish(selectedProduct, publishMode)} disabled={!selectedProduct}>
+            Download {selectedImageCount} Image{selectedImageCount !== 1 ? 's' : ''}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

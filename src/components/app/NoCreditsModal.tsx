@@ -1,13 +1,7 @@
-import {
-  Modal,
-  BlockStack,
-  InlineStack,
-  InlineGrid,
-  Text,
-  Button,
-  Badge,
-  Divider,
-} from '@shopify/polaris';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { creditPacks } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { toast } from 'sonner';
@@ -20,85 +14,74 @@ interface NoCreditsModalProps {
 export function NoCreditsModal({ open, onClose }: NoCreditsModalProps) {
   const { addCredits } = useCredits();
   
-  const handlePurchase = (credits: number, price: number) => {
+  const handlePurchase = (credits: number) => {
     addCredits(credits);
     toast.success(`Added ${credits} credits to your account!`);
     onClose();
   };
   
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="You're out of credits"
-      secondaryActions={[
-        {
-          content: 'Maybe Later',
-          onAction: onClose,
-        },
-      ]}
-    >
-      <Modal.Section>
-        <BlockStack gap="500">
-          <Text as="p" variant="bodyMd" tone="subdued">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>You're out of credits</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-5">
+          <p className="text-muted-foreground">
             Purchase credits to continue generating professional product images.
-          </Text>
+          </p>
           
-          <InlineGrid columns={3} gap="400">
+          <div className="grid grid-cols-3 gap-3">
             {creditPacks.map((pack) => (
               <div 
                 key={pack.packId}
                 className={`relative p-4 rounded-lg border-2 text-center ${
                   pack.popular 
                     ? 'border-primary bg-primary/5' 
-                    : 'border-border bg-surface-subdued'
+                    : 'border-border bg-muted'
                 }`}
               >
                 {pack.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge tone="success">Best Value</Badge>
+                    <Badge className="bg-primary text-primary-foreground">Best Value</Badge>
                   </div>
                 )}
-                <BlockStack gap="200" align="center">
-                  <Text as="p" variant="headingLg" fontWeight="bold">
-                    {pack.credits}
-                  </Text>
-                  <Text as="p" variant="bodySm" tone="subdued">credits</Text>
-                  <Text as="p" variant="headingMd" fontWeight="semibold">
-                    ${pack.price}
-                  </Text>
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    {(pack.pricePerCredit * 100).toFixed(1)}¢ each
-                  </Text>
+                <div className="space-y-2">
+                  <p className="text-2xl font-bold">{pack.credits}</p>
+                  <p className="text-sm text-muted-foreground">credits</p>
+                  <p className="text-lg font-semibold">${pack.price}</p>
+                  <p className="text-xs text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢ each</p>
                   <Button
-                    variant={pack.popular ? 'primary' : 'secondary'}
-                    fullWidth
-                    onClick={() => handlePurchase(pack.credits, pack.price)}
+                    variant={pack.popular ? 'default' : 'outline'}
+                    className="w-full"
+                    size="sm"
+                    onClick={() => handlePurchase(pack.credits)}
                   >
                     Buy
                   </Button>
-                </BlockStack>
+                </div>
               </div>
             ))}
-          </InlineGrid>
-          
-          <Divider />
-          
-          <div className="p-4 rounded-lg bg-surface-subdued border border-border">
-            <InlineStack align="space-between" blockAlign="center">
-              <BlockStack gap="100">
-                <Text as="p" variant="bodyMd" fontWeight="semibold">
-                  Upgrade to Growth Plan
-                </Text>
-                <Text as="p" variant="bodySm" tone="subdued">
-                  500 credits/month + Virtual Try-On
-                </Text>
-              </BlockStack>
-              <Button url="/app/settings">View Plans</Button>
-            </InlineStack>
           </div>
-        </BlockStack>
-      </Modal.Section>
-    </Modal>
+          
+          <Separator />
+          
+          <div className="p-4 rounded-lg bg-muted border border-border flex items-center justify-between">
+            <div>
+              <p className="font-semibold">Upgrade to Growth Plan</p>
+              <p className="text-sm text-muted-foreground">500 credits/month + Virtual Try-On</p>
+            </div>
+            <Button variant="outline" asChild>
+              <a href="/app/settings">View Plans</a>
+            </Button>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Maybe Later</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

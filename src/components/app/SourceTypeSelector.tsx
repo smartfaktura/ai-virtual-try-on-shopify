@@ -1,13 +1,4 @@
-import {
-  BlockStack,
-  InlineGrid,
-  Text,
-  Icon,
-} from '@shopify/polaris';
-import {
-  ProductIcon,
-  UploadIcon,
-} from '@shopify/polaris-icons';
+import { Package, Upload } from 'lucide-react';
 import type { GenerationSourceType } from '@/types';
 
 interface SourceTypeSelectorProps {
@@ -20,68 +11,54 @@ export function SourceTypeSelector({ sourceType, onChange }: SourceTypeSelectorP
     id: GenerationSourceType;
     title: string;
     description: string;
-    icon: typeof ProductIcon;
+    icon: typeof Package;
   }> = [
     {
       id: 'product',
       title: 'From Product(s)',
-      description: 'Select one or multiple Shopify products',
-      icon: ProductIcon,
+      description: 'Select one or multiple products',
+      icon: Package,
     },
     {
       id: 'scratch',
       title: 'From Scratch',
       description: 'Upload your own image file to generate from',
-      icon: UploadIcon,
+      icon: Upload,
     },
   ];
 
   return (
-    <InlineGrid columns={{ xs: 1, sm: 2 }} gap="400">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {options.map((option) => (
         <button
           key={option.id}
           type="button"
           onClick={() => onChange(option.id)}
-          className={`
-            p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer
-            ${sourceType === option.id
+          className={`p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
+            sourceType === option.id
               ? 'border-primary bg-primary/5 shadow-md'
-              : 'border-border hover:border-primary/50 hover:bg-surface-hovered'
-            }
-          `}
+              : 'border-border hover:border-primary/50 hover:bg-muted'
+          }`}
         >
-          <BlockStack gap="300">
-            <div
-              className={`
-                w-12 h-12 rounded-lg flex items-center justify-center
-                ${sourceType === option.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
-                }
-              `}
-            >
-              <Icon source={option.icon} />
+          <div className="space-y-3">
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+              sourceType === option.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            }`}>
+              <option.icon className="w-6 h-6" />
             </div>
-            <BlockStack gap="100">
-              <Text as="p" variant="bodyLg" fontWeight="semibold">
-                {option.title}
-              </Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                {option.description}
-              </Text>
-            </BlockStack>
+            <div className="space-y-1">
+              <p className="text-lg font-semibold">{option.title}</p>
+              <p className="text-sm text-muted-foreground">{option.description}</p>
+            </div>
             {sourceType === option.id && (
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary" />
-                <Text as="span" variant="bodySm" fontWeight="medium">
-                  Selected
-                </Text>
+                <span className="text-sm font-medium">Selected</span>
               </div>
             )}
-          </BlockStack>
+          </div>
         </button>
       ))}
-    </InlineGrid>
+    </div>
   );
 }

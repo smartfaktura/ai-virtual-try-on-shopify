@@ -1,5 +1,3 @@
-import { Text, Icon } from '@shopify/polaris';
-import { CheckCircleIcon } from '@shopify/polaris-icons';
 import type { ModelProfile } from '@/types';
 import { bodyTypeLabels } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
@@ -11,40 +9,22 @@ interface ModelSelectorCardProps {
   showAiMatch?: boolean;
 }
 
-export function ModelSelectorCard({
-  model,
-  isSelected,
-  onSelect,
-  showAiMatch = false,
-}: ModelSelectorCardProps) {
+export function ModelSelectorCard({ model, isSelected, onSelect, showAiMatch = false }: ModelSelectorCardProps) {
   return (
     <div
       onClick={onSelect}
       className={`relative cursor-pointer rounded-lg sm:rounded-xl overflow-hidden transition-all duration-200 group ${
-        isSelected
-          ? 'ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-lg scale-[1.02]'
-          : 'ring-1 ring-border hover:ring-primary hover:shadow-md hover:scale-[1.01]'
+        isSelected ? 'ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-lg scale-[1.02]' : 'ring-1 ring-border hover:ring-primary hover:shadow-md hover:scale-[1.01]'
       }`}
     >
-      {/* Model Image */}
       <div className="aspect-[3/4] overflow-hidden bg-muted">
-        <img
-          src={model.previewUrl}
-          alt={model.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        <img src={model.previewUrl} alt={model.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
       </div>
-
-      {/* AI Match Badge - Top Left */}
       {showAiMatch && (
         <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
-          <Badge className="text-[8px] sm:text-[10px] px-1.5 py-0.5 bg-foreground/80 text-background border-0 shadow-sm">
-            AI Match
-          </Badge>
+          <Badge className="text-[8px] sm:text-[10px] px-1.5 py-0.5 bg-foreground/80 text-background border-0 shadow-sm">AI Match</Badge>
         </div>
       )}
-
-      {/* Selected Overlay */}
       {isSelected && (
         <div className="absolute inset-0 bg-primary/10 pointer-events-none">
           <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-5 h-5 sm:w-7 sm:h-7 bg-primary rounded-full flex items-center justify-center shadow-md">
@@ -54,37 +34,14 @@ export function ModelSelectorCard({
           </div>
         </div>
       )}
-
-      {/* Info Footer - Always Visible */}
       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2 sm:p-3 pt-6 sm:pt-10">
         <div className="space-y-1 sm:space-y-1.5">
-          {/* Name */}
-          <Text as="p" variant="bodySm" fontWeight="bold">
-            <span className="text-white text-xs sm:text-sm">{model.name}</span>
-          </Text>
-          
-          {/* Metadata Badges - Simplified on mobile */}
+          <p className="text-white text-xs sm:text-sm font-bold">{model.name}</p>
           <div className="flex flex-wrap gap-0.5 sm:gap-1">
-            <Badge 
-              variant="secondary" 
-              className="text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0 bg-white/25 text-white border-0 backdrop-blur-sm"
-            >
-              {bodyTypeLabels[model.bodyType]}
-            </Badge>
-            <Badge 
-              variant="secondary" 
-              className="text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0 bg-white/25 text-white border-0 backdrop-blur-sm hidden sm:inline-flex"
-            >
-              {model.ethnicity}
-            </Badge>
+            <Badge variant="secondary" className="text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0 bg-white/25 text-white border-0 backdrop-blur-sm">{bodyTypeLabels[model.bodyType]}</Badge>
+            <Badge variant="secondary" className="text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0 bg-white/25 text-white border-0 backdrop-blur-sm hidden sm:inline-flex">{model.ethnicity}</Badge>
           </div>
-
-          {/* Age Range - Hidden on mobile */}
-          <Text as="p" variant="bodySm">
-            <span className="text-white/70 text-[8px] sm:text-[10px] capitalize hidden sm:inline">
-              {model.ageRange.replace('-', ' ')}
-            </span>
-          </Text>
+          <p className="text-white/70 text-[8px] sm:text-[10px] capitalize hidden sm:inline">{model.ageRange.replace('-', ' ')}</p>
         </div>
       </div>
     </div>
