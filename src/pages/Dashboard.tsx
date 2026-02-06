@@ -157,7 +157,7 @@ export default function Dashboard() {
               <Text as="h2" variant="headingMd">
                 Recent Jobs
               </Text>
-              <Button variant="plain" onClick={() => navigate('/jobs')}>
+              <Button variant="plain" onClick={() => navigate('/app/jobs')}>
                 View all
               </Button>
             </InlineStack>
