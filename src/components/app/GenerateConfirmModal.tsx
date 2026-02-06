@@ -1,16 +1,9 @@
-import {
-  Modal,
-  BlockStack,
-  InlineStack,
-  Text,
-  Thumbnail,
-  Badge,
-  Divider,
-  Banner,
-  Icon,
-  Button,
-} from '@shopify/polaris';
-import { ImageIcon, WalletIcon } from '@shopify/polaris-icons';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Wallet, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import type { Product, Template, AspectRatio, ImageQuality } from '@/types';
 import { getTemplateImage } from './TemplatePreviewCard';
 import { categoryLabels } from '@/data/mockData';
@@ -48,7 +41,6 @@ export function GenerateConfirmModal({
   const totalCredits = imageCount * creditsPerImage;
   const hasEnoughCredits = creditsRemaining >= totalCredits;
   
-  // Get selected source images from product
   const selectedSourceImages = product?.images.filter(img => sourceImageIds.has(img.id)) || [];
   const templateImage = getTemplateImage(template.templateId);
 
@@ -59,149 +51,107 @@ export function GenerateConfirmModal({
   };
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title="Confirm Generation"
-      primaryAction={{
-        content: `Generate ${imageCount} Images`,
-        onAction: onConfirm,
-        disabled: !hasEnoughCredits,
-      }}
-      secondaryActions={[
-        {
-          content: 'Go Back',
-          onAction: onClose,
-        },
-      ]}
-    >
-      <Modal.Section>
-        <BlockStack gap="500">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Confirm Generation</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-5">
           {/* Summary cards */}
-          <InlineStack gap="400">
-            {/* Product - Larger thumbnail for clear verification */}
-            <div className="flex-1 p-4 rounded-lg border-2 border-primary bg-primary/5">
-              <BlockStack gap="300">
-                <Text as="p" variant="bodySm" fontWeight="semibold">Generating for</Text>
-                <InlineStack gap="300" blockAlign="center">
-                  <Thumbnail
-                    source={selectedSourceImages[0]?.url || product.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                    alt={product.title}
-                    size="large"
-                  />
-                  <BlockStack gap="100">
-                    <Text as="p" variant="headingSm" fontWeight="bold">
-                      {product.title}
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      {product.vendor}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-                
-                {/* Source images used for reference */}
-                <BlockStack gap="200">
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    Source reference ({selectedSourceImages.length} image{selectedSourceImages.length !== 1 ? 's' : ''})
-                  </Text>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedSourceImages.map(img => (
-                      <div key={img.id} className="w-10 h-10 rounded-md overflow-hidden ring-1 ring-primary/50">
-                        <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                </BlockStack>
-              </BlockStack>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Product */}
+            <div className="p-4 rounded-lg border-2 border-primary bg-primary/5 space-y-3">
+              <p className="text-sm font-semibold">Generating for</p>
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-border">
+                  <img src={selectedSourceImages[0]?.url || product.images[0]?.url || '/placeholder.svg'} alt={product.title} className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">{product.title}</p>
+                  <p className="text-xs text-muted-foreground">{product.vendor}</p>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Source reference ({selectedSourceImages.length} image{selectedSourceImages.length !== 1 ? 's' : ''})</p>
+                <div className="flex gap-1">
+                  {selectedSourceImages.map(img => (
+                    <div key={img.id} className="w-8 h-8 rounded overflow-hidden ring-1 ring-primary/50">
+                      <img src={img.url} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Template */}
-            <div className="flex-1 p-4 rounded-lg border border-border bg-surface-subdued">
-              <BlockStack gap="200">
-                <Text as="p" variant="bodySm" tone="subdued">Template</Text>
-                <InlineStack gap="200" blockAlign="center">
-                  {templateImage ? (
-                    <div className="w-10 h-10 rounded-md overflow-hidden">
-                      <img src={templateImage} alt={template.name} className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
-                      <Icon source={ImageIcon} tone="subdued" />
-                    </div>
-                  )}
-                  <BlockStack gap="050">
-                    <Text as="p" variant="bodyMd" fontWeight="semibold">
-                      {template.name}
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      {categoryLabels[template.category]}
-                    </Text>
-                  </BlockStack>
-                </InlineStack>
-              </BlockStack>
+            <div className="p-4 rounded-lg border border-border bg-muted/50 space-y-2">
+              <p className="text-xs text-muted-foreground">Template</p>
+              <div className="flex items-center gap-2">
+                {templateImage ? (
+                  <div className="w-10 h-10 rounded-md overflow-hidden">
+                    <img src={templateImage} alt={template.name} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                )}
+                <div>
+                  <p className="font-semibold text-sm">{template.name}</p>
+                  <p className="text-xs text-muted-foreground">{categoryLabels[template.category]}</p>
+                </div>
+              </div>
             </div>
-          </InlineStack>
-
-          <Divider />
-
-          {/* Settings summary */}
-          <BlockStack gap="300">
-            <Text as="h3" variant="headingSm">
-              Generation Settings
-            </Text>
-            <InlineStack gap="200" wrap>
-              <Badge tone="info">{`${imageCount} images`}</Badge>
-              <Badge tone="info">{aspectRatioLabels[aspectRatio]}</Badge>
-              <Badge tone={quality === 'high' ? 'success' : 'info'}>
-                {quality === 'high' ? 'High Quality' : 'Standard Quality'}
-              </Badge>
-            </InlineStack>
-          </BlockStack>
-
-          <Divider />
-
-          {/* Credit cost */}
-          <div className="p-4 rounded-lg bg-surface-subdued border border-border">
-            <InlineStack align="space-between" blockAlign="center">
-              <InlineStack gap="200" blockAlign="center">
-                <Icon source={WalletIcon} />
-                <BlockStack gap="050">
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">
-                    Credit Cost
-                  </Text>
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    {creditsPerImage} credit × {imageCount} images
-                  </Text>
-                </BlockStack>
-              </InlineStack>
-              <BlockStack gap="050" inlineAlign="end">
-                <Text as="p" variant="headingLg" fontWeight="bold">
-                  {totalCredits} credits
-                </Text>
-                <Text as="p" variant="bodySm" tone="subdued">
-                  {`${creditsRemaining - totalCredits} remaining after`}
-                </Text>
-              </BlockStack>
-            </InlineStack>
           </div>
 
-          {/* Warning if not enough credits */}
+          <Separator />
+
+          {/* Settings summary */}
+          <div className="space-y-2">
+            <h3 className="font-semibold">Generation Settings</h3>
+            <div className="flex gap-2 flex-wrap">
+              <Badge variant="secondary">{`${imageCount} images`}</Badge>
+              <Badge variant="secondary">{aspectRatioLabels[aspectRatio]}</Badge>
+              <Badge variant={quality === 'high' ? 'default' : 'secondary'}>
+                {quality === 'high' ? 'High Quality' : 'Standard Quality'}
+              </Badge>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Credit cost */}
+          <div className="p-4 rounded-lg bg-muted border border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-5 h-5" />
+              <div>
+                <p className="font-semibold">Credit Cost</p>
+                <p className="text-sm text-muted-foreground">{creditsPerImage} credit × {imageCount} images</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xl font-bold">{totalCredits} credits</p>
+              <p className="text-sm text-muted-foreground">{creditsRemaining - totalCredits} remaining after</p>
+            </div>
+          </div>
+
           {!hasEnoughCredits && (
-            <Banner tone="critical">
-              <BlockStack gap="300">
-                <Text as="p">
-                  You don't have enough credits. You need {totalCredits} credits but only have {creditsRemaining}.
-                </Text>
-                {onBuyCredits && (
-                  <Button variant="primary" onClick={onBuyCredits}>
-                    Buy Credits
-                  </Button>
-                )}
-              </BlockStack>
-            </Banner>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="space-y-2">
+                <p>You don't have enough credits. You need {totalCredits} credits but only have {creditsRemaining}.</p>
+                {onBuyCredits && <Button size="sm" onClick={onBuyCredits}>Buy Credits</Button>}
+              </AlertDescription>
+            </Alert>
           )}
-        </BlockStack>
-      </Modal.Section>
-    </Modal>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Go Back</Button>
+          <Button onClick={onConfirm} disabled={!hasEnoughCredits}>Generate {imageCount} Images</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,18 +1,10 @@
 import { useState, useEffect } from 'react';
-import {
-  Modal,
-  BlockStack,
-  InlineStack,
-  Text,
-  Button,
-  Thumbnail,
-  Badge,
-  Divider,
-  InlineGrid,
-  Icon,
-  Banner,
-} from '@shopify/polaris';
-import { ArrowDownIcon, CheckCircleIcon } from '@shopify/polaris-icons';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle, Info } from 'lucide-react';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import type { GenerationJob } from '@/types';
@@ -39,7 +31,6 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
   if (!job) return null;
 
   const unpublishedResults = job.results.filter(r => !r.publishedToShopify);
-  const publishedResults = job.results.filter(r => r.publishedToShopify);
   const unpublishedIndices = job.results
     .map((r, idx) => ({ result: r, idx }))
     .filter(item => !item.result.publishedToShopify)
@@ -65,59 +56,61 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
 
   return (
     <>
-      <Modal
-        open={open}
-        onClose={onClose}
-        title="Job Details"
-        size="large"
-        primaryAction={
-          selectedForPublish.size > 0 && onPublish
-            ? { content: `Publish ${selectedForPublish.size} Selected`, onAction: handlePublishSelected }
-            : unpublishedResults.length > 0 
-            ? { content: 'Select images to publish', disabled: true }
-            : undefined
-        }
-        secondaryActions={[
-          ...(job.status === 'failed' && onRetry ? [{ content: 'Retry', onAction: () => onRetry(job) }] : []),
-          { content: 'Close', onAction: onClose },
-        ]}
-      >
-        <Modal.Section>
-          <BlockStack gap="500">
-            <InlineStack align="space-between" blockAlign="center">
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Job Details</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
               <StatusBadge status={job.status} />
-              <Text as="p" variant="bodySm" tone="subdued">Created {new Date(job.createdAt).toLocaleString()}</Text>
-            </InlineStack>
-            <Divider />
-            <BlockStack gap="300">
-              <Text as="h3" variant="headingSm">Product</Text>
-              <InlineStack gap="400" blockAlign="center">
-                <Thumbnail source={job.productSnapshot.images[0]?.url || ''} alt={job.productSnapshot.title} size="medium" />
-                <BlockStack gap="100">
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">{job.productSnapshot.title}</Text>
-                  <Text as="p" variant="bodySm" tone="subdued">{job.productSnapshot.vendor}</Text>
-                </BlockStack>
-              </InlineStack>
-            </BlockStack>
-            <Divider />
+              <p className="text-sm text-muted-foreground">Created {new Date(job.createdAt).toLocaleString()}</p>
+            </div>
+            
+            <Separator />
+            
+            <div className="space-y-2">
+              <h3 className="font-semibold">Product</h3>
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-border">
+                  <img src={job.productSnapshot.images[0]?.url || '/placeholder.svg'} alt={job.productSnapshot.title} className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="font-semibold">{job.productSnapshot.title}</p>
+                  <p className="text-sm text-muted-foreground">{job.productSnapshot.vendor}</p>
+                </div>
+              </div>
+            </div>
+            
+            <Separator />
+            
             {job.results.length > 0 && (
-              <BlockStack gap="400">
-                <Text as="h3" variant="headingSm">{`Generated Images (${job.results.length})`}</Text>
+              <div className="space-y-3">
+                <h3 className="font-semibold">Generated Images ({job.results.length})</h3>
+                
                 {unpublishedResults.length > 0 && (
-                  <Banner tone="info">
-                    <Text as="p" variant="bodySm">👆 Click images to select for publishing</Text>
-                    <InlineStack gap="200">
-                      <Button size="slim" onClick={() => setSelectedForPublish(new Set(unpublishedIndices))}>Select All</Button>
-                      {selectedForPublish.size > 0 && <Button size="slim" variant="plain" onClick={() => setSelectedForPublish(new Set())}>Clear</Button>}
-                    </InlineStack>
-                  </Banner>
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="flex items-center justify-between">
+                      <span>👆 Click images to select for downloading</span>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setSelectedForPublish(new Set(unpublishedIndices))}>Select All</Button>
+                        {selectedForPublish.size > 0 && (
+                          <Button size="sm" variant="ghost" onClick={() => setSelectedForPublish(new Set())}>Clear</Button>
+                        )}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
                 )}
+
                 {selectedForPublish.size > 0 && (
                   <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
-                    <Text as="p" variant="bodySm" fontWeight="semibold">{`✓ ${selectedForPublish.size} selected`}</Text>
+                    <p className="text-sm font-semibold">✓ {selectedForPublish.size} selected</p>
                   </div>
                 )}
-                <InlineGrid columns={{ xs: 2, md: 4 }} gap="300">
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {job.results.map((result, index) => (
                     <div
                       key={result.assetId}
@@ -127,22 +120,50 @@ export function JobDetailModal({ open, onClose, job, onPublish, onRetry }: JobDe
                       }`}
                     >
                       <img src={result.imageUrl} alt={`Generated ${index + 1}`} className="w-full aspect-square object-cover" />
-                      {result.publishedToShopify && <div className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded-full">Published</div>}
+                      {result.publishedToShopify && (
+                        <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">Published</div>
+                      )}
                       {!result.publishedToShopify && (
-                        <div className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center ${selectedForPublish.has(index) ? 'bg-primary border-primary' : 'border-white bg-black/50'}`}>
-                          {selectedForPublish.has(index) ? <Icon source={CheckCircleIcon} tone="base" /> : <span className="text-white text-xs font-bold">{String(index + 1)}</span>}
+                        <div className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center ${
+                          selectedForPublish.has(index) ? 'bg-primary border-primary' : 'border-white bg-black/50'
+                        }`}>
+                          {selectedForPublish.has(index) ? (
+                            <CheckCircle className="w-4 h-4 text-white" />
+                          ) : (
+                            <span className="text-white text-xs font-bold">{index + 1}</span>
+                          )}
                         </div>
                       )}
-                      {!result.publishedToShopify && !selectedForPublish.has(index) && <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">Click to select</div>}
                     </div>
                   ))}
-                </InlineGrid>
-              </BlockStack>
+                </div>
+              </div>
             )}
-          </BlockStack>
-        </Modal.Section>
-      </Modal>
-      <ImageLightbox images={job.results.map(r => r.imageUrl)} currentIndex={lightboxIndex} open={lightboxOpen} onClose={() => setLightboxOpen(false)} onNavigate={setLightboxIndex} onSelect={toggleSelection} onDownload={() => {}} selectedIndices={selectedForPublish} productName={job.productSnapshot.title} />
+          </div>
+
+          <DialogFooter>
+            {job.status === 'failed' && onRetry && (
+              <Button variant="outline" onClick={() => onRetry(job)}>Retry</Button>
+            )}
+            <Button variant="outline" onClick={onClose}>Close</Button>
+            {selectedForPublish.size > 0 && onPublish && (
+              <Button onClick={handlePublishSelected}>Download {selectedForPublish.size} Selected</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <ImageLightbox
+        images={job.results.map(r => r.imageUrl)}
+        currentIndex={lightboxIndex}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        onNavigate={setLightboxIndex}
+        onSelect={toggleSelection}
+        onDownload={() => {}}
+        selectedIndices={selectedForPublish}
+        productName={job.productSnapshot.title}
+      />
     </>
   );
 }
