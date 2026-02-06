@@ -36,7 +36,7 @@ export default function Dashboard() {
   const rows = recentJobs.map(job => [
     <InlineStack gap="300" blockAlign="center" key={job.jobId}>
       <Thumbnail
-        source={job.productSnapshot.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+        source={job.productSnapshot.images[0]?.url || '/placeholder.svg'}
         alt={job.productSnapshot.title}
         size="small"
       />
