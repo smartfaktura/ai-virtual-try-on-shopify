@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, CreditCard, Clock, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
