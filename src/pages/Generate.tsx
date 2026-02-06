@@ -2050,7 +2050,7 @@ export default function Generate() {
           const count = selectedForPublish.size;
           toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`);
           setProductAssignmentModalOpen(false);
-          navigate('/jobs');
+          navigate('/app/jobs');
         }}
         selectedImageCount={selectedForPublish.size}
       />
