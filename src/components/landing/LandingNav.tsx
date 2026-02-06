@@ -59,7 +59,7 @@ export function LandingNav() {
 
         {/* Desktop CTA */}
         <div className="hidden md:block">
-          <Button size="sm" className="rounded-full px-6 font-semibold">
+          <Button size="sm" className="rounded-full px-6 font-semibold" onClick={() => navigate('/auth')}>
             Start Free
           </Button>
         </div>
