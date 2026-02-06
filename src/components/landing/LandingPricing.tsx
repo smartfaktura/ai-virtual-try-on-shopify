@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { pricingPlans } from '@/data/mockData';
 
 export function LandingPricing() {
+  const navigate = useNavigate();
   const [annual, setAnnual] = useState(false);
 
   return (
