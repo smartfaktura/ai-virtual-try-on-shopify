@@ -174,7 +174,7 @@ export default function Dashboard() {
                 description="Generate your first product images to see them here."
                 action={{
                   content: 'Generate images',
-                  onAction: () => navigate('/generate'),
+                  onAction: () => navigate('/app/generate'),
                 }}
               />
             )}
