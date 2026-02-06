@@ -190,7 +190,7 @@ export default function Dashboard() {
           setSelectedJob(null);
         }}
         job={selectedJob}
-        onRetry={() => navigate('/generate')}
+        onRetry={() => navigate('/app/generate')}
       />
     </PageHeader>
   );

@@ -263,7 +263,7 @@ export default function Jobs() {
           setSelectedJobForDetail(null);
           handlePublishClick(job, selectedUrls);
         }}
-        onRetry={() => navigate('/generate')}
+        onRetry={() => navigate('/app/generate')}
       />
     </PageHeader>
   );

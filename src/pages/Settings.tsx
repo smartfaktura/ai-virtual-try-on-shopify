@@ -258,10 +258,10 @@ export default function Settings() {
             />
             
             <Checkbox
-              label="Auto-publish successful generations"
+              label="Auto-download successful generations"
               checked={autoPublish}
               onChange={setAutoPublish}
-              helpText="Automatically publish images to Shopify when generation completes"
+              helpText="Automatically download images when generation completes"
             />
           </BlockStack>
         </Card>

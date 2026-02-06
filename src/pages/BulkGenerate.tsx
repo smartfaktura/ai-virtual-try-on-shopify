@@ -166,7 +166,7 @@ export default function BulkGenerate() {
               )}
 
               <InlineStack align="end" gap="300">
-                <Button onClick={() => navigate('/generate')}>
+                <Button onClick={() => navigate('/app/generate')}>
                   Cancel
                 </Button>
                 <Button
