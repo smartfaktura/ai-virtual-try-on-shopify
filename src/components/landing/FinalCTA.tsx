@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, Shield, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function FinalCTA() {
+  const navigate = useNavigate();
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden">
       {/* Background */}
@@ -24,7 +26,7 @@ export function FinalCTA() {
           Join 2,000+ brands already using nanobanna to create professional product images at a fraction of the cost.
         </p>
 
-        <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25">
+        <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
           Start Free — 5 Credits
           <ArrowRight className="w-5 h-5" />
         </Button>

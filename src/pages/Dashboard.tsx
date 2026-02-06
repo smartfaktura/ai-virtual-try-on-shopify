@@ -36,7 +36,7 @@ export default function Dashboard() {
   const rows = recentJobs.map(job => [
     <InlineStack gap="300" blockAlign="center" key={job.jobId}>
       <Thumbnail
-        source={job.productSnapshot.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+        source={job.productSnapshot.images[0]?.url || '/placeholder.svg'}
         alt={job.productSnapshot.title}
         size="small"
       />
@@ -55,7 +55,7 @@ export default function Dashboard() {
         View
       </Button>
       {job.status === 'failed' && (
-        <Button size="slim" variant="primary" onClick={() => navigate('/generate')}>
+        <Button size="slim" variant="primary" onClick={() => navigate('/app/generate')}>
           Retry
         </Button>
       )}
@@ -135,13 +135,13 @@ export default function Dashboard() {
               <Button
                 variant="primary"
                 size="large"
-                onClick={() => navigate('/generate')}
+                onClick={() => navigate('/app/generate')}
               >
-                Select Product to Generate
+                Upload & Generate
               </Button>
               <Button
                 size="large"
-                onClick={() => navigate('/templates')}
+                onClick={() => navigate('/app/templates')}
                 variant="plain"
               >
                 Explore Templates
@@ -157,7 +157,7 @@ export default function Dashboard() {
               <Text as="h2" variant="headingMd">
                 Recent Jobs
               </Text>
-              <Button variant="plain" onClick={() => navigate('/jobs')}>
+              <Button variant="plain" onClick={() => navigate('/app/jobs')}>
                 View all
               </Button>
             </InlineStack>
@@ -174,7 +174,7 @@ export default function Dashboard() {
                 description="Generate your first product images to see them here."
                 action={{
                   content: 'Generate images',
-                  onAction: () => navigate('/generate'),
+                  onAction: () => navigate('/app/generate'),
                 }}
               />
             )}
@@ -190,7 +190,7 @@ export default function Dashboard() {
           setSelectedJob(null);
         }}
         job={selectedJob}
-        onRetry={() => navigate('/generate')}
+        onRetry={() => navigate('/app/generate')}
       />
     </PageHeader>
   );

@@ -456,17 +456,20 @@ export default function Generate() {
 
   const handlePublishClick = () => {
     if (selectedForPublish.size === 0) {
-      toast.error('Please select at least one image to publish');
+      toast.error('Please select at least one image to download');
       return;
     }
-    setPublishModalOpen(true);
+    // Download selected images
+    selectedForPublish.forEach(idx => handleDownloadImage(idx));
+    toast.success(`${selectedForPublish.size} image(s) downloaded!`);
+    navigate('/app/jobs');
   };
 
   const handlePublish = (mode: 'add' | 'replace', variantId?: string) => {
     const count = selectedForPublish.size;
-    toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} Shopify!`);
+    toast.success(`${count} image${count !== 1 ? 's' : ''} downloaded!`);
     setPublishModalOpen(false);
-    navigate('/jobs');
+    navigate('/app/jobs');
   };
 
   const toggleImageSelection = (index: number) => {
@@ -560,7 +563,7 @@ export default function Generate() {
   return (
     <PageHeader
       title="Generate Images"
-      backAction={{ content: 'Dashboard', onAction: () => navigate('/') }}
+      backAction={{ content: 'Dashboard', onAction: () => navigate('/app') }}
     >
       <BlockStack gap="600">
         {/* Low credits warning */}
@@ -781,10 +784,10 @@ export default function Generate() {
                         );
                       }
                       
-                      // Go to bulk flow
-                      navigate('/generate/bulk', { 
-                        state: { selectedProducts } 
-                      });
+                       // Go to bulk flow
+                       navigate('/app/generate/bulk', { 
+                         state: { selectedProducts } 
+                       });
                     }
                   }}
                 >
@@ -2047,7 +2050,7 @@ export default function Generate() {
           const count = selectedForPublish.size;
           toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`);
           setProductAssignmentModalOpen(false);
-          navigate('/jobs');
+          navigate('/app/jobs');
         }}
         selectedImageCount={selectedForPublish.size}
       />

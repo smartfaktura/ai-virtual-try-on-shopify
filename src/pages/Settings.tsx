@@ -238,30 +238,30 @@ export default function Settings() {
           </BlockStack>
         </Card>
 
-        {/* Publishing Defaults */}
+        {/* Download & Export Defaults */}
         <Card>
           <BlockStack gap="400">
             <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">Publishing Defaults</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Configure how generated images are published to Shopify</Text>
+              <Text as="h2" variant="headingMd">Download & Export Defaults</Text>
+              <Text as="p" variant="bodySm" tone="subdued">Configure how generated images are exported</Text>
             </BlockStack>
             
             <Select
-              label="Default Publish Mode"
+              label="Default Export Mode"
               options={[
-                { label: 'Add as new images', value: 'add' },
-                { label: 'Replace existing images', value: 'replace' },
+                { label: 'Download individually', value: 'add' },
+                { label: 'Download as ZIP', value: 'replace' },
               ]}
               value={publishMode}
               onChange={(v) => setPublishMode(v as 'add' | 'replace')}
-              helpText="How images are added to products by default"
+              helpText="How images are exported by default"
             />
             
             <Checkbox
-              label="Auto-publish successful generations"
+              label="Auto-download successful generations"
               checked={autoPublish}
               onChange={setAutoPublish}
-              helpText="Automatically publish images to Shopify when generation completes"
+              helpText="Automatically download images when generation completes"
             />
           </BlockStack>
         </Card>

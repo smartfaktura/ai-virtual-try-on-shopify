@@ -97,8 +97,8 @@ export default function Jobs() {
     return [
       // Product & Template combined
       <InlineStack key={job.jobId} gap="300" blockAlign="center" wrap={false}>
-        <Thumbnail
-          source={job.productSnapshot.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+      <Thumbnail
+          source={job.productSnapshot.images[0]?.url || '/placeholder.svg'}
           alt={job.productSnapshot.title}
           size="small"
         />
@@ -128,13 +128,13 @@ export default function Jobs() {
           View
         </Button>
         {job.status === 'failed' && (
-          <Button size="slim" variant="primary" onClick={() => navigate('/generate')}>
+          <Button size="slim" variant="primary" onClick={() => navigate('/app/generate')}>
             Retry
           </Button>
         )}
         {job.status === 'completed' && unpublishedCount > 0 && (
           <Button size="slim" variant="primary" onClick={() => handlePublishClick(job)}>
-            {`Publish ${unpublishedCount}`}
+            {`Download ${unpublishedCount}`}
           </Button>
         )}
       </InlineStack>,
@@ -263,7 +263,7 @@ export default function Jobs() {
           setSelectedJobForDetail(null);
           handlePublishClick(job, selectedUrls);
         }}
-        onRetry={() => navigate('/generate')}
+        onRetry={() => navigate('/app/generate')}
       />
     </PageHeader>
   );

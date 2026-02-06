@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -10,6 +11,7 @@ const navLinks = [
 ];
 
 export function LandingNav() {
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -57,7 +59,7 @@ export function LandingNav() {
 
         {/* Desktop CTA */}
         <div className="hidden md:block">
-          <Button size="sm" className="rounded-full px-6 font-semibold">
+          <Button size="sm" className="rounded-full px-6 font-semibold" onClick={() => navigate('/auth')}>
             Start Free
           </Button>
         </div>
@@ -85,7 +87,7 @@ export function LandingNav() {
                 {link.label}
               </button>
             ))}
-            <Button size="sm" className="rounded-full mt-2 font-semibold">
+            <Button size="sm" className="rounded-full mt-2 font-semibold" onClick={() => navigate('/auth')}>
               Start Free
             </Button>
           </div>

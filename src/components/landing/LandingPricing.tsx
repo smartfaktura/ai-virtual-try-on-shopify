@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { pricingPlans } from '@/data/mockData';
 
 export function LandingPricing() {
+  const navigate = useNavigate();
   const [annual, setAnnual] = useState(false);
 
   return (
@@ -91,6 +93,7 @@ export function LandingPricing() {
                 <Button
                   variant={plan.highlighted ? 'default' : 'outline'}
                   className="rounded-full font-semibold w-full gap-2"
+                  onClick={() => navigate('/auth')}
                 >
                   {plan.ctaText}
                   <ArrowRight className="w-4 h-4" />

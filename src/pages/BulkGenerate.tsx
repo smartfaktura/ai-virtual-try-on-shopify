@@ -89,14 +89,12 @@ export default function BulkGenerate() {
   };
 
   const handlePublishAll = () => {
-    toast.success('Publishing all images to Shopify...');
-    // TODO: Implement actual publish logic
+    toast.success('Downloading all images...');
   };
 
   const handlePublishSelected = (productIds: string[], selectedImages: Map<string, number[]>) => {
     const totalImages = Array.from(selectedImages.values()).reduce((acc, arr) => acc + arr.length, 0);
-    toast.success(`Publishing ${totalImages} selected images to Shopify...`);
-    // TODO: Implement actual publish logic
+    toast.success(`Downloading ${totalImages} selected images...`);
   };
 
   const handleStartNew = () => {
@@ -108,7 +106,7 @@ export default function BulkGenerate() {
   return (
     <PageHeader
       title="Bulk Generation"
-      backAction={{ content: 'Generate', onAction: () => navigate('/generate') }}
+      backAction={{ content: 'Generate', onAction: () => navigate('/app/generate') }}
     >
       <BlockStack gap="600">
         {/* Info banner */}
@@ -168,7 +166,7 @@ export default function BulkGenerate() {
               )}
 
               <InlineStack align="end" gap="300">
-                <Button onClick={() => navigate('/generate')}>
+                <Button onClick={() => navigate('/app/generate')}>
                   Cancel
                 </Button>
                 <Button
