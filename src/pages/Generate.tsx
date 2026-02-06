@@ -563,7 +563,7 @@ export default function Generate() {
   return (
     <PageHeader
       title="Generate Images"
-      backAction={{ content: 'Dashboard', onAction: () => navigate('/') }}
+      backAction={{ content: 'Dashboard', onAction: () => navigate('/app') }}
     >
       <BlockStack gap="600">
         {/* Low credits warning */}

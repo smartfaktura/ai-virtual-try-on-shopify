@@ -94,7 +94,7 @@ export function NoCreditsModal({ open, onClose }: NoCreditsModalProps) {
                   500 credits/month + Virtual Try-On
                 </Text>
               </BlockStack>
-              <Button url="/settings">View Plans</Button>
+              <Button url="/app/settings">View Plans</Button>
             </InlineStack>
           </div>
         </BlockStack>
