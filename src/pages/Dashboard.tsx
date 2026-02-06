@@ -141,7 +141,7 @@ export default function Dashboard() {
               </Button>
               <Button
                 size="large"
-                onClick={() => navigate('/templates')}
+                onClick={() => navigate('/app/templates')}
                 variant="plain"
               >
                 Explore Templates
