@@ -247,14 +247,14 @@ export default function Settings() {
             </BlockStack>
             
             <Select
-              label="Default Publish Mode"
+              label="Default Export Mode"
               options={[
-                { label: 'Add as new images', value: 'add' },
-                { label: 'Replace existing images', value: 'replace' },
+                { label: 'Download individually', value: 'add' },
+                { label: 'Download as ZIP', value: 'replace' },
               ]}
               value={publishMode}
               onChange={(v) => setPublishMode(v as 'add' | 'replace')}
-              helpText="How images are added to products by default"
+              helpText="How images are exported by default"
             />
             
             <Checkbox
