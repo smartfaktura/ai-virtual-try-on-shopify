@@ -106,7 +106,7 @@ export default function BulkGenerate() {
   return (
     <PageHeader
       title="Bulk Generation"
-      backAction={{ content: 'Generate', onAction: () => navigate('/generate') }}
+      backAction={{ content: 'Generate', onAction: () => navigate('/app/generate') }}
     >
       <BlockStack gap="600">
         {/* Info banner */}
