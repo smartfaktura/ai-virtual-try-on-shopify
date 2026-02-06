@@ -14,7 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      generation_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          credits_used: number
+          error_message: string | null
+          id: string
+          product_id: string | null
+          prompt_final: string | null
+          quality: string
+          ratio: string
+          requested_count: number
+          results: Json | null
+          status: string
+          template_id: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          credits_used?: number
+          error_message?: string | null
+          id?: string
+          product_id?: string | null
+          prompt_final?: string | null
+          quality?: string
+          ratio?: string
+          requested_count?: number
+          results?: Json | null
+          status?: string
+          template_id?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          credits_used?: number
+          error_message?: string | null
+          id?: string
+          product_id?: string | null
+          prompt_final?: string | null
+          quality?: string
+          ratio?: string
+          requested_count?: number
+          results?: Json | null
+          status?: string
+          template_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_jobs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "user_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          credits_balance: number
+          display_name: string | null
+          email: string
+          id: string
+          plan: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          credits_balance?: number
+          display_name?: string | null
+          email: string
+          id?: string
+          plan?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          credits_balance?: number
+          display_name?: string | null
+          email?: string
+          id?: string
+          plan?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_products: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          image_url: string
+          product_type: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url: string
+          product_type?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string
+          product_type?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
