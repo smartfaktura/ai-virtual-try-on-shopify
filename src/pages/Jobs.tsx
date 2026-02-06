@@ -128,7 +128,7 @@ export default function Jobs() {
           View
         </Button>
         {job.status === 'failed' && (
-          <Button size="slim" variant="primary" onClick={() => navigate('/generate')}>
+          <Button size="slim" variant="primary" onClick={() => navigate('/app/generate')}>
             Retry
           </Button>
         )}
