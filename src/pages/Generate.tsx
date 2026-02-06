@@ -784,10 +784,10 @@ export default function Generate() {
                         );
                       }
                       
-                      // Go to bulk flow
-                      navigate('/generate/bulk', { 
-                        state: { selectedProducts } 
-                      });
+                       // Go to bulk flow
+                       navigate('/app/generate/bulk', { 
+                         state: { selectedProducts } 
+                       });
                     }
                   }}
                 >
