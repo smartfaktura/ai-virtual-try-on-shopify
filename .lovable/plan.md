@@ -1,167 +1,121 @@
 
 
-# Transform nanobanna into a Standalone SaaS Platform
+# Replace Shopify Polaris with Native Tailwind/shadcn Dashboard
 
 ## Overview
 
-This plan converts nanobanna from a Shopify-embedded app into a standalone SaaS platform where anyone can sign up, upload product images, and generate professional AI photography. The landing page becomes the entry point, authentication gates access to the dashboard, and "Publish to Shopify" becomes "Download" with optional shop connections.
+The entire `/app/*` dashboard currently uses Shopify Polaris components (`Frame`, `Navigation`, `TopBar`, `Card`, `Modal`, `DataTable`, `Banner`, `Badge`, `TextField`, `Select`, etc.). This plan replaces **all Polaris usage** across the app with native Tailwind CSS + shadcn/ui components, creating a unified design language that matches the modern landing page aesthetic. The edge functions and AI generation logic remain completely untouched.
 
-## What Changes
+## Scope of Change
 
-### Phase 1: Authentication System
+There are **~30 component files** and **6 page files** that import from `@shopify/polaris`. Every single one needs to be rewritten to use shadcn/ui primitives and Tailwind classes instead.
 
-Add user signup/login so the "Start Free" buttons on the landing page actually work.
+## Design Direction
 
-**Database tables needed:**
-- `profiles` table (id, email, display_name, avatar_url, plan, credits_balance, created_at)
-- `user_products` table (id, user_id, title, product_type, description, image_url, created_at) -- replaces mock Shopify products
-- `generation_jobs` table (id, user_id, product_id, template_id, status, credits_used, results, created_at) -- persists job history
+The dashboard will adopt the same design system as the landing page:
+- Clean white cards with subtle borders and rounded corners
+- Inter/system font stack (already set in `index.css`)
+- Primary green accent (`hsl(161 100% 25%)`)
+- Lucide icons instead of Polaris icons
+- shadcn/ui `Dialog` instead of Polaris `Modal`
+- shadcn/ui `Input`/`Select` instead of Polaris `TextField`/`Select`
+- Custom Tailwind sidebar instead of Polaris `Frame`/`Navigation`
+- shadcn/ui `Table` instead of Polaris `DataTable`
+- shadcn/ui `Badge` instead of Polaris `Badge`
 
-**New pages/components:**
-- `/auth` page with signup and login forms (email + password via built-in authentication)
-- Auth context/provider wrapping the app
-- Protected route wrapper for dashboard routes
+## Implementation Phases
 
-**Flow:**
-```text
-Landing Page (/landing)
-     |
-     | "Start Free" button
-     v
-Auth Page (/auth)
-     |
-     | Sign up / Log in
-     v
-Dashboard (/)
-```
+### Phase 1: AppShell (Sidebar + Header)
 
-### Phase 2: Route Restructuring
+Replace the Polaris `Frame`/`Navigation`/`TopBar` with a custom Tailwind layout:
+- **Collapsible sidebar** with dark background (using existing `--sidebar-*` CSS variables)
+- **Top header bar** with user avatar dropdown, credit indicator, and mobile hamburger
+- Lucide icons (`Home`, `Image`, `LayoutGrid`, `Clock`, `Settings`, `LogOut`)
+- Mobile: sidebar slides in as overlay with backdrop
 
-- Make `/landing` the default route (`/`)
-- Move the dashboard app routes under `/app/*`
-- Update all internal navigation accordingly
+**Files:** `AppShell.tsx`, `CreditIndicator.tsx`
 
-**New route structure:**
-```text
-/              -> Landing page (public)
-/auth          -> Login / Signup (public)
-/app           -> Dashboard (protected)
-/app/generate  -> Generate page (protected)
-/app/templates -> Templates (protected)
-/app/jobs      -> Job history (protected)
-/app/settings  -> Settings (protected)
-```
+### Phase 2: Shared UI Components
 
-### Phase 3: De-Shopify the App Shell
+Rewrite all reusable app components to use shadcn/ui + Tailwind:
 
-The app shell (sidebar, topbar) currently uses Shopify Polaris `Frame`, `Navigation`, and `TopBar`. These need to be replaced with a custom layout since this is no longer a Shopify embedded app.
+| Component | Polaris Used | Replacement |
+|-----------|-------------|-------------|
+| `PageHeader.tsx` | `Page` | Simple `div` with heading + breadcrumb |
+| `MetricCard.tsx` | `Card`, `Text`, `InlineStack`, `Icon` | shadcn `Card` + Lucide icons |
+| `StatusBadge.tsx` | `Badge` | shadcn `Badge` with color variants |
+| `EmptyStateCard.tsx` | `Card`, `EmptyState`, `Text` | Custom Tailwind empty state |
+| `LowCreditsBanner.tsx` | `Banner`, `Button`, `Text` | shadcn `Alert` + `Button` |
+| `PlanCard.tsx` | `Card`, `Text`, `Badge`, `Button`, `Divider`, `Icon` | shadcn `Card` + `Badge` + `Button` |
+| `CreditPackCard.tsx` | `Card`, `Text`, `Button`, `Badge` | shadcn `Card` + `Button` |
+| `CompetitorComparison.tsx` | `Card`, `Text`, `InlineGrid`, `Icon` | shadcn `Card` + Tailwind grid |
 
-**Changes to AppShell:**
-- Replace Polaris `Frame`/`Navigation`/`TopBar` with custom Tailwind sidebar + header
-- Show the authenticated user's name/email instead of "My Store" / "mystore.myshopify.com"
-- Add a "Sign Out" action that actually signs the user out
-- Keep the same navigation items (Dashboard, Generate, Templates, Jobs, Settings)
+### Phase 3: Modal Components
 
-### Phase 4: Replace "Products" with User Uploads
+Replace Polaris `Modal` with shadcn `Dialog`:
 
-Currently the Generate flow starts with "From Product(s)" which loads mock Shopify products. This needs to become upload-first.
+| Component | Changes |
+|-----------|---------|
+| `BuyCreditsModal.tsx` | `Modal` to `Dialog` |
+| `NoCreditsModal.tsx` | `Modal` to `Dialog` |
+| `GenerateConfirmModal.tsx` | `Modal` to `Dialog` |
+| `TryOnConfirmModal.tsx` | `Modal` to `Dialog` |
+| `JobDetailModal.tsx` | `Modal` to `Dialog` |
+| `PublishModal.tsx` | `Modal` to `Dialog` |
 
-**Changes:**
-- Remove `SourceTypeSelector` distinction between "From Product(s)" and "From Scratch" -- everything is now upload-based
-- The Generate flow starts with "Upload your product image" as the primary path
-- Add a secondary "My Products" library where users can save previously uploaded products for reuse
-- Store uploaded products in `user_products` database table
-- Update `UploadSourceCard` to be the default (and primary) entry point
+### Phase 4: Generate Flow Components
 
-### Phase 5: Replace "Publish to Shopify" with Download
+Rewrite all generation-related components:
 
-Currently generated images go through a "Publish to Shopify" modal. This needs to become:
+| Component | Changes |
+|-----------|---------|
+| `SourceTypeSelector.tsx` | Remove Polaris `BlockStack`, `InlineGrid`, `Text`, `Icon` |
+| `UploadSourceCard.tsx` | Replace Polaris `TextField`, `Select`, `Banner`, `Button` with shadcn equivalents |
+| `TemplatePreviewCard.tsx` | Replace Polaris `Text`, `Badge`, `Icon` |
+| `ModelSelectorCard.tsx` | Replace Polaris `Text`, `Icon` (already mostly Tailwind) |
+| `PoseSelectorCard.tsx` | Replace Polaris imports |
+| `GenerationModeToggle.tsx` | Replace Polaris `Text`, `Icon` |
+| `ModelFilterBar.tsx` | Replace Polaris imports |
+| `PoseCategorySection.tsx` | Replace Polaris imports |
+| `NegativesChipSelector.tsx` | Replace Polaris imports |
+| `AspectRatioPreview.tsx` | Replace Polaris imports |
+| `PopularCombinations.tsx` | Replace Polaris imports |
+| `TryOnPreview.tsx` | Replace Polaris imports |
+| `RecentProductsList.tsx` | Replace Polaris imports |
+| `ProductMultiSelect.tsx` | Replace Polaris imports |
+| `ProductAssignmentModal.tsx` | Replace Polaris imports |
+| `ImageLightbox.tsx` | Verify no Polaris usage |
 
-**Changes:**
-- Replace `PublishModal` with a `DownloadModal` or inline download buttons
-- "Publish" becomes "Download" (single/bulk download as ZIP)
-- Remove `ProductAssignmentModal` (Shopify product assignment)
-- Remove Shopify-specific references from `GeneratedAsset` type (`publishedToShopify`, `shopifyImageId`)
-- Add "Save to My Library" option to save generated images for later
+### Phase 5: Page Rewrites
 
-### Phase 6: De-Shopify Text and References
+Rewrite all pages to remove Polaris imports:
 
-Update all Shopify-specific copy across the app:
+| Page | Key Changes |
+|------|-------------|
+| `Dashboard.tsx` | Replace `BlockStack`, `InlineGrid`, `Card`, `Text`, `Button`, `DataTable`, `InlineStack`, `Thumbnail` with Tailwind + shadcn `Table` |
+| `Generate.tsx` | Largest file (~2000 lines). Replace all Polaris layout, form, and modal components |
+| `Templates.tsx` | Replace `DataTable`, `TextField`, `Select`, `Card`, `Badge` with shadcn `Table`, `Input`, `Select` |
+| `Jobs.tsx` | Replace `DataTable`, filters, and modals |
+| `Settings.tsx` | Replace all form controls (`TextField`, `Select`, `Checkbox`) with shadcn equivalents |
+| `BulkGenerate.tsx` | Replace `Banner`, `Card`, `Button` + sub-components (`BulkSettingsCard`, `BulkProgressTracker`, `BulkResultsView`) |
 
-| Current | New |
-|---------|-----|
-| "Publish to Shopify" | "Download Images" |
-| "Select Shopify products" | "Upload your product" |
-| "mystore.myshopify.com" | User's email/name |
-| "Publishing defaults: Shopify" | "Export defaults" |
-| Settings > "Publishing Defaults" to Shopify | "Download & Export Settings" |
-| "Assign to Shopify Product" modal | Remove entirely |
+### Phase 6: Cleanup
 
-### Phase 7: Connect Credits to Real User
+- Remove `@shopify/polaris` and `@shopify/polaris-icons` from `package.json`
+- Remove `import '@shopify/polaris/build/esm/styles.css'` and `AppProvider` from `App.tsx`
+- Clean up Polaris CSS overrides in `index.css` (lines 118-149)
+- Update `App.tsx` to remove `AppProvider` wrapper
 
-- Move credits from mock `CreditContext` to database-backed `profiles.credits_balance`
-- New users get 5 free credits on signup (as promised on landing page)
-- Credit deductions persist to the database
-- Buy Credits modal stays (mock for now, ready for Stripe later)
+## Technical Notes
 
-### Phase 8: Landing Page CTA Wiring
+- **No logic changes**: All state management, hooks, API calls, and edge functions remain identical
+- **No routing changes**: Route structure (`/`, `/auth`, `/app/*`) stays the same
+- **Component API preservation**: Props interfaces stay the same where possible so parent/child contracts don't break
+- **shadcn/ui components already available**: `Card`, `Badge`, `Button`, `Dialog`, `Input`, `Select`, `Table`, `Tabs`, `Accordion`, `Alert`, `Checkbox`, `Label`, `Separator`, `Progress`, `Tooltip` are all already installed
+- **Lucide icons already installed**: `lucide-react` is already a dependency, so no new packages needed
 
-Wire all "Start Free" buttons to navigate to `/auth`:
+## Estimated File Count
 
-- `LandingNav` "Start Free" button -> `/auth`
-- `HeroSection` "Start Free -- 5 Credits" button -> `/auth`
-- `LandingPricing` plan CTA buttons -> `/auth`
-- `FinalCTA` "Start Free -- 5 Credits" button -> `/auth`
-
----
-
-## Technical Details
-
-### Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/pages/Auth.tsx` | Login/signup page with email + password forms |
-| `src/contexts/AuthContext.tsx` | Authentication state management (wraps Supabase auth) |
-| `src/components/app/ProtectedRoute.tsx` | Route guard that redirects unauthenticated users to `/auth` |
-| `src/components/app/DownloadModal.tsx` | Replaces PublishModal -- download single/multiple images |
-| `src/components/app/UserMenu.tsx` | User avatar + dropdown with account/sign out |
-
-### Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Restructure routes: `/` = Landing, `/auth` = Auth, `/app/*` = protected app |
-| `src/components/app/AppShell.tsx` | Replace Polaris Frame with custom Tailwind sidebar layout, show user info |
-| `src/pages/Generate.tsx` | Remove Shopify product picker, make upload the default, replace publish with download |
-| `src/pages/Dashboard.tsx` | Load real user data from DB, remove Shopify references |
-| `src/pages/Settings.tsx` | Remove "Publishing Defaults" Shopify section, update copy |
-| `src/contexts/CreditContext.tsx` | Connect to database for real credit persistence |
-| `src/types/index.ts` | Remove `shopifyImageId`, `publishedToShopify`, update `Shop` type to `UserProfile` |
-| `src/data/mockData.ts` | Keep as sample data but remove Shopify domain references |
-| `src/components/app/SourceTypeSelector.tsx` | Simplify or remove -- upload becomes default |
-| `src/components/landing/LandingNav.tsx` | Wire "Start Free" to `/auth` |
-| `src/components/landing/HeroSection.tsx` | Wire CTA to `/auth` |
-| `src/components/landing/FinalCTA.tsx` | Wire CTA to `/auth` |
-| `src/components/landing/LandingPricing.tsx` | Wire plan CTAs to `/auth` |
-| `src/pages/BulkGenerate.tsx` | Replace "Publish to Shopify" with download |
-
-### Database Migrations
-
-1. Create `profiles` table with trigger on auth.users insert
-2. Create `user_products` table for saved uploads
-3. Create `generation_jobs` table for persisted history
-4. RLS policies: users can only access their own data
-5. Default credits: new profiles start with 5 credits
-
-### Implementation Order
-
-Due to the size of these changes, they should be implemented in this sequence:
-
-1. **Database + Auth** -- Create tables, auth context, login/signup page, protected routes
-2. **Route restructure** -- Move landing to `/`, app to `/app/*`, wire CTAs
-3. **AppShell redesign** -- Replace Polaris Frame with custom Tailwind layout
-4. **Generate flow update** -- Upload-first, remove Shopify product picker, download instead of publish
-5. **Dashboard + Settings cleanup** -- Remove Shopify copy, connect to real user data
-6. **Credit system wiring** -- Database-backed credits with 5 free on signup
+- **~36 files** modified total (6 pages + ~30 components + `App.tsx` + `index.css`)
+- This is a large refactor best done in the phases above to avoid breaking the app mid-way
 
