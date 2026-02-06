@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, Shield, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function FinalCTA() {
+  const navigate = useNavigate();
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden">
       {/* Background */}
