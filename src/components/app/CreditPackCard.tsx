@@ -1,11 +1,6 @@
-import {
-  Card,
-  BlockStack,
-  InlineStack,
-  Text,
-  Button,
-  Badge,
-} from '@shopify/polaris';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import type { CreditPack } from '@/types';
 
 interface CreditPackCardProps {
@@ -17,40 +12,30 @@ export function CreditPackCard({ pack, onPurchase }: CreditPackCardProps) {
   const pricePerCredit = (pack.pricePerCredit * 100).toFixed(1);
   
   return (
-    <div className={`relative ${pack.popular ? 'ring-2 ring-blue-500 rounded-xl' : ''}`}>
+    <div className={`relative ${pack.popular ? 'ring-2 ring-primary rounded-xl' : ''}`}>
       {pack.popular && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-          <Badge tone="info">Best Value</Badge>
+          <Badge className="bg-primary text-primary-foreground">Best Value</Badge>
         </div>
       )}
       <Card>
-        <BlockStack gap="300">
-          <BlockStack gap="100" align="center">
-            <Text as="p" variant="headingLg" fontWeight="bold">
-              {pack.credits}
-            </Text>
-            <Text as="p" variant="bodySm" tone="subdued">
-              credits
-            </Text>
-          </BlockStack>
-          
-          <div className="text-center">
-            <Text as="p" variant="headingMd" fontWeight="semibold">
-              ${pack.price}
-            </Text>
-            <Text as="p" variant="bodySm" tone="subdued">
-              {pricePerCredit}¢ per credit
-            </Text>
+        <CardContent className="p-5 space-y-3 text-center">
+          <div>
+            <p className="text-2xl font-bold">{pack.credits}</p>
+            <p className="text-sm text-muted-foreground">credits</p>
           </div>
-          
+          <div>
+            <p className="text-lg font-semibold">${pack.price}</p>
+            <p className="text-sm text-muted-foreground">{pricePerCredit}¢ per credit</p>
+          </div>
           <Button
-            variant={pack.popular ? 'primary' : 'secondary'}
-            fullWidth
+            variant={pack.popular ? 'default' : 'outline'}
+            className="w-full"
             onClick={() => onPurchase(pack.packId)}
           >
             Buy Credits
           </Button>
-        </BlockStack>
+        </CardContent>
       </Card>
     </div>
   );

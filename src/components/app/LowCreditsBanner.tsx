@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { Banner, Button, InlineStack, Text } from '@shopify/polaris';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, AlertCircle, X } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
 
 export function LowCreditsBanner() {
   const { balance, isLow, isCritical, isEmpty, openBuyModal } = useCredits();
   const [dismissed, setDismissed] = useState(false);
   
-  // Don't show if dismissed or credits are healthy
   if (dismissed || (!isLow && !isCritical && !isEmpty)) {
     return null;
   }
   
-  const tone = isEmpty ? 'critical' : isCritical ? 'critical' : 'warning';
   const title = isEmpty 
     ? "You're out of credits" 
     : isCritical 
@@ -24,19 +24,20 @@ export function LowCreditsBanner() {
       : `You have ${balance} credits remaining. Top up to continue generating.`;
   
   return (
-    <div className="mb-4">
-      <Banner
-        title={title}
-        tone={tone}
-        onDismiss={isEmpty ? undefined : () => setDismissed(true)}
-      >
-        <InlineStack gap="200" blockAlign="center">
-          <Text as="p" variant="bodyMd">{message}</Text>
-          <Button variant="primary" onClick={openBuyModal}>
-            Buy Credits
-          </Button>
-        </InlineStack>
-      </Banner>
-    </div>
+    <Alert variant={isEmpty || isCritical ? 'destructive' : 'default'} className="mb-4">
+      {isEmpty || isCritical ? <AlertCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+      <AlertTitle className="flex items-center justify-between">
+        {title}
+        {!isEmpty && (
+          <button onClick={() => setDismissed(true)} className="ml-auto">
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </AlertTitle>
+      <AlertDescription className="flex items-center gap-3 mt-1">
+        <span>{message}</span>
+        <Button size="sm" onClick={openBuyModal}>Buy Credits</Button>
+      </AlertDescription>
+    </Alert>
   );
 }

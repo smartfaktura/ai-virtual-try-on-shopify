@@ -1,12 +1,5 @@
-import {
-  Card,
-  BlockStack,
-  InlineStack,
-  Text,
-  InlineGrid,
-  Icon,
-} from '@shopify/polaris';
-import { CheckCircleIcon } from '@shopify/polaris-icons';
+import { Card, CardContent } from '@/components/ui/card';
+import { CheckCircle } from 'lucide-react';
 
 export function CompetitorComparison() {
   const comparisons = [
@@ -17,63 +10,41 @@ export function CompetitorComparison() {
 
   return (
     <Card>
-      <BlockStack gap="400">
-        <BlockStack gap="100">
-          <InlineStack gap="200" blockAlign="center">
-            <div className="text-green-600">
-              <Icon source={CheckCircleIcon} />
-            </div>
-            <Text as="h3" variant="headingMd">
-              Save 60-80% Compared to Alternatives
-            </Text>
-          </InlineStack>
-          <Text as="p" variant="bodySm" tone="subdued">
-            Professional AI product images at a fraction of the cost
-          </Text>
-        </BlockStack>
+      <CardContent className="p-5 space-y-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold">Save 60-80% Compared to Alternatives</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">Professional AI product images at a fraction of the cost</p>
+        </div>
 
-        <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {comparisons.map((comp) => (
             <div 
               key={comp.name}
               className={`p-4 rounded-lg text-center ${
                 comp.highlight 
-                  ? 'bg-green-50 border-2 border-green-200' 
-                  : 'bg-gray-50'
+                  ? 'bg-primary/5 border-2 border-primary/20' 
+                  : 'bg-muted'
               }`}
             >
-              <Text as="p" variant="bodySm" fontWeight="semibold">
-                {comp.name}
-              </Text>
-              <Text 
-                as="p" 
-                variant="headingMd" 
-                fontWeight="bold"
-              >
-                {comp.price}
-              </Text>
-              <Text as="p" variant="bodySm" tone="subdued">
-                per image
-              </Text>
+              <p className="text-sm font-semibold">{comp.name}</p>
+              <p className="text-xl font-bold">{comp.price}</p>
+              <p className="text-sm text-muted-foreground">per image</p>
               {comp.highlight && (
-                <div className="mt-2">
-                  <Text as="p" variant="bodySm" tone="success" fontWeight="semibold">
-                    You save up to 84%
-                  </Text>
-                </div>
+                <p className="mt-2 text-sm text-primary font-semibold">You save up to 84%</p>
               )}
             </div>
           ))}
-        </InlineGrid>
-
-        <div className="bg-blue-50 rounded-lg p-3">
-          <InlineStack gap="200" align="center" blockAlign="center">
-            <Text as="p" variant="bodySm" tone="subdued">
-              💡 <strong>Start free:</strong> Every store gets 5 credits to test the quality. No credit card required.
-            </Text>
-          </InlineStack>
         </div>
-      </BlockStack>
+
+        <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 text-center">
+          <p className="text-sm text-muted-foreground">
+            💡 <strong>Start free:</strong> Every account gets 5 credits to test the quality. No credit card required.
+          </p>
+        </div>
+      </CardContent>
     </Card>
   );
 }

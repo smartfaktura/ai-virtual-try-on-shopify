@@ -1,45 +1,39 @@
-import { Button, InlineStack, Text, Icon } from '@shopify/polaris';
-import { WalletIcon, PlusCircleIcon } from '@shopify/polaris-icons';
+import { Wallet, PlusCircle } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditContext';
 
 export function CreditIndicator() {
   const { balance, isLow, isCritical, isEmpty, openBuyModal } = useCredits();
   
-  // Determine color state
   const getColorClass = () => {
-    if (isEmpty || isCritical) return 'text-critical';
-    if (isLow) return 'text-warning';
-    return 'text-success';
+    if (isEmpty || isCritical) return 'text-destructive';
+    if (isLow) return 'text-yellow-600';
+    return 'text-primary';
   };
   
   const getBgClass = () => {
-    if (isEmpty || isCritical) return 'bg-critical/10 border-critical/30';
-    if (isLow) return 'bg-warning/10 border-warning/30';
-    return 'bg-success/10 border-success/30';
+    if (isEmpty || isCritical) return 'bg-destructive/10 border-destructive/30';
+    if (isLow) return 'bg-yellow-500/10 border-yellow-500/30';
+    return 'bg-primary/10 border-primary/30';
   };
   
   return (
     <div className={`p-3 rounded-lg border ${getBgClass()}`}>
-      <InlineStack align="space-between" blockAlign="center">
-        <InlineStack gap="200" blockAlign="center">
-          <div className={getColorClass()}>
-            <Icon source={WalletIcon} />
-          </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Wallet className={`w-4 h-4 ${getColorClass()}`} />
           <div>
-            <Text as="p" variant="bodySm" tone="subdued">Credits</Text>
-            <Text as="p" variant="bodyMd" fontWeight="bold">
-              <span className={getColorClass()}>{balance}</span>
-            </Text>
+            <p className="text-[10px] text-sidebar-foreground/50">Credits</p>
+            <p className={`text-sm font-bold ${getColorClass()}`}>{balance}</p>
           </div>
-        </InlineStack>
+        </div>
         <button
           onClick={openBuyModal}
-          className="p-1.5 rounded-md hover:bg-black/5 transition-colors"
+          className="p-1.5 rounded-md hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground"
           title="Buy credits"
         >
-          <Icon source={PlusCircleIcon} tone="base" />
+          <PlusCircle className="w-4 h-4" />
         </button>
-      </InlineStack>
+      </div>
     </div>
   );
 }

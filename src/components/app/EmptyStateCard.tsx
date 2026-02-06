@@ -1,4 +1,6 @@
-import { Card, EmptyState, Text } from '@shopify/polaris';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { PackageOpen } from 'lucide-react';
 
 interface EmptyStateCardProps {
   heading: string;
@@ -10,18 +12,21 @@ interface EmptyStateCardProps {
   image?: string;
 }
 
-export function EmptyStateCard({ heading, description, action, image }: EmptyStateCardProps) {
+export function EmptyStateCard({ heading, description, action }: EmptyStateCardProps) {
   return (
     <Card>
-      <EmptyState
-        heading={heading}
-        action={action}
-        image={image || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-      >
-        <Text as="p" variant="bodyMd" tone="subdued">
-          {description}
-        </Text>
-      </EmptyState>
+      <CardContent className="py-12 flex flex-col items-center text-center space-y-4">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+          <PackageOpen className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold">{heading}</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">{description}</p>
+        </div>
+        {action && (
+          <Button onClick={action.onAction}>{action.content}</Button>
+        )}
+      </CardContent>
     </Card>
   );
 }
