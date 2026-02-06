@@ -1,0 +1,31 @@
+import { LandingNav } from '@/components/landing/LandingNav';
+import { HeroSection } from '@/components/landing/HeroSection';
+import { SocialProofBar } from '@/components/landing/SocialProofBar';
+import { FeatureGrid } from '@/components/landing/FeatureGrid';
+import { HowItWorks } from '@/components/landing/HowItWorks';
+import { BeforeAfterGallery } from '@/components/landing/BeforeAfterGallery';
+import { IntegrationSection } from '@/components/landing/IntegrationSection';
+import { LandingPricing } from '@/components/landing/LandingPricing';
+import { LandingFAQ } from '@/components/landing/LandingFAQ';
+import { FinalCTA } from '@/components/landing/FinalCTA';
+import { LandingFooter } from '@/components/landing/LandingFooter';
+
+export default function Landing() {
+  return (
+    <div className="min-h-screen bg-background text-foreground scroll-smooth">
+      <LandingNav />
+      <main>
+        <HeroSection />
+        <SocialProofBar />
+        <FeatureGrid />
+        <HowItWorks />
+        <BeforeAfterGallery />
+        <IntegrationSection />
+        <LandingPricing />
+        <LandingFAQ />
+        <FinalCTA />
+      </main>
+      <LandingFooter />
+    </div>
+  );
+}

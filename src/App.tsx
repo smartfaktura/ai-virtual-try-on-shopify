@@ -13,6 +13,7 @@ import BulkGenerate from '@/pages/BulkGenerate';
 import Templates from '@/pages/Templates';
 import Jobs from '@/pages/Jobs';
 import Settings from '@/pages/Settings';
+import Landing from '@/pages/Landing';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -23,19 +24,30 @@ const App = () => (
       <Toaster position="top-right" richColors closeButton />
       <CreditProvider>
         <BrowserRouter>
-          <AppShell>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/generate" element={<Generate />} />
-              <Route path="/generate/bulk" element={<BulkGenerate />} />
-              <Route path="/templates" element={<Templates />} />
-              <Route path="/templates/:id" element={<Templates />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/jobs/:id" element={<Jobs />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AppShell>
+          <Routes>
+            {/* Public landing page — outside AppShell */}
+            <Route path="/landing" element={<Landing />} />
+
+            {/* App routes — inside AppShell */}
+            <Route
+              path="*"
+              element={
+                <AppShell>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/generate" element={<Generate />} />
+                    <Route path="/generate/bulk" element={<BulkGenerate />} />
+                    <Route path="/templates" element={<Templates />} />
+                    <Route path="/templates/:id" element={<Templates />} />
+                    <Route path="/jobs" element={<Jobs />} />
+                    <Route path="/jobs/:id" element={<Jobs />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </AppShell>
+              }
+            />
+          </Routes>
         </BrowserRouter>
         <BuyCreditsModal />
       </CreditProvider>
