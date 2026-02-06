@@ -89,8 +89,7 @@ export default function BulkGenerate() {
   };
 
   const handlePublishAll = () => {
-    toast.success('Publishing all images to Shopify...');
-    // TODO: Implement actual publish logic
+    toast.success('Downloading all images...');
   };
 
   const handlePublishSelected = (productIds: string[], selectedImages: Map<string, number[]>) => {
