@@ -97,8 +97,8 @@ export default function Jobs() {
     return [
       // Product & Template combined
       <InlineStack key={job.jobId} gap="300" blockAlign="center" wrap={false}>
-        <Thumbnail
-          source={job.productSnapshot.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
+      <Thumbnail
+          source={job.productSnapshot.images[0]?.url || '/placeholder.svg'}
           alt={job.productSnapshot.title}
           size="small"
         />
