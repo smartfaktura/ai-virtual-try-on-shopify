@@ -135,9 +135,9 @@ export default function Dashboard() {
               <Button
                 variant="primary"
                 size="large"
-                onClick={() => navigate('/generate')}
+                onClick={() => navigate('/app/generate')}
               >
-                Select Product to Generate
+                Upload & Generate
               </Button>
               <Button
                 size="large"
