@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, Calendar, Clock } from 'lucide-react';
+import { ArrowRight, Check, Calendar, Clock, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+// Product image
+import whiteCropTop from '@/assets/drops/drop-model-white-crop.jpg';
 
 // November — Pilates studio (portrait)
 import dropNovP1 from '@/assets/drops/drop-nov-portrait-1.jpg';
