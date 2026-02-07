@@ -80,14 +80,19 @@ function MarqueeRow({ items, direction = 'left' }: { items: ModelCard[]; directi
     if (!el) return;
 
     let animationId: number;
-    let position = 0;
-    const totalWidth = el.scrollWidth / 2;
+    let position = direction === 'left' ? 0 : -(el.scrollWidth / 2);
+    const speed = 0.5;
 
     const step = () => {
-      position += direction === 'left' ? 0.5 : -0.5;
-      if (direction === 'left' && position >= totalWidth) position = 0;
-      if (direction === 'right' && position <= -totalWidth) position = 0;
-      el.style.transform = `translateX(${direction === 'left' ? -position : -position + totalWidth}px)`;
+      const totalWidth = el.scrollWidth / 2;
+      if (direction === 'left') {
+        position += speed;
+        if (position >= totalWidth) position = 0;
+      } else {
+        position -= speed;
+        if (position <= -totalWidth) position = 0;
+      }
+      el.style.transform = `translateX(${-position}px)`;
       animationId = requestAnimationFrame(step);
     };
 
