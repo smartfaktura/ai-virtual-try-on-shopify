@@ -1,7 +1,6 @@
-import { useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 
-// Models — diverse selection alternating gender, body type, ethnicity, age
+// Models — full library, 34 diverse models
 import modelYuki from '@/assets/models/model-female-slim-asian.jpg';
 import modelMarcus from '@/assets/models/model-male-athletic-black.jpg';
 import modelElena from '@/assets/models/model-female-athletic-european.jpg';
@@ -20,8 +19,6 @@ import modelIsabella from '@/assets/models/model-female-plussize-latina.jpg';
 import modelCallum from '@/assets/models/model-male-athletic-scottish.jpg';
 import modelAstrid from '@/assets/models/model-female-average-nordic.jpg';
 import modelCarlos from '@/assets/models/model-male-average-latino.jpg';
-
-// New American models
 import modelMadison from '@/assets/models/model-female-slim-american-blonde.jpg';
 import modelJake from '@/assets/models/model-male-athletic-american.jpg';
 import modelOlivia from '@/assets/models/model-female-athletic-american-brunette.jpg';
@@ -33,28 +30,57 @@ import modelBrandon from '@/assets/models/model-male-average-american-beard.jpg'
 import modelValeria from '@/assets/models/model-female-slim-american-latina.jpg';
 import modelRyan from '@/assets/models/model-male-athletic-american-classic.jpg';
 
+// Additional models for fuller rows
+import modelNiamh from '@/assets/models/model-female-athletic-mixed.jpg';
+import modelAisha from '@/assets/models/model-female-average-african.jpg';
+import modelSophie from '@/assets/models/model-female-average-european.jpg';
+import modelLeila from '@/assets/models/model-female-average-middleeast.jpg';
+import modelMei from '@/assets/models/model-female-slim-chinese.jpg';
+import modelFreya from '@/assets/models/model-female-slim-nordic.jpg';
+import modelSakura from '@/assets/models/model-female-plussize-japanese.jpg';
+import modelFatima from '@/assets/models/model-female-plussize-middleeast.jpg';
+import modelLuca from '@/assets/models/model-male-athletic-european.jpg';
+import modelJamal from '@/assets/models/model-male-athletic-mixed.jpg';
+import modelHiro from '@/assets/models/model-male-average-asian.jpg';
+import modelKwame from '@/assets/models/model-male-plussize-african.jpg';
+import modelMarco from '@/assets/models/model-male-plussize-latino.jpg';
+import modelOmar from '@/assets/models/model-male-slim-middleeast.jpg';
+import modelCamila from '@/assets/models/model-female-athletic-latina.jpg';
+import modelNadia from '@/assets/models/model-female-athletic-black.jpg';
+import modelSophie2 from '@/assets/models/model-female-average-middleeast.jpg';
+
 interface ModelCard {
   name: string;
   image: string;
 }
 
+// 22 unique models in row 1 — no overlap with row 2
 const ROW_1: ModelCard[] = [
   { name: 'Madison', image: modelMadison },
   { name: 'Marcus', image: modelMarcus },
   { name: 'Olivia', image: modelOlivia },
   { name: 'Arjun', image: modelArjun },
   { name: 'Zoe', image: modelZoe },
-  { name: 'Jake', image: modelJake },
+  { name: 'Luca', image: modelLuca },
   { name: 'Elena', image: modelElena },
   { name: 'Tyler', image: modelTyler },
   { name: 'Amara', image: modelAmara },
   { name: 'Ryan', image: modelRyan },
   { name: 'Yuki', image: modelYuki },
   { name: 'Brandon', image: modelBrandon },
-  { name: 'Aubrey', image: modelAubrey },
+  { name: 'Mei', image: modelMei },
   { name: 'Kenji', image: modelKenji },
+  { name: 'Aubrey', image: modelAubrey },
+  { name: 'Omar', image: modelOmar },
+  { name: 'Niamh', image: modelNiamh },
+  { name: 'Kwame', image: modelKwame },
+  { name: 'Sophie', image: modelSophie },
+  { name: 'Hiro', image: modelHiro },
+  { name: 'Camila', image: modelCamila },
+  { name: 'Marco', image: modelMarco },
 ];
 
+// 22 unique models in row 2
 const ROW_2: ModelCard[] = [
   { name: 'Jordan', image: modelJordan },
   { name: 'Sienna', image: modelSienna },
@@ -68,44 +94,32 @@ const ROW_2: ModelCard[] = [
   { name: 'Erik', image: modelErik },
   { name: 'Isabella', image: modelIsabella },
   { name: 'Callum', image: modelCallum },
-  { name: 'Astrid', image: modelAstrid },
+  { name: 'Aisha', image: modelAisha },
   { name: 'Carlos', image: modelCarlos },
+  { name: 'Freya', image: modelFreya },
+  { name: 'Jamal', image: modelJamal },
+  { name: 'Sakura', image: modelSakura },
+  { name: 'Nadia', image: modelNadia },
+  { name: 'Astrid', image: modelAstrid },
+  { name: 'Leila', image: modelLeila },
+  { name: 'Fatima', image: modelFatima },
+  { name: 'Jake', image: modelJake },
 ];
 
-function MarqueeRow({ items, direction = 'left' }: { items: ModelCard[]; direction?: 'left' | 'right' }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    let animationId: number;
-    let position = direction === 'left' ? 0 : -(el.scrollWidth / 2);
-    const speed = 0.5;
-
-    const step = () => {
-      const totalWidth = el.scrollWidth / 2;
-      if (direction === 'left') {
-        position += speed;
-        if (position >= totalWidth) position = 0;
-      } else {
-        position -= speed;
-        if (position <= -totalWidth) position = 0;
-      }
-      el.style.transform = `translateX(${-position}px)`;
-      animationId = requestAnimationFrame(step);
-    };
-
-    animationId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animationId);
-  }, [direction]);
-
-  const doubled = [...items, ...items];
+function MarqueeRow({ items, direction = 'left', durationSeconds = 60 }: { items: ModelCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
+  // Triple the items to ensure seamless looping with plenty of content
+  const tripled = [...items, ...items, ...items];
 
   return (
     <div className="overflow-hidden">
-      <div ref={scrollRef} className="flex gap-4 will-change-transform" style={{ width: 'max-content' }}>
-        {doubled.map((model, i) => (
+      <div
+        className="flex gap-4 will-change-transform"
+        style={{
+          width: 'max-content',
+          animation: `marquee-${direction} ${durationSeconds}s linear infinite`,
+        }}
+      >
+        {tripled.map((model, i) => (
           <div key={`${model.name}-${i}`} className="flex flex-col items-center gap-2 flex-shrink-0">
             <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
               <img
@@ -141,8 +155,8 @@ export function ModelShowcaseSection() {
       </div>
 
       <div className="flex flex-col gap-8">
-        <MarqueeRow items={ROW_1} direction="left" />
-        <MarqueeRow items={ROW_2} direction="right" />
+        <MarqueeRow items={ROW_1} direction="left" durationSeconds={55} />
+        <MarqueeRow items={ROW_2} direction="right" durationSeconds={65} />
       </div>
     </section>
   );
