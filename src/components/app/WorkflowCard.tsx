@@ -4,18 +4,26 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Workflow } from '@/pages/Workflows';
 
+import imgAdRefresh from '@/assets/showcase/fashion-blazer-street.jpg';
+import imgProductListing from '@/assets/showcase/skincare-serum-marble.jpg';
+import imgWebsiteHero from '@/assets/showcase/fashion-dress-botanical.jpg';
+import imgLifestyle from '@/assets/showcase/home-candle-evening.jpg';
+import imgOnModel from '@/assets/showcase/fashion-activewear-studio.jpg';
+import imgSocialMedia from '@/assets/showcase/food-coffee-artisan.jpg';
+import imgFallback from '@/assets/templates/universal-clean.jpg';
+
 interface WorkflowCardProps {
   workflow: Workflow;
   onSelect: () => void;
 }
 
-const workflowIcons: Record<string, string> = {
-  'Ad Refresh Set': '📢',
-  'Product Listing Set': '🏷️',
-  'Website Hero Set': '🖥️',
-  'Lifestyle Set': '🌿',
-  'On-Model Set': '👤',
-  'Social Media Pack': '📱',
+const workflowImages: Record<string, string> = {
+  'Ad Refresh Set': imgAdRefresh,
+  'Product Listing Set': imgProductListing,
+  'Website Hero Set': imgWebsiteHero,
+  'Lifestyle Set': imgLifestyle,
+  'On-Model Set': imgOnModel,
+  'Social Media Pack': imgSocialMedia,
 };
 
 export function WorkflowCard({ workflow, onSelect }: WorkflowCardProps) {
