@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/app/PageHeader';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
+import { AddProductModal } from '@/components/app/AddProductModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 interface UserProduct {
   id: string;
@@ -26,9 +26,9 @@ interface UserProduct {
 
 export default function Products() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['user-products'],
@@ -77,9 +77,9 @@ export default function Products() {
               className="pl-9"
             />
           </div>
-          <Button onClick={() => navigate('/app/generate')}>
+          <Button onClick={() => setModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Upload Product
+            Add Product
           </Button>
         </div>
 
@@ -94,7 +94,7 @@ export default function Products() {
           <EmptyStateCard
             heading={search ? 'No products match your search' : 'No products yet'}
             description={search ? 'Try a different search term.' : 'Upload your first product to start generating professional visuals.'}
-            action={!search ? { content: 'Upload Product', onAction: () => navigate('/app/generate') } : undefined}
+            action={!search ? { content: 'Add Product', onAction: () => setModalOpen(true) } : undefined}
             icon={<Package className="w-10 h-10 text-muted-foreground" />}
           />
         ) : (
@@ -110,7 +110,7 @@ export default function Products() {
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <div className="flex gap-2">
-                      <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => navigate(`/app/generate`)}>
+                      <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setModalOpen(true)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
                       <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => deleteMutation.mutate(product.id)}>
@@ -130,6 +130,12 @@ export default function Products() {
           </div>
         )}
       </div>
+
+      <AddProductModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
+      />
     </PageHeader>
   );
 }

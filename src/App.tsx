@@ -20,6 +20,7 @@ import BrandProfiles from '@/pages/BrandProfiles';
 import Workflows from '@/pages/Workflows';
 import Products from '@/pages/Products';
 import CreativeDrops from '@/pages/CreativeDrops';
+import MobileUpload from '@/pages/MobileUpload';
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/landing" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/upload/:sessionToken" element={<MobileUpload />} />
 
             {/* Protected app routes */}
             <Route
