@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Upload, Palette, Sparkles, ArrowRight } from 'lucide-react';
+import { Check, Upload, Palette, Sparkles } from 'lucide-react';
 
 interface OnboardingChecklistProps {
   productCount: number;
@@ -48,58 +47,55 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
   const completedCount = Object.values(completionMap).filter(Boolean).length;
 
   return (
-    <Card className="card-elevated border-0">
-      <CardContent className="p-5 space-y-4">
-        {/* Progress bar — thin, restrained */}
-        <div className="w-full h-[3px] bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-500"
-            style={{ width: `${(completedCount / steps.length) * 100}%` }}
-          />
-        </div>
+    <Card className="card-elevated border-0 rounded-xl overflow-hidden">
+      {/* Edge-to-edge gradient progress bar */}
+      <div className="h-1 w-full bg-muted">
+        <div
+          className="h-full bg-gradient-to-r from-primary via-primary to-primary/60 transition-all duration-500"
+          style={{ width: `${(completedCount / steps.length) * 100}%` }}
+        />
+      </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground font-medium">
+      <CardContent className="p-6 space-y-1">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs text-muted-foreground font-medium">
             {completedCount} of {steps.length} complete
           </span>
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-0">
           {steps.map((step, index) => {
             const done = completionMap[step.key];
             const isLast = index === steps.length - 1;
             return (
               <div
                 key={step.key}
-                className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${
-                  done
-                    ? 'bg-muted/30'
-                    : 'bg-transparent'
-                } ${!isLast ? 'border-b border-border/50' : ''}`}
+                className={`flex items-start gap-5 py-5 transition-all ${
+                  done ? 'opacity-50' : ''
+                } ${!isLast ? 'border-b border-border/40' : ''}`}
               >
-                <div className="flex-shrink-0 mt-0.5">
-                  {done ? (
-                    <CheckCircle className="w-5 h-5 text-muted-foreground/60" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-muted-foreground/30" />
-                  )}
-                </div>
+                {/* Large watermark step number */}
+                <span className="text-3xl font-extralight text-foreground/[0.08] leading-none select-none w-10 flex-shrink-0 pt-0.5">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-lg font-light text-muted-foreground">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <h3 className={`text-sm font-medium ${done ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                  <div className="flex items-center gap-2">
+                    <h3 className={`text-sm font-medium ${done ? 'text-muted-foreground' : 'text-foreground'}`}>
                       {step.title}
                     </h3>
+                    {done && <Check className="w-3.5 h-3.5 text-muted-foreground" />}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 ml-[1.85rem]">{step.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
                 </div>
+
                 {!done && (
-                  <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground gap-1" onClick={() => navigate(step.path)}>
+                  <button
+                    onClick={() => navigate(step.path)}
+                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 decoration-foreground/20 hover:decoration-foreground/60 transition-colors flex-shrink-0 pt-0.5"
+                  >
                     {step.cta}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
+                  </button>
                 )}
               </div>
             );
