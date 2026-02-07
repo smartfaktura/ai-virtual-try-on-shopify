@@ -150,7 +150,7 @@ export default function Dashboard() {
             Your AI photography studio is ready. Let's create your first visual set.
           </p>
 
-          {/* Credit badge + Quick actions */}
+          {/* Credit badge */}
           <div className="flex items-center gap-4 mt-5 flex-wrap">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Sparkles className="w-4 h-4 text-primary" />
@@ -161,15 +161,7 @@ export default function Dashboard() {
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
-
-          {/* Quick Actions */}
-          <div className="mt-5">
-            <DashboardQuickActions />
-          </div>
         </div>
-
-        {/* Tip Card */}
-        <DashboardTipCard />
 
         {/* Onboarding Checklist */}
         <div className="space-y-4">
