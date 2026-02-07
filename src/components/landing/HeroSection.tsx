@@ -23,6 +23,16 @@ import serumFlatlay from '@/assets/hero/hero-serum-flatlay.jpg';
 import serumGarden from '@/assets/hero/hero-serum-garden.jpg';
 import serumMoody from '@/assets/hero/hero-serum-moody.jpg';
 
+import productRing from '@/assets/hero/hero-product-ring.jpg';
+import ringModel1 from '@/assets/hero/hero-ring-model1.jpg';
+import ringModel2 from '@/assets/hero/hero-ring-model2.jpg';
+import ringFlatlay from '@/assets/hero/hero-ring-flatlay.jpg';
+import ringMacro from '@/assets/hero/hero-ring-macro.jpg';
+import ringModel3 from '@/assets/hero/hero-ring-model3.jpg';
+import ringVelvet from '@/assets/hero/hero-ring-velvet.jpg';
+import ringWater from '@/assets/hero/hero-ring-water.jpg';
+import ringGolden from '@/assets/hero/hero-ring-golden.jpg';
+
 const trustBadges = [
   { icon: CreditCard, text: 'No credit card required' },
   { icon: Sparkles, text: '5 free visuals' },
@@ -63,6 +73,20 @@ const showcases: ProductShowcase[] = [
       { img: serumMoody, label: 'Moody Dark' },
     ],
     caption: 'Same serum — ∞ scenes — 12 seconds',
+  },
+  {
+    product: { img: productRing, label: 'Gold Ring', subtitle: '1 product photo' },
+    outputs: [
+      { img: ringModel1, label: 'Model Close-Up' },
+      { img: ringModel2, label: 'Golden Light' },
+      { img: ringFlatlay, label: 'Flatlay' },
+      { img: ringMacro, label: 'Macro Detail' },
+      { img: ringModel3, label: 'Editorial' },
+      { img: ringVelvet, label: 'Velvet Display' },
+      { img: ringWater, label: 'Water Reflection' },
+      { img: ringGolden, label: 'Golden Hour' },
+    ],
+    caption: 'Same ring — ∞ shots — 12 seconds',
   },
 ];
 
