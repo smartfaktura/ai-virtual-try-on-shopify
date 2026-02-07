@@ -53,15 +53,12 @@ export function AppShell({ children }: AppShellProps) {
     <div className="flex flex-col h-full">
       {/* Logo — matches landing nav */}
       <div className="px-5 pt-6 pb-6 border-b border-white/[0.06]">
-        <button
-          onClick={() => handleNav('/app')}
-          className="flex items-center gap-2.5 group"
-        >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/20 to-white/[0.06] border border-white/[0.12] flex items-center justify-center flex-shrink-0 shadow-sm group-hover:border-white/20 transition-colors">
-            <span className="text-white font-black text-[13px] tracking-tighter italic">bf</span>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+            <span className="text-primary-foreground font-bold text-sm">bf</span>
           </div>
-          <span className="font-bold text-lg text-sidebar-foreground tracking-tight group-hover:text-white transition-colors">brandframe<span className="text-white/40">.ai</span></span>
-        </button>
+          <span className="font-bold text-lg text-sidebar-foreground tracking-tight">brandframe.ai</span>
+        </div>
       </div>
 
       {/* Generate CTA */}
