@@ -126,28 +126,28 @@ export function FeatureGrid() {
                   onClick={() => handleSelect(i)}
                   className={`group relative flex items-center gap-4 px-5 py-4 rounded-xl text-left transition-all duration-300 ${
                     isActive
-                      ? 'bg-[hsl(212,14%,16%)]'
-                      : 'hover:bg-[hsl(212,14%,13%)]'
+                      ? 'bg-secondary'
+                      : 'hover:bg-secondary/50'
                   }`}
                 >
                   {/* Active indicator bar */}
                   <div
                     className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-full transition-all duration-300 ${
-                      isActive ? 'bg-[hsl(161,100%,45%)]' : 'bg-transparent'
+                      isActive ? 'bg-primary' : 'bg-transparent'
                     }`}
                   />
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-300 ${
                       isActive
-                        ? 'bg-[hsl(161,100%,25%)] text-[hsl(0,0%,100%)]'
-                        : 'bg-[hsl(212,14%,18%)] text-[hsl(210,14%,55%)] group-hover:text-[hsl(210,20%,80%)]'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-muted-foreground group-hover:text-foreground'
                     }`}
                   >
                     <f.icon className="w-[18px] h-[18px]" />
                   </div>
                   <span
                     className={`text-sm font-semibold transition-colors duration-300 ${
-                      isActive ? 'text-[hsl(210,20%,98%)]' : 'text-[hsl(210,14%,55%)] group-hover:text-[hsl(210,20%,80%)]'
+                      isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'
                     }`}
                   >
                     {f.label}
