@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Library,
   Users,
@@ -19,79 +18,117 @@ const features = [
   {
     icon: Library,
     label: 'Content Library',
-    headline: 'A fresh library of studio-grade visuals. Every month.',
+    headline: 'Studio-grade visuals. Every month.',
     description:
-      'Curated product shots, lifestyle scenes, and ad creatives delivered to your dashboard automatically. Always fresh. Always on-brand.',
+      'Curated product shots, lifestyle scenes, and ad creatives delivered automatically.',
     image: featureLibrary,
+    span: 'lg:col-span-4 lg:row-span-2',
+    imageClass: 'h-full',
+    tall: true,
   },
   {
     icon: Users,
     label: 'AI Models',
-    headline: 'Your models. Your look. Already configured.',
+    headline: '34+ diverse models. Zero casting calls.',
     description:
-      '34+ diverse AI models across body types and styles. Save favourites \u2014 they appear in every generation without a single casting call.',
+      'Every body type, ethnicity, and style — pre-configured and ready for your brand.',
     image: featureModels,
+    span: 'lg:col-span-4',
+    imageClass: 'h-48 sm:h-56',
+    tall: false,
   },
   {
     icon: SlidersHorizontal,
     label: 'Brand Memory',
-    headline: 'Tell us your style once. We remember it forever.',
+    headline: 'Your style. Remembered forever.',
     description:
-      'Lighting, tone, backgrounds, composition \u2014 locked into a Brand Profile. Every visual follows your creative direction automatically.',
+      'Lighting, tone, backgrounds — locked into a Brand Profile that guides every visual.',
     image: featureBrandMemory,
+    span: 'lg:col-span-4',
+    imageClass: 'h-48 sm:h-56',
+    tall: false,
   },
   {
     icon: Camera,
     label: 'Campaigns',
-    headline: 'Full editorial campaigns. No studio. No timeline.',
+    headline: 'Full campaigns in minutes.',
     description:
-      'Holiday collections, seasonal rebrands, product launches \u2014 generate an entire campaign in minutes with styled scenes and multiple ratios.',
+      'Valentine\'s Day, Summer Sale, product launches — styled scenes across every ratio.',
     image: featureCampaigns,
+    span: 'lg:col-span-4',
+    imageClass: 'h-48 sm:h-56',
+    tall: false,
   },
   {
     icon: Repeat,
     label: 'Auto Drops',
-    headline: 'Schedule once. Fresh visuals arrive on autopilot.',
+    headline: 'Fresh content on autopilot.',
     description:
-      'Recurring Creative Drops tied to your catalog. Assign workflows and brand profiles \u2014 new assets generated weekly or monthly.',
+      'Schedule once — new visuals generated weekly or monthly, tied to your catalog.',
     image: featureAutoDrops,
+    span: 'lg:col-span-4',
+    imageClass: 'h-48 sm:h-56',
+    tall: false,
   },
   {
     icon: Sparkles,
     label: 'Try-On',
-    headline: 'Your garments on real-looking models. Instantly.',
+    headline: 'Your garments on supermodels. Instantly.',
     description:
-      'Upload any clothing item and see it on AI models in natural poses and environments. Lookbook-quality imagery without the overhead.',
+      'Upload any clothing item and see it on AI models in editorial poses and environments.',
     image: featureTryOn,
+    span: 'lg:col-span-4 lg:row-span-2',
+    imageClass: 'h-full',
+    tall: true,
   },
 ];
 
+function FeatureCard({
+  feature,
+}: {
+  feature: (typeof features)[0];
+}) {
+  const Icon = feature.icon;
+
+  return (
+    <div
+      className={`group relative rounded-2xl overflow-hidden border border-border bg-card ${feature.span} flex flex-col`}
+    >
+      {/* Image area */}
+      <div
+        className={`relative overflow-hidden ${
+          feature.tall ? 'flex-1 min-h-[280px]' : feature.imageClass
+        }`}
+      >
+        <img
+          src={feature.image}
+          alt={feature.headline}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
+
+        {/* Floating badge */}
+        <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/80 backdrop-blur-sm border border-border text-xs font-medium text-foreground">
+          <Icon className="w-3.5 h-3.5 text-primary" />
+          {feature.label}
+        </div>
+      </div>
+
+      {/* Text content */}
+      <div className="p-6">
+        <h3 className="text-lg font-bold leading-snug mb-2 text-foreground">
+          {feature.headline}
+        </h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {feature.description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function FeatureGrid() {
-  const [active, setActive] = useState(0);
-  const total = features.length;
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const resetTimer = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setActive((p) => (p + 1) % total);
-    }, 5000);
-  }, [total]);
-
-  useEffect(() => {
-    resetTimer();
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [resetTimer]);
-
-  const handleSelect = (i: number) => {
-    setActive(i);
-    resetTimer();
-  };
-
-  const current = features[active];
-
   return (
     <section className="relative py-24 sm:py-32 bg-background text-foreground overflow-hidden">
       {/* Ambient glow */}
@@ -110,118 +147,24 @@ export function FeatureGrid() {
             What Brandframe.ai Delivers
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto text-base sm:text-lg">
-            Your AI photography team handles everything &mdash; from monthly libraries to one-off editorial campaigns.
+            Your AI photography team handles everything &mdash; from monthly
+            libraries to one-off editorial campaigns.
           </p>
         </div>
 
-        {/* Feature tabs + content */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-0">
-          {/* Left: Tab list */}
-          <div className="lg:col-span-4 flex flex-col gap-1">
-            {features.map((f, i) => {
-              const isActive = i === active;
-              return (
-                <button
-                  key={f.label}
-                  onClick={() => handleSelect(i)}
-                  className={`group relative flex items-center gap-4 px-5 py-4 rounded-xl text-left transition-all duration-300 ${
-                    isActive
-                      ? 'bg-secondary'
-                      : 'hover:bg-secondary/50'
-                  }`}
-                >
-                  {/* Active indicator bar */}
-                  <div
-                    className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-full transition-all duration-300 ${
-                      isActive ? 'bg-primary' : 'bg-transparent'
-                    }`}
-                  />
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-300 ${
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-muted-foreground group-hover:text-foreground'
-                    }`}
-                  >
-                    <f.icon className="w-[18px] h-[18px]" />
-                  </div>
-                  <span
-                    className={`text-sm font-semibold transition-colors duration-300 ${
-                      isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'
-                    }`}
-                  >
-                    {f.label}
-                  </span>
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 lg:gap-5 auto-rows-auto">
+          {/* Row 1+2: Content Library (tall left) + AI Models + Brand Memory */}
+          <FeatureCard feature={features[0]} />
+          <FeatureCard feature={features[1]} />
+          <FeatureCard feature={features[2]} />
 
-                  {/* Progress bar for active */}
-                   {isActive && (
-                    <div className="absolute bottom-0 left-5 right-5 h-[2px] bg-border rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full"
-                        style={{
-                          animation: 'progress-fill 5s linear forwards',
-                        }}
-                      />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Right: Content card */}
-          <div className="lg:col-span-8 lg:pl-8">
-            <div
-              key={active}
-              className="rounded-2xl overflow-hidden border border-border bg-card"
-              style={{ animation: 'feature-enter 0.4s ease-out' }}
-            >
-              {/* Image */}
-              <div className="relative h-64 sm:h-80 overflow-hidden">
-                <img
-                  src={current.image}
-                  alt={current.headline}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-
-                {/* Floating counter */}
-                <div className="absolute bottom-4 right-4 text-xs font-mono text-muted-foreground bg-card/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-border">
-                  {String(active + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-                </div>
-              </div>
-
-              {/* Text */}
-              <div className="p-8 sm:p-10">
-                <h3 className="text-xl sm:text-2xl font-bold leading-snug mb-3 text-foreground">
-                  {current.headline}
-                </h3>
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg">
-                  {current.description}
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Row 3+4: Campaigns + Auto Drops + Try-On (tall right) */}
+          <FeatureCard feature={features[3]} />
+          <FeatureCard feature={features[4]} />
+          <FeatureCard feature={features[5]} />
         </div>
       </div>
-
-      {/* Inline keyframes */}
-      <style>{`
-        @keyframes progress-fill {
-          from { width: 0; }
-          to { width: 100%; }
-        }
-        @keyframes feature-enter {
-          from {
-            opacity: 0;
-            transform: translateY(12px) scale(0.98);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
     </section>
   );
 }
