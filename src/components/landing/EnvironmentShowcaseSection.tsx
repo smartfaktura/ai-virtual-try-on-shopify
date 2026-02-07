@@ -77,7 +77,7 @@ function MarqueeRow({ items, direction = 'left' }: { items: EnvironmentCard[]; d
 
   return (
     <div className="overflow-hidden">
-      <div ref={scrollRef} className="flex gap-4 will-change-transform" style={{ width: 'max-content' }}>
+      <div ref={scrollRef} className="flex gap-4 will-change-transform" style={{ width: 'max-content', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
         {doubled.map((env, i) => (
           <div key={`${env.name}-${i}`} className="flex flex-col items-center gap-2 flex-shrink-0">
             <div className="w-36 h-48 sm:w-44 sm:h-56 lg:w-52 lg:h-64 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
