@@ -8,12 +8,12 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-import templateStreetwear from '@/assets/templates/clothing-streetwear.jpg';
-import templateCosmetics from '@/assets/templates/cosmetics-luxury.jpg';
-import templateUniversal from '@/assets/templates/universal-clean.jpg';
-import templateStudio from '@/assets/templates/clothing-studio.jpg';
-import templatePastel from '@/assets/templates/cosmetics-pastel.jpg';
-import templateRustic from '@/assets/templates/food-rustic.jpg';
+import featureLibrary from '@/assets/templates/clothing-streetwear.jpg';
+import featureModels from '@/assets/features/feature-ai-models.jpg';
+import featureBrandMemory from '@/assets/features/feature-brand-memory.jpg';
+import featureCampaigns from '@/assets/features/feature-campaigns.jpg';
+import featureAutoDrops from '@/assets/features/feature-auto-drops.jpg';
+import featureTryOn from '@/assets/features/feature-tryon.jpg';
 
 const features = [
   {
