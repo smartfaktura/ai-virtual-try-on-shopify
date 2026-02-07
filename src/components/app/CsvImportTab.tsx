@@ -256,7 +256,7 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
                     <td className="p-2 truncate max-w-[150px] text-xs text-muted-foreground">{row.image_url ? '✓' : '—'}</td>
                     <td className="p-2">
                       {row.valid ? (
-                        <Check className="w-3.5 h-3.5 text-green-600" />
+                        <Check className="w-3.5 h-3.5 text-primary" />
                       ) : (
                         <span className="text-xs text-destructive">{row.error}</span>
                       )}
