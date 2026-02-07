@@ -1,5 +1,6 @@
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, CreditCard, Shield, ChevronRight } from 'lucide-react';
+import { ArrowRight, Sparkles, CreditCard, Shield, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import productUpload from '@/assets/hero/hero-product-tshirt.jpg';
@@ -7,6 +8,10 @@ import outputStudio from '@/assets/hero/hero-output-studio.jpg';
 import outputPark from '@/assets/hero/hero-output-park.jpg';
 import outputCoffee from '@/assets/hero/hero-output-coffee.jpg';
 import outputRooftop from '@/assets/hero/hero-output-rooftop.jpg';
+import outputYoga from '@/assets/hero/hero-output-yoga.jpg';
+import outputUrban from '@/assets/hero/hero-output-urban.jpg';
+import outputBeach from '@/assets/hero/hero-output-beach.jpg';
+import outputHome from '@/assets/hero/hero-output-home.jpg';
 
 const trustBadges = [
   { icon: CreditCard, text: 'No credit card required' },
@@ -14,15 +19,37 @@ const trustBadges = [
   { icon: Shield, text: 'Cancel anytime' },
 ];
 
-const visualContexts = [
+const heroOutputs = [
   { img: outputStudio, label: 'Studio Portrait' },
-  { img: outputPark, label: 'Lifestyle' },
+  { img: outputPark, label: 'Park Lifestyle' },
   { img: outputCoffee, label: 'Coffee Shop' },
-  { img: outputRooftop, label: 'Editorial' },
+  { img: outputRooftop, label: 'Rooftop Editorial' },
+  { img: outputYoga, label: 'Yoga Studio' },
+  { img: outputUrban, label: 'Urban Street' },
+  { img: outputBeach, label: 'Beach Sunset' },
+  { img: outputHome, label: 'At Home' },
 ];
 
 export function HeroSection() {
   const navigate = useNavigate();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollState = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = 220;
+    el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
+  };
+
   return (
     <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 overflow-hidden">
       {/* Background gradient */}
@@ -74,52 +101,87 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Visual Set showcase: Upload → Multiple outputs */}
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-[280px_auto_1fr] gap-4 items-center">
+        {/* Visual showcase: Upload → Carousel of portrait outputs */}
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center gap-6 md:gap-8">
             {/* Left: Original upload */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
-              <div className="relative">
-                <img src={productUpload} alt="Your uploaded product" className="w-full h-64 object-cover" />
-                <span className="absolute top-3 left-3 text-xs font-semibold px-3 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
-                  Your Upload
-                </span>
-              </div>
-              <div className="p-4 text-center">
-                <p className="text-sm font-semibold text-foreground">1 product photo</p>
-                <p className="text-xs text-muted-foreground">That's all you need</p>
+            <div className="flex-shrink-0 w-[180px] sm:w-[200px]">
+              <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
+                <div className="relative aspect-[3/4]">
+                  <img src={productUpload} alt="Your uploaded product" className="w-full h-full object-cover" />
+                  <span className="absolute top-3 left-3 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
+                    Your Upload
+                  </span>
+                </div>
+                <div className="p-3 text-center">
+                  <p className="text-xs sm:text-sm font-semibold text-foreground">1 product photo</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">That's all you need</p>
+                </div>
               </div>
             </div>
 
             {/* Flow arrow */}
-            <div className="hidden md:flex flex-col items-center gap-1">
-              <div className="w-12 h-px bg-border" />
+            <div className="flex-shrink-0 hidden sm:flex flex-col items-center gap-1">
+              <div className="w-10 h-px bg-border" />
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <ChevronRight className="w-4 h-4 text-primary" />
               </div>
-              <div className="w-12 h-px bg-border" />
+              <div className="w-10 h-px bg-border" />
             </div>
 
-            {/* Right: 2x2 generated contexts */}
-            <div>
-              <div className="grid grid-cols-2 gap-3">
-                {visualContexts.map((ctx) => (
+            {/* Right: Portrait carousel */}
+            <div className="flex-1 min-w-0 relative">
+              {/* Carousel arrows */}
+              <button
+                onClick={() => scroll('left')}
+                className={`absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
+                  canScrollLeft ? 'opacity-100 hover:bg-accent' : 'opacity-0 pointer-events-none'
+                }`}
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-4 h-4 text-foreground" />
+              </button>
+              <button
+                onClick={() => scroll('right')}
+                className={`absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
+                  canScrollRight ? 'opacity-100 hover:bg-accent' : 'opacity-0 pointer-events-none'
+                }`}
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-4 h-4 text-foreground" />
+              </button>
+
+              <div
+                ref={scrollRef}
+                onScroll={updateScrollState}
+                className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin"
+                style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
+              >
+                {heroOutputs.map((output) => (
                   <div
-                    key={ctx.label}
-                    className="rounded-xl border border-border bg-card overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300"
+                    key={output.label}
+                    className="flex-shrink-0 w-[150px] sm:w-[180px] snap-start group"
                   >
-                    <div className="relative">
-                      <img src={ctx.img} alt={ctx.label} className="w-full h-32 sm:h-36 object-cover" />
-                      <span className="absolute bottom-2 left-2 text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                        {ctx.label}
-                      </span>
+                    <div className="rounded-xl border border-border bg-card overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-primary/30 transition-all duration-300">
+                      <div className="relative aspect-[3/4]">
+                        <img
+                          src={output.img}
+                          alt={output.label}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                          {output.label}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
+
               {/* Caption */}
-              <p className="text-center text-xs text-muted-foreground mt-4">
-                Same t-shirt — 4 environments — 12 seconds
+              <p className="text-center text-xs text-muted-foreground mt-3">
+                Same t-shirt — 8 environments — 12 seconds
               </p>
             </div>
           </div>
