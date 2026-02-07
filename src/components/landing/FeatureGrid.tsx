@@ -54,7 +54,7 @@ const features = [
     headline: 'Schedule once. Fresh visuals arrive on autopilot.',
     description:
       'Recurring Creative Drops tied to your catalog. Assign workflows and brand profiles \u2014 new assets generated weekly or monthly.',
-    image: templatePastel,
+    image: featureAutoDrops,
   },
   {
     icon: Sparkles,
