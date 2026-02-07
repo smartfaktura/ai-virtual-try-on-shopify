@@ -811,7 +811,7 @@ export default function Generate() {
                   <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 shadow-lg z-30 lg:left-60">
                     <div className="max-w-7xl mx-auto flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <img src={getTemplateImage(selectedTemplate)} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                        <img src={getTemplateImage(selectedTemplate.templateId)} alt="" className="w-10 h-10 rounded-lg object-cover" />
                         <div>
                           <p className="text-sm font-semibold">{selectedTemplate.name}</p>
                           <p className="text-xs text-muted-foreground">{creditCost} credits</p>
