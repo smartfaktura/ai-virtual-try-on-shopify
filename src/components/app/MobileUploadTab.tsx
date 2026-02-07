@@ -41,13 +41,6 @@ export function MobileUploadTab({ onProductAdded, onClose }: MobileUploadTabProp
     setSessionToken(null);
 
     try {
-      const response = await supabase.functions.invoke('mobile-upload', {
-        body: {},
-        headers: {},
-        method: 'POST',
-      });
-
-      // The function uses query params for action, so we need to call with the URL
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Please sign in first');
 
