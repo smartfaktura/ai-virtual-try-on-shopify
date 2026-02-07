@@ -115,36 +115,21 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Polaris Frame overrides for full height */
-  .Polaris-Frame {
-    min-height: 100vh;
-  }
-
-  .Polaris-Frame__Navigation {
-    z-index: 500;
-  }
-
-  /* Ensure sub-navigation is visible */
-  .Polaris-Navigation__ItemInnerWrapper {
-    display: flex;
-    align-items: center;
-  }
-
-  /* Custom scrollbar for Polaris components */
-  .Polaris-Scrollable::-webkit-scrollbar {
+  /* Custom scrollbar */
+  *::-webkit-scrollbar {
     width: 6px;
   }
 
-  .Polaris-Scrollable::-webkit-scrollbar-track {
+  *::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .Polaris-Scrollable::-webkit-scrollbar-thumb {
+  *::-webkit-scrollbar-thumb {
     background: hsl(var(--border));
     border-radius: 3px;
   }
 
-  .Polaris-Scrollable::-webkit-scrollbar-thumb:hover {
+  *::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground));
   }
 }
