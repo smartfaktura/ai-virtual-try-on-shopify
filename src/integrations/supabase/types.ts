@@ -245,34 +245,52 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          company_url: string | null
           created_at: string
           credits_balance: number
           display_name: string | null
           email: string
+          first_name: string | null
           id: string
+          last_name: string | null
+          onboarding_completed: boolean
           plan: string
+          product_categories: string[]
+          referral_source: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
+          company_url?: string | null
           created_at?: string
           credits_balance?: number
           display_name?: string | null
           email: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          onboarding_completed?: boolean
           plan?: string
+          product_categories?: string[]
+          referral_source?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
+          company_url?: string | null
           created_at?: string
           credits_balance?: number
           display_name?: string | null
           email?: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          onboarding_completed?: boolean
           plan?: string
+          product_categories?: string[]
+          referral_source?: string | null
           updated_at?: string
           user_id?: string
         }
