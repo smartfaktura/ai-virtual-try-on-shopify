@@ -22,7 +22,7 @@ const features = [
     headline: 'A fresh library of studio-grade visuals. Every month.',
     description:
       'Curated product shots, lifestyle scenes, and ad creatives delivered to your dashboard automatically. Always fresh. Always on-brand.',
-    image: templateStreetwear,
+    image: featureLibrary,
   },
   {
     icon: Users,
