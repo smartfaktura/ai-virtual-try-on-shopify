@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useStudioChat } from '@/hooks/useStudioChat';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 import avatarSophia from '@/assets/team/avatar-sophia.jpg';
 import avatarKenji from '@/assets/team/avatar-kenji.jpg';
