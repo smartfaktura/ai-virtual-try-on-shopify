@@ -13,6 +13,7 @@ import { OnboardingChecklist } from '@/components/app/OnboardingChecklist';
 import { GenerationModeCards } from '@/components/app/GenerationModeCards';
 import { UpcomingDropsCard } from '@/components/app/UpcomingDropsCard';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
+import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -167,9 +168,12 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* Your AI Studio Team */}
+        <DashboardTeamCarousel />
+
         {/* Two Ways to Create */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">Two Ways to Create</h2>
+          <h2 className="text-xl font-bold text-foreground tracking-tight">Two Ways to Create</h2>
           <GenerationModeCards />
         </div>
 
@@ -234,6 +238,9 @@ export default function Dashboard() {
           icon={CalendarClock}
         />
       </div>
+
+      {/* Your AI Studio Team */}
+      <DashboardTeamCarousel />
 
       {/* Quick Create */}
       <div className="space-y-4">

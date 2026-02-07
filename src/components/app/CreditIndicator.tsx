@@ -5,7 +5,8 @@ export function CreditIndicator() {
   const { balance, isLow, isCritical, isEmpty, openBuyModal } = useCredits();
   
   const getTextClass = () => {
-    if (isEmpty || isCritical) return 'text-destructive';
+    if (isEmpty) return 'text-destructive';
+    if (isCritical) return 'text-amber-300';
     if (isLow) return 'text-amber-400';
     return 'text-sidebar-foreground';
   };

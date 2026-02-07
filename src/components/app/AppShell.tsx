@@ -62,7 +62,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main Nav */}
       <nav className="flex-1 px-3 py-5 space-y-1">
-        <p className="px-3 py-1.5 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/25">Main</p>
+        <p className="px-3 py-1.5 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/35">Main</p>
         {navItems.map((item) => (
           <button
             key={item.path}
@@ -71,7 +71,7 @@ export function AppShell({ children }: AppShellProps) {
               'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
               isActive(item.path)
                 ? 'bg-white/[0.1] text-white'
-                : 'text-white/40 hover:bg-white/[0.04] hover:text-white/70'
+                : 'text-white/60 hover:bg-white/[0.04] hover:text-white/80'
             )}
           >
             <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -80,7 +80,7 @@ export function AppShell({ children }: AppShellProps) {
         ))}
 
         <div className="pt-8">
-          <p className="px-3 py-1.5 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/25">Configuration</p>
+          <p className="px-3 py-1.5 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/35">Configuration</p>
           {configItems.map((item) => (
             <button
               key={item.path}
@@ -89,7 +89,7 @@ export function AppShell({ children }: AppShellProps) {
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                 isActive(item.path)
                   ? 'bg-white/[0.1] text-white'
-                  : 'text-white/40 hover:bg-white/[0.04] hover:text-white/70'
+                  : 'text-white/60 hover:bg-white/[0.04] hover:text-white/80'
               )}
             >
               <item.icon className="w-4 h-4 flex-shrink-0" />
