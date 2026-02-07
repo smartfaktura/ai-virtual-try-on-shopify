@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useStudioChat } from '@/hooks/useStudioChat';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 import avatarSophia from '@/assets/team/avatar-sophia.jpg';
 import avatarKenji from '@/assets/team/avatar-kenji.jpg';
@@ -129,15 +130,21 @@ export function StudioChat() {
                 )}
                 <div
                   className={cn(
-                    'rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed max-w-[85%] whitespace-pre-wrap',
+                    'rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed max-w-[85%]',
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground rounded-br-md'
                       : 'bg-muted text-foreground rounded-bl-md'
                   )}
                 >
-                  {msg.content}
-                  {msg.role === 'assistant' && isLoading && i === displayMessages.length - 1 && (
-                    <span className="inline-block w-1.5 h-4 ml-0.5 bg-foreground/40 animate-pulse rounded-sm" />
+                  {msg.role === 'assistant' ? (
+                    <div className="prose prose-sm dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-1.5 max-w-none">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      {isLoading && i === displayMessages.length - 1 && (
+                        <span className="inline-block w-1.5 h-4 ml-0.5 bg-foreground/40 animate-pulse rounded-sm" />
+                      )}
+                    </div>
+                  ) : (
+                    msg.content
                   )}
                 </div>
               </div>
