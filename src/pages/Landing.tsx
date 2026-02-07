@@ -2,7 +2,7 @@ import { LandingNav } from '@/components/landing/LandingNav';
 import { HeroSection } from '@/components/landing/HeroSection';
 
 import { StudioTeamSection } from '@/components/landing/StudioTeamSection';
-import { FeatureGrid } from '@/components/landing/FeatureGrid';
+
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
 import { EnvironmentShowcaseSection } from '@/components/landing/EnvironmentShowcaseSection';
@@ -21,7 +21,7 @@ export default function Landing() {
         <HeroSection />
         
         <StudioTeamSection />
-        <FeatureGrid />
+        
         <HowItWorks />
         
         <ModelShowcaseSection />
