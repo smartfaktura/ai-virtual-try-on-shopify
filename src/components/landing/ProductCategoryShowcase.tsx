@@ -2,37 +2,33 @@ import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 
 // Fashion & Apparel
-import fashionStudio from '@/assets/hero/hero-output-studio.jpg';
-import fashionPark from '@/assets/hero/hero-output-park.jpg';
-import fashionRooftop from '@/assets/hero/hero-output-rooftop.jpg';
-import fashionUrban from '@/assets/hero/hero-output-urban.jpg';
-import fashionBeach from '@/assets/hero/hero-output-beach.jpg';
+import fashionBlazer from '@/assets/showcase/fashion-blazer-street.jpg';
+import fashionActivewear from '@/assets/showcase/fashion-activewear-studio.jpg';
+import fashionDress from '@/assets/showcase/fashion-dress-garden.jpg';
+import fashionStreetwear from '@/assets/showcase/fashion-streetwear-urban.jpg';
 
 // Skincare
-import skincareStudio from '@/assets/hero/hero-serum-studio.jpg';
-import skincareShadows from '@/assets/hero/hero-serum-shadows.jpg';
-import skincareBathroom from '@/assets/hero/hero-serum-bathroom.jpg';
-import skincareMoody from '@/assets/hero/hero-serum-moody.jpg';
-import skincareGarden from '@/assets/hero/hero-serum-garden.jpg';
+import skincareSerum from '@/assets/showcase/skincare-serum-marble.jpg';
+import skincareCream from '@/assets/showcase/skincare-cream-moody.jpg';
+import skincareSet from '@/assets/showcase/skincare-set-minimal.jpg';
+import skincareOil from '@/assets/showcase/skincare-oil-bathroom.jpg';
 
 // Food & Drinks
-import foodRustic from '@/assets/templates/food-rustic.jpg';
-import foodCommercial from '@/assets/templates/food-commercial.jpg';
-import foodPackaging from '@/assets/templates/food-packaging.jpg';
-import coffeeBeans from '@/assets/products/coffee-beans.jpg';
-import honeyOrganic from '@/assets/products/honey-organic.jpg';
+import foodPasta from '@/assets/showcase/food-pasta-rustic.jpg';
+import foodCoffee from '@/assets/showcase/food-coffee-artisan.jpg';
+import foodHoney from '@/assets/showcase/food-honey-farmhouse.jpg';
+import foodSmoothie from '@/assets/showcase/food-smoothie-bright.jpg';
 
 // Home & Living
-import homeJapandi from '@/assets/templates/home-japandi.jpg';
-import homeWarm from '@/assets/templates/home-warm.jpg';
-import homeConcrete from '@/assets/templates/home-concrete.jpg';
-import candleSoy from '@/assets/products/candle-soy.jpg';
-import lampBrass from '@/assets/products/lamp-brass.jpg';
+import homeCandle from '@/assets/showcase/home-candle-scandi.jpg';
+import homeVases from '@/assets/showcase/home-vases-japandi.jpg';
+import homeLamp from '@/assets/showcase/home-lamp-desk.jpg';
+import homeTextiles from '@/assets/showcase/home-textiles-bedroom.jpg';
 
 interface CategoryCardProps {
   label: string;
   images: string[];
-  cycleDuration: number; // in ms
+  cycleDuration: number;
 }
 
 function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
@@ -59,12 +55,12 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
   }, [previousIndex]);
 
   return (
-    <div className="relative rounded-xl overflow-hidden border border-border/30 bg-zinc-900 aspect-[3/4] group">
+    <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
       {/* Progress bar */}
-      <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-white/10">
+      <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-muted/40">
         <div
           key={progressKey}
-          className="h-full bg-white/80"
+          className="h-full bg-primary/70"
           style={{
             animation: `progress-fill ${cycleDuration}ms linear forwards`,
           }}
@@ -73,7 +69,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
 
       {/* Category label */}
       <div className="absolute top-3 left-3 z-20">
-        <span className="text-xs font-medium tracking-wide text-white/90 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-md">
+        <span className="text-xs font-medium tracking-wide text-primary-foreground bg-foreground/50 backdrop-blur-sm px-2.5 py-1 rounded-md">
           {label}
         </span>
       </div>
@@ -102,29 +98,29 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
 const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
-    images: [fashionStudio, fashionPark, fashionRooftop, fashionUrban, fashionBeach],
-    cycleDuration: 4000,
+    images: [fashionBlazer, fashionActivewear, fashionDress, fashionStreetwear],
+    cycleDuration: 7000,
   },
   {
     label: 'Skincare',
-    images: [skincareStudio, skincareShadows, skincareBathroom, skincareMoody, skincareGarden],
-    cycleDuration: 5000,
+    images: [skincareSerum, skincareCream, skincareSet, skincareOil],
+    cycleDuration: 8500,
   },
   {
     label: 'Food & Drinks',
-    images: [foodRustic, foodCommercial, foodPackaging, coffeeBeans, honeyOrganic],
-    cycleDuration: 3500,
+    images: [foodPasta, foodCoffee, foodHoney, foodSmoothie],
+    cycleDuration: 6000,
   },
   {
     label: 'Home & Living',
-    images: [homeJapandi, homeWarm, homeConcrete, candleSoy, lampBrass],
-    cycleDuration: 4500,
+    images: [homeCandle, homeVases, homeLamp, homeTextiles],
+    cycleDuration: 7500,
   },
 ];
 
 export function ProductCategoryShowcase() {
   return (
-    <section className="py-16 lg:py-24 bg-zinc-950">
+    <section className="py-16 lg:py-24 bg-background">
       {/* Inline keyframes for progress bar & image fade */}
       <style>{`
         @keyframes progress-fill {
@@ -139,13 +135,13 @@ export function ProductCategoryShowcase() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 lg:mb-16">
-          <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase bg-white/10 text-white/70 border-white/10 hover:bg-white/15">
+          <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
             Every Category
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
             All products look better here
           </h2>
-          <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
             Fashion, skincare, food, home décor — our AI adapts to any product category and delivers studio-quality shots.
           </p>
         </div>
