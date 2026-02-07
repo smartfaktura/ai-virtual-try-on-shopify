@@ -7,7 +7,7 @@ import { HowItWorks } from '@/components/landing/HowItWorks';
 import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
 import { EnvironmentShowcaseSection } from '@/components/landing/EnvironmentShowcaseSection';
 import { CreativeDropsSection } from '@/components/landing/CreativeDropsSection';
-import { IntegrationSection } from '@/components/landing/IntegrationSection';
+
 import { LandingPricing } from '@/components/landing/LandingPricing';
 import { LandingFAQ } from '@/components/landing/LandingFAQ';
 import { FinalCTA } from '@/components/landing/FinalCTA';
@@ -27,7 +27,7 @@ export default function Landing() {
         <ModelShowcaseSection />
         <EnvironmentShowcaseSection />
         <CreativeDropsSection />
-        <IntegrationSection />
+        
         <LandingPricing />
         <LandingFAQ />
         <FinalCTA />
