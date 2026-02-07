@@ -19,7 +19,7 @@ export default function Landing() {
       <LandingNav />
       <main>
         <HeroSection />
-        <SocialProofBar />
+        
         <StudioTeamSection />
         <FeatureGrid />
         <HowItWorks />
