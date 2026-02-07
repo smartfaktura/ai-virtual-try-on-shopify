@@ -27,7 +27,7 @@ export function FinalCTA() {
         </p>
 
         <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
-          Create My First Visual Set
+          Get Started Free
           <ArrowRight className="w-5 h-5" />
         </Button>
 
