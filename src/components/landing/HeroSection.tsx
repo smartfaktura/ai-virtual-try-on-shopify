@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, CreditCard, Shield, ChevronRight, ChevronLeft } from 'lucide-react';
+import { ArrowRight, CreditCard, Shield, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import productTshirt from '@/assets/hero/hero-product-tshirt.jpg';
