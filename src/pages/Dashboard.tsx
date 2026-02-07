@@ -168,9 +168,12 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* Your AI Studio Team */}
+        <DashboardTeamCarousel />
+
         {/* Two Ways to Create */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">Two Ways to Create</h2>
+          <h2 className="text-xl font-bold text-foreground tracking-tight">Two Ways to Create</h2>
           <GenerationModeCards />
         </div>
 
