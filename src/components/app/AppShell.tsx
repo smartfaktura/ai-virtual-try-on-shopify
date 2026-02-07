@@ -58,7 +58,7 @@ export function AppShell({ children }: AppShellProps) {
             <path d="M10 24L16 18L22 24L28 18" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <span className="text-lg font-bold text-sidebar-foreground">nanobanna</span>
+        <span className="text-lg font-bold text-sidebar-foreground">brandframe.ai</span>
       </div>
 
       {/* Main Nav */}

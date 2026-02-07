@@ -67,9 +67,9 @@ export default function Auth() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">nb</span>
+                <span className="text-primary-foreground font-bold">bf</span>
               </div>
-              <span className="font-bold text-xl text-foreground tracking-tight">nanobanna</span>
+              <span className="font-bold text-xl text-foreground tracking-tight">brandframe.ai</span>
             </div>
             <h1 className="text-2xl font-bold text-foreground">
               {mode === 'signup' ? 'Create your account' : 'Welcome back'}
