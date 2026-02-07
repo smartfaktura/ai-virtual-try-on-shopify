@@ -157,8 +157,8 @@ export function ModelShowcaseSection() {
       </div>
 
       <div className="flex flex-col gap-8">
-        <MarqueeRow items={ROW_1} direction="left" durationSeconds={55} />
-        <MarqueeRow items={ROW_2} direction="right" durationSeconds={65} />
+        <MarqueeRow items={ROW_1} direction="left" durationSeconds={120} />
+        <MarqueeRow items={ROW_2} direction="right" durationSeconds={130} />
       </div>
     </section>
   );
