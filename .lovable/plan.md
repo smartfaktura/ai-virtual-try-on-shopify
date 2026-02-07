@@ -1,79 +1,52 @@
 
 
-## Product Category Showcase Section
+## Fix Image Loading -- Lean, Performance-Safe Approach
 
-A new section for the landing page that demonstrates Brandframe.ai's versatility across product categories — inspired by the reference screenshot. Four cards (Fashion & Apparel, Skincare, Food & Drinks, Home & Living) each auto-cycle through high-quality AI-generated images at staggered intervals, with a thin progress bar on top of each card that fills as the current image displays.
+### Problem
 
-### Visual Design
+Images across the landing page load progressively (top-to-bottom "crop in"), because the browser fetches and paints them line-by-line. This is caused by two things:
 
-- Dark-themed section background (`bg-zinc-950` or similar dark tone) to make the product cards pop
-- Headline: **"All products look better here"** (matching the reference style)
-- 4 cards in a responsive grid (1 col mobile, 2 col tablet, 4 col desktop)
-- Each card has:
-  - A category label in the top-left corner (e.g., "Fashion & Apparel")
-  - A thin white/primary progress bar at the top that animates from 0% to 100% over the card's cycle duration
-  - Smooth crossfade transitions between images
-  - Rounded corners and subtle border
+1. **`loading="lazy"`** on images that are part of actively animating carousels/marquees -- the browser delays the fetch until they enter the viewport, but by then they're already visible while still downloading.
+2. **No GPU compositing hints** on the Environment marquee, causing occasional micro-stutters and decode flicker.
 
-### Staggered Auto-Rotation
+### Why the lean approach is the right one
 
-Each card rotates images at a different interval to create an organic, non-synchronized feel:
-- Fashion & Apparel: ~4s cycle
-- Skincare: ~5s cycle  
-- Food & Drinks: ~3.5s cycle
-- Home & Living: ~4.5s cycle
+- **No custom `new Image()` preloader needed.** Vite already resolves all imported images at build time into hashed URLs. The `ProductCategoryShowcase` renders all 5 images per card in the DOM immediately (stacked absolutely), so the browser already starts fetching them on mount. Adding a JS preloader would be redundant work.
+- **No extra state management.** Tracking "loaded" booleans per image adds complexity for zero visual gain since the crossfade transition already covers the decode time.
+- **Minimal code changes.** Three small edits across three files -- nothing architectural.
 
-The progress bar resets and re-animates each time a new image appears.
+---
 
-### Image Sources
+### Changes (3 files)
 
-We'll use existing assets from the project, grouped by category:
+**1. EnvironmentShowcaseSection.tsx**
+- Remove `loading="lazy"` from the `<img>` tag (line 88) so all 36 images (18 doubled) start loading immediately when the component mounts
+- Add `decoding="async"` to allow off-main-thread image decoding
+- Add GPU compositing hints (`transform: translateZ(0)`, `backfaceVisibility: hidden`) to the scrolling container, matching the ModelShowcaseSection pattern
+- Add gradient fade edges on left and right sides for visual consistency with the Model marquee
 
-- **Fashion & Apparel**: hero output images (crop top in various scenes) + drop model images
-- **Skincare**: serum hero variations (studio, bathroom, shadows, garden, moody, etc.)
-- **Food & Drinks**: template food images + product food items (coffee beans, honey, chocolate, juice, granola)
-- **Home & Living**: template home images + product home items (candle, lamp, pillow, planter, carafe)
+**2. HeroSection.tsx**
+- Remove `loading="lazy"` from the output carousel images (line 322) since they are above-the-fold hero content
+- Add `decoding="async"` for non-blocking decode
 
-### Technical Implementation
+**3. ProductCategoryShowcase.tsx**
+- Add `decoding="async"` to the stacked images (line 74-83) for smoother off-thread decode during crossfade transitions
+- No other changes needed -- the existing absolute-stack approach already ensures all images load eagerly on mount
 
-**New file:** `src/components/landing/ProductCategoryShowcase.tsx`
+---
 
-- A `CategoryCard` component that:
-  - Accepts an array of images, a category label, and a cycle duration
-  - Uses `useState` for the current image index and `useEffect` with `setInterval` for auto-rotation
-  - Renders two `<img>` layers with opacity transitions for smooth crossfade
-  - Renders a progress bar div with CSS animation (`@keyframes` or inline style with `transition`) that fills over the duration, resetting on each image change via a `key` prop
-- The parent component renders 4 `CategoryCard` instances with different durations
+### What each attribute does
 
-**Modified file:** `src/pages/Landing.tsx`
+| Attribute | Effect |
+|---|---|
+| Remove `loading="lazy"` | Browser fetches image immediately instead of waiting for viewport intersection |
+| `decoding="async"` | Browser decodes the image off the main thread, preventing frame drops during animation |
+| `transform: translateZ(0)` | Forces GPU-accelerated compositing layer, eliminating paint jank |
+| `backfaceVisibility: hidden` | Prevents unnecessary back-face rendering on the GPU layer |
 
-- Import and add `<ProductCategoryShowcase />` to the page layout, placed after `HowItWorks` and before `ModelShowcaseSection`
+### What is NOT included (and why)
 
-### Component Structure
-
-```text
-ProductCategoryShowcase
-+-- Section wrapper (dark bg, centered heading)
-+-- Grid (4 columns on desktop)
-    +-- CategoryCard (Fashion & Apparel, 4s)
-    |   +-- Progress bar (animated width 0->100%)
-    |   +-- Category label overlay
-    |   +-- Image stack (crossfade)
-    +-- CategoryCard (Skincare, 5s)
-    +-- CategoryCard (Food & Drinks, 3.5s)
-    +-- CategoryCard (Home & Living, 4.5s)
-```
-
-### Asset Mapping
-
-Each card will cycle through 4-6 existing images:
-
-| Category | Assets |
-|----------|--------|
-| Fashion & Apparel | `hero-output-studio`, `hero-output-park`, `hero-output-rooftop`, `hero-output-urban`, `hero-output-beach` |
-| Skincare | `hero-serum-studio`, `hero-serum-shadows`, `hero-serum-bathroom`, `hero-serum-moody`, `hero-serum-garden` |
-| Food & Drinks | `templates/food-rustic`, `templates/food-commercial`, `templates/food-packaging`, `products/coffee-beans`, `products/honey-organic` |
-| Home & Living | `templates/home-japandi`, `templates/home-warm`, `templates/home-concrete`, `products/candle-soy`, `products/lamp-brass` |
-
-No new AI-generated images needed — all sourced from existing assets.
+- **No `new Image()` preloader** -- redundant since Vite imports + DOM rendering already trigger browser fetches
+- **No "loaded" state tracking** -- adds complexity; the 1.2s crossfade transition naturally covers any remaining decode time
+- **No changes to ModelShowcaseSection** -- already has eager loading and GPU hints in place
 
