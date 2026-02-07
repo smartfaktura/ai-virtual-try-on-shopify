@@ -102,14 +102,14 @@ export function FeatureGrid() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[hsl(212,14%,25%)] bg-[hsl(212,14%,14%)] text-xs font-medium tracking-wide uppercase text-[hsl(161,100%,45%)] mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-secondary text-xs font-medium tracking-wide uppercase text-primary mb-6">
             <Sparkles className="w-3 h-3" />
             AI-Powered Studio
           </div>
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4 leading-[1.1]">
             What Brandframe.ai Delivers
           </h2>
-          <p className="text-[hsl(210,14%,55%)] max-w-lg mx-auto text-base sm:text-lg">
+          <p className="text-muted-foreground max-w-lg mx-auto text-base sm:text-lg">
             Your AI photography team handles everything &mdash; from monthly libraries to one-off editorial campaigns.
           </p>
         </div>
