@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { MessageCircle, X, Send, RotateCcw, Sparkles } from 'lucide-react';
+import { MessageCircle, X, Send, RotateCcw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useStudioChat } from '@/hooks/useStudioChat';
 import { cn } from '@/lib/utils';
-import ReactMarkdown from 'react-markdown';
+import { ChatMessageBubble } from './ChatMessageBubble';
 
 import avatarSophia from '@/assets/team/avatar-sophia.jpg';
 import avatarKenji from '@/assets/team/avatar-kenji.jpg';
@@ -136,16 +136,11 @@ export function StudioChat() {
                       : 'bg-muted text-foreground rounded-bl-md'
                   )}
                 >
-                  {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-1.5 max-w-none">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
-                      {isLoading && i === displayMessages.length - 1 && (
-                        <span className="inline-block w-1.5 h-4 ml-0.5 bg-foreground/40 animate-pulse rounded-sm" />
-                      )}
-                    </div>
-                  ) : (
-                    msg.content
-                  )}
+                  <ChatMessageBubble
+                    content={msg.content}
+                    role={msg.role}
+                    isStreaming={msg.role === 'assistant' && isLoading && i === displayMessages.length - 1}
+                  />
                 </div>
               </div>
             ))}
