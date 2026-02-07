@@ -30,55 +30,60 @@ export function WorkflowCard({ workflow, onSelect }: WorkflowCardProps) {
   const thumbnail = workflowImages[workflow.name] || imgFallback;
 
   return (
-    <Card className="group hover:shadow-md transition-all hover:border-primary/30">
-      <CardContent className="p-5 space-y-4">
+    <Card className="group hover:shadow-md transition-all hover:border-primary/30 overflow-hidden">
+      {/* Hero image */}
+      <div className="aspect-[16/9] overflow-hidden">
+        <img
+          src={thumbnail}
+          alt={workflow.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </div>
+
+      <CardContent className="p-5 space-y-3">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 border border-border">
-              <img src={thumbnail} alt={workflow.name} className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm">{workflow.name}</h3>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <Image className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{workflow.default_image_count} images</span>
-              </div>
+          <h3 className="font-semibold text-sm">{workflow.name}</h3>
+          <div className="flex items-center gap-2">
+            {workflow.uses_tryon && (
+              <Badge variant="secondary" className="text-[10px] gap-1">
+                <Users className="w-3 h-3" />
+                Try-On
+              </Badge>
+            )}
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Image className="w-3 h-3" />
+              <span className="text-xs">{workflow.default_image_count}</span>
             </div>
           </div>
-          {workflow.uses_tryon && (
-            <Badge variant="secondary" className="text-[10px] gap-1">
-              <Users className="w-3 h-3" />
-              Try-On
-            </Badge>
-          )}
         </div>
 
         {/* Description */}
-        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
           {workflow.description}
         </p>
 
-        {/* Ratios */}
-        <div className="flex items-center gap-1.5">
-          <Ratio className="w-3 h-3 text-muted-foreground" />
-          <div className="flex gap-1">
-            {workflow.recommended_ratios.map(ratio => (
-              <span
-                key={ratio}
-                className="inline-block px-1.5 py-0.5 text-[10px] font-medium bg-secondary text-secondary-foreground rounded"
-              >
-                {ratio}
-              </span>
-            ))}
+        {/* Ratios + CTA */}
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-1.5">
+            <Ratio className="w-3 h-3 text-muted-foreground" />
+            <div className="flex gap-1">
+              {workflow.recommended_ratios.map(ratio => (
+                <span
+                  key={ratio}
+                  className="inline-block px-1.5 py-0.5 text-[10px] font-medium bg-secondary text-secondary-foreground rounded"
+                >
+                  {ratio}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* CTA */}
-        <Button className="w-full" size="sm" onClick={onSelect}>
-          Create Visual Set
-          <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-        </Button>
+          <Button size="sm" variant="ghost" className="gap-1 text-xs h-8" onClick={onSelect}>
+            Create
+            <ArrowRight className="w-3 h-3" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
