@@ -5,6 +5,7 @@ import { StudioTeamSection } from '@/components/landing/StudioTeamSection';
 import { FeatureGrid } from '@/components/landing/FeatureGrid';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { BeforeAfterGallery } from '@/components/landing/BeforeAfterGallery';
+import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
 import { CreativeDropsSection } from '@/components/landing/CreativeDropsSection';
 import { IntegrationSection } from '@/components/landing/IntegrationSection';
 import { LandingPricing } from '@/components/landing/LandingPricing';
@@ -23,6 +24,7 @@ export default function Landing() {
         <FeatureGrid />
         <HowItWorks />
         <BeforeAfterGallery />
+        <ModelShowcaseSection />
         <CreativeDropsSection />
         <IntegrationSection />
         <LandingPricing />
