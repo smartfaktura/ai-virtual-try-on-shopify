@@ -111,7 +111,10 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
   const tripled = [...items, ...items, ...items];
 
   return (
-    <div className="overflow-hidden">
+    <div className="relative overflow-hidden">
+      {/* Gradient fade edges */}
+      <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, hsl(var(--background)), transparent)' }} />
+      <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, hsl(var(--background)), transparent)' }} />
       <div
         className="flex gap-4"
         style={{
@@ -128,7 +131,6 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
                 src={model.image}
                 alt={model.name}
                 className="w-full h-full object-cover object-top"
-                loading="lazy"
               />
             </div>
             <span className="text-xs sm:text-sm font-medium text-foreground">{model.name}</span>
