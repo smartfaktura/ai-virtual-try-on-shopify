@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, Package, CalendarClock } from 'lucide-react';
+import { Image, Wallet, Package, CalendarClock, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PageHeader } from '@/components/app/PageHeader';
 import { MetricCard } from '@/components/app/MetricCard';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
@@ -135,184 +134,196 @@ export default function Dashboard() {
   // --- FIRST-RUN DASHBOARD ---
   if (isNewUser) {
     return (
-      <PageHeader title="Dashboard">
-      <div className="space-y-8">
-          {/* Welcome — breathing, no card wrapper */}
+      <div className="space-y-10">
+        {/* Welcome — luxury greeting, no PageHeader */}
+        <div>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight">
-                Welcome, {firstName}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                <span className="inline-flex items-center gap-1.5 bg-muted rounded-full px-2.5 py-0.5 text-xs font-medium text-foreground">
+              <h1 className="text-3xl font-light tracking-tight text-foreground">
+                Welcome, <span className="font-semibold">{firstName}</span>
+              </h1>
+              <p className="text-sm text-muted-foreground mt-2">
+                <span className="inline-flex items-center gap-1.5 bg-foreground/[0.04] border border-foreground/[0.08] rounded-full px-2.5 py-0.5 text-xs font-medium text-foreground">
                   <Wallet className="w-3 h-3" />
                   {balance} credits
                 </span>
                 <span className="ml-2">to start creating.</span>
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={openBuyModal}>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={openBuyModal}>
               Buy Credits
+              <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </Button>
           </div>
+          {/* Decorative separator */}
+          <div className="mt-6 h-px bg-border" />
+        </div>
 
-          {/* Onboarding Checklist */}
+        {/* Onboarding Checklist */}
+        <div className="space-y-3">
+          <p className="section-label">Get Started</p>
           <OnboardingChecklist
             productCount={productCount}
             brandProfileCount={brandProfileCount}
             jobCount={totalJobCount}
           />
-
-          {/* Two Ways to Create */}
-          <div className="space-y-3">
-            <h2 className="text-lg font-semibold tracking-tight">Two Ways to Create</h2>
-            <GenerationModeCards />
-          </div>
-
-          {/* Explore Workflows */}
-          {workflows.length > 0 && (
-            <div className="space-y-3 bg-muted/50 -mx-4 px-4 py-6 rounded-xl">
-              <h2 className="text-lg font-semibold tracking-tight">Explore Workflows</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {workflows.map(workflow => (
-                  <WorkflowCard
-                    key={workflow.id}
-                    workflow={workflow}
-                    onSelect={() => navigate(`/app/generate?workflow=${workflow.id}`)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
-      </PageHeader>
+
+        {/* Two Ways to Create */}
+        <div className="space-y-3">
+          <p className="section-label">Two Ways to Create</p>
+          <GenerationModeCards />
+        </div>
+
+        {/* Explore Workflows */}
+        {workflows.length > 0 && (
+          <div className="space-y-3 border-t border-border pt-8">
+            <p className="section-label">Explore Workflows</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {workflows.map(workflow => (
+                <WorkflowCard
+                  key={workflow.id}
+                  workflow={workflow}
+                  onSelect={() => navigate(`/app/generate?workflow=${workflow.id}`)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
   // --- RETURNING USER DASHBOARD ---
   return (
-    <PageHeader title="Dashboard">
-      <div className="space-y-6">
-        {/* Low credits banner */}
-        <LowCreditsBanner />
-
-        {/* Metrics Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <MetricCard
-            title="Images Generated"
-            value={generatedCount}
-            suffix="last 30 days"
-            icon={Image}
-          />
-          <MetricCard
-            title="Credits Remaining"
-            value={balance}
-            suffix="available"
-            icon={Wallet}
-            onClick={openBuyModal}
-          />
-          <MetricCard
-            title="Products"
-            value={productCount}
-            suffix="in library"
-            icon={Package}
-          />
-          <MetricCard
-            title="Active Schedules"
-            value={scheduleCount}
-            suffix="creative drops"
-            icon={CalendarClock}
-          />
-        </div>
-
-        {/* Quick Create */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold tracking-tight">Quick Create</h2>
-          <GenerationModeCards compact />
-        </div>
-
-        {/* Recent Jobs */}
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold">Recent Jobs</h2>
-              <Button variant="link" onClick={() => navigate('/app/library')}>
-                View all
-              </Button>
-            </div>
-
-            {recentJobs.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Workflow</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Credits</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentJobs.map(job => (
-                      <TableRow key={job.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                              <img
-                                src={job.user_products?.image_url || '/placeholder.svg'}
-                                alt={job.user_products?.title || 'Product'}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <span className="font-medium text-sm">
-                              {job.user_products?.title || 'Unknown product'}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {job.workflows?.name || '—'}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge status={job.status as JobStatus} />
-                        </TableCell>
-                        <TableCell className="text-right text-sm">
-                          {job.credits_used > 0 ? job.credits_used : '—'}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {new Date(job.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {job.status === 'failed' && (
-                              <Button size="sm" onClick={() => navigate('/app/generate')}>
-                                Retry
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <EmptyStateCard
-                heading="No jobs yet"
-                description="Generate your first product images to see them here."
-                action={{
-                  content: 'Generate images',
-                  onAction: () => navigate('/app/generate'),
-                }}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Drops */}
-        <UpcomingDropsCard />
+    <div className="space-y-8">
+      {/* Welcome greeting for returning user */}
+      <div>
+        <h1 className="text-3xl font-light tracking-tight text-foreground">
+          Welcome back, <span className="font-semibold">{firstName}</span>
+        </h1>
+        <div className="mt-4 h-px bg-border" />
       </div>
-    </PageHeader>
+
+      {/* Low credits banner */}
+      <LowCreditsBanner />
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <MetricCard
+          title="Images Generated"
+          value={generatedCount}
+          suffix="last 30 days"
+          icon={Image}
+        />
+        <MetricCard
+          title="Credits Remaining"
+          value={balance}
+          suffix="available"
+          icon={Wallet}
+          onClick={openBuyModal}
+        />
+        <MetricCard
+          title="Products"
+          value={productCount}
+          suffix="in library"
+          icon={Package}
+        />
+        <MetricCard
+          title="Active Schedules"
+          value={scheduleCount}
+          suffix="creative drops"
+          icon={CalendarClock}
+        />
+      </div>
+
+      {/* Quick Create */}
+      <div className="space-y-3">
+        <p className="section-label">Quick Create</p>
+        <GenerationModeCards compact />
+      </div>
+
+      {/* Recent Jobs */}
+      <Card className="card-elevated border-0">
+        <CardContent className="p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="section-label">Recent Jobs</p>
+            <Button variant="link" onClick={() => navigate('/app/library')}>
+              View all
+            </Button>
+          </div>
+
+          {recentJobs.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Workflow</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Credits</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentJobs.map(job => (
+                    <TableRow key={job.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                            <img
+                              src={job.user_products?.image_url || '/placeholder.svg'}
+                              alt={job.user_products?.title || 'Product'}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="font-medium text-sm">
+                            {job.user_products?.title || 'Unknown product'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {job.workflows?.name || '—'}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={job.status as JobStatus} />
+                      </TableCell>
+                      <TableCell className="text-right text-sm">
+                        {job.credits_used > 0 ? job.credits_used : '—'}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(job.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {job.status === 'failed' && (
+                            <Button size="sm" onClick={() => navigate('/app/generate')}>
+                              Retry
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <EmptyStateCard
+              heading="No jobs yet"
+              description="Generate your first product images to see them here."
+              action={{
+                content: 'Generate images',
+                onAction: () => navigate('/app/generate'),
+              }}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Upcoming Drops */}
+      <UpcomingDropsCard />
+    </div>
   );
 }

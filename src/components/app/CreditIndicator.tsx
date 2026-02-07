@@ -4,31 +4,25 @@ import { useCredits } from '@/contexts/CreditContext';
 export function CreditIndicator() {
   const { balance, isLow, isCritical, isEmpty, openBuyModal } = useCredits();
   
-  const getColorClass = () => {
+  const getTextClass = () => {
     if (isEmpty || isCritical) return 'text-destructive';
-    if (isLow) return 'text-amber-800';
-    return 'text-primary';
-  };
-  
-  const getBgClass = () => {
-    if (isEmpty || isCritical) return 'bg-destructive/10 border-destructive/30';
-    if (isLow) return 'bg-amber-900/10 border-amber-900/20';
-    return 'bg-primary/10 border-primary/30';
+    if (isLow) return 'text-amber-400';
+    return 'text-sidebar-foreground';
   };
   
   return (
-    <div className={`p-3 rounded-lg border ${getBgClass()}`}>
+    <div className="p-3 rounded-lg bg-white/[0.04]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Wallet className={`w-4 h-4 ${getColorClass()}`} />
+          <Wallet className="w-4 h-4 text-sidebar-foreground/40" />
           <div>
-            <p className="text-[10px] text-sidebar-foreground/50">Credits</p>
-            <p className={`text-sm font-bold ${getColorClass()}`}>{balance}</p>
+            <p className="text-[11px] text-sidebar-foreground/40 font-medium">Credits</p>
+            <p className={`text-sm font-semibold ${getTextClass()}`}>{balance}</p>
           </div>
         </div>
         <button
           onClick={openBuyModal}
-          className="p-1.5 rounded-md hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          className="p-1.5 rounded-md hover:bg-white/[0.06] transition-colors text-sidebar-foreground/40 hover:text-sidebar-foreground/70"
           title="Buy credits"
         >
           <PlusCircle className="w-4 h-4" />
