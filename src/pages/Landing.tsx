@@ -23,7 +23,7 @@ export default function Landing() {
         <StudioTeamSection />
         <FeatureGrid />
         <HowItWorks />
-        <BeforeAfterGallery />
+        
         <ModelShowcaseSection />
         <CreativeDropsSection />
         <IntegrationSection />
