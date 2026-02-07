@@ -14,6 +14,7 @@ import Jobs from '@/pages/Jobs';
 import Settings from '@/pages/Settings';
 import Landing from '@/pages/Landing';
 import Auth from '@/pages/Auth';
+import Onboarding from '@/pages/Onboarding';
 import NotFound from '@/pages/NotFound';
 import BrandProfiles from '@/pages/BrandProfiles';
 import Workflows from '@/pages/Workflows';
