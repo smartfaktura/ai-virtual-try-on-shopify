@@ -14,10 +14,10 @@ export function GenerationModeCards({ compact = false }: GenerationModeCardsProp
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Product Photos */}
-      <Card className="group hover:shadow-md transition-all hover:border-primary/30">
+      <Card className="group hover:shadow-md transition-all hover:border-primary/30 border-t-2 border-t-primary">
         <CardContent className={compact ? 'p-4 space-y-3' : 'p-5 space-y-4'}>
           <div className="flex items-start justify-between">
-            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center">
               <Camera className="w-5 h-5 text-foreground" />
             </div>
           </div>
@@ -30,9 +30,9 @@ export function GenerationModeCards({ compact = false }: GenerationModeCardsProp
             </p>
           </div>
           {!compact && (
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">1–2 credits</span> per image
-            </p>
+            <span className="inline-block text-xs font-medium text-foreground bg-muted rounded-full px-2.5 py-0.5">
+              1–2 credits per image
+            </span>
           )}
           <Button
             className="w-full"
@@ -46,10 +46,10 @@ export function GenerationModeCards({ compact = false }: GenerationModeCardsProp
       </Card>
 
       {/* Virtual Try-On */}
-      <Card className="group hover:shadow-md transition-all hover:border-primary/30">
+      <Card className="group hover:shadow-md transition-all hover:border-primary/30 border-t-2 border-t-primary">
         <CardContent className={compact ? 'p-4 space-y-3' : 'p-5 space-y-4'}>
           <div className="flex items-start justify-between">
-            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center">
               <Users className="w-5 h-5 text-foreground" />
             </div>
             <Badge variant="secondary" className="text-[10px] gap-1">
@@ -66,9 +66,9 @@ export function GenerationModeCards({ compact = false }: GenerationModeCardsProp
             </p>
           </div>
           {!compact && (
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">3 credits</span> per image
-            </p>
+            <span className="inline-block text-xs font-medium text-foreground bg-muted rounded-full px-2.5 py-0.5">
+              3 credits per image
+            </span>
           )}
           <Button
             className="w-full"

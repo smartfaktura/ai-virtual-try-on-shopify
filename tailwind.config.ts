@@ -57,14 +57,6 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Shopify-specific colors
-        shopify: {
-          green: "hsl(var(--shopify-green))",
-          blue: "hsl(var(--shopify-blue))",
-          purple: "hsl(var(--shopify-purple))",
-          yellow: "hsl(var(--shopify-yellow))",
-          orange: "hsl(var(--shopify-orange))",
-        },
         status: {
           success: "hsl(var(--status-success))",
           warning: "hsl(var(--status-warning))",

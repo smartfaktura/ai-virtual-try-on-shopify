@@ -227,7 +227,7 @@ export default function Dashboard() {
 
         {/* Quick Create */}
         <div className="space-y-3">
-          <h2 className="text-base font-semibold">Quick Create</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Quick Create</h2>
           <GenerationModeCards compact />
         </div>
 

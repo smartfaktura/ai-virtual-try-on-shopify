@@ -50,8 +50,16 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
   return (
     <Card>
       <CardContent className="p-5 space-y-4">
+        {/* Progress bar */}
+        <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-500"
+            style={{ width: `${(completedCount / steps.length) * 100}%` }}
+          />
+        </div>
+
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">Get Started</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Get Started</h2>
           <span className="text-sm text-muted-foreground">
             {completedCount} of {steps.length} complete
           </span>
@@ -60,26 +68,25 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
         <div className="space-y-3">
           {steps.map((step, index) => {
             const done = completionMap[step.key];
-            const StepIcon = step.icon;
             return (
               <div
                 key={step.key}
                 className={`flex items-start gap-4 p-4 rounded-lg border transition-colors ${
                   done
                     ? 'bg-muted/50 border-border'
-                    : 'bg-card border-border hover:border-primary/30'
+                    : 'bg-card border-l-2 border-primary/40 hover:border-primary/60'
                 }`}
               >
                 <div className="flex-shrink-0 mt-0.5">
                   {done ? (
-                    <CheckCircle className="w-5 h-5 text-primary" />
+                    <CheckCircle className="w-5 h-5 text-muted-foreground" />
                   ) : (
-                    <Circle className="w-5 h-5 text-muted-foreground" />
+                    <Circle className="w-5 h-5 text-muted-foreground/50" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground">
+                    <span className="text-sm font-semibold text-primary">
                       {String(index + 1).padStart(2, '0')}
                     </span>
                     <h3 className={`text-sm font-semibold ${done ? 'text-muted-foreground line-through' : ''}`}>

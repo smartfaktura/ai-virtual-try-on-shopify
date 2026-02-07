@@ -6,13 +6,13 @@ export function CreditIndicator() {
   
   const getColorClass = () => {
     if (isEmpty || isCritical) return 'text-destructive';
-    if (isLow) return 'text-yellow-600';
+    if (isLow) return 'text-amber-800';
     return 'text-primary';
   };
   
   const getBgClass = () => {
     if (isEmpty || isCritical) return 'bg-destructive/10 border-destructive/30';
-    if (isLow) return 'bg-yellow-500/10 border-yellow-500/30';
+    if (isLow) return 'bg-amber-900/10 border-amber-900/20';
     return 'bg-primary/10 border-primary/30';
   };
   
