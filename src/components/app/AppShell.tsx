@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Image, LayoutGrid, Clock, Settings, LogOut, Menu, X, ChevronDown } from 'lucide-react';
+import { Home, Package, Palette, Layers, Calendar, Image, Settings, LogOut, Menu, X, ChevronDown } from 'lucide-react';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -11,9 +11,11 @@ interface AppShellProps {
 
 const navItems = [
   { label: 'Dashboard', icon: Home, path: '/app' },
-  { label: 'Generate', icon: Image, path: '/app/generate' },
-  { label: 'Templates', icon: LayoutGrid, path: '/app/templates' },
-  { label: 'Jobs', icon: Clock, path: '/app/jobs' },
+  { label: 'Products', icon: Package, path: '/app/products' },
+  { label: 'Brand Profiles', icon: Palette, path: '/app/brand-profiles' },
+  { label: 'Workflows', icon: Layers, path: '/app/workflows' },
+  { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
+  { label: 'Library', icon: Image, path: '/app/library' },
 ];
 
 const configItems = [
