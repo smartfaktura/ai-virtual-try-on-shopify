@@ -77,9 +77,9 @@ export default function Products() {
               className="pl-9"
             />
           </div>
-          <Button onClick={() => navigate('/app/generate')}>
+          <Button onClick={() => setModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Upload Product
+            Add Product
           </Button>
         </div>
 
