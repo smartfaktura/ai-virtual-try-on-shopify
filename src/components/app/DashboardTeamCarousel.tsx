@@ -45,11 +45,11 @@ export function DashboardTeamCarousel() {
               key={member.name}
               className="flex-shrink-0 w-[120px] snap-start flex flex-col items-center text-center group"
             >
-              <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-border group-hover:border-primary/40 transition-colors shadow-sm">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-border group-hover:border-accent-foreground/40 transition-all duration-300 shadow-sm">
                 <img
                   src={member.avatar}
                   alt={member.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                   loading="lazy"
                 />
               </div>
