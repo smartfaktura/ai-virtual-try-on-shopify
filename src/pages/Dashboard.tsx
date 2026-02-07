@@ -13,6 +13,7 @@ import { OnboardingChecklist } from '@/components/app/OnboardingChecklist';
 import { GenerationModeCards } from '@/components/app/GenerationModeCards';
 import { UpcomingDropsCard } from '@/components/app/UpcomingDropsCard';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
+import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';

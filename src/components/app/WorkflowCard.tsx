@@ -27,7 +27,7 @@ const workflowImages: Record<string, string> = {
 };
 
 export function WorkflowCard({ workflow, onSelect }: WorkflowCardProps) {
-  const icon = workflowIcons[workflow.name] || '📸';
+  const thumbnail = workflowImages[workflow.name] || imgFallback;
 
   return (
     <Card className="group hover:shadow-md transition-all hover:border-primary/30">
@@ -35,7 +35,9 @@ export function WorkflowCard({ workflow, onSelect }: WorkflowCardProps) {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{icon}</span>
+            <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 border border-border">
+              <img src={thumbnail} alt={workflow.name} className="w-full h-full object-cover" />
+            </div>
             <div>
               <h3 className="font-semibold text-sm">{workflow.name}</h3>
               <div className="flex items-center gap-1.5 mt-0.5">
