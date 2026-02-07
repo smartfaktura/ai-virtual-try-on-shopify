@@ -109,7 +109,7 @@ export default function Dashboard() {
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">Recent Jobs</h2>
-              <Button variant="link" onClick={() => navigate('/app/jobs')}>
+              <Button variant="link" onClick={() => navigate('/app/library')}>
                 View all
               </Button>
             </div>
