@@ -34,6 +34,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/landing" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<Onboarding />} />
 
             {/* Protected app routes */}
             <Route
