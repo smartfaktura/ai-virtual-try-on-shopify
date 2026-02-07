@@ -94,11 +94,11 @@ export default function Dashboard() {
               Generate professional product images in seconds. Select a product and we'll recommend the best photography styles.
             </p>
             <div className="flex items-center gap-3 flex-wrap">
-              <Button size="lg" onClick={() => navigate('/app/generate')}>
-                Upload & Generate
+              <Button size="lg" onClick={() => navigate('/app/workflows')}>
+                Choose a Workflow
               </Button>
-              <Button size="lg" variant="ghost" onClick={() => navigate('/app/templates')}>
-                Explore Templates
+              <Button size="lg" variant="ghost" onClick={() => navigate('/app/brand-profiles')}>
+                Set Up Brand Profile
               </Button>
             </div>
           </CardContent>
