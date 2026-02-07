@@ -42,7 +42,7 @@ export function LandingFooter() {
 
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} nanobanna. All rights reserved.
+            © {new Date().getFullYear()} brandframe.ai. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <a href="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
