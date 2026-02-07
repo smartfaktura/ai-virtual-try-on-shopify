@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { mockShop } from '@/data/mockData';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 
 const LOW_CREDIT_THRESHOLD = 50;
@@ -10,6 +11,7 @@ interface CreditContextValue {
   isLow: boolean;
   isCritical: boolean;
   isEmpty: boolean;
+  isLoading: boolean;
   
   deductCredits: (amount: number) => void;
   addCredits: (amount: number) => void;
@@ -28,20 +30,63 @@ interface CreditProviderProps {
 }
 
 export function CreditProvider({ children }: CreditProviderProps) {
-  const [balance, setBalance] = useState(mockShop.creditsBalance);
+  const { user } = useAuth();
+  const [balance, setBalance] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
+  
+  // Fetch real credits from profiles table
+  useEffect(() => {
+    if (!user) {
+      setBalance(0);
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchCredits = async () => {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('credits_balance')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!error && data) {
+        setBalance(data.credits_balance);
+      }
+      setIsLoading(false);
+    };
+
+    fetchCredits();
+  }, [user]);
   
   const isLow = balance > 0 && balance < LOW_CREDIT_THRESHOLD;
   const isCritical = balance > 0 && balance < CRITICAL_THRESHOLD;
   const isEmpty = balance === 0;
   
-  const deductCredits = useCallback((amount: number) => {
-    setBalance(prev => Math.max(0, prev - amount));
-  }, []);
+  const deductCredits = useCallback(async (amount: number) => {
+    const newBalance = Math.max(0, balance - amount);
+    setBalance(newBalance);
+
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ credits_balance: newBalance })
+        .eq('user_id', user.id);
+    }
+  }, [balance, user]);
   
-  const addCredits = useCallback((amount: number) => {
-    setBalance(prev => prev + amount);
-  }, []);
+  const addCredits = useCallback(async (amount: number) => {
+    const newBalance = balance + amount;
+    setBalance(newBalance);
+
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ credits_balance: newBalance })
+        .eq('user_id', user.id);
+    }
+  }, [balance, user]);
   
   const openBuyModal = useCallback(() => setBuyModalOpen(true), []);
   const closeBuyModal = useCallback(() => setBuyModalOpen(false), []);
@@ -49,7 +94,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => {
     const { count, quality, mode } = settings;
     if (mode === 'virtual-try-on') {
-      return count * 3; // Virtual try-on always costs 3 credits per image
+      return count * 3;
     }
     return count * (quality === 'high' ? 2 : 1);
   }, []);
@@ -61,6 +106,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         isLow,
         isCritical,
         isEmpty,
+        isLoading,
         deductCredits,
         addCredits,
         buyModalOpen,
