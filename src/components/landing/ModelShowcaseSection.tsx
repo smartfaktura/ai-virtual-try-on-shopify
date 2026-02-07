@@ -99,7 +99,7 @@ function MarqueeRow({ items, direction = 'left', speed = 35 }: { items: ModelCar
 
 export function ModelShowcaseSection() {
   return (
-    <section className="py-20 lg:py-28 bg-muted/30 overflow-hidden">
+    <section className="py-20 lg:py-24 bg-muted/30 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="text-center">
           <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">

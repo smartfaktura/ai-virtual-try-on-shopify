@@ -98,7 +98,7 @@ function MarqueeRow({ items, direction = 'left' }: { items: EnvironmentCard[]; d
 
 export function EnvironmentShowcaseSection() {
   return (
-    <section className="py-20 lg:py-28 bg-background overflow-hidden">
+    <section className="py-12 lg:py-16 bg-background overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="text-center">
           <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">

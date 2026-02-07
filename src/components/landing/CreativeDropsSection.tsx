@@ -2,10 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-import productSerum from '@/assets/products/serum-vitamin-c.jpg';
-import productHoodie from '@/assets/products/hoodie-gray-1.jpg';
-import productGranola from '@/assets/products/granola-organic.jpg';
-import productCandle from '@/assets/products/candle-soy.jpg';
+import dropWhiteCrop from '@/assets/drops/drop-model-white-crop.jpg';
+import dropSageSet from '@/assets/drops/drop-model-sage-set.jpg';
+import dropBlackTank from '@/assets/drops/drop-model-black-tank.jpg';
+import dropPinkHoodie from '@/assets/drops/drop-model-pink-hoodie.jpg';
+import dropCamelPullover from '@/assets/drops/drop-model-camel-pullover.jpg';
+import dropNavyJacket from '@/assets/drops/drop-model-navy-jacket.jpg';
+import dropLavenderSet from '@/assets/drops/drop-model-lavender-set.jpg';
+import dropCharcoalJacket from '@/assets/drops/drop-model-charcoal-jacket.jpg';
+import dropCreamBodysuit from '@/assets/drops/drop-model-cream-bodysuit.jpg';
+import dropBurgundyTop from '@/assets/drops/drop-model-burgundy-top.jpg';
+import dropEmeraldSet from '@/assets/drops/drop-model-emerald-set.jpg';
 
 const bullets = [
   'Choose your products once',
@@ -17,21 +24,21 @@ const drops = [
   {
     month: 'March Drop',
     count: '20 visuals · 4 products',
-    thumbnails: [productSerum, productHoodie, productGranola, productCandle],
+    thumbnails: [dropWhiteCrop, dropCharcoalJacket, dropSageSet, dropCreamBodysuit],
     opacity: 'opacity-100',
     status: 'Delivered',
   },
   {
     month: 'February Drop',
     count: '16 visuals · 3 products',
-    thumbnails: [productHoodie, productGranola, productCandle],
+    thumbnails: [dropPinkHoodie, dropNavyJacket, dropLavenderSet],
     opacity: 'opacity-70',
     status: 'Delivered',
   },
   {
     month: 'January Drop',
     count: '20 visuals · 4 products',
-    thumbnails: [productSerum, productCandle, productGranola, productHoodie],
+    thumbnails: [dropBlackTank, dropCamelPullover, dropBurgundyTop, dropEmeraldSet],
     opacity: 'opacity-40',
     status: 'Delivered',
   },
@@ -102,7 +109,7 @@ export function CreativeDropsSection() {
                     <div className="flex gap-1.5">
                       {drop.thumbnails.slice(0, 4).map((thumb, i) => (
                         <div key={i} className="rounded-md overflow-hidden border border-border flex-1">
-                          <img src={thumb} alt="Product" className="w-full h-14 object-cover" />
+                          <img src={thumb} alt="Campaign visual" className="w-full h-20 object-cover object-top" />
                         </div>
                       ))}
                     </div>
