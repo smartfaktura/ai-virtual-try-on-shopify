@@ -12,7 +12,7 @@ export function CreditIndicator() {
   
   const getBgClass = () => {
     if (isEmpty || isCritical) return 'bg-destructive/10 border-destructive/30';
-    if (isLow) return 'bg-yellow-500/10 border-yellow-500/30';
+    if (isLow) return 'bg-status-warning/10 border-status-warning/30';
     return 'bg-primary/10 border-primary/30';
   };
   
