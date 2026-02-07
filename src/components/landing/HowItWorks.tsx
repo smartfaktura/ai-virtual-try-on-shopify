@@ -1,37 +1,39 @@
-import { Upload, Palette, Download, ArrowRight } from 'lucide-react';
+import { Upload, Palette, Calendar, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const steps = [
   {
     icon: Upload,
     number: '01',
     title: 'Upload Your Product',
-    description: 'Drag & drop your product image, or connect your Shopify/WooCommerce store to import your entire catalog automatically.',
+    description: 'Drag & drop your product image or import from your product library. Works with any product type — clothing, cosmetics, food, home goods, and more.',
   },
   {
     icon: Palette,
     number: '02',
-    title: 'Choose Your Style',
-    description: 'Pick from 17+ professional templates — studio, lifestyle, editorial, or let our AI recommend the perfect style for your product.',
+    title: 'Set Your Brand Style',
+    description: 'Create a Brand Profile once with your preferred tone, lighting, and background style. Every future generation stays on-brand automatically.',
   },
   {
-    icon: Download,
+    icon: Calendar,
     number: '03',
-    title: 'Get Pro Images Instantly',
-    description: 'AI generates studio-quality images in ~12 seconds. Download in multiple aspect ratios, publish to your store, or share on social.',
+    title: 'Get Monthly Visuals',
+    description: 'Choose a workflow or set up Creative Drops to receive fresh, professional product visuals on autopilot — monthly or biweekly.',
   },
 ];
 
 export function HowItWorks() {
+  const navigate = useNavigate();
   return (
     <section id="how-it-works" className="py-20 sm:py-28 bg-muted/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            Three Steps to Professional Images
+            Three Steps to Automated Product Visuals
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            No design skills needed. No expensive studio bookings. Just upload and go.
+            Set it once, get fresh visuals forever. No design skills needed.
           </p>
         </div>
 
@@ -60,7 +62,7 @@ export function HowItWorks() {
         </div>
 
         <div className="text-center">
-          <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25">
+          <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate('/auth')}>
             Try It Free — Takes 30 Seconds
             <ArrowRight className="w-4 h-4" />
           </Button>

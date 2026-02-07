@@ -1,4 +1,4 @@
-import { Camera, Users, Layers, Wand2 } from 'lucide-react';
+import { Camera, Users, Calendar, Layers } from 'lucide-react';
 
 import templateStudio from '@/assets/templates/clothing-studio.jpg';
 import templateCosmetics from '@/assets/templates/cosmetics-luxury.jpg';
@@ -8,31 +8,31 @@ import templateUniversal from '@/assets/templates/universal-gradient.jpg';
 const features = [
   {
     icon: Camera,
-    title: 'Product Photography',
-    description: 'Generate studio-quality product images across 17+ professional templates. From clean white backgrounds to lifestyle scenes.',
+    title: 'Brand-Consistent Photography',
+    description: 'Create a Brand Profile once and every image matches your visual identity — tone, lighting, background, and composition stay on-brand automatically.',
     image: templateStudio,
-    badge: '17+ templates',
+    badge: 'Brand Profiles',
   },
   {
     icon: Users,
     title: 'Virtual Try-On',
-    description: 'See your clothing on realistic AI models. 34 diverse models across multiple ethnicities, body types, and 24 pose options.',
+    description: 'See your clothing on realistic AI models. 34 diverse models across multiple ethnicities, body types, and 24 pose options — driven by smart workflows.',
     image: modelPreview,
     badge: '34 models',
   },
   {
-    icon: Layers,
-    title: 'Bulk Generation',
-    description: 'Generate hundreds of images at once. Upload your catalog, select templates, and let AI do the work while you focus on selling.',
+    icon: Calendar,
+    title: 'Creative Drops',
+    description: 'Schedule automated visual runs monthly or biweekly. Fresh ad creatives, lifestyle shots, and product listings arrive on autopilot — no manual work.',
     image: templateUniversal,
-    badge: 'Save hours',
+    badge: 'Automated',
   },
   {
-    icon: Wand2,
-    title: 'Smart Styling',
-    description: 'AI auto-detects your product category and suggests the perfect template, lighting, and composition for maximum conversion.',
+    icon: Layers,
+    title: 'Smart Workflows',
+    description: 'Choose your outcome — Ad Refresh, Product Listing, Hero Set — and the AI handles template selection, styling, and batch generation for you.',
     image: templateCosmetics,
-    badge: 'AI-powered',
+    badge: 'Outcome-driven',
   },
 ];
 
@@ -42,12 +42,12 @@ export function FeatureGrid() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            Everything You Need to Create
+            Your Automated Visual Studio
             <br />
-            <span className="text-primary">Scroll-Stopping Product Images</span>
+            <span className="text-primary">For Brand-Consistent Product Images</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            From product photos to virtual try-ons, one platform handles it all.
+            From brand profiles to automated drops, one platform keeps your visuals fresh and on-brand.
           </p>
         </div>
 
