@@ -54,7 +54,7 @@ interface ModelCard {
   image: string;
 }
 
-// 17 unique models per row — no overlap
+// 22 unique models in row 1 — no overlap with row 2
 const ROW_1: ModelCard[] = [
   { name: 'Madison', image: modelMadison },
   { name: 'Marcus', image: modelMarcus },
@@ -73,8 +73,14 @@ const ROW_1: ModelCard[] = [
   { name: 'Aubrey', image: modelAubrey },
   { name: 'Omar', image: modelOmar },
   { name: 'Niamh', image: modelNiamh },
+  { name: 'Kwame', image: modelKwame },
+  { name: 'Sophie', image: modelSophie },
+  { name: 'Hiro', image: modelHiro },
+  { name: 'Camila', image: modelCamila },
+  { name: 'Marco', image: modelMarco },
 ];
 
+// 22 unique models in row 2
 const ROW_2: ModelCard[] = [
   { name: 'Jordan', image: modelJordan },
   { name: 'Sienna', image: modelSienna },
@@ -93,6 +99,11 @@ const ROW_2: ModelCard[] = [
   { name: 'Freya', image: modelFreya },
   { name: 'Jamal', image: modelJamal },
   { name: 'Sakura', image: modelSakura },
+  { name: 'Nadia', image: modelNadia },
+  { name: 'Astrid', image: modelAstrid },
+  { name: 'Leila', image: modelLeila },
+  { name: 'Fatima', image: modelFatima },
+  { name: 'Jake', image: modelJake },
 ];
 
 function MarqueeRow({ items, direction = 'left', durationSeconds = 60 }: { items: ModelCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
