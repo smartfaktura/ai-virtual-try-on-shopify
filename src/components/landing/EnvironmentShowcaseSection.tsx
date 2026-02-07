@@ -85,7 +85,7 @@ function MarqueeRow({ items, direction = 'left' }: { items: EnvironmentCard[]; d
                 src={env.image}
                 alt={env.name}
                 className="w-full h-full object-cover"
-                loading="lazy"
+                decoding="async"
               />
             </div>
             <span className="text-xs sm:text-sm font-medium text-foreground">{env.name}</span>
