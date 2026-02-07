@@ -201,6 +201,9 @@ export function AppShell({ children }: AppShellProps) {
           </div>
         </main>
       </div>
+
+      {/* Studio Team Chat */}
+      <StudioChat />
     </div>
   );
 }
