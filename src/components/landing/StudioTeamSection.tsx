@@ -10,6 +10,10 @@ import avatarKenji from '@/assets/team/avatar-kenji.jpg';
 import avatarYuki from '@/assets/team/avatar-yuki.jpg';
 import avatarOmar from '@/assets/team/avatar-omar.jpg';
 import avatarSienna from '@/assets/team/avatar-sienna.jpg';
+import avatarLuna from '@/assets/team/avatar-luna.jpg';
+import avatarMax from '@/assets/team/avatar-max.jpg';
+import avatarZara from '@/assets/team/avatar-zara.jpg';
+import avatarLeo from '@/assets/team/avatar-leo.jpg';
 
 interface TeamMember {
   name: string;
@@ -24,42 +28,70 @@ const TEAM: TeamMember[] = [
     role: 'Product Photographer',
     avatar: avatarSophia,
     description:
-      'Your go-to for clean, high-converting product imagery. Sophia crafts pixel-perfect e-commerce listings, hero shots, and catalog visuals with studio-grade lighting and composition.',
+      'Crafts pixel-perfect e-commerce listings, hero shots, and catalog visuals with studio-grade lighting and composition.',
   },
   {
     name: 'Amara',
     role: 'Lifestyle Photographer',
     avatar: avatarAmara,
     description:
-      'Amara places your products in real-world scenes — coffee shops, parks, living rooms — so customers see them in context. Perfect for social media, blogs, and brand storytelling.',
+      'Places your products in real-world scenes so customers see them in context. Perfect for social media and storytelling.',
   },
   {
     name: 'Kenji',
     role: 'Campaign Art Director',
     avatar: avatarKenji,
     description:
-      'Kenji designs seasonal campaigns, promo visuals, and lookbook layouts. He turns your brand guidelines into scroll-stopping creative that feels cohesive across every channel.',
+      'Designs seasonal campaigns, promo visuals, and lookbook layouts that feel cohesive across every channel.',
   },
   {
     name: 'Yuki',
     role: 'Ad Creative Specialist',
     avatar: avatarYuki,
     description:
-      'Yuki builds ad-ready visuals optimized for Meta, Google, TikTok, and Amazon. She knows which formats, ratios, and compositions drive clicks and conversions.',
+      'Builds ad-ready visuals optimized for Meta, Google, TikTok, and Amazon. Knows which formats drive clicks.',
   },
   {
     name: 'Omar',
     role: 'CRO Visual Optimizer',
     avatar: avatarOmar,
     description:
-      "Omar focuses on what converts. He analyzes composition, color psychology, and visual hierarchy to produce images that don't just look great — they drive revenue.",
+      'Analyzes composition, color psychology, and visual hierarchy to produce images that drive revenue.',
   },
   {
     name: 'Sienna',
     role: 'Brand Consistency Manager',
     avatar: avatarSienna,
     description:
-      'Sienna ensures every visual matches your brand DNA. From color palettes to typography overlays, she locks your look so every image feels unmistakably yours.',
+      'Ensures every visual matches your brand DNA. Locks your look so every image feels unmistakably yours.',
+  },
+  {
+    name: 'Luna',
+    role: 'Retouch Specialist',
+    avatar: avatarLuna,
+    description:
+      'Handles color correction, background cleanup, and pixel-level refinement. Every image leaves polished and flawless.',
+  },
+  {
+    name: 'Max',
+    role: 'Export & Format Engineer',
+    avatar: avatarMax,
+    description:
+      'Auto-sizes and formats every visual for Shopify, Amazon, Meta, and Google. One click, every platform covered.',
+  },
+  {
+    name: 'Zara',
+    role: 'Fashion Stylist',
+    avatar: avatarZara,
+    description:
+      'Curates outfits, coordinates colors, and styles virtual try-on shoots so every garment looks its absolute best.',
+  },
+  {
+    name: 'Leo',
+    role: 'Scene & Set Designer',
+    avatar: avatarLeo,
+    description:
+      'Builds backgrounds, props, and environments. From rustic tabletops to sleek studios, he sets the perfect scene.',
   },
 ];
 
@@ -78,24 +110,27 @@ export function StudioTeamSection() {
   const scroll = (direction: 'left' | 'right') => {
     const el = scrollRef.current;
     if (!el) return;
-    const cardWidth = el.querySelector<HTMLElement>('[data-team-card]')?.offsetWidth ?? 400;
-    el.scrollBy({ left: direction === 'left' ? -cardWidth - 24 : cardWidth + 24, behavior: 'smooth' });
+    const cardWidth = el.querySelector<HTMLElement>('[data-team-card]')?.offsetWidth ?? 280;
+    el.scrollBy({
+      left: direction === 'left' ? -cardWidth - 20 : cardWidth + 20,
+      behavior: 'smooth',
+    });
   };
 
   return (
-    <section className="relative py-20 sm:py-28 bg-[hsl(212,14%,10%)] text-white overflow-hidden">
+    <section className="py-20 sm:py-28 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-14 lg:mb-20">
-          <Badge className="mb-4 bg-white/10 text-white/80 border-white/10 text-xs tracking-wide uppercase hover:bg-white/15">
+          <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
             Your AI Studio Team
           </Badge>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-            AI Professionals That Never Sleep
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
+            10 AI Professionals. Zero Overhead.
           </h2>
-          <p className="mt-4 text-lg text-white/60 max-w-2xl mx-auto">
-            A full creative team of photographers, art directors, and brand specialists — 
-            working together on every visual you create. Instantly.
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+            A full creative team of photographers, art directors, stylists, and brand specialists
+            — working together on every visual you create. Instantly.
           </p>
         </div>
 
@@ -104,50 +139,58 @@ export function StudioTeamSection() {
           {/* Navigation arrows */}
           <button
             onClick={() => scroll('left')}
-            className={`absolute left-0 top-1/3 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center transition-opacity ${
-              canScrollLeft ? 'opacity-100 hover:bg-white/20' : 'opacity-0 pointer-events-none'
+            className={`absolute -left-2 sm:-left-5 top-[35%] -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
+              canScrollLeft
+                ? 'opacity-100 hover:bg-accent hover:shadow-lg'
+                : 'opacity-0 pointer-events-none'
             }`}
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-5 h-5 text-white" />
+            <ChevronLeft className="w-5 h-5 text-foreground" />
           </button>
           <button
             onClick={() => scroll('right')}
-            className={`absolute right-0 top-1/3 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 flex items-center justify-center transition-opacity ${
-              canScrollRight ? 'opacity-100 hover:bg-white/20' : 'opacity-0 pointer-events-none'
+            className={`absolute -right-2 sm:-right-5 top-[35%] -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
+              canScrollRight
+                ? 'opacity-100 hover:bg-accent hover:shadow-lg'
+                : 'opacity-0 pointer-events-none'
             }`}
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-5 h-5 text-white" />
+            <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
 
           {/* Cards strip */}
           <div
             ref={scrollRef}
             onScroll={updateScrollState}
-            className="flex gap-6 overflow-x-auto pb-4 px-2 -mx-2 snap-x snap-mandatory scrollbar-thin"
-            style={{ scrollbarColor: 'rgba(255,255,255,0.15) transparent' }}
+            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin"
+            style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
           >
             {TEAM.map((member) => (
               <div
                 key={member.name}
                 data-team-card
-                className="flex-shrink-0 w-[300px] sm:w-[340px] lg:w-[380px] snap-start"
+                className="flex-shrink-0 w-[240px] sm:w-[270px] lg:w-[300px] snap-start group"
               >
-                {/* Character image */}
-                <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-white/5 mb-5">
+                {/* Character image card */}
+                <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-card border border-border shadow-sm group-hover:shadow-lg group-hover:border-primary/30 transition-all duration-300">
                   <img
                     src={member.avatar}
                     alt={member.name}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
                 </div>
 
                 {/* Info */}
-                <h3 className="text-2xl font-bold text-white">{member.name}</h3>
-                <p className="text-sm font-medium text-white/50 mt-1 mb-3">{member.role}</p>
-                <p className="text-sm text-white/60 leading-relaxed">{member.description}</p>
+                <div className="mt-4 px-1">
+                  <h3 className="text-lg font-bold text-foreground">{member.name}</h3>
+                  <p className="text-sm font-medium text-primary mt-0.5">{member.role}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-2">
+                    {member.description}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -155,11 +198,7 @@ export function StudioTeamSection() {
 
         {/* CTA */}
         <div className="text-center mt-14">
-          <Button
-            size="lg"
-            className="gap-2 bg-white text-[hsl(212,14%,10%)] hover:bg-white/90"
-            asChild
-          >
+          <Button size="lg" className="gap-2" asChild>
             <a href="/auth">
               Meet Your Team <ArrowRight className="w-4 h-4" />
             </a>
