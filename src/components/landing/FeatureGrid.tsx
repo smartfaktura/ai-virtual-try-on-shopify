@@ -46,7 +46,7 @@ const features = [
     headline: 'Full editorial campaigns. No studio. No timeline.',
     description:
       'Holiday collections, seasonal rebrands, product launches \u2014 generate an entire campaign in minutes with styled scenes and multiple ratios.',
-    image: templateStudio,
+    image: featureCampaigns,
   },
   {
     icon: Repeat,
