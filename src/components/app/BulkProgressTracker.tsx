@@ -99,7 +99,7 @@ export function BulkProgressTracker({ state, onPause, onResume, onCancel }: Bulk
                 key={item.productId}
                 className={`p-3 rounded-lg border transition-all ${
                   isCurrent ? 'border-primary bg-primary/5' : 'border-border'
-                } ${item.status === 'completed' ? 'bg-slate-50/50' : ''} ${item.status === 'failed' ? 'bg-red-50/50' : ''}`}
+                } ${item.status === 'completed' ? 'bg-green-50/50' : ''} ${item.status === 'failed' ? 'bg-red-50/50' : ''}`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">

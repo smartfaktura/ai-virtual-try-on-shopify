@@ -24,7 +24,7 @@ type Props = ScheduleCardProps | DropCardProps;
 const statusConfig: Record<string, { icon: React.ElementType; color: string }> = {
   scheduled: { icon: Clock, color: 'bg-blue-100 text-blue-800' },
   generating: { icon: Loader2, color: 'bg-amber-100 text-amber-800' },
-  ready: { icon: CheckCircle, color: 'bg-slate-100 text-slate-800' },
+  ready: { icon: CheckCircle, color: 'bg-green-100 text-green-800' },
   failed: { icon: AlertCircle, color: 'bg-red-100 text-red-800' },
 };
 
