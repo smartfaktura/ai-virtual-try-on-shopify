@@ -2,11 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, CreditCard, Shield, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-import productUpload from '@/assets/products/serum-vitamin-c.jpg';
-import contextAd from '@/assets/templates/cosmetics-luxury.jpg';
-import contextListing from '@/assets/templates/cosmetics-pastel.jpg';
-import contextLifestyle from '@/assets/templates/cosmetics-water.jpg';
-import contextHero from '@/assets/templates/universal-clean.jpg';
+import productUpload from '@/assets/hero/hero-product-tshirt.jpg';
+import outputStudio from '@/assets/hero/hero-output-studio.jpg';
+import outputPark from '@/assets/hero/hero-output-park.jpg';
+import outputCoffee from '@/assets/hero/hero-output-coffee.jpg';
+import outputRooftop from '@/assets/hero/hero-output-rooftop.jpg';
 
 const trustBadges = [
   { icon: CreditCard, text: 'No credit card required' },
@@ -15,10 +15,10 @@ const trustBadges = [
 ];
 
 const visualContexts = [
-  { img: contextAd, label: 'Ad Ready' },
-  { img: contextListing, label: 'Listing Ready' },
-  { img: contextLifestyle, label: 'Lifestyle' },
-  { img: contextHero, label: 'Hero Banner' },
+  { img: outputStudio, label: 'Studio Portrait' },
+  { img: outputPark, label: 'Lifestyle' },
+  { img: outputCoffee, label: 'Coffee Shop' },
+  { img: outputRooftop, label: 'Editorial' },
 ];
 
 export function HeroSection() {
