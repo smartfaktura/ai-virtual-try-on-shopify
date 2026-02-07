@@ -99,31 +99,50 @@ const SLOGANS = [
   'Scale Without Limits.',
 ];
 
-function useTypewriter(phrases: string[], typingSpeed = 60, deletingSpeed = 35, pauseDuration = 2200) {
+function useTypewriter(phrases: string[], typingSpeed = 55, deletingSpeed = 30, pauseDuration = 2400) {
   const [displayText, setDisplayText] = useState('');
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const state = useRef({
+    phraseIndex: 0,
+    charIndex: 0,
+    phase: 'typing' as 'typing' | 'pausing' | 'deleting',
+  });
 
   useEffect(() => {
-    const currentPhrase = phrases[phraseIndex];
+    let timerId: ReturnType<typeof setTimeout>;
 
-    const timeout = setTimeout(() => {
-      if (!isDeleting) {
-        setDisplayText(currentPhrase.slice(0, displayText.length + 1));
-        if (displayText.length + 1 === currentPhrase.length) {
-          setTimeout(() => setIsDeleting(true), pauseDuration);
+    const tick = () => {
+      const s = state.current;
+      const currentPhrase = phrases[s.phraseIndex];
+
+      if (s.phase === 'typing') {
+        s.charIndex++;
+        setDisplayText(currentPhrase.slice(0, s.charIndex));
+        if (s.charIndex >= currentPhrase.length) {
+          s.phase = 'pausing';
+          timerId = setTimeout(tick, pauseDuration);
+        } else {
+          // Add slight randomness for natural feel
+          timerId = setTimeout(tick, typingSpeed + Math.random() * 40);
         }
-      } else {
-        setDisplayText(currentPhrase.slice(0, displayText.length - 1));
-        if (displayText.length === 0) {
-          setIsDeleting(false);
-          setPhraseIndex((prev) => (prev + 1) % phrases.length);
+      } else if (s.phase === 'pausing') {
+        s.phase = 'deleting';
+        timerId = setTimeout(tick, deletingSpeed);
+      } else if (s.phase === 'deleting') {
+        s.charIndex--;
+        setDisplayText(currentPhrase.slice(0, s.charIndex));
+        if (s.charIndex <= 0) {
+          s.phase = 'typing';
+          s.phraseIndex = (s.phraseIndex + 1) % phrases.length;
+          timerId = setTimeout(tick, typingSpeed + 200);
+        } else {
+          timerId = setTimeout(tick, deletingSpeed + Math.random() * 15);
         }
       }
-    }, isDeleting ? deletingSpeed : typingSpeed);
+    };
 
-    return () => clearTimeout(timeout);
-  }, [displayText, isDeleting, phraseIndex, phrases, typingSpeed, deletingSpeed, pauseDuration]);
+    timerId = setTimeout(tick, typingSpeed);
+    return () => clearTimeout(timerId);
+  }, [phrases, typingSpeed, deletingSpeed, pauseDuration]);
 
   return displayText;
 }
