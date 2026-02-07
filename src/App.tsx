@@ -15,6 +15,10 @@ import Settings from '@/pages/Settings';
 import Landing from '@/pages/Landing';
 import Auth from '@/pages/Auth';
 import NotFound from '@/pages/NotFound';
+import BrandProfiles from '@/pages/BrandProfiles';
+import Workflows from '@/pages/Workflows';
+import Products from '@/pages/Products';
+import CreativeDrops from '@/pages/CreativeDrops';
 
 const queryClient = new QueryClient();
 
