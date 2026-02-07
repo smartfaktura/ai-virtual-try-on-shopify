@@ -2,33 +2,20 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// November — Pilates studio
-import dropNov1 from '@/assets/drops/drop-nov-1.jpg';
-import dropNov2 from '@/assets/drops/drop-nov-2.jpg';
-import dropNov3 from '@/assets/drops/drop-nov-3.jpg';
-import dropNov4 from '@/assets/drops/drop-nov-4.jpg';
+// November — Pilates studio (portrait)
+import dropNovP1 from '@/assets/drops/drop-nov-portrait-1.jpg';
+import dropNovP2 from '@/assets/drops/drop-nov-portrait-2.jpg';
+import dropNovP3 from '@/assets/drops/drop-nov-portrait-3.jpg';
 
-// September — Autumn
-import dropSept1 from '@/assets/drops/drop-sept-1.jpg';
-import dropSept2 from '@/assets/drops/drop-sept-2.jpg';
-import dropSept3 from '@/assets/drops/drop-sept-3.jpg';
-import dropSept4 from '@/assets/drops/drop-sept-4.jpg';
+// September — Autumn (portrait)
+import dropSeptP1 from '@/assets/drops/drop-sept-portrait-1.jpg';
+import dropSeptP2 from '@/assets/drops/drop-sept-portrait-2.jpg';
+import dropSeptP3 from '@/assets/drops/drop-sept-portrait-3.jpg';
 
-// June — Summer
-import dropJune1 from '@/assets/drops/drop-june-1.jpg';
-import dropJune2 from '@/assets/drops/drop-june-2.jpg';
-import dropJune3 from '@/assets/drops/drop-june-3.jpg';
-import dropJune4 from '@/assets/drops/drop-june-4.jpg';
-
-// Original white crop top
-import dropWhiteCrop from '@/assets/drops/drop-model-white-crop.jpg';
-import dropSageSet from '@/assets/drops/drop-model-sage-set.jpg';
-import dropPinkHoodie from '@/assets/drops/drop-model-pink-hoodie.jpg';
-import dropCreamBodysuit from '@/assets/drops/drop-model-cream-bodysuit.jpg';
-import dropNavyJacket from '@/assets/drops/drop-model-navy-jacket.jpg';
-import dropLavenderSet from '@/assets/drops/drop-model-lavender-set.jpg';
-import dropCharcoalJacket from '@/assets/drops/drop-model-charcoal-jacket.jpg';
-import dropBurgundyTop from '@/assets/drops/drop-model-burgundy-top.jpg';
+// June — Summer (portrait)
+import dropJuneP1 from '@/assets/drops/drop-june-portrait-1.jpg';
+import dropJuneP2 from '@/assets/drops/drop-june-portrait-2.jpg';
+import dropJuneP3 from '@/assets/drops/drop-june-portrait-3.jpg';
 
 const bullets = [
   'Choose your products once',
@@ -40,36 +27,25 @@ const drops = [
   {
     month: 'November Drop',
     count: '16 visuals · Pilates Studio',
-    thumbnails: [dropNov1, dropNov2, dropNov3, dropNov4],
+    thumbnails: [dropNovP1, dropNovP2, dropNovP3],
+    overflow: 13,
     opacity: 'opacity-100',
     status: 'Delivered',
   },
   {
     month: 'September Drop',
     count: '20 visuals · Autumn Collection',
-    thumbnails: [dropSept1, dropSept2, dropSept3, dropSept4],
-    opacity: 'opacity-90',
+    thumbnails: [dropSeptP1, dropSeptP2, dropSeptP3],
+    overflow: 17,
+    opacity: 'opacity-80',
     status: 'Delivered',
   },
   {
     month: 'June Drop',
     count: '20 visuals · Summer Campaign',
-    thumbnails: [dropJune1, dropJune2, dropJune3, dropJune4],
-    opacity: 'opacity-70',
-    status: 'Delivered',
-  },
-  {
-    month: 'March Drop',
-    count: '20 visuals · Spring Lookbook',
-    thumbnails: [dropWhiteCrop, dropCharcoalJacket, dropSageSet, dropCreamBodysuit],
-    opacity: 'opacity-50',
-    status: 'Delivered',
-  },
-  {
-    month: 'January Drop',
-    count: '16 visuals · New Year Campaign',
-    thumbnails: [dropPinkHoodie, dropNavyJacket, dropLavenderSet, dropBurgundyTop],
-    opacity: 'opacity-30',
+    thumbnails: [dropJuneP1, dropJuneP2, dropJuneP3],
+    overflow: 17,
+    opacity: 'opacity-60',
     status: 'Delivered',
   },
 ];
@@ -113,7 +89,7 @@ export function CreativeDropsSection() {
 
           {/* Right: Timeline of drops */}
           <div className="flex justify-center">
-            <div className="w-full max-w-sm space-y-3">
+            <div className="w-full max-w-md space-y-3">
               {/* Next drop indicator */}
               <div className="flex items-center gap-2 text-sm font-medium text-primary mb-2 px-1">
                 <Clock className="w-4 h-4" />
@@ -137,11 +113,21 @@ export function CreativeDropsSection() {
                   </div>
                   <div className="p-2">
                     <div className="flex gap-1.5">
-                      {drop.thumbnails.slice(0, 4).map((thumb, i) => (
+                      {drop.thumbnails.map((thumb, i) => (
                         <div key={i} className="rounded-md overflow-hidden border border-border flex-1">
-                          <img src={thumb} alt="Campaign visual" className="w-full h-16 object-cover object-top" />
+                          <img
+                            src={thumb}
+                            alt="Campaign visual"
+                            className="w-full h-28 object-cover object-top"
+                          />
                         </div>
                       ))}
+                      {/* Overflow indicator */}
+                      <div className="rounded-md border border-border flex-1 bg-muted/40 flex items-center justify-center min-h-[7rem]">
+                        <span className="text-sm font-semibold text-muted-foreground">
+                          +{drop.overflow}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
