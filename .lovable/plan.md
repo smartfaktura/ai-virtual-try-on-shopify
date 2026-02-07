@@ -1,260 +1,183 @@
 
 
-# Evolve nanobanna into a Visual Studio with Creative Drops
+# Phase 2-8: Visual Studio Evolution -- Full Implementation Plan
 
-## Overview
+## Phase 2: Database Schema Migrations
 
-This plan transforms the existing AI product image generator into a "Visual Studio for e-commerce brands" by introducing three new core concepts -- **Brand Profiles**, **Workflows**, and **Creative Drops** -- while preserving all existing edge functions, database tables, auth, and landing page structure. The key shift: users choose *what* they want to create (not *how*), and automation becomes the default mode of operation.
+Create all four new tables and add columns to `generation_jobs`:
 
-## What Stays Untouched
+**Migration 1 -- `brand_profiles` table:**
+- Columns: `id` (uuid PK), `user_id` (uuid, not null), `name` (text), `brand_description` (text, default ''), `tone` (text, default 'clean'), `lighting_style` (text, default 'soft diffused'), `background_style` (text, default 'studio'), `color_temperature` (text, default 'neutral'), `composition_bias` (text, default 'centered'), `do_not_rules` (text[], default '{}'), `created_at`, `updated_at`
+- RLS: SELECT, INSERT, UPDATE, DELETE all scoped to `auth.uid() = user_id`
+- Trigger: `update_updated_at_column` on UPDATE
 
-- Edge functions: `generate-product` and `generate-tryon` (logic unchanged, only new optional parameters passed)
-- Database tables: `profiles`, `user_products`, `generation_jobs` (only additive columns)
-- Auth flow (`/auth`, AuthContext, ProtectedRoute)
-- Landing page layout (10 sections, all component files remain)
-- Upload UX, file upload hooks, image utils
-- Credit system structure (CreditContext, thresholds, cost calculations)
+**Migration 2 -- `workflows` table:**
+- Columns: `id` (uuid PK), `name` (text), `description` (text), `default_image_count` (integer), `required_inputs` (text[]), `recommended_ratios` (text[]), `uses_tryon` (boolean, default false), `template_ids` (text[]), `is_system` (boolean, default true), `created_at`
+- RLS: System workflows readable by all authenticated users (SELECT where `is_system = true`)
+- Seed 6 system workflows: Ad Refresh Set (20), Product Listing Set (10), Website Hero Set (6), Lifestyle Set (10), On-Model Set (10, uses_tryon=true), Social Media Pack (12)
 
-## What Changes
+**Migration 3 -- `creative_schedules` table:**
+- Columns: `id` (uuid PK), `user_id` (uuid, not null), `brand_profile_id` (uuid, FK to brand_profiles), `name` (text), `frequency` (text, default 'monthly'), `products_scope` (text, default 'all'), `selected_product_ids` (uuid[]), `workflow_ids` (uuid[]), `active` (boolean, default true), `next_run_at` (timestamptz), `created_at`, `updated_at`
+- RLS: Full CRUD scoped to `auth.uid() = user_id`
 
-### Phase 1: Fix Build Errors + Remove Polaris from Pages
+**Migration 4 -- `creative_drops` table:**
+- Columns: `id` (uuid PK), `schedule_id` (uuid, FK to creative_schedules), `user_id` (uuid, not null), `run_date` (timestamptz), `status` (text, default 'scheduled'), `generation_job_ids` (uuid[]), `summary` (jsonb), `created_at`
+- RLS: SELECT, UPDATE scoped to `auth.uid() = user_id`
 
-Before adding new features, finish the Polaris migration. Six files still import from `@shopify/polaris`:
+**Migration 5 -- Update `generation_jobs`:**
+- Add nullable columns: `brand_profile_id` (uuid), `workflow_id` (uuid), `creative_drop_id` (uuid)
+- Add index on `brand_profile_id` and `workflow_id`
 
-| File | Status |
-|------|--------|
-| `Dashboard.tsx` | Uses Polaris `BlockStack`, `InlineGrid`, `Card`, `Text`, `Button`, `DataTable`, `InlineStack`, `Thumbnail` + Polaris icons causing TS errors |
-| `Generate.tsx` (~2000 lines) | Heaviest Polaris usage: `BlockStack`, `InlineStack`, `Card`, `Text`, `Button`, `Modal`, `TextField`, `Thumbnail`, `Badge`, `Checkbox`, `Select`, `InlineGrid`, `Divider`, `Banner`, `ProgressBar`, `Collapsible`, `Icon` |
-| `Templates.tsx` | Uses `BlockStack`, `InlineStack`, `Card`, `Text`, `Button`, `DataTable`, `Badge`, `TextField`, `Select`, `InlineGrid`, `Icon` |
-| `Jobs.tsx` | Uses `BlockStack`, `InlineStack`, `Card`, `Text`, `Button`, `DataTable`, `TextField`, `Select`, `Thumbnail`, `InlineGrid`, `Icon` |
-| `Settings.tsx` | Uses `BlockStack`, `InlineStack`, `Card`, `Text`, `Button`, `TextField`, `Select`, `Checkbox`, `Divider`, `Banner`, `InlineGrid`, `ProgressBar`, `Badge`, `ButtonGroup` |
-| `BulkGenerate.tsx` | Uses `BlockStack`, `InlineStack`, `Card`, `Text`, `Button`, `Banner`, `Divider` |
-| `BulkSettingsCard.tsx` | Uses `Card`, `BlockStack`, `InlineStack`, `Text`, `Button`, `Badge`, `Divider`, `Banner`, `Select`, `ChoiceList` |
-| `BulkProgressTracker.tsx` | Likely uses Polaris components |
-| `BulkResultsView.tsx` | Likely uses Polaris components |
+## Phase 3: Brand Profiles Feature
 
-All will be rewritten using shadcn/ui + Tailwind. After this, `@shopify/polaris` and `@shopify/polaris-icons` are removed from `package.json`, and the `AppProvider` wrapper and Polaris CSS import are removed from `App.tsx`.
+**New files to create:**
+- `src/pages/BrandProfiles.tsx` -- Main page listing brand profiles with empty state
+- `src/components/app/BrandProfileForm.tsx` -- Dialog-based form for create/edit
+- `src/components/app/BrandProfileCard.tsx` -- Card displaying a brand profile
 
-### Phase 2: Database Schema -- New Tables
+**Behavior:**
+- Lists all user brand profiles from the database using React Query
+- Empty state with guided "Create your first Brand Profile" prompt
+- Form collects: name, description, tone (dropdown), lighting style (dropdown), background style (dropdown), color temperature (dropdown), composition bias (dropdown), do-not rules (chip/tag input)
+- Cards show profile name, tone badge, and key settings at a glance
+- Edit/delete actions on each card
+- All data persisted to `brand_profiles` table via Supabase client
 
-**New table: `brand_profiles`**
+## Phase 4: Workflows Feature
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | Primary key |
-| user_id | uuid | FK to auth.users |
-| name | text | e.g. "My Premium Brand" |
-| brand_description | text | What the brand is about |
-| tone | text | luxury / clean / bold / minimal / playful |
-| lighting_style | text | e.g. "soft diffused", "dramatic side" |
-| background_style | text | studio / lifestyle / gradient / contextual |
-| color_temperature | text | warm / neutral / cool |
-| composition_bias | text | centered / rule-of-thirds / dynamic |
-| do_not_rules | text[] | Array of things to avoid |
-| created_at | timestamptz | Default now() |
-| updated_at | timestamptz | Default now() |
+**New files to create:**
+- `src/pages/Workflows.tsx` -- Browse system workflows as visual cards
+- `src/components/app/WorkflowCard.tsx` -- Card for each workflow showing name, description, image count, ratios, and whether it uses try-on
 
-RLS: Users can only CRUD their own brand profiles.
+**Behavior:**
+- Fetches system workflows from database
+- Each card has a "Create Visual Set" button that navigates to the generation flow with the workflow pre-selected
+- Cards visually show: workflow name, description, default image count, recommended ratios, and a try-on badge if applicable
+- No user-created workflows in v1 -- all are system-seeded
 
-**New table: `workflows`** (seeded with defaults)
+## Phase 5: Refactor Generate Flow
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | Primary key |
-| name | text | e.g. "Ad Refresh Set" |
-| description | text | What this workflow produces |
-| default_image_count | integer | 6-20 |
-| required_inputs | text[] | ['product', 'model', 'season'] |
-| recommended_ratios | text[] | ['1:1', '4:5'] |
-| uses_tryon | boolean | Whether this workflow needs model selection |
-| template_ids | text[] | Which internal templates to use |
-| is_system | boolean | True for built-in workflows |
-| created_at | timestamptz | Default now() |
+The existing `Generate.tsx` (~956 lines) is restructured to be workflow-driven:
 
-RLS: System workflows readable by all authenticated users. No user-created workflows in v1.
+**Key changes:**
+- Step 1 becomes "Choose Workflow" instead of source/product/template selection
+- The workflow determines which templates to use internally (users never see template names)
+- Step 2 is "Select Product(s)" (keep existing upload + product library UX)
+- Step 3 is "Select Brand Profile" (new dropdown/selector from user's brand profiles)
+- Step 4 (conditional) is "Select Model + Pose" only if workflow.uses_tryon is true
+- Step 5 is "Review & Generate" (shows summary of workflow + product + brand profile + cost)
+- Brand profile settings replace the manual brand kit accordion (tone, background style come from the selected brand profile instead of manual dropdowns)
+- The existing `useGenerateProduct` and `useGenerateTryOn` hooks are called unchanged -- the workflow just selects the right template internally and passes brand profile data
 
-**New table: `creative_schedules`**
+**Files modified:**
+- `src/pages/Generate.tsx` -- Major restructure around workflow steps
+- `src/hooks/useGenerateProduct.ts` -- Add optional `brandProfileId` to params (for DB tracking only, prompt logic unchanged)
+- `src/hooks/useGenerateTryOn.ts` -- Same addition
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | Primary key |
-| user_id | uuid | FK to auth.users |
-| brand_profile_id | uuid | FK to brand_profiles |
-| name | text | Schedule name |
-| frequency | text | monthly / biweekly |
-| products_scope | text | all / selected |
-| selected_product_ids | uuid[] | If scope is "selected" |
-| workflow_ids | uuid[] | Which workflows to run |
-| active | boolean | Default true |
-| next_run_at | timestamptz | When to run next |
-| created_at | timestamptz | Default now() |
-| updated_at | timestamptz | Default now() |
+## Phase 6: Creative Drops (Automation)
 
-RLS: Users can only CRUD their own schedules.
+**New files to create:**
+- `src/pages/CreativeDrops.tsx` -- Main page with schedule management + drop history
+- `src/components/app/ScheduleForm.tsx` -- Dialog form to create/edit a creative schedule
+- `src/components/app/DropCard.tsx` -- Card showing a completed or upcoming drop with status, date, image count
+- `src/components/app/DropDetailModal.tsx` -- Modal showing all generated images from a drop in a gallery grid
+- `supabase/functions/run-creative-drop/index.ts` -- Edge function that executes a creative drop
 
-**New table: `creative_drops`**
+**UX:**
+- Tab layout: "Schedules" tab and "Drops" tab
+- Schedules tab: list of active/paused schedules with create button
+- Schedule form: select workflows (multi-select), products (all or selected), brand profile, frequency (monthly/biweekly), schedule name
+- Drops tab: timeline of past drops with status badges (scheduled/generating/ready/failed)
+- Each drop card links to a detail modal showing the generated gallery
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | Primary key |
-| schedule_id | uuid | FK to creative_schedules |
-| user_id | uuid | FK to auth.users |
-| run_date | timestamptz | When this drop ran |
-| status | text | scheduled / generating / ready / failed |
-| generation_job_ids | uuid[] | References to generation_jobs |
-| summary | jsonb | Stats: total images, workflows used, etc. |
-| created_at | timestamptz | Default now() |
-
-RLS: Users can only view their own drops.
-
-**Update `generation_jobs` table** -- add columns:
-
-| Column | Type | Notes |
-|--------|------|-------|
-| brand_profile_id | uuid | Nullable, FK to brand_profiles |
-| workflow_id | uuid | Nullable, FK to workflows |
-| creative_drop_id | uuid | Nullable, FK to creative_drops |
-
-### Phase 3: Brand Profiles Feature
-
-**New files:**
-- `src/pages/BrandProfiles.tsx` -- List + create/edit brand profiles
-- `src/components/app/BrandProfileForm.tsx` -- Form for creating/editing a brand profile
-- `src/components/app/BrandProfileCard.tsx` -- Card displaying a brand profile summary
-
-**UX Flow:**
-1. User navigates to "Brand Profiles" from sidebar
-2. If no profiles exist, guided empty state: "Create your first Brand Profile"
-3. Form collects: name, description, tone, lighting, background, color temperature, composition, do-not rules
-4. Saved profiles appear as selectable cards
-5. During generation, user picks which Brand Profile to apply
-6. Brand Profile settings automatically inject into the prompt (replacing the manual brand kit accordion)
-
-### Phase 4: Workflows Feature
-
-**New files:**
-- `src/pages/Workflows.tsx` -- Browse system workflows
-- `src/components/app/WorkflowCard.tsx` -- Card for each workflow
-- `src/data/workflows.ts` -- Seed data for system workflows
-
-**System Workflows (seeded):**
-
-| Workflow | Images | Uses Try-On | Description |
-|----------|--------|-------------|-------------|
-| Ad Refresh Set | 20 | No | Fresh ad creatives across multiple styles |
-| Product Listing Set | 10 | No | E-commerce ready product images |
-| Website Hero Set | 6 | No | Wide-format hero images |
-| Lifestyle Set | 10 | No | Lifestyle context shots |
-| On-Model Set | 10 | Yes | Virtual try-on with diverse models |
-| Social Media Pack | 12 | No | Multi-ratio pack (1:1, 4:5, 16:9) |
-
-**UX Flow:**
-1. User sees workflow cards with descriptions and image counts
-2. Clicking "Create Visual Set" opens the generation flow
-3. User picks product(s) and brand profile
-4. Workflow internally maps to the right templates and settings
-5. Users never see raw templates -- they see outcome descriptions
-
-### Phase 5: Refactor Generate Flow
-
-The current Generate page (~2000 lines) is rebuilt around workflows:
-
-**New flow:**
-1. Choose Workflow (replaces "Choose Template")
-2. Select Product(s) (upload or pick from library)
-3. Select Brand Profile
-4. If workflow uses try-on: Select Model + Pose
-5. Generate Visual Set
-6. Review + Download results
-
-The existing `generate-product` and `generate-tryon` edge functions are called unchanged. The workflow just selects the right template internally and passes brand profile settings instead of manual brand kit toggles.
-
-### Phase 6: Creative Drops (Automation)
-
-**New files:**
-- `src/pages/CreativeDrops.tsx` -- Main Creative Drops page
-- `src/components/app/ScheduleForm.tsx` -- Create/edit schedule
-- `src/components/app/DropCard.tsx` -- Card showing a completed/upcoming drop
-- `src/components/app/DropDetailModal.tsx` -- Modal showing all images from a drop
-- `supabase/functions/run-creative-drop/index.ts` -- Edge function that executes a drop
-
-**UX Flow:**
-1. User navigates to "Creative Drops" from sidebar
-2. Empty state: "Set up your first Creative Drop schedule"
-3. Create schedule: pick workflows, products, brand profile, frequency
-4. Dashboard shows upcoming drops and past drops
-5. Each completed drop shows a gallery of generated images
-
-**Automation Logic (Edge Function):**
-- `run-creative-drop` function receives a schedule ID
+**Edge Function (`run-creative-drop`):**
+- Accepts `schedule_id` in request body
+- Authenticates using service role key
 - Fetches the schedule, brand profile, products, and workflow definitions
-- For each product x workflow combination, calls `generate-product` or `generate-tryon`
-- Aggregates results into a `creative_drops` record
-- Updates `next_run_at` on the schedule
+- For each product x workflow combination, internally calls `generate-product` or `generate-tryon` edge functions
+- Creates `generation_jobs` records with `creative_drop_id` set
+- Aggregates results into a `creative_drops` record with summary stats
+- Updates `next_run_at` on the schedule based on frequency
 
-**Cron trigger:** A pg_cron job runs every hour, checks `creative_schedules` where `active = true AND next_run_at <= now()`, and calls the edge function for each due schedule.
+**Cron setup:**
+- SQL migration to create a pg_cron job that runs every hour
+- The cron calls the `run-creative-drop` edge function for each schedule where `active = true AND next_run_at <= now()`
 
-### Phase 7: Update Navigation
+## Phase 7: Update Navigation + Routing
 
-**New sidebar items:**
+**Changes to `AppShell.tsx` sidebar:**
+- Dashboard (Home icon) -- `/app`
+- Products (Package icon) -- `/app/products` (reuses existing product management from Generate's product selection)
+- Brand Profiles (Palette icon) -- `/app/brand-profiles`
+- Workflows (Layers icon) -- `/app/workflows`
+- Creative Drops (Calendar icon) -- `/app/creative-drops`
+- Library (Image icon) -- `/app/library` (replaces Jobs)
+- Settings (Settings icon) -- `/app/settings`
 
-| Item | Icon | Path |
-|------|------|------|
-| Dashboard | Home | /app |
-| Products | Package | /app/products |
-| Brand Profiles | Palette | /app/brand-profiles |
-| Workflows | Layers | /app/workflows |
-| Creative Drops | Calendar | /app/creative-drops |
-| Library | Image | /app/library |
-| Settings | Settings | /app/settings |
+**Changes to `App.tsx` routes:**
+- Add routes: `/app/products`, `/app/brand-profiles`, `/app/workflows`, `/app/creative-drops`, `/app/library`
+- Keep `/app/generate` (accessed from workflow "Create Visual Set" button)
+- Remove `/app/templates` route (templates are internal now)
+- Rename `/app/jobs` to `/app/library` (keep component, update labels)
 
-"Generate" becomes accessed through Workflows (clicking "Create Visual Set"), not a standalone nav item. "Templates" and "Jobs" are replaced by "Workflows" and "Library" respectively.
+**New page:**
+- `src/pages/Products.tsx` -- Dedicated product management page (upload, list, edit, delete products from `user_products` table)
 
-### Phase 8: Landing Page Copy Updates
+## Phase 8: Landing Page Copy Updates
 
-No layout or component restructure. Only text content changes:
+**No layout changes.** Only text content updates across existing components:
 
-| Section | Change |
-|---------|--------|
-| Hero headline | "Professional Product Images In Seconds, Not Days" becomes "Create New Product Visuals Without New Photoshoots" |
-| Hero subheadline | Update to mention automated monthly creative drops |
-| Feature Grid | Update descriptions to emphasize brand consistency and automation |
-| How It Works | Steps become: Upload Product, Set Your Brand Style, Get Monthly Visuals |
-| Integration Section | Keep as-is (already de-Shopified) |
-| Final CTA | Update copy to mention automation angle |
+**`HeroSection.tsx`:**
+- Badge: "AI-powered visual studio for brands"
+- Headline: "Create New Product Visuals" / "Without New Photoshoots"
+- Subheadline: mention automated monthly creative drops and brand consistency
+- Trust badge: change "5 free credits" to "5 free visuals"
 
-**New section: "Meet Your Studio Team"** -- inserted between BeforeAfterGallery and IntegrationSection:
-- Product Photographer
-- Lifestyle Photographer
-- Ad Creative Specialist
-- CRO Visual Optimizer
-- Brand Consistency Manager
-- Format and Export Assistant
+**`FeatureGrid.tsx`:**
+- Feature 1: "Brand-Consistent Photography" -- emphasize brand profiles and consistency
+- Feature 2: "Virtual Try-On" -- keep but update description to mention workflow-driven
+- Feature 3: "Creative Drops" -- replace "Bulk Generation" with automated drops messaging
+- Feature 4: "Smart Workflows" -- replace "Smart Styling" with outcome-driven workflow messaging
 
-These are conceptual roles, not separate agents -- presented as cards showing what the AI handles.
+**`HowItWorks.tsx`:**
+- Step 1: "Upload Your Product" (keep)
+- Step 2: "Set Your Brand Style" (replace "Choose Your Style" -- create brand profile once)
+- Step 3: "Get Monthly Visuals" (replace "Get Pro Images Instantly" -- emphasize automation)
 
-## Implementation Order
+**`IntegrationSection.tsx`:**
+- Remove Shopify/WooCommerce references
+- Replace with: "Direct Upload", "Product Library", "Brand Profiles", "Automated Drops"
 
-Due to dependencies, implementation must follow this sequence:
+**`FinalCTA.tsx`:**
+- Update headline to "Ready to Automate Your Product Photography?"
+- Update description to mention Creative Drops
 
-1. **Phase 1**: Fix build errors + rewrite remaining Polaris pages to shadcn/ui + remove Polaris dependency
-2. **Phase 2**: Database migrations (new tables + updated columns)
-3. **Phase 3**: Brand Profiles (pages + components + DB integration)
-4. **Phase 4**: Workflows (seed data + pages + components)
-5. **Phase 5**: Refactor Generate flow around workflows + brand profiles
-6. **Phase 6**: Creative Drops (schedules, drops, cron automation)
-7. **Phase 7**: Navigation restructure
-8. **Phase 8**: Landing page copy updates + Studio Team section
+**New section -- `StudioTeamSection.tsx`:**
+- Inserted between `BeforeAfterGallery` and `IntegrationSection` in `Landing.tsx`
+- 6 conceptual "team member" cards: Product Photographer, Lifestyle Photographer, Ad Creative Specialist, CRO Visual Optimizer, Brand Consistency Manager, Format & Export Assistant
+- Each card has an icon, title, and one-sentence description
+- Clean grid layout matching existing section design patterns
 
-Each phase builds on the previous one. Phases 1-2 are prerequisites for everything else. The entire implementation will be done incrementally across multiple responses to avoid overwhelming the build system.
+## Implementation Sequence
 
-## Technical Notes
+Due to dependencies, implementation will follow this order:
 
-- All new tables get RLS policies following the existing pattern (users access own data only)
-- The `workflows` table uses `is_system = true` for built-in workflows -- no user CRUD in v1
-- Edge functions `generate-product` and `generate-tryon` are NOT modified -- the orchestration happens client-side or in the new `run-creative-drop` function
-- The `run-creative-drop` edge function calls the other edge functions via HTTP internally
-- Brand profile data flows into the existing `brandSettings` parameter of the generation hooks
-- Mock data in `mockData.ts` will be gradually replaced by real DB queries as features are connected
-- The Polaris cleanup (Phase 1) must happen first to fix the current TS build errors before any new features can be added
+1. Phase 2: Run all 5 database migrations (tables + columns + seeds)
+2. Phase 3: Build Brand Profiles pages and components
+3. Phase 7 (partial): Add new routes and navigation so new pages are accessible
+4. Phase 4: Build Workflows page
+5. Phase 5: Refactor Generate flow
+6. Phase 6: Build Creative Drops + edge function
+7. Phase 7 (complete): Clean up old routes (remove templates, rename jobs to library)
+8. Phase 8: Landing page copy updates + Studio Team section
+
+## Technical Details
+
+- All new pages use React Query for data fetching with the existing Supabase client
+- RLS policies follow the existing pattern: `auth.uid() = user_id` for all user-owned data
+- Workflows table uses `is_system = true` for read-only system workflows
+- No changes to existing `generate-product` or `generate-tryon` edge functions
+- The `run-creative-drop` edge function calls the existing edge functions via HTTP internally using SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+- Credit deduction logic remains in CreditContext -- Creative Drops will deduct credits when generating
+- The `mockData.ts` references will be gradually replaced by real DB queries as pages are connected
 
