@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, CreditCard, Shield, ChevronRight, ChevronLeft } from 'lucide-react';
+import { ArrowRight, CreditCard, Shield, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import productTshirt from '@/assets/hero/hero-product-tshirt.jpg';
@@ -90,12 +90,51 @@ const showcases: ProductShowcase[] = [
   },
 ];
 
+const SLOGANS = [
+  'Ready When You Are.',
+  'No Studio Needed.',
+  'Instant Brand Visuals.',
+  'Every Product. Every Scene.',
+  'Ads That Convert.',
+  'Scale Without Limits.',
+];
+
+function useTypewriter(phrases: string[], typingSpeed = 60, deletingSpeed = 35, pauseDuration = 2200) {
+  const [displayText, setDisplayText] = useState('');
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentPhrase = phrases[phraseIndex];
+
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        setDisplayText(currentPhrase.slice(0, displayText.length + 1));
+        if (displayText.length + 1 === currentPhrase.length) {
+          setTimeout(() => setIsDeleting(true), pauseDuration);
+        }
+      } else {
+        setDisplayText(currentPhrase.slice(0, displayText.length - 1));
+        if (displayText.length === 0) {
+          setIsDeleting(false);
+          setPhraseIndex((prev) => (prev + 1) % phrases.length);
+        }
+      }
+    }, isDeleting ? deletingSpeed : typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [displayText, isDeleting, phraseIndex, phrases, typingSpeed, deletingSpeed, pauseDuration]);
+
+  return displayText;
+}
+
 export function HeroSection() {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeScene, setActiveScene] = useState(0);
+  const typedText = useTypewriter(SLOGANS);
 
   const current = showcases[activeScene];
 
@@ -131,17 +170,16 @@ export function HeroSection() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto mb-14">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
-            Your AI photography team
-          </div>
-
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-6">
             Your AI Photography Team.
             <br />
-            <span className="text-primary">Ready When You Are.</span>
+            <span className="text-primary">
+              {typedText}
+              <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-0.5 align-middle animate-[blink_1s_step-end_infinite]" />
+            </span>
           </h1>
+
+          <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Upload a product photo. Your team of photographers, art directors, and retouchers delivers ∞ brand-ready visuals in seconds — for ads, listings, and campaigns.
