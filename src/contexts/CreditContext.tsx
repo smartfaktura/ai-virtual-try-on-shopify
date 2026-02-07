@@ -23,7 +23,21 @@ interface CreditContextValue {
   calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => number;
 }
 
-const CreditContext = createContext<CreditContextValue | undefined>(undefined);
+const defaultValue: CreditContextValue = {
+  balance: 0,
+  isLow: false,
+  isCritical: false,
+  isEmpty: true,
+  isLoading: true,
+  deductCredits: () => {},
+  addCredits: () => {},
+  buyModalOpen: false,
+  openBuyModal: () => {},
+  closeBuyModal: () => {},
+  calculateCost: () => 0,
+};
+
+const CreditContext = createContext<CreditContextValue>(defaultValue);
 
 interface CreditProviderProps {
   children: ReactNode;
