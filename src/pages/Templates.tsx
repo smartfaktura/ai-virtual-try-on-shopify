@@ -1,23 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, Image, Play, Eye } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
-  BlockStack,
-  InlineStack,
-  Card,
-  Text,
-  Button,
-  DataTable,
-  Badge,
-  TextField,
   Select,
-  InlineGrid,
-  Icon,
-} from '@shopify/polaris';
-import { SearchIcon, ImageIcon, ViewIcon, PlayIcon } from '@shopify/polaris-icons';
-import { PageHeader } from '@/components/app/PageHeader';
-import { mockTemplates, categoryLabels } from '@/data/mockData';
-import { getTemplateImage } from '@/components/app/TemplatePreviewCard';
-import type { Template, TemplateCategory } from '@/types';
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -26,24 +21,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button as ShadcnButton } from '@/components/ui/button';
-import { Badge as ShadcnBadge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/app/PageHeader';
+import { mockTemplates, categoryLabels } from '@/data/mockData';
+import { getTemplateImage } from '@/components/app/TemplatePreviewCard';
+import type { Template, TemplateCategory } from '@/types';
 
 export default function Templates() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
-
-  const categories = [
-    { id: 'all', content: 'All' },
-    { id: 'clothing', content: 'Clothing' },
-    { id: 'cosmetics', content: 'Cosmetics' },
-    { id: 'food', content: 'Food' },
-    { id: 'home', content: 'Home' },
-    { id: 'supplements', content: 'Supplements' },
-    { id: 'universal', content: 'Universal' },
-  ];
 
   const filteredTemplates = mockTemplates.filter(t => {
     if (selectedCategory !== 'all' && t.category !== selectedCategory) return false;
@@ -52,170 +39,165 @@ export default function Templates() {
   });
 
   const handleUseTemplate = (templateId: string) => {
-    navigate(`/generate?template=${templateId}`);
+    navigate(`/app/generate?template=${templateId}`);
   };
-
-  const rows = filteredTemplates.map(template => {
-    const previewImage = getTemplateImage(template.templateId);
-    return [
-      <InlineStack key={template.templateId} gap="300" blockAlign="center">
-        {previewImage ? (
-          <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
-            <img src={previewImage} alt={template.name} className="w-full h-full object-cover" />
-          </div>
-        ) : (
-          <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-            <Icon source={ImageIcon} tone="subdued" />
-          </div>
-        )}
-        <BlockStack gap="050">
-          <Text as="span" variant="bodyMd" fontWeight="semibold">
-            {template.name}
-          </Text>
-          <Text as="span" variant="bodySm" tone="subdued">
-            {template.description.slice(0, 50)}...
-          </Text>
-        </BlockStack>
-      </InlineStack>,
-      <Badge key={`cat-${template.templateId}`}>
-        {categoryLabels[template.category]}
-      </Badge>,
-      <Badge key={`status-${template.templateId}`} tone={template.enabled ? 'success' : undefined}>
-        {template.enabled ? 'Active' : 'Disabled'}
-      </Badge>,
-      new Date(template.updatedAt).toLocaleDateString(),
-      <InlineStack key={`actions-${template.templateId}`} gap="200">
-        <Button
-          icon={PlayIcon}
-          onClick={() => handleUseTemplate(template.templateId)}
-        >
-          Use
-        </Button>
-        <Button
-          icon={ViewIcon}
-          variant="plain"
-          onClick={() => setPreviewTemplate(template)}
-        >
-          Preview
-        </Button>
-      </InlineStack>,
-    ];
-  });
 
   return (
     <PageHeader title="Templates">
-      <BlockStack gap="400">
+      <div className="space-y-4">
         <Card>
-          <BlockStack gap="400">
+          <CardContent className="p-5 space-y-4">
             {/* Filters */}
-            <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-              <TextField
-                label="Search"
-                labelHidden
-                placeholder="Search templates..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-                prefix={<Icon source={SearchIcon} />}
-                autoComplete="off"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search templates..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
               <Select
-                label="Category"
-                labelHidden
-                options={categories.map(c => ({ label: c.content, value: c.id }))}
                 value={selectedCategory}
-                onChange={(v) => setSelectedCategory(v as TemplateCategory | 'all')}
-              />
-            </InlineGrid>
+                onValueChange={v => setSelectedCategory(v as TemplateCategory | 'all')}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="clothing">Clothing</SelectItem>
+                  <SelectItem value="cosmetics">Cosmetics</SelectItem>
+                  <SelectItem value="food">Food</SelectItem>
+                  <SelectItem value="home">Home</SelectItem>
+                  <SelectItem value="supplements">Supplements</SelectItem>
+                  <SelectItem value="universal">Universal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Table */}
-            <DataTable
-              columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-              headings={['Template', 'Category', 'Status', 'Updated', 'Actions']}
-              rows={rows}
-            />
-          </BlockStack>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Template</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Updated</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTemplates.map(template => {
+                    const previewImage = getTemplateImage(template.templateId);
+                    return (
+                      <TableRow key={template.templateId}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            {previewImage ? (
+                              <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0">
+                                <img src={previewImage} alt={template.name} className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                                <Image className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium text-sm">{template.name}</p>
+                              <p className="text-xs text-muted-foreground">{template.description.slice(0, 50)}...</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{categoryLabels[template.category]}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={template.enabled ? 'default' : 'outline'}>
+                            {template.enabled ? 'Active' : 'Disabled'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {new Date(template.updatedAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" onClick={() => handleUseTemplate(template.templateId)}>
+                              <Play className="w-3 h-3 mr-1" /> Use
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setPreviewTemplate(template)}>
+                              <Eye className="w-3 h-3 mr-1" /> Preview
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Template Categories Overview */}
-        <InlineGrid columns={{ xs: 2, md: 3, lg: 6 }} gap="400">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {Object.entries(categoryLabels).map(([key, label]) => {
             const count = mockTemplates.filter(t => t.category === key && t.enabled).length;
             return (
               <Card key={key}>
-                <BlockStack gap="100" inlineAlign="center">
-                  <Text as="p" variant="headingLg" fontWeight="bold">
-                    {count}
-                  </Text>
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    {label}
-                  </Text>
-                </BlockStack>
+                <CardContent className="p-4 text-center space-y-1">
+                  <p className="text-2xl font-bold">{count}</p>
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                </CardContent>
               </Card>
             );
           })}
-        </InlineGrid>
-      </BlockStack>
+        </div>
+      </div>
 
       {/* Preview Modal */}
       <Dialog open={!!previewTemplate} onOpenChange={() => setPreviewTemplate(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{previewTemplate?.name}</DialogTitle>
-            <DialogDescription>
-              Template preview and details
-            </DialogDescription>
+            <DialogDescription>Template preview and details</DialogDescription>
           </DialogHeader>
-          
           {previewTemplate && (
             <div className="space-y-4">
-              {/* Large Preview Image */}
               <div className="aspect-video rounded-lg overflow-hidden bg-muted">
                 {getTemplateImage(previewTemplate.templateId) ? (
-                  <img 
-                    src={getTemplateImage(previewTemplate.templateId)} 
+                  <img
+                    src={getTemplateImage(previewTemplate.templateId)}
                     alt={previewTemplate.name}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Icon source={ImageIcon} tone="subdued" />
+                    <Image className="w-8 h-8 text-muted-foreground" />
                   </div>
                 )}
               </div>
-
-              {/* Details */}
               <div className="space-y-3">
                 <div className="flex gap-2">
-                  <ShadcnBadge variant="secondary">
-                    {categoryLabels[previewTemplate.category]}
-                  </ShadcnBadge>
-                  <ShadcnBadge variant={previewTemplate.enabled ? 'default' : 'outline'}>
+                  <Badge variant="secondary">{categoryLabels[previewTemplate.category]}</Badge>
+                  <Badge variant={previewTemplate.enabled ? 'default' : 'outline'}>
                     {previewTemplate.enabled ? 'Active' : 'Disabled'}
-                  </ShadcnBadge>
+                  </Badge>
                 </div>
-                
-                <p className="text-sm text-muted-foreground">
-                  {previewTemplate.description}
-                </p>
-
-                <div className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">{previewTemplate.description}</p>
+                <p className="text-xs text-muted-foreground">
                   Last updated: {new Date(previewTemplate.updatedAt).toLocaleDateString()}
-                </div>
+                </p>
               </div>
             </div>
           )}
-
           <DialogFooter>
-            <ShadcnButton variant="outline" onClick={() => setPreviewTemplate(null)}>
-              Close
-            </ShadcnButton>
-            <ShadcnButton onClick={() => {
-              if (previewTemplate) {
-                handleUseTemplate(previewTemplate.templateId);
-              }
-            }}>
+            <Button variant="outline" onClick={() => setPreviewTemplate(null)}>Close</Button>
+            <Button onClick={() => previewTemplate && handleUseTemplate(previewTemplate.templateId)}>
               Use this template
-            </ShadcnButton>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

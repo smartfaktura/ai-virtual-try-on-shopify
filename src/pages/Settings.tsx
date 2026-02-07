@@ -1,21 +1,20 @@
 import { useState } from 'react';
+import { HelpCircle, MessageSquare } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import {
-  BlockStack,
-  InlineStack,
-  Card,
-  Text,
-  Button,
-  TextField,
   Select,
-  Checkbox,
-  Divider,
-  Banner,
-  InlineGrid,
-  ProgressBar,
-  Badge,
-  ButtonGroup,
-} from '@shopify/polaris';
-import { QuestionCircleIcon, ChatIcon } from '@shopify/polaris-icons';
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { PageHeader } from '@/components/app/PageHeader';
 import { PlanCard } from '@/components/app/PlanCard';
 import { CreditPackCard } from '@/components/app/CreditPackCard';
@@ -27,28 +26,19 @@ import { toast } from 'sonner';
 
 export default function Settings() {
   const { balance, addCredits } = useCredits();
-  
-  // Brand defaults
+
   const [brandTone, setBrandTone] = useState<BrandTone>('clean');
   const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('studio');
   const [negatives, setNegatives] = useState('text overlays, busy backgrounds, watermarks');
   const [consistencyEnabled, setConsistencyEnabled] = useState(true);
 
-  // Publishing defaults
   const [publishMode, setPublishMode] = useState<'add' | 'replace'>('add');
   const [autoPublish, setAutoPublish] = useState(false);
-
-  // AI settings
   const [defaultQuality, setDefaultQuality] = useState<'standard' | 'high'>('standard');
-
-  // Default image settings
-  const [defaultAspectRatio, setDefaultAspectRatio] = useState<string>('1:1');
-  const [defaultImageCount, setDefaultImageCount] = useState<string>('4');
-
-  // Permissions
+  const [defaultAspectRatio, setDefaultAspectRatio] = useState('1:1');
+  const [defaultImageCount, setDefaultImageCount] = useState('4');
   const [restrictPromptEditing, setRestrictPromptEditing] = useState(true);
 
-  // Notification settings
   const [emailOnComplete, setEmailOnComplete] = useState(true);
   const [emailOnFailed, setEmailOnFailed] = useState(true);
   const [emailLowCredits, setEmailLowCredits] = useState(true);
@@ -57,22 +47,17 @@ export default function Settings() {
   const [inAppFailed, setInAppFailed] = useState(true);
   const [inAppTips, setInAppTips] = useState(true);
 
-  // Billing
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
-  const currentPlanId = 'growth'; // Mock current plan
+  const currentPlanId = 'growth';
 
-  const handleSave = () => {
-    toast.success('Settings saved successfully!');
-  };
+  const creditsTotal = 1000;
+  const creditsPercentage = (balance / creditsTotal) * 100;
 
+  const handleSave = () => toast.success('Settings saved successfully!');
   const handlePlanSelect = (planId: string) => {
-    if (planId === 'enterprise') {
-      toast.info('Our team will reach out to discuss your needs!');
-    } else {
-      toast.success(`Switched to ${planId} plan!`);
-    }
+    if (planId === 'enterprise') toast.info('Our team will reach out to discuss your needs!');
+    else toast.success(`Switched to ${planId} plan!`);
   };
-
   const handleCreditPurchase = (packId: string) => {
     const pack = creditPacks.find(p => p.packId === packId);
     if (pack) {
@@ -81,272 +66,240 @@ export default function Settings() {
     }
   };
 
-  const creditsTotal = 1000;
-  const creditsPercentage = (balance / creditsTotal) * 100;
-
-  const appVersion = '1.2.0';
-  const lastUpdated = '2026-01-28';
-
   return (
     <PageHeader title="Settings">
-      <BlockStack gap="600">
+      <div className="space-y-6">
         {/* Brand Defaults */}
         <Card>
-          <BlockStack gap="400">
-            <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">Brand Defaults</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Set default brand settings for all new generations</Text>
-            </BlockStack>
-            
-            <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-              <Select
-                label="Default Brand Tone"
-                options={[
-                  { label: 'Clean', value: 'clean' },
-                  { label: 'Luxury', value: 'luxury' },
-                  { label: 'Playful', value: 'playful' },
-                  { label: 'Bold', value: 'bold' },
-                  { label: 'Minimal', value: 'minimal' },
-                ]}
-                value={brandTone}
-                onChange={(v) => setBrandTone(v as BrandTone)}
-              />
-              <Select
-                label="Default Background Style"
-                options={[
-                  { label: 'Studio', value: 'studio' },
-                  { label: 'Lifestyle', value: 'lifestyle' },
-                  { label: 'Gradient', value: 'gradient' },
-                  { label: 'Pattern', value: 'pattern' },
-                  { label: 'Contextual Scene', value: 'contextual' },
-                ]}
-                value={backgroundStyle}
-                onChange={(v) => setBackgroundStyle(v as BackgroundStyle)}
-              />
-            </InlineGrid>
-            
-            <TextField
-              label="Default Negative List"
-              value={negatives}
-              onChange={setNegatives}
-              autoComplete="off"
-              helpText="Comma-separated list of things to avoid in generations"
-            />
-            
-            <Checkbox
-              label="Enable style consistency by default"
-              checked={consistencyEnabled}
-              onChange={setConsistencyEnabled}
-              helpText="Keep visual style consistent across all generations"
-            />
-          </BlockStack>
+          <CardContent className="p-5 space-y-4">
+            <div>
+              <h2 className="text-base font-semibold">Brand Defaults</h2>
+              <p className="text-sm text-muted-foreground">Set default brand settings for all new generations</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Default Brand Tone</Label>
+                <Select value={brandTone} onValueChange={v => setBrandTone(v as BrandTone)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="clean">Clean</SelectItem>
+                    <SelectItem value="luxury">Luxury</SelectItem>
+                    <SelectItem value="playful">Playful</SelectItem>
+                    <SelectItem value="bold">Bold</SelectItem>
+                    <SelectItem value="minimal">Minimal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Default Background Style</Label>
+                <Select value={backgroundStyle} onValueChange={v => setBackgroundStyle(v as BackgroundStyle)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="studio">Studio</SelectItem>
+                    <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                    <SelectItem value="gradient">Gradient</SelectItem>
+                    <SelectItem value="pattern">Pattern</SelectItem>
+                    <SelectItem value="contextual">Contextual Scene</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Default Negative List</Label>
+              <Input value={negatives} onChange={e => setNegatives(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Comma-separated list of things to avoid in generations</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="consistency" checked={consistencyEnabled} onCheckedChange={v => setConsistencyEnabled(!!v)} />
+              <div>
+                <Label htmlFor="consistency">Enable style consistency by default</Label>
+                <p className="text-xs text-muted-foreground">Keep visual style consistent across all generations</p>
+              </div>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Default Image Settings */}
         <Card>
-          <BlockStack gap="400">
-            <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">Default Image Settings</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Set defaults for new generation jobs</Text>
-            </BlockStack>
-            
-            <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-              <Select
-                label="Default Aspect Ratio"
-                options={[
-                  { label: '1:1 (Square)', value: '1:1' },
-                  { label: '4:5 (Portrait)', value: '4:5' },
-                  { label: '16:9 (Landscape)', value: '16:9' },
-                  { label: '9:16 (Story)', value: '9:16' },
-                ]}
-                value={defaultAspectRatio}
-                onChange={setDefaultAspectRatio}
-                helpText="Applied when starting a new generation"
-              />
-              <Select
-                label="Default Image Count"
-                options={[
-                  { label: '1 image', value: '1' },
-                  { label: '4 images', value: '4' },
-                  { label: '8 images', value: '8' },
-                ]}
-                value={defaultImageCount}
-                onChange={setDefaultImageCount}
-                helpText="Number of images per generation"
-              />
-            </InlineGrid>
-          </BlockStack>
+          <CardContent className="p-5 space-y-4">
+            <div>
+              <h2 className="text-base font-semibold">Default Image Settings</h2>
+              <p className="text-sm text-muted-foreground">Set defaults for new generation jobs</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Default Aspect Ratio</Label>
+                <Select value={defaultAspectRatio} onValueChange={setDefaultAspectRatio}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                    <SelectItem value="4:5">4:5 (Portrait)</SelectItem>
+                    <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
+                    <SelectItem value="9:16">9:16 (Story)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Default Image Count</Label>
+                <Select value={defaultImageCount} onValueChange={setDefaultImageCount}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 image</SelectItem>
+                    <SelectItem value="4">4 images</SelectItem>
+                    <SelectItem value="8">8 images</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
         </Card>
 
-        {/* Notification Settings */}
+        {/* Notifications */}
         <Card>
-          <BlockStack gap="400">
-            <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">Notifications</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Manage how you receive updates</Text>
-            </BlockStack>
-            
-            <BlockStack gap="300">
-              <Text as="h3" variant="headingSm">Email Notifications</Text>
-              <Checkbox
-                label="Generation complete"
-                checked={emailOnComplete}
-                onChange={setEmailOnComplete}
-                helpText="Receive email when image generation finishes"
-              />
-              <Checkbox
-                label="Generation failed"
-                checked={emailOnFailed}
-                onChange={setEmailOnFailed}
-                helpText="Receive email if generation encounters an error"
-              />
-              <Checkbox
-                label="Low credits warning"
-                checked={emailLowCredits}
-                onChange={setEmailLowCredits}
-                helpText="Get notified when credits drop below 10%"
-              />
-              <Checkbox
-                label="Weekly usage digest"
-                checked={emailWeeklyDigest}
-                onChange={setEmailWeeklyDigest}
-                helpText="Weekly summary of generations and credit usage"
-              />
-            </BlockStack>
-
-            <Divider />
-
-            <BlockStack gap="300">
-              <Text as="h3" variant="headingSm">In-App Notifications</Text>
-              <Checkbox
-                label="Show generation complete"
-                checked={inAppComplete}
-                onChange={setInAppComplete}
-              />
-              <Checkbox
-                label="Show generation errors"
-                checked={inAppFailed}
-                onChange={setInAppFailed}
-              />
-              <Checkbox
-                label="Show tips and suggestions"
-                checked={inAppTips}
-                onChange={setInAppTips}
-                helpText="Occasional tips to improve your generations"
-              />
-            </BlockStack>
-          </BlockStack>
+          <CardContent className="p-5 space-y-4">
+            <div>
+              <h2 className="text-base font-semibold">Notifications</h2>
+              <p className="text-sm text-muted-foreground">Manage how you receive updates</p>
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold">Email Notifications</h3>
+              {[
+                { id: 'emailComplete', label: 'Generation complete', help: 'Receive email when image generation finishes', checked: emailOnComplete, set: setEmailOnComplete },
+                { id: 'emailFailed', label: 'Generation failed', help: 'Receive email if generation encounters an error', checked: emailOnFailed, set: setEmailOnFailed },
+                { id: 'emailLow', label: 'Low credits warning', help: "Get notified when credits drop below 10%", checked: emailLowCredits, set: setEmailLowCredits },
+                { id: 'emailDigest', label: 'Weekly usage digest', help: 'Weekly summary of generations and credit usage', checked: emailWeeklyDigest, set: setEmailWeeklyDigest },
+              ].map(n => (
+                <div key={n.id} className="flex items-start space-x-2">
+                  <Checkbox id={n.id} checked={n.checked} onCheckedChange={v => n.set(!!v)} />
+                  <div>
+                    <Label htmlFor={n.id}>{n.label}</Label>
+                    <p className="text-xs text-muted-foreground">{n.help}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Separator />
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold">In-App Notifications</h3>
+              {[
+                { id: 'inAppComplete', label: 'Show generation complete', checked: inAppComplete, set: setInAppComplete },
+                { id: 'inAppFailed', label: 'Show generation errors', checked: inAppFailed, set: setInAppFailed },
+                { id: 'inAppTips', label: 'Show tips and suggestions', help: 'Occasional tips to improve your generations', checked: inAppTips, set: setInAppTips },
+              ].map(n => (
+                <div key={n.id} className="flex items-start space-x-2">
+                  <Checkbox id={n.id} checked={n.checked} onCheckedChange={v => n.set(!!v)} />
+                  <div>
+                    <Label htmlFor={n.id}>{n.label}</Label>
+                    {('help' in n && n.help) && <p className="text-xs text-muted-foreground">{n.help}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
 
-        {/* Download & Export Defaults */}
+        {/* Download & Export */}
         <Card>
-          <BlockStack gap="400">
-            <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">Download & Export Defaults</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Configure how generated images are exported</Text>
-            </BlockStack>
-            
-            <Select
-              label="Default Export Mode"
-              options={[
-                { label: 'Download individually', value: 'add' },
-                { label: 'Download as ZIP', value: 'replace' },
-              ]}
-              value={publishMode}
-              onChange={(v) => setPublishMode(v as 'add' | 'replace')}
-              helpText="How images are exported by default"
-            />
-            
-            <Checkbox
-              label="Auto-download successful generations"
-              checked={autoPublish}
-              onChange={setAutoPublish}
-              helpText="Automatically download images when generation completes"
-            />
-          </BlockStack>
+          <CardContent className="p-5 space-y-4">
+            <div>
+              <h2 className="text-base font-semibold">Download & Export Defaults</h2>
+              <p className="text-sm text-muted-foreground">Configure how generated images are exported</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Default Export Mode</Label>
+              <Select value={publishMode} onValueChange={v => setPublishMode(v as 'add' | 'replace')}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="add">Download individually</SelectItem>
+                  <SelectItem value="replace">Download as ZIP</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-start space-x-2">
+              <Checkbox id="autoDownload" checked={autoPublish} onCheckedChange={v => setAutoPublish(!!v)} />
+              <div>
+                <Label htmlFor="autoDownload">Auto-download successful generations</Label>
+                <p className="text-xs text-muted-foreground">Automatically download images when generation completes</p>
+              </div>
+            </div>
+          </CardContent>
         </Card>
 
         {/* AI Model Settings */}
         <Card>
-          <BlockStack gap="400">
-            <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">AI Model Settings</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Configure the AI image generation model</Text>
-            </BlockStack>
-            
-            <InlineStack gap="200" blockAlign="center">
-              <Text as="p" variant="bodyMd">Model:</Text>
-              <Badge tone="info">nanobanna-v1</Badge>
-              <Text as="p" variant="bodySm" tone="subdued">(Latest stable version)</Text>
-            </InlineStack>
-            
-            <Select
-              label="Default Quality Mode"
-              options={[
-                { label: 'Standard (1 credit/image)', value: 'standard' },
-                { label: 'High (2 credits/image)', value: 'high' },
-              ]}
-              value={defaultQuality}
-              onChange={(v) => setDefaultQuality(v as 'standard' | 'high')}
-            />
-          </BlockStack>
+          <CardContent className="p-5 space-y-4">
+            <div>
+              <h2 className="text-base font-semibold">AI Model Settings</h2>
+              <p className="text-sm text-muted-foreground">Configure the AI image generation model</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Model:</span>
+              <Badge variant="secondary">nanobanna-v1</Badge>
+              <span className="text-xs text-muted-foreground">(Latest stable version)</span>
+            </div>
+            <div className="space-y-2">
+              <Label>Default Quality Mode</Label>
+              <Select value={defaultQuality} onValueChange={v => setDefaultQuality(v as 'standard' | 'high')}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">Standard (1 credit/image)</SelectItem>
+                  <SelectItem value="high">High (2 credits/image)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Plans & Billing */}
-        <BlockStack gap="400">
-          <BlockStack gap="100">
-            <Text as="h2" variant="headingLg">Plans & Billing</Text>
-            <Text as="p" variant="bodySm" tone="subdued">Choose the plan that's right for your business</Text>
-          </BlockStack>
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Plans & Billing</h2>
+            <p className="text-sm text-muted-foreground">Choose the plan that's right for your business</p>
+          </div>
 
-          {/* Current Plan Status */}
           <Card>
-            <BlockStack gap="400">
-              <InlineStack align="space-between" blockAlign="center">
-                <BlockStack gap="100">
-                  <InlineStack gap="200" blockAlign="center">
-                    <Text as="h3" variant="headingMd">Current Plan</Text>
-                    <Badge tone="success">Growth</Badge>
-                  </InlineStack>
-                  <Text as="p" variant="bodySm" tone="subdued">500 credits/month • Renews Feb 15, 2026</Text>
-                </BlockStack>
-              </InlineStack>
-              
-              <Divider />
-              
-              <BlockStack gap="200">
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd">Credits Remaining</Text>
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">{balance} / {creditsTotal}</Text>
-                </InlineStack>
-                <ProgressBar progress={creditsPercentage} size="small" tone="primary" />
-                <Text as="p" variant="bodySm" tone="subdued">Resets on the 1st of each month</Text>
-              </BlockStack>
-            </BlockStack>
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold">Current Plan</h3>
+                    <Badge className="bg-primary/10 text-primary">Growth</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">500 credits/month • Renews Feb 15, 2026</p>
+                </div>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Credits Remaining</span>
+                  <span className="text-sm font-semibold">{balance} / {creditsTotal}</span>
+                </div>
+                <Progress value={creditsPercentage} className="h-2" />
+                <p className="text-xs text-muted-foreground">Resets on the 1st of each month</p>
+              </div>
+            </CardContent>
           </Card>
 
-          {/* Billing Period Toggle */}
-          <InlineStack align="space-between" blockAlign="center">
-            <Text as="h3" variant="headingMd">Choose Your Plan</Text>
-            <ButtonGroup variant="segmented">
-              <Button 
-                pressed={billingPeriod === 'monthly'} 
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-semibold">Choose Your Plan</h3>
+            <div className="flex rounded-lg border border-border overflow-hidden">
+              <button
+                className={`px-4 py-2 text-sm font-medium transition-colors ${billingPeriod === 'monthly' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
                 onClick={() => setBillingPeriod('monthly')}
               >
                 Monthly
-              </Button>
-              <Button 
-                pressed={billingPeriod === 'annual'} 
+              </button>
+              <button
+                className={`px-4 py-2 text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
                 onClick={() => setBillingPeriod('annual')}
               >
                 Annual (Save 17%)
-              </Button>
-            </ButtonGroup>
-          </InlineStack>
+              </button>
+            </div>
+          </div>
 
-          {/* Plan Cards */}
-          <InlineGrid columns={{ xs: 1, sm: 2, lg: 4 }} gap="400">
-            {pricingPlans.map((plan) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {pricingPlans.map(plan => (
               <PlanCard
                 key={plan.planId}
                 plan={plan}
@@ -355,111 +308,88 @@ export default function Settings() {
                 onSelect={handlePlanSelect}
               />
             ))}
-          </InlineGrid>
+          </div>
 
-          {/* Credit Top-ups */}
           <Card>
-            <BlockStack gap="400">
-              <BlockStack gap="100">
-                <Text as="h3" variant="headingMd">Need More Credits?</Text>
-                <Text as="p" variant="bodySm" tone="subdued">Purchase additional credits anytime • Credits never expire</Text>
-              </BlockStack>
-              
-              <InlineGrid columns={{ xs: 1, sm: 3 }} gap="400">
-                {creditPacks.map((pack) => (
-                  <CreditPackCard
-                    key={pack.packId}
-                    pack={pack}
-                    onPurchase={handleCreditPurchase}
-                  />
+            <CardContent className="p-5 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold">Need More Credits?</h3>
+                <p className="text-sm text-muted-foreground">Purchase additional credits anytime • Credits never expire</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {creditPacks.map(pack => (
+                  <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} />
                 ))}
-              </InlineGrid>
-            </BlockStack>
+              </div>
+            </CardContent>
           </Card>
 
-          {/* Competitor Comparison */}
           <CompetitorComparison />
-        </BlockStack>
+        </div>
 
         {/* Team & Permissions */}
         <Card>
-          <BlockStack gap="400">
-            <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">Team & Permissions</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Control access to advanced features</Text>
-            </BlockStack>
-            
-            <Checkbox
-              label="Restrict prompt editing to admins only"
-              checked={restrictPromptEditing}
-              onChange={setRestrictPromptEditing}
-              helpText="Only admin users can edit prompts directly"
-            />
-          </BlockStack>
+          <CardContent className="p-5 space-y-4">
+            <div>
+              <h2 className="text-base font-semibold">Team & Permissions</h2>
+              <p className="text-sm text-muted-foreground">Control access to advanced features</p>
+            </div>
+            <div className="flex items-start space-x-2">
+              <Checkbox id="restrictPrompt" checked={restrictPromptEditing} onCheckedChange={v => setRestrictPromptEditing(!!v)} />
+              <div>
+                <Label htmlFor="restrictPrompt">Restrict prompt editing to admins only</Label>
+                <p className="text-xs text-muted-foreground">Only admin users can edit prompts directly</p>
+              </div>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Help & Support */}
         <Card>
-          <BlockStack gap="400">
-            <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">Help & Support</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Get help and learn more about the app</Text>
-            </BlockStack>
-            
-            <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
-              <Button
-                icon={QuestionCircleIcon}
-                onClick={() => window.open('https://docs.example.com', '_blank')}
-                fullWidth
-              >
-                Documentation
+          <CardContent className="p-5 space-y-4">
+            <div>
+              <h2 className="text-base font-semibold">Help & Support</h2>
+              <p className="text-sm text-muted-foreground">Get help and learn more about the app</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button variant="outline" className="w-full" onClick={() => window.open('https://docs.example.com', '_blank')}>
+                <HelpCircle className="w-4 h-4 mr-2" /> Documentation
               </Button>
-              <Button
-                icon={ChatIcon}
-                onClick={() => window.open('mailto:support@example.com', '_blank')}
-                fullWidth
-              >
-                Contact Support
+              <Button variant="outline" className="w-full" onClick={() => window.open('mailto:support@example.com', '_blank')}>
+                <MessageSquare className="w-4 h-4 mr-2" /> Contact Support
               </Button>
-              <Button
-                icon={QuestionCircleIcon}
-                onClick={() => window.open('https://docs.example.com/faq', '_blank')}
-                fullWidth
-              >
-                FAQ
+              <Button variant="outline" className="w-full" onClick={() => window.open('https://docs.example.com/faq', '_blank')}>
+                <HelpCircle className="w-4 h-4 mr-2" /> FAQ
               </Button>
-            </InlineGrid>
-          </BlockStack>
+            </div>
+          </CardContent>
         </Card>
 
         {/* About */}
         <Card>
-          <BlockStack gap="400">
-            <BlockStack gap="100">
-              <Text as="h2" variant="headingMd">About</Text>
-              <Text as="p" variant="bodySm" tone="subdued">App information and updates</Text>
-            </BlockStack>
-            
-            <InlineStack align="space-between" blockAlign="center">
-              <BlockStack gap="100">
-                <InlineStack gap="200" blockAlign="center">
-                  <Text as="p" variant="bodyMd">Version</Text>
-                  <Badge>{appVersion}</Badge>
-                </InlineStack>
-                <Text as="p" variant="bodySm" tone="subdued">Last updated: {lastUpdated}</Text>
-              </BlockStack>
-              <Button variant="plain" onClick={() => toast.info('Changelog coming soon!')}>
-                What's New
-              </Button>
-            </InlineStack>
-          </BlockStack>
+          <CardContent className="p-5 space-y-4">
+            <div>
+              <h2 className="text-base font-semibold">About</h2>
+              <p className="text-sm text-muted-foreground">App information and updates</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Version</span>
+                  <Badge variant="secondary">1.2.0</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">Last updated: 2026-01-28</p>
+              </div>
+              <Button variant="link" onClick={() => toast.info('Changelog coming soon!')}>What's New</Button>
+            </div>
+          </CardContent>
         </Card>
 
-        {/* Save Button */}
-        <InlineStack align="end">
-          <Button variant="primary" onClick={handleSave}>Save Settings</Button>
-        </InlineStack>
-      </BlockStack>
+        {/* Save */}
+        <div className="flex justify-end">
+          <Button onClick={handleSave}>Save Settings</Button>
+        </div>
+      </div>
     </PageHeader>
   );
 }
