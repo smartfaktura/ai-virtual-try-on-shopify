@@ -1,274 +1,103 @@
 
 
-## Comprehensive Dashboard Overhaul: Real Data + Feature-Aware First-Run Experience
+## Dashboard Visual Overhaul: Studio Infrastructure + Luxury Feel
 
-### What This Solves
+### The Problem
 
-The current Dashboard is broken in two fundamental ways:
+Looking at the screenshot, the dashboard has three issues working against the "luxury studio" feel:
 
-1. **Fake data everywhere.** It imports `mockMetrics` and `mockJobs` from a static file, showing 234 images generated, 847 credits, 12.4s avg time, and 78% publish rate to a user who has done nothing. This destroys trust immediately after signup.
+1. **Shopify Green is still the primary color everywhere.** The sidebar active state, sidebar logo background, CTA buttons, and the user avatar all use `161 100% 25%` (green). This creates a cheap SaaS vibe instead of a studio feel.
 
-2. **No connection to actual app features.** The landing page promises "Upload -> Choose Model/Scene -> Get Visual Set" but the Dashboard shows a generic metrics grid and a table of fake jobs. There's no mention of Virtual Try-On, Brand Profiles, Workflows, or Creative Drops -- the core features the user just signed up for.
+2. **Flat, generic card layout.** Every section is a white card with identical padding, identical borders, identical text sizes. There's no visual hierarchy -- the welcome message looks the same weight as the checklist which looks the same as the workflow cards.
 
----
-
-### The New Dashboard: Two Modes
-
-The Dashboard will detect user state from the database and show one of two views:
-
-**Mode A: First-Run** (no generation jobs yet) -- A guided experience that mirrors the landing page's 3-step promise and introduces all five product hubs.
-
-**Mode B: Returning User** (has at least 1 generation job) -- Real metrics, real recent jobs, and quick-access cards for the two generation modes (Product Photos + Virtual Try-On).
+3. **No warmth or texture.** The background is a cool gray (`210 20% 98%`), borders are cool-toned, and there's no spacing rhythm that suggests a curated, premium environment.
 
 ---
 
-### Mode A: First-Run Dashboard Layout
+### What Changes
 
-```text
-+----------------------------------------------------------+
-| Welcome to brandframe.ai, [First Name]!                   |
-| You have 5 credits to start creating.    [Buy Credits]    |
-+----------------------------------------------------------+
+**Phase 1: Apply the Studio Infrastructure Color System (src/index.css)**
 
-+----------------------------------------------------------+
-| GET STARTED                                     1/3 done  |
-|                                                            |
-| [x] 1. Upload Your First Product        [Go to Products]  |
-|        Add a product image to generate visuals from.       |
-|                                                            |
-| [ ] 2. Create Your Brand Profile    [Go to Brand Profiles] |
-|        Set your visual style -- tone, lighting, colors.    |
-|                                                            |
-| [ ] 3. Generate Your First Visual Set   [Go to Workflows]  |
-|        Product Photos or Virtual Try-On -- your choice.    |
-+----------------------------------------------------------+
+This replaces the entire Shopify Green palette with the approved color system from the ChatGPT spec:
 
-+----------------------------------------------------------+
-| TWO WAYS TO CREATE                                        |
-|                                                            |
-| +------------------------+ +---------------------------+  |
-| | Product Photos         | | Virtual Try-On            |  |
-| | Studio, lifestyle,     | | Put your clothing on      |  |
-| | editorial shots for    | | diverse AI models with    |  |
-| | any product type.      | | any pose and environment. |  |
-| |                        | |                           |  |
-| | 1-2 credits/image      | | 3 credits/image           |  |
-| | [Start Generating]     | | [Try It]                  |  |
-| +------------------------+ +---------------------------+  |
-+----------------------------------------------------------+
+| Token | Current (Green SaaS) | New (Studio) |
+|---|---|---|
+| `--background` | `210 20% 98%` (cool gray) | `40 10% 98%` (warm stone #FAFAF9) |
+| `--foreground` | `212 14% 15%` | `222 47% 11%` (#0F172A slate-900) |
+| `--primary` | `161 100% 25%` (GREEN) | `217 33% 17%` (#1E293B dark blue) |
+| `--ring` | `161 100% 25%` (green) | `217 33% 17%` (brand blue) |
+| `--secondary` | `210 14% 95%` | `40 7% 94%` (#F1F1EF warm) |
+| `--muted` | `210 14% 95%` | `40 7% 94%` |
+| `--muted-foreground` | `212 10% 45%` | `215 16% 47%` (#475569) |
+| `--border` | `210 14% 89%` | `40 6% 88%` (warm neutral) |
+| `--destructive` | `0 72% 51%` | `0 72% 35%` (#991B1B deeper) |
+| `--status-success` | `161 60% 35%` (green) | `215 25% 27%` (#334155 dark slate) |
+| `--status-warning` | `40 85% 50%` | `19 83% 34%` (#9A3412) |
+| `--surface-selected` | `161 70% 95%` (green tint) | `220 29% 92%` (#E8EBF1) |
+| `--sidebar-background` | `212 14% 12%` | `222 47% 11%` (#0F172A deepened) |
+| `--sidebar-primary` | `161 100% 45%` (green) | `210 17% 70%` (muted steel) |
+| `--sidebar-ring` | `161 100% 45%` | `217 33% 17%` |
+| `--accent-highlight` | `161 100% 25%` | `217 33% 17%` |
 
-+----------------------------------------------------------+
-| EXPLORE WORKFLOWS                                         |
-| 6 cards: Ad Refresh (20), Product Listing (10),           |
-|   Website Hero (6), Lifestyle (10), On-Model (10),        |
-|   Social Pack (12)                                        |
-+----------------------------------------------------------+
-```
+Also updates dark mode block and removes all "Shopify Polaris" / "Shopify Green" comments. Updates status badge classes from `bg-green-*` to `bg-slate-*`.
 
-Each checklist step shows a live checkmark based on real database counts:
-- Step 1 checks: `user_products` count > 0
-- Step 2 checks: `brand_profiles` count > 0
-- Step 3 checks: `generation_jobs` count > 0
+**Phase 2: Remove Shopify color group from Tailwind config (tailwind.config.ts)**
 
-The "Two Ways to Create" section directly reflects the app's dual generation capability: standard product photography (using `generate-product` edge function) and Virtual Try-On (using `generate-tryon` edge function for clothing). This matches what the landing page promises in Step 2.
+Remove the entire `shopify: { green, blue, purple, yellow, orange }` color block since those CSS variables no longer exist.
 
----
+**Phase 3: Dashboard Layout Refinements (src/pages/Dashboard.tsx)**
 
-### Mode B: Returning User Dashboard Layout
+Transform the flat card stack into a layered studio hierarchy:
 
-```text
-+----------------------------------------------------------+
-| [Low Credits Banner - if applicable]                      |
-+----------------------------------------------------------+
+**First-Run Dashboard changes:**
+- Welcome section: Remove the Card wrapper. Instead, render a full-width welcome block with larger typography (text-2xl for name, tracking-tight), the credit count as a subtle pill, and the "Buy Credits" button styled as a minimal outlined link. This creates a breathing, premium opening.
+- Onboarding checklist: Keep the Card wrapper but add a subtle left border accent (`border-l-2 border-primary`) on incomplete steps to draw the eye down the path.
+- "Two Ways to Create" section heading: Change from `text-base` to `text-lg` with `tracking-tight` for more weight.
+- Workflow grid: Add a subtle muted background band behind the workflow section to create depth separation.
 
-+----------------------------------------------------------+
-| Metrics Row (4 cards, all real data)                      |
-|                                                            |
-| Images Generated | Credits    | Products   | Active       |
-| [count from DB]  | [from DB]  | [from DB]  | Schedules    |
-| last 30 days     | available  | in library | [from DB]    |
-+----------------------------------------------------------+
+**Returning User Dashboard changes:**
+- MetricCards: No structural change but the color shift (green to dark blue) automatically gives them a more serious tone.
+- Quick Create section heading: Same typography upgrade.
 
-+----------------------------------------------------------+
-| QUICK CREATE                                              |
-|                                                            |
-| +------------------------+ +---------------------------+  |
-| | Product Photos         | | Virtual Try-On            |  |
-| | For any product type.  | | For clothing products.    |  |
-| | [Generate]             | | [Try On]                  |  |
-| +------------------------+ +---------------------------+  |
-+----------------------------------------------------------+
+**Phase 4: Onboarding Checklist Polish (src/components/app/OnboardingChecklist.tsx)**
 
-+----------------------------------------------------------+
-| RECENT JOBS                               [View all]      |
-| [Real jobs from generation_jobs table]                    |
-| Product | Workflow | Status | Credits | Date | Actions    |
-+----------------------------------------------------------+
+- Add step number styling: the `01`, `02`, `03` numbers become larger (`text-sm` with `font-semibold`) using the primary color to create a visual anchor.
+- Completed steps get a softer checkmark treatment: instead of `text-primary` (which was green, now dark blue), use a more subtle completion indicator.
+- Add a thin progress bar at the top of the card showing completion (0/3, 1/3, etc.) as a slim `bg-primary` bar.
 
-+----------------------------------------------------------+
-| UPCOMING DROPS                                            |
-| [Next scheduled creative drop, if any]                    |
-| "Monthly Refresh" -- Next run: Feb 15    [View Schedules] |
-+----------------------------------------------------------+
-```
+**Phase 5: Generation Mode Cards Polish (src/components/app/GenerationModeCards.tsx)**
 
-Key differences from current Dashboard:
-- **Images Generated**: Real count from `generation_jobs` where `status = 'completed'` and `created_at > 30 days ago`
-- **Credits Remaining**: Real balance from `profiles.credits_balance` (not mock 847)
-- **Products in Library**: Real count from `user_products`
-- **Active Schedules**: Real count from `creative_schedules` where `active = true`
-- **Recent Jobs**: Real data from `generation_jobs` joined with `user_products` and `workflows`
-- **Upcoming Drops**: Real data from `creative_schedules` showing next run date
+- Icon containers: Change from `bg-secondary` (flat gray) to a more refined `bg-primary/5 border border-primary/10` for a subtle branded tint.
+- Add a thin top border on each card in the primary color (`border-t-2 border-primary`) for visual anchoring.
+- Credit cost text: Style as a discrete pill (`bg-muted rounded-full px-2 py-0.5`) instead of inline text.
+
+**Phase 6: Fix Hardcoded Green References (3 files)**
+
+1. `src/components/app/StatusBadge.tsx` -- Change `bg-green-100 text-green-800` to `bg-slate-100 text-slate-800`
+2. `src/components/app/CreditIndicator.tsx` -- Change `text-yellow-600` and `bg-yellow-500/10 border-yellow-500/30` to use the new warning tokens: `text-amber-800` and `bg-amber-900/10 border-amber-900/20`
+3. `src/components/app/BulkProgressTracker.tsx` -- Change any `bg-green-*` to `bg-slate-*`
 
 ---
 
-### Files to Create (3 new)
-
-**1. `src/components/app/OnboardingChecklist.tsx`**
-
-A 3-step vertical checklist with:
-- Live completion state per step (green checkmark when done)
-- Progress indicator ("1 of 3 complete")
-- Each step is a clickable card with navigation button
-- Steps: Upload Product, Create Brand Profile, Generate Visual Set
-- Uses Card, Button, Badge from existing UI components
-
-**2. `src/components/app/GenerationModeCards.tsx`**
-
-Two side-by-side cards introducing the dual generation capability:
-- **Product Photos**: Icon, description, credit cost (1-2/image), CTA navigates to `/app/generate`
-- **Virtual Try-On**: Icon, description, credit cost (3/image), CTA navigates to `/app/generate` with try-on mode hint
-- Shows "Try-On" badge on the second card (matching WorkflowCard pattern)
-- Compact layout -- not overwhelming for new users
-
-**3. `src/components/app/UpcomingDropsCard.tsx`**
-
-A compact card that:
-- Fetches the next active `creative_schedule` from the database
-- Shows schedule name, frequency, and next run date
-- Links to `/app/creative-drops`
-- Shows "No schedules yet" with a CTA to create one if empty
-
----
-
-### Files to Modify (2 existing)
-
-**4. `src/pages/Dashboard.tsx` -- Major rewrite**
-
-Current state: Imports `mockMetrics` and `mockJobs`, renders static fake data.
-
-New implementation:
-- Fetch real data using `@tanstack/react-query`:
-  - `profiles` table: `first_name`, `credits_balance`
-  - `user_products`: count
-  - `brand_profiles`: count
-  - `generation_jobs`: recent 5 (with all fields), plus 30-day completed count
-  - `creative_schedules`: count of active schedules
-  - `workflows`: list for the workflow preview grid
-- Detect first-run: `isNewUser = (jobCount === 0)`
-- Render Mode A (first-run) or Mode B (returning) based on detection
-- Remove all imports from `@/data/mockData`
-- Keep existing `JobDetailModal`, `StatusBadge`, `LowCreditsBanner` usage
-- The Recent Jobs table changes: show "Workflow" column instead of "Template" (since workflows are the primary abstraction now), and join with `user_products` for the product thumbnail/title
-
-**5. `src/contexts/CreditContext.tsx` -- Connect to real data**
-
-Current state: Initializes balance from `mockShop.creditsBalance` (hardcoded 847).
-
-New implementation:
-- Fetch `credits_balance` from `profiles` table on mount (using the authenticated user's ID)
-- Keep the same `CreditContext` interface (balance, isLow, isCritical, isEmpty, deductCredits, etc.)
-- After `deductCredits()`, update the database via Supabase
-- After `addCredits()`, update the database
-- Remove import of `mockShop` from `@/data/mockData`
-- This change ensures the credit balance shown everywhere (sidebar `CreditIndicator`, `LowCreditsBanner`, dashboard metrics) reflects the real database value
-
----
-
-### Database Queries
-
-All queries use existing tables with RLS already enabled. No schema changes needed.
-
-```typescript
-// User profile (name + credits)
-const { data: profile } = await supabase
-  .from('profiles')
-  .select('first_name, credits_balance')
-  .eq('user_id', user.id)
-  .single();
-
-// Product count
-const { count: productCount } = await supabase
-  .from('user_products')
-  .select('*', { count: 'exact', head: true });
-
-// Brand profile count
-const { count: brandProfileCount } = await supabase
-  .from('brand_profiles')
-  .select('*', { count: 'exact', head: true });
-
-// Recent jobs (5 most recent)
-const { data: recentJobs } = await supabase
-  .from('generation_jobs')
-  .select('*, user_products(title, image_url), workflows(name)')
-  .order('created_at', { ascending: false })
-  .limit(5);
-
-// 30-day generation count
-const thirtyDaysAgo = new Date();
-thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-const { count: generatedCount } = await supabase
-  .from('generation_jobs')
-  .select('*', { count: 'exact', head: true })
-  .eq('status', 'completed')
-  .gte('created_at', thirtyDaysAgo.toISOString());
-
-// Active schedule count
-const { count: scheduleCount } = await supabase
-  .from('creative_schedules')
-  .select('*', { count: 'exact', head: true })
-  .eq('active', true);
-
-// Workflows (for preview grid)
-const { data: workflows } = await supabase
-  .from('workflows')
-  .select('*')
-  .order('name');
-```
-
----
-
-### What Gets Removed
-
-- All `mockMetrics` and `mockJobs` references in Dashboard
-- `mockShop.creditsBalance` initialization in CreditContext
-- Fake trend percentages (12% up, 15% down)
-- Hardcoded "234 / 300 images" usage bar
-- "Publish Rate" metric (deprecated feature)
-- "Avg. Generation Time" metric (not tracked in DB; replaced by "Products in Library")
-
----
-
-### What Stays the Same
-
-- `MetricCard` component (reused with real data)
-- `StatusBadge` component (reused for job statuses)
-- `EmptyStateCard` component (reused when no jobs in returning user mode)
-- `LowCreditsBanner` (shown based on real credit balance)
-- `JobDetailModal` (opens when clicking View on a job)
-- `AppShell` sidebar navigation (unchanged)
-- `PageHeader` wrapper (unchanged)
-- Existing workflows in the database (6 system workflows already seeded)
-
----
-
-### Summary of All Changes
+### Files Modified (8 total)
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/pages/Dashboard.tsx` | Rewrite | Real data, two-mode layout, remove mocks |
-| `src/contexts/CreditContext.tsx` | Modify | Real credits from DB, remove mockShop |
-| `src/components/app/OnboardingChecklist.tsx` | Create | 3-step guided setup card |
-| `src/components/app/GenerationModeCards.tsx` | Create | Product Photos vs Try-On introduction |
-| `src/components/app/UpcomingDropsCard.tsx` | Create | Next scheduled drop preview |
+| `src/index.css` | Edit | Full CSS variable replacement: green to Control Blue, warm stone backgrounds, studio-grade status colors |
+| `tailwind.config.ts` | Edit | Remove `shopify` color group |
+| `src/pages/Dashboard.tsx` | Edit | Layout refinements: breathing welcome block, section typography, visual hierarchy |
+| `src/components/app/OnboardingChecklist.tsx` | Edit | Progress bar, step number styling, completion polish |
+| `src/components/app/GenerationModeCards.tsx` | Edit | Branded icon containers, top border accent, credit cost pills |
+| `src/components/app/StatusBadge.tsx` | Edit | Green to slate for success status |
+| `src/components/app/CreditIndicator.tsx` | Edit | Yellow to amber-brown for warning state |
+| `src/components/app/BulkProgressTracker.tsx` | Edit | Green to slate for completed items |
+
+---
+
+### What This Achieves
+
+- **No more green anywhere.** The entire app shifts to a warm neutral base with a single dark-blue accent.
+- **Warm stone backgrounds** (#FAFAF9) instead of cool clinical gray -- feels like a photo studio, not a SaaS admin.
+- **Visual hierarchy in the dashboard** -- the welcome area breathes, the checklist draws you through steps, the workflow grid has depth.
+- **Luxury restraint** -- fewer borders, more typography weight, branded accents used sparingly. Product visuals remain the most colorful elements.
 
