@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Package, Palette, Layers, Calendar, Image, Settings, LogOut, Menu, X, ChevronDown } from 'lucide-react';
+import { Home, Package, Palette, Layers, Calendar, Image, Settings, LogOut, Menu, X, ChevronDown, Sparkles } from 'lucide-react';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
