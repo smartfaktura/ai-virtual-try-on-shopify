@@ -76,7 +76,10 @@ function MarqueeRow({ items, direction = 'left' }: { items: EnvironmentCard[]; d
   const doubled = [...items, ...items];
 
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden relative">
+      {/* Gradient fade edges */}
+      <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, hsl(var(--background)), transparent)' }} />
+      <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, hsl(var(--background)), transparent)' }} />
       <div ref={scrollRef} className="flex gap-4 will-change-transform" style={{ width: 'max-content', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
         {doubled.map((env, i) => (
           <div key={`${env.name}-${i}`} className="flex flex-col items-center gap-2 flex-shrink-0">
