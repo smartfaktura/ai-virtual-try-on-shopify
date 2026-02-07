@@ -1,19 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
-  BlockStack,
-  InlineStack,
-  Card,
-  Text,
-  Button,
-  DataTable,
-  TextField,
   Select,
-  Thumbnail,
-  InlineGrid,
-  Icon,
-} from '@shopify/polaris';
-import { SearchIcon } from '@shopify/polaris-icons';
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/app/PageHeader';
 import { StatusBadge } from '@/components/app/StatusBadge';
@@ -27,13 +25,11 @@ export default function Jobs() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  
-  // Publish modal state
+
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [selectedJobForPublish, setSelectedJobForPublish] = useState<GenerationJob | null>(null);
   const [selectedImageUrlsForPublish, setSelectedImageUrlsForPublish] = useState<string[]>([]);
-  
-  // Job detail modal state
+
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedJobForDetail, setSelectedJobForDetail] = useState<GenerationJob | null>(null);
 
@@ -44,7 +40,6 @@ export default function Jobs() {
 
   const handlePublishClick = (job: GenerationJob, specificUrls?: string[]) => {
     setSelectedJobForPublish(job);
-    // If specific URLs provided (from Job Detail modal), use those; otherwise use all unpublished
     const urlsToPublish = specificUrls || job.results.filter(r => !r.publishedToShopify).map(r => r.imageUrl);
     setSelectedImageUrlsForPublish(urlsToPublish);
     setPublishModalOpen(true);
@@ -59,7 +54,6 @@ export default function Jobs() {
     setSelectedImageUrlsForPublish([]);
   };
 
-  // Find matching product for job
   const getProductForJob = (job: GenerationJob): Product | null => {
     return mockProducts.find(p => p.id === job.productId) || null;
   };
@@ -90,62 +84,11 @@ export default function Jobs() {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const rows = filteredJobs.map(job => {
-    const unpublishedCount = job.results.filter(r => !r.publishedToShopify).length;
-    const publishedCount = job.results.filter(r => r.publishedToShopify).length;
-    
-    return [
-      // Product & Template combined
-      <InlineStack key={job.jobId} gap="300" blockAlign="center" wrap={false}>
-      <Thumbnail
-          source={job.productSnapshot.images[0]?.url || '/placeholder.svg'}
-          alt={job.productSnapshot.title}
-          size="small"
-        />
-        <BlockStack gap="100">
-          <Text as="span" variant="bodyMd" fontWeight="semibold" truncate>
-            {job.productSnapshot.title}
-          </Text>
-          <Text as="span" variant="bodySm" tone="subdued">
-            {job.templateSnapshot.name}
-          </Text>
-        </BlockStack>
-      </InlineStack>,
-      // Status
-      <StatusBadge key={`status-${job.jobId}`} status={job.status} />,
-      // Details - simplified with credits
-      <Text key={`details-${job.jobId}`} as="span" variant="bodySm" tone="subdued">
-        {job.requestedCount} × {job.ratio} • {job.creditsUsed > 0 ? `${job.creditsUsed} cr` : '—'}
-        {publishedCount > 0 && ` • ${publishedCount}/${job.results.length} ✓`}
-      </Text>,
-      // Date - compact
-      <Text key={`date-${job.jobId}`} as="span" variant="bodySm" tone="subdued">
-        {formatDate(job.createdAt)}
-      </Text>,
-      // Actions - simplified
-      <InlineStack key={`actions-${job.jobId}`} gap="100">
-        <Button size="slim" onClick={() => handleViewJob(job)}>
-          View
-        </Button>
-        {job.status === 'failed' && (
-          <Button size="slim" variant="primary" onClick={() => navigate('/app/generate')}>
-            Retry
-          </Button>
-        )}
-        {job.status === 'completed' && unpublishedCount > 0 && (
-          <Button size="slim" variant="primary" onClick={() => handlePublishClick(job)}>
-            {`Download ${unpublishedCount}`}
-          </Button>
-        )}
-      </InlineStack>,
-    ];
-  });
-
   return (
     <PageHeader title="Jobs">
-      <BlockStack gap="400">
+      <div className="space-y-4">
         {/* Status summary cards */}
-        <InlineGrid columns={{ xs: 2, md: 5 }} gap="400">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
             { key: 'all', label: 'All Jobs', count: statusCounts.all },
             { key: 'queued', label: 'Queued', count: statusCounts.queued },
@@ -153,90 +96,130 @@ export default function Jobs() {
             { key: 'completed', label: 'Completed', count: statusCounts.completed },
             { key: 'failed', label: 'Failed', count: statusCounts.failed },
           ].map(item => (
-            <Card key={item.key}>
-              <div
-                className={`cursor-pointer ${statusFilter === item.key ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
-                onClick={() => setStatusFilter(item.key as JobStatus | 'all')}
-              >
-                <BlockStack gap="100" inlineAlign="center">
-                  <Text as="p" variant="headingLg" fontWeight="bold">
-                    {item.count}
-                  </Text>
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    {item.label}
-                  </Text>
-                </BlockStack>
-              </div>
+            <Card
+              key={item.key}
+              className={`cursor-pointer transition-opacity ${statusFilter === item.key ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
+              onClick={() => setStatusFilter(item.key as JobStatus | 'all')}
+            >
+              <CardContent className="p-4 text-center space-y-1">
+                <p className="text-2xl font-bold">{item.count}</p>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </CardContent>
             </Card>
           ))}
-        </InlineGrid>
+        </div>
 
         {/* Filters and table */}
         <Card>
-          <BlockStack gap="400">
-            <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
-              <TextField
-                label="Search"
-                labelHidden
-                placeholder="Search by product or template..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-                prefix={<Icon source={SearchIcon} />}
-                autoComplete="off"
-              />
-              <Select
-                label="Status"
-                labelHidden
-                options={[
-                  { label: 'All statuses', value: 'all' },
-                  { label: 'Queued', value: 'queued' },
-                  { label: 'Generating', value: 'generating' },
-                  { label: 'Completed', value: 'completed' },
-                  { label: 'Failed', value: 'failed' },
-                ]}
-                value={statusFilter}
-                onChange={(v) => setStatusFilter(v as JobStatus | 'all')}
-              />
-              <Select
-                label="Category"
-                labelHidden
-                options={[
-                  { label: 'All categories', value: 'all' },
-                  ...Object.entries(categoryLabels).map(([key, label]) => ({
-                    label,
-                    value: key,
-                  })),
-                ]}
-                value={categoryFilter}
-                onChange={setCategoryFilter}
-              />
-            </InlineGrid>
+          <CardContent className="p-5 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by product or template..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={v => setStatusFilter(v as JobStatus | 'all')}>
+                <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="queued">Queued</SelectItem>
+                  <SelectItem value="generating">Generating</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {Object.entries(categoryLabels).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <DataTable
-              columnContentTypes={['text', 'text', 'text', 'text', 'text']}
-              headings={['Product & Template', 'Status', 'Details', 'Date', 'Actions']}
-              rows={rows}
-            />
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product & Template</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Details</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredJobs.map(job => {
+                    const unpublishedCount = job.results.filter(r => !r.publishedToShopify).length;
+                    const publishedCount = job.results.filter(r => r.publishedToShopify).length;
+                    return (
+                      <TableRow key={job.jobId}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                              <img
+                                src={job.productSnapshot.images[0]?.url || '/placeholder.svg'}
+                                alt={job.productSnapshot.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm truncate max-w-[180px]">{job.productSnapshot.title}</p>
+                              <p className="text-xs text-muted-foreground">{job.templateSnapshot.name}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell><StatusBadge status={job.status} /></TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {job.requestedCount} × {job.ratio} • {job.creditsUsed > 0 ? `${job.creditsUsed} cr` : '—'}
+                          {publishedCount > 0 && ` • ${publishedCount}/${job.results.length} ✓`}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{formatDate(job.createdAt)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button size="sm" variant="outline" onClick={() => handleViewJob(job)}>View</Button>
+                            {job.status === 'failed' && (
+                              <Button size="sm" onClick={() => navigate('/app/generate')}>Retry</Button>
+                            )}
+                            {job.status === 'completed' && unpublishedCount > 0 && (
+                              <Button size="sm" onClick={() => handlePublishClick(job)}>
+                                Download {unpublishedCount}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
 
             {filteredJobs.length === 0 && (
-              <BlockStack gap="200" inlineAlign="center">
-                <Text as="p" variant="bodyMd" tone="subdued">
-                  No jobs found matching your filters.
-                </Text>
-                <Button onClick={() => {
-                  setSearchQuery('');
-                  setStatusFilter('all');
-                  setCategoryFilter('all');
-                }}>
+              <div className="text-center py-8 space-y-2">
+                <p className="text-sm text-muted-foreground">No jobs found matching your filters.</p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter('all');
+                    setCategoryFilter('all');
+                  }}
+                >
                   Clear filters
                 </Button>
-              </BlockStack>
+              </div>
             )}
-          </BlockStack>
+          </CardContent>
         </Card>
-      </BlockStack>
+      </div>
 
-      {/* Publish Modal with product context */}
       <PublishModal
         open={publishModalOpen}
         onClose={() => {
@@ -250,7 +233,6 @@ export default function Jobs() {
         existingImages={selectedJobForPublish?.productSnapshot.images || []}
       />
 
-      {/* Job Detail Modal */}
       <JobDetailModal
         open={detailModalOpen}
         onClose={() => {

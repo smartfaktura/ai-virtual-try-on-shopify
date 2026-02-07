@@ -1,37 +1,21 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import {
-  BlockStack,
-  InlineStack,
-  Card,
-  Text,
-  Button,
-  Modal,
-  TextField,
-  Thumbnail,
-  Badge,
-  Checkbox,
   Select,
-  InlineGrid,
-  Divider,
-  Banner,
-  ProgressBar,
-  Collapsible,
-  Icon,
-} from '@shopify/polaris';
-import {
-  SearchIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  ImageIcon,
-  CheckCircleIcon,
-  ArrowDownIcon,
-  RefreshIcon,
-  MaximizeIcon,
-  XIcon,
-  PersonIcon,
-  ListBulletedIcon,
-} from '@shopify/polaris-icons';
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { PageHeader } from '@/components/app/PageHeader';
 import { TemplatePreviewCard, getTemplateImage } from '@/components/app/TemplatePreviewCard';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
@@ -58,8 +42,7 @@ import { UploadSourceCard } from '@/components/app/UploadSourceCard';
 import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal';
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { detectProductCategory } from '@/lib/categoryUtils';
-import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses, genderLabels } from '@/data/mockData';
+import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
 
@@ -70,56 +53,48 @@ export default function Generate() {
   const [searchParams] = useSearchParams();
   const initialTemplateId = searchParams.get('template');
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost } = useCredits();
-  
+
   const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
-  
-  // Source type for generation
+
   const [sourceType, setSourceType] = useState<GenerationSourceType>('product');
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
-  
-  // File upload hook
+
   const { upload: uploadFile, isUploading } = useFileUpload();
-  
-  // Selections
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedSourceImages, setSelectedSourceImages] = useState<Set<string>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
     initialTemplateId ? mockTemplates.find(t => t.templateId === initialTemplateId) || null : null
   );
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
-  
-  // Virtual Try-On state
+
   const [generationMode, setGenerationMode] = useState<GenerationMode>('product-only');
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedPose, setSelectedPose] = useState<TryOnPose | null>(null);
   const [modelGenderFilter, setModelGenderFilter] = useState<ModelGender | 'all'>('all');
   const [modelBodyTypeFilter, setModelBodyTypeFilter] = useState<ModelBodyType | 'all'>('all');
   const [modelAgeFilter, setModelAgeFilter] = useState<ModelAgeRange | 'all'>('all');
-  
-  // Brand settings - expanded by default on first use
+
   const [brandKitOpen, setBrandKitOpen] = useState(true);
   const [brandTone, setBrandTone] = useState<BrandTone>('clean');
   const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('studio');
   const [negatives, setNegatives] = useState<string[]>(['text overlays', 'busy backgrounds']);
   const [consistencyEnabled, setConsistencyEnabled] = useState(true);
-  
-  // Generation settings
+
   const [imageCount, setImageCount] = useState<'1' | '4' | '8'>('4');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [quality, setQuality] = useState<ImageQuality>('standard');
   const [preserveAccuracy, setPreserveAccuracy] = useState(true);
-  
-  // Generating state
+
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedForPublish, setSelectedForPublish] = useState<Set<number>>(new Set());
-  
-  // Modals
+
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [tryOnConfirmModalOpen, setTryOnConfirmModalOpen] = useState(false);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
@@ -127,10 +102,7 @@ export default function Generate() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
 
-  // Virtual Try-On generation hook
   const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
-  
-  // Product-only generation hook
   const { generate: generateProduct, isLoading: isProductGenerating, progress: productProgress } = useGenerateProduct();
 
   const categories: Array<{ id: TemplateCategory | 'all'; label: string }> = [
@@ -154,7 +126,6 @@ export default function Generate() {
     p.vendor.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filter models by gender, body type, and age
   const filteredModels = mockModels.filter(m => {
     if (modelGenderFilter !== 'all' && m.gender !== modelGenderFilter) return false;
     if (modelBodyTypeFilter !== 'all' && m.bodyType !== modelBodyTypeFilter) return false;
@@ -162,118 +133,67 @@ export default function Generate() {
     return true;
   });
 
-  // Group poses by category
   const posesByCategory = mockTryOnPoses.reduce((acc, pose) => {
     if (!acc[pose.category]) acc[pose.category] = [];
     acc[pose.category].push(pose);
     return acc;
   }, {} as Record<PoseCategory, TryOnPose[]>);
 
-  // Create popular combinations
   const popularCombinations = createPopularCombinations(mockModels, mockTryOnPoses);
 
-  // Check if product is clothing-related
   const isClothingProduct = (product: Product | null) => {
     if (!product) return false;
     const productType = product.productType.toLowerCase();
-    const clothingKeywords = [
-      'sweater', 'shirt', 'apparel', 'dress', 'jacket', 'pants', 'jeans', 'coat', 
-      'blouse', 'skirt', 'suit', 'hoodie', 't-shirt', 'clothing',
-      'legging', 'bra', 'sports bra', 'tank', 'jogger', 'shorts', 'top', 
-      'long sleeve', 'crop', 'bodysuit', 'romper', 'jumpsuit', 'sweatshirt',
-      'pullover', 'cardigan', 'vest', 'active', 'athletic', 'yoga', 'workout'
-    ];
-    return clothingKeywords.some(kw => productType.includes(kw)) || 
-           product.tags.some(tag => clothingKeywords.some(kw => tag.toLowerCase().includes(kw)));
+    const clothingKeywords = ['sweater', 'shirt', 'apparel', 'dress', 'jacket', 'pants', 'jeans', 'coat', 'blouse', 'skirt', 'suit', 'hoodie', 't-shirt', 'clothing', 'legging', 'bra', 'sports bra', 'tank', 'jogger', 'shorts', 'top', 'long sleeve', 'crop', 'bodysuit', 'romper', 'jumpsuit', 'sweatshirt', 'pullover', 'cardigan', 'vest', 'active', 'athletic', 'yoga', 'workout'];
+    return clothingKeywords.some(kw => productType.includes(kw)) ||
+      product.tags.some(tag => clothingKeywords.some(kw => tag.toLowerCase().includes(kw)));
   };
 
-  // Detect product category for template recommendations
   const detectProductCategory = (product: Product | null): TemplateCategory | null => {
     if (!product) return null;
     const type = product.productType.toLowerCase();
     const tags = product.tags.map(t => t.toLowerCase()).join(' ');
     const combined = `${type} ${tags}`;
-
-    // Cosmetics keywords
-    const cosmeticsKeywords = ['serum', 'moisturizer', 'lipstick', 'foundation', 'mascara', 'eyeshadow', 
-      'cleanser', 'toner', 'essence', 'sunscreen', 'primer', 'concealer', 'blush', 'bronzer', 
-      'highlighter', 'skincare', 'beauty', 'makeup', 'cream', 'treatment', 'powder', 'lip'];
+    const cosmeticsKeywords = ['serum', 'moisturizer', 'lipstick', 'foundation', 'mascara', 'skincare', 'beauty', 'makeup', 'cream', 'treatment', 'powder', 'lip'];
     if (cosmeticsKeywords.some(kw => combined.includes(kw))) return 'cosmetics';
-
-    // Food keywords
-    const foodKeywords = ['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'jam', 'sauce', 
-      'snack', 'bar', 'cookie', 'candy', 'nuts', 'dried fruit', 'beverage', 'juice', 'food', 
-      'organic', 'artisan', 'spread', 'confectionery'];
+    const foodKeywords = ['cereal', 'granola', 'chocolate', 'coffee', 'tea', 'honey', 'snack', 'beverage', 'juice', 'food', 'organic'];
     if (foodKeywords.some(kw => combined.includes(kw))) return 'food';
-
-    // Home keywords
-    const homeKeywords = ['candle', 'vase', 'planter', 'pillow', 'blanket', 'lamp', 'clock', 'frame', 
-      'mirror', 'rug', 'curtain', 'towel', 'mug', 'bowl', 'plate', 'decor', 'home', 'interior', 
-      'kitchen', 'lighting', 'textile', 'carafe', 'ceramic'];
+    const homeKeywords = ['candle', 'vase', 'planter', 'pillow', 'lamp', 'decor', 'home', 'interior', 'carafe', 'ceramic'];
     if (homeKeywords.some(kw => combined.includes(kw))) return 'home';
-
-    // Supplements keywords
-    const supplementKeywords = ['vitamin', 'supplement', 'capsule', 'powder', 'gummy', 'protein', 
-      'collagen', 'probiotic', 'omega', 'mineral', 'herb', 'extract', 'wellness', 'health', 
-      'greens', 'superfood', 'sleep', 'energy'];
+    const supplementKeywords = ['vitamin', 'supplement', 'capsule', 'protein', 'collagen', 'omega', 'wellness', 'greens', 'superfood'];
     if (supplementKeywords.some(kw => combined.includes(kw))) return 'supplements';
-
-    // Clothing check
     if (isClothingProduct(product)) return 'clothing';
-
     return null;
   };
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
     setProductPickerOpen(false);
-    // Auto-select first image as source by default
     if (product.images.length > 0) {
       setSelectedSourceImages(new Set([product.images[0].id]));
     } else {
       setSelectedSourceImages(new Set());
     }
-    
-    // Auto-recommend category based on detected product type
     const detectedCategory = detectProductCategory(product);
-    if (detectedCategory) {
-      setSelectedCategory(detectedCategory);
-    }
-    
-    // If clothing product, show mode selection first
-    if (isClothingProduct(product)) {
-      setCurrentStep('mode');
-    } else {
-      setCurrentStep('template');
-    }
+    if (detectedCategory) setSelectedCategory(detectedCategory);
+    if (isClothingProduct(product)) setCurrentStep('mode');
+    else setCurrentStep('template');
   };
 
   const toggleSourceImage = (imageId: string) => {
     setSelectedSourceImages(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(imageId)) {
-        // Don't allow deselecting if it's the only one
-        if (newSet.size > 1) {
-          newSet.delete(imageId);
-        }
-      } else {
-        newSet.add(imageId);
-      }
+      if (newSet.has(imageId)) { if (newSet.size > 1) newSet.delete(imageId); }
+      else newSet.add(imageId);
       return newSet;
     });
   };
 
   const selectAllSourceImages = () => {
-    if (selectedProduct) {
-      setSelectedSourceImages(new Set(selectedProduct.images.map(img => img.id)));
-    }
+    if (selectedProduct) setSelectedSourceImages(new Set(selectedProduct.images.map(img => img.id)));
   };
-
   const clearSourceImages = () => {
-    if (selectedProduct && selectedProduct.images.length > 0) {
-      // Keep at least the first image selected
-      setSelectedSourceImages(new Set([selectedProduct.images[0].id]));
-    }
+    if (selectedProduct?.images.length) setSelectedSourceImages(new Set([selectedProduct.images[0].id]));
   };
 
   const handleSelectTemplate = (template: Template) => {
@@ -283,1795 +203,754 @@ export default function Generate() {
     toast.success(`"${template.name}" selected! Click Continue when ready.`);
   };
 
-  const handleSelectModel = (model: ModelProfile) => {
-    setSelectedModel(model);
-    toast.success(`Model "${model.name}" selected!`);
-  };
-
-  const handleSelectPose = (pose: TryOnPose) => {
-    setSelectedPose(pose);
-    toast.success(`Pose "${pose.name}" selected!`);
-  };
-
-  const handleCancelGeneration = () => {
-    setCurrentStep('settings');
-    setGeneratingProgress(0);
-    toast.info('Generation cancelled');
-  };
+  const handleSelectModel = (model: ModelProfile) => { setSelectedModel(model); toast.success(`Model "${model.name}" selected!`); };
+  const handleSelectPose = (pose: TryOnPose) => { setSelectedPose(pose); toast.success(`Pose "${pose.name}" selected!`); };
+  const handleCancelGeneration = () => { setCurrentStep('settings'); setGeneratingProgress(0); toast.info('Generation cancelled'); };
 
   const handleGenerateClick = () => {
     if (!selectedProduct) return;
-    
-    // Check credits first
-    const cost = calculateCost({ 
-      count: parseInt(imageCount), 
-      quality, 
-      mode: generationMode 
-    });
-    
-    if (balance < cost) {
-      setNoCreditsModalOpen(true);
-      return;
-    }
-    
-    // Virtual Try-On mode
+    const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode });
+    if (balance < cost) { setNoCreditsModalOpen(true); return; }
     if (generationMode === 'virtual-try-on') {
-      if (!selectedModel || !selectedPose) {
-        toast.error('Please select a model and pose first');
-        return;
-      }
-      setTryOnConfirmModalOpen(true);
-      return;
+      if (!selectedModel || !selectedPose) { toast.error('Please select a model and pose first'); return; }
+      setTryOnConfirmModalOpen(true); return;
     }
-    
-    // Product-only mode
-    if (!selectedTemplate) {
-      toast.error('Please select a template first');
-      return;
-    }
+    if (!selectedTemplate) { toast.error('Please select a template first'); return; }
     setConfirmModalOpen(true);
   };
 
   const handleConfirmGenerate = async () => {
     if (!selectedProduct || !selectedTemplate) return;
-    
-    // Get the source image URL
     let sourceImageUrl = '';
-    
-    if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
-      sourceImageUrl = scratchUpload.uploadedUrl;
-    } else if (selectedProduct) {
+    if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) sourceImageUrl = scratchUpload.uploadedUrl;
+    else if (selectedProduct) {
       const selectedImageId = Array.from(selectedSourceImages)[0];
       const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
       sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
     }
-    
-    if (!sourceImageUrl) {
-      toast.error('No source image available');
-      return;
-    }
-    
+    if (!sourceImageUrl) { toast.error('No source image available'); return; }
     setConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
-    
     const result = await generateProduct({
-      product: selectedProduct,
-      template: selectedTemplate,
-      brandSettings: {
-        tone: brandTone,
-        backgroundStyle,
-      },
-      aspectRatio,
-      imageCount: parseInt(imageCount),
-      sourceImageUrl,
+      product: selectedProduct, template: selectedTemplate,
+      brandSettings: { tone: brandTone, backgroundStyle },
+      aspectRatio, imageCount: parseInt(imageCount), sourceImageUrl,
     });
-    
     if (result && result.images.length > 0) {
       setGeneratedImages(result.images);
       setGeneratingProgress(100);
       setCurrentStep('results');
-      
-      // Credit deduction feedback
-      const creditCost = result.generatedCount * 3;
-      toast.success(`Generated ${result.generatedCount} images! Used ${creditCost} credits.`);
-    } else {
-      // Generation failed, go back to settings
-      setCurrentStep('settings');
-    }
+      toast.success(`Generated ${result.generatedCount} images! Used ${result.generatedCount * 3} credits.`);
+    } else setCurrentStep('settings');
   };
 
-  // Virtual Try-On generation with real AI
   const handleTryOnConfirmGenerate = async () => {
     if (!selectedModel || !selectedPose) return;
-    
-    // Get the source image URL - from product or scratch upload
     let sourceImageUrl = '';
     let productData: { title: string; productType: string; description: string } | null = null;
-    
     if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
       sourceImageUrl = scratchUpload.uploadedUrl;
-      productData = {
-        title: scratchUpload.productInfo.title,
-        productType: scratchUpload.productInfo.productType,
-        description: scratchUpload.productInfo.description,
-      };
+      productData = { title: scratchUpload.productInfo.title, productType: scratchUpload.productInfo.productType, description: scratchUpload.productInfo.description };
     } else if (selectedProduct) {
       const selectedImageId = Array.from(selectedSourceImages)[0];
       const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
       sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
-      productData = {
-        title: selectedProduct.title,
-        productType: selectedProduct.productType,
-        description: selectedProduct.description,
-      };
+      productData = { title: selectedProduct.title, productType: selectedProduct.productType, description: selectedProduct.description };
     }
-    
-    if (!sourceImageUrl || !productData) {
-      toast.error('No source image available');
-      return;
-    }
-    
+    if (!sourceImageUrl || !productData) { toast.error('No source image available'); return; }
     setTryOnConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
-    
-    // Create a pseudo-product for the generation
     const pseudoProduct: Product = selectedProduct || {
-      id: 'scratch-' + Date.now(),
-      title: productData.title,
-      vendor: 'Custom Upload',
-      productType: productData.productType,
-      tags: [],
-      description: productData.description,
-      images: [{ id: 'scratch-img', url: sourceImageUrl }],
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      id: 'scratch-' + Date.now(), title: productData.title, vendor: 'Custom Upload',
+      productType: productData.productType, tags: [], description: productData.description,
+      images: [{ id: 'scratch-img', url: sourceImageUrl }], status: 'active',
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
-    
     const result = await generateTryOn({
-      product: pseudoProduct,
-      model: selectedModel,
-      pose: selectedPose,
-      aspectRatio,
-      imageCount: parseInt(imageCount),
-      sourceImageUrl,
+      product: pseudoProduct, model: selectedModel, pose: selectedPose,
+      aspectRatio, imageCount: parseInt(imageCount), sourceImageUrl,
       modelImageUrl: selectedModel.previewUrl,
     });
-    
     if (result && result.images.length > 0) {
       setGeneratedImages(result.images);
       setGeneratingProgress(100);
       setCurrentStep('results');
-      
-      // Mock credit deduction
-      const creditCost = result.generatedCount * 3;
-      toast.success(`Generated ${result.generatedCount} images! Used ${creditCost} credits.`);
-    } else {
-      // Generation failed, go back to settings
-      setCurrentStep('settings');
-    }
+      toast.success(`Generated ${result.generatedCount} images! Used ${result.generatedCount * 3} credits.`);
+    } else setCurrentStep('settings');
   };
 
   const handlePublishClick = () => {
-    if (selectedForPublish.size === 0) {
-      toast.error('Please select at least one image to download');
-      return;
-    }
-    // Download selected images
+    if (selectedForPublish.size === 0) { toast.error('Please select at least one image to download'); return; }
     selectedForPublish.forEach(idx => handleDownloadImage(idx));
     toast.success(`${selectedForPublish.size} image(s) downloaded!`);
     navigate('/app/jobs');
   };
-
-  const handlePublish = (mode: 'add' | 'replace', variantId?: string) => {
-    const count = selectedForPublish.size;
-    toast.success(`${count} image${count !== 1 ? 's' : ''} downloaded!`);
+  const handlePublish = (mode: 'add' | 'replace') => {
+    toast.success(`${selectedForPublish.size} image(s) downloaded!`);
     setPublishModalOpen(false);
     navigate('/app/jobs');
   };
-
   const toggleImageSelection = (index: number) => {
-    setSelectedForPublish(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
+    setSelectedForPublish(prev => { const s = new Set(prev); s.has(index) ? s.delete(index) : s.add(index); return s; });
   };
-
-  const handleImageClick = (index: number) => {
-    setLightboxIndex(index);
-    setLightboxOpen(true);
-  };
-
+  const handleImageClick = (index: number) => { setLightboxIndex(index); setLightboxOpen(true); };
   const handleDownloadImage = (index: number) => {
     const url = generatedImages[index];
     const link = document.createElement('a');
-    link.href = url;
-    link.download = `generated-image-${index + 1}.jpg`;
-    link.click();
+    link.href = url; link.download = `generated-image-${index + 1}.jpg`; link.click();
     toast.success('Image downloaded');
   };
-
-  const handleDownloadAll = () => {
-    generatedImages.forEach((_, idx) => handleDownloadImage(idx));
-    toast.success(`${generatedImages.length} images downloaded`);
-  };
-
-  const handleRegenerate = (index: number) => {
-    toast.info('Regenerating variation... (this would cost 1 credit)');
-    // In a real app, this would call the API with the same seed + variation
-  };
+  const handleDownloadAll = () => { generatedImages.forEach((_, idx) => handleDownloadImage(idx)); toast.success(`${generatedImages.length} images downloaded`); };
+  const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 
   const getStepNumber = () => {
     if (generationMode === 'virtual-try-on') {
-      switch (currentStep) {
-        case 'source': return 1;
-        case 'product': return 1;
-        case 'upload': return 1;
-        case 'mode': return 1;
-        case 'model': return 2;
-        case 'pose': return 3;
-        case 'settings': return 4;
-        case 'generating': return 5;
-        case 'results': return 5;
-        default: return 1;
-      }
-    } else {
-      switch (currentStep) {
-        case 'source': return 1;
-        case 'product': return 1;
-        case 'upload': return 1;
-        case 'mode': return 1;
-        case 'template': return 2;
-        case 'settings': return 3;
-        case 'generating': return 4;
-        case 'results': return 4;
-        default: return 1;
-      }
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, mode: 1, model: 2, pose: 3, settings: 4, generating: 5, results: 5 };
+      return map[currentStep] || 1;
     }
+    const map: Record<string, number> = { source: 1, product: 1, upload: 1, mode: 1, template: 2, settings: 3, generating: 4, results: 4 };
+    return map[currentStep] || 1;
   };
 
   const getSteps = () => {
     if (generationMode === 'virtual-try-on') {
       return [
-        { name: sourceType === 'scratch' ? 'Source' : 'Product', desc: sourceType === 'scratch' ? 'Upload your image' : 'Pick what you\'re selling' },
-        { name: 'Model', desc: 'Choose a model' },
-        { name: 'Pose', desc: 'Pick the style' },
-        { name: 'Settings', desc: 'Adjust details' },
-        { name: 'Results', desc: 'Review & publish' },
+        { name: sourceType === 'scratch' ? 'Source' : 'Product' },
+        { name: 'Model' }, { name: 'Pose' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
-    return [
-      { name: sourceType === 'scratch' ? 'Source' : 'Product', desc: sourceType === 'scratch' ? 'Upload your image' : 'Pick what you\'re selling' },
-      { name: 'Template', desc: 'Choose a style' },
-      { name: 'Settings', desc: 'Adjust details' },
-      { name: 'Results', desc: 'Review & publish' },
-    ];
+    return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Template' }, { name: 'Settings' }, { name: 'Results' }];
   };
 
-  // Virtual Try-On credit cost is higher
-  const creditCost = generationMode === 'virtual-try-on' 
-    ? parseInt(imageCount) * 3 
-    : parseInt(imageCount) * (quality === 'high' ? 2 : 1);
+  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 3 : parseInt(imageCount) * (quality === 'high' ? 2 : 1);
 
   return (
-    <PageHeader
-      title="Generate Images"
-      backAction={{ content: 'Dashboard', onAction: () => navigate('/app') }}
-    >
-      <BlockStack gap="600">
-        {/* Low credits warning */}
+    <PageHeader title="Generate Images" backAction={{ content: 'Dashboard', onAction: () => navigate('/app') }}>
+      <div className="space-y-6">
         <LowCreditsBanner />
 
-        {/* Progress indicator with step descriptions - Mobile optimized */}
+        {/* Progress Steps */}
         <Card>
-          <BlockStack gap="200">
-            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-              <InlineStack gap="200" align="center" wrap={false}>
-                {getSteps().map((step, index) => (
-                  <InlineStack key={step.name} gap="100" blockAlign="center">
-                    <div
-                      className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors flex-shrink-0 ${
-                        getStepNumber() > index + 1
-                          ? 'bg-primary text-primary-foreground'
-                          : getStepNumber() === index + 1
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {getStepNumber() > index + 1 ? '✓' : index + 1}
-                    </div>
-                    <BlockStack gap="0">
-                      <Text
-                        as="span"
-                        variant="bodySm"
-                        fontWeight={getStepNumber() === index + 1 ? 'semibold' : 'regular'}
-                        tone={getStepNumber() >= index + 1 ? undefined : 'subdued'}
-                      >
-                        <span className="hidden md:inline">{step.name}</span>
-                      </Text>
-                    </BlockStack>
-                    {index < getSteps().length - 1 && (
-                      <div className={`w-4 sm:w-8 md:w-12 h-0.5 flex-shrink-0 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
-                    )}
-                  </InlineStack>
-                ))}
-              </InlineStack>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-center gap-2 overflow-x-auto">
+              {getSteps().map((step, index) => (
+                <div key={step.name} className="flex items-center gap-2">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
+                    getStepNumber() > index + 1 ? 'bg-primary text-primary-foreground'
+                    : getStepNumber() === index + 1 ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {getStepNumber() > index + 1 ? '✓' : index + 1}
+                  </div>
+                  <span className={`text-xs hidden md:inline ${getStepNumber() === index + 1 ? 'font-semibold' : 'text-muted-foreground'}`}>
+                    {step.name}
+                  </span>
+                  {index < getSteps().length - 1 && (
+                    <div className={`w-8 md:w-12 h-0.5 flex-shrink-0 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
+                  )}
+                </div>
+              ))}
             </div>
-            <Text as="p" variant="bodySm" tone="subdued" alignment="center">
-              <span className="text-xs sm:text-sm">{generationMode === 'virtual-try-on' ? 'About 3-4 minutes total' : 'About 2-3 minutes total'}</span>
-            </Text>
-          </BlockStack>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              {generationMode === 'virtual-try-on' ? 'About 3-4 minutes total' : 'About 2-3 minutes total'}
+            </p>
+          </CardContent>
         </Card>
 
-        {/* Step 0: Source Type Selection */}
+        {/* Source Selection */}
         {currentStep === 'source' && (
-          <Card>
-            <BlockStack gap="500">
-              <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">
-                  How do you want to start?
-                </Text>
-                <Text as="p" variant="bodyMd" tone="subdued">
-                  Choose whether to use existing Shopify products or upload your own image file.
-                </Text>
-              </BlockStack>
-
-              <SourceTypeSelector
-                sourceType={sourceType}
-                onChange={(type) => {
-                  setSourceType(type);
-                  // Reset relevant state when switching
-                  if (type === 'scratch') {
-                    setSelectedProduct(null);
-                    setScratchUpload(null);
-                  } else {
-                    setScratchUpload(null);
-                  }
-                }}
-              />
-
-              <InlineStack align="end">
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    if (sourceType === 'product') {
-                      setCurrentStep('product');
-                    } else {
-                      setCurrentStep('upload');
-                    }
-                  }}
-                >
-                  Continue
-                </Button>
-              </InlineStack>
-            </BlockStack>
-          </Card>
+          <Card><CardContent className="p-5 space-y-5">
+            <div>
+              <h2 className="text-base font-semibold">How do you want to start?</h2>
+              <p className="text-sm text-muted-foreground">Choose whether to use existing products or upload your own image file.</p>
+            </div>
+            <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); }} />
+            <div className="flex justify-end">
+              <Button onClick={() => setCurrentStep(sourceType === 'product' ? 'product' : 'upload')}>Continue</Button>
+            </div>
+          </CardContent></Card>
         )}
 
-        {/* Step 1a: Upload Image (From Scratch) */}
+        {/* Upload Step */}
         {currentStep === 'upload' && (
-          <Card>
-            <BlockStack gap="500">
-              <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">
-                  Upload Your Image
-                </Text>
-                <Text as="p" variant="bodyMd" tone="subdued">
-                  Upload a product image from your computer. Add details to help the AI generate better results.
-                </Text>
-              </BlockStack>
-
-              <UploadSourceCard
-                scratchUpload={scratchUpload}
-                onUpload={setScratchUpload}
-                onRemove={() => setScratchUpload(null)}
-                onUpdateProductInfo={(info) => {
-                  if (scratchUpload) {
-                    setScratchUpload({ ...scratchUpload, productInfo: info });
+          <Card><CardContent className="p-5 space-y-5">
+            <div>
+              <h2 className="text-base font-semibold">Upload Your Image</h2>
+              <p className="text-sm text-muted-foreground">Upload a product image from your computer.</p>
+            </div>
+            <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
+              onUpdateProductInfo={info => { if (scratchUpload) setScratchUpload({ ...scratchUpload, productInfo: info }); }}
+              isUploading={isUploading}
+            />
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
+              <Button disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
+                onClick={async () => {
+                  if (!scratchUpload) return;
+                  const uploadedUrl = await uploadFile(scratchUpload.file);
+                  if (uploadedUrl) {
+                    setScratchUpload({ ...scratchUpload, uploadedUrl });
+                    const isClothing = ['leggings', 'hoodie', 't-shirt', 'sports bra', 'jacket', 'tank top', 'joggers'].some(kw => scratchUpload.productInfo.productType.toLowerCase().includes(kw));
+                    setCurrentStep(isClothing ? 'mode' : 'template');
                   }
                 }}
-                isUploading={isUploading}
-              />
-
-              <InlineStack align="space-between">
-                <Button onClick={() => setCurrentStep('source')}>
-                  Back
-                </Button>
-                <Button
-                  variant="primary"
-                  disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
-                  onClick={async () => {
-                    if (!scratchUpload) return;
-                    
-                    // Upload the file to storage
-                    const uploadedUrl = await uploadFile(scratchUpload.file);
-                    if (uploadedUrl) {
-                      setScratchUpload({ ...scratchUpload, uploadedUrl });
-                      // Determine if it's a clothing product for mode selection
-                      const productType = scratchUpload.productInfo.productType.toLowerCase();
-                      const clothingKeywords = ['leggings', 'hoodie', 't-shirt', 'sports bra', 'jacket', 'tank top', 'joggers', 'shorts', 'dress', 'sweater'];
-                      const isClothing = clothingKeywords.some(kw => productType.includes(kw));
-                      
-                      if (isClothing) {
-                        setCurrentStep('mode');
-                      } else {
-                        setCurrentStep('template');
-                      }
-                    }
-                  }}
-                >
-                  {isUploading ? 'Uploading...' : 'Continue'}
-                </Button>
-              </InlineStack>
-            </BlockStack>
-          </Card>
+              >{isUploading ? 'Uploading...' : 'Continue'}</Button>
+            </div>
+          </CardContent></Card>
         )}
 
-        {/* Step 1b: Product Selection (From Product) */}
+        {/* Product Selection */}
         {currentStep === 'product' && (
-          <Card>
-            <BlockStack gap="500">
-              <InlineStack align="space-between">
-                <BlockStack gap="100">
-                  <Text as="h2" variant="headingMd">
-                    Select Product(s)
-                  </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Choose one or multiple products. Selecting 2+ will use bulk generation with shared settings.
-                  </Text>
-                </BlockStack>
-                <Button variant="plain" onClick={() => setCurrentStep('source')}>
-                  Change source
-                </Button>
-              </InlineStack>
-              
-              <ProductMultiSelect
-                products={mockProducts}
-                selectedIds={selectedProductIds}
-                onSelectionChange={setSelectedProductIds}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-              />
-
-              <InlineStack align="space-between">
-                <Button onClick={() => setCurrentStep('source')}>
-                  Back
-                </Button>
-                <Button
-                  variant="primary"
-                  disabled={selectedProductIds.size === 0}
-                  onClick={() => {
-                    const selectedProducts = mockProducts.filter(p => selectedProductIds.has(p.id));
-                    
-                    if (selectedProducts.length === 1) {
-                      // Single product - continue with single flow
-                      const product = selectedProducts[0];
-                      setSelectedProduct(product);
-                      // Auto-select first image as source
-                      if (product.images.length > 0) {
-                        setSelectedSourceImages(new Set([product.images[0].id]));
-                      }
-                      // Auto-recommend category
-                      const productType = product.productType.toLowerCase();
-                      if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel')) {
-                        setSelectedCategory('clothing');
-                      } else if (productType.includes('serum') || productType.includes('cream') || productType.includes('beauty')) {
-                        setSelectedCategory('cosmetics');
-                      }
-                      
-                      if (isClothingProduct(product)) {
-                        setCurrentStep('mode');
-                      } else {
-                        setCurrentStep('template');
-                      }
-                    } else {
-                      // Multiple products - check for category consistency
-                      const categories = new Set(
-                        selectedProducts.map(p => detectProductCategory(p)).filter(Boolean)
-                      );
-                      
-                      if (categories.size > 1) {
-                        toast.warning(
-                          'Products from different categories selected. The same template will be applied to all.',
-                          { duration: 5000 }
-                        );
-                      }
-                      
-                       // Go to bulk flow
-                       navigate('/app/generate/bulk', { 
-                         state: { selectedProducts } 
-                       });
-                    }
-                  }}
-                >
-                  {selectedProductIds.size === 0 
-                    ? 'Select at least 1 product' 
-                    : selectedProductIds.size === 1 
-                      ? 'Continue with 1 product' 
-                      : `Continue with ${selectedProductIds.size} products`}
-                </Button>
-              </InlineStack>
-            </BlockStack>
-          </Card>
+          <Card><CardContent className="p-5 space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold">Select Product(s)</h2>
+                <p className="text-sm text-muted-foreground">Choose one or multiple products. 2+ products will use bulk generation.</p>
+              </div>
+              <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
+            </div>
+            <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
+              <Button disabled={selectedProductIds.size === 0} onClick={() => {
+                const selected = mockProducts.filter(p => selectedProductIds.has(p.id));
+                if (selected.length === 1) {
+                  const product = selected[0];
+                  setSelectedProduct(product);
+                  if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
+                  const cat = detectProductCategory(product);
+                  if (cat) setSelectedCategory(cat);
+                  setCurrentStep(isClothingProduct(product) ? 'mode' : 'template');
+                } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
+              }}>
+                {selectedProductIds.size === 0 ? 'Select at least 1' : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
+              </Button>
+            </div>
+          </CardContent></Card>
         )}
 
-        {/* Mode Selection - Works for both product and scratch uploads */}
+        {/* Mode Selection */}
         {currentStep === 'mode' && (selectedProduct || scratchUpload) && (
-          <Card>
-            <BlockStack gap="500">
-              <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">
-                  Choose Generation Mode
-                </Text>
-                <Text as="p" variant="bodyMd" tone="subdued">
-                  How would you like to showcase your {selectedProduct?.title || scratchUpload?.productInfo.title}?
-                </Text>
-              </BlockStack>
-
-              <InlineStack align="center">
-                <GenerationModeToggle mode={generationMode} onChange={setGenerationMode} />
-              </InlineStack>
-
-              {generationMode === 'virtual-try-on' && (
-                <Banner tone="info">
-                  <BlockStack gap="200">
-                    <Text as="p" variant="bodySm" fontWeight="semibold">
-                      ✨ Virtual Try-On Mode
-                    </Text>
-                    <Text as="p" variant="bodySm">
-                      AI will digitally dress your selected model in your garment — creating realistic "model wearing product" images without a photoshoot.
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Uses 3 credits per image (vs 1-2 for standard shots)
-                    </Text>
-                  </BlockStack>
-                </Banner>
-              )}
-
-              {generationMode === 'product-only' && (
-                <Banner tone="info">
-                  <Text as="p" variant="bodySm">
-                    Standard product photography — flat lay, studio, or lifestyle shots focusing on the garment itself.
-                  </Text>
-                </Banner>
-              )}
-
-              <InlineStack align="end">
-                <Button onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>
-                  Back
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    if (generationMode === 'virtual-try-on') {
-                      setCurrentStep('model');
-                    } else {
-                      setCurrentStep('template');
-                    }
-                  }}
-                >
-                  Continue
-                </Button>
-              </InlineStack>
-            </BlockStack>
-          </Card>
-        )}
-
-        {/* Model Selection Step - Virtual Try-On only */}
-        {currentStep === 'model' && (selectedProduct || scratchUpload) && (
-          <BlockStack gap="400">
-            {/* Live Preview */}
-            <TryOnPreview
-              product={selectedProduct}
-              scratchUpload={scratchUpload}
-              model={selectedModel}
-              pose={selectedPose}
-              creditCost={creditCost}
-            />
-
-            {/* Popular Combinations Quick Start */}
-            {!selectedModel && popularCombinations.length > 0 && (
-              <Card>
-                <PopularCombinations
-                  combinations={popularCombinations}
-                  onSelect={(model, pose) => {
-                    setSelectedModel(model);
-                    setSelectedPose(pose);
-                    setCurrentStep('settings');
-                  }}
-                />
-              </Card>
+          <Card><CardContent className="p-5 space-y-5">
+            <div>
+              <h2 className="text-base font-semibold">Choose Generation Mode</h2>
+              <p className="text-sm text-muted-foreground">How would you like to showcase your {selectedProduct?.title || scratchUpload?.productInfo.title}?</p>
+            </div>
+            <div className="flex justify-center">
+              <GenerationModeToggle mode={generationMode} onChange={setGenerationMode} />
+            </div>
+            {generationMode === 'virtual-try-on' && (
+              <Alert><AlertDescription>
+                <p className="font-semibold">✨ Virtual Try-On Mode</p>
+                <p className="text-sm">AI will digitally dress your selected model in your garment. Uses 3 credits per image.</p>
+              </AlertDescription></Alert>
             )}
-
-            <Card>
-              <BlockStack gap="400">
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Select a Model
-                  </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Choose who will wear your {selectedProduct?.title || scratchUpload?.productInfo.title}. We offer diverse representation across genders, body types, and ethnicities.
-                  </Text>
-                </BlockStack>
-
-                {/* Enhanced Filter Bar */}
-                <ModelFilterBar
-                  genderFilter={modelGenderFilter}
-                  bodyTypeFilter={modelBodyTypeFilter}
-                  ageFilter={modelAgeFilter}
-                  onGenderChange={setModelGenderFilter}
-                  onBodyTypeChange={setModelBodyTypeFilter}
-                  onAgeChange={setModelAgeFilter}
-                />
-
-                {/* Model Grid */}
-                {filteredModels.length > 0 ? (
-                  <InlineGrid columns={{ xs: 2, sm: 3, md: 4 }} gap="400">
-                    {filteredModels.map(model => (
-                      <ModelSelectorCard
-                        key={model.modelId}
-                        model={model}
-                        isSelected={selectedModel?.modelId === model.modelId}
-                        onSelect={() => handleSelectModel(model)}
-                      />
-                    ))}
-                  </InlineGrid>
-                ) : (
-                  <Banner tone="warning">
-                    <Text as="p" variant="bodySm">
-                      No models match your filters. Try adjusting the filters above.
-                    </Text>
-                  </Banner>
-                )}
-
-                <InlineStack align="space-between">
-                  <Button onClick={() => setCurrentStep('mode')}>
-                    Back
-                  </Button>
-                  <Button
-                    variant="primary"
-                    disabled={!selectedModel}
-                    onClick={() => setCurrentStep('pose')}
-                  >
-                    Continue to Pose Selection
-                  </Button>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-          </BlockStack>
+            {generationMode === 'product-only' && (
+              <Alert><AlertDescription>Standard product photography — flat lay, studio, or lifestyle shots.</AlertDescription></Alert>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
+              <Button onClick={() => setCurrentStep(generationMode === 'virtual-try-on' ? 'model' : 'template')}>Continue</Button>
+            </div>
+          </CardContent></Card>
         )}
 
-        {/* Pose Selection Step - Virtual Try-On only */}
-        {currentStep === 'pose' && (selectedProduct || scratchUpload) && selectedModel && (
-          <BlockStack gap="400">
-            {/* Live Preview */}
-            <TryOnPreview
-              product={selectedProduct}
-              scratchUpload={scratchUpload}
-              model={selectedModel}
-              pose={selectedPose}
-              creditCost={creditCost}
-            />
-
-            <Card>
-              <BlockStack gap="500">
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Choose a Pose & Scene
-                  </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Select the photography style and setting for your virtual try-on shots with {selectedModel.name}.
-                  </Text>
-                </BlockStack>
-
-                {/* Poses by Category */}
-                <BlockStack gap="600">
-                  {(['studio', 'lifestyle', 'editorial', 'streetwear'] as PoseCategory[]).map(category => (
-                    <PoseCategorySection
-                      key={category}
-                      category={category}
-                      poses={posesByCategory[category] || []}
-                      selectedPoseId={selectedPose?.poseId || null}
-                      onSelectPose={handleSelectPose}
-                    />
-                  ))}
-                </BlockStack>
-
-                <InlineStack align="space-between">
-                  <Button onClick={() => setCurrentStep('model')}>
-                    Back
-                  </Button>
-                  <Button
-                    variant="primary"
-                    disabled={!selectedPose}
-                    onClick={() => setCurrentStep('settings')}
-                  >
-                    Continue to Settings
-                  </Button>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-          </BlockStack>
+        {/* Model Selection */}
+        {currentStep === 'model' && (selectedProduct || scratchUpload) && (
+          <div className="space-y-4">
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} />
+            {!selectedModel && popularCombinations.length > 0 && (
+              <Card><CardContent className="p-5">
+                <PopularCombinations combinations={popularCombinations} onSelect={(model, pose) => { setSelectedModel(model); setSelectedPose(pose); setCurrentStep('settings'); }} />
+              </CardContent></Card>
+            )}
+            <Card><CardContent className="p-5 space-y-4">
+              <div>
+                <h2 className="text-base font-semibold">Select a Model</h2>
+                <p className="text-sm text-muted-foreground">Choose the model who will wear your garment</p>
+              </div>
+              <ModelFilterBar genderFilter={modelGenderFilter} bodyTypeFilter={modelBodyTypeFilter} ageFilter={modelAgeFilter}
+                onGenderChange={setModelGenderFilter} onBodyTypeChange={setModelBodyTypeFilter} onAgeChange={setModelAgeFilter} />
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                {filteredModels.map(model => (
+                  <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModel?.modelId === model.modelId} onSelect={() => handleSelectModel(model)} />
+                ))}
+              </div>
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep('mode')}>Back</Button>
+                <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Pose</Button>
+              </div>
+            </CardContent></Card>
+          </div>
         )}
 
-        {/* Step 2: Template Selection (Product-Only mode) */}
+        {/* Pose Selection */}
+        {currentStep === 'pose' && selectedModel && (
+          <div className="space-y-4">
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} />
+            <Card><CardContent className="p-5 space-y-4">
+              <div>
+                <h2 className="text-base font-semibold">Select a Pose</h2>
+                <p className="text-sm text-muted-foreground">Choose how your model will be positioned</p>
+              </div>
+              {Object.entries(posesByCategory).map(([category, poses]) => (
+                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseId={selectedPose?.poseId || null} onSelectPose={handleSelectPose} />
+              ))}
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
+                <Button disabled={!selectedPose} onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
+              </div>
+            </CardContent></Card>
+          </div>
+        )}
+
+        {/* Template Selection */}
         {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && (selectedProduct || scratchUpload) && (
           <>
-            {/* Selected Product/Upload Card */}
-            <Card>
-              <BlockStack gap="300">
-                <InlineStack align="space-between">
-                  <Text as="h3" variant="headingSm" tone="subdued">
-                    {sourceType === 'scratch' ? 'Uploaded Image' : 'Selected Product'}
-                  </Text>
-                  <Button variant="plain" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>
-                    Change
-                  </Button>
-                </InlineStack>
-                {sourceType === 'scratch' && scratchUpload ? (
-                  <InlineStack gap="400" blockAlign="center">
+            {/* Selected Product Card */}
+            <Card><CardContent className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{sourceType === 'scratch' ? 'Uploaded Image' : 'Selected Product'}</span>
+                <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
+              </div>
+              {sourceType === 'scratch' && scratchUpload ? (
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                    <img src={scratchUpload.previewUrl} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{scratchUpload.productInfo.title}</p>
+                    <p className="text-sm text-muted-foreground">Custom Upload • {scratchUpload.productInfo.productType}</p>
+                  </div>
+                </div>
+              ) : selectedProduct && (
+                <>
+                  <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
-                      <img src={scratchUpload.previewUrl} alt={scratchUpload.productInfo.title} className="w-full h-full object-cover" />
+                      <img src={selectedProduct.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
                     </div>
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodyLg" fontWeight="semibold">
-                        {scratchUpload.productInfo.title}
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Custom Upload • {scratchUpload.productInfo.productType}
-                      </Text>
-                      {scratchUpload.productInfo.description && (
-                        <Text as="p" variant="bodySm" tone="subdued">
-                          {scratchUpload.productInfo.description.slice(0, 80)}...
-                        </Text>
-                      )}
-                    </BlockStack>
-                  </InlineStack>
-                ) : selectedProduct && (
-                  <>
-                    <InlineStack gap="400" blockAlign="center">
-                      <Thumbnail
-                        source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                        alt={selectedProduct.title}
-                        size="large"
-                      />
-                      <BlockStack gap="100">
-                        <Text as="p" variant="bodyLg" fontWeight="semibold">
-                          {selectedProduct.title}
-                        </Text>
-                        <Text as="p" variant="bodySm" tone="subdued">
-                          {selectedProduct.vendor} • {selectedProduct.productType}
-                        </Text>
-                        <InlineStack gap="100">
-                          {selectedProduct.tags.map(tag => (
-                            <Badge key={tag}>{tag}</Badge>
-                          ))}
-                        </InlineStack>
-                      </BlockStack>
-                    </InlineStack>
-                    {selectedProduct.images.length > 0 && (
-                      <BlockStack gap="300">
-                        <Divider />
-                        <BlockStack gap="200">
-                          <Text as="h4" variant="headingSm">
-                            Source images for generation
-                          </Text>
-                          <Text as="p" variant="bodySm" tone="subdued">
-                            Select which image(s) to use as reference for AI generation:
-                          </Text>
-                        </BlockStack>
-                        
-                        <div className="flex flex-wrap gap-3">
-                          {selectedProduct.images.map(img => {
-                            const isSelected = selectedSourceImages.has(img.id);
-                            return (
-                              <div
-                                key={img.id}
-                                onClick={() => toggleSourceImage(img.id)}
-                                className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
-                                  isSelected 
-                                    ? 'ring-2 ring-primary ring-offset-2' 
-                                    : 'ring-1 ring-border hover:ring-primary'
-                                }`}
-                              >
-                                <img 
-                                  src={img.url} 
-                                  alt={img.altText || ''} 
-                                  className="w-16 h-16 object-cover"
-                                />
-                                {isSelected && (
-                                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                      </svg>
-                                    </div>
+                    <div>
+                      <p className="font-semibold">{selectedProduct.title}</p>
+                      <p className="text-sm text-muted-foreground">{selectedProduct.vendor} • {selectedProduct.productType}</p>
+                      <div className="flex gap-1 mt-1">{selectedProduct.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}</div>
+                    </div>
+                  </div>
+                  {selectedProduct.images.length > 1 && (
+                    <div className="space-y-2">
+                      <Separator />
+                      <p className="text-sm font-medium">Source images for generation</p>
+                      <div className="flex flex-wrap gap-3">
+                        {selectedProduct.images.map(img => {
+                          const isSelected = selectedSourceImages.has(img.id);
+                          return (
+                            <div key={img.id} onClick={() => toggleSourceImage(img.id)}
+                              className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${isSelected ? 'ring-2 ring-primary ring-offset-2' : 'ring-1 ring-border hover:ring-primary'}`}>
+                              <img src={img.url} alt="" className="w-16 h-16 object-cover" />
+                              {isSelected && (
+                                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                    <CheckCircle className="w-3 h-3 text-primary-foreground" />
                                   </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        
-                        <InlineStack align="space-between" blockAlign="center">
-                          <Text as="p" variant="bodySm" tone="subdued">
-                            {selectedSourceImages.size} of {selectedProduct.images.length} selected
-                          </Text>
-                          {selectedProduct.images.length > 1 && (
-                            <InlineStack gap="200">
-                              <Button variant="plain" size="micro" onClick={selectAllSourceImages}>
-                                Select All
-                              </Button>
-                              <Button variant="plain" size="micro" onClick={clearSourceImages}>
-                                Clear
-                              </Button>
-                            </InlineStack>
-                          )}
-                        </InlineStack>
-                      </BlockStack>
-                    )}
-                    {selectedProduct.images.length === 0 && (
-                      <Banner tone="warning">
-                        <Text as="p" variant="bodySm">
-                          This product has no images. Please add product images in Shopify first.
-                        </Text>
-                      </Banner>
-                    )}
-                  </>
-                )}
-              </BlockStack>
-            </Card>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent></Card>
 
-            {/* Template Selection */}
+            {/* Template Grid */}
             {currentStep === 'template' && (
               <div className={selectedTemplate ? 'pb-24' : ''}>
-                <BlockStack gap="400">
-                  {/* Educational Banner */}
-                  <Banner tone="info">
-                    <Text as="p" variant="bodySm">
-                      Templates define the photography style for your images. Each template produces a different look — preview images show example results.
-                    </Text>
-                  </Banner>
+                <div className="space-y-4">
+                  <Alert><AlertDescription>Templates define the photography style. Each template produces a different look.</AlertDescription></Alert>
 
-                  {/* Top Picks - FIXED based on product type, not the category filter */}
+                  {/* Top Picks */}
                   {(() => {
-                    // Determine product's category from its type
                     const productType = (selectedProduct?.productType || scratchUpload?.productInfo.productType || '').toLowerCase();
                     let productCategory: TemplateCategory = 'universal';
-                    if (productType.includes('sweater') || productType.includes('shirt') || productType.includes('apparel') || productType.includes('hoodie') || productType.includes('leggings') || productType.includes('tank') || productType.includes('jogger')) {
-                      productCategory = 'clothing';
-                    } else if (productType.includes('serum') || productType.includes('cream') || productType.includes('beauty')) {
-                      productCategory = 'cosmetics';
-                    } else if (productType.includes('food') || productType.includes('cereal')) {
-                      productCategory = 'food';
-                    } else if (productType.includes('decor') || productType.includes('home')) {
-                      productCategory = 'home';
-                    } else if (productType.includes('supplement') || productType.includes('vitamin')) {
-                      productCategory = 'supplements';
-                    }
-                    
-                    const topPicks = mockTemplates
-                      .filter(t => t.enabled && t.category === productCategory)
-                      .slice(0, 3);
-                    
-                    // If not enough in category, add universal templates
-                    if (topPicks.length < 3) {
-                      const universalTemplates = mockTemplates
-                        .filter(t => t.enabled && t.category === 'universal')
-                        .slice(0, 3 - topPicks.length);
-                      topPicks.push(...universalTemplates);
-                    }
+                    if (['sweater', 'shirt', 'apparel', 'hoodie', 'leggings', 'tank', 'jogger'].some(kw => productType.includes(kw))) productCategory = 'clothing';
+                    else if (['serum', 'cream', 'beauty'].some(kw => productType.includes(kw))) productCategory = 'cosmetics';
+                    else if (['food', 'cereal'].some(kw => productType.includes(kw))) productCategory = 'food';
+                    else if (['decor', 'home'].some(kw => productType.includes(kw))) productCategory = 'home';
+                    else if (['supplement', 'vitamin'].some(kw => productType.includes(kw))) productCategory = 'supplements';
 
+                    const topPicks = mockTemplates.filter(t => t.enabled && t.category === productCategory).slice(0, 3);
+                    if (topPicks.length < 3) topPicks.push(...mockTemplates.filter(t => t.enabled && t.category === 'universal').slice(0, 3 - topPicks.length));
                     const topPickIds = topPicks.map(t => t.templateId);
-                    const displayTitle = selectedProduct?.productType || scratchUpload?.productInfo.productType || 'your product';
-                    
+
                     return (
                       <>
-                        {/* Top Picks Card */}
-                        <Card>
-                          <BlockStack gap="400">
-                            <BlockStack gap="100">
-                              <Text as="h2" variant="headingMd">
-                                Top Picks for {categoryLabels[productCategory]}
-                              </Text>
-                              <Text as="p" variant="bodySm" tone="subdued">
-                                Best templates for {displayTitle.toLowerCase()} products
-                              </Text>
-                            </BlockStack>
-                            
-                            <InlineGrid columns={{ xs: 1, sm: 2, md: 3 }} gap="400">
-                              {topPicks.map(template => (
-                                <TemplatePreviewCard
-                                  key={template.templateId}
-                                  template={{ ...template, recommended: false }}
-                                  isSelected={selectedTemplate?.templateId === template.templateId}
-                                  onSelect={() => handleSelectTemplate(template)}
-                                  showCredits={false}
-                                />
-                              ))}
-                            </InlineGrid>
-                          </BlockStack>
-                        </Card>
+                        <Card><CardContent className="p-5 space-y-4">
+                          <div>
+                            <h2 className="text-base font-semibold">Top Picks for {categoryLabels[productCategory]}</h2>
+                            <p className="text-sm text-muted-foreground">Best templates for {productType || 'your'} products</p>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {topPicks.map(t => (
+                              <TemplatePreviewCard key={t.templateId} template={{ ...t, recommended: false }} isSelected={selectedTemplate?.templateId === t.templateId} onSelect={() => handleSelectTemplate(t)} showCredits={false} />
+                            ))}
+                          </div>
+                        </CardContent></Card>
 
-                        {/* Browse More Styles - independent category browsing */}
-                        <Card>
-                          <BlockStack gap="400">
-                            <BlockStack gap="200">
-                              <Text as="h2" variant="headingMd">
-                                Browse All Templates
-                              </Text>
-                              <Text as="p" variant="bodySm" tone="subdued">
-                                Explore all available photography styles
-                              </Text>
-                            </BlockStack>
-                            
-                            {/* Category tabs */}
-                            <InlineStack gap="200" wrap>
-                              {categories.map(cat => (
-                                <Button
-                                  key={cat.id}
-                                  pressed={selectedCategory === cat.id}
-                                  onClick={() => setSelectedCategory(cat.id)}
-                                  size="slim"
-                                >
-                                  {cat.label}
-                                </Button>
-                              ))}
-                            </InlineStack>
-
-                            {/* Template grid - show based on selected category, exclude top picks */}
-                            {(() => {
-                              const browseTemplates = mockTemplates.filter(t => {
-                                if (!t.enabled) return false;
-                                // Filter by selected category
-                                if (selectedCategory !== 'all' && t.category !== selectedCategory) return false;
-                                // Exclude templates already shown in Top Picks
-                                if (topPickIds.includes(t.templateId)) return false;
-                                return true;
-                              });
-                              
-                              return browseTemplates.length > 0 ? (
-                                <InlineGrid columns={{ xs: 2, sm: 3, md: 4, lg: 5 }} gap="300">
-                                  {browseTemplates.map(template => (
-                                    <TemplatePreviewCard
-                                      key={template.templateId}
-                                      template={{ ...template, recommended: false }}
-                                      isSelected={selectedTemplate?.templateId === template.templateId}
-                                      onSelect={() => handleSelectTemplate(template)}
-                                      showCredits={false}
-                                    />
-                                  ))}
-                                </InlineGrid>
-                              ) : (
-                                <div className="py-8 text-center">
-                                  <Text as="p" variant="bodySm" tone="subdued">
-                                    {selectedCategory === 'all' 
-                                      ? 'All templates are shown in Top Picks above.' 
-                                      : `No additional ${categoryLabels[selectedCategory as TemplateCategory]} templates available.`}
-                                  </Text>
-                                </div>
-                              );
-                            })()}
-                          </BlockStack>
-                        </Card>
+                        <Card><CardContent className="p-5 space-y-4">
+                          <div>
+                            <h2 className="text-base font-semibold">Browse All Templates</h2>
+                            <p className="text-sm text-muted-foreground">Explore all available photography styles</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {categories.map(cat => (
+                              <Button key={cat.id} variant={selectedCategory === cat.id ? 'default' : 'outline'} size="sm" onClick={() => setSelectedCategory(cat.id)}>
+                                {cat.label}
+                              </Button>
+                            ))}
+                          </div>
+                          {(() => {
+                            const browse = mockTemplates.filter(t => t.enabled && (selectedCategory === 'all' || t.category === selectedCategory) && !topPickIds.includes(t.templateId));
+                            return browse.length > 0 ? (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                {browse.map(t => <TemplatePreviewCard key={t.templateId} template={{ ...t, recommended: false }} isSelected={selectedTemplate?.templateId === t.templateId} onSelect={() => handleSelectTemplate(t)} showCredits={false} />)}
+                              </div>
+                            ) : (
+                              <p className="py-8 text-center text-sm text-muted-foreground">
+                                {selectedCategory === 'all' ? 'All templates shown above.' : `No additional ${categoryLabels[selectedCategory as TemplateCategory]} templates.`}
+                              </p>
+                            );
+                          })()}
+                        </CardContent></Card>
                       </>
                     );
                   })()}
-                </BlockStack>
+                </div>
 
-                {/* Sticky Continue Footer - Shows when template selected */}
                 {selectedTemplate && (
                   <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-lg p-4">
-                    <div className="max-w-5xl mx-auto">
-                      <InlineStack align="space-between" blockAlign="center">
-                        <InlineStack gap="300" blockAlign="center">
-                          {/* Template thumbnail */}
-                          <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0">
-                            {getTemplateImage(selectedTemplate.templateId) ? (
-                              <img 
-                                src={getTemplateImage(selectedTemplate.templateId)} 
-                                alt="" 
-                                className="w-full h-full object-cover" 
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-muted flex items-center justify-center">
-                                <Icon source={ImageIcon} tone="subdued" />
-                              </div>
-                            )}
-                          </div>
-                          <BlockStack gap="050">
-                            <Text as="p" variant="bodySm" fontWeight="semibold">
-                              {selectedTemplate.name}
-                            </Text>
-                            <Text as="p" variant="bodySm" tone="subdued">
-                              {selectedTemplate.defaults.quality === 'high' ? '2' : '1'} credits per image
-                            </Text>
-                          </BlockStack>
-                        </InlineStack>
-                        <InlineStack gap="200">
-                          <Button onClick={() => setSelectedTemplate(null)}>
-                            Clear
-                          </Button>
-                          <Button variant="primary" onClick={() => setCurrentStep('settings')}>
-                            Continue to Settings
-                          </Button>
-                        </InlineStack>
-                      </InlineStack>
+                    <div className="max-w-5xl mx-auto flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0">
+                          {getTemplateImage(selectedTemplate.templateId) ? (
+                            <img src={getTemplateImage(selectedTemplate.templateId)} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-muted flex items-center justify-center"><Image className="w-4 h-4 text-muted-foreground" /></div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold">{selectedTemplate.name}</p>
+                          <p className="text-xs text-muted-foreground">{selectedTemplate.defaults.quality === 'high' ? '2' : '1'} credits per image</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setSelectedTemplate(null)}>Clear</Button>
+                        <Button onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Settings Step - Product Only Mode */}
+            {/* Settings for Product-Only */}
             {currentStep === 'settings' && selectedTemplate && generationMode === 'product-only' && (
-              <BlockStack gap="400">
-                {/* Selected Template */}
-                <Card>
-                  <BlockStack gap="300">
-                    <InlineStack align="space-between">
-                      <Text as="h3" variant="headingSm" tone="subdued">
-                        Selected Template
-                      </Text>
-                      <Button variant="plain" onClick={() => setCurrentStep('template')}>
-                        Change
-                      </Button>
-                    </InlineStack>
-                    <InlineStack gap="400" blockAlign="center">
-                      {(() => {
-                        const templateImage = getTemplateImage(selectedTemplate.templateId);
-                        return templateImage ? (
-                          <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border">
-                            <img
-                              src={templateImage}
-                              alt={selectedTemplate.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                            <Icon source={ImageIcon} tone="subdued" />
-                          </div>
-                        );
-                      })()}
-                      <BlockStack gap="100">
-                        <Text as="p" variant="bodyMd" fontWeight="semibold">
-                          {selectedTemplate.name}
-                        </Text>
-                        <Text as="p" variant="bodySm" tone="subdued">
-                          {selectedTemplate.description.length > 80 
-                            ? `${selectedTemplate.description.slice(0, 80)}...` 
-                            : selectedTemplate.description}
-                        </Text>
-                        <InlineStack gap="200">
-                          <Badge>{categoryLabels[selectedTemplate.category]}</Badge>
-                          <Badge tone="attention">{`~${selectedTemplate.defaults.quality === 'high' ? 2 : 1} cr/img`}</Badge>
-                        </InlineStack>
-                      </BlockStack>
-                    </InlineStack>
-                  </BlockStack>
-                </Card>
-
-                {/* Brand Customization - Expanded by default */}
-                <Card>
-                  <BlockStack gap="400">
-                    <div
-                      className="cursor-pointer"
-                      onClick={() => setBrandKitOpen(!brandKitOpen)}
-                    >
-                      <InlineStack align="space-between" blockAlign="center">
-                        <BlockStack gap="100">
-                          <InlineStack gap="200" blockAlign="center">
-                            <Text as="h3" variant="headingMd">
-                              Make It Match Your Brand
-                            </Text>
-                            <Badge tone="info">Recommended</Badge>
-                          </InlineStack>
-                          <Text as="p" variant="bodySm" tone="subdued">
-                            Choose colors and styles that feel like your store
-                          </Text>
-                        </BlockStack>
-                        <Icon source={brandKitOpen ? ChevronUpIcon : ChevronDownIcon} />
-                      </InlineStack>
+              <div className="space-y-4">
+                <Card><CardContent className="p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Selected Template</span>
+                    <Button variant="link" size="sm" onClick={() => setCurrentStep('template')}>Change</Button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-md overflow-hidden border border-border">
+                      {getTemplateImage(selectedTemplate.templateId) ? (
+                        <img src={getTemplateImage(selectedTemplate.templateId)} alt="" className="w-full h-full object-cover" />
+                      ) : <div className="w-full h-full bg-muted" />}
                     </div>
-                    
-                    <Collapsible open={brandKitOpen} id="brand-kit">
-                      <BlockStack gap="400">
-                        <Divider />
-                        <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-                          <Select
-                            label="Brand Tone"
-                            options={[
-                              { label: 'Clean', value: 'clean' },
-                              { label: 'Luxury', value: 'luxury' },
-                              { label: 'Playful', value: 'playful' },
-                              { label: 'Bold', value: 'bold' },
-                              { label: 'Minimal', value: 'minimal' },
-                            ]}
-                            value={brandTone}
-                            onChange={(v) => setBrandTone(v as BrandTone)}
-                          />
-                          <Select
-                            label="Background Style"
-                            options={[
-                              { label: 'Studio', value: 'studio' },
-                              { label: 'Lifestyle', value: 'lifestyle' },
-                              { label: 'Gradient', value: 'gradient' },
-                              { label: 'Pattern', value: 'pattern' },
-                              { label: 'Contextual Scene', value: 'contextual' },
-                            ]}
-                            value={backgroundStyle}
-                            onChange={(v) => setBackgroundStyle(v as BackgroundStyle)}
-                          />
-                        </InlineGrid>
-                        <NegativesChipSelector
-                          value={negatives}
-                          onChange={setNegatives}
-                        />
-                        <Checkbox
-                          label="Keep style consistent across all generations"
-                          checked={consistencyEnabled}
-                          onChange={setConsistencyEnabled}
-                        />
-                      </BlockStack>
-                    </Collapsible>
-                  </BlockStack>
-                </Card>
+                    <div>
+                      <p className="font-medium text-sm">{selectedTemplate.name}</p>
+                      <p className="text-xs text-muted-foreground">{selectedTemplate.description}</p>
+                    </div>
+                  </div>
+                </CardContent></Card>
 
-                {/* Generation Settings */}
-                <Card>
-                  <BlockStack gap="400">
-                    <Text as="h3" variant="headingMd">
-                      Generation Settings
-                    </Text>
-                    <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-                      <Select
-                        label="Number of Images"
-                        options={[
-                          { label: '1 image (saves credits)', value: '1' },
-                          { label: '4 images (recommended)', value: '4' },
-                          { label: '8 images (maximum variety)', value: '8' },
-                        ]}
-                        value={imageCount}
-                        onChange={(v) => setImageCount(v as '1' | '4' | '8')}
-                      />
-                      <Select
-                        label="Output Quality"
-                        options={[
-                          { label: 'Standard (1 credit/image)', value: 'standard' },
-                          { label: 'High (2 credits/image) - More detail', value: 'high' },
-                        ]}
-                        value={quality}
-                        onChange={(v) => setQuality(v as ImageQuality)}
-                      />
-                    </InlineGrid>
-                    
-                    {/* Visual Aspect Ratio Selector */}
-                    <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
-                    
-                    <Checkbox
-                      label="Keep my product looking exactly like it does"
-                      checked={preserveAccuracy}
-                      onChange={setPreserveAccuracy}
-                      helpText="When on, the AI won't change your product's colors, shape, or key details"
-                    />
-                  </BlockStack>
-                </Card>
+                <Card><CardContent className="p-5 space-y-4">
+                  <h3 className="text-base font-semibold">Generation Settings</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Number of Images</Label>
+                      <Select value={imageCount} onValueChange={v => setImageCount(v as '1' | '4' | '8')}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 image (saves credits)</SelectItem>
+                          <SelectItem value="4">4 images (recommended)</SelectItem>
+                          <SelectItem value="8">8 images (maximum variety)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Quality</Label>
+                      <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard (1 credit/image)</SelectItem>
+                          <SelectItem value="high">High (2 credits/image)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                </CardContent></Card>
 
-                {/* Credits Notice */}
-                <Banner tone="info">
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text as="p">
-                      This generation will use <strong>{creditCost} credits</strong>
-                      {' '}({parseInt(imageCount)} images × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''} each)
-                    </Text>
-                    <Text as="p" fontWeight="semibold">
-                      {balance} credits available
-                    </Text>
-                  </InlineStack>
-                </Banner>
+                <Card><CardContent className="p-5 space-y-4">
+                  <div className="flex items-center justify-between cursor-pointer" onClick={() => setBrandKitOpen(!brandKitOpen)}>
+                    <h3 className="text-base font-semibold">Brand Settings</h3>
+                    <span className="text-xs text-muted-foreground">{brandKitOpen ? '▲' : '▼'}</span>
+                  </div>
+                  {brandKitOpen && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Brand Tone</Label>
+                          <Select value={brandTone} onValueChange={v => setBrandTone(v as BrandTone)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="clean">Clean</SelectItem>
+                              <SelectItem value="luxury">Luxury</SelectItem>
+                              <SelectItem value="playful">Playful</SelectItem>
+                              <SelectItem value="bold">Bold</SelectItem>
+                              <SelectItem value="minimal">Minimal</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Background</Label>
+                          <Select value={backgroundStyle} onValueChange={v => setBackgroundStyle(v as BackgroundStyle)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="studio">Studio</SelectItem>
+                              <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                              <SelectItem value="gradient">Gradient</SelectItem>
+                              <SelectItem value="pattern">Pattern</SelectItem>
+                              <SelectItem value="contextual">Contextual</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <NegativesChipSelector value={negatives} onChange={setNegatives} />
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="preserve" checked={preserveAccuracy} onCheckedChange={v => setPreserveAccuracy(!!v)} />
+                        <Label htmlFor="preserve">Keep product looking exactly as-is</Label>
+                      </div>
+                    </div>
+                  )}
+                </CardContent></Card>
 
-                {/* Generate Button */}
-                <InlineStack align="end" gap="200">
-                  <Button onClick={() => setCurrentStep('template')}>
-                    Back
-                  </Button>
-                  <Button variant="primary" onClick={handleGenerateClick}>
-                    Generate {imageCount} Images
-                  </Button>
-                </InlineStack>
-              </BlockStack>
+                <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Total: {creditCost} credits</p>
+                    <p className="text-xs text-muted-foreground">{imageCount} images × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''}</p>
+                  </div>
+                  <p className="text-sm">{balance} credits available</p>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setCurrentStep('template')}>Back</Button>
+                  <Button onClick={handleGenerateClick}>Generate {imageCount} Images</Button>
+                </div>
+              </div>
             )}
           </>
         )}
 
-        {/* Settings Step - Virtual Try-On Mode */}
-        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (selectedProduct || scratchUpload) && (
-          <BlockStack gap="400">
-            {/* Summary Card */}
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h3" variant="headingSm" tone="subdued">
-                  Virtual Try-On Summary
-                </Text>
-                <InlineStack gap="600" wrap>
-                  {/* Product */}
-                  <BlockStack gap="200">
-                    <Text as="p" variant="bodySm" tone="subdued">Product</Text>
-                    <InlineStack gap="200" blockAlign="center">
-                      {sourceType === 'scratch' && scratchUpload ? (
-                        <>
-                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-border">
-                            <img src={scratchUpload.previewUrl} alt={scratchUpload.productInfo.title} className="w-full h-full object-cover" />
-                          </div>
-                          <Text as="p" variant="bodySm" fontWeight="semibold">{scratchUpload.productInfo.title}</Text>
-                        </>
-                      ) : selectedProduct && (
-                        <>
-                          <Thumbnail
-                            source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                            alt={selectedProduct.title}
-                            size="small"
-                          />
-                          <Text as="p" variant="bodySm" fontWeight="semibold">{selectedProduct.title}</Text>
-                        </>
-                      )}
-                    </InlineStack>
-                    <Button variant="plain" size="micro" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Change</Button>
-                  </BlockStack>
+        {/* Settings for Virtual Try-On */}
+        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (
+          <div className="space-y-4">
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} />
+            <Card><CardContent className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Selected Model & Pose</span>
+                <Button variant="link" size="sm" onClick={() => setCurrentStep('model')}>Change</Button>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg overflow-hidden"><img src={selectedModel.previewUrl} alt="" className="w-full h-full object-cover" /></div>
+                <div>
+                  <p className="text-sm font-medium">{selectedModel.name}</p>
+                  <p className="text-xs text-muted-foreground">{selectedPose.name}</p>
+                </div>
+              </div>
+            </CardContent></Card>
 
-                  {/* Model */}
-                  <BlockStack gap="200">
-                    <Text as="p" variant="bodySm" tone="subdued">Model</Text>
-                    <InlineStack gap="200" blockAlign="center">
-                      <div className="w-10 h-10 rounded-full overflow-hidden">
-                        <img src={selectedModel.previewUrl} alt={selectedModel.name} className="w-full h-full object-cover" />
-                      </div>
-                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedModel.name}</Text>
-                    </InlineStack>
-                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('model')}>Change</Button>
-                  </BlockStack>
+            <Card><CardContent className="p-5 space-y-4">
+              <h3 className="text-base font-semibold">Generation Settings</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Number of Images</Label>
+                  <Select value={imageCount} onValueChange={v => setImageCount(v as '1' | '4' | '8')}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 image</SelectItem>
+                      <SelectItem value="4">4 images (recommended)</SelectItem>
+                      <SelectItem value="8">8 images</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Quality</Label><p className="text-sm text-muted-foreground mt-1">Virtual Try-On uses High quality by default</p></div>
+              </div>
+              <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+              <div className="flex items-center space-x-2">
+                <Checkbox id="preserveTryOn" checked={preserveAccuracy} onCheckedChange={v => setPreserveAccuracy(!!v)} />
+                <Label htmlFor="preserveTryOn">Keep product looking exactly as-is</Label>
+              </div>
+            </CardContent></Card>
 
-                  {/* Pose */}
-                  <BlockStack gap="200">
-                    <Text as="p" variant="bodySm" tone="subdued">Pose</Text>
-                    <InlineStack gap="200" blockAlign="center">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden">
-                        <img src={selectedPose.previewUrl} alt={selectedPose.name} className="w-full h-full object-cover" />
-                      </div>
-                      <Text as="p" variant="bodySm" fontWeight="semibold">{selectedPose.name}</Text>
-                    </InlineStack>
-                    <Button variant="plain" size="micro" onClick={() => setCurrentStep('pose')}>Change</Button>
-                  </BlockStack>
-                </InlineStack>
-              </BlockStack>
-            </Card>
+            <Alert><AlertDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">Virtual Try-On uses {creditCost} credits</p>
+                  <p className="text-xs text-muted-foreground">{parseInt(imageCount)} images × 3 credits each</p>
+                </div>
+                <p className="font-semibold">{balance} credits available</p>
+              </div>
+            </AlertDescription></Alert>
 
-            {/* Source Image Selection for Virtual Try-On - Only show for product source */}
-            {sourceType === 'product' && selectedProduct && selectedProduct.images.length > 0 && (
-              <Card>
-                <BlockStack gap="300">
-                  <BlockStack gap="200">
-                    <Text as="h3" variant="headingMd">
-                      Source Reference Image
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Select the product photo that shows your garment best. The AI will use this as reference to dress the model.
-                    </Text>
-                  </BlockStack>
-                  
-                  <div className="flex flex-wrap gap-3">
-                    {selectedProduct.images.map(img => {
-                      const isSelected = selectedSourceImages.has(img.id);
-                      return (
-                        <div
-                          key={img.id}
-                          onClick={() => {
-                            // For Virtual Try-On, only allow single selection
-                            setSelectedSourceImages(new Set([img.id]));
-                          }}
-                          className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
-                            isSelected 
-                              ? 'ring-2 ring-primary ring-offset-2' 
-                              : 'ring-1 ring-border hover:ring-primary'
-                          }`}
-                        >
-                          <img 
-                            src={img.url} 
-                            alt={img.altText || ''} 
-                            className="w-20 h-20 object-cover"
-                          />
-                          {isSelected && (
-                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  {selectedProduct.images.length > 1 && (
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Tip: Choose a clear, front-facing photo with good lighting for best results
-                    </Text>
-                  )}
-                </BlockStack>
-              </Card>
-            )}
-
-            {/* Source Image Preview for Scratch Upload */}
-            {sourceType === 'scratch' && scratchUpload && (
-              <Card>
-                <BlockStack gap="300">
-                  <BlockStack gap="200">
-                    <Text as="h3" variant="headingMd">
-                      Source Reference Image
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Your uploaded image will be used as reference to dress the model.
-                    </Text>
-                  </BlockStack>
-                  
-                  <div className="relative w-24 h-24 rounded-lg overflow-hidden ring-2 ring-primary ring-offset-2">
-                    <img 
-                      src={scratchUpload.previewUrl} 
-                      alt={scratchUpload.productInfo.title} 
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </BlockStack>
-              </Card>
-            )}
-
-            {/* Generation Settings */}
-            <Card>
-              <BlockStack gap="400">
-                <Text as="h3" variant="headingMd">
-                  Generation Settings
-                </Text>
-                <InlineGrid columns={{ xs: 1, md: 2 }} gap="400">
-                  <Select
-                    label="Number of Images"
-                    options={[
-                      { label: '1 image (saves credits)', value: '1' },
-                      { label: '4 images (recommended)', value: '4' },
-                      { label: '8 images (maximum variety)', value: '8' },
-                    ]}
-                    value={imageCount}
-                    onChange={(v) => setImageCount(v as '1' | '4' | '8')}
-                  />
-                  <div>
-                    <Text as="p" variant="bodySm" fontWeight="semibold">Output Quality</Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      Virtual Try-On uses High quality by default
-                    </Text>
-                  </div>
-                </InlineGrid>
-                
-                {/* Visual Aspect Ratio Selector */}
-                <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
-                
-                <Checkbox
-                  label="Keep my product looking exactly like it does"
-                  checked={preserveAccuracy}
-                  onChange={setPreserveAccuracy}
-                  helpText="When on, the AI won't change your garment's colors, patterns, or details"
-                />
-              </BlockStack>
-            </Card>
-
-            {/* Credits Notice */}
-            <Banner tone="warning">
-              <InlineStack align="space-between" blockAlign="center">
-                <BlockStack gap="100">
-                  <Text as="p" fontWeight="semibold">
-                    Virtual Try-On uses <strong>{creditCost} credits</strong>
-                  </Text>
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    {parseInt(imageCount)} images × 3 credits each (premium AI processing)
-                  </Text>
-                </BlockStack>
-                <Text as="p" fontWeight="semibold">
-                  {balance} credits available
-                </Text>
-              </InlineStack>
-            </Banner>
-
-            {/* Generate Button */}
-            <InlineStack align="end" gap="200">
-              <Button onClick={() => setCurrentStep('pose')}>
-                Back
-              </Button>
-              <Button variant="primary" onClick={handleGenerateClick}>
-                Generate {imageCount} Try-On Images
-              </Button>
-            </InlineStack>
-          </BlockStack>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCurrentStep('pose')}>Back</Button>
+              <Button onClick={handleGenerateClick}>Generate {imageCount} Try-On Images</Button>
+            </div>
+          </div>
         )}
 
-        {/* Generating State */}
+        {/* Generating */}
         {currentStep === 'generating' && (
-          <Card>
-            <BlockStack gap="600" inlineAlign="center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse-subtle">
-                <Icon source={generationMode === 'virtual-try-on' ? PersonIcon : ImageIcon} tone="primary" />
-              </div>
-              <BlockStack gap="200" inlineAlign="center">
-                <Text as="h2" variant="headingLg">
-                  {generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}
-                </Text>
-                <Text as="p" variant="bodyMd" tone="subdued">
-                  {generationMode === 'virtual-try-on' 
-                    ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}" with ${selectedPose?.name} pose`
-                    : `Creating ${imageCount} images of "${selectedProduct?.title}" with ${selectedTemplate?.name}`
-                  }
-                </Text>
-              </BlockStack>
-              <div className="w-full max-w-md">
-                <ProgressBar 
-                  progress={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : productProgress, 100)} 
-                  size="small" 
-                />
-              </div>
-              <Text as="p" variant="bodySm" tone="subdued">
-                {generationMode === 'virtual-try-on' ? 'This usually takes 20-30 seconds' : 'This usually takes 10-15 seconds'}
-              </Text>
-              <Button 
-                variant="plain" 
-                onClick={handleCancelGeneration}
-                icon={XIcon}
-              >
-                Cancel and go back
-              </Button>
-            </BlockStack>
-          </Card>
+          <Card><CardContent className="p-10 flex flex-col items-center gap-6">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse-subtle">
+              {generationMode === 'virtual-try-on' ? <User className="w-7 h-7 text-primary" /> : <Image className="w-7 h-7 text-primary" />}
+            </div>
+            <div className="text-center">
+              <h2 className="text-lg font-semibold">{generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` : `Creating ${imageCount} images of "${selectedProduct?.title}"`}
+              </p>
+            </div>
+            <div className="w-full max-w-md">
+              <Progress value={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : productProgress, 100)} className="h-2" />
+            </div>
+            <p className="text-xs text-muted-foreground">{generationMode === 'virtual-try-on' ? '20-30 seconds' : '10-15 seconds'}</p>
+            <Button variant="link" onClick={handleCancelGeneration}><X className="w-4 h-4 mr-1" /> Cancel</Button>
+          </CardContent></Card>
         )}
 
         {/* Results */}
         {currentStep === 'results' && (selectedProduct || scratchUpload) && (
-          <BlockStack gap="400">
-            {/* Product Context Card - Different for scratch vs product */}
-            {sourceType === 'scratch' && scratchUpload ? (
-              <Card>
-                <BlockStack gap="300">
-                  <InlineStack gap="200" blockAlign="center">
-                    <Badge tone="info">Generated from uploaded image</Badge>
-                  </InlineStack>
-                  <InlineStack gap="400" blockAlign="center">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
-                      <img src={scratchUpload.previewUrl} alt={scratchUpload.productInfo.title} className="w-full h-full object-cover" />
+          <div className="space-y-4">
+            <Card><CardContent className="p-5 space-y-3">
+              <Badge variant="secondary">{sourceType === 'scratch' ? 'Generated from uploaded image' : 'Publishing to'}</Badge>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                  <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
+                  <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? scratchUpload?.productInfo.productType : selectedProduct?.vendor}</p>
+                </div>
+              </div>
+            </CardContent></Card>
+
+            <Card><CardContent className="p-5 space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h2 className="text-base font-semibold">Generated Images</h2>
+                  <p className="text-xs text-muted-foreground">👆 Click images to select them</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setCurrentStep('settings')}>← Adjust</Button>
+                  <Button variant="outline" size="sm" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); }}>Start Over</Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {generatedImages.map((url, index) => (
+                  <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
+                    <img src={url} alt={`Generated ${index + 1}`} className="w-full aspect-square object-cover" onClick={() => toggleImageSelection(index)} />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2" onClick={() => toggleImageSelection(index)}>
+                      <button onClick={e => { e.stopPropagation(); handleImageClick(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="View full size">
+                        <Maximize2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={e => { e.stopPropagation(); handleDownloadImage(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Download">
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button onClick={e => { e.stopPropagation(); handleRegenerate(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="Regenerate">
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
                     </div>
-                    <BlockStack gap="100">
-                      <Text as="p" variant="headingMd" fontWeight="bold">
-                        {scratchUpload.productInfo.title}
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        {scratchUpload.productInfo.productType}
-                      </Text>
-                    </BlockStack>
-                  </InlineStack>
-                  <Divider />
-                  <Banner tone="info">
-                    <BlockStack gap="200">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">
-                        Assign to a Shopify Product
-                      </Text>
-                      <Text as="p" variant="bodySm">
-                        Select images below and publish them to any product in your store.
-                      </Text>
-                    </BlockStack>
-                  </Banner>
-                </BlockStack>
-              </Card>
-            ) : selectedProduct && (
-              <Card>
-                <BlockStack gap="300">
-                  <InlineStack gap="200" blockAlign="center">
-                    <Badge tone="success">Publishing to</Badge>
-                  </InlineStack>
-                  <InlineStack gap="400" blockAlign="center">
-                    <Thumbnail
-                      source={selectedProduct.images[0]?.url || 'https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png'}
-                      alt={selectedProduct.title}
-                      size="large"
-                    />
-                    <BlockStack gap="100">
-                      <Text as="p" variant="headingMd" fontWeight="bold">
-                        {selectedProduct.title}
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        {selectedProduct.vendor}
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        Currently has {selectedProduct.images.length} image{selectedProduct.images.length !== 1 ? 's' : ''}
-                      </Text>
-                    </BlockStack>
-                  </InlineStack>
-                  {selectedProduct.images.length > 0 && (
-                    <>
-                      <Divider />
-                      <BlockStack gap="200">
-                        <Text as="p" variant="bodySm" fontWeight="semibold">
-                          Existing product images (for reference)
-                        </Text>
-                        <InlineStack gap="200">
-                          {selectedProduct.images.map(img => (
-                            <div key={img.id} className="w-12 h-12 rounded-md overflow-hidden border border-border">
-                              <img src={img.url} alt={img.altText || ''} className="w-full h-full object-cover" />
-                            </div>
-                          ))}
-                        </InlineStack>
-                      </BlockStack>
-                    </>
-                  )}
-                </BlockStack>
-              </Card>
-            )}
-
-            <Card>
-              <BlockStack gap="400">
-                <InlineStack align="space-between">
-                  <BlockStack gap="100">
-                    <Text as="h2" variant="headingMd">
-                      Generated Images
-                    </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
-                      👆 Click images to select them for publishing
-                    </Text>
-                  </BlockStack>
-                  <InlineStack gap="200">
-                    <Button onClick={() => setCurrentStep('settings')}>
-                      ← Adjust Settings
-                    </Button>
-                    <Button onClick={() => {
-                      setCurrentStep('source');
-                      setSelectedProduct(null);
-                      setScratchUpload(null);
-                      setSelectedTemplate(null);
-                      setGeneratedImages([]);
-                      setSelectedForPublish(new Set());
-                    }}>
-                      Start Over
-                    </Button>
-                  </InlineStack>
-                </InlineStack>
-                
-                <InlineGrid columns={{ xs: 2, md: 4 }} gap="400">
-                  {generatedImages.map((url, index) => (
-                    <div
-                      key={index}
-                      className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${
-                        selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''
-                      }`}
-                    >
-                      <img 
-                        src={url} 
-                        alt={`Generated ${index + 1}`} 
-                        className="w-full aspect-square object-cover"
-                        onClick={() => toggleImageSelection(index)}
-                      />
-                      
-                      {/* Overlay with actions */}
-                      <div 
-                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
-                        onClick={() => toggleImageSelection(index)}
-                      >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleImageClick(index);
-                          }}
-                          className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white transition-colors"
-                          title="View full size"
-                        >
-                          <Icon source={MaximizeIcon} />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownloadImage(index);
-                          }}
-                          className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white transition-colors"
-                          title="Download"
-                        >
-                          <Icon source={ArrowDownIcon} />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRegenerate(index);
-                          }}
-                          className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white transition-colors"
-                          title="Regenerate variation"
-                        >
-                          <Icon source={RefreshIcon} />
-                        </button>
-                      </div>
-                      
-                      {/* Selection indicator - more visible */}
-                      <div 
-                        className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
-                          selectedForPublish.has(index) 
-                            ? 'bg-primary border-primary scale-110' 
-                            : 'border-white bg-black/50 hover:bg-black/70'
-                        }`}
-                        onClick={() => toggleImageSelection(index)}
-                      >
-                        {selectedForPublish.has(index) ? (
-                          <Icon source={CheckCircleIcon} tone="base" />
-                        ) : (
-                          <span className="text-white text-xs font-bold">{index + 1}</span>
-                        )}
-                      </div>
+                    <div className={`absolute top-2 right-2 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${selectedForPublish.has(index) ? 'bg-primary border-primary scale-110' : 'border-white bg-black/50'}`} onClick={() => toggleImageSelection(index)}>
+                      {selectedForPublish.has(index) ? <CheckCircle className="w-4 h-4 text-primary-foreground" /> : <span className="text-white text-xs font-bold">{index + 1}</span>}
                     </div>
-                  ))}
-                </InlineGrid>
-
-                {/* Selection helper banner */}
-                {selectedForPublish.size === 0 && (
-                  <Banner tone="info">
-                    <Text as="p" variant="bodySm">
-                      👆 Click on images above to select them for publishing. You can select multiple images.
-                    </Text>
-                  </Banner>
-                )}
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="p" variant="bodySm" tone="subdued">
-                    Selected: {selectedForPublish.size} of {generatedImages.length} images
-                  </Text>
-                  <InlineStack gap="200">
-                    <Button onClick={() => setSelectedForPublish(new Set(generatedImages.map((_, i) => i)))}>
-                      Select All
-                    </Button>
-                    <Button onClick={() => setSelectedForPublish(new Set())}>
-                      Clear Selection
-                    </Button>
-                  </InlineStack>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-
-            {/* Prompt Preview */}
-            {(selectedTemplate || generationMode === 'virtual-try-on') && (
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h3" variant="headingSm">
-                    Generation Summary
-                  </Text>
-                  <div className="p-3 bg-surface-subdued rounded-lg font-mono text-sm">
-                    {generationMode === 'virtual-try-on' ? (
-                      <>Virtual Try-On: {selectedModel?.name} wearing {scratchUpload?.productInfo.title || selectedProduct?.title} in {selectedPose?.name} pose</>
-                    ) : (
-                      <>{selectedTemplate?.promptBlueprint.sceneDescription}. {scratchUpload?.productInfo.title || selectedProduct?.title}. {selectedTemplate?.promptBlueprint.lighting}.</>
-                    )}
                   </div>
-                </BlockStack>
-              </Card>
+                ))}
+              </div>
+
+              {selectedForPublish.size === 0 && (
+                <Alert><AlertDescription>👆 Click on images above to select them for publishing.</AlertDescription></Alert>
+              )}
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Selected: {selectedForPublish.size} of {generatedImages.length}</p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setSelectedForPublish(new Set(generatedImages.map((_, i) => i)))}>Select All</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSelectedForPublish(new Set())}>Clear</Button>
+                </div>
+              </div>
+            </CardContent></Card>
+
+            {(selectedTemplate || generationMode === 'virtual-try-on') && (
+              <Card><CardContent className="p-5 space-y-2">
+                <h3 className="text-sm font-semibold">Generation Summary</h3>
+                <div className="p-3 bg-muted rounded-lg font-mono text-sm">
+                  {generationMode === 'virtual-try-on'
+                    ? `Virtual Try-On: ${selectedModel?.name} wearing ${scratchUpload?.productInfo.title || selectedProduct?.title} in ${selectedPose?.name} pose`
+                    : `${selectedTemplate?.promptBlueprint.sceneDescription}. ${scratchUpload?.productInfo.title || selectedProduct?.title}. ${selectedTemplate?.promptBlueprint.lighting}.`
+                  }
+                </div>
+              </CardContent></Card>
             )}
 
-            {/* Actions */}
-            <InlineStack align="end" gap="200">
-              <Button onClick={handleDownloadAll} icon={ArrowDownIcon}>
-                Download All
-              </Button>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
               {sourceType === 'scratch' ? (
-                <Button
-                  variant="primary"
-                  onClick={() => setProductAssignmentModalOpen(true)}
-                  disabled={selectedForPublish.size === 0}
-                  size="large"
-                >
-                  {`Assign ${selectedForPublish.size} to Product`}
+                <Button onClick={() => setProductAssignmentModalOpen(true)} disabled={selectedForPublish.size === 0}>
+                  Assign {selectedForPublish.size} to Product
                 </Button>
               ) : (
-                <Button
-                  variant="primary"
-                  onClick={handlePublishClick}
-                  disabled={selectedForPublish.size === 0}
-                  size="large"
-                >
-                  {`Publish ${selectedForPublish.size} to "${selectedProduct?.title}"`}
+                <Button onClick={handlePublishClick} disabled={selectedForPublish.size === 0}>
+                  Publish {selectedForPublish.size} to "{selectedProduct?.title}"
                 </Button>
               )}
-            </InlineStack>
-          </BlockStack>
+            </div>
+          </div>
         )}
-      </BlockStack>
+      </div>
 
       {/* Modals */}
-      <GenerateConfirmModal
-        open={confirmModalOpen}
-        onClose={() => setConfirmModalOpen(false)}
-        onConfirm={handleConfirmGenerate}
-        product={selectedProduct}
-        template={selectedTemplate}
-        sourceImageIds={selectedSourceImages}
-        imageCount={parseInt(imageCount)}
-        aspectRatio={aspectRatio}
-        quality={quality}
-        creditsRemaining={balance}
-        onBuyCredits={openBuyModal}
-      />
-
-      <TryOnConfirmModal
-        open={tryOnConfirmModalOpen}
-        onClose={() => setTryOnConfirmModalOpen(false)}
-        onConfirm={handleTryOnConfirmGenerate}
-        product={selectedProduct}
-        model={selectedModel}
-        pose={selectedPose}
-        imageCount={parseInt(imageCount)}
-        aspectRatio={aspectRatio}
-        creditsRemaining={balance}
-        isLoading={isTryOnGenerating}
-        onBuyCredits={openBuyModal}
-        sourceImageUrl={
-          selectedProduct && selectedSourceImages.size > 0
-            ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url
-            : undefined
-        }
-      />
-
-      <PublishModal
-        open={publishModalOpen}
-        onClose={() => setPublishModalOpen(false)}
-        onPublish={handlePublish}
-        selectedImages={Array.from(selectedForPublish).map(i => generatedImages[i])}
-        product={selectedProduct}
-        existingImages={selectedProduct?.images || []}
-      />
-
-      <ProductAssignmentModal
-        open={productAssignmentModalOpen}
-        onClose={() => setProductAssignmentModalOpen(false)}
-        products={mockProducts}
-        selectedProduct={assignToProduct}
-        onSelectProduct={setAssignToProduct}
-        onPublish={(product, mode) => {
-          const count = selectedForPublish.size;
-          toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`);
-          setProductAssignmentModalOpen(false);
-          navigate('/app/jobs');
-        }}
-        selectedImageCount={selectedForPublish.size}
-      />
-
-      <ImageLightbox
-        images={generatedImages}
-        currentIndex={lightboxIndex}
-        open={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
-        onNavigate={setLightboxIndex}
-        onSelect={toggleImageSelection}
-        onDownload={handleDownloadImage}
-        onRegenerate={handleRegenerate}
-        selectedIndices={selectedForPublish}
-        productName={selectedProduct?.title || scratchUpload?.productInfo.title}
-      />
-
-      <NoCreditsModal
-        open={noCreditsModalOpen}
-        onClose={() => setNoCreditsModalOpen(false)}
-      />
+      <GenerateConfirmModal open={confirmModalOpen} onClose={() => setConfirmModalOpen(false)} onConfirm={handleConfirmGenerate}
+        product={selectedProduct} template={selectedTemplate} sourceImageIds={selectedSourceImages}
+        imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} quality={quality} creditsRemaining={balance} onBuyCredits={openBuyModal} />
+      <TryOnConfirmModal open={tryOnConfirmModalOpen} onClose={() => setTryOnConfirmModalOpen(false)} onConfirm={handleTryOnConfirmGenerate}
+        product={selectedProduct} model={selectedModel} pose={selectedPose}
+        imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} creditsRemaining={balance} isLoading={isTryOnGenerating} onBuyCredits={openBuyModal}
+        sourceImageUrl={selectedProduct && selectedSourceImages.size > 0 ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url : undefined} />
+      <PublishModal open={publishModalOpen} onClose={() => setPublishModalOpen(false)} onPublish={handlePublish}
+        selectedImages={Array.from(selectedForPublish).map(i => generatedImages[i])} product={selectedProduct} existingImages={selectedProduct?.images || []} />
+      <ProductAssignmentModal open={productAssignmentModalOpen} onClose={() => setProductAssignmentModalOpen(false)}
+        products={mockProducts} selectedProduct={assignToProduct} onSelectProduct={setAssignToProduct}
+        onPublish={(product, mode) => { toast.success(`${selectedForPublish.size} image(s) ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`); setProductAssignmentModalOpen(false); navigate('/app/jobs'); }}
+        selectedImageCount={selectedForPublish.size} />
+      <ImageLightbox images={generatedImages} currentIndex={lightboxIndex} open={lightboxOpen} onClose={() => setLightboxOpen(false)}
+        onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}
+        onRegenerate={handleRegenerate} selectedIndices={selectedForPublish} productName={selectedProduct?.title || scratchUpload?.productInfo.title} />
+      <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} />
     </PageHeader>
   );
 }

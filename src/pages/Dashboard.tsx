@@ -1,16 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  BlockStack,
-  InlineGrid,
-  Card,
-  Text,
-  Button,
-  DataTable,
-  InlineStack,
-  Thumbnail,
-} from '@shopify/polaris';
-import { ImageIcon, WalletIcon, ClockIcon, CheckCircleIcon, AlertCircleIcon } from '@shopify/polaris-icons';
+import { Image, Wallet, Clock, CheckCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/app/PageHeader';
 import { MetricCard } from '@/components/app/MetricCard';
 import { StatusBadge } from '@/components/app/StatusBadge';
@@ -18,7 +11,7 @@ import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { JobDetailModal } from '@/components/app/JobDetailModal';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { useCredits } from '@/contexts/CreditContext';
-import { mockMetrics, mockJobs, categoryLabels } from '@/data/mockData';
+import { mockMetrics, mockJobs } from '@/data/mockData';
 import type { GenerationJob } from '@/types';
 
 export default function Dashboard() {
@@ -33,55 +26,26 @@ export default function Dashboard() {
   };
   const recentJobs = mockJobs.slice(0, 5);
 
-  const rows = recentJobs.map(job => [
-    <InlineStack gap="300" blockAlign="center" key={job.jobId}>
-      <Thumbnail
-        source={job.productSnapshot.images[0]?.url || '/placeholder.svg'}
-        alt={job.productSnapshot.title}
-        size="small"
-      />
-      <Text as="span" variant="bodyMd" fontWeight="semibold">
-        {job.productSnapshot.title}
-      </Text>
-    </InlineStack>,
-    job.templateSnapshot.name,
-    <StatusBadge key={`status-${job.jobId}`} status={job.status} />,
-    <Text as="span" variant="bodyMd" key={`credits-${job.jobId}`}>
-      {job.creditsUsed > 0 ? job.creditsUsed : '—'}
-    </Text>,
-    new Date(job.createdAt).toLocaleDateString(),
-    <InlineStack gap="200" key={`actions-${job.jobId}`}>
-      <Button size="slim" onClick={() => handleViewJob(job)}>
-        View
-      </Button>
-      {job.status === 'failed' && (
-        <Button size="slim" variant="primary" onClick={() => navigate('/app/generate')}>
-          Retry
-        </Button>
-      )}
-    </InlineStack>,
-  ]);
-
   return (
     <PageHeader title="Dashboard">
-      <BlockStack gap="600">
+      <div className="space-y-6">
         {/* Low credits banner */}
         <LowCreditsBanner />
 
         {/* Metrics Row */}
-        <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <MetricCard
             title="Images Generated"
             value={mockMetrics.imagesGenerated30d}
             suffix="last 30 days"
-            icon={ImageIcon}
+            icon={Image}
             trend={{ value: 12, direction: 'up' }}
           />
           <MetricCard
             title="Credits Remaining"
             value={balance}
             suffix="available"
-            icon={WalletIcon}
+            icon={Wallet}
             onClick={openBuyModal}
             trend={{ value: 15, direction: 'down' }}
           />
@@ -89,85 +53,122 @@ export default function Dashboard() {
             title="Avg. Generation Time"
             value={mockMetrics.avgGenerationTime}
             suffix="seconds"
-            icon={ClockIcon}
+            icon={Clock}
             trend={{ value: 8, direction: 'down' }}
           />
           <MetricCard
             title="Publish Rate"
             value={`${mockMetrics.publishRate}%`}
             suffix="of generated"
-            icon={CheckCircleIcon}
+            icon={CheckCircle}
             trend={{ value: 5, direction: 'up' }}
           />
-        </InlineGrid>
+        </div>
 
         {/* Usage Progress */}
         <Card>
-          <BlockStack gap="300">
-            <InlineStack align="space-between">
-              <Text as="h2" variant="headingMd">Usage This Month</Text>
-              <Text as="span" variant="bodyMd" tone="subdued">
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold">Usage This Month</h2>
+              <span className="text-sm text-muted-foreground">
                 {mockMetrics.imagesGenerated30d} / 300 images
-              </Text>
-            </InlineStack>
+              </span>
+            </div>
             <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-primary transition-all rounded-full"
                 style={{ width: `${Math.min((mockMetrics.imagesGenerated30d / 300) * 100, 100)}%` }}
               />
             </div>
-            <Text as="p" variant="bodySm" tone="subdued">
+            <p className="text-sm text-muted-foreground">
               {Math.round((mockMetrics.imagesGenerated30d / 300) * 100)}% of monthly quota used
-            </Text>
-          </BlockStack>
+            </p>
+          </CardContent>
         </Card>
 
         {/* Quick Generate Card */}
         <Card>
-          <BlockStack gap="400">
-            <Text as="h2" variant="headingMd">
-              Quick Generate
-            </Text>
-            <Text as="p" variant="bodyMd" tone="subdued">
+          <CardContent className="p-5 space-y-4">
+            <h2 className="text-base font-semibold">Quick Generate</h2>
+            <p className="text-sm text-muted-foreground">
               Generate professional product images in seconds. Select a product and we'll recommend the best photography styles.
-            </Text>
-            <InlineStack gap="300" wrap>
-              <Button
-                variant="primary"
-                size="large"
-                onClick={() => navigate('/app/generate')}
-              >
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button size="lg" onClick={() => navigate('/app/generate')}>
                 Upload & Generate
               </Button>
-              <Button
-                size="large"
-                onClick={() => navigate('/app/templates')}
-                variant="plain"
-              >
+              <Button size="lg" variant="ghost" onClick={() => navigate('/app/templates')}>
                 Explore Templates
               </Button>
-            </InlineStack>
-          </BlockStack>
+            </div>
+          </CardContent>
         </Card>
 
         {/* Recent Jobs */}
         <Card>
-          <BlockStack gap="400">
-            <InlineStack align="space-between">
-              <Text as="h2" variant="headingMd">
-                Recent Jobs
-              </Text>
-              <Button variant="plain" onClick={() => navigate('/app/jobs')}>
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold">Recent Jobs</h2>
+              <Button variant="link" onClick={() => navigate('/app/jobs')}>
                 View all
               </Button>
-            </InlineStack>
-            
+            </div>
+
             {recentJobs.length > 0 ? (
-              <DataTable
-                columnContentTypes={['text', 'text', 'text', 'numeric', 'text', 'text']}
-                headings={['Product', 'Template', 'Status', 'Credits', 'Created', 'Actions']}
-                rows={rows}
-              />
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Template</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Credits</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentJobs.map(job => (
+                      <TableRow key={job.jobId}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                              <img
+                                src={job.productSnapshot.images[0]?.url || '/placeholder.svg'}
+                                alt={job.productSnapshot.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <span className="font-medium text-sm">{job.productSnapshot.title}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">{job.templateSnapshot.name}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={job.status} />
+                        </TableCell>
+                        <TableCell className="text-right text-sm">
+                          {job.creditsUsed > 0 ? job.creditsUsed : '—'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {new Date(job.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" onClick={() => handleViewJob(job)}>
+                              View
+                            </Button>
+                            {job.status === 'failed' && (
+                              <Button size="sm" onClick={() => navigate('/app/generate')}>
+                                Retry
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             ) : (
               <EmptyStateCard
                 heading="No jobs yet"
@@ -178,9 +179,9 @@ export default function Dashboard() {
                 }}
               />
             )}
-          </BlockStack>
+          </CardContent>
         </Card>
-      </BlockStack>
+      </div>
 
       {/* Job Detail Modal */}
       <JobDetailModal

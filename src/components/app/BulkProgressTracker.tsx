@@ -1,16 +1,9 @@
-import {
-  BlockStack,
-  InlineStack,
-  Card,
-  Text,
-  Button,
-  Badge,
-  Thumbnail,
-  Spinner,
-} from '@shopify/polaris';
-import { PlayIcon, XIcon, CheckCircleIcon, AlertCircleIcon, PauseCircleIcon } from '@shopify/polaris-icons';
-import type { BulkGenerationState, BulkQueueItem } from '@/types/bulk';
+import { Pause, Play, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import type { BulkGenerationState, BulkQueueItem } from '@/types/bulk';
 
 interface BulkProgressTrackerProps {
   state: BulkGenerationState;
@@ -22,12 +15,12 @@ interface BulkProgressTrackerProps {
 function getStatusIcon(status: BulkQueueItem['status']) {
   switch (status) {
     case 'completed':
-      return <span className="text-emerald-600"><CheckCircleIcon /></span>;
+      return <CheckCircle className="w-4 h-4 text-primary" />;
     case 'failed':
-      return <span className="text-destructive"><AlertCircleIcon /></span>;
+      return <AlertCircle className="w-4 h-4 text-destructive" />;
     case 'generating':
     case 'converting':
-      return <Spinner size="small" />;
+      return <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />;
     default:
       return null;
   }
@@ -35,25 +28,15 @@ function getStatusIcon(status: BulkQueueItem['status']) {
 
 function getStatusLabel(status: BulkQueueItem['status']) {
   switch (status) {
-    case 'pending':
-      return 'Waiting...';
-    case 'converting':
-      return 'Preparing image...';
-    case 'generating':
-      return 'Generating...';
-    case 'completed':
-      return 'Done';
-    case 'failed':
-      return 'Failed';
+    case 'pending': return 'Waiting...';
+    case 'converting': return 'Preparing image...';
+    case 'generating': return 'Generating...';
+    case 'completed': return 'Done';
+    case 'failed': return 'Failed';
   }
 }
 
-export function BulkProgressTracker({
-  state,
-  onPause,
-  onResume,
-  onCancel,
-}: BulkProgressTrackerProps) {
+export function BulkProgressTracker({ state, onPause, onResume, onCancel }: BulkProgressTrackerProps) {
   const completedCount = state.queue.filter(q => q.status === 'completed').length;
   const failedCount = state.queue.filter(q => q.status === 'failed').length;
   const totalCount = state.queue.length;
@@ -64,136 +47,104 @@ export function BulkProgressTracker({
 
   return (
     <Card>
-      <BlockStack gap="500">
+      <CardContent className="p-5 space-y-5">
         {/* Header */}
-        <InlineStack align="space-between" blockAlign="center">
-          <BlockStack gap="100">
-            <Text as="h2" variant="headingMd">Bulk Generation Progress</Text>
-            <Text as="p" variant="bodySm" tone="subdued">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold">Bulk Generation Progress</h2>
+            <p className="text-sm text-muted-foreground">
               {completedCount}/{totalCount} products completed
               {failedCount > 0 && ` • ${failedCount} failed`}
-            </Text>
-          </BlockStack>
-          
-          <InlineStack gap="200">
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
             {isRunning && (
-              <Button icon={PauseCircleIcon} onClick={onPause} size="slim">
-                Pause
+              <Button size="sm" variant="outline" onClick={onPause}>
+                <Pause className="w-4 h-4 mr-1" /> Pause
               </Button>
             )}
             {isPaused && (
-              <Button icon={PlayIcon} onClick={onResume} size="slim" variant="primary">
-                Resume
+              <Button size="sm" onClick={onResume}>
+                <Play className="w-4 h-4 mr-1" /> Resume
               </Button>
             )}
-            <Button icon={XIcon} onClick={onCancel} size="slim" tone="critical">
-              Cancel
+            <Button size="sm" variant="destructive" onClick={onCancel}>
+              <X className="w-4 h-4 mr-1" /> Cancel
             </Button>
-          </InlineStack>
-        </InlineStack>
+          </div>
+        </div>
 
         {/* Overall progress */}
-        <BlockStack gap="200">
-          <InlineStack align="space-between">
-            <Text as="span" variant="bodySm">Overall progress</Text>
-            <Text as="span" variant="bodySm" fontWeight="semibold">{overallProgress}%</Text>
-          </InlineStack>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Overall progress</span>
+            <span className="text-sm font-semibold">{overallProgress}%</span>
+          </div>
           <Progress value={overallProgress} className="h-2" />
-        </BlockStack>
+        </div>
 
-        {/* Status badges */}
-        <InlineStack gap="200">
-          <Badge tone="info">{state.status === 'running' ? 'Running' : state.status === 'paused' ? 'Paused' : 'Processing'}</Badge>
-          {state.config.mode === 'virtual-try-on' && (
-            <Badge>Virtual Try-On</Badge>
-          )}
-          <Badge>{`${state.config.imageCount} images/product`}</Badge>
-        </InlineStack>
+        {/* Badges */}
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">{state.status === 'running' ? 'Running' : state.status === 'paused' ? 'Paused' : 'Processing'}</Badge>
+          {state.config.mode === 'virtual-try-on' && <Badge variant="outline">Virtual Try-On</Badge>}
+          <Badge variant="outline">{state.config.imageCount} images/product</Badge>
+        </div>
 
-        {/* Queue items */}
+        {/* Queue */}
         <div className="max-h-[300px] overflow-y-auto space-y-2">
           {state.queue.map((item, index) => {
             const isCurrent = state.currentIndex === index && isRunning;
-            
             return (
-              <div 
+              <div
                 key={item.productId}
-                className={`
-                  p-3 rounded-lg border transition-all
-                  ${isCurrent ? 'border-primary bg-primary/5' : 'border-border'}
-                  ${item.status === 'completed' ? 'bg-green-50/50' : ''}
-                  ${item.status === 'failed' ? 'bg-red-50/50' : ''}
-                `}
+                className={`p-3 rounded-lg border transition-all ${
+                  isCurrent ? 'border-primary bg-primary/5' : 'border-border'
+                } ${item.status === 'completed' ? 'bg-green-50/50' : ''} ${item.status === 'failed' ? 'bg-red-50/50' : ''}`}
               >
-                <InlineStack gap="300" align="space-between" blockAlign="center">
-                  <InlineStack gap="300" blockAlign="center">
-                    {/* Product thumbnail */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
                       {item.product.images[0] ? (
-                        <img 
-                          src={item.product.images[0].url} 
-                          alt={item.product.title}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={item.product.images[0].url} alt={item.product.title} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Thumbnail source="" alt="" size="small" />
-                        </div>
+                        <div className="w-full h-full bg-muted" />
                       )}
                     </div>
-                    
-                    {/* Product info */}
-                    <BlockStack gap="050">
-                      <Text as="p" variant="bodySm" fontWeight="medium" truncate>
-                        {item.product.title}
-                      </Text>
-                      <InlineStack gap="100" blockAlign="center">
+                    <div>
+                      <p className="text-sm font-medium truncate">{item.product.title}</p>
+                      <div className="flex items-center gap-1">
                         {getStatusIcon(item.status)}
-                        <Text as="span" variant="bodySm" tone="subdued">
-                          {getStatusLabel(item.status)}
-                        </Text>
-                      </InlineStack>
-                    </BlockStack>
-                  </InlineStack>
-                  
-                  {/* Progress or results */}
+                        <span className="text-xs text-muted-foreground">{getStatusLabel(item.status)}</span>
+                      </div>
+                    </div>
+                  </div>
                   <div className="flex-shrink-0">
-                  {(item.status === 'generating' || item.status === 'converting') && (
+                    {(item.status === 'generating' || item.status === 'converting') && (
                       <div className="w-24">
                         <Progress value={item.progress} className="h-1.5" />
                       </div>
                     )}
                     {item.status === 'completed' && item.results && (
-                      <Badge tone="success">{`${item.results.length} images`}</Badge>
+                      <Badge className="bg-primary/10 text-primary">{item.results.length} images</Badge>
                     )}
                     {item.status === 'failed' && (
-                      <Badge tone="critical">Error</Badge>
+                      <Badge variant="destructive">Error</Badge>
                     )}
                   </div>
-                </InlineStack>
-                
-                {/* Error message */}
+                </div>
                 {item.status === 'failed' && item.error && (
-                  <Text as="p" variant="bodySm" tone="critical">
-                    {item.error}
-                  </Text>
+                  <p className="text-xs text-destructive mt-1">{item.error}</p>
                 )}
-                
-                {/* Generated image previews */}
                 {item.status === 'completed' && item.results && item.results.length > 0 && (
                   <div className="mt-2 flex gap-1 overflow-x-auto">
                     {item.results.slice(0, 4).map((imgUrl, imgIndex) => (
                       <div key={String(imgIndex)} className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
-                        <img 
-                          src={imgUrl} 
-                          alt={`Generated ${imgIndex + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={imgUrl} alt={`Generated ${imgIndex + 1}`} className="w-full h-full object-cover" />
                       </div>
                     ))}
                     {item.results.length > 4 && (
-                      <div className="w-12 h-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
-                        <Text as="span" variant="bodySm">+{item.results.length - 4}</Text>
+                      <div className="w-12 h-12 rounded bg-muted flex items-center justify-center flex-shrink-0 text-xs">
+                        +{item.results.length - 4}
                       </div>
                     )}
                   </div>
@@ -202,7 +153,7 @@ export function BulkProgressTracker({
             );
           })}
         </div>
-      </BlockStack>
+      </CardContent>
     </Card>
   );
 }
