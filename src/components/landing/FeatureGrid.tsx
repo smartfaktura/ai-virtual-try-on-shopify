@@ -30,7 +30,7 @@ const features = [
     headline: 'Your models. Your look. Already configured.',
     description:
       '34+ diverse AI models across body types and styles. Save favourites \u2014 they appear in every generation without a single casting call.',
-    image: templateCosmetics,
+    image: featureModels,
   },
   {
     icon: SlidersHorizontal,
