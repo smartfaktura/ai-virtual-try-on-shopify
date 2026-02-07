@@ -170,17 +170,16 @@ export function HeroSection() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto mb-14">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
-            Your AI photography team
-          </div>
-
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-6">
             Your AI Photography Team.
             <br />
-            <span className="text-primary">Ready When You Are.</span>
+            <span className="text-primary">
+              {typedText}
+              <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-0.5 align-middle animate-[blink_1s_step-end_infinite]" />
+            </span>
           </h1>
+
+          <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Upload a product photo. Your team of photographers, art directors, and retouchers delivers ∞ brand-ready visuals in seconds — for ads, listings, and campaigns.
