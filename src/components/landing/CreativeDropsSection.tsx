@@ -2,17 +2,33 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+// November — Pilates studio
+import dropNov1 from '@/assets/drops/drop-nov-1.jpg';
+import dropNov2 from '@/assets/drops/drop-nov-2.jpg';
+import dropNov3 from '@/assets/drops/drop-nov-3.jpg';
+import dropNov4 from '@/assets/drops/drop-nov-4.jpg';
+
+// September — Autumn
+import dropSept1 from '@/assets/drops/drop-sept-1.jpg';
+import dropSept2 from '@/assets/drops/drop-sept-2.jpg';
+import dropSept3 from '@/assets/drops/drop-sept-3.jpg';
+import dropSept4 from '@/assets/drops/drop-sept-4.jpg';
+
+// June — Summer
+import dropJune1 from '@/assets/drops/drop-june-1.jpg';
+import dropJune2 from '@/assets/drops/drop-june-2.jpg';
+import dropJune3 from '@/assets/drops/drop-june-3.jpg';
+import dropJune4 from '@/assets/drops/drop-june-4.jpg';
+
+// Original white crop top
 import dropWhiteCrop from '@/assets/drops/drop-model-white-crop.jpg';
 import dropSageSet from '@/assets/drops/drop-model-sage-set.jpg';
-import dropBlackTank from '@/assets/drops/drop-model-black-tank.jpg';
 import dropPinkHoodie from '@/assets/drops/drop-model-pink-hoodie.jpg';
-import dropCamelPullover from '@/assets/drops/drop-model-camel-pullover.jpg';
+import dropCreamBodysuit from '@/assets/drops/drop-model-cream-bodysuit.jpg';
 import dropNavyJacket from '@/assets/drops/drop-model-navy-jacket.jpg';
 import dropLavenderSet from '@/assets/drops/drop-model-lavender-set.jpg';
 import dropCharcoalJacket from '@/assets/drops/drop-model-charcoal-jacket.jpg';
-import dropCreamBodysuit from '@/assets/drops/drop-model-cream-bodysuit.jpg';
 import dropBurgundyTop from '@/assets/drops/drop-model-burgundy-top.jpg';
-import dropEmeraldSet from '@/assets/drops/drop-model-emerald-set.jpg';
 
 const bullets = [
   'Choose your products once',
@@ -22,24 +38,38 @@ const bullets = [
 
 const drops = [
   {
-    month: 'March Drop',
-    count: '20 visuals · 4 products',
-    thumbnails: [dropWhiteCrop, dropCharcoalJacket, dropSageSet, dropCreamBodysuit],
+    month: 'November Drop',
+    count: '16 visuals · Pilates Studio',
+    thumbnails: [dropNov1, dropNov2, dropNov3, dropNov4],
     opacity: 'opacity-100',
     status: 'Delivered',
   },
   {
-    month: 'February Drop',
-    count: '16 visuals · 3 products',
-    thumbnails: [dropPinkHoodie, dropNavyJacket, dropLavenderSet],
+    month: 'September Drop',
+    count: '20 visuals · Autumn Collection',
+    thumbnails: [dropSept1, dropSept2, dropSept3, dropSept4],
+    opacity: 'opacity-90',
+    status: 'Delivered',
+  },
+  {
+    month: 'June Drop',
+    count: '20 visuals · Summer Campaign',
+    thumbnails: [dropJune1, dropJune2, dropJune3, dropJune4],
     opacity: 'opacity-70',
     status: 'Delivered',
   },
   {
+    month: 'March Drop',
+    count: '20 visuals · Spring Lookbook',
+    thumbnails: [dropWhiteCrop, dropCharcoalJacket, dropSageSet, dropCreamBodysuit],
+    opacity: 'opacity-50',
+    status: 'Delivered',
+  },
+  {
     month: 'January Drop',
-    count: '20 visuals · 4 products',
-    thumbnails: [dropBlackTank, dropCamelPullover, dropBurgundyTop, dropEmeraldSet],
-    opacity: 'opacity-40',
+    count: '16 visuals · New Year Campaign',
+    thumbnails: [dropPinkHoodie, dropNavyJacket, dropLavenderSet, dropBurgundyTop],
+    opacity: 'opacity-30',
     status: 'Delivered',
   },
 ];
@@ -83,7 +113,7 @@ export function CreativeDropsSection() {
 
           {/* Right: Timeline of drops */}
           <div className="flex justify-center">
-            <div className="w-full max-w-sm space-y-4">
+            <div className="w-full max-w-sm space-y-3">
               {/* Next drop indicator */}
               <div className="flex items-center gap-2 text-sm font-medium text-primary mb-2 px-1">
                 <Clock className="w-4 h-4" />
@@ -95,21 +125,21 @@ export function CreativeDropsSection() {
                   key={drop.month}
                   className={`rounded-2xl border border-border bg-card shadow-sm overflow-hidden ${drop.opacity} transition-opacity`}
                 >
-                  <div className="p-4 border-b border-border flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <Calendar className="w-4 h-4 text-primary" />
+                  <div className="p-3 border-b border-border flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Calendar className="w-3.5 h-3.5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-foreground">{drop.month}</p>
-                      <p className="text-xs text-muted-foreground">{drop.count}</p>
+                      <p className="text-[11px] text-muted-foreground">{drop.count}</p>
                     </div>
                     <span className="text-[10px] font-medium text-muted-foreground">{drop.status}</span>
                   </div>
-                  <div className="p-3">
+                  <div className="p-2">
                     <div className="flex gap-1.5">
                       {drop.thumbnails.slice(0, 4).map((thumb, i) => (
                         <div key={i} className="rounded-md overflow-hidden border border-border flex-1">
-                          <img src={thumb} alt="Campaign visual" className="w-full h-20 object-cover object-top" />
+                          <img src={thumb} alt="Campaign visual" className="w-full h-16 object-cover object-top" />
                         </div>
                       ))}
                     </div>
