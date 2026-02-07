@@ -6,7 +6,7 @@ export function CreditIndicator() {
   
   const getColorClass = () => {
     if (isEmpty || isCritical) return 'text-destructive';
-    if (isLow) return 'text-yellow-600';
+    if (isLow) return 'text-status-warning';
     return 'text-primary';
   };
   
