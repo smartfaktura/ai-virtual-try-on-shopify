@@ -1,16 +1,24 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, CreditCard, Clock, Shield } from 'lucide-react';
+import { ArrowRight, Sparkles, CreditCard, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-import productBefore from '@/assets/products/serum-vitamin-c.jpg';
-import productAfter from '@/assets/templates/cosmetics-luxury.jpg';
-import clothingBefore from '@/assets/products/hoodie-gray-1.jpg';
-import clothingAfter from '@/assets/templates/clothing-studio.jpg';
+import productUpload from '@/assets/products/serum-vitamin-c.jpg';
+import contextAd from '@/assets/templates/cosmetics-luxury.jpg';
+import contextListing from '@/assets/templates/cosmetics-pastel.jpg';
+import contextLifestyle from '@/assets/templates/cosmetics-water.jpg';
+import contextHero from '@/assets/templates/universal-clean.jpg';
 
 const trustBadges = [
   { icon: CreditCard, text: 'No credit card required' },
   { icon: Sparkles, text: '5 free visuals' },
   { icon: Shield, text: 'Cancel anytime' },
+];
+
+const visualContexts = [
+  { img: contextAd, label: 'Ad Creative (4:5)' },
+  { img: contextListing, label: 'Product Listing (1:1)' },
+  { img: contextLifestyle, label: 'Lifestyle Scene' },
+  { img: contextHero, label: 'Website Hero (16:9)' },
 ];
 
 export function HeroSection() {
@@ -36,22 +44,22 @@ export function HeroSection() {
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Set your brand style once and get fresh, on-brand product visuals every month — automatically. No studio, no photographer, no hassle.
+            Upload one product photo and get 20 brand-ready visuals for ads, website, and campaigns — automatically.
           </p>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate('/auth')}>
-              Start Free — 5 Visuals
+              Create My First Visual Set
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button
               variant="outline"
               size="lg"
               className="rounded-full px-8 py-6 text-base font-semibold"
-              onClick={() => document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.querySelector('#how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              See Examples
+              See How It Works
             </Button>
           </div>
 
@@ -66,63 +74,48 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Before/After showcase */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          <ShowcaseCard
-            beforeImg={productBefore}
-            afterImg={productAfter}
-            label="Skincare Product"
-            category="Cosmetics"
-          />
-          <ShowcaseCard
-            beforeImg={clothingBefore}
-            afterImg={clothingAfter}
-            label="Apparel"
-            category="Fashion"
-          />
+        {/* Visual Set showcase: Upload → Multiple outputs */}
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start">
+            {/* Left: Original upload */}
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
+              <div className="relative">
+                <img src={productUpload} alt="Your uploaded product" className="w-full h-64 object-cover" />
+                <span className="absolute top-3 left-3 text-xs font-semibold px-3 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
+                  Your Upload
+                </span>
+              </div>
+              <div className="p-4 text-center">
+                <p className="text-sm font-semibold text-foreground">1 product photo</p>
+                <p className="text-xs text-muted-foreground">That's all you need</p>
+              </div>
+            </div>
+
+            {/* Right: 2x2 generated contexts */}
+            <div>
+              <div className="grid grid-cols-2 gap-3">
+                {visualContexts.map((ctx) => (
+                  <div
+                    key={ctx.label}
+                    className="rounded-xl border border-border bg-card overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300"
+                  >
+                    <div className="relative">
+                      <img src={ctx.img} alt={ctx.label} className="w-full h-32 sm:h-36 object-cover" />
+                      <span className="absolute bottom-2 left-2 text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                        {ctx.label}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Caption */}
+              <p className="text-center text-xs text-muted-foreground mt-4">
+                Same product — 4 visual contexts — 12 seconds
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function ShowcaseCard({
-  beforeImg,
-  afterImg,
-  label,
-  category,
-}: {
-  beforeImg: string;
-  afterImg: string;
-  label: string;
-  category: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-      <div className="grid grid-cols-2">
-        <div className="relative">
-          <img src={beforeImg} alt={`${label} before`} className="w-full h-48 object-cover" />
-          <span className="absolute bottom-2 left-2 text-xs font-medium bg-foreground/70 text-background px-2 py-0.5 rounded">
-            Before
-          </span>
-        </div>
-        <div className="relative">
-          <img src={afterImg} alt={`${label} after`} className="w-full h-48 object-cover" />
-          <span className="absolute bottom-2 left-2 text-xs font-medium bg-primary text-primary-foreground px-2 py-0.5 rounded">
-            After
-          </span>
-        </div>
-      </div>
-      <div className="p-4 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-foreground">{label}</p>
-          <p className="text-xs text-muted-foreground">{category}</p>
-        </div>
-        <div className="flex items-center gap-1 text-xs text-primary font-medium">
-          <Clock className="w-3 h-3" />
-          ~12s
-        </div>
-      </div>
-    </div>
   );
 }

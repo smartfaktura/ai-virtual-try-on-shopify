@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, Shield, Clock } from 'lucide-react';
+import { ArrowRight, Sparkles, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function FinalCTA() {
@@ -17,32 +17,32 @@ export function FinalCTA() {
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-tight mb-6">
-          Ready to Automate Your
+          Stop Planning Photoshoots.
           <br />
-          Product Photography?
+          Start Receiving Visuals.
         </h2>
 
         <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-          Join 2,000+ brands using nanobanna to get fresh, on-brand product visuals delivered automatically every month.
+          Upload your products, choose your workflows, and let your studio team deliver fresh visuals every month.
         </p>
 
         <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
-          Start Free — 5 Visuals
+          Create My First Visual Set
           <ArrowRight className="w-5 h-5" />
         </Button>
 
         <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Shield className="w-4 h-4 text-primary" />
-            No credit card required
+            Free to try
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Clock className="w-4 h-4 text-primary" />
-            Setup in 30 seconds
+            <Zap className="w-4 h-4 text-primary" />
+            No prompts
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Sparkles className="w-4 h-4 text-primary" />
-            5 free visuals included
+            Cancel anytime
           </div>
         </div>
       </div>

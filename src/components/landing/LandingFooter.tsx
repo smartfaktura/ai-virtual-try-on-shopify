@@ -1,5 +1,5 @@
 const footerLinks = {
-  Product: ['Features', 'Pricing', 'Templates', 'Virtual Try-On', 'Bulk Generation', 'API'],
+  Product: ['Workflows', 'Pricing', 'Virtual Try-On', 'Creative Drops', 'Brand Profiles'],
   Company: ['About', 'Blog', 'Careers', 'Press'],
   Support: ['Help Center', 'Contact', 'Status', 'Changelog'],
   Legal: ['Privacy Policy', 'Terms of Service', 'Cookie Policy'],
@@ -19,7 +19,7 @@ export function LandingFooter() {
               <span className="font-bold text-foreground">nanobanna</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              AI-powered product photography for modern brands. Professional images in seconds.
+              Your automated visual studio for e-commerce. Professional product visuals, delivered monthly.
             </p>
           </div>
 
