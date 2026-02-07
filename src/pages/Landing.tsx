@@ -21,7 +21,7 @@ export default function Landing() {
         <HeroSection />
         
         <StudioTeamSection />
-        <FeatureGrid />
+        
         <HowItWorks />
         
         <ModelShowcaseSection />
