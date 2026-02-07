@@ -140,12 +140,29 @@
 @layer components {
   /* Elevated card — shadow-based depth instead of borders */
   .card-elevated {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Luxury card — elevated with refined ring edge */
+  .card-luxury {
+    @apply rounded-xl;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    ring: 1px solid rgba(0, 0, 0, 0.03);
   }
 
   /* Section label — whisper-level uppercase heading */
   .section-label {
     @apply text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground;
+  }
+
+  /* Section divider — label with extending line */
+  .section-divider {
+    @apply flex items-center gap-4;
+  }
+
+  .section-divider::after {
+    content: '';
+    @apply flex-1 h-px bg-border;
   }
 
   /* Metric card styling */
