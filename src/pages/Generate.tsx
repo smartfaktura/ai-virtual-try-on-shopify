@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useGenerateTryOn } from '@/hooks/useGenerateTryOn';
 import { useGenerateProduct } from '@/hooks/useGenerateProduct';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
@@ -42,17 +44,44 @@ import { UploadSourceCard } from '@/components/app/UploadSourceCard';
 import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal';
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { supabase } from '@/integrations/supabase/client';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
+import type { Workflow } from '@/pages/Workflows';
+import type { BrandProfile } from '@/pages/BrandProfiles';
 
-type Step = 'source' | 'product' | 'upload' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
+type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
 export default function Generate() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
+  const workflowId = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost } = useCredits();
+
+  // Workflow & Brand Profile from DB
+  const { data: activeWorkflow } = useQuery({
+    queryKey: ['workflow', workflowId],
+    queryFn: async () => {
+      if (!workflowId) return null;
+      const { data, error } = await supabase.from('workflows').select('*').eq('id', workflowId).single();
+      if (error) return null;
+      return data as Workflow;
+    },
+    enabled: !!workflowId,
+  });
+
+  const { data: brandProfiles = [] } = useQuery({
+    queryKey: ['brand-profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('brand_profiles').select('*').order('name');
+      if (error) return [];
+      return data as BrandProfile[];
+    },
+    enabled: !!user,
+  });
 
   const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
@@ -72,6 +101,9 @@ export default function Generate() {
     initialTemplateId ? mockTemplates.find(t => t.templateId === initialTemplateId) || null : null
   );
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
+
+  const [selectedBrandProfileId, setSelectedBrandProfileId] = useState<string>('');
+  const selectedBrandProfile = brandProfiles.find(bp => bp.id === selectedBrandProfileId) || null;
 
   const [generationMode, setGenerationMode] = useState<GenerationMode>('product-only');
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
@@ -104,6 +136,40 @@ export default function Generate() {
 
   const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
   const { generate: generateProduct, isLoading: isProductGenerating, progress: productProgress } = useGenerateProduct();
+
+  // When workflow is loaded, set generation mode and defaults
+  useEffect(() => {
+    if (activeWorkflow) {
+      if (activeWorkflow.uses_tryon) {
+        setGenerationMode('virtual-try-on');
+      }
+      // Set aspect ratio from workflow recommendations
+      if (activeWorkflow.recommended_ratios?.length > 0) {
+        const firstRatio = activeWorkflow.recommended_ratios[0] as AspectRatio;
+        if (['1:1', '4:5', '16:9'].includes(firstRatio)) {
+          setAspectRatio(firstRatio);
+        }
+      }
+      // Auto-select template from workflow's template_ids
+      if (activeWorkflow.template_ids?.length > 0) {
+        const matchingTemplate = mockTemplates.find(t =>
+          activeWorkflow.template_ids.some(tid => t.templateId.includes(tid) || t.name.toLowerCase().includes(tid.replace(/-/g, ' ')))
+        );
+        if (matchingTemplate) setSelectedTemplate(matchingTemplate);
+      }
+    }
+  }, [activeWorkflow]);
+
+  // Apply brand profile settings when selected
+  useEffect(() => {
+    if (selectedBrandProfile) {
+      setBrandTone(selectedBrandProfile.tone as BrandTone);
+      setBackgroundStyle(selectedBrandProfile.background_style as BackgroundStyle);
+      if (selectedBrandProfile.do_not_rules?.length > 0) {
+        setNegatives(selectedBrandProfile.do_not_rules);
+      }
+    }
+  }, [selectedBrandProfile]);
 
   const categories: Array<{ id: TemplateCategory | 'all'; label: string }> = [
     { id: 'all', label: 'All Templates' },
@@ -176,8 +242,24 @@ export default function Generate() {
     }
     const detectedCategory = detectProductCategory(product);
     if (detectedCategory) setSelectedCategory(detectedCategory);
-    if (isClothingProduct(product)) setCurrentStep('mode');
-    else setCurrentStep('template');
+    // Go to brand profile step if profiles exist
+    if (brandProfiles.length > 0) {
+      setCurrentStep('brand-profile');
+    } else if (activeWorkflow?.uses_tryon || isClothingProduct(product)) {
+      setCurrentStep('mode');
+    } else {
+      setCurrentStep('template');
+    }
+  };
+
+  const handleBrandProfileContinue = () => {
+    if (activeWorkflow?.uses_tryon) {
+      setCurrentStep('model');
+    } else if (isClothingProduct(selectedProduct)) {
+      setCurrentStep('mode');
+    } else {
+      setCurrentStep('template');
+    }
   };
 
   const toggleSourceImage = (imageId: string) => {
@@ -285,12 +367,12 @@ export default function Generate() {
     if (selectedForPublish.size === 0) { toast.error('Please select at least one image to download'); return; }
     selectedForPublish.forEach(idx => handleDownloadImage(idx));
     toast.success(`${selectedForPublish.size} image(s) downloaded!`);
-    navigate('/app/jobs');
+    navigate('/app/library');
   };
   const handlePublish = (mode: 'add' | 'replace') => {
     toast.success(`${selectedForPublish.size} image(s) downloaded!`);
     setPublishModalOpen(false);
-    navigate('/app/jobs');
+    navigate('/app/library');
   };
   const toggleImageSelection = (index: number) => {
     setSelectedForPublish(prev => { const s = new Set(prev); s.has(index) ? s.delete(index) : s.add(index); return s; });
@@ -307,10 +389,10 @@ export default function Generate() {
 
   const getStepNumber = () => {
     if (generationMode === 'virtual-try-on') {
-      const map: Record<string, number> = { source: 1, product: 1, upload: 1, mode: 1, model: 2, pose: 3, settings: 4, generating: 5, results: 5 };
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, pose: 4, settings: 5, generating: 6, results: 6 };
       return map[currentStep] || 1;
     }
-    const map: Record<string, number> = { source: 1, product: 1, upload: 1, mode: 1, template: 2, settings: 3, generating: 4, results: 4 };
+    const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, template: 3, settings: 4, generating: 5, results: 5 };
     return map[currentStep] || 1;
   };
 
@@ -318,18 +400,36 @@ export default function Generate() {
     if (generationMode === 'virtual-try-on') {
       return [
         { name: sourceType === 'scratch' ? 'Source' : 'Product' },
+        { name: 'Brand' },
         { name: 'Model' }, { name: 'Pose' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
-    return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Template' }, { name: 'Settings' }, { name: 'Results' }];
+    return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Template' }, { name: 'Settings' }, { name: 'Results' }];
   };
 
   const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 3 : parseInt(imageCount) * (quality === 'high' ? 2 : 1);
 
+  const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
+
   return (
-    <PageHeader title="Generate Images" backAction={{ content: 'Dashboard', onAction: () => navigate('/app') }}>
+    <PageHeader title={pageTitle} backAction={{ content: activeWorkflow ? 'Workflows' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}>
       <div className="space-y-6">
         <LowCreditsBanner />
+
+        {/* Workflow Info Banner */}
+        {activeWorkflow && (
+          <Alert>
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">{activeWorkflow.name}</p>
+                  <p className="text-xs text-muted-foreground">{activeWorkflow.description}</p>
+                </div>
+                <Badge variant="secondary">{activeWorkflow.default_image_count} images</Badge>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Progress Steps */}
         <Card>
@@ -353,9 +453,6 @@ export default function Generate() {
                 </div>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              {generationMode === 'virtual-try-on' ? 'About 3-4 minutes total' : 'About 2-3 minutes total'}
-            </p>
           </CardContent>
         </Card>
 
@@ -392,8 +489,12 @@ export default function Generate() {
                   const uploadedUrl = await uploadFile(scratchUpload.file);
                   if (uploadedUrl) {
                     setScratchUpload({ ...scratchUpload, uploadedUrl });
-                    const isClothing = ['leggings', 'hoodie', 't-shirt', 'sports bra', 'jacket', 'tank top', 'joggers'].some(kw => scratchUpload.productInfo.productType.toLowerCase().includes(kw));
-                    setCurrentStep(isClothing ? 'mode' : 'template');
+                    if (brandProfiles.length > 0) {
+                      setCurrentStep('brand-profile');
+                    } else {
+                      const isClothing = ['leggings', 'hoodie', 't-shirt', 'sports bra', 'jacket', 'tank top', 'joggers'].some(kw => scratchUpload.productInfo.productType.toLowerCase().includes(kw));
+                      setCurrentStep(isClothing ? 'mode' : 'template');
+                    }
                   }
                 }}
               >{isUploading ? 'Uploading...' : 'Continue'}</Button>
@@ -422,11 +523,74 @@ export default function Generate() {
                   if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
                   const cat = detectProductCategory(product);
                   if (cat) setSelectedCategory(cat);
-                  setCurrentStep(isClothingProduct(product) ? 'mode' : 'template');
+                  if (brandProfiles.length > 0) {
+                    setCurrentStep('brand-profile');
+                  } else if (isClothingProduct(product)) {
+                    setCurrentStep('mode');
+                  } else {
+                    setCurrentStep('template');
+                  }
                 } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
               }}>
                 {selectedProductIds.size === 0 ? 'Select at least 1' : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
               </Button>
+            </div>
+          </CardContent></Card>
+        )}
+
+        {/* Brand Profile Selection - NEW STEP */}
+        {currentStep === 'brand-profile' && (
+          <Card><CardContent className="p-5 space-y-5">
+            <div>
+              <h2 className="text-base font-semibold flex items-center gap-2">
+                <Palette className="w-5 h-5 text-primary" />
+                Select Brand Profile
+              </h2>
+              <p className="text-sm text-muted-foreground">Apply your brand's visual identity to this generation.</p>
+            </div>
+
+            {brandProfiles.length > 0 ? (
+              <div className="space-y-3">
+                {brandProfiles.map(bp => (
+                  <div
+                    key={bp.id}
+                    onClick={() => setSelectedBrandProfileId(bp.id)}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedBrandProfileId === bp.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">{bp.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {bp.tone} · {bp.lighting_style} · {bp.background_style}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="capitalize">{bp.tone}</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <Palette className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">No brand profiles yet.</p>
+                <Button variant="link" onClick={() => navigate('/app/brand-profiles')}>Create one</Button>
+              </div>
+            )}
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
+              <div className="flex gap-2">
+                {!selectedBrandProfileId && (
+                  <Button variant="ghost" onClick={handleBrandProfileContinue}>Skip</Button>
+                )}
+                <Button onClick={handleBrandProfileContinue} disabled={false}>
+                  {selectedBrandProfileId ? 'Continue' : 'Continue without profile'}
+                </Button>
+              </div>
             </div>
           </CardContent></Card>
         )}
@@ -451,7 +615,7 @@ export default function Generate() {
               <Alert><AlertDescription>Standard product photography — flat lay, studio, or lifestyle shots.</AlertDescription></Alert>
             )}
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
+              <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'))}>Back</Button>
               <Button onClick={() => setCurrentStep(generationMode === 'virtual-try-on' ? 'model' : 'template')}>Continue</Button>
             </div>
           </CardContent></Card>
@@ -479,7 +643,7 @@ export default function Generate() {
                 ))}
               </div>
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setCurrentStep('mode')}>Back</Button>
+                <Button variant="outline" onClick={() => setCurrentStep(activeWorkflow?.uses_tryon ? 'brand-profile' : 'mode')}>Back</Button>
                 <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Pose</Button>
               </div>
             </CardContent></Card>
@@ -563,6 +727,20 @@ export default function Generate() {
                   )}
                 </>
               )}
+
+              {/* Show active brand profile if selected */}
+              {selectedBrandProfile && (
+                <div className="pt-2 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Palette className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">{selectedBrandProfile.name}</span>
+                      <Badge variant="secondary" className="text-[10px] capitalize">{selectedBrandProfile.tone}</Badge>
+                    </div>
+                    <Button variant="link" size="sm" onClick={() => setCurrentStep('brand-profile')}>Change</Button>
+                  </div>
+                </div>
+              )}
             </CardContent></Card>
 
             {/* Template Grid */}
@@ -630,52 +808,25 @@ export default function Generate() {
                 </div>
 
                 {selectedTemplate && (
-                  <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-lg p-4">
-                    <div className="max-w-5xl mx-auto flex items-center justify-between">
+                  <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 shadow-lg z-30 lg:left-60">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0">
-                          {getTemplateImage(selectedTemplate.templateId) ? (
-                            <img src={getTemplateImage(selectedTemplate.templateId)} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-muted flex items-center justify-center"><Image className="w-4 h-4 text-muted-foreground" /></div>
-                          )}
-                        </div>
+                        <img src={getTemplateImage(selectedTemplate)} alt="" className="w-10 h-10 rounded-lg object-cover" />
                         <div>
                           <p className="text-sm font-semibold">{selectedTemplate.name}</p>
-                          <p className="text-xs text-muted-foreground">{selectedTemplate.defaults.quality === 'high' ? '2' : '1'} credits per image</p>
+                          <p className="text-xs text-muted-foreground">{creditCost} credits</p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setSelectedTemplate(null)}>Clear</Button>
-                        <Button onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
-                      </div>
+                      <Button onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Settings for Product-Only */}
-            {currentStep === 'settings' && selectedTemplate && generationMode === 'product-only' && (
+            {/* Settings */}
+            {currentStep === 'settings' && generationMode === 'product-only' && (
               <div className="space-y-4">
-                <Card><CardContent className="p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Selected Template</span>
-                    <Button variant="link" size="sm" onClick={() => setCurrentStep('template')}>Change</Button>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-md overflow-hidden border border-border">
-                      {getTemplateImage(selectedTemplate.templateId) ? (
-                        <img src={getTemplateImage(selectedTemplate.templateId)} alt="" className="w-full h-full object-cover" />
-                      ) : <div className="w-full h-full bg-muted" />}
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{selectedTemplate.name}</p>
-                      <p className="text-xs text-muted-foreground">{selectedTemplate.description}</p>
-                    </div>
-                  </div>
-                </CardContent></Card>
-
                 <Card><CardContent className="p-5 space-y-4">
                   <h3 className="text-base font-semibold">Generation Settings</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -684,9 +835,9 @@ export default function Generate() {
                       <Select value={imageCount} onValueChange={v => setImageCount(v as '1' | '4' | '8')}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">1 image (saves credits)</SelectItem>
+                          <SelectItem value="1">1 image</SelectItem>
                           <SelectItem value="4">4 images (recommended)</SelectItem>
-                          <SelectItem value="8">8 images (maximum variety)</SelectItem>
+                          <SelectItem value="8">8 images</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -695,8 +846,8 @@ export default function Generate() {
                       <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="standard">Standard (1 credit/image)</SelectItem>
-                          <SelectItem value="high">High (2 credits/image)</SelectItem>
+                          <SelectItem value="standard">Standard (1 credit/img)</SelectItem>
+                          <SelectItem value="high">High (2 credits/img)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -706,11 +857,20 @@ export default function Generate() {
 
                 <Card><CardContent className="p-5 space-y-4">
                   <div className="flex items-center justify-between cursor-pointer" onClick={() => setBrandKitOpen(!brandKitOpen)}>
-                    <h3 className="text-base font-semibold">Brand Settings</h3>
+                    <h3 className="text-base font-semibold">
+                      {selectedBrandProfile ? `Brand Settings — ${selectedBrandProfile.name}` : 'Brand Settings'}
+                    </h3>
                     <span className="text-xs text-muted-foreground">{brandKitOpen ? '▲' : '▼'}</span>
                   </div>
                   {brandKitOpen && (
                     <div className="space-y-4">
+                      {selectedBrandProfile && (
+                        <Alert>
+                          <AlertDescription className="text-xs">
+                            Settings pre-filled from your brand profile "{selectedBrandProfile.name}". You can still adjust them below.
+                          </AlertDescription>
+                        </Alert>
+                      )}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>Brand Tone</Label>
@@ -945,7 +1105,7 @@ export default function Generate() {
         selectedImages={Array.from(selectedForPublish).map(i => generatedImages[i])} product={selectedProduct} existingImages={selectedProduct?.images || []} />
       <ProductAssignmentModal open={productAssignmentModalOpen} onClose={() => setProductAssignmentModalOpen(false)}
         products={mockProducts} selectedProduct={assignToProduct} onSelectProduct={setAssignToProduct}
-        onPublish={(product, mode) => { toast.success(`${selectedForPublish.size} image(s) ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`); setProductAssignmentModalOpen(false); navigate('/app/jobs'); }}
+        onPublish={(product, mode) => { toast.success(`${selectedForPublish.size} image(s) ${mode === 'add' ? 'added to' : 'replaced on'} "${product.title}"!`); setProductAssignmentModalOpen(false); navigate('/app/library'); }}
         selectedImageCount={selectedForPublish.size} />
       <ImageLightbox images={generatedImages} currentIndex={lightboxIndex} open={lightboxOpen} onClose={() => setLightboxOpen(false)}
         onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}

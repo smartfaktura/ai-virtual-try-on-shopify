@@ -4,6 +4,7 @@ import { SocialProofBar } from '@/components/landing/SocialProofBar';
 import { FeatureGrid } from '@/components/landing/FeatureGrid';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { BeforeAfterGallery } from '@/components/landing/BeforeAfterGallery';
+import { StudioTeamSection } from '@/components/landing/StudioTeamSection';
 import { IntegrationSection } from '@/components/landing/IntegrationSection';
 import { LandingPricing } from '@/components/landing/LandingPricing';
 import { LandingFAQ } from '@/components/landing/LandingFAQ';
@@ -20,6 +21,7 @@ export default function Landing() {
         <FeatureGrid />
         <HowItWorks />
         <BeforeAfterGallery />
+        <StudioTeamSection />
         <IntegrationSection />
         <LandingPricing />
         <LandingFAQ />

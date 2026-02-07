@@ -17,17 +17,17 @@ export function FinalCTA() {
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-tight mb-6">
-          Ready to Transform Your
+          Ready to Automate Your
           <br />
-          Product Images?
+          Product Photography?
         </h2>
 
         <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-          Join 2,000+ brands already using nanobanna to create professional product images at a fraction of the cost.
+          Join 2,000+ brands using nanobanna to get fresh, on-brand product visuals delivered automatically every month.
         </p>
 
         <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
-          Start Free — 5 Credits
+          Start Free — 5 Visuals
           <ArrowRight className="w-5 h-5" />
         </Button>
 
@@ -42,7 +42,7 @@ export function FinalCTA() {
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Sparkles className="w-4 h-4 text-primary" />
-            5 free credits included
+            5 free visuals included
           </div>
         </div>
       </div>

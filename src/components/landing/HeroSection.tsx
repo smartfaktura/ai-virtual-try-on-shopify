@@ -9,7 +9,7 @@ import clothingAfter from '@/assets/templates/clothing-studio.jpg';
 
 const trustBadges = [
   { icon: CreditCard, text: 'No credit card required' },
-  { icon: Sparkles, text: '5 free credits' },
+  { icon: Sparkles, text: '5 free visuals' },
   { icon: Shield, text: 'Cancel anytime' },
 ];
 
@@ -26,23 +26,23 @@ export function HeroSection() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
-            AI-powered product photography
+            AI-powered visual studio for brands
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-6">
-            Professional Product Images
+            Create New Product Visuals
             <br />
-            <span className="text-primary">In Seconds, Not Days</span>
+            <span className="text-primary">Without New Photoshoots</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Stop paying $500+ per photoshoot. Generate studio-quality product images, lifestyle shots, and virtual try-ons with AI — starting at $0.008 per image.
+            Set your brand style once and get fresh, on-brand product visuals every month — automatically. No studio, no photographer, no hassle.
           </p>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate('/auth')}>
-              Start Free — 5 Credits
+              Start Free — 5 Visuals
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button

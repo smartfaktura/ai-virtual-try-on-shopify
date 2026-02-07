@@ -1,10 +1,10 @@
-import { Store, Upload, ShoppingBag, Globe } from 'lucide-react';
+import { Upload, Package, Palette, Calendar } from 'lucide-react';
 
 const integrations = [
-  { icon: ShoppingBag, name: 'Shopify', description: 'One-click import from your Shopify store' },
-  { icon: Store, name: 'WooCommerce', description: 'Sync products from WooCommerce' },
-  { icon: Upload, name: 'Direct Upload', description: 'Drag & drop any product image' },
-  { icon: Globe, name: 'Any Platform', description: 'Works with any e-commerce or social platform' },
+  { icon: Upload, name: 'Direct Upload', description: 'Drag & drop any product image from your device' },
+  { icon: Package, name: 'Product Library', description: 'Organize and reuse your products across workflows' },
+  { icon: Palette, name: 'Brand Profiles', description: 'Save your visual identity for consistent output' },
+  { icon: Calendar, name: 'Automated Drops', description: 'Schedule recurring visual runs on autopilot' },
 ];
 
 export function IntegrationSection() {
@@ -13,10 +13,10 @@ export function IntegrationSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            Works With Your Existing Tools
+            Built for Your Workflow
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            No e-commerce store needed. Upload any product image and start generating professional photos in seconds.
+            Upload any product image and let the platform handle the rest — from brand styling to automated delivery.
           </p>
         </div>
 
