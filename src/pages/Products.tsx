@@ -26,9 +26,9 @@ interface UserProduct {
 
 export default function Products() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['user-products'],
