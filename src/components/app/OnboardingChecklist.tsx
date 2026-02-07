@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Check, Upload, Palette, Sparkles } from 'lucide-react';
+import { Check, Upload, Palette, Sparkles, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface OnboardingChecklistProps {
   productCount: number;
@@ -47,61 +47,62 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
   const completedCount = Object.values(completionMap).filter(Boolean).length;
 
   return (
-    <Card className="card-elevated border-0 rounded-xl overflow-hidden">
-      {/* Edge-to-edge gradient progress bar */}
+    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      {/* Progress bar */}
       <div className="h-1 w-full bg-muted">
         <div
-          className="h-full bg-gradient-to-r from-primary via-primary to-primary/60 transition-all duration-500"
+          className="h-full bg-primary transition-all duration-500"
           style={{ width: `${(completedCount / steps.length) * 100}%` }}
         />
       </div>
 
-      <CardContent className="p-6 space-y-1">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs text-muted-foreground font-medium">
-            {completedCount} of {steps.length} complete
-          </span>
-        </div>
+      <div className="p-6">
+        <p className="text-sm text-muted-foreground mb-6">
+          {completedCount} of {steps.length} complete
+        </p>
 
         <div className="space-y-0">
           {steps.map((step, index) => {
             const done = completionMap[step.key];
             const isLast = index === steps.length - 1;
+            const StepIcon = step.icon;
             return (
               <div
                 key={step.key}
-                className={`flex items-start gap-5 py-5 transition-all ${
-                  done ? 'opacity-50' : ''
-                } ${!isLast ? 'border-b border-border/40' : ''}`}
+                className={`flex items-center gap-4 py-4 ${!isLast ? 'border-b border-border' : ''}`}
               >
-                {/* Large watermark step number */}
-                <span className="text-3xl font-extralight text-foreground/[0.08] leading-none select-none w-10 flex-shrink-0 pt-0.5">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
+                {/* Step number circle — matches landing HowItWorks */}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                  done
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-primary text-primary-foreground'
+                }`}>
+                  {done ? <Check className="w-4 h-4" /> : String(index + 1).padStart(2, '0')}
+                </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className={`text-sm font-medium ${done ? 'text-muted-foreground' : 'text-foreground'}`}>
-                      {step.title}
-                    </h3>
-                    {done && <Check className="w-3.5 h-3.5 text-muted-foreground" />}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{step.description}</p>
+                  <h3 className={`text-sm font-semibold ${done ? 'text-muted-foreground' : 'text-foreground'}`}>
+                    {step.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
                 </div>
 
                 {!done && (
-                  <button
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full font-semibold gap-1 flex-shrink-0"
                     onClick={() => navigate(step.path)}
-                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 decoration-foreground/20 hover:decoration-foreground/60 transition-colors flex-shrink-0 pt-0.5"
                   >
                     {step.cta}
-                  </button>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
                 )}
               </div>
             );
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

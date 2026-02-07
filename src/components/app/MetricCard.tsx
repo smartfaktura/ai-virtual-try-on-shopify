@@ -17,40 +17,42 @@ interface MetricCardProps {
 export function MetricCard({ title, value, suffix, icon: Icon, trend, loading, onClick }: MetricCardProps) {
   if (loading) {
     return (
-      <Card className="card-elevated border-0 rounded-xl">
-        <CardContent className="p-5 space-y-2">
-          <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-          <div className="h-8 w-16 bg-muted rounded animate-pulse" />
-        </CardContent>
-      </Card>
+      <div className="rounded-2xl border border-border bg-card p-5 space-y-2">
+        <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+        <div className="h-8 w-16 bg-muted rounded animate-pulse" />
+      </div>
     );
   }
 
   const content = (
-    <CardContent className="p-5 space-y-2">
+    <div className="p-5 space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{title}</p>
-        {Icon && <Icon className="w-4 h-4 text-muted-foreground/50" />}
+        <p className="text-sm text-muted-foreground font-medium">{title}</p>
+        {Icon && (
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Icon className="w-4 h-4 text-primary" />
+          </div>
+        )}
       </div>
       <div className="flex items-end gap-1.5">
-        <p className="text-2xl font-semibold tracking-tight">{value}</p>
+        <p className="text-3xl font-extrabold text-foreground tracking-tight">{value}</p>
         {suffix && <span className="text-xs text-muted-foreground pb-1">{suffix}</span>}
       </div>
       {trend && (
-        <p className={`text-xs ${trend.direction === 'up' ? 'text-primary' : 'text-destructive'}`}>
+        <p className={`text-xs font-medium ${trend.direction === 'up' ? 'text-primary' : 'text-destructive'}`}>
           {trend.direction === 'up' ? '↑' : '↓'} {Math.abs(trend.value)}% from last month
         </p>
       )}
-    </CardContent>
+    </div>
   );
 
+  const className = `rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 ${
+    onClick ? 'cursor-pointer hover:shadow-lg hover:border-primary/30' : ''
+  }`;
+
   if (onClick) {
-    return (
-      <Card className="card-elevated border-0 rounded-xl cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-px" onClick={onClick}>
-        {content}
-      </Card>
-    );
+    return <div className={className} onClick={onClick}>{content}</div>;
   }
 
-  return <Card className="card-elevated border-0 rounded-xl">{content}</Card>;
+  return <div className={className}>{content}</div>;
 }

@@ -50,16 +50,13 @@ export function AppShell({ children }: AppShellProps) {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      {/* Logo */}
+      {/* Logo — matches landing nav */}
       <div className="px-5 pt-6 pb-6 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-white/[0.12] flex items-center justify-center flex-shrink-0">
-            <svg width="20" height="20" viewBox="0 0 36 36" fill="none">
-              <path d="M10 18L16 12L22 18L28 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M10 24L16 18L22 24L28 18" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+            <span className="text-primary-foreground font-bold text-sm">bf</span>
           </div>
-          <span className="text-xl font-semibold tracking-tight text-sidebar-foreground">brandframe.ai</span>
+          <span className="font-bold text-lg text-sidebar-foreground tracking-tight">brandframe.ai</span>
         </div>
       </div>
 
@@ -71,9 +68,9 @@ export function AppShell({ children }: AppShellProps) {
             key={item.path}
             onClick={() => handleNav(item.path)}
             className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150',
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
               isActive(item.path)
-                ? 'border-l-2 border-white bg-white/[0.08] text-white font-medium rounded-l-none'
+                ? 'bg-white/[0.1] text-white'
                 : 'text-white/40 hover:bg-white/[0.04] hover:text-white/70'
             )}
           >
@@ -89,9 +86,9 @@ export function AppShell({ children }: AppShellProps) {
               key={item.path}
               onClick={() => handleNav(item.path)}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150',
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                 isActive(item.path)
-                  ? 'border-l-2 border-white bg-white/[0.08] text-white font-medium rounded-l-none'
+                  ? 'bg-white/[0.1] text-white'
                   : 'text-white/40 hover:bg-white/[0.04] hover:text-white/70'
               )}
             >
@@ -134,7 +131,7 @@ export function AppShell({ children }: AppShellProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-14 bg-card/80 backdrop-blur-sm flex items-center justify-between px-4 flex-shrink-0 border-b border-border/50">
+        <header className="h-14 bg-background/80 backdrop-blur-xl flex items-center justify-between px-4 flex-shrink-0 border-b border-border shadow-sm">
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-muted"
@@ -150,7 +147,7 @@ export function AppShell({ children }: AppShellProps) {
               onClick={() => setUserMenuOpen(!userMenuOpen)}
               className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-muted transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
                 {initials}
               </div>
               <span className="hidden sm:block text-sm font-medium">{displayName}</span>
@@ -160,9 +157,9 @@ export function AppShell({ children }: AppShellProps) {
             {userMenuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 w-56 bg-popover border border-border rounded-lg shadow-lg z-50 py-1">
-                  <div className="px-3 py-2 border-b border-border">
-                    <p className="text-sm font-medium">{displayName}</p>
+                <div className="absolute right-0 top-full mt-1 w-56 bg-popover border border-border rounded-2xl shadow-lg z-50 py-1 overflow-hidden">
+                  <div className="px-3 py-2.5 border-b border-border">
+                    <p className="text-sm font-semibold">{displayName}</p>
                     <p className="text-xs text-muted-foreground">{userEmail}</p>
                   </div>
                   <button
