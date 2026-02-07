@@ -144,7 +144,7 @@ export function HeroSection() {
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Upload a product photo. Your team of photographers, art directors, and retouchers delivers 20 brand-ready visuals in seconds — for ads, listings, and campaigns.
+            Upload a product photo. Your team of photographers, art directors, and retouchers delivers ∞ brand-ready visuals in seconds — for ads, listings, and campaigns.
           </p>
 
           {/* CTAs */}
