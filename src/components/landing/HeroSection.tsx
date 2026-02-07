@@ -119,7 +119,7 @@ export function HeroSection() {
               </div>
               {/* Caption */}
               <p className="text-center text-xs text-muted-foreground mt-4">
-                Same product — 4 deliverables — 12 seconds
+                Same t-shirt — 4 environments — 12 seconds
               </p>
             </div>
           </div>
