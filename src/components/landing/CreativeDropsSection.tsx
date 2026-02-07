@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, Calendar, Clock } from 'lucide-react';
+import { ArrowRight, Check, Calendar, Clock, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+// Product image
+import whiteCropTop from '@/assets/drops/drop-model-white-crop.jpg';
 
 // November — Pilates studio (portrait)
 import dropNovP1 from '@/assets/drops/drop-nov-portrait-1.jpg';
@@ -90,6 +93,25 @@ export function CreativeDropsSection() {
           {/* Right: Timeline of drops */}
           <div className="flex justify-center">
             <div className="w-full max-w-md space-y-3">
+              {/* Scheduled product card */}
+              <div className="rounded-2xl border border-border bg-card shadow-sm p-3 flex items-center gap-3 mb-1">
+                <div className="w-12 h-12 rounded-lg overflow-hidden border border-border shrink-0">
+                  <img
+                    src={whiteCropTop}
+                    alt="White Crop Top"
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground">White Crop Top</p>
+                  <p className="text-[11px] text-muted-foreground">Scheduled for monthly drops</p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Package className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-[10px] font-medium text-primary">Active</span>
+                </div>
+              </div>
+
               {/* Next drop indicator */}
               <div className="flex items-center gap-2 text-sm font-medium text-primary mb-2 px-1">
                 <Clock className="w-4 h-4" />
