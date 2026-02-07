@@ -17,7 +17,7 @@ interface MetricCardProps {
 export function MetricCard({ title, value, suffix, icon: Icon, trend, loading, onClick }: MetricCardProps) {
   if (loading) {
     return (
-      <Card>
+      <Card className="card-elevated border-0">
         <CardContent className="p-5 space-y-2">
           <div className="h-4 w-24 bg-muted rounded animate-pulse" />
           <div className="h-8 w-16 bg-muted rounded animate-pulse" />
@@ -46,11 +46,11 @@ export function MetricCard({ title, value, suffix, icon: Icon, trend, loading, o
 
   if (onClick) {
     return (
-      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
+      <Card className="card-elevated border-0 cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
         {content}
       </Card>
     );
   }
 
-  return <Card>{content}</Card>;
+  return <Card className="card-elevated border-0">{content}</Card>;
 }

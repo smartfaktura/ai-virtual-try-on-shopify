@@ -51,8 +51,8 @@ export function AppShell({ children }: AppShellProps) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-4 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+      <div className="p-5 flex items-center gap-3 border-b border-white/[0.06]">
+        <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
           <svg width="20" height="20" viewBox="0 0 36 36" fill="none">
             <path d="M10 18L16 12L22 18L28 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M10 24L16 18L22 24L28 18" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -62,8 +62,8 @@ export function AppShell({ children }: AppShellProps) {
       </div>
 
       {/* Main Nav */}
-      <nav className="flex-1 px-3 py-2 space-y-1">
-        <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">Main</p>
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/30">Main</p>
         {navItems.map((item) => (
           <button
             key={item.path}
@@ -71,8 +71,8 @@ export function AppShell({ children }: AppShellProps) {
             className={cn(
               'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
               isActive(item.path)
-                ? 'bg-sidebar-accent text-sidebar-primary'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                ? 'border-l-2 border-white/60 bg-white/[0.06] text-sidebar-foreground rounded-l-none'
+                : 'text-sidebar-foreground/50 hover:bg-white/[0.04] hover:text-sidebar-foreground/80'
             )}
           >
             <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -80,8 +80,8 @@ export function AppShell({ children }: AppShellProps) {
           </button>
         ))}
 
-        <div className="pt-4">
-          <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">Configuration</p>
+        <div className="pt-6">
+          <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/30">Configuration</p>
           {configItems.map((item) => (
             <button
               key={item.path}
@@ -89,8 +89,8 @@ export function AppShell({ children }: AppShellProps) {
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 isActive(item.path)
-                  ? 'bg-sidebar-accent text-sidebar-primary'
-                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                  ? 'border-l-2 border-white/60 bg-white/[0.06] text-sidebar-foreground rounded-l-none'
+                  : 'text-sidebar-foreground/50 hover:bg-white/[0.04] hover:text-sidebar-foreground/80'
               )}
             >
               <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -101,7 +101,7 @@ export function AppShell({ children }: AppShellProps) {
       </nav>
 
       {/* Credits */}
-      <div className="px-3 pb-3">
+      <div className="px-3 pb-4 border-t border-white/[0.06] pt-3">
         <CreditIndicator />
       </div>
     </div>
@@ -120,7 +120,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
           <aside className="absolute left-0 top-0 bottom-0 w-64 bg-sidebar shadow-xl">
             <div className="absolute top-3 right-3">
-              <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent">
+              <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-sidebar-foreground/70 hover:bg-white/[0.04]">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -131,8 +131,8 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0">
+        {/* Top Header — floating shadow instead of border */}
+        <header className="h-14 bg-card flex items-center justify-between px-4 flex-shrink-0 shadow-[0_1px_0_0_rgba(0,0,0,0.04)]">
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-muted"
@@ -148,7 +148,7 @@ export function AppShell({ children }: AppShellProps) {
               onClick={() => setUserMenuOpen(!userMenuOpen)}
               className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-muted transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+              <div className="w-8 h-8 rounded-full bg-foreground/10 text-foreground flex items-center justify-center text-sm font-semibold">
                 {initials}
               </div>
               <span className="hidden sm:block text-sm font-medium">{displayName}</span>
