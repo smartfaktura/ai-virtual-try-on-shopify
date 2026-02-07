@@ -52,7 +52,7 @@ const TEAM: TeamMember[] = [
     role: 'CRO Visual Optimizer',
     avatar: avatarOmar,
     description:
-      'Omar focuses on what converts. He analyzes composition, color psychology, and visual hierarchy to produce images that don't just look great — they drive revenue.',
+      "Omar focuses on what converts. He analyzes composition, color psychology, and visual hierarchy to produce images that don't just look great — they drive revenue.",
   },
   {
     name: 'Sienna',
