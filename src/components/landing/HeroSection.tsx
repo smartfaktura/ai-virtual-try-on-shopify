@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, CreditCard, Shield, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-import productUpload from '@/assets/hero/hero-product-tshirt.jpg';
+import productTshirt from '@/assets/hero/hero-product-tshirt.jpg';
 import outputStudio from '@/assets/hero/hero-output-studio.jpg';
 import outputPark from '@/assets/hero/hero-output-park.jpg';
 import outputCoffee from '@/assets/hero/hero-output-coffee.jpg';
@@ -13,21 +13,57 @@ import outputUrban from '@/assets/hero/hero-output-urban.jpg';
 import outputBeach from '@/assets/hero/hero-output-beach.jpg';
 import outputHome from '@/assets/hero/hero-output-home.jpg';
 
+import productSerum from '@/assets/hero/hero-product-serum.jpg';
+import serumStudio from '@/assets/hero/hero-serum-studio.jpg';
+import serumShadows from '@/assets/hero/hero-serum-shadows.jpg';
+import serumTable from '@/assets/hero/hero-serum-table.jpg';
+import serumBathroom from '@/assets/hero/hero-serum-bathroom.jpg';
+import serumShelf from '@/assets/hero/hero-serum-shelf.jpg';
+import serumFlatlay from '@/assets/hero/hero-serum-flatlay.jpg';
+import serumGarden from '@/assets/hero/hero-serum-garden.jpg';
+import serumMoody from '@/assets/hero/hero-serum-moody.jpg';
+
 const trustBadges = [
   { icon: CreditCard, text: 'No credit card required' },
   { icon: Sparkles, text: '5 free visuals' },
   { icon: Shield, text: 'Cancel anytime' },
 ];
 
-const heroOutputs = [
-  { img: outputStudio, label: 'Studio Portrait' },
-  { img: outputPark, label: 'Park Lifestyle' },
-  { img: outputCoffee, label: 'Coffee Shop' },
-  { img: outputRooftop, label: 'Rooftop Editorial' },
-  { img: outputYoga, label: 'Yoga Studio' },
-  { img: outputUrban, label: 'Urban Street' },
-  { img: outputBeach, label: 'Beach Sunset' },
-  { img: outputHome, label: 'At Home' },
+interface ProductShowcase {
+  product: { img: string; label: string; subtitle: string };
+  outputs: { img: string; label: string }[];
+  caption: string;
+}
+
+const showcases: ProductShowcase[] = [
+  {
+    product: { img: productTshirt, label: 'Cropped Tee', subtitle: '1 product photo' },
+    outputs: [
+      { img: outputStudio, label: 'Studio Portrait' },
+      { img: outputPark, label: 'Park Lifestyle' },
+      { img: outputCoffee, label: 'Coffee Shop' },
+      { img: outputRooftop, label: 'Rooftop Editorial' },
+      { img: outputYoga, label: 'Yoga Studio' },
+      { img: outputUrban, label: 'Urban Street' },
+      { img: outputBeach, label: 'Beach Sunset' },
+      { img: outputHome, label: 'At Home' },
+    ],
+    caption: 'Same tee — ∞ environments — 12 seconds',
+  },
+  {
+    product: { img: productSerum, label: 'Face Serum', subtitle: '1 product photo' },
+    outputs: [
+      { img: serumStudio, label: 'Studio Lighting' },
+      { img: serumShadows, label: 'Window Shadows' },
+      { img: serumTable, label: 'On the Table' },
+      { img: serumBathroom, label: 'Bathroom Spa' },
+      { img: serumShelf, label: 'Shelf Display' },
+      { img: serumFlatlay, label: 'Flatlay' },
+      { img: serumGarden, label: 'Garden' },
+      { img: serumMoody, label: 'Moody Dark' },
+    ],
+    caption: 'Same serum — ∞ scenes — 12 seconds',
+  },
 ];
 
 export function HeroSection() {
@@ -35,13 +71,26 @@ export function HeroSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [activeScene, setActiveScene] = useState(0);
 
-  const updateScrollState = () => {
+  const current = showcases[activeScene];
+
+  const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 10);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-  };
+  }, []);
+
+  // Reset scroll when switching scenes
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollTo({ left: 0 });
+      // Delay state update for scroll width recalculation
+      requestAnimationFrame(updateScrollState);
+    }
+  }, [activeScene, updateScrollState]);
 
   const scroll = (direction: 'left' | 'right') => {
     const el = scrollRef.current;
@@ -101,22 +150,43 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Visual showcase: Upload → Carousel of portrait outputs */}
+        {/* Visual showcase: Upload → Carousel of outputs */}
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-6 md:gap-8">
-            {/* Left: Original upload */}
+            {/* Left: Original upload with scene switcher */}
             <div className="flex-shrink-0 w-[180px] sm:w-[200px]">
               <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
                 <div className="relative aspect-[3/4]">
-                  <img src={productUpload} alt="Your uploaded product" className="w-full h-full object-cover" />
+                  <img
+                    src={current.product.img}
+                    alt={current.product.label}
+                    className="w-full h-full object-cover transition-all duration-500"
+                  />
                   <span className="absolute top-3 left-3 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
                     Your Upload
                   </span>
                 </div>
                 <div className="p-3 text-center">
-                  <p className="text-xs sm:text-sm font-semibold text-foreground">1 product photo</p>
+                  <p className="text-xs sm:text-sm font-semibold text-foreground">{current.product.subtitle}</p>
                   <p className="text-[10px] sm:text-xs text-muted-foreground">That's all you need</p>
                 </div>
+              </div>
+
+              {/* Scene switcher pills */}
+              <div className="flex items-center justify-center gap-2 mt-3">
+                {showcases.map((scene, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveScene(i)}
+                    className={`text-[10px] sm:text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+                      activeScene === i
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        : 'bg-card text-muted-foreground border-border hover:border-primary/40'
+                    }`}
+                  >
+                    {scene.product.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -157,7 +227,7 @@ export function HeroSection() {
                 className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin"
                 style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
               >
-                {heroOutputs.map((output) => (
+                {current.outputs.map((output) => (
                   <div
                     key={output.label}
                     className="flex-shrink-0 w-[150px] sm:w-[180px] snap-start group"
@@ -181,7 +251,7 @@ export function HeroSection() {
 
               {/* Caption */}
               <p className="text-center text-xs text-muted-foreground mt-3">
-                Same t-shirt — 8 environments — 12 seconds
+                {current.caption}
               </p>
             </div>
           </div>
