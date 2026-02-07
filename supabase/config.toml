@@ -2,3 +2,9 @@ project_id = "azwiljtrbtaupofwmpzb"
 
 [functions.studio-chat]
 verify_jwt = false
+
+[functions.import-product]
+verify_jwt = false
+
+[functions.mobile-upload]
+verify_jwt = false

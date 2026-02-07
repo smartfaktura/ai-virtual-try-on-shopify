@@ -36,6 +36,7 @@ const App = () => (
             <Route path="/landing" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/upload/:sessionToken" element={<MobileUpload />} />
 
             {/* Protected app routes */}
             <Route

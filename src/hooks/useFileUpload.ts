@@ -11,27 +11,33 @@ interface UseFileUploadResult {
 }
 
 export function useFileUpload(): UseFileUploadResult {
+  const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
   const upload = useCallback(async (file: File): Promise<string | null> => {
+    if (!user) {
+      toast.error('Please sign in to upload');
+      return null;
+    }
+
     setIsUploading(true);
     setError(null);
     setProgress(0);
 
     try {
-      // Generate unique filename
+      // Generate unique filename with user-scoped path
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 8);
       const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const fileName = `${timestamp}-${randomId}.${extension}`;
+      const fileName = `${user.id}/${timestamp}-${randomId}.${extension}`;
 
       setProgress(30);
 
-      // Upload to Supabase Storage
+      // Upload to secure product-uploads bucket
       const { data, error: uploadError } = await supabase.storage
-        .from('scratch-uploads')
+        .from('product-uploads')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false,
@@ -43,15 +49,19 @@ export function useFileUpload(): UseFileUploadResult {
 
       setProgress(80);
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('scratch-uploads')
-        .getPublicUrl(data.path);
+      // Get signed URL for private bucket
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from('product-uploads')
+        .createSignedUrl(data.path, 60 * 60 * 24 * 365);
+
+      if (signedUrlError) {
+        throw new Error(signedUrlError.message);
+      }
 
       setProgress(100);
       
       toast.success('Image uploaded successfully');
-      return urlData.publicUrl;
+      return signedUrlData.signedUrl;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to upload image';
       setError(message);
@@ -60,7 +70,7 @@ export function useFileUpload(): UseFileUploadResult {
     } finally {
       setIsUploading(false);
     }
-  }, []);
+  }, [user]);
 
   return {
     upload,

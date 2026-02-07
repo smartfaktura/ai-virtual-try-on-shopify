@@ -130,6 +130,12 @@ export default function Products() {
           </div>
         )}
       </div>
+
+      <AddProductModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
+      />
     </PageHeader>
   );
 }
