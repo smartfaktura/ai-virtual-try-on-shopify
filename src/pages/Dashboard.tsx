@@ -134,34 +134,37 @@ export default function Dashboard() {
   // --- FIRST-RUN DASHBOARD ---
   if (isNewUser) {
     return (
-      <div className="space-y-10">
-        {/* Welcome — luxury greeting, no PageHeader */}
+      <div className="space-y-12">
+        {/* Welcome — luxury greeting */}
         <div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-light tracking-tight text-foreground">
-                Welcome, <span className="font-semibold">{firstName}</span>
-              </h1>
-              <p className="text-sm text-muted-foreground mt-2">
-                <span className="inline-flex items-center gap-1.5 bg-foreground/[0.04] border border-foreground/[0.08] rounded-full px-2.5 py-0.5 text-xs font-medium text-foreground">
-                  <Wallet className="w-3 h-3" />
-                  {balance} credits
-                </span>
-                <span className="ml-2">to start creating.</span>
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={openBuyModal}>
+          <h1 className="text-4xl font-light tracking-tight text-foreground">
+            Welcome, <span className="font-semibold">{firstName}</span>
+          </h1>
+          <p className="text-sm text-muted-foreground mt-3">
+            Your AI photography studio is ready.
+          </p>
+
+          {/* Credit row */}
+          <div className="mt-4 flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 bg-foreground/[0.03] border border-foreground/[0.06] rounded-full px-3 py-1 text-xs font-medium text-foreground/70">
+              <Wallet className="w-3 h-3" />
+              {balance} credits available
+            </span>
+            <button
+              onClick={openBuyModal}
+              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 decoration-foreground/20 hover:decoration-foreground/60 transition-colors"
+            >
               Buy Credits
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </Button>
+            </button>
           </div>
-          {/* Decorative separator */}
-          <div className="mt-6 h-px bg-border" />
+
+          {/* Gradient separator */}
+          <div className="mt-6 h-px bg-gradient-to-r from-border via-border/50 to-transparent" />
         </div>
 
         {/* Onboarding Checklist */}
-        <div className="space-y-3">
-          <p className="section-label">Get Started</p>
+        <div className="space-y-4">
+          <p className="section-label section-divider">Get Started</p>
           <OnboardingChecklist
             productCount={productCount}
             brandProfileCount={brandProfileCount}
@@ -170,15 +173,15 @@ export default function Dashboard() {
         </div>
 
         {/* Two Ways to Create */}
-        <div className="space-y-3">
-          <p className="section-label">Two Ways to Create</p>
+        <div className="space-y-4">
+          <p className="section-label section-divider">Two Ways to Create</p>
           <GenerationModeCards />
         </div>
 
         {/* Explore Workflows */}
         {workflows.length > 0 && (
-          <div className="space-y-3 border-t border-border pt-8">
-            <p className="section-label">Explore Workflows</p>
+          <div className="space-y-4 pt-2">
+            <p className="section-label section-divider">Explore Workflows</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {workflows.map(workflow => (
                 <WorkflowCard
@@ -196,55 +199,57 @@ export default function Dashboard() {
 
   // --- RETURNING USER DASHBOARD ---
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Welcome greeting for returning user */}
       <div>
-        <h1 className="text-3xl font-light tracking-tight text-foreground">
+        <h1 className="text-4xl font-light tracking-tight text-foreground">
           Welcome back, <span className="font-semibold">{firstName}</span>
         </h1>
-        <div className="mt-4 h-px bg-border" />
+        <div className="mt-5 h-px bg-gradient-to-r from-border via-border/50 to-transparent" />
       </div>
 
       {/* Low credits banner */}
       <LowCreditsBanner />
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard
-          title="Images Generated"
-          value={generatedCount}
-          suffix="last 30 days"
-          icon={Image}
-        />
-        <MetricCard
-          title="Credits Remaining"
-          value={balance}
-          suffix="available"
-          icon={Wallet}
-          onClick={openBuyModal}
-        />
-        <MetricCard
-          title="Products"
-          value={productCount}
-          suffix="in library"
-          icon={Package}
-        />
-        <MetricCard
-          title="Active Schedules"
-          value={scheduleCount}
-          suffix="creative drops"
-          icon={CalendarClock}
-        />
+      <div className="bg-muted/30 rounded-xl p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <MetricCard
+            title="Images Generated"
+            value={generatedCount}
+            suffix="last 30 days"
+            icon={Image}
+          />
+          <MetricCard
+            title="Credits Remaining"
+            value={balance}
+            suffix="available"
+            icon={Wallet}
+            onClick={openBuyModal}
+          />
+          <MetricCard
+            title="Products"
+            value={productCount}
+            suffix="in library"
+            icon={Package}
+          />
+          <MetricCard
+            title="Active Schedules"
+            value={scheduleCount}
+            suffix="creative drops"
+            icon={CalendarClock}
+          />
+        </div>
       </div>
 
       {/* Quick Create */}
-      <div className="space-y-3">
-        <p className="section-label">Quick Create</p>
+      <div className="space-y-4">
+        <p className="section-label section-divider">Quick Create</p>
         <GenerationModeCards compact />
       </div>
 
       {/* Recent Jobs */}
-      <Card className="card-elevated border-0">
+      <Card className="card-elevated border-0 rounded-xl overflow-hidden">
         <CardContent className="p-5 space-y-4">
           <div className="flex items-center justify-between">
             <p className="section-label">Recent Jobs</p>
