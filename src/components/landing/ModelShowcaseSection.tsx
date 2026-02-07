@@ -106,16 +106,18 @@ const ROW_2: ModelCard[] = [
   { name: 'Jake', image: modelJake },
 ];
 
-function MarqueeRow({ items, direction = 'left', durationSeconds = 60 }: { items: ModelCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
+function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
   // Triple the items to ensure seamless looping with plenty of content
   const tripled = [...items, ...items, ...items];
 
   return (
     <div className="overflow-hidden">
       <div
-        className="flex gap-4 will-change-transform"
+        className="flex gap-4"
         style={{
           width: 'max-content',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
           animation: `marquee-${direction} ${durationSeconds}s linear infinite`,
         }}
       >
@@ -155,8 +157,8 @@ export function ModelShowcaseSection() {
       </div>
 
       <div className="flex flex-col gap-8">
-        <MarqueeRow items={ROW_1} direction="left" durationSeconds={55} />
-        <MarqueeRow items={ROW_2} direction="right" durationSeconds={65} />
+        <MarqueeRow items={ROW_1} direction="left" durationSeconds={120} />
+        <MarqueeRow items={ROW_2} direction="right" durationSeconds={130} />
       </div>
     </section>
   );
