@@ -136,25 +136,25 @@ export default function Dashboard() {
   if (isNewUser) {
     return (
       <PageHeader title="Dashboard">
-        <div className="space-y-6">
-          {/* Welcome Card */}
-          <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">
-                    Welcome to brandframe.ai, {firstName}!
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    You have <span className="font-medium text-foreground">{balance} credits</span> to start creating.
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" onClick={openBuyModal}>
-                  Buy Credits
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="space-y-8">
+          {/* Welcome — breathing, no card wrapper */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight">
+                Welcome, {firstName}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                <span className="inline-flex items-center gap-1.5 bg-muted rounded-full px-2.5 py-0.5 text-xs font-medium text-foreground">
+                  <Wallet className="w-3 h-3" />
+                  {balance} credits
+                </span>
+                <span className="ml-2">to start creating.</span>
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={openBuyModal}>
+              Buy Credits
+            </Button>
+          </div>
 
           {/* Onboarding Checklist */}
           <OnboardingChecklist
@@ -165,14 +165,14 @@ export default function Dashboard() {
 
           {/* Two Ways to Create */}
           <div className="space-y-3">
-            <h2 className="text-base font-semibold">Two Ways to Create</h2>
+            <h2 className="text-lg font-semibold tracking-tight">Two Ways to Create</h2>
             <GenerationModeCards />
           </div>
 
           {/* Explore Workflows */}
           {workflows.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-base font-semibold">Explore Workflows</h2>
+            <div className="space-y-3 bg-muted/50 -mx-4 px-4 py-6 rounded-xl">
+              <h2 className="text-lg font-semibold tracking-tight">Explore Workflows</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {workflows.map(workflow => (
                   <WorkflowCard
@@ -227,7 +227,7 @@ export default function Dashboard() {
 
         {/* Quick Create */}
         <div className="space-y-3">
-          <h2 className="text-base font-semibold">Quick Create</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Quick Create</h2>
           <GenerationModeCards compact />
         </div>
 
