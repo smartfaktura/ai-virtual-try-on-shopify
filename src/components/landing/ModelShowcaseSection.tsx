@@ -21,25 +21,47 @@ import modelCallum from '@/assets/models/model-male-athletic-scottish.jpg';
 import modelAstrid from '@/assets/models/model-female-average-nordic.jpg';
 import modelCarlos from '@/assets/models/model-male-average-latino.jpg';
 
+// New American models
+import modelMadison from '@/assets/models/model-female-slim-american-blonde.jpg';
+import modelJake from '@/assets/models/model-male-athletic-american.jpg';
+import modelOlivia from '@/assets/models/model-female-athletic-american-brunette.jpg';
+import modelTyler from '@/assets/models/model-male-slim-american-blonde.jpg';
+import modelAubrey from '@/assets/models/model-female-average-american-redhead.jpg';
+import modelJordan from '@/assets/models/model-male-athletic-american-mixed.jpg';
+import modelZoe from '@/assets/models/model-female-athletic-american-black.jpg';
+import modelBrandon from '@/assets/models/model-male-average-american-beard.jpg';
+import modelValeria from '@/assets/models/model-female-slim-american-latina.jpg';
+import modelRyan from '@/assets/models/model-male-athletic-american-classic.jpg';
+
 interface ModelCard {
   name: string;
   image: string;
 }
 
 const ROW_1: ModelCard[] = [
-  { name: 'Yuki', image: modelYuki },
+  { name: 'Madison', image: modelMadison },
   { name: 'Marcus', image: modelMarcus },
-  { name: 'Elena', image: modelElena },
+  { name: 'Olivia', image: modelOlivia },
   { name: 'Arjun', image: modelArjun },
+  { name: 'Zoe', image: modelZoe },
+  { name: 'Jake', image: modelJake },
+  { name: 'Elena', image: modelElena },
+  { name: 'Tyler', image: modelTyler },
   { name: 'Amara', image: modelAmara },
+  { name: 'Ryan', image: modelRyan },
+  { name: 'Yuki', image: modelYuki },
+  { name: 'Brandon', image: modelBrandon },
+  { name: 'Aubrey', image: modelAubrey },
   { name: 'Kenji', image: modelKenji },
-  { name: 'Sienna', image: modelSienna },
-  { name: 'Wei', image: modelWei },
-  { name: 'Charlotte', image: modelCharlotte },
 ];
 
 const ROW_2: ModelCard[] = [
+  { name: 'Jordan', image: modelJordan },
+  { name: 'Sienna', image: modelSienna },
   { name: 'Diego', image: modelDiego },
+  { name: 'Valeria', image: modelValeria },
+  { name: 'Wei', image: modelWei },
+  { name: 'Charlotte', image: modelCharlotte },
   { name: 'Hana', image: modelHana },
   { name: 'Max', image: modelMax },
   { name: 'Priya', image: modelPriya },
@@ -50,7 +72,7 @@ const ROW_2: ModelCard[] = [
   { name: 'Carlos', image: modelCarlos },
 ];
 
-function MarqueeRow({ items, direction = 'left', speed = 35 }: { items: ModelCard[]; direction?: 'left' | 'right'; speed?: number }) {
+function MarqueeRow({ items, direction = 'left' }: { items: ModelCard[]; direction?: 'left' | 'right' }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,7 +81,7 @@ function MarqueeRow({ items, direction = 'left', speed = 35 }: { items: ModelCar
 
     let animationId: number;
     let position = 0;
-    const totalWidth = el.scrollWidth / 2; // we duplicate items
+    const totalWidth = el.scrollWidth / 2;
 
     const step = () => {
       position += direction === 'left' ? 0.5 : -0.5;
@@ -73,7 +95,6 @@ function MarqueeRow({ items, direction = 'left', speed = 35 }: { items: ModelCar
     return () => cancelAnimationFrame(animationId);
   }, [direction]);
 
-  // Duplicate items for seamless loop
   const doubled = [...items, ...items];
 
   return (
@@ -103,7 +124,7 @@ export function ModelShowcaseSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="text-center">
           <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-            34+ AI Models
+            44+ AI Models
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
             Professional Models. Every Look.
