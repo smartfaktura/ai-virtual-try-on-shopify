@@ -154,10 +154,10 @@ export function FeatureGrid() {
                   </span>
 
                   {/* Progress bar for active */}
-                  {isActive && (
-                    <div className="absolute bottom-0 left-5 right-5 h-[2px] bg-[hsl(212,14%,22%)] rounded-full overflow-hidden">
+                   {isActive && (
+                    <div className="absolute bottom-0 left-5 right-5 h-[2px] bg-border rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[hsl(161,100%,45%)] rounded-full"
+                        className="h-full bg-primary rounded-full"
                         style={{
                           animation: 'progress-fill 5s linear forwards',
                         }}
