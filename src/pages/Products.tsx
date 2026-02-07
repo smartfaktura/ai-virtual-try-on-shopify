@@ -94,7 +94,7 @@ export default function Products() {
           <EmptyStateCard
             heading={search ? 'No products match your search' : 'No products yet'}
             description={search ? 'Try a different search term.' : 'Upload your first product to start generating professional visuals.'}
-            action={!search ? { content: 'Upload Product', onAction: () => navigate('/app/generate') } : undefined}
+            action={!search ? { content: 'Add Product', onAction: () => setModalOpen(true) } : undefined}
             icon={<Package className="w-10 h-10 text-muted-foreground" />}
           />
         ) : (
