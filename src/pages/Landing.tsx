@@ -27,7 +27,7 @@ export default function Landing() {
         <ModelShowcaseSection />
         <EnvironmentShowcaseSection />
         <CreativeDropsSection />
-        <IntegrationSection />
+        
         <LandingPricing />
         <LandingFAQ />
         <FinalCTA />
