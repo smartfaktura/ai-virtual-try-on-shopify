@@ -173,7 +173,7 @@ export function FeatureGrid() {
           <div className="lg:col-span-8 lg:pl-8">
             <div
               key={active}
-              className="rounded-2xl overflow-hidden border border-[hsl(212,14%,20%)] bg-[hsl(212,14%,12%)]"
+              className="rounded-2xl overflow-hidden border border-border bg-card"
               style={{ animation: 'feature-enter 0.4s ease-out' }}
             >
               {/* Image */}
@@ -183,20 +183,20 @@ export function FeatureGrid() {
                   alt={current.headline}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(212,14%,12%)] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
 
                 {/* Floating counter */}
-                <div className="absolute bottom-4 right-4 text-xs font-mono text-[hsl(210,14%,45%)] bg-[hsl(212,14%,12%)]/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[hsl(212,14%,22%)]">
+                <div className="absolute bottom-4 right-4 text-xs font-mono text-muted-foreground bg-card/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-border">
                   {String(active + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
                 </div>
               </div>
 
               {/* Text */}
               <div className="p-8 sm:p-10">
-                <h3 className="text-xl sm:text-2xl font-bold leading-snug mb-3 text-[hsl(210,20%,98%)]">
+                <h3 className="text-xl sm:text-2xl font-bold leading-snug mb-3 text-foreground">
                   {current.headline}
                 </h3>
-                <p className="text-sm sm:text-base text-[hsl(210,14%,55%)] leading-relaxed max-w-lg">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg">
                   {current.description}
                 </p>
               </div>
