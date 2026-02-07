@@ -10,14 +10,15 @@ interface EmptyStateCardProps {
     onAction: () => void;
   };
   image?: string;
+  icon?: React.ReactNode;
 }
 
-export function EmptyStateCard({ heading, description, action }: EmptyStateCardProps) {
+export function EmptyStateCard({ heading, description, action, icon }: EmptyStateCardProps) {
   return (
     <Card>
       <CardContent className="py-12 flex flex-col items-center text-center space-y-4">
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-          <PackageOpen className="w-8 h-8 text-muted-foreground" />
+          {icon || <PackageOpen className="w-8 h-8 text-muted-foreground" />}
         </div>
         <div className="space-y-1">
           <h3 className="text-lg font-semibold">{heading}</h3>

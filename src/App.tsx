@@ -15,6 +15,10 @@ import Settings from '@/pages/Settings';
 import Landing from '@/pages/Landing';
 import Auth from '@/pages/Auth';
 import NotFound from '@/pages/NotFound';
+import BrandProfiles from '@/pages/BrandProfiles';
+import Workflows from '@/pages/Workflows';
+import Products from '@/pages/Products';
+import CreativeDrops from '@/pages/CreativeDrops';
 
 const queryClient = new QueryClient();
 
@@ -38,8 +42,14 @@ const App = () => (
                   <AppShell>
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/brand-profiles" element={<BrandProfiles />} />
+                      <Route path="/workflows" element={<Workflows />} />
+                      <Route path="/creative-drops" element={<CreativeDrops />} />
                       <Route path="/generate" element={<Generate />} />
                       <Route path="/generate/bulk" element={<BulkGenerate />} />
+                      <Route path="/library" element={<Jobs />} />
+                      <Route path="/library/:id" element={<Jobs />} />
                       <Route path="/templates" element={<Templates />} />
                       <Route path="/templates/:id" element={<Templates />} />
                       <Route path="/jobs" element={<Jobs />} />

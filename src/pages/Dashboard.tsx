@@ -89,16 +89,16 @@ export default function Dashboard() {
         {/* Quick Generate Card */}
         <Card>
           <CardContent className="p-5 space-y-4">
-            <h2 className="text-base font-semibold">Quick Generate</h2>
+            <h2 className="text-base font-semibold">Quick Start</h2>
             <p className="text-sm text-muted-foreground">
-              Generate professional product images in seconds. Select a product and we'll recommend the best photography styles.
+              Choose a workflow to generate professional product visuals automatically matched to your brand profile.
             </p>
             <div className="flex items-center gap-3 flex-wrap">
-              <Button size="lg" onClick={() => navigate('/app/generate')}>
-                Upload & Generate
+              <Button size="lg" onClick={() => navigate('/app/workflows')}>
+                Choose a Workflow
               </Button>
-              <Button size="lg" variant="ghost" onClick={() => navigate('/app/templates')}>
-                Explore Templates
+              <Button size="lg" variant="ghost" onClick={() => navigate('/app/brand-profiles')}>
+                Set Up Brand Profile
               </Button>
             </div>
           </CardContent>
@@ -109,7 +109,7 @@ export default function Dashboard() {
           <CardContent className="p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">Recent Jobs</h2>
-              <Button variant="link" onClick={() => navigate('/app/jobs')}>
+              <Button variant="link" onClick={() => navigate('/app/library')}>
                 View all
               </Button>
             </div>
