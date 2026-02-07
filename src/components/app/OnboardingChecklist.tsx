@@ -87,6 +87,11 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
                   {done ? <Check className="w-4 h-4" /> : String(index + 1).padStart(2, '0')}
                 </div>
 
+                {/* Preview thumbnail */}
+                <div className="w-12 h-12 rounded-lg overflow-hidden border border-border flex-shrink-0 hidden sm:block">
+                  <img src={step.preview} alt={step.title} className="w-full h-full object-cover" loading="lazy" />
+                </div>
+
                 <div className="flex-1 min-w-0">
                   <h3 className={`text-sm font-semibold ${done ? 'text-muted-foreground' : 'text-foreground'}`}>
                     {step.title}

@@ -51,10 +51,6 @@ export function WorkflowCard({ workflow, onSelect }: WorkflowCardProps) {
                 Try-On
               </Badge>
             )}
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <Image className="w-3 h-3" />
-              <span className="text-xs">{workflow.default_image_count}</span>
-            </div>
           </div>
         </div>
 
@@ -63,8 +59,8 @@ export function WorkflowCard({ workflow, onSelect }: WorkflowCardProps) {
           {workflow.description}
         </p>
 
-        {/* Ratios + CTA */}
-        <div className="flex items-center justify-between pt-1">
+        {/* Ratios + Credit cost */}
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <Ratio className="w-3 h-3 text-muted-foreground" />
             <div className="flex gap-1">
@@ -78,12 +74,19 @@ export function WorkflowCard({ workflow, onSelect }: WorkflowCardProps) {
               ))}
             </div>
           </div>
-
-          <Button size="sm" variant="ghost" className="gap-1 text-xs h-8" onClick={onSelect}>
-            Create
-            <ArrowRight className="w-3 h-3" />
-          </Button>
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Image className="w-3 h-3" />
+            <span className="text-[10px] font-medium">
+              {workflow.default_image_count} images · ~{workflow.uses_tryon ? workflow.default_image_count * 3 : workflow.default_image_count * 2} credits
+            </span>
+          </div>
         </div>
+
+        {/* CTA */}
+        <Button size="sm" className="w-full rounded-full font-semibold gap-1.5 mt-1" onClick={onSelect}>
+          Create Set
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Button>
       </CardContent>
     </Card>
   );

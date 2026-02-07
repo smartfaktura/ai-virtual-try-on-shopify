@@ -1,4 +1,3 @@
-import { Card, CardContent } from '@/components/ui/card';
 import type { LucideIcon } from 'lucide-react';
 
 interface MetricCardProps {
@@ -12,9 +11,13 @@ interface MetricCardProps {
   };
   loading?: boolean;
   onClick?: () => void;
+  /** Optional mini progress (0–100) shown as a thin bar */
+  progress?: number;
+  /** Color token for the progress bar, defaults to primary */
+  progressColor?: string;
 }
 
-export function MetricCard({ title, value, suffix, icon: Icon, trend, loading, onClick }: MetricCardProps) {
+export function MetricCard({ title, value, suffix, icon: Icon, trend, loading, onClick, progress, progressColor }: MetricCardProps) {
   if (loading) {
     return (
       <div className="rounded-2xl border border-border bg-card p-5 space-y-2">
@@ -42,6 +45,16 @@ export function MetricCard({ title, value, suffix, icon: Icon, trend, loading, o
         <p className={`text-xs font-medium ${trend.direction === 'up' ? 'text-primary' : 'text-destructive'}`}>
           {trend.direction === 'up' ? '↑' : '↓'} {Math.abs(trend.value)}% from last month
         </p>
+      )}
+      {typeof progress === 'number' && (
+        <div className="pt-1">
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${progressColor || 'bg-primary'}`}
+              style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
