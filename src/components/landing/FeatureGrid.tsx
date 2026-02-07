@@ -93,10 +93,10 @@ export function FeatureGrid() {
   const current = features[active];
 
   return (
-    <section className="relative py-24 sm:py-32 bg-[hsl(212,14%,10%)] text-[hsl(210,20%,98%)] overflow-hidden">
+    <section className="relative py-24 sm:py-32 bg-background text-foreground overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[hsl(161,100%,25%)] opacity-[0.04] blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary opacity-[0.04] blur-[120px]" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
