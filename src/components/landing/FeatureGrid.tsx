@@ -62,7 +62,7 @@ const features = [
     headline: 'Your garments on real-looking models. Instantly.',
     description:
       'Upload any clothing item and see it on AI models in natural poses and environments. Lookbook-quality imagery without the overhead.',
-    image: templateRustic,
+    image: featureTryOn,
   },
 ];
 
