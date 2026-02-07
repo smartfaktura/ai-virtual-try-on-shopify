@@ -45,7 +45,9 @@ import modelHiro from '@/assets/models/model-male-average-asian.jpg';
 import modelKwame from '@/assets/models/model-male-plussize-african.jpg';
 import modelMarco from '@/assets/models/model-male-plussize-latino.jpg';
 import modelOmar from '@/assets/models/model-male-slim-middleeast.jpg';
-import modelLiam from '@/assets/models/model-female-athletic-latina.jpg';
+import modelCamila from '@/assets/models/model-female-athletic-latina.jpg';
+import modelNadia from '@/assets/models/model-female-athletic-black.jpg';
+import modelSophie2 from '@/assets/models/model-female-average-middleeast.jpg';
 
 interface ModelCard {
   name: string;
