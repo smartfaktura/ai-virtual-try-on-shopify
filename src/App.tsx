@@ -20,6 +20,7 @@ import BrandProfiles from '@/pages/BrandProfiles';
 import Workflows from '@/pages/Workflows';
 import Products from '@/pages/Products';
 import CreativeDrops from '@/pages/CreativeDrops';
+import MobileUpload from '@/pages/MobileUpload';
 
 const queryClient = new QueryClient();
 
