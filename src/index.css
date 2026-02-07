@@ -2,104 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Shopify Polaris Design System Integration */
+/* Studio Infrastructure Design System */
 
 @layer base {
   :root {
-    /* Shopify Admin-inspired palette */
-    --background: 210 20% 98%;
-    --foreground: 212 14% 15%;
+    /* Warm stone studio backdrop */
+    --background: 40 10% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 212 14% 15%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 212 14% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Shopify Green as primary */
-    --primary: 161 100% 25%;
+    /* Control Blue – brand anchor */
+    --primary: 217 33% 17%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 14% 95%;
-    --secondary-foreground: 212 14% 15%;
+    --secondary: 40 7% 94%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 14% 95%;
-    --muted-foreground: 212 10% 45%;
+    --muted: 40 7% 94%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 210 14% 95%;
-    --accent-foreground: 212 14% 15%;
+    --accent: 40 7% 94%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 72% 30%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 14% 89%;
-    --input: 210 14% 89%;
-    --ring: 161 100% 25%;
+    --border: 220 9% 87%;
+    --input: 220 9% 87%;
+    --ring: 217 33% 17%;
 
     --radius: 0.5rem;
 
-    /* Premium accent - using primary green only */
-    --accent-highlight: 161 100% 25%;
-    
-    /* Status colors - muted, premium feel */
-    --status-success: 161 60% 35%;
-    --status-warning: 40 85% 50%;
-    --status-critical: 0 65% 50%;
-    --status-info: 210 60% 50%;
+    /* Brand accent */
+    --accent-highlight: 217 33% 17%;
+
+    /* Status colors – quiet, authoritative */
+    --status-success: 215 25% 27%;
+    --status-warning: 19 83% 34%;
+    --status-critical: 0 72% 30%;
+    --status-info: 215 25% 47%;
 
     /* Surface colors */
     --surface: 0 0% 100%;
-    --surface-subdued: 210 20% 98%;
-    --surface-hovered: 210 14% 95%;
-    --surface-pressed: 210 14% 91%;
-    --surface-selected: 161 70% 95%;
+    --surface-subdued: 40 10% 98%;
+    --surface-hovered: 40 7% 94%;
+    --surface-pressed: 220 9% 91%;
+    --surface-selected: 220 29% 92%;
 
     /* Text colors */
-    --text-primary: 212 14% 15%;
-    --text-secondary: 212 10% 45%;
-    --text-disabled: 210 10% 65%;
-    --text-success: 142 72% 29%;
-    --text-critical: 0 72% 51%;
+    --text-primary: 222 47% 11%;
+    --text-secondary: 215 16% 47%;
+    --text-disabled: 220 9% 65%;
+    --text-success: 215 25% 27%;
+    --text-critical: 0 72% 30%;
 
     /* Sidebar */
-    --sidebar-background: 212 14% 12%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 161 100% 45%;
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 220 13% 91%;
+    --sidebar-primary: 217 33% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 212 14% 20%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 212 14% 20%;
-    --sidebar-ring: 161 100% 45%;
+    --sidebar-accent: 222 47% 16%;
+    --sidebar-accent-foreground: 220 13% 91%;
+    --sidebar-border: 222 47% 16%;
+    --sidebar-ring: 217 33% 45%;
   }
 
   .dark {
-    --background: 212 14% 10%;
-    --foreground: 210 20% 98%;
+    /* Dark studio preview mode */
+    --background: 222 47% 7%;
+    --foreground: 220 13% 91%;
 
-    --card: 212 14% 12%;
-    --card-foreground: 210 20% 98%;
+    --card: 222 47% 9%;
+    --card-foreground: 220 13% 91%;
 
-    --popover: 212 14% 12%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 220 13% 91%;
 
-    --primary: 161 100% 45%;
-    --primary-foreground: 212 14% 10%;
+    --primary: 217 33% 55%;
+    --primary-foreground: 222 47% 7%;
 
-    --secondary: 212 14% 20%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 222 47% 16%;
+    --secondary-foreground: 220 13% 91%;
 
-    --muted: 212 14% 20%;
-    --muted-foreground: 210 14% 65%;
+    --muted: 222 47% 16%;
+    --muted-foreground: 215 16% 60%;
 
-    --accent: 212 14% 20%;
-    --accent-foreground: 210 20% 98%;
+    --accent: 222 47% 16%;
+    --accent-foreground: 220 13% 91%;
 
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 220 13% 91%;
 
-    --border: 212 14% 25%;
-    --input: 212 14% 25%;
-    --ring: 161 100% 45%;
+    --border: 222 47% 20%;
+    --input: 222 47% 20%;
+    --ring: 217 33% 55%;
   }
 }
 
@@ -134,7 +135,7 @@
   }
 }
 
-/* Polaris component overrides */
+/* Component overrides */
 @layer components {
   /* Metric card styling */
   .metric-card {
@@ -151,15 +152,15 @@
   }
 
   .status-badge--success {
-    @apply bg-green-100 text-green-800;
+    @apply bg-slate-100 text-slate-800;
   }
 
   .status-badge--warning {
-    @apply bg-yellow-100 text-yellow-800;
+    @apply bg-amber-100 text-amber-900;
   }
 
   .status-badge--critical {
-    @apply bg-red-100 text-red-800;
+    @apply bg-red-100 text-red-900;
   }
 
   .status-badge--info {
