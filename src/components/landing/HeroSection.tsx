@@ -319,7 +319,7 @@ export function HeroSection() {
                           src={output.img}
                           alt={output.label}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          loading="lazy"
+                          decoding="async"
                         />
                         <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
                           {output.label}
