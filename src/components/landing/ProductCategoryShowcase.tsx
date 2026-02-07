@@ -1,29 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 
-// Fashion & Apparel
-import fashionBlazer from '@/assets/showcase/fashion-blazer-street.jpg';
-import fashionActivewear from '@/assets/showcase/fashion-activewear-studio.jpg';
-import fashionDress from '@/assets/showcase/fashion-dress-garden.jpg';
-import fashionStreetwear from '@/assets/showcase/fashion-streetwear-urban.jpg';
+// Fashion & Apparel (5 new high-quality images)
+import fashionBlazerGolden from '@/assets/showcase/fashion-blazer-golden.jpg';
+import fashionActivewearBright from '@/assets/showcase/fashion-activewear-bright.jpg';
+import fashionDressBotanical from '@/assets/showcase/fashion-dress-botanical.jpg';
+import fashionStreetDenim from '@/assets/showcase/fashion-street-denim.jpg';
+import fashionCashmereCafe from '@/assets/showcase/fashion-cashmere-cafe.jpg';
 
-// Skincare
-import skincareSerum from '@/assets/showcase/skincare-serum-marble.jpg';
-import skincareCream from '@/assets/showcase/skincare-cream-moody.jpg';
-import skincareSet from '@/assets/showcase/skincare-set-minimal.jpg';
-import skincareOil from '@/assets/showcase/skincare-oil-bathroom.jpg';
+// Skincare (5 new high-quality images — 1 failed moderation, using 4 + existing best)
+import skincareSerumMorning from '@/assets/showcase/skincare-serum-morning.jpg';
+import skincareCreamBotanical from '@/assets/showcase/skincare-cream-botanical.jpg';
+import skincareOilLifestyle from '@/assets/showcase/skincare-oil-lifestyle.jpg';
+import skincareRetinolModel from '@/assets/showcase/skincare-retinol-model.jpg';
+import skincareSetMinimal from '@/assets/showcase/skincare-set-minimal.jpg';
 
-// Food & Drinks
-import foodPasta from '@/assets/showcase/food-pasta-rustic.jpg';
-import foodCoffee from '@/assets/showcase/food-coffee-artisan.jpg';
-import foodHoney from '@/assets/showcase/food-honey-farmhouse.jpg';
-import foodSmoothie from '@/assets/showcase/food-smoothie-bright.jpg';
+// Food & Drinks (5 new high-quality images)
+import foodPastaArtisan from '@/assets/showcase/food-pasta-artisan.jpg';
+import foodCoffeePourover from '@/assets/showcase/food-coffee-pourover.jpg';
+import foodHoneyGolden from '@/assets/showcase/food-honey-golden.jpg';
+import foodAcaiBright from '@/assets/showcase/food-acai-bright.jpg';
+import foodBreadBakery from '@/assets/showcase/food-bread-bakery.jpg';
 
-// Home & Living
-import homeCandle from '@/assets/showcase/home-candle-scandi.jpg';
-import homeVases from '@/assets/showcase/home-vases-japandi.jpg';
-import homeLamp from '@/assets/showcase/home-lamp-desk.jpg';
-import homeTextiles from '@/assets/showcase/home-textiles-bedroom.jpg';
+// Home & Living (5 new high-quality images)
+import homeCandleEvening from '@/assets/showcase/home-candle-evening.jpg';
+import homeVasesShelf from '@/assets/showcase/home-vases-shelf.jpg';
+import homeLampEvening from '@/assets/showcase/home-lamp-evening.jpg';
+import homeBedroomMorning from '@/assets/showcase/home-bedroom-morning.jpg';
+import homePendantKitchen from '@/assets/showcase/home-pendant-kitchen.jpg';
 
 interface CategoryCardProps {
   label: string;
@@ -33,26 +37,17 @@ interface CategoryCardProps {
 
 function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
   const [progressKey, setProgressKey] = useState(0);
 
   const advance = useCallback(() => {
-    setPreviousIndex(currentIndex);
     setCurrentIndex((prev) => (prev + 1) % images.length);
     setProgressKey((k) => k + 1);
-  }, [currentIndex, images.length]);
+  }, [images.length]);
 
   useEffect(() => {
     const timer = setInterval(advance, cycleDuration);
     return () => clearInterval(timer);
   }, [advance, cycleDuration]);
-
-  // Clear previous image after crossfade completes
-  useEffect(() => {
-    if (previousIndex === null) return;
-    const timeout = setTimeout(() => setPreviousIndex(null), 700);
-    return () => clearTimeout(timeout);
-  }, [previousIndex]);
 
   return (
     <div className="relative rounded-xl overflow-hidden border border-border/40 bg-card aspect-[3/4] group">
@@ -74,23 +69,19 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
         </span>
       </div>
 
-      {/* Previous image (fading out) */}
-      {previousIndex !== null && (
+      {/* All images stacked — only currentIndex is visible */}
+      {images.map((img, i) => (
         <img
-          src={images[previousIndex]}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 opacity-0"
-          aria-hidden="true"
+          key={i}
+          src={img}
+          alt={`${label} AI-generated product shot`}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            opacity: i === currentIndex ? 1 : 0,
+            transition: 'opacity 1.2s ease-in-out',
+          }}
         />
-      )}
-
-      {/* Current image (fading in) */}
-      <img
-        key={currentIndex}
-        src={images[currentIndex]}
-        alt={`${label} AI-generated product shot`}
-        className="absolute inset-0 w-full h-full object-cover animate-[fade-image_0.7s_ease-in-out_forwards]"
-      />
+      ))}
     </div>
   );
 }
@@ -98,22 +89,22 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
 const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
-    images: [fashionBlazer, fashionActivewear, fashionDress, fashionStreetwear],
+    images: [fashionBlazerGolden, fashionActivewearBright, fashionDressBotanical, fashionStreetDenim, fashionCashmereCafe],
     cycleDuration: 7000,
   },
   {
     label: 'Skincare',
-    images: [skincareSerum, skincareCream, skincareSet, skincareOil],
+    images: [skincareSerumMorning, skincareCreamBotanical, skincareOilLifestyle, skincareRetinolModel, skincareSetMinimal],
     cycleDuration: 8500,
   },
   {
     label: 'Food & Drinks',
-    images: [foodPasta, foodCoffee, foodHoney, foodSmoothie],
+    images: [foodPastaArtisan, foodCoffeePourover, foodHoneyGolden, foodAcaiBright, foodBreadBakery],
     cycleDuration: 6000,
   },
   {
     label: 'Home & Living',
-    images: [homeCandle, homeVases, homeLamp, homeTextiles],
+    images: [homeCandleEvening, homeVasesShelf, homeLampEvening, homeBedroomMorning, homePendantKitchen],
     cycleDuration: 7500,
   },
 ];
@@ -121,15 +112,11 @@ const CATEGORIES: CategoryCardProps[] = [
 export function ProductCategoryShowcase() {
   return (
     <section className="py-16 lg:py-24 bg-background">
-      {/* Inline keyframes for progress bar & image fade */}
+      {/* Inline keyframes for progress bar */}
       <style>{`
         @keyframes progress-fill {
           from { width: 0%; }
           to { width: 100%; }
-        }
-        @keyframes fade-image {
-          from { opacity: 0; }
-          to { opacity: 1; }
         }
       `}</style>
 
