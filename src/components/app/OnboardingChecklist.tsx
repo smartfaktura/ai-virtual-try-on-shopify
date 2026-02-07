@@ -2,6 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { Check, Upload, Palette, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+import imgProduct from '@/assets/products/serum-vitamin-c.jpg';
+import imgBrand from '@/assets/showcase/skincare-set-minimal.jpg';
+import imgGenerate from '@/assets/showcase/fashion-dress-botanical.jpg';
+
 interface OnboardingChecklistProps {
   productCount: number;
   brandProfileCount: number;
@@ -16,6 +20,7 @@ const steps = [
     icon: Upload,
     path: '/app/products',
     cta: 'Go to Products',
+    preview: imgProduct,
   },
   {
     key: 'brand',
@@ -24,6 +29,7 @@ const steps = [
     icon: Palette,
     path: '/app/brand-profiles',
     cta: 'Go to Brand Profiles',
+    preview: imgBrand,
   },
   {
     key: 'generate',
@@ -32,6 +38,7 @@ const steps = [
     icon: Sparkles,
     path: '/app/workflows',
     cta: 'Go to Workflows',
+    preview: imgGenerate,
   },
 ] as const;
 
