@@ -90,12 +90,51 @@ const showcases: ProductShowcase[] = [
   },
 ];
 
+const SLOGANS = [
+  'Ready When You Are.',
+  'No Studio Needed.',
+  'Instant Brand Visuals.',
+  'Every Product. Every Scene.',
+  'Ads That Convert.',
+  'Scale Without Limits.',
+];
+
+function useTypewriter(phrases: string[], typingSpeed = 60, deletingSpeed = 35, pauseDuration = 2200) {
+  const [displayText, setDisplayText] = useState('');
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentPhrase = phrases[phraseIndex];
+
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        setDisplayText(currentPhrase.slice(0, displayText.length + 1));
+        if (displayText.length + 1 === currentPhrase.length) {
+          setTimeout(() => setIsDeleting(true), pauseDuration);
+        }
+      } else {
+        setDisplayText(currentPhrase.slice(0, displayText.length - 1));
+        if (displayText.length === 0) {
+          setIsDeleting(false);
+          setPhraseIndex((prev) => (prev + 1) % phrases.length);
+        }
+      }
+    }, isDeleting ? deletingSpeed : typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [displayText, isDeleting, phraseIndex, phrases, typingSpeed, deletingSpeed, pauseDuration]);
+
+  return displayText;
+}
+
 export function HeroSection() {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeScene, setActiveScene] = useState(0);
+  const typedText = useTypewriter(SLOGANS);
 
   const current = showcases[activeScene];
 
