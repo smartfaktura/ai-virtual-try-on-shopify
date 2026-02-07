@@ -93,23 +93,23 @@ export function FeatureGrid() {
   const current = features[active];
 
   return (
-    <section className="relative py-24 sm:py-32 bg-[hsl(212,14%,10%)] text-[hsl(210,20%,98%)] overflow-hidden">
+    <section className="relative py-24 sm:py-32 bg-background text-foreground overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[hsl(161,100%,25%)] opacity-[0.04] blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary opacity-[0.04] blur-[120px]" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[hsl(212,14%,25%)] bg-[hsl(212,14%,14%)] text-xs font-medium tracking-wide uppercase text-[hsl(161,100%,45%)] mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-secondary text-xs font-medium tracking-wide uppercase text-primary mb-6">
             <Sparkles className="w-3 h-3" />
             AI-Powered Studio
           </div>
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4 leading-[1.1]">
             What Brandframe.ai Delivers
           </h2>
-          <p className="text-[hsl(210,14%,55%)] max-w-lg mx-auto text-base sm:text-lg">
+          <p className="text-muted-foreground max-w-lg mx-auto text-base sm:text-lg">
             Your AI photography team handles everything &mdash; from monthly libraries to one-off editorial campaigns.
           </p>
         </div>
@@ -126,38 +126,38 @@ export function FeatureGrid() {
                   onClick={() => handleSelect(i)}
                   className={`group relative flex items-center gap-4 px-5 py-4 rounded-xl text-left transition-all duration-300 ${
                     isActive
-                      ? 'bg-[hsl(212,14%,16%)]'
-                      : 'hover:bg-[hsl(212,14%,13%)]'
+                      ? 'bg-secondary'
+                      : 'hover:bg-secondary/50'
                   }`}
                 >
                   {/* Active indicator bar */}
                   <div
                     className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-full transition-all duration-300 ${
-                      isActive ? 'bg-[hsl(161,100%,45%)]' : 'bg-transparent'
+                      isActive ? 'bg-primary' : 'bg-transparent'
                     }`}
                   />
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-300 ${
                       isActive
-                        ? 'bg-[hsl(161,100%,25%)] text-[hsl(0,0%,100%)]'
-                        : 'bg-[hsl(212,14%,18%)] text-[hsl(210,14%,55%)] group-hover:text-[hsl(210,20%,80%)]'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-muted-foreground group-hover:text-foreground'
                     }`}
                   >
                     <f.icon className="w-[18px] h-[18px]" />
                   </div>
                   <span
                     className={`text-sm font-semibold transition-colors duration-300 ${
-                      isActive ? 'text-[hsl(210,20%,98%)]' : 'text-[hsl(210,14%,55%)] group-hover:text-[hsl(210,20%,80%)]'
+                      isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'
                     }`}
                   >
                     {f.label}
                   </span>
 
                   {/* Progress bar for active */}
-                  {isActive && (
-                    <div className="absolute bottom-0 left-5 right-5 h-[2px] bg-[hsl(212,14%,22%)] rounded-full overflow-hidden">
+                   {isActive && (
+                    <div className="absolute bottom-0 left-5 right-5 h-[2px] bg-border rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[hsl(161,100%,45%)] rounded-full"
+                        className="h-full bg-primary rounded-full"
                         style={{
                           animation: 'progress-fill 5s linear forwards',
                         }}
@@ -173,7 +173,7 @@ export function FeatureGrid() {
           <div className="lg:col-span-8 lg:pl-8">
             <div
               key={active}
-              className="rounded-2xl overflow-hidden border border-[hsl(212,14%,20%)] bg-[hsl(212,14%,12%)]"
+              className="rounded-2xl overflow-hidden border border-border bg-card"
               style={{ animation: 'feature-enter 0.4s ease-out' }}
             >
               {/* Image */}
@@ -183,20 +183,20 @@ export function FeatureGrid() {
                   alt={current.headline}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(212,14%,12%)] via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
 
                 {/* Floating counter */}
-                <div className="absolute bottom-4 right-4 text-xs font-mono text-[hsl(210,14%,45%)] bg-[hsl(212,14%,12%)]/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[hsl(212,14%,22%)]">
+                <div className="absolute bottom-4 right-4 text-xs font-mono text-muted-foreground bg-card/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-border">
                   {String(active + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
                 </div>
               </div>
 
               {/* Text */}
               <div className="p-8 sm:p-10">
-                <h3 className="text-xl sm:text-2xl font-bold leading-snug mb-3 text-[hsl(210,20%,98%)]">
+                <h3 className="text-xl sm:text-2xl font-bold leading-snug mb-3 text-foreground">
                   {current.headline}
                 </h3>
-                <p className="text-sm sm:text-base text-[hsl(210,14%,55%)] leading-relaxed max-w-lg">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg">
                   {current.description}
                 </p>
               </div>
