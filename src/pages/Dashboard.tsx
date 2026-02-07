@@ -89,9 +89,9 @@ export default function Dashboard() {
         {/* Quick Generate Card */}
         <Card>
           <CardContent className="p-5 space-y-4">
-            <h2 className="text-base font-semibold">Quick Generate</h2>
+            <h2 className="text-base font-semibold">Quick Start</h2>
             <p className="text-sm text-muted-foreground">
-              Generate professional product images in seconds. Select a product and we'll recommend the best photography styles.
+              Choose a workflow to generate professional product visuals automatically matched to your brand profile.
             </p>
             <div className="flex items-center gap-3 flex-wrap">
               <Button size="lg" onClick={() => navigate('/app/workflows')}>
