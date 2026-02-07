@@ -14,10 +14,151 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_profiles: {
+        Row: {
+          background_style: string
+          brand_description: string
+          color_temperature: string
+          composition_bias: string
+          created_at: string
+          do_not_rules: string[]
+          id: string
+          lighting_style: string
+          name: string
+          tone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          background_style?: string
+          brand_description?: string
+          color_temperature?: string
+          composition_bias?: string
+          created_at?: string
+          do_not_rules?: string[]
+          id?: string
+          lighting_style?: string
+          name: string
+          tone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          background_style?: string
+          brand_description?: string
+          color_temperature?: string
+          composition_bias?: string
+          created_at?: string
+          do_not_rules?: string[]
+          id?: string
+          lighting_style?: string
+          name?: string
+          tone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      creative_drops: {
+        Row: {
+          created_at: string
+          generation_job_ids: string[]
+          id: string
+          run_date: string
+          schedule_id: string | null
+          status: string
+          summary: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          generation_job_ids?: string[]
+          id?: string
+          run_date?: string
+          schedule_id?: string | null
+          status?: string
+          summary?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          generation_job_ids?: string[]
+          id?: string
+          run_date?: string
+          schedule_id?: string | null
+          status?: string
+          summary?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_drops_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "creative_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creative_schedules: {
+        Row: {
+          active: boolean
+          brand_profile_id: string | null
+          created_at: string
+          frequency: string
+          id: string
+          name: string
+          next_run_at: string | null
+          products_scope: string
+          selected_product_ids: string[]
+          updated_at: string
+          user_id: string
+          workflow_ids: string[]
+        }
+        Insert: {
+          active?: boolean
+          brand_profile_id?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          name: string
+          next_run_at?: string | null
+          products_scope?: string
+          selected_product_ids?: string[]
+          updated_at?: string
+          user_id: string
+          workflow_ids?: string[]
+        }
+        Update: {
+          active?: boolean
+          brand_profile_id?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          name?: string
+          next_run_at?: string | null
+          products_scope?: string
+          selected_product_ids?: string[]
+          updated_at?: string
+          user_id?: string
+          workflow_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_schedules_brand_profile_id_fkey"
+            columns: ["brand_profile_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generation_jobs: {
         Row: {
+          brand_profile_id: string | null
           completed_at: string | null
           created_at: string
+          creative_drop_id: string | null
           credits_used: number
           error_message: string | null
           id: string
@@ -30,10 +171,13 @@ export type Database = {
           status: string
           template_id: string | null
           user_id: string
+          workflow_id: string | null
         }
         Insert: {
+          brand_profile_id?: string | null
           completed_at?: string | null
           created_at?: string
+          creative_drop_id?: string | null
           credits_used?: number
           error_message?: string | null
           id?: string
@@ -46,10 +190,13 @@ export type Database = {
           status?: string
           template_id?: string | null
           user_id: string
+          workflow_id?: string | null
         }
         Update: {
+          brand_profile_id?: string | null
           completed_at?: string | null
           created_at?: string
+          creative_drop_id?: string | null
           credits_used?: number
           error_message?: string | null
           id?: string
@@ -62,13 +209,35 @@ export type Database = {
           status?: string
           template_id?: string | null
           user_id?: string
+          workflow_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "generation_jobs_brand_profile_id_fkey"
+            columns: ["brand_profile_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generation_jobs_creative_drop_id_fkey"
+            columns: ["creative_drop_id"]
+            isOneToOne: false
+            referencedRelation: "creative_drops"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "generation_jobs_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "user_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generation_jobs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
             referencedColumns: ["id"]
           },
         ]
@@ -142,6 +311,45 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      workflows: {
+        Row: {
+          created_at: string
+          default_image_count: number
+          description: string
+          id: string
+          is_system: boolean
+          name: string
+          recommended_ratios: string[]
+          required_inputs: string[]
+          template_ids: string[]
+          uses_tryon: boolean
+        }
+        Insert: {
+          created_at?: string
+          default_image_count?: number
+          description?: string
+          id?: string
+          is_system?: boolean
+          name: string
+          recommended_ratios?: string[]
+          required_inputs?: string[]
+          template_ids?: string[]
+          uses_tryon?: boolean
+        }
+        Update: {
+          created_at?: string
+          default_image_count?: number
+          description?: string
+          id?: string
+          is_system?: boolean
+          name?: string
+          recommended_ratios?: string[]
+          required_inputs?: string[]
+          template_ids?: string[]
+          uses_tryon?: boolean
         }
         Relationships: []
       }
