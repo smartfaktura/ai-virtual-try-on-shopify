@@ -39,9 +39,9 @@ export function LandingNav() {
         {/* Logo */}
         <a href="#" className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">nb</span>
+            <span className="text-primary-foreground font-bold text-sm">bf</span>
           </div>
-          <span className="font-bold text-lg text-foreground tracking-tight">nanobanna</span>
+          <span className="font-bold text-lg text-foreground tracking-tight">brandframe.ai</span>
         </a>
 
         {/* Desktop links */}
