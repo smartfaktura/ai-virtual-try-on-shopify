@@ -38,7 +38,7 @@ const features = [
     headline: 'Tell us your style once. We remember it forever.',
     description:
       'Lighting, tone, backgrounds, composition \u2014 locked into a Brand Profile. Every visual follows your creative direction automatically.',
-    image: templateUniversal,
+    image: featureBrandMemory,
   },
   {
     icon: Camera,
