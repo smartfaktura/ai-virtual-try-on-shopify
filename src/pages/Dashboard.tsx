@@ -239,6 +239,9 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Your AI Studio Team */}
+      <DashboardTeamCarousel />
+
       {/* Quick Create */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-foreground tracking-tight">Quick Create</h2>
