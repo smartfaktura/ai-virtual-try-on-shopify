@@ -16,7 +16,7 @@ export function LandingPricing() {
             Simple, Transparent Pricing
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Start free with 5 credits. No credit card required. Scale as you grow.
+            Start free. Automate as you grow. Creative Drops included on Growth and above.
           </p>
 
           {/* Toggle */}
@@ -77,7 +77,7 @@ export function LandingPricing() {
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground mt-1">
-                    {typeof plan.credits === 'number' ? `${plan.credits.toLocaleString()} credits/month` : 'Unlimited credits'}
+                    {typeof plan.credits === 'number' ? `${plan.credits.toLocaleString()} visuals/month` : 'Unlimited visuals'}
                   </p>
                 </div>
 
@@ -103,36 +103,11 @@ export function LandingPricing() {
           })}
         </div>
 
-        {/* Competitor comparison */}
-        <div className="mt-14 max-w-2xl mx-auto">
-          <div className="rounded-2xl bg-muted/40 border border-border p-6">
-            <h3 className="text-base font-bold text-foreground text-center mb-4">
-              Save 60-80% Compared to Alternatives
-            </h3>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { name: 'nanobanna', price: '$0.008', highlight: true },
-                { name: 'Competitor A', price: '$0.03', highlight: false },
-                { name: 'Competitor B', price: '$0.05', highlight: false },
-              ].map((comp) => (
-                <div
-                  key={comp.name}
-                  className={`text-center p-3 rounded-xl ${
-                    comp.highlight
-                      ? 'bg-primary/10 border border-primary/20'
-                      : 'bg-card border border-border'
-                  }`}
-                >
-                  <p className="text-xs font-medium text-muted-foreground">{comp.name}</p>
-                  <p className="text-xl font-bold text-foreground mt-1">{comp.price}</p>
-                  <p className="text-[10px] text-muted-foreground">per image</p>
-                  {comp.highlight && (
-                    <p className="text-[10px] font-bold text-primary mt-1">You save up to 84%</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Simple line replacing competitor comparison */}
+        <div className="mt-14 text-center">
+          <p className="text-sm text-muted-foreground">
+            All plans include unlimited Brand Profiles and workflow access.
+          </p>
         </div>
       </div>
     </section>

@@ -7,20 +7,20 @@ import {
 
 const faqs = [
   {
-    q: 'What are credits and how do they work?',
-    a: 'Each credit generates one AI image. Standard product photos cost 1-2 credits, while Virtual Try-On images cost 3 credits. You get 5 free credits to start, and credits from top-up packs never expire.',
+    q: 'What is a Visual Set?',
+    a: 'A Visual Set is a collection of 6–20 brand-ready images generated from a single product photo. Each set is tied to a workflow — like Ad Refresh, Product Listing, or Website Hero — so you get images sized and styled for a specific purpose.',
   },
   {
-    q: 'Do I need a Shopify store to use nanobanna?',
-    a: 'Not at all! While we have a native Shopify integration, you can upload any product image directly. nanobanna works for anyone who needs professional product images — whether you sell on Amazon, Etsy, your own website, or social media.',
+    q: 'What are Creative Drops?',
+    a: 'Creative Drops are automated, recurring visual runs. You choose your products, select your workflows, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
   },
   {
     q: 'How is the image quality compared to a real photoshoot?',
-    a: 'Our AI generates studio-quality images that are indistinguishable from professional photography for most use cases. We use advanced models trained on millions of professional product photos to ensure consistent, high-quality results.',
+    a: 'Our AI generates studio-quality images that match professional photography for most e-commerce use cases. Combined with your Brand Profile, every image maintains consistent lighting, tone, and composition across your entire catalog.',
   },
   {
-    q: 'Can I generate images in bulk?',
-    a: 'Yes! Our Growth and Pro plans include bulk generation. Upload your entire catalog, select templates, and generate hundreds of images with one click. Perfect for seasonal refreshes or new product launches.',
+    q: 'How does Brand Memory work?',
+    a: 'When you create a Brand Profile, you set your preferred tone, lighting style, background, color temperature, and composition rules. Every future generation uses this profile automatically — so your visuals stay on-brand without manual adjustments.',
   },
   {
     q: 'What image formats and sizes are supported?',
@@ -28,15 +28,15 @@ const faqs = [
   },
   {
     q: 'Is there a free trial?',
-    a: 'Every new account gets 5 free credits — no credit card required. That\'s enough to generate several images and see the quality for yourself before committing to a plan.',
+    a: 'Every new account gets 5 free visuals — no credit card required. That\'s enough to create your first Visual Set and see the quality before committing to a plan.',
   },
   {
     q: 'How does Virtual Try-On work?',
-    a: 'Upload a clothing item and choose from our library of 34 diverse AI models across different ethnicities, body types, and ages. Select a pose and scene, and our AI generates realistic photos of the model wearing your product.',
+    a: 'Upload a clothing item and choose from our library of 34 diverse AI models across different ethnicities, body types, and ages. Select a pose and scene, and the AI generates realistic photos of the model wearing your product.',
   },
   {
     q: 'Can I cancel my subscription anytime?',
-    a: 'Absolutely. You can cancel, upgrade, or downgrade your plan at any time. There are no long-term contracts or cancellation fees. Unused monthly credits don\'t roll over, but top-up credits never expire.',
+    a: 'Absolutely. You can cancel, upgrade, or downgrade your plan at any time. There are no long-term contracts or cancellation fees. Unused monthly visuals don\'t roll over, but top-up credits never expire.',
   },
 ];
 

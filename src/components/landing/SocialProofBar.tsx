@@ -1,10 +1,10 @@
-import { TrendingUp, Clock, DollarSign, Image } from 'lucide-react';
+import { TrendingUp, Clock, RefreshCw, Image } from 'lucide-react';
 
 const metrics = [
-  { icon: Image, value: '50,000+', label: 'Images generated' },
-  { icon: Clock, value: '12s', label: 'Avg. generation time' },
-  { icon: DollarSign, value: '84%', label: 'Cost savings vs studios' },
-  { icon: TrendingUp, value: '2,000+', label: 'Brands using nanobanna' },
+  { icon: Image, value: '50,000+', label: 'Visuals generated' },
+  { icon: Clock, value: '12s', label: 'Avg. delivery time' },
+  { icon: RefreshCw, value: 'Monthly', label: 'Visuals refreshed automatically' },
+  { icon: TrendingUp, value: '2,000+', label: 'E-commerce brands' },
 ];
 
 export function SocialProofBar() {

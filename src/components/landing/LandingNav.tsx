@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
-  { label: 'Features', href: '#features' },
+  { label: 'Workflows', href: '#features' },
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Pricing', href: '#pricing' },
   { label: 'FAQ', href: '#faq' },
@@ -55,6 +55,11 @@ export function LandingNav() {
               {link.label}
             </button>
           ))}
+          {/* Creative Drops badge */}
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+            <Sparkles className="w-3 h-3" />
+            Monthly Creative Drops
+          </div>
         </div>
 
         {/* Desktop CTA */}
@@ -87,6 +92,10 @@ export function LandingNav() {
                 {link.label}
               </button>
             ))}
+            <div className="flex items-center gap-1.5 text-xs text-primary font-medium py-1">
+              <Sparkles className="w-3 h-3" />
+              Monthly Creative Drops
+            </div>
             <Button size="sm" className="rounded-full mt-2 font-semibold" onClick={() => navigate('/auth')}>
               Start Free
             </Button>

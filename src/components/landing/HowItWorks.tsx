@@ -1,4 +1,4 @@
-import { Upload, Palette, Calendar, ArrowRight } from 'lucide-react';
+import { Upload, Target, Images, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,16 +10,16 @@ const steps = [
     description: 'Drag & drop your product image or import from your product library. Works with any product type — clothing, cosmetics, food, home goods, and more.',
   },
   {
-    icon: Palette,
+    icon: Target,
     number: '02',
-    title: 'Set Your Brand Style',
-    description: 'Create a Brand Profile once with your preferred tone, lighting, and background style. Every future generation stays on-brand automatically.',
+    title: 'Choose What You\'re Creating',
+    description: 'Pick a visual goal — Ad Refresh, Product Listing, Hero Set — and your studio team takes it from there.',
   },
   {
-    icon: Calendar,
+    icon: Images,
     number: '03',
-    title: 'Get Monthly Visuals',
-    description: 'Choose a workflow or set up Creative Drops to receive fresh, professional product visuals on autopilot — monthly or biweekly.',
+    title: 'Get a Visual Set',
+    description: 'Receive 6–20 brand-ready images in seconds. Or schedule Creative Drops and get fresh visuals every month, automatically.',
   },
 ];
 
@@ -63,7 +63,7 @@ export function HowItWorks() {
 
         <div className="text-center">
           <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate('/auth')}>
-            Try It Free — Takes 30 Seconds
+            Create My First Visual Set
             <ArrowRight className="w-4 h-4" />
           </Button>
         </div>

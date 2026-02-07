@@ -17,15 +17,15 @@ import homeJapandi from '@/assets/templates/home-japandi.jpg';
 import clothingStreetwear from '@/assets/templates/clothing-streetwear.jpg';
 
 const comparisons = [
-  { before: serumVitaminC, after: cosmeticsLuxury, label: 'Skincare', category: 'Cosmetics' },
-  { before: hoodieGray, after: clothingStudio, label: 'Hoodie', category: 'Fashion' },
-  { before: granolaOrganic, after: foodRustic, label: 'Granola', category: 'Food' },
-  { before: collagenPowder, after: supplementsLuxury, label: 'Supplements', category: 'Health' },
-  { before: candleSoy, after: homeJapandi, label: 'Candle', category: 'Home' },
-  { before: leggingsBlack, after: clothingStreetwear, label: 'Leggings', category: 'Fashion' },
+  { before: serumVitaminC, after: cosmeticsLuxury, label: 'Skincare Serum', category: 'Ads' },
+  { before: hoodieGray, after: clothingStudio, label: 'Hoodie', category: 'Website' },
+  { before: granolaOrganic, after: foodRustic, label: 'Granola', category: 'Listing' },
+  { before: collagenPowder, after: supplementsLuxury, label: 'Collagen', category: 'Seasonal' },
+  { before: candleSoy, after: homeJapandi, label: 'Candle', category: 'Lifestyle' },
+  { before: leggingsBlack, after: clothingStreetwear, label: 'Leggings', category: 'Ads' },
 ];
 
-const categories = ['All', 'Cosmetics', 'Fashion', 'Food', 'Health', 'Home'];
+const categories = ['All', 'Ads', 'Website', 'Listing', 'Seasonal', 'Lifestyle'];
 
 export function BeforeAfterGallery() {
   const [activeFilter, setActiveFilter] = useState('All');
@@ -39,10 +39,10 @@ export function BeforeAfterGallery() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            See the Difference AI Makes
+            Same Product. Endless Contexts.
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Real products, real results. From raw phone photos to professional-grade images.
+            One upload creates visuals for every channel and campaign.
           </p>
         </div>
 
@@ -77,14 +77,14 @@ export function BeforeAfterGallery() {
                   </span>
                 </div>
                 <div className="relative">
-                  <img src={comp.after} alt={`${comp.label} AI generated`} className="w-full h-40 object-cover" />
+                  <img src={comp.after} alt={`${comp.label} generated`} className="w-full h-40 object-cover" />
                   <span className="absolute bottom-2 left-2 text-[10px] font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
-                    AI GENERATED
+                    GENERATED
                   </span>
                 </div>
               </div>
               <div className="p-4">
-                <p className="text-sm font-semibold text-foreground">{comp.label}</p>
+                <p className="text-sm font-semibold text-foreground">Same product — new visual context</p>
                 <p className="text-xs text-muted-foreground">{comp.category}</p>
               </div>
             </div>
