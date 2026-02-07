@@ -35,17 +35,17 @@ export function DashboardTeamCarousel() {
         <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent z-10" />
 
-        {/* Scrolling strip */}
+        {/* Scrolling strip — no scrollbar */}
         <div
-          className="flex gap-5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin px-1"
-          style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
+          className="flex gap-6 overflow-x-auto pb-2 snap-x snap-mandatory px-1"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
         >
           {TEAM.map((member) => (
             <div
               key={member.name}
-              className="flex-shrink-0 w-[100px] snap-start flex flex-col items-center text-center group"
+              className="flex-shrink-0 w-[120px] snap-start flex flex-col items-center text-center group"
             >
-              <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-border group-hover:border-primary/40 transition-colors shadow-sm">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-border group-hover:border-primary/40 transition-colors shadow-sm">
                 <img
                   src={member.avatar}
                   alt={member.name}
@@ -53,7 +53,7 @@ export function DashboardTeamCarousel() {
                   loading="lazy"
                 />
               </div>
-              <p className="text-sm font-semibold text-foreground mt-2 leading-tight">{member.name}</p>
+              <p className="text-sm font-semibold text-foreground mt-2.5 leading-tight">{member.name}</p>
               <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{member.role}</p>
             </div>
           ))}
