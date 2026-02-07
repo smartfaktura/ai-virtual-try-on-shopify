@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Library,
   Users,
@@ -6,8 +6,6 @@ import {
   Camera,
   Repeat,
   Sparkles,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 
 import templateStreetwear from '@/assets/templates/clothing-streetwear.jpg';
@@ -20,50 +18,50 @@ import templateRustic from '@/assets/templates/food-rustic.jpg';
 const features = [
   {
     icon: Library,
-    title: 'Monthly Content Library',
-    headline: 'A fresh library of studio-grade visuals every month.',
+    label: 'Content Library',
+    headline: 'A fresh library of studio-grade visuals. Every month.',
     description:
-      "Stop scrambling for content. Brandframe.ai delivers curated product images, lifestyle shots, and ad creatives to your dashboard automatically. Always fresh, always on-brand.",
+      'Curated product shots, lifestyle scenes, and ad creatives delivered to your dashboard automatically. Always fresh. Always on-brand.',
     image: templateStreetwear,
   },
   {
     icon: Users,
-    title: 'Models Set Up for Your Brand',
+    label: 'AI Models',
     headline: 'Your models. Your look. Already configured.',
     description:
-      "Choose from 34+ diverse AI models across body types and styles. Save your favourites and they appear in every generation \u2014 consistent representation without a single casting call.",
+      '34+ diverse AI models across body types and styles. Save favourites \u2014 they appear in every generation without a single casting call.',
     image: templateCosmetics,
   },
   {
     icon: SlidersHorizontal,
-    title: 'Brand Preferences',
+    label: 'Brand Memory',
     headline: 'Tell us your style once. We remember it forever.',
     description:
-      "Set lighting, tone, backgrounds, and composition in a Brand Profile. Every visual \u2014 flat-lay or lifestyle \u2014 follows your creative direction automatically.",
+      'Lighting, tone, backgrounds, composition \u2014 locked into a Brand Profile. Every visual follows your creative direction automatically.',
     image: templateUniversal,
   },
   {
     icon: Camera,
-    title: 'One-time Editorial Campaigns',
-    headline: 'Full campaigns without a studio or timeline.',
+    label: 'Campaigns',
+    headline: 'Full editorial campaigns. No studio. No timeline.',
     description:
-      "Holiday collection? Seasonal rebrand? Generate an entire editorial campaign in minutes \u2014 styled scenes, model pairings, multiple ratios for ads, social, and web.",
+      'Holiday collections, seasonal rebrands, product launches \u2014 generate an entire campaign in minutes with styled scenes and multiple ratios.',
     image: templateStudio,
   },
   {
     icon: Repeat,
-    title: 'Automated Creative Drops',
+    label: 'Auto Drops',
     headline: 'Schedule once. Fresh visuals arrive on autopilot.',
     description:
-      "Set up recurring drops tied to your catalog. Assign workflows and brand profiles, then Brandframe.ai generates and delivers new assets weekly or monthly \u2014 zero manual work.",
+      'Recurring Creative Drops tied to your catalog. Assign workflows and brand profiles \u2014 new assets generated weekly or monthly.',
     image: templatePastel,
   },
   {
     icon: Sparkles,
-    title: 'Virtual Try-On',
-    headline: 'Your garments on real-looking models, instantly.',
+    label: 'Try-On',
+    headline: 'Your garments on real-looking models. Instantly.',
     description:
-      "Upload any clothing item and see it on AI models in natural poses. Lookbook-quality imagery for fashion brands without traditional photoshoot overhead.",
+      'Upload any clothing item and see it on AI models in natural poses and environments. Lookbook-quality imagery without the overhead.',
     image: templateRustic,
   },
 ];
@@ -71,97 +69,159 @@ const features = [
 export function FeatureGrid() {
   const [active, setActive] = useState(0);
   const total = features.length;
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const next = useCallback(() => setActive((p) => (p + 1) % total), [total]);
-  const prev = useCallback(() => setActive((p) => (p - 1 + total) % total), [total]);
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setActive((p) => (p + 1) % total);
+    }, 5000);
+  }, [total]);
 
   useEffect(() => {
-    const id = setInterval(next, 6000);
-    return () => clearInterval(id);
-  }, [next]);
+    resetTimer();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [resetTimer]);
+
+  const handleSelect = (i: number) => {
+    setActive(i);
+    resetTimer();
+  };
 
   const current = features[active];
 
   return (
-    <section id="features" className="py-20 sm:py-28">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative py-24 sm:py-32 bg-[hsl(212,14%,10%)] text-[hsl(210,20%,98%)] overflow-hidden">
+      {/* Ambient glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[hsl(161,100%,25%)] opacity-[0.04] blur-[120px]" />
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-3">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[hsl(212,14%,25%)] bg-[hsl(212,14%,14%)] text-xs font-medium tracking-wide uppercase text-[hsl(161,100%,45%)] mb-6">
+            <Sparkles className="w-3 h-3" />
+            AI-Powered Studio
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4 leading-[1.1]">
             What Brandframe.ai Delivers
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Your AI photography team handles everything from monthly content to one-off campaigns.
+          <p className="text-[hsl(210,14%,55%)] max-w-lg mx-auto text-base sm:text-lg">
+            Your AI photography team handles everything &mdash; from monthly libraries to one-off editorial campaigns.
           </p>
         </div>
 
-        {/* Main carousel card */}
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[400px]">
-            {/* Image */}
-            <div className="relative h-64 lg:h-auto overflow-hidden bg-muted">
-              <img
-                key={active}
-                src={current.image}
-                alt={current.title}
-                className="w-full h-full object-cover animate-fade-in"
-              />
-            </div>
+        {/* Feature tabs + content */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-0">
+          {/* Left: Tab list */}
+          <div className="lg:col-span-4 flex flex-col gap-1">
+            {features.map((f, i) => {
+              const isActive = i === active;
+              return (
+                <button
+                  key={f.label}
+                  onClick={() => handleSelect(i)}
+                  className={`group relative flex items-center gap-4 px-5 py-4 rounded-xl text-left transition-all duration-300 ${
+                    isActive
+                      ? 'bg-[hsl(212,14%,16%)]'
+                      : 'hover:bg-[hsl(212,14%,13%)]'
+                  }`}
+                >
+                  {/* Active indicator bar */}
+                  <div
+                    className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-full transition-all duration-300 ${
+                      isActive ? 'bg-[hsl(161,100%,45%)]' : 'bg-transparent'
+                    }`}
+                  />
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-300 ${
+                      isActive
+                        ? 'bg-[hsl(161,100%,25%)] text-[hsl(0,0%,100%)]'
+                        : 'bg-[hsl(212,14%,18%)] text-[hsl(210,14%,55%)] group-hover:text-[hsl(210,20%,80%)]'
+                    }`}
+                  >
+                    <f.icon className="w-[18px] h-[18px]" />
+                  </div>
+                  <span
+                    className={`text-sm font-semibold transition-colors duration-300 ${
+                      isActive ? 'text-[hsl(210,20%,98%)]' : 'text-[hsl(210,14%,55%)] group-hover:text-[hsl(210,20%,80%)]'
+                    }`}
+                  >
+                    {f.label}
+                  </span>
 
-            {/* Content */}
-            <div className="p-8 sm:p-10 flex flex-col justify-center" key={active}>
-              <div className="flex items-center gap-2.5 mb-5">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <current.icon className="w-[18px] h-[18px] text-primary" />
+                  {/* Progress bar for active */}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-5 right-5 h-[2px] bg-[hsl(212,14%,22%)] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[hsl(161,100%,45%)] rounded-full"
+                        style={{
+                          animation: 'progress-fill 5s linear forwards',
+                        }}
+                      />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right: Content card */}
+          <div className="lg:col-span-8 lg:pl-8">
+            <div
+              key={active}
+              className="rounded-2xl overflow-hidden border border-[hsl(212,14%,20%)] bg-[hsl(212,14%,12%)]"
+              style={{ animation: 'feature-enter 0.4s ease-out' }}
+            >
+              {/* Image */}
+              <div className="relative h-64 sm:h-80 overflow-hidden">
+                <img
+                  src={current.image}
+                  alt={current.headline}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(212,14%,12%)] via-transparent to-transparent" />
+
+                {/* Floating counter */}
+                <div className="absolute bottom-4 right-4 text-xs font-mono text-[hsl(210,14%,45%)] bg-[hsl(212,14%,12%)]/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-[hsl(212,14%,22%)]">
+                  {String(active + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
                 </div>
-                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  {current.title}
-                </span>
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-bold text-foreground leading-snug mb-3">
-                {current.headline}
-              </h3>
-
-              <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-                {current.description}
-              </p>
-
-              {/* Nav */}
-              <div className="flex items-center justify-between mt-auto">
-                <div className="flex gap-1.5">
-                  {features.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActive(i)}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === active ? 'w-7 bg-primary' : 'w-1.5 bg-border hover:bg-muted-foreground/30'
-                      }`}
-                      aria-label={`Slide ${i + 1}`}
-                    />
-                  ))}
-                </div>
-                <div className="flex gap-1.5">
-                  <button
-                    onClick={prev}
-                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
-                    aria-label="Previous"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={next}
-                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
-                    aria-label="Next"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+              {/* Text */}
+              <div className="p-8 sm:p-10">
+                <h3 className="text-xl sm:text-2xl font-bold leading-snug mb-3 text-[hsl(210,20%,98%)]">
+                  {current.headline}
+                </h3>
+                <p className="text-sm sm:text-base text-[hsl(210,14%,55%)] leading-relaxed max-w-lg">
+                  {current.description}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Inline keyframes */}
+      <style>{`
+        @keyframes progress-fill {
+          from { width: 0; }
+          to { width: 100%; }
+        }
+        @keyframes feature-enter {
+          from {
+            opacity: 0;
+            transform: translateY(12px) scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
     </section>
   );
 }
