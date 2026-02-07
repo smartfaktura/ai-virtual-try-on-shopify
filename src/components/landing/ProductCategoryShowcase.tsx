@@ -75,6 +75,7 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
           key={i}
           src={img}
           alt={`${label} AI-generated product shot`}
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover"
           style={{
             opacity: i === currentIndex ? 1 : 0,
