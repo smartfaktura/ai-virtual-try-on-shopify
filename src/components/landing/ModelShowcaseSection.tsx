@@ -135,7 +135,7 @@ export function ModelShowcaseSection() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <MarqueeRow items={ROW_1} direction="left" />
         <MarqueeRow items={ROW_2} direction="right" />
       </div>
