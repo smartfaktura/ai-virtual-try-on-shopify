@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Package, Palette, Layers, Calendar, Image, Settings, LogOut, Menu, X, ChevronDown } from 'lucide-react';
+import { Home, Package, Palette, Layers, Calendar, Image, Settings, LogOut, Menu, X, ChevronDown, Sparkles } from 'lucide-react';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -60,8 +60,19 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </div>
 
+      {/* Generate CTA */}
+      <div className="px-3 pt-5 pb-2">
+        <button
+          onClick={() => handleNav('/app/generate')}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25"
+        >
+          <Sparkles className="w-4 h-4" />
+          Generate
+        </button>
+      </div>
+
       {/* Main Nav */}
-      <nav className="flex-1 px-3 py-5 space-y-1">
+      <nav className="flex-1 px-3 py-3 space-y-1">
         <p className="px-3 py-1.5 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/35">Main</p>
         {navItems.map((item) => (
           <button

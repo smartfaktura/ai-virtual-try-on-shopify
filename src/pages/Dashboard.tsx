@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MetricCard } from '@/components/app/MetricCard';
@@ -14,6 +12,10 @@ import { GenerationModeCards } from '@/components/app/GenerationModeCards';
 import { UpcomingDropsCard } from '@/components/app/UpcomingDropsCard';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
 import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
+import { RecentCreationsGallery } from '@/components/app/RecentCreationsGallery';
+import { DashboardTipCard } from '@/components/app/DashboardTipCard';
+import { ActivityFeed } from '@/components/app/ActivityFeed';
+import { DashboardQuickActions } from '@/components/app/DashboardQuickActions';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -132,10 +134,13 @@ export default function Dashboard() {
 
   const firstName = profile?.first_name || profile?.display_name || 'there';
 
+  // Credit usage progress (out of 300 monthly quota)
+  const creditUsageProgress = Math.round(((300 - balance) / 300) * 100);
+
   // --- FIRST-RUN DASHBOARD ---
   if (isNewUser) {
     return (
-      <div className="space-y-14">
+      <div className="space-y-8 sm:space-y-10">
         {/* Welcome — bold, matching landing hero */}
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
@@ -145,8 +150,8 @@ export default function Dashboard() {
             Your AI photography studio is ready. Let's create your first visual set.
           </p>
 
-          {/* Credit badge — matches landing trust badges */}
-          <div className="flex items-center gap-4 mt-5">
+          {/* Credit badge + Quick actions */}
+          <div className="flex items-center gap-4 mt-5 flex-wrap">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Sparkles className="w-4 h-4 text-primary" />
               <span><strong className="text-foreground">{balance}</strong> credits available</span>
@@ -156,7 +161,15 @@ export default function Dashboard() {
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
+
+          {/* Quick Actions */}
+          <div className="mt-5">
+            <DashboardQuickActions />
+          </div>
         </div>
+
+        {/* Tip Card */}
+        <DashboardTipCard />
 
         {/* Onboarding Checklist */}
         <div className="space-y-4">
@@ -167,6 +180,9 @@ export default function Dashboard() {
             jobCount={totalJobCount}
           />
         </div>
+
+        {/* What You Can Create — showcase gallery */}
+        <RecentCreationsGallery />
 
         {/* Your AI Studio Team */}
         <DashboardTeamCarousel />
@@ -181,7 +197,7 @@ export default function Dashboard() {
         {workflows.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Workflows</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {workflows.map(workflow => (
                 <WorkflowCard
                   key={workflow.id}
@@ -198,25 +214,34 @@ export default function Dashboard() {
 
   // --- RETURNING USER DASHBOARD ---
   return (
-    <div className="space-y-10">
-      {/* Welcome greeting */}
+    <div className="space-y-8 sm:space-y-10">
+      {/* Welcome greeting + Quick Actions */}
       <div>
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
           Welcome back, {firstName} 👋
         </h1>
         <p className="text-muted-foreground mt-1">Here's what's happening with your studio.</p>
+
+        {/* Quick Actions */}
+        <div className="mt-4">
+          <DashboardQuickActions />
+        </div>
       </div>
+
+      {/* Tip Card */}
+      <DashboardTipCard />
 
       {/* Low credits banner */}
       <LowCreditsBanner />
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      {/* Metrics Row — 2x2 on mobile, 4 on desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
         <MetricCard
           title="Images Generated"
           value={generatedCount}
           suffix="last 30 days"
           icon={Image}
+          progress={Math.min(100, Math.round((generatedCount / 300) * 100))}
         />
         <MetricCard
           title="Credits Remaining"
@@ -224,6 +249,8 @@ export default function Dashboard() {
           suffix="available"
           icon={Wallet}
           onClick={openBuyModal}
+          progress={Math.max(0, Math.round((balance / 300) * 100))}
+          progressColor={balance < 10 ? 'bg-destructive' : balance < 30 ? 'bg-amber-500' : 'bg-primary'}
         />
         <MetricCard
           title="Products"
@@ -238,6 +265,9 @@ export default function Dashboard() {
           icon={CalendarClock}
         />
       </div>
+
+      {/* Recent Creations Gallery */}
+      <RecentCreationsGallery />
 
       {/* Your AI Studio Team */}
       <DashboardTeamCarousel />
@@ -318,6 +348,7 @@ export default function Dashboard() {
             <EmptyStateCard
               heading="No jobs yet"
               description="Generate your first product images to see them here."
+              showCollage
               action={{
                 content: 'Generate images',
                 onAction: () => navigate('/app/generate'),
@@ -326,6 +357,9 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Activity Feed */}
+      <ActivityFeed />
 
       {/* Upcoming Drops */}
       <UpcomingDropsCard />
