@@ -1,6 +1,6 @@
 import { LandingNav } from '@/components/landing/LandingNav';
 import { HeroSection } from '@/components/landing/HeroSection';
-import { SocialProofBar } from '@/components/landing/SocialProofBar';
+
 import { StudioTeamSection } from '@/components/landing/StudioTeamSection';
 import { FeatureGrid } from '@/components/landing/FeatureGrid';
 import { HowItWorks } from '@/components/landing/HowItWorks';
