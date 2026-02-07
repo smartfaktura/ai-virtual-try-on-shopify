@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, CreditCard, Shield } from 'lucide-react';
+import { ArrowRight, Sparkles, CreditCard, Shield, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import productUpload from '@/assets/products/serum-vitamin-c.jpg';
@@ -15,10 +15,10 @@ const trustBadges = [
 ];
 
 const visualContexts = [
-  { img: contextAd, label: 'Ad Creative (4:5)' },
-  { img: contextListing, label: 'Product Listing (1:1)' },
-  { img: contextLifestyle, label: 'Lifestyle Scene' },
-  { img: contextHero, label: 'Website Hero (16:9)' },
+  { img: contextAd, label: 'Ad Ready' },
+  { img: contextListing, label: 'Listing Ready' },
+  { img: contextLifestyle, label: 'Lifestyle' },
+  { img: contextHero, label: 'Hero Banner' },
 ];
 
 export function HeroSection() {
@@ -34,17 +34,17 @@ export function HeroSection() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
-            AI-powered visual studio for brands
+            Your AI photography team
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-6">
-            Create New Product Visuals
+            Your AI Photography Team.
             <br />
-            <span className="text-primary">Without New Photoshoots</span>
+            <span className="text-primary">Ready When You Are.</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Upload one product photo and get 20 brand-ready visuals for ads, website, and campaigns — automatically.
+            Upload a product photo. Your team of photographers, art directors, and retouchers delivers 20 brand-ready visuals in seconds — for ads, listings, and campaigns.
           </p>
 
           {/* CTAs */}
@@ -76,7 +76,7 @@ export function HeroSection() {
 
         {/* Visual Set showcase: Upload → Multiple outputs */}
         <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-[280px_auto_1fr] gap-4 items-center">
             {/* Left: Original upload */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
               <div className="relative">
@@ -89,6 +89,15 @@ export function HeroSection() {
                 <p className="text-sm font-semibold text-foreground">1 product photo</p>
                 <p className="text-xs text-muted-foreground">That's all you need</p>
               </div>
+            </div>
+
+            {/* Flow arrow */}
+            <div className="hidden md:flex flex-col items-center gap-1">
+              <div className="w-12 h-px bg-border" />
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <ChevronRight className="w-4 h-4 text-primary" />
+              </div>
+              <div className="w-12 h-px bg-border" />
             </div>
 
             {/* Right: 2x2 generated contexts */}
@@ -110,7 +119,7 @@ export function HeroSection() {
               </div>
               {/* Caption */}
               <p className="text-center text-xs text-muted-foreground mt-4">
-                Same product — 4 visual contexts — 12 seconds
+                Same product — 4 deliverables — 12 seconds
               </p>
             </div>
           </div>

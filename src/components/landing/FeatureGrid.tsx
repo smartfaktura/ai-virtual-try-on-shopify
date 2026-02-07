@@ -1,4 +1,4 @@
-import { RefreshCw, ShoppingBag, Monitor, Fingerprint } from 'lucide-react';
+import { RefreshCw, ShoppingBag, Monitor, Palette } from 'lucide-react';
 
 import templateStreetwear from '@/assets/templates/clothing-streetwear.jpg';
 import templateCosmetics from '@/assets/templates/cosmetics-luxury.jpg';
@@ -11,28 +11,28 @@ const workflows = [
     title: 'Ad Refresh Sets',
     description: 'Never run ads with the same images again. Fresh creatives every month, automatically.',
     image: templateStreetwear,
-    badge: '20 images',
+    stat: '20 images, refreshed monthly',
   },
   {
     icon: ShoppingBag,
     title: 'Product Listing Sets',
     description: 'Marketplace-ready visuals, consistent every time. Clean backgrounds, perfect sizing.',
     image: templateCosmetics,
-    badge: '10 images',
+    stat: '10 images, marketplace-optimized',
   },
   {
     icon: Monitor,
     title: 'Website & Hero Sets',
     description: 'Wide compositions with space for copy. Built for landing pages and banners.',
     image: templateUniversal,
-    badge: '6 images',
+    stat: '6 wide compositions',
   },
   {
-    icon: Fingerprint,
+    icon: Palette,
     title: 'Brand Memory',
     description: 'Your lighting, tone, and style — remembered forever. Every visual stays on-brand.',
     image: templateStudio,
-    badge: 'Always on',
+    stat: 'Applied to every generation',
   },
 ];
 
@@ -61,11 +61,6 @@ export function FeatureGrid() {
                   alt={workflow.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-3 right-3">
-                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
-                    {workflow.badge}
-                  </span>
-                </div>
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-3">
@@ -74,7 +69,8 @@ export function FeatureGrid() {
                   </div>
                   <h3 className="text-lg font-bold text-foreground">{workflow.title}</h3>
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">{workflow.description}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-2">{workflow.description}</p>
+                <p className="text-xs font-medium text-primary">{workflow.stat}</p>
               </div>
             </div>
           ))}

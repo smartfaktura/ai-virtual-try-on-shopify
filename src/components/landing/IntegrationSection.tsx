@@ -1,11 +1,11 @@
 import { ShoppingBag, Megaphone, Search, Package, Globe } from 'lucide-react';
 
 const platforms = [
-  { icon: ShoppingBag, name: 'Shopify' },
-  { icon: Megaphone, name: 'Meta Ads' },
-  { icon: Search, name: 'Google Ads' },
-  { icon: Package, name: 'Amazon' },
-  { icon: Globe, name: 'Any Platform' },
+  { icon: ShoppingBag, name: 'Shopify', desc: 'Auto-sized for your store' },
+  { icon: Megaphone, name: 'Meta Ads', desc: '1:1, 4:5, 9:16 ready' },
+  { icon: Search, name: 'Google Ads', desc: 'Display & Performance Max' },
+  { icon: Package, name: 'Amazon', desc: 'Main image compliant' },
+  { icon: Globe, name: 'Any Platform', desc: 'Custom export sizes' },
 ];
 
 export function IntegrationSection() {
@@ -30,15 +30,10 @@ export function IntegrationSection() {
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-3">
                 <platform.icon className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-sm font-bold text-foreground">{platform.name}</h3>
+              <h3 className="text-sm font-bold text-foreground mb-1">{platform.name}</h3>
+              <p className="text-[11px] text-muted-foreground leading-snug">{platform.desc}</p>
             </div>
           ))}
-        </div>
-
-        <div className="text-center mt-10">
-          <p className="text-sm text-muted-foreground">
-            Exported in perfect sizes for every platform.
-          </p>
         </div>
       </div>
     </section>

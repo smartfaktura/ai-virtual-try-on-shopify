@@ -1,17 +1,19 @@
-import { TrendingUp, Clock, RefreshCw, Image } from 'lucide-react';
+import { TrendingUp, Clock, RefreshCw, Image, Quote } from 'lucide-react';
 
 const metrics = [
   { icon: Image, value: '50,000+', label: 'Visuals generated' },
   { icon: Clock, value: '12s', label: 'Avg. delivery time' },
   { icon: RefreshCw, value: 'Monthly', label: 'Visuals refreshed automatically' },
-  { icon: TrendingUp, value: '2,000+', label: 'E-commerce brands' },
+  { icon: TrendingUp, value: '2,000+', label: 'Brands trust brandframe.ai' },
 ];
+
+const placeholderLogos = ['Brand A', 'Brand B', 'Brand C', 'Brand D', 'Brand E'];
 
 export function SocialProofBar() {
   return (
     <section className="py-12 border-y border-border bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           {metrics.map((metric) => (
             <div key={metric.label} className="text-center">
               <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 mb-3">
@@ -21,6 +23,32 @@ export function SocialProofBar() {
               <p className="text-sm text-muted-foreground mt-1">{metric.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Testimonial */}
+        <div className="max-w-xl mx-auto text-center mb-6">
+          <Quote className="w-5 h-5 text-primary/40 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground italic leading-relaxed">
+            "We replaced 3 monthly photoshoots. Our ad creative is fresher than ever."
+          </p>
+          <p className="text-xs font-medium text-foreground mt-2">
+            — E-commerce brand, Growth plan
+          </p>
+        </div>
+
+        {/* Logo row */}
+        <div className="flex items-center justify-center gap-8">
+          <span className="text-xs text-muted-foreground shrink-0">Trusted by</span>
+          <div className="flex items-center gap-6">
+            {placeholderLogos.map((logo) => (
+              <span
+                key={logo}
+                className="text-xs font-semibold text-muted-foreground/40 tracking-wider uppercase"
+              >
+                {logo}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </section>

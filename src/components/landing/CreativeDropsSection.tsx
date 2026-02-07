@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, Calendar } from 'lucide-react';
+import { ArrowRight, Check, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import productSerum from '@/assets/products/serum-vitamin-c.jpg';
@@ -13,7 +13,29 @@ const bullets = [
   'Fresh visuals arrive every month',
 ];
 
-const calendarThumbnails = [productSerum, productHoodie, productGranola, productCandle];
+const drops = [
+  {
+    month: 'March Drop',
+    count: '20 visuals · 4 products',
+    thumbnails: [productSerum, productHoodie, productGranola, productCandle],
+    opacity: 'opacity-100',
+    status: 'Delivered',
+  },
+  {
+    month: 'February Drop',
+    count: '16 visuals · 3 products',
+    thumbnails: [productHoodie, productGranola, productCandle],
+    opacity: 'opacity-70',
+    status: 'Delivered',
+  },
+  {
+    month: 'January Drop',
+    count: '20 visuals · 4 products',
+    thumbnails: [productSerum, productCandle, productGranola, productHoodie],
+    opacity: 'opacity-40',
+    status: 'Delivered',
+  },
+];
 
 export function CreativeDropsSection() {
   const navigate = useNavigate();
@@ -52,37 +74,41 @@ export function CreativeDropsSection() {
             </Button>
           </div>
 
-          {/* Right: Calendar mockup */}
+          {/* Right: Timeline of drops */}
           <div className="flex justify-center">
-            <div className="w-full max-w-sm rounded-2xl border border-border bg-card shadow-lg overflow-hidden">
-              {/* Calendar header */}
-              <div className="p-5 border-b border-border flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">March Creative Drop</p>
-                  <p className="text-xs text-muted-foreground">20 visuals · 4 products</p>
-                </div>
+            <div className="w-full max-w-sm space-y-4">
+              {/* Next drop indicator */}
+              <div className="flex items-center gap-2 text-sm font-medium text-primary mb-2 px-1">
+                <Clock className="w-4 h-4" />
+                Next drop in 12 days
               </div>
 
-              {/* Thumbnail grid */}
-              <div className="p-4">
-                <div className="grid grid-cols-2 gap-2">
-                  {calendarThumbnails.map((thumb, i) => (
-                    <div key={i} className="rounded-lg overflow-hidden border border-border">
-                      <img src={thumb} alt="Product thumbnail" className="w-full h-24 object-cover" />
+              {drops.map((drop) => (
+                <div
+                  key={drop.month}
+                  className={`rounded-2xl border border-border bg-card shadow-sm overflow-hidden ${drop.opacity} transition-opacity`}
+                >
+                  <div className="p-4 border-b border-border flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Calendar className="w-4 h-4 text-primary" />
                     </div>
-                  ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground">{drop.month}</p>
+                      <p className="text-xs text-muted-foreground">{drop.count}</p>
+                    </div>
+                    <span className="text-[10px] font-medium text-muted-foreground">{drop.status}</span>
+                  </div>
+                  <div className="p-3">
+                    <div className="flex gap-1.5">
+                      {drop.thumbnails.slice(0, 4).map((thumb, i) => (
+                        <div key={i} className="rounded-md overflow-hidden border border-border flex-1">
+                          <img src={thumb} alt="Product" className="w-full h-14 object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Scheduled: 1st of every month</span>
-                  <span className="flex items-center gap-1 text-xs font-medium text-primary">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Active
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>

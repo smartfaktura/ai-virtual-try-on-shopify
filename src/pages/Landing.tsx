@@ -1,10 +1,10 @@
 import { LandingNav } from '@/components/landing/LandingNav';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { SocialProofBar } from '@/components/landing/SocialProofBar';
+import { StudioTeamSection } from '@/components/landing/StudioTeamSection';
 import { FeatureGrid } from '@/components/landing/FeatureGrid';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { BeforeAfterGallery } from '@/components/landing/BeforeAfterGallery';
-import { StudioTeamSection } from '@/components/landing/StudioTeamSection';
 import { CreativeDropsSection } from '@/components/landing/CreativeDropsSection';
 import { IntegrationSection } from '@/components/landing/IntegrationSection';
 import { LandingPricing } from '@/components/landing/LandingPricing';
@@ -19,10 +19,10 @@ export default function Landing() {
       <main>
         <HeroSection />
         <SocialProofBar />
+        <StudioTeamSection />
         <FeatureGrid />
         <HowItWorks />
         <BeforeAfterGallery />
-        <StudioTeamSection />
         <CreativeDropsSection />
         <IntegrationSection />
         <LandingPricing />

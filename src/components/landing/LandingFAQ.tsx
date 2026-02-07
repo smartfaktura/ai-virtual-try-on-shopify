@@ -7,6 +7,14 @@ import {
 
 const faqs = [
   {
+    q: 'Will the images look AI-generated?',
+    a: 'No. Our AI generates studio-quality images indistinguishable from professional photography. Combined with Brand Memory, every image maintains consistent, realistic lighting and composition.',
+  },
+  {
+    q: 'Can I really stop doing photoshoots?',
+    a: 'For most e-commerce visual needs, yes. Brands use brandframe.ai to replace recurring product shoots for ads, listings, and campaigns. You may still want photoshoots for flagship campaigns, but your day-to-day visual output is fully automated.',
+  },
+  {
     q: 'What is a Visual Set?',
     a: 'A Visual Set is a collection of 6–20 brand-ready images generated from a single product photo. Each set is tied to a workflow — like Ad Refresh, Product Listing, or Website Hero — so you get images sized and styled for a specific purpose.',
   },

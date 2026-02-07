@@ -79,6 +79,11 @@ export function LandingPricing() {
                   <p className="text-xs text-muted-foreground mt-1">
                     {typeof plan.credits === 'number' ? `${plan.credits.toLocaleString()} visuals/month` : 'Unlimited visuals'}
                   </p>
+                  {typeof plan.credits === 'number' && (
+                    <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                      ≈ {Math.round(plan.credits / 20)} visual sets
+                    </p>
+                  )}
                 </div>
 
                 <ul className="flex-1 space-y-3 mb-6">

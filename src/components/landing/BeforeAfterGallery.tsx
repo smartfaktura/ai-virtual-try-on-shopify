@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-// Product (before) images
+// Product (original) images
 import serumVitaminC from '@/assets/products/serum-vitamin-c.jpg';
 import hoodieGray from '@/assets/products/hoodie-gray-1.jpg';
 import granolaOrganic from '@/assets/products/granola-organic.jpg';
@@ -8,7 +8,7 @@ import collagenPowder from '@/assets/products/collagen-powder.jpg';
 import candleSoy from '@/assets/products/candle-soy.jpg';
 import leggingsBlack from '@/assets/products/leggings-black-1.jpg';
 
-// Template (after) images
+// Template (output) images
 import cosmeticsLuxury from '@/assets/templates/cosmetics-luxury.jpg';
 import clothingStudio from '@/assets/templates/clothing-studio.jpg';
 import foodRustic from '@/assets/templates/food-rustic.jpg';
@@ -17,12 +17,12 @@ import homeJapandi from '@/assets/templates/home-japandi.jpg';
 import clothingStreetwear from '@/assets/templates/clothing-streetwear.jpg';
 
 const comparisons = [
-  { before: serumVitaminC, after: cosmeticsLuxury, label: 'Skincare Serum', category: 'Ads' },
-  { before: hoodieGray, after: clothingStudio, label: 'Hoodie', category: 'Website' },
-  { before: granolaOrganic, after: foodRustic, label: 'Granola', category: 'Listing' },
-  { before: collagenPowder, after: supplementsLuxury, label: 'Collagen', category: 'Seasonal' },
-  { before: candleSoy, after: homeJapandi, label: 'Candle', category: 'Lifestyle' },
-  { before: leggingsBlack, after: clothingStreetwear, label: 'Leggings', category: 'Ads' },
+  { original: serumVitaminC, output: cosmeticsLuxury, label: 'Instagram Ad', category: 'Ads' },
+  { original: hoodieGray, output: clothingStudio, label: 'Amazon Listing', category: 'Listing' },
+  { original: granolaOrganic, output: foodRustic, label: 'Website Hero', category: 'Website' },
+  { original: collagenPowder, output: supplementsLuxury, label: 'Seasonal Campaign', category: 'Seasonal' },
+  { original: candleSoy, output: homeJapandi, label: 'Lifestyle Blog', category: 'Lifestyle' },
+  { original: leggingsBlack, output: clothingStreetwear, label: 'TikTok Ad', category: 'Ads' },
 ];
 
 const categories = ['All', 'Ads', 'Website', 'Listing', 'Seasonal', 'Lifestyle'];
@@ -39,7 +39,7 @@ export function BeforeAfterGallery() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            Same Product. Endless Contexts.
+            One Product. Every Channel.
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             One upload creates visuals for every channel and campaign.
@@ -67,24 +67,26 @@ export function BeforeAfterGallery() {
           {filtered.map((comp) => (
             <div
               key={comp.label}
-              className="rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow duration-300"
+              className="group rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="grid grid-cols-2">
-                <div className="relative">
-                  <img src={comp.before} alt={`${comp.label} original`} className="w-full h-40 object-cover" />
-                  <span className="absolute bottom-2 left-2 text-[10px] font-semibold bg-foreground/60 text-background px-1.5 py-0.5 rounded">
-                    ORIGINAL
-                  </span>
-                </div>
-                <div className="relative">
-                  <img src={comp.after} alt={`${comp.label} generated`} className="w-full h-40 object-cover" />
-                  <span className="absolute bottom-2 left-2 text-[10px] font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
-                    GENERATED
-                  </span>
+              {/* PiP layout: large output image with small inset original */}
+              <div className="relative">
+                <img
+                  src={comp.output}
+                  alt={`${comp.label} visual`}
+                  className="w-full h-52 object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                />
+                {/* Inset original (PiP) */}
+                <div className="absolute top-3 left-3 w-14 h-14 rounded-lg border-2 border-background/80 shadow-lg overflow-hidden">
+                  <img
+                    src={comp.original}
+                    alt="Original product"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
               <div className="p-4">
-                <p className="text-sm font-semibold text-foreground">Same product — new visual context</p>
+                <p className="text-sm font-semibold text-foreground">{comp.label}</p>
                 <p className="text-xs text-muted-foreground">{comp.category}</p>
               </div>
             </div>
