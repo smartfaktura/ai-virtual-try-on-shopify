@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, Package, CalendarClock, ArrowRight } from 'lucide-react';
+import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -134,37 +134,32 @@ export default function Dashboard() {
   // --- FIRST-RUN DASHBOARD ---
   if (isNewUser) {
     return (
-      <div className="space-y-12">
-        {/* Welcome — luxury greeting */}
+      <div className="space-y-14">
+        {/* Welcome — bold, matching landing hero */}
         <div>
-          <h1 className="text-4xl font-light tracking-tight text-foreground">
-            Welcome, <span className="font-semibold">{firstName}</span>
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+            Welcome, {firstName} 👋
           </h1>
-          <p className="text-sm text-muted-foreground mt-3">
-            Your AI photography studio is ready.
+          <p className="text-lg text-muted-foreground mt-2 max-w-xl">
+            Your AI photography studio is ready. Let's create your first visual set.
           </p>
 
-          {/* Credit row */}
-          <div className="mt-4 flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 bg-foreground/[0.03] border border-foreground/[0.06] rounded-full px-3 py-1 text-xs font-medium text-foreground/70">
-              <Wallet className="w-3 h-3" />
-              {balance} credits available
-            </span>
-            <button
-              onClick={openBuyModal}
-              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 decoration-foreground/20 hover:decoration-foreground/60 transition-colors"
-            >
+          {/* Credit badge — matches landing trust badges */}
+          <div className="flex items-center gap-4 mt-5">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span><strong className="text-foreground">{balance}</strong> credits available</span>
+            </div>
+            <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={openBuyModal}>
               Buy Credits
-            </button>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
           </div>
-
-          {/* Gradient separator */}
-          <div className="mt-6 h-px bg-gradient-to-r from-border via-border/50 to-transparent" />
         </div>
 
         {/* Onboarding Checklist */}
         <div className="space-y-4">
-          <p className="section-label section-divider">Get Started</p>
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">Get Started</h2>
           <OnboardingChecklist
             productCount={productCount}
             brandProfileCount={brandProfileCount}
@@ -174,15 +169,15 @@ export default function Dashboard() {
 
         {/* Two Ways to Create */}
         <div className="space-y-4">
-          <p className="section-label section-divider">Two Ways to Create</p>
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">Two Ways to Create</h2>
           <GenerationModeCards />
         </div>
 
         {/* Explore Workflows */}
         {workflows.length > 0 && (
-          <div className="space-y-4 pt-2">
-            <p className="section-label section-divider">Explore Workflows</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Workflows</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {workflows.map(workflow => (
                 <WorkflowCard
                   key={workflow.id}
@@ -200,60 +195,58 @@ export default function Dashboard() {
   // --- RETURNING USER DASHBOARD ---
   return (
     <div className="space-y-10">
-      {/* Welcome greeting for returning user */}
+      {/* Welcome greeting */}
       <div>
-        <h1 className="text-4xl font-light tracking-tight text-foreground">
-          Welcome back, <span className="font-semibold">{firstName}</span>
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+          Welcome back, {firstName} 👋
         </h1>
-        <div className="mt-5 h-px bg-gradient-to-r from-border via-border/50 to-transparent" />
+        <p className="text-muted-foreground mt-1">Here's what's happening with your studio.</p>
       </div>
 
       {/* Low credits banner */}
       <LowCreditsBanner />
 
       {/* Metrics Row */}
-      <div className="bg-muted/30 rounded-xl p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <MetricCard
-            title="Images Generated"
-            value={generatedCount}
-            suffix="last 30 days"
-            icon={Image}
-          />
-          <MetricCard
-            title="Credits Remaining"
-            value={balance}
-            suffix="available"
-            icon={Wallet}
-            onClick={openBuyModal}
-          />
-          <MetricCard
-            title="Products"
-            value={productCount}
-            suffix="in library"
-            icon={Package}
-          />
-          <MetricCard
-            title="Active Schedules"
-            value={scheduleCount}
-            suffix="creative drops"
-            icon={CalendarClock}
-          />
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <MetricCard
+          title="Images Generated"
+          value={generatedCount}
+          suffix="last 30 days"
+          icon={Image}
+        />
+        <MetricCard
+          title="Credits Remaining"
+          value={balance}
+          suffix="available"
+          icon={Wallet}
+          onClick={openBuyModal}
+        />
+        <MetricCard
+          title="Products"
+          value={productCount}
+          suffix="in library"
+          icon={Package}
+        />
+        <MetricCard
+          title="Active Schedules"
+          value={scheduleCount}
+          suffix="creative drops"
+          icon={CalendarClock}
+        />
       </div>
 
       {/* Quick Create */}
       <div className="space-y-4">
-        <p className="section-label section-divider">Quick Create</p>
+        <h2 className="text-xl font-bold text-foreground tracking-tight">Quick Create</h2>
         <GenerationModeCards compact />
       </div>
 
       {/* Recent Jobs */}
-      <Card className="card-elevated border-0 rounded-xl overflow-hidden">
-        <CardContent className="p-5 space-y-4">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+        <div className="p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <p className="section-label">Recent Jobs</p>
-            <Button variant="link" onClick={() => navigate('/app/library')}>
+            <h2 className="text-lg font-bold text-foreground">Recent Jobs</h2>
+            <Button variant="link" className="text-sm font-medium" onClick={() => navigate('/app/library')}>
               View all
             </Button>
           </div>
@@ -276,7 +269,7 @@ export default function Dashboard() {
                     <TableRow key={job.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-border flex-shrink-0">
                             <img
                               src={job.user_products?.image_url || '/placeholder.svg'}
                               alt={job.user_products?.title || 'Product'}
@@ -303,7 +296,7 @@ export default function Dashboard() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {job.status === 'failed' && (
-                            <Button size="sm" onClick={() => navigate('/app/generate')}>
+                            <Button size="sm" className="rounded-full" onClick={() => navigate('/app/generate')}>
                               Retry
                             </Button>
                           )}
@@ -324,8 +317,8 @@ export default function Dashboard() {
               }}
             />
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Upcoming Drops */}
       <UpcomingDropsCard />
