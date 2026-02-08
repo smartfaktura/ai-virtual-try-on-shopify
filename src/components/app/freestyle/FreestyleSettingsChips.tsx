@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Square, Smartphone, RectangleHorizontal, ChevronDown,
   Minus, Plus, Wand2, Image as ImageIcon,
