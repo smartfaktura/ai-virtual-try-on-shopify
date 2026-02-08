@@ -442,6 +442,7 @@ export default function BrandProfileWizard() {
                     size="sm"
                     className="h-8 px-2"
                     onClick={() => addCustomChip('brand_keywords', customKeyword, setCustomKeyword)}
+                  >
                     <Plus className="w-3.5 h-3.5" />
                   </Button>
                 </div>
