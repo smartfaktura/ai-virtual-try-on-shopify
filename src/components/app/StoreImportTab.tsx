@@ -149,10 +149,15 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
         )}
       </div>
 
-      {/* Supported platforms hint */}
-      <p className="text-xs text-muted-foreground">
-        Works with Shopify, WooCommerce, Etsy, Amazon, and any page with product meta tags. All product images will be imported automatically.
-      </p>
+      {/* Supported platforms */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {['Shopify', 'Etsy', 'Amazon', 'WooCommerce'].map((p) => (
+          <Badge key={p} variant="secondary" className="text-[10px] px-2 py-0.5 font-normal">
+            {p}
+          </Badge>
+        ))}
+        <span className="text-[11px] text-muted-foreground">+ any product page</span>
+      </div>
 
       {/* Error */}
       {error && (
