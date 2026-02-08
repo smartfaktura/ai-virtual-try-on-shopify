@@ -328,8 +328,8 @@ export default function BrandProfileWizard() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {MOOD_OPTIONS.map(mood => (
                     <button
+                      type="button"
                       key={mood.value}
-                      onClick={() => update('tone', mood.value)}
                       className={cn(
                         'text-left p-4 rounded-xl border transition-all',
                         form.tone === mood.value
