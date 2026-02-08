@@ -43,6 +43,9 @@ const KEYWORD_SUGGESTIONS = [
   'sustainable', 'handcrafted', 'premium', 'organic', 'artisan',
   'modern', 'timeless', 'edgy', 'feminine', 'masculine',
   'urban', 'natural', 'luxurious', 'affordable', 'innovative',
+  'vintage', 'eco-friendly', 'minimalist', 'high-end', 'bohemian',
+  'clinical', 'sporty', 'cozy', 'sophisticated', 'youthful',
+  'professional', 'rustic', 'futuristic', 'wholesome', 'sleek',
 ];
 
 // ── Do-Not suggestions ──────────────────────────────────────────────────
