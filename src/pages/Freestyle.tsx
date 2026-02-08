@@ -244,6 +244,16 @@ export default function Freestyle() {
     onImageCountChange: setImageCount,
     stylePresets,
     onStylePresetsChange: setStylePresets,
+    selectedBrandProfile,
+    onBrandProfileSelect: setSelectedBrandProfile,
+    brandProfilePopoverOpen,
+    onBrandProfilePopoverChange: setBrandProfilePopoverOpen,
+    brandProfiles,
+    isLoadingBrandProfiles,
+    negatives,
+    onNegativesChange: setNegatives,
+    negativesPopoverOpen,
+    onNegativesPopoverChange: setNegativesPopoverOpen,
   };
 
   return (
