@@ -48,6 +48,19 @@ interface FreestyleRequest {
   negatives?: string[];
 }
 
+// ── Selfie / UGC intent detection ─────────────────────────────────────────
+const SELFIE_KEYWORDS = [
+  'selfie', 'self-portrait', 'self portrait', 'front-facing', 'front facing',
+  'ugc', 'phone camera', 'mirror shot', 'mirror selfie', 'phone selfie',
+  'casual selfie', 'social media selfie', 'influencer selfie', 'vlog',
+  'arm-length', 'arm length', 'front camera', 'facecam',
+];
+
+function detectSelfieIntent(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  return SELFIE_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 // ── Negative prompt (always appended when polish is on) ───────────────────
 const NEGATIVE_PROMPT = `
 CRITICAL — DO NOT include any of the following:
@@ -66,13 +79,23 @@ function polishUserPrompt(
   modelContext?: string
 ): string {
   const layers: string[] = [];
+  const isSelfie = detectSelfieIntent(rawPrompt);
 
-  layers.push(`Professional photography: ${rawPrompt}`);
-
-  // Base quality layer (always)
-  layers.push(
-    "Ultra high resolution, sharp focus, natural lighting, commercial-grade color accuracy."
-  );
+  if (isSelfie) {
+    layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
+    layers.push(
+      "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
+    );
+    // Selfie composition layer
+    layers.push(
+      "SELFIE COMPOSITION: Front-facing smartphone camera perspective. Slight high angle (camera held slightly above eye level). Arm-length or close-up distance from subject. Soft natural smartphone-style bokeh in background — NOT studio strobe bokeh. Authentic, candid facial expression — relaxed, genuine, not model-posed. Natural selfie framing with the subject centered or slightly off-center."
+    );
+  } else {
+    layers.push(`Professional photography: ${rawPrompt}`);
+    layers.push(
+      "Ultra high resolution, sharp focus, natural lighting, commercial-grade color accuracy."
+    );
+  }
 
   // Brand profile layer
   if (brandProfile) {
@@ -104,6 +127,11 @@ function polishUserPrompt(
     layers.push(
       "PRODUCT ACCURACY: The product in the PRODUCT REFERENCE IMAGE must be reproduced with 100% fidelity — identical shape, color, texture, branding, and proportions. Do not modify, stylize, or reinterpret the product in any way."
     );
+    if (isSelfie) {
+      layers.push(
+        "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
+      );
+    }
   }
 
   // Model / portrait layer — strong identity matching
@@ -112,9 +140,15 @@ function polishUserPrompt(
     layers.push(
       `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo.`
     );
-    layers.push(
-      "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
-    );
+    if (isSelfie) {
+      layers.push(
+        "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections — NOT studio-retouched or airbrushed. Soft, flattering natural light on the face. Relaxed, genuine expression as if casually taking a selfie. Slight warmth and glow from ambient or window light."
+      );
+    } else {
+      layers.push(
+        "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
+      );
+    }
   }
 
   // Scene / environment layer
