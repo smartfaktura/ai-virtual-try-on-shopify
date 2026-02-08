@@ -35,7 +35,7 @@ export function WorkflowCard({ workflow, onSelect, isGenerating, autoPlay, onHov
         {isGenerating ? (
           <Skeleton className="w-full h-full" />
         ) : scene ? (
-          <WorkflowAnimatedThumbnail scene={scene} isActive={isHovered} />
+          <WorkflowAnimatedThumbnail scene={scene} isActive={isActive} />
         ) : (
           <img
             src={workflow.preview_image_url || imgFallback}

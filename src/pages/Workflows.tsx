@@ -143,6 +143,8 @@ export default function Workflows() {
                 workflow={workflow}
                 onSelect={() => handleCreateVisualSet(workflow)}
                 isGenerating={generatingIds.has(workflow.id)}
+                autoPlay={workflow.name === 'Virtual Try-On Set' && hoveredWorkflow !== null ? hoveredWorkflow === workflow.name : workflow.name === 'Virtual Try-On Set'}
+                onHoverChange={(hovered) => setHoveredWorkflow(hovered ? workflow.name : null)}
               />
             ))}
           </div>

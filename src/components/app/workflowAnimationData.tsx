@@ -58,7 +58,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     background: tryonResult,
     elements: [
       {
-        type: 'product', image: tryonProduct, label: 'Tank Top', sublabel: 'Product',
+        type: 'product', image: tryonProduct, label: 'Crop Top', sublabel: 'Product',
         icon: <Plus className="w-3 h-3" />,
         position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
@@ -67,12 +67,12 @@ export const workflowScenes: Record<string, WorkflowScene> = {
         position: { top: '40%', left: '38%' }, enterDelay: 0.9, animation: 'pop',
       },
       {
-        type: 'model', image: tryonModel, label: 'Slim Blonde',
+        type: 'model', image: tryonModel, label: 'Charlotte',
         icon: <User className="w-3 h-3" />,
         position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
       },
       {
-        type: 'scene', image: tryonScene, label: 'Coffee Shop', sublabel: 'Scene',
+        type: 'scene', image: tryonScene, label: 'Editorial Minimal', sublabel: 'Scene',
         icon: <MapPin className="w-3 h-3" />,
         position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
       },
