@@ -30,7 +30,7 @@ export function FreestyleGallery({ images, onDownload, onExpand }: FreestyleGall
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-[2px] rounded-xl overflow-hidden">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-[2px] overflow-hidden">
       {images.map((img, idx) => (
         <div key={img.timestamp + idx} className="group relative overflow-hidden animate-fade-in bg-muted/30">
           <img

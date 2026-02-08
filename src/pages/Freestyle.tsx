@@ -134,13 +134,13 @@ export default function Freestyle() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
       {hasImages ? (
         <>
-          {/* Results Gallery */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {/* Results Gallery — scrollable, edge-to-edge */}
+          <div className="flex-1 overflow-y-auto min-h-0">
             <FreestyleGallery
               images={generatedImages}
               onDownload={handleDownload}
@@ -148,8 +148,8 @@ export default function Freestyle() {
             />
           </div>
 
-          {/* Bottom Floating Prompt Bar */}
-          <div className="flex-shrink-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2">
+          {/* Sticky Prompt Bar — always pinned at bottom */}
+          <div className="flex-shrink-0 border-t border-border/50 bg-background/80 backdrop-blur-xl px-4 sm:px-6 pb-4 sm:pb-5 pt-3 shadow-[0_-4px_16px_-4px_hsl(var(--foreground)/0.05)]">
             <FreestylePromptPanel {...panelProps} />
           </div>
         </>
