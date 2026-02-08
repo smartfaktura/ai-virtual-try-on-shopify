@@ -16,6 +16,7 @@ const navItems = [
   { label: 'Brand Profiles', icon: Palette, path: '/app/brand-profiles' },
   { label: 'Workflows', icon: Layers, path: '/app/workflows' },
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
+  { label: 'Templates', icon: LayoutTemplate, path: '/app/templates' },
   { label: 'Video', icon: Film, path: '/app/video' },
   { label: 'Library', icon: Image, path: '/app/library' },
 ];
