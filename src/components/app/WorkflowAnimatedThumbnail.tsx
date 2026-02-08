@@ -11,11 +11,12 @@ export interface AnimatedStep {
 interface Props {
   steps: AnimatedStep[];
   stepDuration?: number;
+  isActive?: boolean;
 }
 
 const DEFAULT_DURATION = 2200;
 
-export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATION }: Props) {
+export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATION, isActive = true }: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -27,10 +28,22 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
     }, 500);
   }, [steps.length]);
 
+  // Reset to first frame when deactivated
   useEffect(() => {
+    if (!isActive) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setActiveStep(0);
+        setIsTransitioning(false);
+      }, 300);
+    }
+  }, [isActive]);
+
+  useEffect(() => {
+    if (!isActive) return;
     const interval = setInterval(advance, stepDuration);
     return () => clearInterval(interval);
-  }, [advance, stepDuration]);
+  }, [advance, stepDuration, isActive]);
 
   const current = steps[activeStep];
 
@@ -53,7 +66,7 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
       ))}
 
       {/* Action overlay */}
-      {current.overlay === 'action' && !isTransitioning && (
+      {isActive && current.overlay === 'action' && !isTransitioning && (
         <div className="absolute inset-0 z-10 bg-black/20 flex items-center justify-center">
           <div className="animate-scale-in">
             <div className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
@@ -64,7 +77,7 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
       )}
 
       {/* Result overlay */}
-      {current.overlay === 'result' && !isTransitioning && (
+      {isActive && current.overlay === 'result' && !isTransitioning && (
         <div className="absolute inset-0 z-10 flex items-end justify-center pb-16">
           <div className="animate-scale-in flex items-center gap-1 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-lg">
             <Sparkles className="w-3 h-3 text-primary" />
@@ -73,35 +86,39 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
         </div>
       )}
 
-      {/* Step label */}
-      <div className="absolute top-3 left-3 z-20">
-        <div
-          className="flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full"
-          key={activeStep}
-        >
-          {current.icon}
-          <span className="text-[10px] font-medium animate-fade-in">{current.label}</span>
-        </div>
-      </div>
-
-      {/* Progress dots */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-        {steps.map((_, i) => (
+      {/* Step label — only on hover */}
+      {isActive && (
+        <div className="absolute top-3 left-3 z-20 animate-fade-in">
           <div
-            key={i}
-            className="relative h-1 rounded-full overflow-hidden transition-all duration-300"
-            style={{ width: i === activeStep ? 20 : 6, backgroundColor: 'rgba(255,255,255,0.4)' }}
+            className="flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full"
+            key={activeStep}
           >
-            {i === activeStep && (
-              <div
-                className="absolute inset-0 bg-white rounded-full"
-                style={{ animation: `wf-progress ${stepDuration}ms linear` }}
-              />
-            )}
-            {i < activeStep && <div className="absolute inset-0 bg-white rounded-full" />}
+            {current.icon}
+            <span className="text-[10px] font-medium animate-fade-in">{current.label}</span>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Progress dots — only on hover */}
+      {isActive && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 animate-fade-in">
+          {steps.map((_, i) => (
+            <div
+              key={i}
+              className="relative h-1 rounded-full overflow-hidden transition-all duration-300"
+              style={{ width: i === activeStep ? 20 : 6, backgroundColor: 'rgba(255,255,255,0.4)' }}
+            >
+              {i === activeStep && (
+                <div
+                  className="absolute inset-0 bg-white rounded-full"
+                  style={{ animation: `wf-progress ${stepDuration}ms linear` }}
+                />
+              )}
+              {i < activeStep && <div className="absolute inset-0 bg-white rounded-full" />}
+            </div>
+          ))}
+        </div>
+      )}
 
       <style>{`
         @keyframes wf-progress {

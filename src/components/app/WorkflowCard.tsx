@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Users, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,15 +18,20 @@ interface WorkflowCardProps {
 
 export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardProps) {
   const animationSteps = workflowAnimations[workflow.name];
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Card className="group hover:shadow-md transition-all hover:border-primary/30 overflow-hidden">
       {/* Hero image — portrait */}
-      <div className="aspect-[3/4] overflow-hidden relative">
+      <div
+        className="aspect-[3/4] overflow-hidden relative"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {isGenerating ? (
           <Skeleton className="w-full h-full" />
         ) : animationSteps ? (
-          <WorkflowAnimatedThumbnail steps={animationSteps} />
+          <WorkflowAnimatedThumbnail steps={animationSteps} isActive={isHovered} />
         ) : (
           <img
             src={workflow.preview_image_url || imgFallback}
