@@ -1,5 +1,6 @@
 import { Download, Expand, Trash2, Wand2, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 interface GalleryImage {
@@ -15,6 +16,15 @@ interface FreestyleGalleryProps {
   onExpand: (index: number) => void;
   onDelete?: (imageId: string) => void;
   onCopyPrompt?: (prompt: string) => void;
+  generatingCount?: number;
+}
+
+function SkeletonCard({ className }: { className?: string }) {
+  return (
+    <div className={cn('rounded-xl overflow-hidden', className)}>
+      <Skeleton className="w-full aspect-square" />
+    </div>
+  );
 }
 
 function ImageCard({
@@ -111,8 +121,8 @@ function ImageCard({
   );
 }
 
-export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt }: FreestyleGalleryProps) {
-  if (images.length === 0) {
+export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0 }: FreestyleGalleryProps) {
+  if (images.length === 0 && generatingCount === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-6">
         <div className="w-24 h-24 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
@@ -128,11 +138,20 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     );
   }
 
-  const count = images.length;
+  const skeletons = generatingCount > 0
+    ? Array.from({ length: generatingCount }, (_, i) => (
+        <SkeletonCard key={`skeleton-${i}`} className="mb-1" />
+      ))
+    : [];
+
+  const count = images.length + generatingCount;
 
   if (count <= 3) {
     return (
       <div className="flex items-start justify-center gap-3 px-6 pt-6">
+        {skeletons.map((s, i) => (
+          <div key={`skel-wrap-${i}`} className="w-60">{s}</div>
+        ))}
         {images.map((img, idx) => (
           <ImageCard
             key={img.id}
@@ -151,6 +170,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   return (
     <div className="columns-2 lg:columns-3 gap-1 p-1 pb-4">
+      {skeletons}
       {images.map((img, idx) => (
         <ImageCard
           key={img.id}

@@ -159,8 +159,11 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
+          model_id: string | null
+          product_id: string | null
           prompt: string
           quality: string
+          scene_id: string | null
           user_id: string
         }
         Insert: {
@@ -168,8 +171,11 @@ export type Database = {
           created_at?: string
           id?: string
           image_url: string
+          model_id?: string | null
+          product_id?: string | null
           prompt: string
           quality?: string
+          scene_id?: string | null
           user_id: string
         }
         Update: {
@@ -177,11 +183,22 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string
+          model_id?: string | null
+          product_id?: string | null
           prompt?: string
           quality?: string
+          scene_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "freestyle_generations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "user_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       generated_videos: {
         Row: {

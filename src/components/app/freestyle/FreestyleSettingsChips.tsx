@@ -13,6 +13,7 @@ import avatarLuna from '@/assets/team/avatar-luna.jpg';
 import { ModelSelectorChip } from './ModelSelectorChip';
 import { SceneSelectorChip } from './SceneSelectorChip';
 import { ProductSelectorChip } from './ProductSelectorChip';
+import { StylePresetChips } from './StylePresetChips';
 import type { ModelProfile } from '@/types';
 import type { TryOnPose } from '@/types';
 import type { Tables } from '@/integrations/supabase/types';
@@ -52,6 +53,8 @@ interface FreestyleSettingsChipsProps {
   onPolishChange: (v: boolean) => void;
   imageCount: number;
   onImageCountChange: (count: number) => void;
+  stylePresets: string[];
+  onStylePresetsChange: (ids: string[]) => void;
 }
 
 export function FreestyleSettingsChips({
@@ -64,140 +67,147 @@ export function FreestyleSettingsChips({
   quality, onQualityToggle,
   polishPrompt, onPolishChange,
   imageCount, onImageCountChange,
+  stylePresets, onStylePresetsChange,
 }: FreestyleSettingsChipsProps) {
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {uploadButton}
+      <div className="space-y-2">
+        {/* Row 1: Main settings chips */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {uploadButton}
 
-        {/* Product Selector */}
-        <ProductSelectorChip
-          selectedProduct={selectedProduct}
-          open={productPopoverOpen}
-          onOpenChange={onProductPopoverChange}
-          onSelect={onProductSelect}
-          products={products}
-          isLoading={isLoadingProducts}
-        />
+          {/* Product Selector */}
+          <ProductSelectorChip
+            selectedProduct={selectedProduct}
+            open={productPopoverOpen}
+            onOpenChange={onProductPopoverChange}
+            onSelect={onProductSelect}
+            products={products}
+            isLoading={isLoadingProducts}
+          />
 
-        {/* Model Selector */}
-        <ModelSelectorChip
-          selectedModel={selectedModel}
-          open={modelPopoverOpen}
-          onOpenChange={onModelPopoverChange}
-          onSelect={onModelSelect}
-        />
+          {/* Model Selector */}
+          <ModelSelectorChip
+            selectedModel={selectedModel}
+            open={modelPopoverOpen}
+            onOpenChange={onModelPopoverChange}
+            onSelect={onModelSelect}
+          />
 
-        {/* Scene Selector */}
-        <SceneSelectorChip
-          selectedScene={selectedScene}
-          open={scenePopoverOpen}
-          onOpenChange={onScenePopoverChange}
-          onSelect={onSceneSelect}
-        />
+          {/* Scene Selector */}
+          <SceneSelectorChip
+            selectedScene={selectedScene}
+            open={scenePopoverOpen}
+            onOpenChange={onScenePopoverChange}
+            onSelect={onSceneSelect}
+          />
 
-        {/* Aspect Ratio */}
-        <Popover open={aspectPopoverOpen} onOpenChange={setAspectPopoverOpen}>
-          <PopoverTrigger asChild>
-            <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
-              <Square className="w-3.5 h-3.5" />
-              {aspectRatio}
-              <ChevronDown className="w-3 h-3 opacity-40" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-40 p-2" align="start">
-            {ASPECT_RATIOS.map(ar => (
+          {/* Aspect Ratio */}
+          <Popover open={aspectPopoverOpen} onOpenChange={setAspectPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
+                <Square className="w-3.5 h-3.5" />
+                {aspectRatio}
+                <ChevronDown className="w-3 h-3 opacity-40" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-2" align="start">
+              {ASPECT_RATIOS.map(ar => (
+                <button
+                  key={ar.value}
+                  onClick={() => { onAspectRatioChange(ar.value); setAspectPopoverOpen(false); }}
+                  className={cn(
+                    'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2',
+                    aspectRatio === ar.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                  )}
+                >
+                  <ar.icon className="w-3.5 h-3.5" />
+                  {ar.label}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+
+          {/* Quality Toggle with Tooltip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
               <button
-                key={ar.value}
-                onClick={() => { onAspectRatioChange(ar.value); setAspectPopoverOpen(false); }}
+                onClick={onQualityToggle}
                 className={cn(
-                  'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2',
-                  aspectRatio === ar.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                  quality === 'high'
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
                 )}
               >
-                <ar.icon className="w-3.5 h-3.5" />
-                {ar.label}
+                {quality === 'high' ? '✦ High' : 'Standard'}
               </button>
-            ))}
-          </PopoverContent>
-        </Popover>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[220px] text-center">
+              {quality === 'standard'
+                ? 'Fast generation at standard resolution. 1 credit per image.'
+                : 'Higher detail and resolution output. 2 credits per image.'}
+            </TooltipContent>
+          </Tooltip>
 
-        {/* Quality Toggle with Tooltip */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={onQualityToggle}
-              className={cn(
-                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-                quality === 'high'
-                  ? 'border-primary/30 bg-primary/10 text-primary'
-                  : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-              )}
-            >
-              {quality === 'high' ? '✦ High' : 'Standard'}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-[220px] text-center">
-            {quality === 'standard'
-              ? 'Fast generation at standard resolution. 1 credit per image.'
-              : 'Higher detail and resolution output. 2 credits per image.'}
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Prompt Polish Toggle with HoverCard */}
-        <HoverCard openDelay={200} closeDelay={100}>
-          <HoverCardTrigger asChild>
-            <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 cursor-default">
-              <Wand2 className="w-3.5 h-3.5" />
-              Polish
-              <Switch
-                checked={polishPrompt}
-                onCheckedChange={onPolishChange}
-                className="scale-75 -my-1"
-              />
-            </div>
-          </HoverCardTrigger>
-          <HoverCardContent side="top" align="center" className="w-72 p-4">
-            <div className="flex items-start gap-3">
-              <Avatar className="w-12 h-12 flex-shrink-0 ring-2 ring-primary/20">
-                <AvatarImage src={avatarLuna} alt="Luna" />
-                <AvatarFallback className="text-sm">L</AvatarFallback>
-              </Avatar>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold">Luna</p>
-                <p className="text-xs text-primary font-medium">Retouch Specialist</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Refines your prompt with professional photography lighting, composition, and mood techniques for studio-quality results.
-                </p>
+          {/* Prompt Polish Toggle with HoverCard */}
+          <HoverCard openDelay={200} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 cursor-default">
+                <Wand2 className="w-3.5 h-3.5" />
+                Polish
+                <Switch
+                  checked={polishPrompt}
+                  onCheckedChange={onPolishChange}
+                  className="scale-75 -my-1"
+                />
               </div>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
+            </HoverCardTrigger>
+            <HoverCardContent side="top" align="center" className="w-72 p-4">
+              <div className="flex items-start gap-3">
+                <Avatar className="w-12 h-12 flex-shrink-0 ring-2 ring-primary/20">
+                  <AvatarImage src={avatarLuna} alt="Luna" />
+                  <AvatarFallback className="text-sm">L</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">Luna</p>
+                  <p className="text-xs text-primary font-medium">Retouch Specialist</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Refines your prompt with professional photography lighting, composition, and mood techniques for studio-quality results.
+                  </p>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
 
-        {/* Spacer to push image count to the right */}
-        <div className="flex-1" />
+          {/* Spacer to push image count to the right */}
+          <div className="flex-1" />
 
-        {/* Image Count Stepper */}
-        <div className="inline-flex items-center gap-1 h-8 px-2.5 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 flex-shrink-0">
-          <button
-            onClick={() => onImageCountChange(Math.max(1, imageCount - 1))}
-            disabled={imageCount <= 1}
-            className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors"
-          >
-            <Minus className="w-3 h-3" />
-          </button>
-          <span className="w-5 text-center tabular-nums">{imageCount}</span>
-          <button
-            onClick={() => onImageCountChange(Math.min(4, imageCount + 1))}
-            disabled={imageCount >= 4}
-            className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors"
-          >
-            <Plus className="w-3 h-3" />
-          </button>
-          <ImageIcon className="w-3.5 h-3.5 ml-0.5" />
+          {/* Image Count Stepper */}
+          <div className="inline-flex items-center gap-1 h-8 px-2.5 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 flex-shrink-0">
+            <button
+              onClick={() => onImageCountChange(Math.max(1, imageCount - 1))}
+              disabled={imageCount <= 1}
+              className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors"
+            >
+              <Minus className="w-3 h-3" />
+            </button>
+            <span className="w-5 text-center tabular-nums">{imageCount}</span>
+            <button
+              onClick={() => onImageCountChange(Math.min(4, imageCount + 1))}
+              disabled={imageCount >= 4}
+              className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+            <ImageIcon className="w-3.5 h-3.5 ml-0.5" />
+          </div>
         </div>
+
+        {/* Row 2: Style Presets */}
+        <StylePresetChips selected={stylePresets} onChange={onStylePresetsChange} />
       </div>
     </TooltipProvider>
   );

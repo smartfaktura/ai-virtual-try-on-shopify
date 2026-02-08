@@ -11,6 +11,8 @@ interface FreestyleParams {
   imageCount: number;
   quality: 'standard' | 'high';
   polishPrompt: boolean;
+  modelContext?: string;
+  stylePresets?: string[];
 }
 
 interface FreestyleResult {
@@ -81,6 +83,8 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
           imageCount: params.imageCount,
           quality: params.quality,
           polishPrompt: params.polishPrompt,
+          modelContext: params.modelContext,
+          stylePresets: params.stylePresets,
         }),
       });
 

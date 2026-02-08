@@ -10,6 +10,18 @@ export interface FreestyleImage {
   aspectRatio: string;
   quality: string;
   createdAt: number;
+  modelId?: string | null;
+  sceneId?: string | null;
+  productId?: string | null;
+}
+
+export interface SaveImageMeta {
+  prompt: string;
+  aspectRatio: string;
+  quality: string;
+  modelId?: string | null;
+  sceneId?: string | null;
+  productId?: string | null;
 }
 
 export function useFreestyleImages() {
@@ -45,6 +57,9 @@ export function useFreestyleImages() {
         aspectRatio: row.aspect_ratio,
         quality: row.quality,
         createdAt: new Date(row.created_at).getTime(),
+        modelId: row.model_id ?? null,
+        sceneId: row.scene_id ?? null,
+        productId: row.product_id ?? null,
       }));
 
       setImages(mapped);
@@ -57,9 +72,7 @@ export function useFreestyleImages() {
   // Save a generated image (base64 → storage → DB)
   const saveImage = useCallback(async (
     base64DataUrl: string,
-    prompt: string,
-    aspectRatio: string,
-    quality: string,
+    meta: SaveImageMeta,
   ): Promise<FreestyleImage | null> => {
     if (!user) return null;
 
@@ -94,9 +107,12 @@ export function useFreestyleImages() {
         .insert({
           user_id: user.id,
           image_url: imageUrl,
-          prompt,
-          aspect_ratio: aspectRatio,
-          quality,
+          prompt: meta.prompt,
+          aspect_ratio: meta.aspectRatio,
+          quality: meta.quality,
+          model_id: meta.modelId ?? null,
+          scene_id: meta.sceneId ?? null,
+          product_id: meta.productId ?? null,
         })
         .select()
         .single();
@@ -110,10 +126,13 @@ export function useFreestyleImages() {
       const saved: FreestyleImage = {
         id: row.id,
         url: imageUrl,
-        prompt,
-        aspectRatio,
-        quality,
+        prompt: meta.prompt,
+        aspectRatio: meta.aspectRatio,
+        quality: meta.quality,
         createdAt: new Date(row.created_at).getTime(),
+        modelId: (row as any).model_id ?? null,
+        sceneId: (row as any).scene_id ?? null,
+        productId: (row as any).product_id ?? null,
       };
 
       setImages(prev => [saved, ...prev]);

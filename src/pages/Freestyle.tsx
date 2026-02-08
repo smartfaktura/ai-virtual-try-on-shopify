@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
+import { STYLE_PRESETS } from '@/components/app/freestyle/StylePresetChips';
 import { useGenerateFreestyle } from '@/hooks/useGenerateFreestyle';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useCredits } from '@/contexts/CreditContext';
@@ -33,6 +34,7 @@ export default function Freestyle() {
   const [productSourced, setProductSourced] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [stylePresets, setStylePresets] = useState<string[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { generate, isLoading, progress } = useGenerateFreestyle();
@@ -63,7 +65,6 @@ export default function Freestyle() {
     setSourceImagePreview(previewUrl);
     const base64 = await convertImageToBase64(previewUrl);
     setSourceImage(base64);
-    // Manual upload clears product selection
     setSelectedProduct(null);
     setProductSourced(false);
   }, []);
@@ -114,6 +115,17 @@ export default function Freestyle() {
       finalPrompt = `${prompt}. Scene/Environment: ${selectedScene.description}`;
     }
 
+    // Build model text context
+    let modelContext: string | undefined;
+    if (selectedModel) {
+      modelContext = `${selectedModel.gender}, ${selectedModel.bodyType} build, ${selectedModel.ethnicity}`;
+    }
+
+    // Gather active style preset keywords
+    const activePresetKeywords = stylePresets
+      .map(id => STYLE_PRESETS.find(p => p.id === id)?.keywords)
+      .filter(Boolean) as string[];
+
     const result = await generate({
       prompt: finalPrompt,
       sourceImage: sourceImage || undefined,
@@ -123,21 +135,41 @@ export default function Freestyle() {
       imageCount,
       quality,
       polishPrompt,
+      modelContext,
+      stylePresets: activePresetKeywords.length > 0 ? activePresetKeywords : undefined,
     });
 
     if (result && result.images.length > 0) {
       deductCredits(creditCost);
       for (const imageUrl of result.images) {
-        await saveImage(imageUrl, finalPrompt, aspectRatio, quality);
+        await saveImage(imageUrl, {
+          prompt: finalPrompt,
+          aspectRatio,
+          quality,
+          modelId: selectedModel?.modelId ?? null,
+          sceneId: selectedScene?.poseId ?? null,
+          productId: selectedProduct?.id ?? null,
+        });
       }
     }
-  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage]);
+  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage, stylePresets]);
 
-  const handleDownload = useCallback((imageUrl: string, index: number) => {
-    const a = document.createElement('a');
-    a.href = imageUrl;
-    a.download = `freestyle-${index + 1}.png`;
-    a.click();
+  const handleDownload = useCallback(async (imageUrl: string, index: number) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `freestyle-${index + 1}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      // Fallback: open in new tab
+      window.open(imageUrl, '_blank');
+    }
   }, []);
 
   const openLightbox = useCallback((index: number) => {
@@ -192,6 +224,8 @@ export default function Freestyle() {
     onPolishChange: setPolishPrompt,
     imageCount,
     onImageCountChange: setImageCount,
+    stylePresets,
+    onStylePresetsChange: setStylePresets,
   };
 
   return (
@@ -204,13 +238,14 @@ export default function Freestyle() {
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
           </div>
-        ) : hasImages ? (
+        ) : hasImages || isLoading ? (
           <FreestyleGallery
             images={galleryImages}
             onDownload={handleDownload}
             onExpand={openLightbox}
             onDelete={handleDelete}
             onCopyPrompt={setPrompt}
+            generatingCount={isLoading ? imageCount : 0}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
