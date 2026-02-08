@@ -42,7 +42,9 @@ CRITICAL — DO NOT include any of the following:
 // ── Context-aware prompt polish ───────────────────────────────────────────
 function polishUserPrompt(
   rawPrompt: string,
-  context: { hasSource: boolean; hasModel: boolean; hasScene: boolean }
+  context: { hasSource: boolean; hasModel: boolean; hasScene: boolean },
+  brandProfile?: BrandProfileContext,
+  userNegatives?: string[]
 ): string {
   const layers: string[] = [];
 
@@ -52,6 +54,19 @@ function polishUserPrompt(
   layers.push(
     "Ultra high resolution, sharp focus, natural lighting, commercial-grade color accuracy."
   );
+
+  // Brand profile layer — injects tone, lighting, and composition preferences
+  if (brandProfile) {
+    const brandParts: string[] = [];
+    if (brandProfile.tone) brandParts.push(`Visual tone: ${brandProfile.tone}`);
+    if (brandProfile.lightingStyle) brandParts.push(`Lighting: ${brandProfile.lightingStyle}`);
+    if (brandProfile.backgroundStyle) brandParts.push(`Background preference: ${brandProfile.backgroundStyle}`);
+    if (brandProfile.colorTemperature) brandParts.push(`Color temperature: ${brandProfile.colorTemperature}`);
+    if (brandProfile.compositionBias) brandParts.push(`Composition: ${brandProfile.compositionBias}`);
+    if (brandParts.length > 0) {
+      layers.push(`BRAND STYLE GUIDE:\n${brandParts.join(". ")}.`);
+    }
+  }
 
   // Product / source image layer
   if (context.hasSource) {
@@ -74,7 +89,25 @@ function polishUserPrompt(
     );
   }
 
-  layers.push(NEGATIVE_PROMPT);
+  // Build combined negatives list
+  const allNegatives: string[] = [];
+  // Add brand profile do-not rules
+  if (brandProfile?.doNotRules && brandProfile.doNotRules.length > 0) {
+    allNegatives.push(...brandProfile.doNotRules);
+  }
+  // Add user-selected negatives
+  if (userNegatives && userNegatives.length > 0) {
+    allNegatives.push(...userNegatives);
+  }
+
+  // Build final negative prompt
+  let negativeBlock = NEGATIVE_PROMPT;
+  if (allNegatives.length > 0) {
+    const dedupedNegatives = [...new Set(allNegatives.map(n => n.toLowerCase()))];
+    negativeBlock += `\n- No ${dedupedNegatives.join("\n- No ")}`;
+  }
+
+  layers.push(negativeBlock);
 
   return layers.join("\n\n");
 }
