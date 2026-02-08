@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +43,14 @@ const TEAM: TeamMember[] = [
       'Places your products in real-world scenes so customers see them in context. Perfect for social media and storytelling.',
   },
   {
+    name: 'Luna',
+    role: 'Retouch Specialist',
+    avatar: avatarLuna,
+    videoUrl: `${VIDEO_BASE}/849398707518439436.mp4`,
+    description:
+      'Handles color correction, background cleanup, and pixel-level refinement. Every image leaves polished and flawless.',
+  },
+  {
     name: 'Kenji',
     role: 'Campaign Art Director',
     avatar: avatarKenji,
@@ -75,14 +83,6 @@ const TEAM: TeamMember[] = [
       'Ensures every visual matches your brand DNA. Locks your look so every image feels unmistakably yours.',
   },
   {
-    name: 'Luna',
-    role: 'Retouch Specialist',
-    avatar: avatarLuna,
-    videoUrl: `${VIDEO_BASE}/849398707518439436.mp4`,
-    description:
-      'Handles color correction, background cleanup, and pixel-level refinement. Every image leaves polished and flawless.',
-  },
-  {
     name: 'Max',
     role: 'Export & Format Engineer',
     avatar: avatarMax,
@@ -112,6 +112,8 @@ export function StudioTeamSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const isHoveredRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const updateScrollState = () => {
     const el = scrollRef.current;
@@ -129,6 +131,39 @@ export function StudioTeamSection() {
       behavior: 'smooth',
     });
   };
+
+  // Auto-scroll effect
+  useEffect(() => {
+    const startAutoScroll = () => {
+      if (intervalRef.current) return;
+      intervalRef.current = setInterval(() => {
+        const el = scrollRef.current;
+        if (!el || isHoveredRef.current) return;
+        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
+          el.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          el.scrollLeft += 1;
+        }
+        updateScrollState();
+      }, 30);
+    };
+
+    startAutoScroll();
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    isHoveredRef.current = true;
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    isHoveredRef.current = false;
+  }, []);
 
   return (
     <section className="py-20 sm:py-28 bg-muted/30">
@@ -148,7 +183,7 @@ export function StudioTeamSection() {
         </div>
 
         {/* Carousel */}
-        <div className="relative">
+        <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
           {/* Navigation arrows */}
           <button
             onClick={() => scroll('left')}
@@ -177,8 +212,8 @@ export function StudioTeamSection() {
           <div
             ref={scrollRef}
             onScroll={updateScrollState}
-            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin"
-            style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
+            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {TEAM.map((member) => (
               <div
