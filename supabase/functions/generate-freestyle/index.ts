@@ -170,7 +170,8 @@ type GenerateResult = string | { blocked: true; reason: string } | null;
 async function generateImage(
   content: ContentItem[],
   apiKey: string,
-  model: string
+  model: string,
+  aspectRatio?: string
 ): Promise<GenerateResult> {
   const maxRetries = 2;
 
@@ -188,6 +189,7 @@ async function generateImage(
             model,
             messages: [{ role: "user", content }],
             modalities: ["image", "text"],
+            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
         }
       );
@@ -411,7 +413,7 @@ serve(async (req) => {
           body.modelContext
         );
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel);
+        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio);
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;
