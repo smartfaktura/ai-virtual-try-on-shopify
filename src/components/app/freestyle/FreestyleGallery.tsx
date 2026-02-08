@@ -22,6 +22,7 @@ function ImageCard({
   onExpand,
   onDelete,
   className,
+  natural,
 }: {
   img: GalleryImage;
   idx: number;
@@ -29,7 +30,50 @@ function ImageCard({
   onExpand: (index: number) => void;
   onDelete?: (imageId: string) => void;
   className?: string;
+  natural?: boolean;
 }) {
+  // "natural" mode: image sizes itself, no container background
+  if (natural) {
+    return (
+      <div className={cn('group relative inline-block animate-fade-in', className)}>
+        <img
+          src={img.url}
+          alt={`Generated ${idx + 1}`}
+          className="w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-transform duration-500 group-hover:scale-[1.02]"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <p className="absolute bottom-12 left-3 right-3 text-[11px] text-white/70 line-clamp-2 leading-snug opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {img.prompt}
+        </p>
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+          {onDelete && (
+            <button
+              onClick={() => onDelete(img.id)}
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500/40 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => onDownload(img.url, idx)}
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onExpand(idx)}
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            >
+              <Expand className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -40,17 +84,13 @@ function ImageCard({
       <img
         src={img.url}
         alt={`Generated ${idx + 1}`}
-        className="w-full h-auto max-h-[inherit] object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+        className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
         loading="lazy"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-      {/* Prompt caption */}
       <p className="absolute bottom-12 left-3 right-3 text-[11px] text-white/70 line-clamp-2 leading-snug opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         {img.prompt}
       </p>
-
-      {/* Hover actions */}
       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
         {onDelete && (
           <button
@@ -101,30 +141,18 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete }: Fre
   // Adaptive layout: centered for 1-3 images, masonry for 4+
   if (count <= 3) {
     return (
-      <div className="px-6 pt-6">
-        <div
-          className={cn(
-            'flex gap-3 items-start justify-center mx-auto',
-            count === 1 && 'max-w-lg w-full',
-            count === 2 && 'max-w-3xl w-full',
-            count === 3 && 'max-w-4xl w-full',
-          )}
-        >
-          {images.map((img, idx) => (
-            <ImageCard
-              key={img.id}
-              img={img}
-              idx={idx}
-              onDownload={onDownload}
-              onExpand={onExpand}
-              onDelete={onDelete}
-              className={cn(
-                count === 1 && 'w-full max-h-[calc(100vh-320px)]',
-                count >= 2 && 'flex-1 min-w-0 max-h-[calc(100vh-320px)]',
-              )}
-            />
-          ))}
-        </div>
+      <div className="flex items-start justify-center gap-3 px-6 pt-6">
+        {images.map((img, idx) => (
+          <ImageCard
+            key={img.id}
+            img={img}
+            idx={idx}
+            onDownload={onDownload}
+            onExpand={onExpand}
+            onDelete={onDelete}
+            natural
+          />
+        ))}
       </div>
     );
   }
