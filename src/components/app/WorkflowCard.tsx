@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
-import { workflowAnimations } from '@/components/app/workflowAnimationData';
+import { workflowScenes } from '@/components/app/workflowAnimationData';
 import type { Workflow } from '@/pages/Workflows';
 
 import imgFallback from '@/assets/templates/universal-clean.jpg';
@@ -17,7 +17,7 @@ interface WorkflowCardProps {
 }
 
 export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardProps) {
-  const animationSteps = workflowAnimations[workflow.name];
+  const scene = workflowScenes[workflow.name];
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -30,8 +30,8 @@ export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardP
       >
         {isGenerating ? (
           <Skeleton className="w-full h-full" />
-        ) : animationSteps ? (
-          <WorkflowAnimatedThumbnail steps={animationSteps} isActive={isHovered} />
+        ) : scene ? (
+          <WorkflowAnimatedThumbnail scene={scene} isActive={isHovered} />
         ) : (
           <img
             src={workflow.preview_image_url || imgFallback}
