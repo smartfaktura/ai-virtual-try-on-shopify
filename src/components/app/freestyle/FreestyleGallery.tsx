@@ -210,7 +210,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     return (
       <div className="flex items-start justify-center gap-3 px-6 pt-6">
         {generatingCards.map((card, i) => (
-          <div key={`gen-wrap-${i}`} className="w-60">{card}</div>
+          <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)] aspect-square">{card}</div>
         ))}
         {images.map((img, idx) => (
           <ImageCard
