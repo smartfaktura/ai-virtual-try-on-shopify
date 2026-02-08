@@ -197,9 +197,9 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     );
   }
 
-  const skeletons = generatingCount > 0
+  const generatingCards = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
-        <SkeletonCard key={`skeleton-${i}`} />
+        <GeneratingCard key={`generating-${i}`} progress={generatingProgress} />
       ))
     : [];
 
