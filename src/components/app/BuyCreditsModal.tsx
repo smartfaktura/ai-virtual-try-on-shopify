@@ -55,9 +55,10 @@ export function BuyCreditsModal() {
 
   return (
     <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
-      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-xl max-h-[85vh] flex flex-col overflow-hidden gap-5">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-base">Credits & Plan</DialogTitle>
+          <DialogTitle className="text-lg tracking-tight">Credits & Plan</DialogTitle>
+          <p className="text-sm text-muted-foreground">Manage your credits and subscription</p>
         </DialogHeader>
 
         {/* Compact balance bar */}
