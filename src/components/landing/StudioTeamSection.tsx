@@ -20,6 +20,7 @@ interface TeamMember {
   role: string;
   description: string;
   avatar: string;
+  videoUrl?: string;
 }
 
 const TEAM: TeamMember[] = [
@@ -27,6 +28,7 @@ const TEAM: TeamMember[] = [
     name: 'Sophia',
     role: 'Product Photographer',
     avatar: avatarSophia,
+    videoUrl: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/849393075369279549.mp4',
     description:
       'Crafts pixel-perfect e-commerce listings, hero shots, and catalog visuals with studio-grade lighting and composition.',
   },
@@ -175,12 +177,25 @@ export function StudioTeamSection() {
               >
                 {/* Character image card */}
                 <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-card border border-border shadow-sm group-hover:shadow-lg group-hover:border-primary/30 transition-all duration-300">
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                  />
+                  {member.videoUrl ? (
+                    <video
+                      src={member.videoUrl}
+                      poster={member.avatar}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="none"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <img
+                      src={member.avatar}
+                      alt={member.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  )}
                 </div>
 
                 {/* Info */}
