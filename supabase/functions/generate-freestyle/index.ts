@@ -26,7 +26,7 @@ const TONE_DESCRIPTIONS: Record<string, string> = {
 
 interface BrandProfileContext {
   tone: string;
-  colorFeel: string; // Color Feel value (e.g., 'warm-earthy')
+  colorFeel: string;
   doNotRules: string[];
   brandKeywords?: string[];
   colorPalette?: string[];
@@ -62,7 +62,8 @@ function polishUserPrompt(
   rawPrompt: string,
   context: { hasSource: boolean; hasModel: boolean; hasScene: boolean },
   brandProfile?: BrandProfileContext,
-  userNegatives?: string[]
+  userNegatives?: string[],
+  modelContext?: string
 ): string {
   const layers: string[] = [];
 
@@ -101,12 +102,16 @@ function polishUserPrompt(
   // Product / source image layer
   if (context.hasSource) {
     layers.push(
-      "PRODUCT ACCURACY: The product in the reference image must be reproduced with 100% fidelity — identical shape, color, texture, branding, and proportions. Do not modify, stylize, or reinterpret the product in any way."
+      "PRODUCT ACCURACY: The product in the PRODUCT REFERENCE IMAGE must be reproduced with 100% fidelity — identical shape, color, texture, branding, and proportions. Do not modify, stylize, or reinterpret the product in any way."
     );
   }
 
-  // Model / portrait layer
+  // Model / portrait layer — strong identity matching
   if (context.hasModel) {
+    const identityDetails = modelContext ? ` (${modelContext})` : "";
+    layers.push(
+      `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo.`
+    );
     layers.push(
       "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
     );
@@ -115,7 +120,7 @@ function polishUserPrompt(
   // Scene / environment layer
   if (context.hasScene) {
     layers.push(
-      "ENVIRONMENT: Match the lighting direction and color temperature of the scene reference. Integrate the subject naturally into the environment with consistent shadows and reflections."
+      "ENVIRONMENT: Match the lighting direction and color temperature of the SCENE REFERENCE IMAGE. Integrate the subject naturally into the environment with consistent shadows and reflections."
     );
   }
 
@@ -158,12 +163,12 @@ function extractBlockReason(data: Record<string, unknown>): string {
   return "This prompt was flagged by our content safety system. Try rephrasing with different terms.";
 }
 
+type ContentItem = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
 type GenerateResult = string | { blocked: true; reason: string } | null;
 
-// ── AI image generation with retries ──────────────────────────────────────
+// ── AI image generation with structured content ───────────────────────────
 async function generateImage(
-  prompt: string,
-  images: Array<{ type: "image_url"; image_url: { url: string } }>,
+  content: ContentItem[],
   apiKey: string,
   model: string
 ): Promise<GenerateResult> {
@@ -171,11 +176,6 @@ async function generateImage(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const content: Array<unknown> = [{ type: "text", text: prompt }];
-      for (const img of images) {
-        content.push(img);
-      }
-
       const response = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
         {
@@ -212,7 +212,6 @@ async function generateImage(
       const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
       if (!imageUrl) {
-        // Check for content policy block before retrying
         if (isContentBlocked(data)) {
           const reason = extractBlockReason(data);
           console.warn("Content blocked by safety filter:", reason);
@@ -242,6 +241,50 @@ async function generateImage(
   }
 
   return null;
+}
+
+// ── Build labeled content array with interleaved text + images ────────────
+function buildContentArray(
+  prompt: string,
+  sourceImage?: string,
+  modelImage?: string,
+  sceneImage?: string,
+  modelContext?: string
+): ContentItem[] {
+  const content: ContentItem[] = [];
+
+  // Main prompt text first
+  content.push({ type: "text", text: prompt });
+
+  // Product/source image with explicit label
+  if (sourceImage) {
+    content.push({
+      type: "text",
+      text: "PRODUCT/SOURCE REFERENCE IMAGE — reproduce this exact product with 100% fidelity (shape, color, texture, branding, proportions):",
+    });
+    content.push({ type: "image_url", image_url: { url: sourceImage } });
+  }
+
+  // Model image with strong identity label
+  if (modelImage) {
+    const modelDesc = modelContext ? ` (${modelContext})` : "";
+    content.push({
+      type: "text",
+      text: `MODEL REFERENCE IMAGE — use this EXACT person's face, hair, skin tone, and body${modelDesc}. Do NOT generate a different person:`,
+    });
+    content.push({ type: "image_url", image_url: { url: modelImage } });
+  }
+
+  // Scene image with label
+  if (sceneImage) {
+    content.push({
+      type: "text",
+      text: "SCENE/ENVIRONMENT REFERENCE IMAGE — match this setting, lighting direction, and color temperature:",
+    });
+    content.push({ type: "image_url", image_url: { url: sceneImage } });
+  }
+
+  return content;
 }
 
 // ── Request handler ───────────────────────────────────────────────────────
@@ -288,7 +331,7 @@ serve(async (req) => {
 
     let finalPrompt: string;
     if (body.polishPrompt) {
-      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives);
+      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext);
     } else {
       // Even without polish, apply brand context and negatives if provided
       let unpolished = enrichedPrompt;
@@ -311,18 +354,6 @@ serve(async (req) => {
         unpolished += `\n\nDo NOT include: ${dedupedNeg.join(", ")}`;
       }
       finalPrompt = unpolished;
-    }
-
-    // Build image references
-    const imageRefs: Array<{ type: "image_url"; image_url: { url: string } }> = [];
-    if (body.sourceImage) {
-      imageRefs.push({ type: "image_url", image_url: { url: body.sourceImage } });
-    }
-    if (body.modelImage) {
-      imageRefs.push({ type: "image_url", image_url: { url: body.modelImage } });
-    }
-    if (body.sceneImage) {
-      imageRefs.push({ type: "image_url", image_url: { url: body.sceneImage } });
     }
 
     // Add aspect ratio instruction
@@ -364,19 +395,29 @@ serve(async (req) => {
 
     for (let i = 0; i < imageCount; i++) {
       try {
-        const variationPrompt =
+        const variationSuffix =
           i === 0
-            ? `${aspectPrompt}${batchConsistency}`
-            : `${aspectPrompt}${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
+            ? batchConsistency
+            : `${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
 
-        const result = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY, aiModel);
+        const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
+
+        // Build structured content array with labeled images
+        const contentArray = buildContentArray(
+          promptWithVariation,
+          body.sourceImage,
+          body.modelImage,
+          body.sceneImage,
+          body.modelContext
+        );
+
+        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel);
 
         if (result && typeof result === "object" && "blocked" in result) {
-          // Content was blocked by safety filter
           contentBlocked = true;
           blockReason = result.reason;
           console.warn(`Image ${i + 1} blocked by content safety filter`);
-          break; // No point retrying with same prompt
+          break;
         } else if (typeof result === "string") {
           images.push(result);
           console.log(`Generated freestyle image ${i + 1}/${imageCount}`);
@@ -399,7 +440,7 @@ serve(async (req) => {
       }
     }
 
-    // If content was blocked and no images were generated, return a 200 with block info
+    // If content was blocked and no images were generated
     if (contentBlocked && images.length === 0) {
       return new Response(
         JSON.stringify({
