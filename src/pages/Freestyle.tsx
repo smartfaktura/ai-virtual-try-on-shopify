@@ -286,6 +286,7 @@ export default function Freestyle() {
             onDelete={handleDelete}
             onCopyPrompt={setPrompt}
             generatingCount={isLoading ? imageCount : 0}
+            generatingProgress={progress}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
