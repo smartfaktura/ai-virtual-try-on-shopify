@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
 import type { ModelProfile, TryOnPose } from '@/types';
+import type { Tables } from '@/integrations/supabase/types';
+
+type UserProduct = Tables<'user_products'>;
 
 interface FreestylePromptPanelProps {
   prompt: string;
@@ -24,6 +27,12 @@ interface FreestylePromptPanelProps {
   onSceneSelect: (scene: TryOnPose | null) => void;
   scenePopoverOpen: boolean;
   onScenePopoverChange: (open: boolean) => void;
+  selectedProduct: UserProduct | null;
+  onProductSelect: (product: UserProduct | null) => void;
+  productPopoverOpen: boolean;
+  onProductPopoverChange: (open: boolean) => void;
+  products: UserProduct[];
+  isLoadingProducts: boolean;
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
   quality: 'standard' | 'high';
@@ -40,6 +49,8 @@ export function FreestylePromptPanel({
   onGenerate, canGenerate, isLoading, progress, creditCost,
   selectedModel, onModelSelect, modelPopoverOpen, onModelPopoverChange,
   selectedScene, onSceneSelect, scenePopoverOpen, onScenePopoverChange,
+  selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
+  products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
   quality, onQualityToggle,
   polishPrompt, onPolishChange,
@@ -61,7 +72,7 @@ export function FreestylePromptPanel({
       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors"
     >
       <Plus className="w-3.5 h-3.5" />
-      <span className="hidden sm:inline">Upload</span>
+      Upload Image
     </button>
   );
 
@@ -97,6 +108,9 @@ export function FreestylePromptPanel({
       <div className="px-4 sm:px-5 py-3">
         <FreestyleSettingsChips
           uploadButton={uploadButton}
+          selectedProduct={selectedProduct} onProductSelect={onProductSelect}
+          productPopoverOpen={productPopoverOpen} onProductPopoverChange={onProductPopoverChange}
+          products={products} isLoadingProducts={isLoadingProducts}
           selectedModel={selectedModel} onModelSelect={onModelSelect}
           modelPopoverOpen={modelPopoverOpen} onModelPopoverChange={onModelPopoverChange}
           selectedScene={selectedScene} onSceneSelect={onSceneSelect}

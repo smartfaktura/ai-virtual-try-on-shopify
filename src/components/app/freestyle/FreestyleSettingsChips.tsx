@@ -12,8 +12,12 @@ import { cn } from '@/lib/utils';
 import avatarLuna from '@/assets/team/avatar-luna.jpg';
 import { ModelSelectorChip } from './ModelSelectorChip';
 import { SceneSelectorChip } from './SceneSelectorChip';
+import { ProductSelectorChip } from './ProductSelectorChip';
 import type { ModelProfile } from '@/types';
 import type { TryOnPose } from '@/types';
+import type { Tables } from '@/integrations/supabase/types';
+
+type UserProduct = Tables<'user_products'>;
 
 export type FreestyleAspectRatio = '1:1' | '3:4' | '4:5' | '16:9';
 
@@ -34,6 +38,12 @@ interface FreestyleSettingsChipsProps {
   onSceneSelect: (scene: TryOnPose | null) => void;
   scenePopoverOpen: boolean;
   onScenePopoverChange: (open: boolean) => void;
+  selectedProduct: UserProduct | null;
+  onProductSelect: (product: UserProduct | null) => void;
+  productPopoverOpen: boolean;
+  onProductPopoverChange: (open: boolean) => void;
+  products: UserProduct[];
+  isLoadingProducts: boolean;
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
   quality: 'standard' | 'high';
@@ -48,6 +58,8 @@ export function FreestyleSettingsChips({
   uploadButton,
   selectedModel, onModelSelect, modelPopoverOpen, onModelPopoverChange,
   selectedScene, onSceneSelect, scenePopoverOpen, onScenePopoverChange,
+  selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
+  products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
   quality, onQualityToggle,
   polishPrompt, onPolishChange,
@@ -59,6 +71,16 @@ export function FreestyleSettingsChips({
     <TooltipProvider delayDuration={300}>
       <div className="flex items-center gap-1.5 flex-wrap">
         {uploadButton}
+
+        {/* Product Selector */}
+        <ProductSelectorChip
+          selectedProduct={selectedProduct}
+          open={productPopoverOpen}
+          onOpenChange={onProductPopoverChange}
+          onSelect={onProductSelect}
+          products={products}
+          isLoading={isLoadingProducts}
+        />
 
         {/* Model Selector */}
         <ModelSelectorChip
