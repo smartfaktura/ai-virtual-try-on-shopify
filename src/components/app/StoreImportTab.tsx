@@ -125,7 +125,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
     <div className="space-y-5">
       <div className="space-y-2">
         <Label htmlFor="store-url">Product URL</Label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 min-w-0">
           <div className="relative flex-1">
             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
