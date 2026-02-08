@@ -649,6 +649,14 @@ export default function BrandProfileWizard() {
           </Button>
         )}
       </div>
+
+      {/* Team reassurance on final step */}
+      {step === STEPS.length - 1 && (
+        <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+          <Users className="w-3.5 h-3.5" />
+          Your entire studio team will apply this profile to every generation.
+        </p>
+      )}
     </form>
   );
 }
