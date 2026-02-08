@@ -288,6 +288,8 @@ export default function Generate() {
   const handleBrandProfileContinue = () => {
     if (activeWorkflow?.uses_tryon) {
       setCurrentStep('model');
+    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+      setCurrentStep('settings');
     } else if (isClothingProduct(selectedProduct)) {
       setCurrentStep('mode');
     } else {
