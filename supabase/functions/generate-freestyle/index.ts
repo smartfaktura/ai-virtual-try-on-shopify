@@ -413,7 +413,7 @@ serve(async (req) => {
           body.modelContext
         );
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel);
+        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio);
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;
