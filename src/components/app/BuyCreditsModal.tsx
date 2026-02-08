@@ -55,22 +55,23 @@ export function BuyCreditsModal() {
 
   return (
     <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
-      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-xl max-h-[85vh] flex flex-col overflow-hidden gap-5">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-base">Credits & Plan</DialogTitle>
+          <DialogTitle className="text-lg tracking-tight">Credits & Plan</DialogTitle>
+          <p className="text-sm text-muted-foreground">Manage your credits and subscription</p>
         </DialogHeader>
 
         {/* Compact balance bar */}
-        <div className="flex-shrink-0 p-3 rounded-lg bg-muted/50 border border-border">
-          <div className="flex items-center justify-between mb-2">
+        <div className="flex-shrink-0 p-5 rounded-xl bg-muted/50 border border-border">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Wallet className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xl font-bold">{balance}</span>
-              <span className="text-xs text-muted-foreground">credits</span>
+              <span className="text-3xl font-bold">{balance}</span>
+              <span className="text-sm text-muted-foreground">credits</span>
             </div>
             <Badge variant="secondary" className="text-[10px]">{planConfig.name}</Badge>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 hasBonus ? 'bg-accent-foreground/60' : 'bg-primary'
@@ -79,33 +80,33 @@ export function BuyCreditsModal() {
             />
           </div>
           <div className="flex items-center justify-between mt-1">
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {hasBonus
                 ? `${balance} available (includes bonus)`
                 : `${balance} / ${monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()}`
               }
             </span>
             {hasBonus && (
-              <span className="text-[10px] text-primary font-medium">Bonus credits ✓</span>
+              <span className="text-xs text-primary font-medium">Bonus credits ✓</span>
             )}
           </div>
         </div>
 
         <Tabs defaultValue={isFree ? 'upgrade' : 'topup'} className="w-full flex-1 flex flex-col min-h-0">
           <TabsList className="w-full flex-shrink-0">
-            <TabsTrigger value="topup" className="flex-1 text-xs">Top Up</TabsTrigger>
-            <TabsTrigger value="upgrade" className="flex-1 text-xs">Upgrade Plan</TabsTrigger>
+            <TabsTrigger value="topup" className="flex-1 text-sm">Top Up</TabsTrigger>
+            <TabsTrigger value="upgrade" className="flex-1 text-sm">Upgrade Plan</TabsTrigger>
           </TabsList>
 
           {/* Top Up Tab */}
-          <TabsContent value="topup" className="flex-1 overflow-y-auto space-y-3 mt-3">
-            <p className="text-xs text-muted-foreground">Credits never expire • Use across all modes</p>
+          <TabsContent value="topup" className="flex-1 overflow-y-auto space-y-4 mt-4">
+            <p className="text-sm text-muted-foreground">Credits never expire • Use across all modes</p>
 
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-3">
               {creditPacks.map((pack) => (
                 <div
                   key={pack.packId}
-                  className={`relative p-3 rounded-lg border-2 text-center transition-all hover:shadow-sm ${
+                  className={`relative p-4 rounded-xl border-2 text-center transition-all hover:shadow-sm ${
                     pack.popular
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/50'
@@ -116,14 +117,14 @@ export function BuyCreditsModal() {
                       <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5 py-0">Best Value</Badge>
                     </div>
                   )}
-                  <div className="space-y-1">
-                    <p className="text-xl font-bold leading-tight">{pack.credits}</p>
-                    <p className="text-[10px] text-muted-foreground">≈ {Math.round(pack.credits / 4)} images</p>
-                    <p className="text-base font-semibold">${pack.price}</p>
-                    <p className="text-[10px] text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢/cr</p>
+                  <div className="space-y-1.5">
+                    <p className="text-2xl font-bold leading-tight">{pack.credits}</p>
+                    <p className="text-xs text-muted-foreground">≈ {Math.round(pack.credits / 4)} images</p>
+                    <p className="text-lg font-semibold">${pack.price}</p>
+                    <p className="text-xs text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢/cr</p>
                     <Button
                       variant={pack.popular ? 'default' : 'outline'}
-                      className="w-full mt-1"
+                      className="w-full mt-2"
                       size="sm"
                       onClick={() => handlePurchase(pack.credits)}
                     >
@@ -136,15 +137,15 @@ export function BuyCreditsModal() {
           </TabsContent>
 
           {/* Upgrade Plan Tab */}
-          <TabsContent value="upgrade" className="flex-1 overflow-y-auto space-y-3 mt-3">
+          <TabsContent value="upgrade" className="flex-1 overflow-y-auto space-y-4 mt-4">
             {recommendedPlan ? (
               <>
                 {/* Value-focused recommended plan card */}
-                <div className="p-3.5 rounded-lg border-2 border-primary bg-primary/5 space-y-3">
+                <div className="p-5 rounded-xl border-2 border-primary bg-primary/5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <Zap className="w-4 h-4 text-primary" />
-                      <span className="font-semibold text-sm">{recommendedPlan.name}</span>
+                      <span className="font-semibold text-base">{recommendedPlan.name}</span>
                     </div>
                     <Badge className="bg-primary text-primary-foreground text-[9px]">
                       {isFree ? 'Most Popular' : 'Recommended'}
@@ -152,7 +153,7 @@ export function BuyCreditsModal() {
                   </div>
 
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold">${recommendedPlan.monthlyPrice}</span>
+                    <span className="text-3xl font-bold">${recommendedPlan.monthlyPrice}</span>
                     <span className="text-xs text-muted-foreground">/mo</span>
                     <span className="text-xs text-muted-foreground ml-1">•</span>
                     <span className="text-xs text-muted-foreground ml-1">
@@ -164,13 +165,13 @@ export function BuyCreditsModal() {
 
                   {/* Feature unlock grid — the CRO focus */}
                   {isFree && (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2.5">
                       {featureUnlocks.map(({ icon: Icon, label, desc }) => (
-                        <div key={label} className="flex items-start gap-2 p-2 rounded-md bg-background/60">
-                          <Icon className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                        <div key={label} className="flex items-start gap-2 p-3 rounded-md bg-background/60">
+                          <Icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-xs font-medium leading-tight">{label}</p>
-                            <p className="text-[10px] text-muted-foreground leading-tight">{desc}</p>
+                            <p className="text-sm font-medium leading-tight">{label}</p>
+                            <p className="text-xs text-muted-foreground leading-tight">{desc}</p>
                           </div>
                         </div>
                       ))}
@@ -189,7 +190,7 @@ export function BuyCreditsModal() {
                     </ul>
                   )}
 
-                  <Button className="w-full" size="sm" onClick={handleUpgrade}>
+                  <Button className="w-full" onClick={handleUpgrade}>
                     Upgrade to {recommendedPlan.name}
                     <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
@@ -197,7 +198,7 @@ export function BuyCreditsModal() {
 
                 {/* Alt plan for free users */}
                 {altPlan && (
-                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-muted/30">
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/30">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium">{altPlan.name}</span>
                       <span className="text-[10px] text-muted-foreground">
@@ -219,7 +220,7 @@ export function BuyCreditsModal() {
 
             <button
               onClick={handleUpgrade}
-              className="w-full text-center text-[11px] text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+              className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
             >
               Compare all plans in Settings
             </button>
