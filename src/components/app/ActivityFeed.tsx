@@ -5,6 +5,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import type { LucideIcon } from 'lucide-react';
 
+import avatarSophia from '@/assets/team/avatar-sophia.jpg';
+import avatarMax from '@/assets/team/avatar-max.jpg';
+import avatarSienna from '@/assets/team/avatar-sienna.jpg';
+
+const getTeamAvatar = (activityId: string) => {
+  if (activityId.startsWith('job-')) return { src: avatarSophia, name: 'Sophia' };
+  if (activityId.startsWith('product-')) return { src: avatarMax, name: 'Max' };
+  if (activityId.startsWith('brand-')) return { src: avatarSienna, name: 'Sienna' };
+  return null;
+};
+
 interface ActivityItem {
   id: string;
   icon: LucideIcon;
