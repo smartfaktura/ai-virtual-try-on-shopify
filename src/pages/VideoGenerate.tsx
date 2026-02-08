@@ -163,7 +163,14 @@ export default function VideoGenerate() {
       toast.error('Please provide an image first');
       return;
     }
-    startGeneration({ imageUrl: url, prompt, duration, modelName, aspectRatio });
+    startGeneration({
+      imageUrl: url,
+      prompt,
+      duration,
+      modelName,
+      aspectRatio,
+      imageTailUrl: loopMode ? url : undefined,
+    });
   };
 
   const handleDownload = () => {
