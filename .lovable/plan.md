@@ -1,56 +1,39 @@
 
 
-## Improve Selfie/UGC Shot Quality in Freestyle Edge Function
+## Add Framing & Composition Control to Freestyle Generation
 
 ### Problem
-Selfie-type prompts currently get the same "Professional photography" treatment as all other prompts. This produces results that look too polished, too "studio", and lack the authentic, front-facing camera feel that makes selfies look real.
+The AI model sometimes positions the subject too low in the frame, cutting off the head or leaving too much empty space above/below. There are no explicit framing instructions in the current prompt engineering telling the AI where to place the subject.
 
 ### What Changes
 
-Enhance the `generate-freestyle` edge function with **automatic selfie/UGC detection** and **specialized prompt engineering** that produces more realistic, beautiful selfie compositions.
-
-### Approach
-
-**1. Add selfie/UGC detection** in the edge function
-- Detect keywords like "selfie", "self-portrait", "front-facing", "UGC", "phone camera", "mirror shot" in the user's prompt
-- When detected, switch from "Professional photography" prefix to a selfie-optimized prefix
-
-**2. Add selfie-specific prompt engineering layers**
-- Camera perspective: front-facing smartphone camera, slight arm extension, natural selfie angle (slightly above eye level)
-- Depth of field: soft smartphone-style bokeh, face in sharp focus
-- Expression/posing: natural, authentic, candid expressions -- not model-posed
-- Lighting: favor natural/ambient light over studio strobes
-- Product interaction: when a source product is attached, add explicit instructions for how to hold/display the product naturally in a selfie context (near face, in hand, casual grip)
-
-**3. Preserve existing quality for non-selfie shots**
-- All current prompt polish logic remains unchanged for standard prompts
-- The selfie layer only activates when selfie intent is detected
+Add **automatic framing instructions** to the `generate-freestyle` edge function that ensure proper subject positioning based on the type of shot being generated.
 
 ### Technical Details
 
 **File: `supabase/functions/generate-freestyle/index.ts`**
 
-Add a detection function:
-```
-function detectSelfieIntent(prompt: string): boolean
-```
-Checks for selfie-related keywords in the prompt text.
+1. **Add a FRAMING layer when a model/person is involved** (`context.hasModel` is true or the prompt mentions a person):
 
-Modify `polishUserPrompt` function:
-- When selfie intent is detected, replace "Professional photography:" prefix with "Authentic selfie-style photo:"
-- Add a SELFIE COMPOSITION layer with specific instructions:
-  - Front-facing smartphone camera perspective
-  - Slight high angle (above eye level)
-  - Arm-length or close-up distance
-  - Natural bokeh (not studio strobe bokeh)
-  - Authentic, candid expression
-- When a product (source image) is present in selfie mode, add PRODUCT INTERACTION instructions:
-  - Hold product casually near face or in frame
-  - Product should be naturally integrated, not floating or posed stiffly
-- Adjust PORTRAIT QUALITY layer for selfies:
-  - Emphasize natural skin texture (not studio retouching)
-  - Soft, flattering but real lighting
-  - Slight imperfections that make it feel authentic
+   For **selfie shots** (when `isSelfie` is true), update the SELFIE COMPOSITION layer to include:
+   - "Subject's full head and hair must be fully visible within the frame with natural headroom above"
+   - "Frame from mid-chest or shoulders upward -- do NOT crop below the chin or above the forehead"
+   - "Center the face in the upper-third of the frame following the rule of thirds"
 
-No frontend changes needed -- this is purely a backend prompt engineering improvement that will automatically improve all future selfie-type generations.
+   For **standard portrait/model shots** (non-selfie, but has model reference), add a new FRAMING layer:
+   - "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head -- do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
 
+2. **Add framing guidance for product-only shots** (no model, has source product):
+   - "FRAMING: Center the product with balanced negative space on all sides. The product should occupy 50-70% of the frame with no cropping of edges."
+
+These instructions are automatically applied during prompt polish -- no UI changes needed. The framing will improve for all future generations without users needing to manually specify it.
+
+### Summary of Changes
+
+| Shot Type | New Framing Instruction |
+|---|---|
+| Selfie (with person) | Full head visible, face in upper-third, frame from shoulders up |
+| Portrait (with model ref) | Full head + hair visible, proper headroom, rule of thirds |
+| Product only | Centered, 50-70% frame, no edge cropping |
+
+One file changed: `supabase/functions/generate-freestyle/index.ts`
