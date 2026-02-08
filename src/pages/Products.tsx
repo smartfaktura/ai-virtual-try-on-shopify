@@ -35,6 +35,7 @@ export default function Products() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<UserProduct | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortBy>('newest');
@@ -157,7 +158,7 @@ export default function Products() {
                 <List className="w-4 h-4" />
               </Button>
             </div>
-            <Button onClick={() => setModalOpen(true)}>
+            <Button onClick={() => { setEditingProduct(null); setModalOpen(true); }}>
               <Plus className="w-4 h-4 mr-2" />
               Add Product
             </Button>
@@ -253,7 +254,7 @@ export default function Products() {
                     )}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                       <div className="flex gap-2">
-                        <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setModalOpen(true)}>
+                        <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
                         <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => deleteMutation.mutate(product.id)}>
@@ -318,7 +319,7 @@ export default function Products() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setModalOpen(true)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteMutation.mutate(product.id)}>
@@ -334,11 +335,12 @@ export default function Products() {
 
       <AddProductModal
         open={modalOpen}
-        onOpenChange={setModalOpen}
+        onOpenChange={(open) => { setModalOpen(open); if (!open) setEditingProduct(null); }}
         onProductAdded={() => {
           queryClient.invalidateQueries({ queryKey: ['user-products'] });
           queryClient.invalidateQueries({ queryKey: ['product-image-counts'] });
         }}
+        editingProduct={editingProduct}
       />
     </PageHeader>
   );
