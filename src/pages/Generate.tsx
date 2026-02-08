@@ -1003,6 +1003,19 @@ export default function Generate() {
             <div className="w-full max-w-md">
               <Progress value={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : productProgress, 100)} className="h-2" />
             </div>
+            {/* Team member working message */}
+            <div className="flex items-center gap-2.5">
+              <img
+                src={generationMode === 'virtual-try-on' ? avatarZara : avatarSophia}
+                alt={generationMode === 'virtual-try-on' ? 'Zara' : 'Sophia'}
+                className="w-8 h-8 rounded-full object-cover border-2 border-primary/20"
+              />
+              <p className="text-sm text-muted-foreground italic">
+                {generationMode === 'virtual-try-on'
+                  ? 'Zara is styling the look...'
+                  : 'Sophia is setting up the lighting...'}
+              </p>
+            </div>
             <p className="text-xs text-muted-foreground">{generationMode === 'virtual-try-on' ? '20-30 seconds' : '10-15 seconds'}</p>
             <Button variant="link" onClick={handleCancelGeneration}><X className="w-4 h-4 mr-1" /> Cancel</Button>
           </CardContent></Card>
