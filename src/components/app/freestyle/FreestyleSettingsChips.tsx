@@ -122,6 +122,24 @@ export function FreestyleSettingsChips({
             onSelect={onSceneSelect}
           />
 
+          {/* Brand Profile Selector */}
+          <BrandProfileChip
+            selectedProfile={selectedBrandProfile}
+            open={brandProfilePopoverOpen}
+            onOpenChange={onBrandProfilePopoverChange}
+            onSelect={onBrandProfileSelect}
+            profiles={brandProfiles}
+            isLoading={isLoadingBrandProfiles}
+          />
+
+          {/* Negatives / Exclude Chip */}
+          <NegativesChip
+            negatives={negatives}
+            onNegativesChange={onNegativesChange}
+            open={negativesPopoverOpen}
+            onOpenChange={onNegativesPopoverChange}
+          />
+
           {/* Aspect Ratio */}
           <Popover open={aspectPopoverOpen} onOpenChange={setAspectPopoverOpen}>
             <PopoverTrigger asChild>
