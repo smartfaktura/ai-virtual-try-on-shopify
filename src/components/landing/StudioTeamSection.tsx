@@ -20,6 +20,7 @@ interface TeamMember {
   role: string;
   description: string;
   avatar: string;
+  videoUrl?: string;
 }
 
 const TEAM: TeamMember[] = [
