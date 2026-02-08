@@ -150,10 +150,11 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
 
       {isActive && (
         <>
-          {/* Dark gradient overlay — fades in, then lifts at result time */}
+          {/* Light gradient overlay — fades in, then lifts at result time */}
           <div
-            className="absolute inset-0 z-[1] bg-gradient-to-t from-black/55 via-black/25 to-black/35"
+            className="absolute inset-0 z-[1]"
             style={{
+              background: 'linear-gradient(to top, rgba(0,0,0,0.35), rgba(0,0,0,0.08) 40%, rgba(0,0,0,0.12))',
               opacity: 0,
               animation: `wf-fade-in 0.4s ease-out forwards, wf-fade-out 0.5s ease-in ${elementsExitAt}s forwards`,
             }}
@@ -182,7 +183,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
             <div
               className="absolute inset-y-0 w-1/3"
               style={{
-                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)',
                 animation: `wf-shimmer 0.8s ease-in-out ${elementsExitAt - 0.2}s forwards`,
               }}
             />
@@ -196,9 +197,9 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
               animation: `wf-badge-pop 0.45s cubic-bezier(.34,1.56,.64,1) ${badgeAt}s forwards`,
             }}
           >
-            <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-xl">
+            <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-full wf-card-shadow">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[11px] font-semibold text-primary">Generated</span>
+              <span className="text-[11px] font-bold text-primary tracking-wide">Generated</span>
             </div>
           </div>
         </>
