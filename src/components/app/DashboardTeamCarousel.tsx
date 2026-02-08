@@ -14,7 +14,7 @@ const VIDEO_BASE = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/p
 const TEAM = [
   { name: 'Sophia', role: 'Product Photographer', avatar: avatarSophia, videoUrl: `${VIDEO_BASE}/849395850555686932.mp4` },
   { name: 'Amara', role: 'Lifestyle Photographer', avatar: avatarAmara, videoUrl: `${VIDEO_BASE}/849398236443574344.mp4` },
-  { name: 'Kenji', role: 'Campaign Art Director', avatar: avatarKenji, videoUrl: `${VIDEO_BASE}/849398243640999964.mp4` },
+  { name: 'Kenji', role: 'Campaign Art Director', avatar: avatarKenji, videoUrl: `${VIDEO_BASE}/849400657458757636.mp4` },
   { name: 'Yuki', role: 'Ad Creative Specialist', avatar: avatarYuki, videoUrl: `${VIDEO_BASE}/849398252540657664.mp4` },
   { name: 'Omar', role: 'CRO Visual Optimizer', avatar: avatarOmar, videoUrl: `${VIDEO_BASE}/849398684226822188.mp4` },
   { name: 'Sienna', role: 'Brand Consistency Manager', avatar: avatarSienna, videoUrl: `${VIDEO_BASE}/849398695958937689.mp4` },
