@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2 } from 'lucide-react';
+import { ImagePlus, Loader2, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ProductImageGallery } from './ProductImageGallery';
 import { supabase } from '@/integrations/supabase/client';
+import avatarSophia from '@/assets/team/avatar-sophia.jpg';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -370,9 +372,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-foreground">Product Images</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Click the star to set the cover image
-            </p>
           </div>
           {images.length > 0 && (
             <Badge variant="secondary" className="text-[11px] font-medium px-2 py-0.5">
@@ -444,6 +443,20 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               maxImages={MAX_IMAGES}
               disabled={isUploading}
             />
+          </div>
+        )}
+
+        {/* Pro Tip */}
+        {images.length > 0 && (
+          <div className="flex items-start gap-2.5 rounded-lg bg-muted/40 px-3 py-2.5">
+            <Avatar className="w-6 h-6 shrink-0 mt-0.5">
+              <AvatarImage src={avatarSophia} alt="Sophia" />
+              <AvatarFallback className="text-[10px]">S</AvatarFallback>
+            </Avatar>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-foreground">Sophia, Art Director:</span>{' '}
+              The <span className="text-primary font-medium">cover image</span> (marked "Cover") is what our AI uses as the primary reference for generations. Pick your clearest, most representative angle.
+            </p>
           </div>
         )}
       </div>
