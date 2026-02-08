@@ -83,7 +83,7 @@ function ImageCard({
         <img
           src={img.url}
           alt={`Generated ${idx + 1}`}
-          className="w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-transform duration-500 group-hover:scale-[1.02]"
+          className="w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20"
           loading="lazy"
         />
         <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -102,7 +102,7 @@ function ImageCard({
       <img
         src={img.url}
         alt={`Generated ${idx + 1}`}
-        className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+        className="w-full h-auto object-cover"
         loading="lazy"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
