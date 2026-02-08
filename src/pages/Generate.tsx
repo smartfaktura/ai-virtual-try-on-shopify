@@ -1020,7 +1020,136 @@ export default function Generate() {
           </>
         )}
 
-        {/* Settings for Virtual Try-On */}
+        {/* Workflow-Specific Settings */}
+        {hasWorkflowConfig && currentStep === 'settings' && generationMode !== 'virtual-try-on' && (selectedProduct || scratchUpload) && (
+          <div className="space-y-4">
+            {/* Product summary */}
+            <Card><CardContent className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{sourceType === 'scratch' ? 'Uploaded Image' : 'Selected Product'}</span>
+                <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                  <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
+                  <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? scratchUpload?.productInfo.productType : `${selectedProduct?.vendor} • ${selectedProduct?.productType}`}</p>
+                </div>
+              </div>
+              {selectedBrandProfile && (
+                <div className="pt-2 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Palette className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">{selectedBrandProfile.name}</span>
+                      <Badge variant="secondary" className="text-[10px] capitalize">{selectedBrandProfile.tone}</Badge>
+                    </div>
+                    <Button variant="link" size="sm" onClick={() => setCurrentStep('brand-profile')}>Change</Button>
+                  </div>
+                </div>
+              )}
+            </CardContent></Card>
+
+            {/* Variation Strategy Preview */}
+            <Card><CardContent className="p-5 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold">What You'll Get</h3>
+                <p className="text-sm text-muted-foreground">
+                  {variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
+                   variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
+                   variationStrategy?.type === 'layout' ? 'Different layout compositions' :
+                   variationStrategy?.type === 'paired' ? 'Before and after comparison' :
+                   variationStrategy?.type === 'angle' ? 'Multiple angles and perspectives' :
+                   variationStrategy?.type === 'mood' ? 'Different mood and energy styles' :
+                   variationStrategy?.type === 'surface' ? 'Different surface and styling options' :
+                   variationStrategy?.type === 'scene' ? 'Different lifestyle scenes' :
+                   'Workflow-specific variations'}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {variationStrategy?.variations.map((v, i) => (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      setSelectedVariationIndices(prev => {
+                        const next = new Set(prev);
+                        if (next.has(i)) { if (next.size > 1) next.delete(i); }
+                        else next.add(i);
+                        return next;
+                      });
+                    }}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedVariationIndices.has(i)
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{v.label}</p>
+                      {v.aspect_ratio && <Badge variant="outline" className="text-[10px]">{v.aspect_ratio}</Badge>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{v.instruction}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Click to toggle variations. {selectedVariationIndices.size} of {variationStrategy?.variations.length} selected.
+              </p>
+            </CardContent></Card>
+
+            {/* Quality & Settings */}
+            <Card><CardContent className="p-5 space-y-4">
+              <h3 className="text-base font-semibold">Generation Settings</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Quality</Label>
+                  <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard (1 credit/img)</SelectItem>
+                      <SelectItem value="high">High (2 credits/img)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Aspect Ratio</Label>
+                  {uiConfig?.lock_aspect_ratio ? (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{workflowConfig?.fixed_settings?.aspect_ratios?.[0] || aspectRatio}</Badge>
+                      <span className="text-xs text-muted-foreground">Locked by workflow</span>
+                    </div>
+                  ) : variationStrategy?.type === 'multi-ratio' ? (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">Multiple</Badge>
+                      <span className="text-xs text-muted-foreground">Each variation uses its own ratio</span>
+                    </div>
+                  ) : (
+                    <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                  )}
+                </div>
+              </div>
+            </CardContent></Card>
+
+            {/* Cost summary */}
+            <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">Total: {selectedVariationIndices.size * (quality === 'high' ? 2 : 1)} credits</p>
+                <p className="text-xs text-muted-foreground">{selectedVariationIndices.size} variation{selectedVariationIndices.size !== 1 ? 's' : ''} × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''}</p>
+              </div>
+              <p className="text-sm">{balance} credits available</p>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'))}>Back</Button>
+              <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0}>
+                Generate {selectedVariationIndices.size} {activeWorkflow?.name} Images
+              </Button>
+            </div>
+          </div>
+        )}
+
         {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (
           <div className="space-y-4">
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} />
