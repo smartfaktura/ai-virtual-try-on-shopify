@@ -18,7 +18,7 @@ export function DashboardTeamCarousel() {
           className="flex gap-6 overflow-x-auto pb-2 snap-x snap-mandatory px-1"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
         >
-          {TEAM.map((member) => (
+          {TEAM_MEMBERS.map((member) => (
             <div
               key={member.name}
               className="flex-shrink-0 w-[100px] sm:w-[120px] snap-start flex flex-col items-center text-center group"

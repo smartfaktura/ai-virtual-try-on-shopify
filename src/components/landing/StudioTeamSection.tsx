@@ -111,7 +111,7 @@ export function StudioTeamSection() {
             className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {TEAM.map((member) => (
+            {TEAM_MEMBERS.map((member) => (
               <div
                 key={member.name}
                 data-team-card
