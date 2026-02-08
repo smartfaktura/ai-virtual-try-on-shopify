@@ -1,17 +1,8 @@
 import { PageLayout } from '@/components/landing/PageLayout';
-import { Users, Sparkles, Globe, Lightbulb, Heart, Zap } from 'lucide-react';
+import { Users, Lightbulb, Heart, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-
-import avatarAmara from '@/assets/team/avatar-amara.jpg';
-import avatarKenji from '@/assets/team/avatar-kenji.jpg';
-import avatarLeo from '@/assets/team/avatar-leo.jpg';
-import avatarLuna from '@/assets/team/avatar-luna.jpg';
-import avatarMax from '@/assets/team/avatar-max.jpg';
-import avatarOmar from '@/assets/team/avatar-omar.jpg';
-import avatarSienna from '@/assets/team/avatar-sienna.jpg';
-import avatarSophia from '@/assets/team/avatar-sophia.jpg';
-import avatarYuki from '@/assets/team/avatar-yuki.jpg';
-import avatarZara from '@/assets/team/avatar-zara.jpg';
+import { TEAM_MEMBERS } from '@/data/teamData';
+import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
 
 const values = [
   {
@@ -32,19 +23,6 @@ const values = [
     description:
       'Complex technology, effortless experience. Upload a product, pick a workflow, get studio-quality results.',
   },
-];
-
-const team = [
-  { name: 'Sophia Chen', role: 'CEO & Co-Founder', avatar: avatarSophia },
-  { name: 'Kenji Tanaka', role: 'CTO & Co-Founder', avatar: avatarKenji },
-  { name: 'Amara Osei', role: 'VP of Engineering', avatar: avatarAmara },
-  { name: 'Leo Martínez', role: 'Head of Product', avatar: avatarLeo },
-  { name: 'Luna Park', role: 'Lead ML Engineer', avatar: avatarLuna },
-  { name: 'Omar Farouk', role: 'Head of Design', avatar: avatarOmar },
-  { name: 'Sienna Russo', role: 'Growth Lead', avatar: avatarSienna },
-  { name: 'Yuki Nakamura', role: 'Senior Engineer', avatar: avatarYuki },
-  { name: 'Zara Ahmed', role: 'Brand Strategist', avatar: avatarZara },
-  { name: 'Max Lindqvist', role: 'ML Researcher', avatar: avatarMax },
 ];
 
 const stats = [
@@ -143,14 +121,16 @@ export default function About() {
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
-            {team.map((member) => (
-              <div key={member.name} className="text-center group">
-                <div className="w-20 h-20 mx-auto rounded-full overflow-hidden mb-3 ring-2 ring-border group-hover:ring-primary/50 transition-all">
-                  <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+            {TEAM_MEMBERS.map((member) => (
+              <TeamAvatarHoverCard key={member.name} member={member} side="top">
+                <div className="text-center group cursor-pointer">
+                  <div className="w-20 h-20 mx-auto rounded-full overflow-hidden mb-3 ring-2 ring-border group-hover:ring-primary/50 transition-all">
+                    <img src={member.avatar} alt={member.fullName} className="w-full h-full object-cover" />
+                  </div>
+                  <h4 className="text-sm font-medium text-foreground">{member.fullName}</h4>
+                  <p className="text-xs text-muted-foreground">{member.role}</p>
                 </div>
-                <h4 className="text-sm font-medium text-foreground">{member.name}</h4>
-                <p className="text-xs text-muted-foreground">{member.role}</p>
-              </div>
+              </TeamAvatarHoverCard>
             ))}
           </div>
         </div>
