@@ -337,6 +337,8 @@ export default function BrandProfileWizard() {
       {/* Step content */}
       <Card className="border-border/50">
         <CardContent className="p-6 space-y-6">
+          {/* Team specialist tip */}
+          <TeamStepTip step={step} />
 
           {/* ──────── STEP 1: Your Brand ──────── */}
           {step === 0 && (
