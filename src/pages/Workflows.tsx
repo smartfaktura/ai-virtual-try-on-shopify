@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
 import { Button } from '@/components/ui/button';
@@ -49,23 +49,24 @@ export default function Workflows() {
 
   const workflowsMissingPreviews = workflows.filter(w => !w.preview_image_url);
 
-  const runGeneration = async (targets: Workflow[], regenerate: boolean) => {
-    if (targets.length === 0) {
-      toast.info('No workflows to generate.');
+  const handleGeneratePreviews = async () => {
+    if (workflowsMissingPreviews.length === 0) {
+      toast.info('All workflows already have preview images.');
       return;
     }
 
-    const ids = new Set(targets.map(w => w.id));
+    const ids = new Set(workflowsMissingPreviews.map(w => w.id));
     setGeneratingIds(ids);
-    toast.info(`Generating ${ids.size} preview image${ids.size > 1 ? 's' : ''} with premium model…`);
+    toast.info(`Generating ${ids.size} preview image${ids.size > 1 ? 's' : ''}…`);
 
     let successCount = 0;
     let failCount = 0;
 
-    for (const workflow of targets) {
+    // Generate one at a time to avoid rate limits
+    for (const workflow of workflowsMissingPreviews) {
       try {
         const { data, error } = await supabase.functions.invoke('generate-workflow-preview', {
-          body: { workflow_id: workflow.id, regenerate },
+          body: { workflow_id: workflow.id },
         });
 
         if (error) throw error;
@@ -78,6 +79,7 @@ export default function Workflows() {
           return next;
         });
 
+        // Refresh after each success so the user sees images appear
         queryClient.invalidateQueries({ queryKey: ['workflows'] });
       } catch (err: any) {
         console.error(`Failed for ${workflow.name}:`, err);
@@ -96,9 +98,6 @@ export default function Workflows() {
     if (failCount > 0) toast.error(`${failCount} image${failCount > 1 ? 's' : ''} failed to generate.`);
   };
 
-  const handleGenerateMissing = () => runGeneration(workflowsMissingPreviews, false);
-  const handleRegenerateAll = () => runGeneration(workflows, true);
-
   const isAnyGenerating = generatingIds.size > 0;
 
   return (
@@ -107,42 +106,24 @@ export default function Workflows() {
       subtitle="Choose an outcome-driven workflow to generate professional visual sets."
     >
       <div className="space-y-6">
-        {/* Admin actions: generate / regenerate previews */}
-        {!isLoading && workflows.length > 0 && (
-          <div className="flex justify-end gap-2">
-            {workflowsMissingPreviews.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                disabled={isAnyGenerating}
-                onClick={handleGenerateMissing}
-              >
-                {isAnyGenerating ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5" />
-                )}
-                {isAnyGenerating
-                  ? `Generating (${generatingIds.size} left)…`
-                  : `Generate ${workflowsMissingPreviews.length} Missing`}
-              </Button>
-            )}
+        {/* Admin action: generate missing previews */}
+        {!isLoading && workflowsMissingPreviews.length > 0 && (
+          <div className="flex justify-end">
             <Button
               variant="outline"
               size="sm"
               className="gap-1.5"
               disabled={isAnyGenerating}
-              onClick={handleRegenerateAll}
+              onClick={handleGeneratePreviews}
             >
               {isAnyGenerating ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <RefreshCw className="w-3.5 h-3.5" />
+                <Sparkles className="w-3.5 h-3.5" />
               )}
               {isAnyGenerating
                 ? `Generating (${generatingIds.size} left)…`
-                : `Regenerate All (${workflows.length})`}
+                : `Generate ${workflowsMissingPreviews.length} Preview${workflowsMissingPreviews.length > 1 ? 's' : ''}`}
             </Button>
           </div>
         )}
