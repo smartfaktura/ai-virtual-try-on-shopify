@@ -229,7 +229,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   return (
     <div className="grid grid-cols-3 gap-1 pt-3 px-1 pb-4">
-      {skeletons}
+      {generatingCards}
       {images.map((img, idx) => (
         <ImageCard
           key={img.id}
