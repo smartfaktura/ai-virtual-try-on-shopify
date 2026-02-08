@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           background_style: string
           brand_description: string
+          brand_keywords: string[]
+          color_palette: string[]
           color_temperature: string
           composition_bias: string
           created_at: string
@@ -25,6 +27,9 @@ export type Database = {
           id: string
           lighting_style: string
           name: string
+          photography_reference: string
+          preferred_scenes: string[]
+          target_audience: string
           tone: string
           updated_at: string
           user_id: string
@@ -32,6 +37,8 @@ export type Database = {
         Insert: {
           background_style?: string
           brand_description?: string
+          brand_keywords?: string[]
+          color_palette?: string[]
           color_temperature?: string
           composition_bias?: string
           created_at?: string
@@ -39,6 +46,9 @@ export type Database = {
           id?: string
           lighting_style?: string
           name: string
+          photography_reference?: string
+          preferred_scenes?: string[]
+          target_audience?: string
           tone?: string
           updated_at?: string
           user_id: string
@@ -46,6 +56,8 @@ export type Database = {
         Update: {
           background_style?: string
           brand_description?: string
+          brand_keywords?: string[]
+          color_palette?: string[]
           color_temperature?: string
           composition_bias?: string
           created_at?: string
@@ -53,6 +65,9 @@ export type Database = {
           id?: string
           lighting_style?: string
           name?: string
+          photography_reference?: string
+          preferred_scenes?: string[]
+          target_audience?: string
           tone?: string
           updated_at?: string
           user_id?: string
