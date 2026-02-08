@@ -6,7 +6,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import avatarLuna from '@/assets/team/avatar-luna.jpg';
 import { ModelSelectorChip } from './ModelSelectorChip';
 import { SceneSelectorChip } from './SceneSelectorChip';
 import type { ModelProfile } from '@/types';
@@ -129,7 +131,10 @@ export function FreestyleSettingsChips({
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70">
-                <Wand2 className="w-3.5 h-3.5" />
+                <Avatar className="w-5 h-5 -ml-0.5">
+                  <AvatarImage src={avatarLuna} alt="Luna" />
+                  <AvatarFallback className="text-[8px]">L</AvatarFallback>
+                </Avatar>
                 Polish
                 <Switch
                   checked={polishPrompt}
@@ -138,8 +143,8 @@ export function FreestyleSettingsChips({
                 />
               </div>
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[240px] text-center">
-              AI automatically refines your prompt with professional photography techniques for better results.
+            <TooltipContent side="top" className="max-w-[260px] text-center">
+              <span className="font-medium">Luna</span> (Retouch Specialist) refines your prompt with professional photography techniques for better results.
             </TooltipContent>
           </Tooltip>
         </div>
