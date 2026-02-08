@@ -86,7 +86,7 @@ export function BuyCreditsModal() {
               }
             </span>
             {hasBonus && (
-              <span className="text-[10px] text-emerald-600 font-medium">Bonus credits ✓</span>
+              <span className="text-[10px] text-primary font-medium">Bonus credits ✓</span>
             )}
           </div>
         </div>
