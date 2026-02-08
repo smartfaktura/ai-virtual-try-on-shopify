@@ -190,7 +190,7 @@ export default function Onboarding() {
               </div>
 
               <div className="space-y-1.5">
-                <Label>Where did you hear about brandframe.ai? *</Label>
+                <Label>Where did you hear about framea.ai? *</Label>
                 <Select value={referralSource} onValueChange={setReferralSource}>
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder="Select an option" />
