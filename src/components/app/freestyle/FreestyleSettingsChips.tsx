@@ -58,6 +58,18 @@ interface FreestyleSettingsChipsProps {
   onImageCountChange: (count: number) => void;
   stylePresets: string[];
   onStylePresetsChange: (ids: string[]) => void;
+  // Brand profile
+  selectedBrandProfile: BrandProfile | null;
+  onBrandProfileSelect: (profile: BrandProfile | null) => void;
+  brandProfilePopoverOpen: boolean;
+  onBrandProfilePopoverChange: (open: boolean) => void;
+  brandProfiles: BrandProfile[];
+  isLoadingBrandProfiles: boolean;
+  // Negatives
+  negatives: string[];
+  onNegativesChange: (negatives: string[]) => void;
+  negativesPopoverOpen: boolean;
+  onNegativesPopoverChange: (open: boolean) => void;
 }
 
 export function FreestyleSettingsChips({
