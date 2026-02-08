@@ -117,14 +117,14 @@ export function BuyCreditsModal() {
                       <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5 py-0">Best Value</Badge>
                     </div>
                   )}
-                  <div className="space-y-1">
-                    <p className="text-xl font-bold leading-tight">{pack.credits}</p>
-                    <p className="text-[10px] text-muted-foreground">≈ {Math.round(pack.credits / 4)} images</p>
-                    <p className="text-base font-semibold">${pack.price}</p>
-                    <p className="text-[10px] text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢/cr</p>
+                  <div className="space-y-1.5">
+                    <p className="text-2xl font-bold leading-tight">{pack.credits}</p>
+                    <p className="text-xs text-muted-foreground">≈ {Math.round(pack.credits / 4)} images</p>
+                    <p className="text-lg font-semibold">${pack.price}</p>
+                    <p className="text-xs text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢/cr</p>
                     <Button
                       variant={pack.popular ? 'default' : 'outline'}
-                      className="w-full mt-1"
+                      className="w-full mt-2"
                       size="sm"
                       onClick={() => handlePurchase(pack.credits)}
                     >
