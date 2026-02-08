@@ -325,12 +325,15 @@ export default function Generate() {
   const handleCancelGeneration = () => { setCurrentStep('settings'); setGeneratingProgress(0); toast.info('Generation cancelled'); };
 
   const handleGenerateClick = () => {
-    if (!selectedProduct) return;
+    if (!selectedProduct && !(sourceType === 'scratch' && scratchUpload)) {
+      toast.error('Please select a product first');
+      return;
+    }
     const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode });
     if (balance < cost) { setNoCreditsModalOpen(true); return; }
     if (generationMode === 'virtual-try-on') {
       if (!selectedModel || !selectedPose) { toast.error('Please select a model and pose first'); return; }
-      setTryOnConfirmModalOpen(true); return;
+      handleTryOnConfirmGenerate(); return;
     }
     // Workflow-config path: skip template requirement
     if (hasWorkflowConfig) {
@@ -1198,7 +1201,7 @@ export default function Generate() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold">Virtual Try-On uses {creditCost} credits</p>
-                  <p className="text-xs text-muted-foreground">{parseInt(imageCount)} images × 3 credits each</p>
+                  <p className="text-xs text-muted-foreground">{parseInt(imageCount)} images × 8 credits each</p>
                 </div>
                 <p className="font-semibold">{balance} credits available</p>
               </div>
