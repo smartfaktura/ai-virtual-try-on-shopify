@@ -83,13 +83,13 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete }: Fre
   if (images.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-6">
-        <div className="w-24 h-24 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-          <Wand2 className="w-10 h-10 text-white/20" />
+        <div className="w-24 h-24 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
+          <Wand2 className="w-10 h-10 text-muted-foreground/50" />
         </div>
-        <h2 className="text-2xl font-light tracking-tight text-white/80 mb-3">
+        <h2 className="text-2xl font-light tracking-tight text-foreground/80 mb-3">
           Freestyle Studio
         </h2>
-        <p className="text-sm text-white/40 max-w-sm leading-relaxed">
+        <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed">
           Describe what you want to create, attach a reference, pick a model or scene — your creations appear here.
         </p>
       </div>
