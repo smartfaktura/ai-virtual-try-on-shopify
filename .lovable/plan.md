@@ -1,67 +1,118 @@
 
 
-# Fix Generating Card Size + Smooth Image Fade-In
+# Graceful Content Policy Handling
 
-## Problems
+## Problem
 
-1. **Size mismatch**: The generating card is a small square while neighboring images are tall portraits. The flex container uses `items-start`, so the card doesn't stretch to match sibling heights.
-2. **Abrupt image appearance**: Images pop in instantly with a quick 0.2s fade. When they replace the generating card, the transition feels jarring/"laggy".
+When a user submits a prompt that triggers the AI's content safety filter, the edge function receives a text-only response (no image) with a refusal message like "I cannot fulfill this request." Currently this cascades into a 500 error that crashes the app with an error overlay.
 
 ## Solution
 
-### 1. Match generating card height to images (FreestyleGallery.tsx)
+Handle content policy violations across three layers so the user sees a clear, styled "Content Blocked" card in the gallery instead of a crash.
 
-**Centered layout (count <= 3):**
-- Change flex container from `items-start` to `items-stretch` so all children (generating cards and images) share the same height
-- The image cards already constrain themselves with `max-h-[calc(100vh-400px)]` -- the generating card will now stretch to match
-- Remove the wrapper `div` around generating cards that was forcing `aspect-square` -- let flexbox handle sizing
-- Give the generating card a `min-w-[280px]` so it has reasonable width when stretching vertically
+---
 
-**Grid layout (count > 3):**
-- The grid cells already have equal width; just ensure the generating card fills the cell properly with `w-full h-full`
+## Changes
 
-### 2. Smooth image fade-in (FreestyleGallery.tsx)
+### 1. Edge Function: `supabase/functions/generate-freestyle/index.ts`
 
-Add an `onLoad`-driven fade for `ImageCard`:
-- Start each image with `opacity-0`
-- On the `<img>` `onLoad` event, set a state flag to `true`
-- Transition to `opacity-100` with a `duration-500 ease-out` CSS transition
-- This creates a smooth "developing" effect where images gracefully materialize instead of popping in
+Detect content policy refusals and return them with a distinct error type instead of a generic 500.
 
-### 3. Update fade-in animation (index.css)
+- In the `generateImage` function, when no image is returned, check the response for content policy signals:
+  - `finish_reason === "IMAGE_PROHIBITED_CONTENT"` (from the AI gateway)
+  - Response `content` containing refusal language like "I cannot fulfill" or "inappropriate"
+- When detected, return a structured object instead of `null`: `{ blocked: true, reason: "..." }`
+- In the main handler loop, collect blocked results alongside successful images
+- Return a new response shape when all images are blocked:
 
-- Increase the `fadeIn` keyframe duration from `0.2s` to `0.5s` and add a slight scale-up (`from: scale(0.98)`) for a more polished entrance
+```json
+{
+  "images": [],
+  "generatedCount": 0,
+  "requestedCount": 1,
+  "contentBlocked": true,
+  "blockReason": "This prompt was flagged by our content safety system. Try rephrasing with different terms."
+}
+```
+
+This returns a 200 (not 500), so the frontend can handle it gracefully.
+
+### 2. Hook: `src/hooks/useGenerateFreestyle.ts`
+
+- Update `FreestyleResult` interface to include optional `contentBlocked: boolean` and `blockReason: string` fields
+- After receiving the result, check for `contentBlocked` -- if true, show a warning toast instead of success, and return the result (not null) so the page component can act on it
+
+### 3. Page: `src/pages/Freestyle.tsx`
+
+- After `generate()` returns, check `result.contentBlocked`
+- If blocked, instead of saving images, add a "blocked" placeholder to the gallery state
+- Track blocked entries via a new `useState<BlockedEntry[]>` that stores `{ id, prompt, reason, timestamp }`
+- Pass these to the gallery as a new `blockedEntries` prop
+- Blocked entries can be dismissed (deleted) by the user
+
+### 4. Gallery: `src/components/app/freestyle/FreestyleGallery.tsx`
+
+Add a new `ContentBlockedCard` component that renders in place of an image:
+
+**Visual design:**
+- Same size as a regular image card (fills grid cell or matches flex layout)
+- Soft red/rose gradient background with a subtle border
+- Centered `ShieldAlert` icon (from lucide-react) in a muted red tone
+- Title: "Content Blocked"
+- Subtitle: The block reason text (e.g., "This prompt was flagged by our content safety system.")
+- A small "Dismiss" button at the bottom to remove the card
+- The prompt text shown in small muted text so the user knows which request was blocked
+
+**Props update:**
+- Add `blockedEntries?: Array<{ id: string; prompt: string; reason: string }>` to `FreestyleGalleryProps`
+- Add `onDismissBlocked?: (id: string) => void` callback
+
+**Layout:**
+- Blocked cards render in the same position as generating/image cards
+- In centered mode (count <= 3): same flex sizing as images
+- In grid mode: fills the grid cell like a normal image
 
 ---
 
 ## Technical Details
 
-### File: `src/components/app/freestyle/FreestyleGallery.tsx`
+### Edge function `generateImage` return type change
 
-**ImageCard changes:**
-- Add `useState(false)` for `loaded` state
-- Add `onLoad={() => setLoaded(true)}` to the `<img>` element
-- Apply `opacity-0 transition-opacity duration-700 ease-out` by default, then `opacity-100` when loaded
-- Remove the `animate-fade-in` class from the card wrapper (replace with the load-driven transition)
+Currently returns `string | null`. Change to `string | { blocked: true; reason: string } | null`.
 
-**GeneratingCard changes:**
-- Accept full height/width from parent via `w-full h-full` in className
-- Keep `min-h-[300px]` as a floor so it doesn't collapse when there are no images
+When the AI gateway response has no image:
+1. Check `data.choices[0].finish_reason` -- if it contains "PROHIBITED" or "BLOCKED", it's a content policy issue
+2. Check `data.choices[0].message.content` -- if it contains refusal text, extract it as the reason
+3. Return `{ blocked: true, reason: extractedReason }` instead of retrying
 
-**Centered layout (lines 209-228):**
-- Change `items-start` to `items-stretch` on the flex container
-- Remove wrapper div around generating cards; render them directly with proper sizing
-- Image cards in natural mode: wrap in a container that constrains max-height but allows flex stretch
+### ContentBlockedCard component
 
-**Grid layout (lines 231-245):**
-- No structural changes needed; the generating card already fills grid cells
+```text
++---------------------------------------+
+|                                       |
+|         [ShieldAlert icon]            |
+|                                       |
+|        Content Blocked                |
+|                                       |
+|   This prompt was flagged by our      |
+|   content safety system.              |
+|                                       |
+|   "blonde nude women..."  (prompt)    |
+|                                       |
+|        [Dismiss]  [Edit Prompt]       |
+|                                       |
++---------------------------------------+
+```
 
-### File: `src/index.css`
-
-- Update `fadeIn` to `0.5s` duration and add `transform: scale(0.98)` on the `from` state
+- Background: `bg-gradient-to-br from-red-500/5 via-rose-500/10 to-red-500/5`
+- Border: `border border-red-200/30`
+- Icon color: `text-red-400/60`
+- "Edit Prompt" button copies the blocked prompt back to the editor for rephrasing
 
 ### Files changed
 
-1. `src/components/app/freestyle/FreestyleGallery.tsx` -- Fix card sizing, add image load transition
-2. `src/index.css` -- Slow down fadeIn animation
+1. `supabase/functions/generate-freestyle/index.ts` -- Detect content blocks, return structured response
+2. `src/hooks/useGenerateFreestyle.ts` -- Handle `contentBlocked` in result
+3. `src/pages/Freestyle.tsx` -- Track blocked entries, pass to gallery
+4. `src/components/app/freestyle/FreestyleGallery.tsx` -- Add `ContentBlockedCard`, render blocked entries
 
