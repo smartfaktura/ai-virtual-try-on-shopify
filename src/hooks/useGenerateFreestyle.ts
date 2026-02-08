@@ -2,6 +2,15 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 
+interface BrandProfileContext {
+  tone: string;
+  lightingStyle: string;
+  backgroundStyle: string;
+  colorTemperature: string;
+  compositionBias: string;
+  doNotRules: string[];
+}
+
 interface FreestyleParams {
   prompt: string;
   sourceImage?: string;
@@ -13,6 +22,8 @@ interface FreestyleParams {
   polishPrompt: boolean;
   modelContext?: string;
   stylePresets?: string[];
+  brandProfile?: BrandProfileContext;
+  negatives?: string[];
 }
 
 interface FreestyleResult {
@@ -85,6 +96,8 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
           polishPrompt: params.polishPrompt,
           modelContext: params.modelContext,
           stylePresets: params.stylePresets,
+          brandProfile: params.brandProfile,
+          negatives: params.negatives,
         }),
       });
 

@@ -7,6 +7,7 @@ import type { ModelProfile, TryOnPose } from '@/types';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
+type BrandProfile = Tables<'brand_profiles'>;
 
 interface FreestylePromptPanelProps {
   prompt: string;
@@ -43,6 +44,18 @@ interface FreestylePromptPanelProps {
   onImageCountChange: (count: number) => void;
   stylePresets: string[];
   onStylePresetsChange: (ids: string[]) => void;
+  // Brand profile
+  selectedBrandProfile: BrandProfile | null;
+  onBrandProfileSelect: (profile: BrandProfile | null) => void;
+  brandProfilePopoverOpen: boolean;
+  onBrandProfilePopoverChange: (open: boolean) => void;
+  brandProfiles: BrandProfile[];
+  isLoadingBrandProfiles: boolean;
+  // Negatives
+  negatives: string[];
+  onNegativesChange: (negatives: string[]) => void;
+  negativesPopoverOpen: boolean;
+  onNegativesPopoverChange: (open: boolean) => void;
 }
 
 export function FreestylePromptPanel({
@@ -58,6 +71,9 @@ export function FreestylePromptPanel({
   polishPrompt, onPolishChange,
   imageCount, onImageCountChange,
   stylePresets, onStylePresetsChange,
+  selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
+  brandProfiles, isLoadingBrandProfiles,
+  negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
 }: FreestylePromptPanelProps) {
   const uploadButton = sourceImagePreview ? (
     <div className="relative w-9 h-9 flex-shrink-0">
@@ -123,6 +139,11 @@ export function FreestylePromptPanel({
           polishPrompt={polishPrompt} onPolishChange={onPolishChange}
           imageCount={imageCount} onImageCountChange={onImageCountChange}
           stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
+          selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
+          brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
+          brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
+          negatives={negatives} onNegativesChange={onNegativesChange}
+          negativesPopoverOpen={negativesPopoverOpen} onNegativesPopoverChange={onNegativesPopoverChange}
         />
       </div>
 

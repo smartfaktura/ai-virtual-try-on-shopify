@@ -14,11 +14,14 @@ import { ModelSelectorChip } from './ModelSelectorChip';
 import { SceneSelectorChip } from './SceneSelectorChip';
 import { ProductSelectorChip } from './ProductSelectorChip';
 import { StylePresetChips } from './StylePresetChips';
+import { BrandProfileChip } from './BrandProfileChip';
+import { NegativesChip } from './NegativesChip';
 import type { ModelProfile } from '@/types';
 import type { TryOnPose } from '@/types';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
+type BrandProfile = Tables<'brand_profiles'>;
 
 export type FreestyleAspectRatio = '1:1' | '3:4' | '4:5' | '16:9';
 
@@ -55,6 +58,18 @@ interface FreestyleSettingsChipsProps {
   onImageCountChange: (count: number) => void;
   stylePresets: string[];
   onStylePresetsChange: (ids: string[]) => void;
+  // Brand profile
+  selectedBrandProfile: BrandProfile | null;
+  onBrandProfileSelect: (profile: BrandProfile | null) => void;
+  brandProfilePopoverOpen: boolean;
+  onBrandProfilePopoverChange: (open: boolean) => void;
+  brandProfiles: BrandProfile[];
+  isLoadingBrandProfiles: boolean;
+  // Negatives
+  negatives: string[];
+  onNegativesChange: (negatives: string[]) => void;
+  negativesPopoverOpen: boolean;
+  onNegativesPopoverChange: (open: boolean) => void;
 }
 
 export function FreestyleSettingsChips({
@@ -68,6 +83,9 @@ export function FreestyleSettingsChips({
   polishPrompt, onPolishChange,
   imageCount, onImageCountChange,
   stylePresets, onStylePresetsChange,
+  selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
+  brandProfiles, isLoadingBrandProfiles,
+  negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
 }: FreestyleSettingsChipsProps) {
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
 
@@ -102,6 +120,24 @@ export function FreestyleSettingsChips({
             open={scenePopoverOpen}
             onOpenChange={onScenePopoverChange}
             onSelect={onSceneSelect}
+          />
+
+          {/* Brand Profile Selector */}
+          <BrandProfileChip
+            selectedProfile={selectedBrandProfile}
+            open={brandProfilePopoverOpen}
+            onOpenChange={onBrandProfilePopoverChange}
+            onSelect={onBrandProfileSelect}
+            profiles={brandProfiles}
+            isLoading={isLoadingBrandProfiles}
+          />
+
+          {/* Negatives / Exclude Chip */}
+          <NegativesChip
+            negatives={negatives}
+            onNegativesChange={onNegativesChange}
+            open={negativesPopoverOpen}
+            onOpenChange={onNegativesPopoverChange}
           />
 
           {/* Aspect Ratio */}

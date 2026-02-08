@@ -6,6 +6,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+interface BrandProfileContext {
+  tone: string;
+  lightingStyle: string;
+  backgroundStyle: string;
+  colorTemperature: string;
+  compositionBias: string;
+  doNotRules: string[];
+}
+
 interface FreestyleRequest {
   prompt: string;
   sourceImage?: string;
@@ -17,6 +26,8 @@ interface FreestyleRequest {
   polishPrompt: boolean;
   modelContext?: string;
   stylePresets?: string[];
+  brandProfile?: BrandProfileContext;
+  negatives?: string[];
 }
 
 // ── Negative prompt (always appended when polish is on) ───────────────────
@@ -31,7 +42,9 @@ CRITICAL — DO NOT include any of the following:
 // ── Context-aware prompt polish ───────────────────────────────────────────
 function polishUserPrompt(
   rawPrompt: string,
-  context: { hasSource: boolean; hasModel: boolean; hasScene: boolean }
+  context: { hasSource: boolean; hasModel: boolean; hasScene: boolean },
+  brandProfile?: BrandProfileContext,
+  userNegatives?: string[]
 ): string {
   const layers: string[] = [];
 
@@ -41,6 +54,19 @@ function polishUserPrompt(
   layers.push(
     "Ultra high resolution, sharp focus, natural lighting, commercial-grade color accuracy."
   );
+
+  // Brand profile layer — injects tone, lighting, and composition preferences
+  if (brandProfile) {
+    const brandParts: string[] = [];
+    if (brandProfile.tone) brandParts.push(`Visual tone: ${brandProfile.tone}`);
+    if (brandProfile.lightingStyle) brandParts.push(`Lighting: ${brandProfile.lightingStyle}`);
+    if (brandProfile.backgroundStyle) brandParts.push(`Background preference: ${brandProfile.backgroundStyle}`);
+    if (brandProfile.colorTemperature) brandParts.push(`Color temperature: ${brandProfile.colorTemperature}`);
+    if (brandProfile.compositionBias) brandParts.push(`Composition: ${brandProfile.compositionBias}`);
+    if (brandParts.length > 0) {
+      layers.push(`BRAND STYLE GUIDE:\n${brandParts.join(". ")}.`);
+    }
+  }
 
   // Product / source image layer
   if (context.hasSource) {
@@ -63,7 +89,25 @@ function polishUserPrompt(
     );
   }
 
-  layers.push(NEGATIVE_PROMPT);
+  // Build combined negatives list
+  const allNegatives: string[] = [];
+  // Add brand profile do-not rules
+  if (brandProfile?.doNotRules && brandProfile.doNotRules.length > 0) {
+    allNegatives.push(...brandProfile.doNotRules);
+  }
+  // Add user-selected negatives
+  if (userNegatives && userNegatives.length > 0) {
+    allNegatives.push(...userNegatives);
+  }
+
+  // Build final negative prompt
+  let negativeBlock = NEGATIVE_PROMPT;
+  if (allNegatives.length > 0) {
+    const dedupedNegatives = [...new Set(allNegatives.map(n => n.toLowerCase()))];
+    negativeBlock += `\n- No ${dedupedNegatives.join("\n- No ")}`;
+  }
+
+  layers.push(negativeBlock);
 
   return layers.join("\n\n");
 }
@@ -187,9 +231,27 @@ serve(async (req) => {
       hasScene: !!body.sceneImage,
     };
 
-    const finalPrompt = body.polishPrompt
-      ? polishUserPrompt(enrichedPrompt, polishContext)
-      : enrichedPrompt;
+    let finalPrompt: string;
+    if (body.polishPrompt) {
+      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives);
+    } else {
+      // Even without polish, apply brand context and negatives if provided
+      let unpolished = enrichedPrompt;
+      if (body.brandProfile) {
+        const bp = body.brandProfile;
+        const parts = [bp.tone, bp.lightingStyle, bp.backgroundStyle, bp.colorTemperature, bp.compositionBias].filter(Boolean);
+        if (parts.length > 0) unpolished += `\n\nBrand style: ${parts.join(", ")}`;
+      }
+      const allNeg: string[] = [
+        ...(body.brandProfile?.doNotRules || []),
+        ...(body.negatives || []),
+      ];
+      if (allNeg.length > 0) {
+        const dedupedNeg = [...new Set(allNeg.map(n => n.toLowerCase()))];
+        unpolished += `\n\nDo NOT include: ${dedupedNeg.join(", ")}`;
+      }
+      finalPrompt = unpolished;
+    }
 
     // Build image references
     const imageRefs: Array<{ type: "image_url"; image_url: { url: string } }> = [];
@@ -218,6 +280,9 @@ serve(async (req) => {
       hasSceneImage: !!body.sceneImage,
       hasModelContext: !!body.modelContext,
       stylePresets: body.stylePresets,
+      hasBrandProfile: !!body.brandProfile,
+      brandTone: body.brandProfile?.tone,
+      negativesCount: body.negatives?.length || 0,
       aspectRatio: body.aspectRatio,
       imageCount: body.imageCount,
       quality: body.quality,

@@ -16,6 +16,7 @@ import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleS
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
+type BrandProfile = Tables<'brand_profiles'>;
 
 export default function Freestyle() {
   const [prompt, setPrompt] = useState('');
@@ -35,6 +36,10 @@ export default function Freestyle() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [stylePresets, setStylePresets] = useState<string[]>([]);
+  const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
+  const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
+  const [negatives, setNegatives] = useState<string[]>([]);
+  const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { generate, isLoading, progress } = useGenerateFreestyle();
@@ -51,6 +56,19 @@ export default function Freestyle() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as UserProduct[];
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: brandProfiles = [], isLoading: isLoadingBrandProfiles } = useQuery({
+    queryKey: ['brand-profiles', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('brand_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as BrandProfile[];
     },
     enabled: !!user?.id,
   });
@@ -126,6 +144,16 @@ export default function Freestyle() {
       .map(id => STYLE_PRESETS.find(p => p.id === id)?.keywords)
       .filter(Boolean) as string[];
 
+    // Build brand profile context for the edge function
+    const brandContext = selectedBrandProfile ? {
+      tone: selectedBrandProfile.tone,
+      lightingStyle: selectedBrandProfile.lighting_style,
+      backgroundStyle: selectedBrandProfile.background_style,
+      colorTemperature: selectedBrandProfile.color_temperature,
+      compositionBias: selectedBrandProfile.composition_bias,
+      doNotRules: selectedBrandProfile.do_not_rules,
+    } : undefined;
+
     const result = await generate({
       prompt: finalPrompt,
       sourceImage: sourceImage || undefined,
@@ -137,6 +165,8 @@ export default function Freestyle() {
       polishPrompt,
       modelContext,
       stylePresets: activePresetKeywords.length > 0 ? activePresetKeywords : undefined,
+      brandProfile: brandContext,
+      negatives: negatives.length > 0 ? negatives : undefined,
     });
 
     if (result && result.images.length > 0) {
@@ -152,7 +182,7 @@ export default function Freestyle() {
         });
       }
     }
-  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage, stylePresets]);
+  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage, stylePresets]);
 
   const handleDownload = useCallback(async (imageUrl: string, index: number) => {
     try {
@@ -226,6 +256,16 @@ export default function Freestyle() {
     onImageCountChange: setImageCount,
     stylePresets,
     onStylePresetsChange: setStylePresets,
+    selectedBrandProfile,
+    onBrandProfileSelect: setSelectedBrandProfile,
+    brandProfilePopoverOpen,
+    onBrandProfilePopoverChange: setBrandProfilePopoverOpen,
+    brandProfiles,
+    isLoadingBrandProfiles,
+    negatives,
+    onNegativesChange: setNegatives,
+    negativesPopoverOpen,
+    onNegativesPopoverChange: setNegativesPopoverOpen,
   };
 
   return (
