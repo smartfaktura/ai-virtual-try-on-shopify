@@ -354,6 +354,8 @@ serve(async (req) => {
     const imageCount = Math.min(body.imageCount || 1, 4);
     const images: string[] = [];
     const errors: string[] = [];
+    let contentBlocked = false;
+    let blockReason = "";
 
     // Batch consistency instruction for multi-image requests
     const batchConsistency = imageCount > 1
@@ -367,10 +369,16 @@ serve(async (req) => {
             ? `${aspectPrompt}${batchConsistency}`
             : `${aspectPrompt}${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
 
-        const imageUrl = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY, aiModel);
+        const result = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY, aiModel);
 
-        if (imageUrl) {
-          images.push(imageUrl);
+        if (result && typeof result === "object" && "blocked" in result) {
+          // Content was blocked by safety filter
+          contentBlocked = true;
+          blockReason = result.reason;
+          console.warn(`Image ${i + 1} blocked by content safety filter`);
+          break; // No point retrying with same prompt
+        } else if (typeof result === "string") {
+          images.push(result);
           console.log(`Generated freestyle image ${i + 1}/${imageCount}`);
         } else {
           errors.push(`Image ${i + 1} failed to generate`);
@@ -391,6 +399,20 @@ serve(async (req) => {
       }
     }
 
+    // If content was blocked and no images were generated, return a 200 with block info
+    if (contentBlocked && images.length === 0) {
+      return new Response(
+        JSON.stringify({
+          images: [],
+          generatedCount: 0,
+          requestedCount: imageCount,
+          contentBlocked: true,
+          blockReason,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (images.length === 0) {
       return new Response(
         JSON.stringify({ error: "Failed to generate any images", details: errors }),
@@ -404,6 +426,8 @@ serve(async (req) => {
         generatedCount: images.length,
         requestedCount: imageCount,
         partialSuccess: images.length < imageCount,
+        contentBlocked: contentBlocked || undefined,
+        blockReason: contentBlocked ? blockReason : undefined,
         errors: errors.length > 0 ? errors : undefined,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

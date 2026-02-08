@@ -129,6 +129,11 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
       const result: FreestyleResult = await response.json();
       setProgress(100);
 
+      if (result.contentBlocked) {
+        toast.warning('Content flagged by safety system. Try rephrasing your prompt.');
+        return result;
+      }
+
       if (result.partialSuccess) {
         toast.warning(`Generated ${result.generatedCount} of ${result.requestedCount} images.`);
       } else {
