@@ -1,94 +1,52 @@
 
 
-# Enhanced Freestyle Loading State
+# Fix Generating Card Size and Polish
 
-## Overview
+## Problem
 
-Replace the blank gray skeleton square with an engaging, branded loading experience. When generating, users will see a team avatar with animated status text, a progress bar, and helpful time estimate -- turning the wait into a polished, human moment.
+The generating card is rendered at a fixed `w-60` with `aspect-square`, making it look like a small widget next to the full-sized generated images. It should match the image dimensions and feel like a proper image placeholder -- as if the image is "developing" in place.
 
-## Current Problem
+## Solution
 
-The loading state is a plain `<Skeleton />` square -- a flat gray rectangle with a pulse animation. No context about what's happening, no time estimate, and no personality. It feels broken rather than intentional.
-
-## Design
-
-Each generating placeholder will show:
-1. A softly pulsing gradient background (not flat gray)
-2. A centered team avatar with a subtle glow ring animation
-3. A rotating status message (e.g., "Setting up the lighting...", "Composing the scene...")
-4. A slim progress bar below the avatar area
-5. A time estimate hint: "Usually takes 10-20 seconds"
-
-The overall vibe is: a studio team member is actively working on your image.
-
----
-
-## Changes
+Make the `GeneratingCard` fill the same space as images in both layout modes:
 
 ### File: `src/components/app/freestyle/FreestyleGallery.tsx`
 
-**Replace `SkeletonCard` with a new `GeneratingCard` component:**
+**GeneratingCard changes:**
 
-- Remove the plain `<Skeleton>` usage
-- New component includes:
-  - A `rounded-xl` card with animated gradient background (`bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60` with a shimmer animation)
-  - A centered team avatar (randomly picked from a small pool: Sophia, Luna, Kenji) displayed in a `w-12 h-12` rounded-full with a pulsing ring border
-  - Below the avatar: a rotating status message that cycles every 3 seconds through phrases like:
-    - "Setting up the lighting..."
-    - "Composing the scene..."
-    - "Refining the details..."
-    - "Adding finishing touches..."
-  - A slim `<Progress>` bar showing the current generation progress (passed as a prop)
-  - A small hint line: "Usually 10-20s" in `text-xs text-muted-foreground/50`
+1. Remove the hardcoded `aspect-square` -- instead, use the full available height via `min-h-[400px]` so it visually matches tall images in the "natural" (centered) layout
+2. Remove `animate-pulse` (too generic) -- replace with a subtle animated gradient shimmer that sweeps across the card for a more modern, premium feel
+3. Scale up the avatar to `w-16 h-16` and increase text sizes slightly for the larger card area
+4. Widen the progress bar (`max-w-[200px]`) to fill the bigger space
+5. Add a faint border (`border border-border/30`) for definition against the background
 
-**Props update:**
-- Change `generatingCount` to also accept a `generatingProgress` number (0-100)
-- The `FreestyleGalleryProps` interface gets: `generatingProgress?: number`
+**Layout changes for the `count <= 3` (centered) mode:**
 
-**Layout:**
-- When count is <= 3 (centered flex layout): the generating card matches the `w-60` sizing
-- When in grid layout: the generating card fills the grid cell like images do
+- Remove the `w-60` wrapper on generating cards -- instead use `max-h-[calc(100vh-400px)] w-auto aspect-square` to match the `ImageCard` natural sizing, giving it the same height constraint as images
+- This makes the generating card occupy the same visual footprint as the image next to it
 
-### File: `src/pages/Freestyle.tsx`
+**Layout changes for the grid mode (`count > 3`):**
 
-- Pass the `progress` value from `useGenerateFreestyle` to the gallery as `generatingProgress`
-- Update the `FreestyleGallery` call: add `generatingProgress={progress}`
+- The card already fills the grid cell width, but ensure it uses `aspect-square` to match grid image proportions (this part is fine as-is, just needs the visual upgrades)
 
----
+### Shimmer animation
 
-## Technical Details
+Add a custom CSS shimmer keyframe using the existing `shimmer` animation already defined in `tailwind.config.ts`:
+- Apply `bg-[length:200%_100%] animate-shimmer` with a gradient like `bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40` for a smooth light sweep effect
+- Remove the generic `animate-pulse` in favor of this
 
-### GeneratingCard component (inside FreestyleGallery.tsx)
+### Summary of visual changes
 
-- Import team avatars: `avatar-sophia.jpg`, `avatar-luna.jpg`, `avatar-kenji.jpg`
-- Use `useState` + `useEffect` with a 3-second `setInterval` to cycle through status messages
-- Pick a random avatar on mount using `useState(() => ...)` so it stays consistent during the generation
-- The progress bar uses the existing `<Progress>` component from `@/components/ui/progress`
-- The shimmer effect uses the existing `animate-pulse` class on the background
+| Aspect | Before | After |
+|--------|--------|-------|
+| Size (centered) | Fixed `w-60` small square | Full height matching images |
+| Size (grid) | Correct width, small feel | Same width, polished look |
+| Animation | `animate-pulse` (flash) | Shimmer sweep gradient |
+| Avatar | `w-12 h-12` | `w-16 h-16` |
+| Progress bar | `max-w-[140px]` | `max-w-[200px]` |
+| Border | None | Subtle `border-border/30` |
+| Background | Flat gradient | Animated shimmer gradient |
 
-### Status messages array
+### File changed
 
-```
-"Setting up the lighting..."
-"Composing the scene..."  
-"Styling the shot..."
-"Refining the details..."
-"Adjusting the colors..."
-"Adding finishing touches..."
-```
-
-### Avatar pool with names
-
-```
-{ name: "Sophia", avatar: avatar-sophia }
-{ name: "Luna", avatar: avatar-luna }
-{ name: "Kenji", avatar: avatar-kenji }
-```
-
-The name appears as a small label above the status text: "Sophia is working on this..."
-
-### Files modified
-
-1. `src/components/app/freestyle/FreestyleGallery.tsx` -- Replace SkeletonCard, add GeneratingCard, update props
-2. `src/pages/Freestyle.tsx` -- Pass `generatingProgress={progress}` to FreestyleGallery
-
+- `src/components/app/freestyle/FreestyleGallery.tsx` -- Update `GeneratingCard` styling and its wrapper in both layout branches
