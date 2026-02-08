@@ -169,7 +169,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   }
 
   return (
-    <div className="columns-2 lg:columns-3 gap-1 p-1 pb-4">
+    <div className="columns-3 gap-1 p-1 pb-4">
       {skeletons}
       {images.map((img, idx) => (
         <ImageCard
