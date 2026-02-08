@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, X, Sparkles, Loader2 } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { Plus, X, Sparkles, Loader2, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
@@ -56,6 +56,8 @@ interface FreestylePromptPanelProps {
   onNegativesChange: (negatives: string[]) => void;
   negativesPopoverOpen: boolean;
   onNegativesPopoverChange: (open: boolean) => void;
+  // Drag and drop
+  onFileDrop?: (file: File) => void;
 }
 
 export function FreestylePromptPanel({
@@ -74,7 +76,45 @@ export function FreestylePromptPanel({
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
+  onFileDrop,
 }: FreestylePromptPanelProps) {
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDragOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    dragCounterRef.current = 0;
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/') && onFileDrop) {
+      onFileDrop(file);
+    }
+  }, [onFileDrop]);
   const uploadButton = sourceImagePreview ? (
     <div className="relative w-9 h-9 flex-shrink-0">
       <img src={sourceImagePreview} alt="Attached" className="w-9 h-9 rounded-lg object-cover ring-1 ring-border" />
@@ -96,7 +136,27 @@ export function FreestylePromptPanel({
   );
 
   return (
-    <div className="relative bg-background/80 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg overflow-hidden">
+    <div
+      className={`relative bg-background/80 backdrop-blur-xl border rounded-2xl shadow-lg overflow-hidden transition-colors duration-200 ${
+        isDragOver
+          ? 'border-primary border-2 ring-2 ring-primary/20'
+          : 'border-border/60'
+      }`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drag overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-20 bg-primary/5 backdrop-blur-[2px] flex items-center justify-center rounded-2xl">
+          <div className="flex flex-col items-center gap-2 text-primary">
+            <ImagePlus className="w-8 h-8" />
+            <span className="text-sm font-medium">Drop image here</span>
+          </div>
+        </div>
+      )}
+
       {isLoading && (
         <div className="absolute top-0 left-0 right-0 z-10">
           <Progress value={progress} className="h-[2px] rounded-none bg-muted" />

@@ -89,6 +89,16 @@ export default function Freestyle() {
     setProductSourced(false);
   }, []);
 
+  const handleFileDrop = useCallback(async (file: File) => {
+    const previewUrl = URL.createObjectURL(file);
+    setSourceImagePreview(previewUrl);
+    const base64 = await convertImageToBase64(previewUrl);
+    setSourceImage(base64);
+    setSelectedProduct(null);
+    setProductSourced(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, []);
+
   const removeSourceImage = useCallback(() => {
     setSourceImage(null);
     setSourceImagePreview(null);
@@ -282,6 +292,7 @@ export default function Freestyle() {
     onBrandProfilePopoverChange: setBrandProfilePopoverOpen,
     brandProfiles,
     isLoadingBrandProfiles,
+    onFileDrop: handleFileDrop,
     negatives,
     onNegativesChange: setNegatives,
     negativesPopoverOpen,
