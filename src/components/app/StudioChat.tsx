@@ -125,7 +125,7 @@ export function StudioChat() {
                 {msg.role === 'assistant' && (
                   <Avatar className="w-7 h-7 flex-shrink-0 mt-0.5">
                     <AvatarImage src={avatarSophia} alt="Team" />
-                    <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">bf</AvatarFallback>
+                    <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">fa</AvatarFallback>
                   </Avatar>
                 )}
                 <div
