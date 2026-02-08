@@ -1,84 +1,55 @@
 
 
-## Generate Happy Sophia Video + Save Videos to Platform
+## Add Sophia's Animated Video to the Landing Page and Dashboard
 
-### Part 1: Generate New Video with Happy Vibe Prompt
+### What Changes
 
-We'll trigger a new Kling AI video generation for the Sophia avatar using a descriptive text prompt that conveys a happy, energetic brand vibe. The prompt will describe Sophia's personality as a creative AI photographer who's excited about helping brands create stunning visuals.
+Replace Sophia's static image with her animated "happy vibe" video in two places:
+1. **Landing Page Team Section** (the large carousel cards)
+2. **Dashboard Team Carousel** (the small avatar strip)
 
-**Prompt to use:**
-> "A warm, confident smile spreading across her face, gentle head tilt, eyes sparkling with creative energy. Soft natural lighting, subtle hair movement as if a gentle breeze. She looks welcoming and enthusiastic, embodying the spirit of a passionate AI photography professional ready to bring brands to life. Smooth, cinematic motion."
+All other 9 team members remain as static images.
 
-**Settings:**
-- Model: V2.1 (best quality)
-- Duration: 5 seconds
-- Aspect ratio: 1:1 (matches avatar cards)
-- Source: The already-uploaded Sophia avatar from `scratch-uploads/test/avatar-sophia.jpg`
+### Performance Strategy (No Slowdown)
 
-### Part 2: Save Generated Videos to the Platform
+The video will NOT impact page load speed because of these safeguards:
 
-Currently, generated videos exist only as temporary Kling AI URLs that expire. We need a proper system to persist and display them.
+- **`preload="none"`** -- The browser won't download a single byte of video until it's needed
+- **`poster` attribute** -- Sophia's static JPG image is shown immediately as a placeholder while the video loads
+- **`loading="lazy"` equivalent** -- The video sits below the fold (after the hero), so it won't compete with initial page resources
+- **`autoPlay` + `muted` + `loop` + `playsInline`** -- Required for silent autoplay on all browsers including Safari/iOS
+- **Single video only** -- One 5-second MP4 (roughly 1-3 MB) among 9 static images is negligible
 
-#### Step 1 -- Create a `generated_videos` database table
+If all 10 members were animated in the future, we'd add Intersection Observer to only load videos when they scroll into view, but for a single video this is unnecessary.
 
-A new table to store video generation history:
+### Technical Changes
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| id | uuid (PK) | Unique identifier |
-| user_id | uuid | Owner (linked to auth) |
-| source_image_url | text | The original image used |
-| prompt | text | The motion prompt used |
-| video_url | text | Permanent URL to stored video |
-| kling_task_id | text | Kling API task reference |
-| model_name | text | Which model was used |
-| duration | text | 5 or 10 seconds |
-| aspect_ratio | text | 1:1, 16:9, or 9:16 |
-| status | text | queued, processing, complete, failed |
-| created_at | timestamptz | When it was created |
+**1. `src/components/landing/StudioTeamSection.tsx`**
 
-RLS policies will ensure users can only see/manage their own videos.
+- Add optional `videoUrl` field to the `TeamMember` interface
+- Set Sophia's `videoUrl` to the permanent storage URL
+- Replace the `<img>` render logic with a conditional: if `videoUrl` exists, render a `<video>` element with the static image as `poster`; otherwise render `<img>` as before
+- Video attributes: `autoPlay`, `muted`, `loop`, `playsInline`, `preload="none"`, `poster={member.avatar}`
 
-#### Step 2 -- Create a `generated-videos` storage bucket
+**2. `src/components/app/DashboardTeamCarousel.tsx`**
 
-A new public storage bucket to permanently store the MP4 files downloaded from Kling AI's temporary URLs.
+- Add optional `videoUrl` field to the team data
+- Same conditional rendering: `<video>` for Sophia, `<img>` for everyone else
+- Smaller container (80x80px) so the video file loads quickly at this size
 
-#### Step 3 -- Update the edge function to auto-save
+### Data
 
-When the status poll detects a completed video (`succeed`), the edge function will:
-1. Download the MP4 from Kling's temporary URL
-2. Upload it to the `generated-videos` storage bucket
-3. Save the permanent URL + metadata to the `generated_videos` table
-4. Return the permanent URL to the frontend
+The permanent video URL from storage:
+```
+https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/849393075369279549.mp4
+```
 
-#### Step 4 -- Update the Video Generator page
+### Files Modified
 
-- After generation completes, show the video player with the permanent URL
-- Add a **"Video History"** section below the generator showing all previously generated videos in a grid
-- Each history card shows: thumbnail (first frame), prompt snippet, date, duration, and a play/download button
+| File | Change |
+|------|--------|
+| `src/components/landing/StudioTeamSection.tsx` | Add `videoUrl` to interface and Sophia's data; conditional video/image rendering |
+| `src/components/app/DashboardTeamCarousel.tsx` | Add `videoUrl` to Sophia's data; conditional video/image rendering |
 
-#### Step 5 -- Update the hook
-
-Modify `useGenerateVideo` to:
-- Accept an optional `onComplete` callback
-- Return the saved video record from the database after completion
-
-### Technical Details
-
-**Files to create:**
-- Database migration for `generated_videos` table + `generated-videos` bucket + RLS policies
-
-**Files to modify:**
-- `supabase/functions/generate-video/index.ts` -- Add save logic (download MP4 from Kling, upload to bucket, insert DB record)
-- `src/hooks/useGenerateVideo.ts` -- Return saved video data, add history fetching
-- `src/pages/VideoGenerate.tsx` -- Add video history grid below the generator
-- `src/integrations/supabase/types.ts` -- Will auto-update with new table types
-
-**Flow diagram:**
-
-1. User clicks Generate with prompt
-2. Edge function creates Kling task, inserts DB row (status: processing)
-3. Frontend polls for status
-4. On completion: edge function downloads MP4 from Kling, uploads to permanent bucket, updates DB row with final URL
-5. Frontend receives permanent URL, displays video, refreshes history grid
+No new files, no database changes, no edge function changes.
 
