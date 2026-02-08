@@ -367,6 +367,52 @@ export default function Generate() {
     } else setCurrentStep('settings');
   };
 
+  const handleWorkflowGenerate = async () => {
+    if (!selectedProduct && !scratchUpload) return;
+    let sourceImageUrl = '';
+    let productData = { title: '', productType: '', description: '' };
+    if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
+      sourceImageUrl = scratchUpload.uploadedUrl;
+      productData = scratchUpload.productInfo;
+    } else if (selectedProduct) {
+      const selectedImageId = Array.from(selectedSourceImages)[0];
+      const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
+      sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
+      productData = { title: selectedProduct.title, productType: selectedProduct.productType, description: selectedProduct.description };
+    }
+    if (!sourceImageUrl) { toast.error('No source image available'); return; }
+    setCurrentStep('generating');
+    setGeneratingProgress(0);
+    const result = await generateWorkflow({
+      workflowId: activeWorkflow!.id,
+      product: { ...productData, imageUrl: sourceImageUrl },
+      brandProfile: selectedBrandProfile ? {
+        tone: selectedBrandProfile.tone,
+        background_style: selectedBrandProfile.background_style,
+        lighting_style: selectedBrandProfile.lighting_style,
+        color_temperature: selectedBrandProfile.color_temperature,
+        brand_keywords: selectedBrandProfile.brand_keywords,
+        color_palette: selectedBrandProfile.color_palette,
+        target_audience: selectedBrandProfile.target_audience,
+        do_not_rules: selectedBrandProfile.do_not_rules,
+        composition_bias: selectedBrandProfile.composition_bias,
+        preferred_scenes: selectedBrandProfile.preferred_scenes,
+        photography_reference: selectedBrandProfile.photography_reference,
+      } : undefined,
+      selectedVariations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+      quality,
+    });
+    if (result && result.images.length > 0) {
+      setGeneratedImages(result.images);
+      setWorkflowVariationLabels(result.variations?.map(v => v.label) || []);
+      setGeneratingProgress(100);
+      setCurrentStep('results');
+      const creditUsed = result.generatedCount * (quality === 'high' ? 2 : 1);
+      deductCredits(creditUsed);
+      toast.success(`Generated ${result.generatedCount} ${activeWorkflow?.name} images!`);
+    } else setCurrentStep('settings');
+  };
+
   const handleTryOnConfirmGenerate = async () => {
     if (!selectedModel || !selectedPose) return;
     let sourceImageUrl = '';
