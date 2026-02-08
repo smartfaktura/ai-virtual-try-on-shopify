@@ -17,7 +17,11 @@ interface WorkflowCardProps {
 }
 
 export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardProps) {
-  const scene = workflowScenes[workflow.name];
+  const baseScene = workflowScenes[workflow.name];
+  const scene = baseScene ? {
+    ...baseScene,
+    dynamicBackground: workflow.preview_image_url || undefined,
+  } : null;
   const [isHovered, setIsHovered] = useState(false);
 
   return (

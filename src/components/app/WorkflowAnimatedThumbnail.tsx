@@ -19,6 +19,7 @@ export interface SceneElement {
 
 export interface WorkflowScene {
   background: string;
+  dynamicBackground?: string | null;
   elements: SceneElement[];
 }
 
@@ -135,7 +136,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
     <div className="relative w-full h-full overflow-hidden bg-muted" key={isActive ? iteration : 'static'}>
       {/* Background — always visible, subtle Ken Burns on hover */}
       <img
-        src={scene.background}
+        src={scene.dynamicBackground || scene.background}
         alt=""
         loading="eager"
         decoding="async"
