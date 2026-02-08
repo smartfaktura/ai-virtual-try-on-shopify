@@ -77,7 +77,7 @@ export function SocialMediaGridThumbnail({ isActive = true }: Props) {
             />
             {/* Ratio label */}
             <div
-              className="absolute bottom-1.5 left-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md"
+              className="absolute bottom-1.5 left-1.5 bg-background/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md"
               style={{
                 opacity: isActive ? 0 : 1,
                 ...(isActive

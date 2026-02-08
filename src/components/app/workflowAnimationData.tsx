@@ -79,28 +79,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     ],
   },
 
-  'Social Media Pack': {
-    background: socialResult,
-    elements: [
-      {
-        type: 'product', image: socialProduct, label: 'Vitamin C', sublabel: 'Product',
-        icon: <Image className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
-      },
-      {
-        type: 'badge', label: 'Story', icon: <Camera className="w-3 h-3" />,
-        position: { top: '34%', right: '8%' }, enterDelay: 0.9, animation: 'slide-right',
-      },
-      {
-        type: 'badge', label: 'Post', icon: <Grid3X3 className="w-3 h-3" />,
-        position: { top: '48%', right: '14%' }, enterDelay: 1.3, animation: 'slide-right',
-      },
-      {
-        type: 'badge', label: 'Reel', icon: <Sun className="w-3 h-3" />,
-        position: { top: '62%', right: '8%' }, enterDelay: 1.7, animation: 'slide-right',
-      },
-    ],
-  },
+  // Social Media Pack now uses SocialMediaGridThumbnail directly
 
   'Product Listing Set': {
     background: listingResult,
