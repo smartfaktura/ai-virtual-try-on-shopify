@@ -11,6 +11,8 @@ interface FreestyleParams {
   imageCount: number;
   quality: 'standard' | 'high';
   polishPrompt: boolean;
+  modelContext?: string;
+  stylePresets?: string[];
 }
 
 interface FreestyleResult {
