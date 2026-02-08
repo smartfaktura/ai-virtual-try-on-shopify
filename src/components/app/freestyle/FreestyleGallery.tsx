@@ -33,7 +33,7 @@ function ImageCard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-lg animate-fade-in shadow-md shadow-black/20',
+        'group relative overflow-hidden rounded-xl animate-fade-in shadow-md shadow-black/20 bg-muted/30',
         className,
       )}
     >
