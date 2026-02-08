@@ -106,7 +106,7 @@ export function BuyCreditsModal() {
               {creditPacks.map((pack) => (
                 <div
                   key={pack.packId}
-                  className={`relative p-3 rounded-lg border-2 text-center transition-all hover:shadow-sm ${
+                  className={`relative p-4 rounded-xl border-2 text-center transition-all hover:shadow-sm ${
                     pack.popular
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/50'
