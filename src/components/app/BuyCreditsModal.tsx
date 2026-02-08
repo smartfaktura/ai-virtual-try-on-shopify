@@ -62,12 +62,12 @@ export function BuyCreditsModal() {
         </DialogHeader>
 
         {/* Compact balance bar */}
-        <div className="flex-shrink-0 p-3 rounded-lg bg-muted/50 border border-border">
-          <div className="flex items-center justify-between mb-2">
+        <div className="flex-shrink-0 p-5 rounded-xl bg-muted/50 border border-border">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Wallet className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xl font-bold">{balance}</span>
-              <span className="text-xs text-muted-foreground">credits</span>
+              <span className="text-3xl font-bold">{balance}</span>
+              <span className="text-sm text-muted-foreground">credits</span>
             </div>
             <Badge variant="secondary" className="text-[10px]">{planConfig.name}</Badge>
           </div>
