@@ -61,6 +61,11 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
         modelImageBase64 = await convertImageToBase64(params.modelImage);
       }
 
+      let sceneImageBase64: string | undefined;
+      if (params.sceneImage) {
+        sceneImageBase64 = await convertImageToBase64(params.sceneImage);
+      }
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-freestyle`, {
         method: 'POST',
         headers: {
