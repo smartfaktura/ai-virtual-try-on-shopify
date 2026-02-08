@@ -353,6 +353,7 @@ export default function BrandProfileWizard() {
                     <button
                       type="button"
                       key={cf.value}
+                      onClick={() => update('color_temperature', cf.value)}
                       className={cn(
                         'text-left rounded-xl border overflow-hidden transition-all',
                         form.color_temperature === cf.value
