@@ -22,6 +22,7 @@ function ImageCard({
   onExpand,
   onDelete,
   className,
+  natural,
 }: {
   img: GalleryImage;
   idx: number;
@@ -29,7 +30,50 @@ function ImageCard({
   onExpand: (index: number) => void;
   onDelete?: (imageId: string) => void;
   className?: string;
+  natural?: boolean;
 }) {
+  // "natural" mode: image sizes itself, no container background
+  if (natural) {
+    return (
+      <div className={cn('group relative inline-block animate-fade-in', className)}>
+        <img
+          src={img.url}
+          alt={`Generated ${idx + 1}`}
+          className="w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-transform duration-500 group-hover:scale-[1.02]"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <p className="absolute bottom-12 left-3 right-3 text-[11px] text-white/70 line-clamp-2 leading-snug opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {img.prompt}
+        </p>
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+          {onDelete && (
+            <button
+              onClick={() => onDelete(img.id)}
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500/40 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => onDownload(img.url, idx)}
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onExpand(idx)}
+              className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            >
+              <Expand className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -40,17 +84,13 @@ function ImageCard({
       <img
         src={img.url}
         alt={`Generated ${idx + 1}`}
-        className="w-full h-auto max-h-[inherit] object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+        className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
         loading="lazy"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-      {/* Prompt caption */}
       <p className="absolute bottom-12 left-3 right-3 text-[11px] text-white/70 line-clamp-2 leading-snug opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         {img.prompt}
       </p>
-
-      {/* Hover actions */}
       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
         {onDelete && (
           <button
