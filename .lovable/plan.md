@@ -1,61 +1,78 @@
 
-# Upgrade-Focused Credit & Plan Experience in /app
+
+# Make Credits and Plan Dynamic and Upgrade-Focused
+
+## The Problem
+
+The current user (info@tsimkus.lt / Tomas Simkus) is on the **free plan** with **180 credits**, but the app hardcodes "Growth Plan" everywhere with a 2,500 credit quota. This is misleading and breaks the upgrade funnel.
+
+The sidebar shows "GROWTH PLAN" and "/ 2,500" when the user actually has no paid plan at all.
 
 ## What Changes
 
-### 1. Redesigned Sidebar Credit Indicator with "Upgrade" CTA
+### 1. CreditContext reads the plan from the database
 
-The current sidebar credit area only shows the balance and a "+" button. We will enhance it to also show:
-- The current plan name (e.g., "Growth Plan")
-- A prominent "Upgrade" button that links to `/app/settings` (plans section)
-- The progress bar scaled to the plan's actual credit quota (e.g., out of 2,500 for Growth)
+The `CreditContext` currently only fetches `credits_balance`. It will also fetch the `plan` field from the profiles table and expose it, along with a computed plan config (name, monthly quota, next upgrade tier).
 
-When the sidebar is collapsed, a small upgrade icon will remain visible.
+A plan configuration map will translate the database `plan` value into display info:
 
-### 2. Redesigned Buy Credits Modal (on "+" click)
+```text
+free    -> "Free"     / 20 credits (signup bonus)  / upgrade to Starter
+starter -> "Starter"  / 1,000 credits/month        / upgrade to Growth
+growth  -> "Growth"   / 2,500 credits/month        / upgrade to Pro
+pro     -> "Pro"      / 6,000 credits/month        / upgrade to Enterprise
+```
 
-The current modal is generic and doesn't reflect the platform's context well. The new modal will have two tabs:
+### 2. CreditIndicator shows real plan and smart upgrade CTA
 
-**Tab 1 - "Top Up" (default):**
-- Current balance with progress bar showing usage against plan quota
-- Current plan badge (e.g., "Growth - 2,500 credits/month")
-- The 3 credit packs with better context: show how many standard images each pack equals (e.g., "500 credits = ~125 images")
-- "after purchase" total
+The sidebar credit widget will:
+- Display the actual plan name (e.g., "Free Plan" not "Growth Plan")
+- Show the correct credit quota for the plan
+- For free users: show a more prominent upgrade nudge
+- Progress bar scales to actual plan quota
 
-**Tab 2 - "Upgrade Plan":**
-- Show the next tier up from the current plan (e.g., if on Growth, show Pro)
-- Highlight the savings vs buying top-ups: "Pro gives you 6,000 credits/month for $179 vs buying 6,000 credits as top-ups for $234"
-- Quick upgrade button
-- Link to full plan comparison on Settings page
+### 3. BuyCreditsModal becomes plan-aware
 
-### 3. Current Plan Context in Key Areas
+The "Credits and Plan" modal will:
+- Show the actual current plan in the balance header
+- **Top Up tab**: Same credit packs but with correct "after" totals
+- **Upgrade Plan tab**: Show the recommended next plan based on current plan (not always Pro). For free users, highlight Growth (most popular). Show a side-by-side current vs. next plan comparison with clear benefits and savings
 
-- The `CreditIndicator` component in the sidebar will display the plan name and an upgrade arrow
-- The `BuyCreditsModal` will show which plan the user is on and what they unlock by upgrading
+### 4. Settings page uses dynamic plan
+
+The Settings page also hardcodes `currentPlanId = 'growth'` and `creditsTotal = 2500`. These will read from the CreditContext instead.
 
 ---
 
 ## Technical Details
 
+### File: `src/contexts/CreditContext.tsx`
+- Add `plan` state (string, default `'free'`)
+- Fetch `plan` alongside `credits_balance` from profiles table: `.select('credits_balance, plan')`
+- Add a `PLAN_CONFIG` map with quota, display name, and next plan ID for each tier
+- Export `plan`, `planConfig` (name, monthlyCredits, nextPlanId) in the context value
+
 ### File: `src/components/app/CreditIndicator.tsx`
-- Add current plan name display (hardcoded as "Growth" for now, matching Settings page)
-- Add "Upgrade" button that navigates to `/app/settings#plans`
-- Update progress bar to scale against plan credits (2,500) instead of hardcoded 300
-- In collapsed state, show a small crown/arrow-up icon that links to settings
+- Remove hardcoded `PLAN_NAME = 'Growth'` and `PLAN_CREDITS = 2500`
+- Read `plan` and `planConfig` from `useCredits()`
+- Display dynamic plan name and credits quota
+- For free plan users, make the "Upgrade" CTA more prominent (slightly larger, with a subtle highlight)
 
 ### File: `src/components/app/BuyCreditsModal.tsx`
-Full redesign:
-- Add Tabs component with "Top Up" and "Upgrade Plan" tabs
-- **Top Up tab**: Keep credit packs but add context like "~125 images" per pack, show plan name and usage bar
-- **Upgrade Plan tab**: Show current plan vs next plan comparison card. For Growth users, show Pro plan benefits. Highlight cost savings of upgrading vs top-ups. Include "Upgrade Now" button and "Compare all plans" link to settings
-- Update the bottom CTA from generic "Need more credits regularly?" to show a calculated savings message
+- Remove hardcoded `CURRENT_PLAN_ID = 'growth'` and `PLAN_CREDITS = 2500`
+- Read plan info from `useCredits()`
+- Dynamically determine `currentPlan` and `nextPlan` from `pricingPlans` based on the user's actual plan
+- For free users on the Upgrade tab: show Growth as "Recommended" (it's the most popular) with Starter as a smaller alternative
+- For Starter users: recommend Growth
+- For Growth users: recommend Pro
+- Update the balance header to show the real plan name and quota
+- Add a "Your current plan" vs "Recommended" comparison layout in the Upgrade tab
 
-### File: `src/components/app/NoCreditsModal.tsx`
-- Update the "Upgrade to Growth Plan" text to show dynamic plan info
-- Change "500 credits/month" to correct "2,500 credits/month" for Growth
+### File: `src/pages/Settings.tsx`
+- Remove hardcoded `currentPlanId = 'growth'` and `creditsTotal = 2500`
+- Read plan info from `useCredits()` context
+- The "Current Plan" card will show the actual plan badge and credit quota
 
-### File: `src/components/app/AppShell.tsx`
-- Import `useNavigate` is already available
-- Pass navigation capability to `CreditIndicator` for the upgrade button
+### File: `src/data/mockData.ts`
+- Add a `free` plan entry to `pricingPlans` array so it can be referenced (with 0 monthlyPrice and 20 credits)
 
-No new dependencies needed. All changes use existing UI components (Tabs, Badge, Button, Progress, Separator).
