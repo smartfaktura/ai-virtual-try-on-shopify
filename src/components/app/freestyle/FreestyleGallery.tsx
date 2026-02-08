@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Expand, Trash2, Wand2, Copy } from 'lucide-react';
+import { Download, Expand, Trash2, Wand2, Copy, ShieldAlert, X, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
@@ -23,6 +23,12 @@ const STATUS_MESSAGES = [
   'Adding finishing touches…',
 ];
 
+export interface BlockedEntry {
+  id: string;
+  prompt: string;
+  reason: string;
+}
+
 interface GalleryImage {
   id: string;
   url: string;
@@ -38,6 +44,9 @@ interface FreestyleGalleryProps {
   onCopyPrompt?: (prompt: string) => void;
   generatingCount?: number;
   generatingProgress?: number;
+  blockedEntries?: BlockedEntry[];
+  onDismissBlocked?: (id: string) => void;
+  onEditBlockedPrompt?: (prompt: string) => void;
 }
 
 function GeneratingCard({ progress = 0, className }: { progress?: number; className?: string }) {
