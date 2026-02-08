@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
