@@ -22,6 +22,7 @@ import Products from '@/pages/Products';
 import CreativeDrops from '@/pages/CreativeDrops';
 import MobileUpload from '@/pages/MobileUpload';
 import VideoGenerate from '@/pages/VideoGenerate';
+import Freestyle from '@/pages/Freestyle';
 
 const queryClient = new QueryClient();
 
