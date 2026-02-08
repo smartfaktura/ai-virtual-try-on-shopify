@@ -14,11 +14,14 @@ import { ModelSelectorChip } from './ModelSelectorChip';
 import { SceneSelectorChip } from './SceneSelectorChip';
 import { ProductSelectorChip } from './ProductSelectorChip';
 import { StylePresetChips } from './StylePresetChips';
+import { BrandProfileChip } from './BrandProfileChip';
+import { NegativesChip } from './NegativesChip';
 import type { ModelProfile } from '@/types';
 import type { TryOnPose } from '@/types';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
+type BrandProfile = Tables<'brand_profiles'>;
 
 export type FreestyleAspectRatio = '1:1' | '3:4' | '4:5' | '16:9';
 
