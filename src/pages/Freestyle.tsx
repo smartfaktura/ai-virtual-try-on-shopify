@@ -147,7 +147,25 @@ export default function Freestyle() {
         <div className="flex-1 h-full flex flex-col items-center justify-center">
           <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
         </div>
+      ) : hasImages && savedImages.length <= 3 ? (
+        /* Few images: scrollable layout, prompt bar NOT floating */
+        <div className="h-full overflow-y-auto">
+          <div className="flex flex-col items-center justify-center min-h-full px-4 sm:px-6 py-8">
+            <div className="w-full flex-1 flex items-center justify-center mb-6">
+              <FreestyleGallery
+                images={galleryImages}
+                onDownload={handleDownload}
+                onExpand={openLightbox}
+                onDelete={handleDelete}
+              />
+            </div>
+            <div className="w-full max-w-3xl">
+              <FreestylePromptPanel {...panelProps} />
+            </div>
+          </div>
+        </div>
       ) : hasImages ? (
+        /* Many images: masonry with floating prompt bar */
         <>
           <div className="h-full overflow-y-auto pb-52">
             <FreestyleGallery
@@ -179,7 +197,7 @@ export default function Freestyle() {
           <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed text-center mb-8">
             Describe what you want to create, attach a reference, pick a model or scene.
           </p>
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-3xl">
             <FreestylePromptPanel {...panelProps} />
           </div>
         </div>
