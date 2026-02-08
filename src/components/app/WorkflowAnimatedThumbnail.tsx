@@ -177,7 +177,7 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
       })}
 
       {/* Action overlay — icon hops in */}
-      {isActive && current.overlay === 'action' && !entering && (
+      {isActive && current.overlay === 'action' && animPhase === 'idle' && (
         <div className="absolute inset-0 z-10 bg-black/15 flex items-center justify-center">
           <div
             className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
