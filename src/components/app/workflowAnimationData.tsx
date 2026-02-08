@@ -22,10 +22,7 @@ import lifestyleProduct from '@/assets/products/candle-soy.jpg';
 import lifestyleScene from '@/assets/showcase/home-candle-scandi.jpg';
 import lifestyleResult from '@/assets/workflows/workflow-lifestyle.jpg';
 
-// Website Hero Set
-import heroProduct from '@/assets/products/faux-fur-jacket-1.jpg';
-import heroModel from '@/assets/models/model-female-athletic-european.jpg';
-import heroResult from '@/assets/workflows/workflow-website-hero.jpg';
+// Website Hero Set — uses HeroBannerThumbnail component directly
 
 // Ad Refresh Set
 import adProduct from '@/assets/products/leggings-black-1.jpg';
