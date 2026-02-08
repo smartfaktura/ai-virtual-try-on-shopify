@@ -243,6 +243,7 @@ export default function BrandProfileWizard() {
         {STEPS.map((label, i) => (
           <React.Fragment key={label}>
             <button
+              type="button"
               onClick={() => (i < step || canProceed) && setStep(i)}
               className="flex items-center gap-2 group"
             >
