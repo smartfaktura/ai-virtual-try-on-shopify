@@ -29,7 +29,8 @@ IMPORTANT PHOTOGRAPHY GUIDELINES:
 async function generateImage(
   prompt: string,
   images: Array<{ type: "image_url"; image_url: { url: string } }>,
-  apiKey: string
+  apiKey: string,
+  model: string
 ): Promise<string | null> {
   const maxRetries = 2;
 
