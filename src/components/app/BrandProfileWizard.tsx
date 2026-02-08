@@ -567,6 +567,7 @@ export default function BrandProfileWizard() {
           variant="ghost"
           onClick={() => step > 0 ? setStep(step - 1) : navigate('/app/brand-profiles')}
           className="gap-1.5"
+        >
           <ArrowLeft className="w-4 h-4" />
           {step > 0 ? 'Back' : 'Cancel'}
         </Button>
