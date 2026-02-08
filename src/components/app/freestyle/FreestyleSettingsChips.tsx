@@ -6,7 +6,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import avatarLuna from '@/assets/team/avatar-luna.jpg';
 import { ModelSelectorChip } from './ModelSelectorChip';
 import { SceneSelectorChip } from './SceneSelectorChip';
 import type { ModelProfile } from '@/types';
