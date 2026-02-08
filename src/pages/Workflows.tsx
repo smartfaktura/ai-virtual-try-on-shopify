@@ -49,24 +49,23 @@ export default function Workflows() {
 
   const workflowsMissingPreviews = workflows.filter(w => !w.preview_image_url);
 
-  const handleGeneratePreviews = async () => {
-    if (workflowsMissingPreviews.length === 0) {
-      toast.info('All workflows already have preview images.');
+  const runGeneration = async (targets: Workflow[], regenerate: boolean) => {
+    if (targets.length === 0) {
+      toast.info('No workflows to generate.');
       return;
     }
 
-    const ids = new Set(workflowsMissingPreviews.map(w => w.id));
+    const ids = new Set(targets.map(w => w.id));
     setGeneratingIds(ids);
-    toast.info(`Generating ${ids.size} preview image${ids.size > 1 ? 's' : ''}…`);
+    toast.info(`Generating ${ids.size} preview image${ids.size > 1 ? 's' : ''} with premium model…`);
 
     let successCount = 0;
     let failCount = 0;
 
-    // Generate one at a time to avoid rate limits
-    for (const workflow of workflowsMissingPreviews) {
+    for (const workflow of targets) {
       try {
         const { data, error } = await supabase.functions.invoke('generate-workflow-preview', {
-          body: { workflow_id: workflow.id },
+          body: { workflow_id: workflow.id, regenerate },
         });
 
         if (error) throw error;
@@ -79,7 +78,6 @@ export default function Workflows() {
           return next;
         });
 
-        // Refresh after each success so the user sees images appear
         queryClient.invalidateQueries({ queryKey: ['workflows'] });
       } catch (err: any) {
         console.error(`Failed for ${workflow.name}:`, err);
@@ -97,6 +95,9 @@ export default function Workflows() {
     if (successCount > 0) toast.success(`Generated ${successCount} preview image${successCount > 1 ? 's' : ''}.`);
     if (failCount > 0) toast.error(`${failCount} image${failCount > 1 ? 's' : ''} failed to generate.`);
   };
+
+  const handleGenerateMissing = () => runGeneration(workflowsMissingPreviews, false);
+  const handleRegenerateAll = () => runGeneration(workflows, true);
 
   const isAnyGenerating = generatingIds.size > 0;
 
