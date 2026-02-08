@@ -435,6 +435,7 @@ export type Database = {
           plan: string
           product_categories: string[]
           referral_source: string | null
+          settings: Json | null
           updated_at: string
           user_id: string
         }
@@ -452,6 +453,7 @@ export type Database = {
           plan?: string
           product_categories?: string[]
           referral_source?: string | null
+          settings?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -469,6 +471,7 @@ export type Database = {
           plan?: string
           product_categories?: string[]
           referral_source?: string | null
+          settings?: Json | null
           updated_at?: string
           user_id?: string
         }
