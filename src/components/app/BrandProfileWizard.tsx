@@ -224,6 +224,7 @@ export default function BrandProfileWizard() {
     <form onSubmit={handleFormSubmit} className="max-w-2xl mx-auto py-8 px-4 space-y-6">
       {/* Back button */}
       <button
+        type="button"
         onClick={() => navigate('/app/brand-profiles')}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
@@ -242,6 +243,7 @@ export default function BrandProfileWizard() {
         {STEPS.map((label, i) => (
           <React.Fragment key={label}>
             <button
+              type="button"
               onClick={() => (i < step || canProceed) && setStep(i)}
               className="flex items-center gap-2 group"
             >
@@ -326,6 +328,7 @@ export default function BrandProfileWizard() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {MOOD_OPTIONS.map(mood => (
                     <button
+                      type="button"
                       key={mood.value}
                       onClick={() => update('tone', mood.value)}
                       className={cn(
@@ -348,6 +351,7 @@ export default function BrandProfileWizard() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                   {COLOR_FEEL_OPTIONS.map(cf => (
                     <button
+                      type="button"
                       key={cf.value}
                       onClick={() => update('color_temperature', cf.value)}
                       className={cn(
@@ -377,6 +381,7 @@ export default function BrandProfileWizard() {
                 <div className="flex items-center gap-2 flex-wrap">
                   {form.color_palette.map((color, i) => (
                     <button
+                      type="button"
                       key={i}
                       onClick={() => removeColor(i)}
                       className="group relative w-8 h-8 rounded-lg border border-border flex-shrink-0 transition-transform hover:scale-105"
@@ -396,7 +401,7 @@ export default function BrandProfileWizard() {
                       className="w-24 h-8 text-xs bg-background"
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addColor(); } }}
                     />
-                    <Button variant="ghost" size="sm" className="h-8 px-2" onClick={addColor}>
+                    <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onClick={addColor}>
                       <Plus className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -409,6 +414,7 @@ export default function BrandProfileWizard() {
                 <div className="flex flex-wrap gap-1.5">
                   {KEYWORD_SUGGESTIONS.map(kw => (
                     <button
+                      type="button"
                       key={kw}
                       onClick={() => toggleChip('brand_keywords', kw)}
                       className={cn(
@@ -435,6 +441,7 @@ export default function BrandProfileWizard() {
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addCustomChip('brand_keywords', customKeyword, setCustomKeyword); } }}
                   />
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="h-8 px-2"
@@ -472,6 +479,7 @@ export default function BrandProfileWizard() {
                 <div className="flex flex-wrap gap-1.5">
                   {DO_NOT_SUGGESTIONS.map(rule => (
                     <button
+                      type="button"
                       key={rule}
                       onClick={() => toggleChip('do_not_rules', rule)}
                       className={cn(
@@ -498,6 +506,7 @@ export default function BrandProfileWizard() {
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addCustomChip('do_not_rules', customRule, setCustomRule); } }}
                   />
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="h-8 px-2"
@@ -525,7 +534,7 @@ export default function BrandProfileWizard() {
               {/* Prompt preview */}
               <Collapsible open={reviewOpen} onOpenChange={setReviewOpen}>
                 <CollapsibleTrigger asChild>
-                  <button className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-sm hover:bg-primary/10 transition-colors">
+                  <button type="button" className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-sm hover:bg-primary/10 transition-colors">
                     <span className="flex items-center gap-2 text-xs font-medium">
                       <Eye className="w-3.5 h-3.5" />
                       What the AI will see
@@ -559,6 +568,7 @@ export default function BrandProfileWizard() {
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <Button
+          type="button"
           variant="ghost"
           onClick={() => step > 0 ? setStep(step - 1) : navigate('/app/brand-profiles')}
           className="gap-1.5"
