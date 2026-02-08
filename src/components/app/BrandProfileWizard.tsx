@@ -224,6 +224,7 @@ export default function BrandProfileWizard() {
     <form onSubmit={handleFormSubmit} className="max-w-2xl mx-auto py-8 px-4 space-y-6">
       {/* Back button */}
       <button
+        type="button"
         onClick={() => navigate('/app/brand-profiles')}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
