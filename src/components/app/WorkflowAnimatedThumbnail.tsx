@@ -86,35 +86,39 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
         </div>
       )}
 
-      {/* Step label */}
-      <div className="absolute top-3 left-3 z-20">
-        <div
-          className="flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full"
-          key={activeStep}
-        >
-          {current.icon}
-          <span className="text-[10px] font-medium animate-fade-in">{current.label}</span>
-        </div>
-      </div>
-
-      {/* Progress dots */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-        {steps.map((_, i) => (
+      {/* Step label — only on hover */}
+      {isActive && (
+        <div className="absolute top-3 left-3 z-20 animate-fade-in">
           <div
-            key={i}
-            className="relative h-1 rounded-full overflow-hidden transition-all duration-300"
-            style={{ width: i === activeStep ? 20 : 6, backgroundColor: 'rgba(255,255,255,0.4)' }}
+            className="flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full"
+            key={activeStep}
           >
-            {i === activeStep && (
-              <div
-                className="absolute inset-0 bg-white rounded-full"
-                style={{ animation: `wf-progress ${stepDuration}ms linear` }}
-              />
-            )}
-            {i < activeStep && <div className="absolute inset-0 bg-white rounded-full" />}
+            {current.icon}
+            <span className="text-[10px] font-medium animate-fade-in">{current.label}</span>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Progress dots — only on hover */}
+      {isActive && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 animate-fade-in">
+          {steps.map((_, i) => (
+            <div
+              key={i}
+              className="relative h-1 rounded-full overflow-hidden transition-all duration-300"
+              style={{ width: i === activeStep ? 20 : 6, backgroundColor: 'rgba(255,255,255,0.4)' }}
+            >
+              {i === activeStep && (
+                <div
+                  className="absolute inset-0 bg-white rounded-full"
+                  style={{ animation: `wf-progress ${stepDuration}ms linear` }}
+                />
+              )}
+              {i < activeStep && <div className="absolute inset-0 bg-white rounded-full" />}
+            </div>
+          ))}
+        </div>
+      )}
 
       <style>{`
         @keyframes wf-progress {
