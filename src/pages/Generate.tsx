@@ -765,7 +765,8 @@ export default function Generate() {
         )}
 
         {/* Template Selection */}
-        {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && (selectedProduct || scratchUpload) && (
+        {/* Template Selection — only for non-workflow or workflows without config */}
+        {!hasWorkflowConfig && (currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && (selectedProduct || scratchUpload) && (
           <>
             {/* Selected Product Card */}
             <Card><CardContent className="p-5 space-y-3">
