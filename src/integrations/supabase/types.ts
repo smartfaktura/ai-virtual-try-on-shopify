@@ -515,6 +515,7 @@ export type Database = {
           created_at: string
           default_image_count: number
           description: string
+          generation_config: Json | null
           id: string
           is_system: boolean
           name: string
@@ -529,6 +530,7 @@ export type Database = {
           created_at?: string
           default_image_count?: number
           description?: string
+          generation_config?: Json | null
           id?: string
           is_system?: boolean
           name: string
@@ -543,6 +545,7 @@ export type Database = {
           created_at?: string
           default_image_count?: number
           description?: string
+          generation_config?: Json | null
           id?: string
           is_system?: boolean
           name?: string
