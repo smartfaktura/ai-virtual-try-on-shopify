@@ -1,70 +1,132 @@
 
 
-# Add AI Studio Team Touchpoints to Brand Profile Wizard
+# Improve Products Page: Filters, Views, and Multi-Image Support
 
 ## Overview
 
-Add contextual, encouraging messages from relevant AI Studio Team members at each step of the Brand Profile wizard. This creates a sense that real specialists are guiding the user through the process and will personally take care of their brand identity.
+Three major improvements to the Products experience:
+1. Enhanced Products page with filters and grid/list view toggle
+2. Multi-image support for products (upload multiple, set primary)
+3. Store import updated to pull all product images
 
-## Design
+---
 
-Each wizard step will show a small "team tip" banner at the top of the step content, featuring:
-- A circular avatar of the relevant team specialist (living video avatar)
-- The specialist's name and role
-- A short, reassuring message explaining how they'll use this information
+## 1. Products Page Redesign
 
-The banner will be compact (not intrusive) -- a subtle card with a soft accent background, sitting right below the step indicator and above the form fields.
+### Filter Bar
+Add a horizontal filter bar below the search with:
+- **Product Type** filter: dropdown showing all unique types from user's products (e.g., Candle Sand, Serum, T-Shirt)
+- **Sort by**: Newest first, Oldest first, Name A-Z, Name Z-A
+- Active filters shown as dismissible badges
 
-## Team Member Mapping Per Step
+### View Toggle (Grid / List)
+- **Grid view** (current): 5-column card layout with thumbnails
+- **List view** (new): Full-width rows showing:
+  - Thumbnail (64x64)
+  - Product name (full, not truncated)
+  - Product type badge
+  - Description (truncated to 1 line)
+  - Number of images (e.g., "3 photos")
+  - Date added (e.g., "Feb 8, 2026")
+  - Edit / Delete actions on the right
 
-| Step | Specialist | Why |
+Toggle icon buttons (LayoutGrid / List) in the top-right area next to "Add Product".
+
+---
+
+## 2. Multi-Image Support
+
+### Database Change
+Create a new `product_images` table:
+
+| Column | Type | Notes |
 |---|---|---|
-| **Step 1: Your Brand** | **Sienna** - Brand Consistency Manager | She ensures every visual matches your brand DNA. Perfect for the identity/description step. |
-| **Step 2: Visual Style** | **Sophia** - Product Photographer + **Luna** - Retouch Specialist | Sophia handles lighting/composition, Luna handles color correction. Both are relevant to visual style choices. |
-| **Step 3: Avoid These** | **Kenji** - Campaign Art Director | He designs cohesive campaigns. Knowing what to avoid helps him keep everything on-brand. |
+| id | uuid | Primary key |
+| product_id | uuid | Foreign key to user_products |
+| user_id | uuid | For RLS |
+| image_url | text | Signed URL |
+| storage_path | text | Path in product-uploads bucket |
+| position | integer | Order (0 = primary) |
+| created_at | timestamptz | Default now() |
 
-## Messages
+RLS policies: users can only CRUD their own images. The existing `user_products.image_url` column will continue to hold the primary image URL for backward compatibility and fast queries.
 
-- **Step 1 (Sienna):** "I'll memorize your brand identity and make sure every visual feels unmistakably yours."
-- **Step 2 (Sophia + Luna):** "We'll use your style preferences to dial in the perfect lighting, colors, and mood for every shoot."
-- **Step 3 (Kenji):** "Your exclusions become my guardrails. I'll make sure nothing off-brand ever makes it through."
+### Manual Upload Tab Changes
+- Allow uploading multiple images (up to 6)
+- Show a horizontal scrollable row of image previews
+- First uploaded image is automatically the primary
+- Users can click a "star" icon on any image to set it as primary
+- Drag-and-drop or click to add more images
 
-## UI Component
+### Products Page: Image Count
+- Show a small badge on product cards (e.g., "3") if the product has more than 1 image
+- In list view, show "X photos" text
 
-A new `TeamStepTip` inline component inside `BrandProfileWizard.tsx`:
+### Product Detail / Edit
+- When editing a product, show all images in a mini gallery
+- Allow reordering, deleting individual images, or adding more
+- Click the star/crown icon to change the primary image
+
+---
+
+## 3. Store Import: Extract All Images
+
+### Edge Function Update
+Update the AI prompt in `import-product/index.ts` to extract ALL product images (not just the primary). The response format changes to include an `images` array:
 
 ```text
-+----------------------------------------------------------+
-|  [avatar] [avatar]  Sophia & Luna                        |
-|  Product Photographer + Retouch Specialist               |
-|  "We'll use your style preferences to dial in the        |
-|   perfect lighting, colors, and mood for every shoot."   |
-+----------------------------------------------------------+
+- "image_urls": array of all product image URLs (absolute)
 ```
 
-- Rounded card with `bg-primary/5 border-primary/10` styling
-- Avatar(s) displayed as small circular images (32x32px)
-- Subtle, not distracting -- blends with the wizard's existing aesthetic
-- On steps with 2 specialists, avatars are stacked/overlapping slightly
+After extraction, download and upload ALL images to the product-uploads bucket, then insert rows into `product_images` for each.
+
+---
 
 ## Technical Details
 
-### File Modified: `src/components/app/BrandProfileWizard.tsx`
+### Files Created
 
-1. **Add imports** for the team avatar images at the top of the file:
-   - `avatarSienna`, `avatarSophia`, `avatarLuna`, `avatarKenji`
+**Migration SQL** (via migration tool)
+- Create `product_images` table with RLS policies
+- Add index on `product_id` and `user_id`
 
-2. **Define a `STEP_TEAM_TIPS` array** containing the team tip configuration for each step:
-   - Each entry has: `avatars` (array of image paths), `names` (string), `roles` (string), `message` (string)
+### Files Modified
 
-3. **Add a `TeamStepTip` component** (inline, not a separate file) that renders the tip banner:
-   - Takes the current step index and renders the corresponding tip
-   - Displays overlapping avatars for multi-specialist steps
-   - Shows the personalized message in italic quotes
+**`src/pages/Products.tsx`**
+- Add state for `viewMode` ('grid' | 'list'), `typeFilter`, and `sortBy`
+- Add a query to fetch product image counts from `product_images`
+- Add filter bar component with product type dropdown and sort selector
+- Add view toggle buttons (LayoutGrid / List icons)
+- Add list view rendering with full product info rows
+- Update grid view cards to show image count badge
 
-4. **Insert the `TeamStepTip`** inside `<CardContent>` at the very top, before the step-specific form content:
-   - Positioned right after the `<CardContent className="p-6 space-y-6">` opening
-   - Renders before the `{step === 0 && ...}` conditional blocks
+**`src/components/app/ManualProductTab.tsx`**
+- Change from single file state to `files: File[]` array (max 6)
+- Show horizontal preview strip with star (primary) and X (remove) buttons
+- Upload all files to storage, insert into `product_images` table
+- Set the first image as `image_url` on the `user_products` record
 
-5. **Add a final reassurance message** at the save step: When the user is on Step 3, add a small footer note below the navigation buttons saying something like "Your entire studio team will apply this profile to every generation."
+**`src/components/app/AddProductModal.tsx`**
+- Widen the modal slightly to accommodate the multi-image preview strip
+
+**`supabase/functions/import-product/index.ts`**
+- Update AI prompt to extract `image_urls` array (all product images)
+- Download and upload all images (up to 6) to storage
+- Return the full array in the response
+
+**`src/components/app/StoreImportTab.tsx`**
+- Handle the new `image_urls` array from the import response
+- Show all extracted images in the preview
+- Insert all images into `product_images` on save
+
+**`src/components/app/freestyle/ProductSelectorChip.tsx`**
+- No changes needed -- it already uses `image_url` (primary) which stays the same
+
+### New Component
+
+**`src/components/app/ProductImageGallery.tsx`**
+- Reusable mini gallery for showing/managing multiple product images
+- Used in both the ManualProductTab (during upload) and in a future product edit view
+- Shows images in a horizontal strip with star (set primary) and X (delete) controls
+- "Add more" button at the end
 
