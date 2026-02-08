@@ -79,13 +79,23 @@ function polishUserPrompt(
   modelContext?: string
 ): string {
   const layers: string[] = [];
+  const isSelfie = detectSelfieIntent(rawPrompt);
 
-  layers.push(`Professional photography: ${rawPrompt}`);
-
-  // Base quality layer (always)
-  layers.push(
-    "Ultra high resolution, sharp focus, natural lighting, commercial-grade color accuracy."
-  );
+  if (isSelfie) {
+    layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
+    layers.push(
+      "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
+    );
+    // Selfie composition layer
+    layers.push(
+      "SELFIE COMPOSITION: Front-facing smartphone camera perspective. Slight high angle (camera held slightly above eye level). Arm-length or close-up distance from subject. Soft natural smartphone-style bokeh in background — NOT studio strobe bokeh. Authentic, candid facial expression — relaxed, genuine, not model-posed. Natural selfie framing with the subject centered or slightly off-center."
+    );
+  } else {
+    layers.push(`Professional photography: ${rawPrompt}`);
+    layers.push(
+      "Ultra high resolution, sharp focus, natural lighting, commercial-grade color accuracy."
+    );
+  }
 
   // Brand profile layer
   if (brandProfile) {
