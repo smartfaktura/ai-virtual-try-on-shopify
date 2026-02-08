@@ -13,6 +13,7 @@ const navLinks = [
 
 export function LandingNav() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
