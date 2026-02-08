@@ -1,48 +1,24 @@
 
 
-# Fix Buy Credits Modal: Layout, Math, and CRO Improvements
+# Fix Add Product Modal Horizontal Overflow
 
-## Problems Identified
+## Problem
 
-1. **Broken savings math**: The savings calculation uses 2.6 cents/credit as the top-up comparison rate, but 2,500 credits at that rate = $65, which is LESS than the $79 Growth plan. This shows "Save $-14/month" -- a negative number that actively discourages upgrading.
+The "Add Product" modal content overflows to the right, clipping the "Import" button and "Save Product" button. This happens because:
 
-2. **Progress bar overflow**: User has 180 credits on a Free plan (20 credits quota). The math `180/20 = 900%` caps at 100%, making the bar look completely full. This is confusing -- it looks like they've used everything when they actually have plenty.
-
-3. **Modal too tall / overflows**: The Upgrade tab has too much vertical content (plan card + savings box + 5 features + button + alt plan + separator + compare link), causing it to overflow the viewport.
-
-4. **Weak CRO on Upgrade tab**: For a free user, the upgrade pitch buries the value proposition under a broken savings box and generic feature list.
-
----
+1. The dialog base styles use `w-full max-w-lg` but don't include `overflow-hidden`
+2. The AddProductModal overrides width to `sm:max-w-[580px]` but the inner flex layout (URL input + Import button) can push beyond the container width
+3. Long URL text in the input field expands the flex container beyond the dialog boundary
 
 ## Changes
 
-### File: `src/components/app/BuyCreditsModal.tsx` -- Full Rewrite
+### File: `src/components/app/AddProductModal.tsx`
+- Add `overflow-hidden` to the DialogContent className to prevent any horizontal overflow at the container level
+- This ensures all child content (StoreImportTab, ManualProductTab, CsvImportTab, MobileUploadTab) respects the dialog's width boundary
 
-**Balance section (top)**:
-- Keep compact: plan badge, credit count, quota
-- Fix progress bar: for free users where balance exceeds monthlyCredits, show a green "bonus" bar with a label like "180 credits available" without the misleading ratio
-- When balance > monthlyCredits, show progress as 100% with a subtle "bonus credits" note
+### File: `src/components/app/StoreImportTab.tsx`
+- Add `min-w-0` to the flex container wrapping the URL input so that the input properly shrinks within the flex layout instead of pushing the "Import" button off-screen
+- Add `min-w-0` to the extracted product preview's text container (`flex-1 min-w-0` is already there -- confirmed)
+- Add `overflow-hidden` to the extracted product preview wrapper so long titles/descriptions don't push the "Discard" / "Save Product" buttons off-screen
 
-**Top Up tab**:
-- Keep the 3-column credit pack grid
-- Each pack shows: credits, image count, price, per-credit rate, buy button
-- Remove "after purchase" line to reduce clutter
-- Keep "Credits never expire" note
-
-**Upgrade Plan tab -- CRO-optimized**:
-- Remove the broken savings calculation entirely
-- Replace with a value-focused pitch: highlight **feature unlocks** (Virtual Try-On, Video, Bulk Generation) not cost comparisons
-- For free users: show Growth as the primary recommendation with a clear "What you unlock" section
-- Show Starter as a compact alternative below
-- Tighten spacing: reduce padding, use smaller text where appropriate
-- Add `max-h` with `overflow-y-auto` on the tab content to prevent modal overflow
-- Keep "Compare all plans in Settings" link at bottom
-
-**Dialog sizing**:
-- Add `max-h-[85vh]` and `overflow-y-auto` to the dialog content wrapper to handle any overflow gracefully
-
-### File: `src/components/app/CreditIndicator.tsx` -- Minor Fix
-
-- Fix progress bar logic: when `balance > monthlyCredits` (free user with bonus credits), cap the visual at 100% but use a different color tint to indicate "over quota" in a positive way
-- No structural changes needed, just the progress calculation
-
+These are minimal, targeted CSS fixes -- no structural or logic changes needed.
