@@ -53,7 +53,7 @@ function GeneratingCard({ progress = 0, className }: { progress?: number; classN
     <div
       className={cn(
         'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-5 px-8',
-        'border border-border/30',
+        'border border-border/30 min-h-[300px] w-full h-full',
         'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
         className,
       )}
