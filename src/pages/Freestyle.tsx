@@ -16,6 +16,7 @@ import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleS
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
+type BrandProfile = Tables<'brand_profiles'>;
 
 export default function Freestyle() {
   const [prompt, setPrompt] = useState('');
