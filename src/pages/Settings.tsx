@@ -109,7 +109,7 @@ export default function Settings() {
     setIsSaving(true);
     const { error } = await supabase
       .from('profiles')
-      .update({ settings: settings as unknown as Record<string, unknown> })
+      .update({ settings: JSON.parse(JSON.stringify(settings)) })
       .eq('user_id', user.id);
 
     if (error) {
