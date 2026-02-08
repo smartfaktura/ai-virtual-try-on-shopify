@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Upload, Target, Images, ArrowRight, Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,37 @@ import sceneUrban from '@/assets/hero/hero-output-urban.jpg';
 // Model + environment thumbs for step 2
 import modelThumb from '@/assets/hero/hero-model-blonde.jpg';
 import envThumb from '@/assets/hero/hero-scene-yoga.jpg';
+
+function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt: string; label: string; isResult?: boolean }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      className="flex flex-col items-center gap-1 relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div className={`w-14 h-14 rounded-lg overflow-hidden cursor-pointer ${isResult ? 'border-2 border-primary/50 ring-2 ring-primary/20' : 'border-2 border-primary'}`}>
+        <img src={src} alt={alt} className="w-full h-full object-cover object-top" />
+      </div>
+      <span className={`text-[9px] ${isResult ? 'text-primary font-medium' : 'text-muted-foreground'}`}>{label}</span>
+
+      {/* Hover popup */}
+      <div
+        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 pointer-events-none transition-all duration-200 ease-out"
+        style={{
+          opacity: hovered ? 1 : 0,
+          transform: `translateX(-50%) scale(${hovered ? 1 : 0.92})`,
+        }}
+      >
+        <div className="w-44 h-44 rounded-xl overflow-hidden border border-border bg-card shadow-xl">
+          <img src={src} alt={alt} className="w-full h-full object-cover object-top" />
+        </div>
+        <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-card border-r border-b border-border rotate-45" />
+      </div>
+    </div>
+  );
+}
 
 export function HowItWorks() {
   const navigate = useNavigate();
@@ -114,37 +146,13 @@ export function HowItWorks() {
                   <div className="p-3 border-b border-border">
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Your Selection</p>
                     <div className="flex items-center gap-2">
-                      {/* Product thumb */}
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-primary">
-                          <img src={cropTopProduct} alt="Product" className="w-full h-full object-cover object-top" />
-                        </div>
-                        <span className="text-[9px] text-muted-foreground">Product</span>
-                      </div>
+                      <HoverPreview src={cropTopProduct} alt="Product" label="Product" />
                       <Plus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      {/* Model thumb */}
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-primary">
-                          <img src={modelThumb} alt="Model" className="w-full h-full object-cover object-top" />
-                        </div>
-                        <span className="text-[9px] text-muted-foreground">Model</span>
-                      </div>
+                      <HoverPreview src={modelThumb} alt="Model" label="Model" />
                       <Plus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      {/* Environment thumb */}
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-primary">
-                          <img src={envThumb} alt="Environment" className="w-full h-full object-cover object-top" />
-                        </div>
-                        <span className="text-[9px] text-muted-foreground">Scene</span>
-                      </div>
+                      <HoverPreview src={envThumb} alt="Scene" label="Scene" />
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      {/* Result */}
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-primary/50 ring-2 ring-primary/20">
-                          <img src={outcomeImage} alt="Generated" className="w-full h-full object-cover object-top" />
-                        </div>
-                        <span className="text-[9px] text-primary font-medium">Result</span>
-                      </div>
+                      <HoverPreview src={outcomeImage} alt="Result" label="Result" isResult />
                     </div>
                   </div>
                   {/* Generate button */}
