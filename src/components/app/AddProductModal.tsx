@@ -30,7 +30,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[580px] max-h-[85vh] overflow-y-auto rounded-2xl p-0">
+      <DialogContent className="sm:max-w-[580px] max-h-[85vh] overflow-y-auto overflow-x-hidden rounded-2xl p-0">
         <div className="px-6 pt-6 pb-2">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold tracking-tight">
