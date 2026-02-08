@@ -1,123 +1,98 @@
 
-# Fix Edit Product: Show Existing Product Data Instead of Blank Form
 
-## Problem
+# Premium Edit Product Screen Redesign
 
-Clicking the "Edit" (pencil) button on any product opens the same blank "Add Product" modal. It should open with the product's existing data pre-filled so users can edit the name, type, description, and manage images.
+## Overview
 
-## Solution
+Redesign the Edit Product modal to feel clean, premium, and intuitive -- matching the luxury studio aesthetic of the app. The current version has raw, utilitarian styling with dashed borders, plain star icons, and cramped layout. The redesign will introduce clear visual hierarchy, refined spacing, and polished micro-interactions.
 
-Add an edit mode to the existing modal flow. When a user clicks "Edit", the modal opens pre-populated with the product's current data and existing images loaded from the database.
+## Current Issues
+
+- Dashed border around image area looks unfinished and draft-like
+- The "star = primary image" text label is raw/technical
+- Image thumbnails are small (80px) and cramped
+- Form labels are basic with no visual hierarchy
+- Description field uses a single-line Input instead of a Textarea
+- No visual separation between the image zone and the form fields
+- Cancel/Save buttons lack visual weight and polish
+- No subtle section headings to guide the user through the form
+
+## Design Direction
+
+Follow the existing studio aesthetic: clean surfaces, subtle shadows instead of borders, refined typography, generous spacing. Think Apple product edit screens -- minimal chrome, clear hierarchy, images as the hero.
+
+---
 
 ## Changes
 
-### 1. Products.tsx -- Track which product is being edited
+### 1. ProductImageGallery.tsx -- Larger, Polished Image Tiles
 
-- Add an `editingProduct` state (`UserProduct | null`) alongside the existing `modalOpen` state
-- When the Edit button is clicked, set `editingProduct` to that product and open the modal
-- When the Add button is clicked, set `editingProduct` to null and open the modal
-- Pass `editingProduct` to `AddProductModal`
-- On modal close, clear `editingProduct`
+- Increase thumbnail size from 80x80px (`w-20 h-20`) to 96x96px (`w-24 h-24`)
+- Replace dashed border with solid `border border-border` and add subtle shadow on the selected/primary image
+- Replace the plain Star icon with a filled crown/star that uses `bg-primary text-primary-foreground` when primary and a subtle glass overlay when not
+- Increase the X (remove) button size slightly for better touch targets
+- Style the "Add" button as a cleaner rounded square with a subtle background tint instead of dashed border
+- Add smooth hover scale transition on image tiles (`hover:scale-[1.02]`)
 
-### 2. AddProductModal.tsx -- Support edit mode
+### 2. ManualProductTab.tsx -- Refined Layout and Visual Hierarchy
 
-- Accept an optional `editingProduct` prop
-- Change the dialog title dynamically: "Edit Product" vs "Add Product"
-- When in edit mode, hide the tabs (Store URL, CSV, Mobile don't apply to editing) and show only the manual form
-- Pass the `editingProduct` data down to `ManualProductTab`
+**Image Section:**
+- Remove the dashed border wrapper around images entirely
+- Add a proper section heading: "Product Images" with a subtle counter badge (e.g., "1/6")
+- Add a helpful subline under the heading: "First image is used as the cover. Click the star to change."
+- Clean empty-state dropzone: use a solid `bg-muted/50` background with `rounded-xl` instead of dashed border; larger icon; cleaner typography
+- When images exist, just show the gallery directly on a clean background (no dashed wrapper)
 
-### 3. ManualProductTab.tsx -- Pre-fill fields and update instead of insert
+**Form Section:**
+- Add a visual separator (a thin `border-t` or `<Separator />`) between the image section and the form fields
+- Add a subtle section heading: "Product Details" above the fields
+- Use `Textarea` instead of `Input` for the description field (3 rows, resizable) so long descriptions are readable
+- Add `text-xs text-muted-foreground` helper text under the Product Name field: "This name will appear in your generations"
+- Refine label styling with slightly more weight (`font-medium`)
 
-- Accept an optional `editingProduct` prop
-- When `editingProduct` is provided:
-  - Pre-fill `title`, `productType`, and `description` from the product data
-  - Fetch existing images from the `product_images` table for that product and load them into the gallery (as existing images without `File` objects)
-  - Also include the product's primary `image_url` even if no rows exist in `product_images`
-- On save when editing:
-  - UPDATE the `user_products` row instead of INSERT
-  - Delete removed images from `product_images` (and optionally from storage)
-  - Insert newly added images into `product_images`
-  - Update the primary `image_url` on `user_products` if the primary selection changed
-- Change the submit button text from "Add Product" to "Save Changes"
+**Footer/Actions:**
+- Move buttons into a proper `DialogFooter`-like sticky bottom area with top border
+- Make Cancel button ghost (not outline) for less visual noise
+- Make Save/Add button slightly larger with proper padding
+- Add a subtle loading spinner animation (replace the Upload spin icon with a proper Loader2 spinner)
 
-### 4. ProductImageGallery.tsx -- Handle existing images (no File object)
+### 3. AddProductModal.tsx -- Modal Polish
 
-- The `ImageItem.file` field is already optional (`file?: File`), so existing images loaded from the database (which only have a URL, no File) are already supported
-- No changes needed to this component
+- Add a `DialogDescription` under the title for edit mode: "Update your product details and images"
+- For add mode: "Upload product images and fill in the details"
+- Slightly increase max width to `sm:max-w-[640px]` for breathing room
+- Add `rounded-2xl` to match the luxury card aesthetic
+
+---
 
 ## Technical Details
 
-### Products.tsx
+### File: `src/components/app/ProductImageGallery.tsx`
 
-```text
-// New state
-const [editingProduct, setEditingProduct] = useState<UserProduct | null>(null);
+- Change `w-20 h-20` to `w-24 h-24` on image tiles
+- Change `border-2` to `border` on tiles; add `shadow-sm` on primary tile
+- Add `transition-transform hover:scale-[1.02]` to image tiles
+- Change the "Add" button from dashed border to `bg-muted/50 hover:bg-muted border border-border`
+- Update star button styling: use `bg-primary/90 text-white shadow-sm` when primary, `bg-black/30 text-white/80 backdrop-blur-sm` when not
+- Update remove button: use `bg-black/30 text-white/80 backdrop-blur-sm hover:bg-destructive hover:text-white`
+- Increase icon sizes from `w-3 h-3` to `w-3.5 h-3.5`
 
-// Edit button handler (grid and list views)
-onClick={() => { setEditingProduct(product); setModalOpen(true); }}
+### File: `src/components/app/ManualProductTab.tsx`
 
-// Add button handler  
-onClick={() => { setEditingProduct(null); setModalOpen(true); }}
+- Import `Textarea` from `@/components/ui/textarea`
+- Import `Separator` from `@/components/ui/separator`
+- Import `Loader2` from `lucide-react` (replace Upload spin)
+- Restructure the template:
+  - Image section: heading with counter badge + subtext, then gallery or dropzone (no dashed wrapper when images exist)
+  - `<Separator />` between image and form sections
+  - Form section: "Product Details" heading, then fields
+  - Description field: switch from `<Input>` to `<Textarea rows={3}>`
+  - Add helper text under Product Name
+  - Footer: ghost Cancel, primary Save with `Loader2` spinner
 
-// Modal close handler
-onOpenChange={(open) => { setModalOpen(open); if (!open) setEditingProduct(null); }}
+### File: `src/components/app/AddProductModal.tsx`
 
-// Pass to modal
-<AddProductModal editingProduct={editingProduct} ... />
-```
+- Import `DialogDescription` from dialog component
+- Add description text below the title
+- Update modal max width to `sm:max-w-[640px]`
 
-### AddProductModal.tsx
-
-```text
-// New prop
-editingProduct?: UserProduct | null;
-
-// Dynamic title
-<DialogTitle>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
-
-// Conditional rendering
-if editingProduct:
-  - Render ManualProductTab directly (no Tabs wrapper)
-  - Pass editingProduct to ManualProductTab
-else:
-  - Render existing Tabs UI unchanged
-```
-
-### ManualProductTab.tsx
-
-```text
-// New prop  
-editingProduct?: UserProduct | null;
-
-// Pre-fill on mount (useEffect)
-useEffect(() => {
-  if (editingProduct) {
-    setTitle(editingProduct.title);
-    setProductType(editingProduct.product_type);
-    setDescription(editingProduct.description);
-    // Fetch existing images from product_images table
-    loadExistingImages(editingProduct.id);
-  }
-}, [editingProduct]);
-
-// New async function to load existing images
-async function loadExistingImages(productId) {
-  - Query product_images where product_id = productId, ordered by position
-  - If no rows found, fall back to creating a single image item from editingProduct.image_url
-  - Map rows to ImageItem[] with isPrimary = (position === 0)
-  - Set images state
-}
-
-// Save handler branches
-if editingProduct:
-  - Upload only NEW images (those with a File object)
-  - Delete removed images (compare initial IDs vs current IDs)
-  - UPDATE user_products row
-  - Update product_images table (delete removed, insert new, update positions)
-else:
-  - Existing INSERT logic (unchanged)
-```
-
-### UserProduct interface
-
-The `UserProduct` interface is already defined in `Products.tsx`. It will be passed through the components as-is -- no changes needed to the interface.
