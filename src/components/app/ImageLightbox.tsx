@@ -1,6 +1,6 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Download, RefreshCw } from 'lucide-react';
+import { useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ImageLightboxProps {
   images: string[];
@@ -30,97 +30,139 @@ export function ImageLightbox({
   const currentImage = images[currentIndex];
   const isSelected = selectedIndices.has(currentIndex);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     const newIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
     onNavigate(newIndex);
-  };
+  }, [currentIndex, images.length, onNavigate]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     const newIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
     onNavigate(newIndex);
-  };
+  }, [currentIndex, images.length, onNavigate]);
 
-  const modalTitle = productName 
-    ? `Image ${currentIndex + 1} of ${images.length} • ${productName}`
-    : `Image ${currentIndex + 1} of ${images.length}`;
+  // Global keyboard handler
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') handlePrevious();
+      else if (e.key === 'ArrowRight') handleNext();
+      else if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, handlePrevious, handleNext, onClose]);
+
+  if (!open) return null;
+
+  const counter = productName
+    ? `${currentIndex + 1} / ${images.length} · ${productName}`
+    : `${currentIndex + 1} / ${images.length}`;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{modalTitle}</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4" tabIndex={0} onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft') handlePrevious();
-          if (e.key === 'ArrowRight') handleNext();
-        }}>
-          {/* Main image with navigation */}
-          <div className="relative">
-            {images.length > 1 && (
-              <button
-                onClick={handlePrevious}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/80 border border-border flex items-center justify-center hover:bg-background transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-            )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
+        onClick={onClose}
+      />
 
-            <div className="flex items-center justify-center min-h-[400px] bg-muted rounded-lg overflow-hidden">
-              <img src={currentImage} alt={`Generated image ${currentIndex + 1}`} className="max-w-full max-h-[60vh] object-contain" />
-            </div>
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-5 right-5 z-50 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+      >
+        <X className="w-5 h-5" />
+      </button>
 
-            {images.length > 1 && (
-              <button
-                onClick={handleNext}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-background/80 border border-border flex items-center justify-center hover:bg-background transition-colors"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-
-          {/* Thumbnail strip */}
-          {images.length > 1 && (
-            <div className="flex gap-2 justify-center overflow-x-auto py-2">
-              {images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => onNavigate(idx)}
-                  className={`w-16 h-16 rounded-md overflow-hidden border-2 transition-all flex-shrink-0 ${
-                    idx === currentIndex
-                      ? 'border-primary ring-2 ring-primary/30'
-                      : 'border-border hover:border-muted-foreground'
-                  } ${selectedIndices.has(idx) ? 'ring-2 ring-primary' : ''}`}
-                >
-                  <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="flex items-center justify-center gap-2">
-            {onSelect && (
-              <Button variant={isSelected ? 'default' : 'outline'} onClick={() => onSelect(currentIndex)}>
-                {isSelected ? '✓ Selected' : 'Select for Download'}
-              </Button>
-            )}
-            {onDownload && (
-              <Button variant="outline" onClick={() => onDownload(currentIndex)}>
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
-            )}
-            {onRegenerate && (
-              <Button variant="ghost" onClick={() => onRegenerate(currentIndex)}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Regenerate
-              </Button>
-            )}
-          </div>
+      {/* Counter */}
+      {images.length > 1 && (
+        <div className="absolute top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white/70 text-sm font-medium tabular-nums">
+          {counter}
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+
+      {/* Navigation arrows */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={handlePrevious}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button
+            onClick={handleNext}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </>
+      )}
+
+      {/* Main image */}
+      <div className="relative z-10 flex flex-col items-center max-w-[90vw] max-h-[90vh] animate-in zoom-in-95 fade-in duration-200">
+        <img
+          src={currentImage}
+          alt={`Generated image ${currentIndex + 1}`}
+          className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl shadow-black/40"
+        />
+
+        {/* Bottom action bar */}
+        <div className="flex items-center gap-2 mt-5">
+          {onSelect && (
+            <button
+              onClick={() => onSelect(currentIndex)}
+              className={cn(
+                'flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium transition-colors backdrop-blur-md',
+                isSelected
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'
+              )}
+            >
+              {isSelected ? <Check className="w-4 h-4" /> : null}
+              {isSelected ? 'Selected' : 'Select'}
+            </button>
+          )}
+          {onDownload && (
+            <button
+              onClick={() => onDownload(currentIndex)}
+              className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
+          )}
+          {onRegenerate && (
+            <button
+              onClick={() => onRegenerate(currentIndex)}
+              className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Regenerate
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Thumbnail strip */}
+      {images.length > 1 && (
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-50 flex gap-2 px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md overflow-x-auto max-w-[80vw]">
+          {images.map((img, idx) => (
+            <button
+              key={idx}
+              onClick={() => onNavigate(idx)}
+              className={cn(
+                'w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-200 ring-2',
+                idx === currentIndex
+                  ? 'ring-white scale-105'
+                  : 'ring-transparent opacity-50 hover:opacity-80'
+              )}
+            >
+              <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
