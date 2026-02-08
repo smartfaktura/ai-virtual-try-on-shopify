@@ -78,35 +78,46 @@ export function ProductSelectorChip({
               placeholder="Search products..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="h-8 text-xs mb-2"
+              className="h-8 text-xs mb-2.5"
               autoFocus
             />
-            <button
-              onClick={() => { onSelect(null); onOpenChange(false); }}
-              className={cn(
-                'w-full text-left px-3 py-2 rounded-lg text-sm mb-2 transition-colors',
-                !selectedProduct ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-              )}
-            >
-              No Product
-            </button>
-            <div className="grid grid-cols-3 gap-1.5 max-h-60 overflow-y-auto pr-1">
+
+            {/* Selected product - clear option */}
+            {selectedProduct && (
+              <button
+                onClick={() => { onSelect(null); onOpenChange(false); }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:bg-muted/80 transition-colors mb-2"
+              >
+                <X className="w-3 h-3" />
+                Clear selection
+              </button>
+            )}
+
+            <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
               {filtered.map(product => (
                 <button
                   key={product.id}
                   onClick={() => { onSelect(product); onOpenChange(false); setSearch(''); }}
                   className={cn(
-                    'relative rounded-lg overflow-hidden border-2 transition-all',
+                    'flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
                     selectedProduct?.id === product.id
                       ? 'border-primary ring-2 ring-primary/30'
                       : 'border-transparent hover:border-border'
                   )}
                 >
-                  <img src={product.image_url} alt={product.title} className="w-full aspect-square object-cover" />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
-                    <p className="text-[9px] text-white truncate">{product.title}</p>
+                  <img
+                    src={product.image_url}
+                    alt={product.title}
+                    className="w-full aspect-square object-cover rounded-t-md"
+                  />
+                  <div className="px-1.5 py-1.5 bg-background">
+                    <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">
+                      {product.title}
+                    </p>
                     {product.product_type && (
-                      <p className="text-[8px] text-white/60 truncate">{product.product_type}</p>
+                      <p className="text-[9px] text-muted-foreground truncate mt-0.5">
+                        {product.product_type}
+                      </p>
                     )}
                   </div>
                 </button>
