@@ -14,9 +14,9 @@ export function LandingFooter() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xs">fa</span>
+                <span className="text-primary-foreground font-bold text-xs">V</span>
               </div>
-              <span className="font-bold text-foreground">framea.ai</span>
+              <span className="font-bold text-foreground">VOVV.AI</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Your automated visual studio for e-commerce. Professional product visuals, delivered monthly.
