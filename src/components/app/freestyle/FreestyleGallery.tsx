@@ -52,35 +52,36 @@ function GeneratingCard({ progress = 0, className }: { progress?: number; classN
   return (
     <div
       className={cn(
-        'rounded-xl overflow-hidden aspect-square flex flex-col items-center justify-center gap-4 px-6 animate-pulse',
-        'bg-gradient-to-br from-muted/80 via-muted/50 to-muted/70',
+        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-5 px-8',
+        'border border-border/30',
+        'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
         className,
       )}
     >
       {/* Avatar with glow ring */}
       <div className="relative">
-        <div className="absolute -inset-1 rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]" />
+        <div className="absolute -inset-1.5 rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]" />
         <img
           src={crew.avatar}
           alt={crew.name}
-          className="relative w-12 h-12 rounded-full object-cover ring-2 ring-primary/40"
+          className="relative w-16 h-16 rounded-full object-cover ring-2 ring-primary/40"
         />
       </div>
 
       {/* Status text */}
-      <div className="text-center space-y-1 min-h-[3rem]">
-        <p className="text-xs font-medium text-foreground/70">
+      <div className="text-center space-y-1.5 min-h-[3.5rem]">
+        <p className="text-sm font-medium text-foreground/70">
           {crew.name} is working on this…
         </p>
-        <p className="text-xs text-muted-foreground/60 transition-opacity duration-300">
+        <p className="text-sm text-muted-foreground/60 transition-opacity duration-300">
           {STATUS_MESSAGES[msgIdx]}
         </p>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full max-w-[140px] space-y-1.5">
+      <div className="w-full max-w-[200px] space-y-2">
         <Progress value={progress} className="h-1" />
-        <p className="text-[10px] text-muted-foreground/40 text-center">Usually 10–20s</p>
+        <p className="text-xs text-muted-foreground/40 text-center">Usually 10–20s</p>
       </div>
     </div>
   );
@@ -209,7 +210,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     return (
       <div className="flex items-start justify-center gap-3 px-6 pt-6">
         {generatingCards.map((card, i) => (
-          <div key={`gen-wrap-${i}`} className="w-60">{card}</div>
+          <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)] aspect-square">{card}</div>
         ))}
         {images.map((img, idx) => (
           <ImageCard
