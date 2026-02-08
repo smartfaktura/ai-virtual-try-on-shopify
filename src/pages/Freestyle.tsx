@@ -3,6 +3,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
+import type { BlockedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
 import { STYLE_PRESETS } from '@/components/app/freestyle/StylePresetChips';
 import { useGenerateFreestyle } from '@/hooks/useGenerateFreestyle';
@@ -40,6 +41,7 @@ export default function Freestyle() {
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
   const [negatives, setNegatives] = useState<string[]>([]);
   const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
+  const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { generate, isLoading, progress } = useGenerateFreestyle();
@@ -169,17 +171,26 @@ export default function Freestyle() {
       negatives: negatives.length > 0 ? negatives : undefined,
     });
 
-    if (result && result.images.length > 0) {
-      deductCredits(creditCost);
-      for (const imageUrl of result.images) {
-        await saveImage(imageUrl, {
-          prompt: finalPrompt,
-          aspectRatio,
-          quality,
-          modelId: selectedModel?.modelId ?? null,
-          sceneId: selectedScene?.poseId ?? null,
-          productId: selectedProduct?.id ?? null,
-        });
+    if (result) {
+      if (result.contentBlocked) {
+        // Add a blocked entry to show in gallery
+        setBlockedEntries(prev => [{
+          id: crypto.randomUUID(),
+          prompt: prompt,
+          reason: result.blockReason || 'This prompt was flagged by our content safety system.',
+        }, ...prev]);
+      } else if (result.images.length > 0) {
+        deductCredits(creditCost);
+        for (const imageUrl of result.images) {
+          await saveImage(imageUrl, {
+            prompt: finalPrompt,
+            aspectRatio,
+            quality,
+            modelId: selectedModel?.modelId ?? null,
+            sceneId: selectedScene?.poseId ?? null,
+            productId: selectedProduct?.id ?? null,
+          });
+        }
       }
     }
   }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage, stylePresets]);
@@ -211,7 +222,16 @@ export default function Freestyle() {
     await deleteImage(imageId);
   }, [deleteImage]);
 
+  const handleDismissBlocked = useCallback((id: string) => {
+    setBlockedEntries(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  const handleEditBlockedPrompt = useCallback((blockedPrompt: string) => {
+    setPrompt(blockedPrompt);
+  }, []);
+
   const hasImages = savedImages.length > 0;
+  const hasBlocked = blockedEntries.length > 0;
   const showLoading = isLoadingImages && !hasImages;
 
   const galleryImages = savedImages.map(img => ({
@@ -278,7 +298,7 @@ export default function Freestyle() {
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
           </div>
-        ) : hasImages || isLoading ? (
+        ) : hasImages || isLoading || hasBlocked ? (
           <FreestyleGallery
             images={galleryImages}
             onDownload={handleDownload}
@@ -287,6 +307,9 @@ export default function Freestyle() {
             onCopyPrompt={setPrompt}
             generatingCount={isLoading ? imageCount : 0}
             generatingProgress={progress}
+            blockedEntries={blockedEntries}
+            onDismissBlocked={handleDismissBlocked}
+            onEditBlockedPrompt={handleEditBlockedPrompt}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">

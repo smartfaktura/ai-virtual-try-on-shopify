@@ -140,13 +140,33 @@ function polishUserPrompt(
   return layers.join("\n\n");
 }
 
+// Content-block detection helpers
+function isContentBlocked(data: Record<string, unknown>): boolean {
+  const choice = (data.choices as Array<Record<string, unknown>>)?.[0];
+  if (!choice) return false;
+  const finishReason = String(choice.finish_reason || "");
+  if (/PROHIBIT|BLOCK|SAFETY|RECITATION/i.test(finishReason)) return true;
+  const content = String((choice.message as Record<string, unknown>)?.content || "");
+  if (/I cannot fulfill|I('m| am) unable to|violates .* policy|inappropriate|not able to generate/i.test(content)) return true;
+  return false;
+}
+
+function extractBlockReason(data: Record<string, unknown>): string {
+  const choice = (data.choices as Array<Record<string, unknown>>)?.[0];
+  const content = String((choice?.message as Record<string, unknown>)?.content || "").trim();
+  if (content.length > 10 && content.length < 300) return content;
+  return "This prompt was flagged by our content safety system. Try rephrasing with different terms.";
+}
+
+type GenerateResult = string | { blocked: true; reason: string } | null;
+
 // ── AI image generation with retries ──────────────────────────────────────
 async function generateImage(
   prompt: string,
   images: Array<{ type: "image_url"; image_url: { url: string } }>,
   apiKey: string,
   model: string
-): Promise<string | null> {
+): Promise<GenerateResult> {
   const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -192,6 +212,13 @@ async function generateImage(
       const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
       if (!imageUrl) {
+        // Check for content policy block before retrying
+        if (isContentBlocked(data)) {
+          const reason = extractBlockReason(data);
+          console.warn("Content blocked by safety filter:", reason);
+          return { blocked: true, reason };
+        }
+
         console.error("No image in response:", JSON.stringify(data).slice(0, 500));
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 1000));
@@ -327,6 +354,8 @@ serve(async (req) => {
     const imageCount = Math.min(body.imageCount || 1, 4);
     const images: string[] = [];
     const errors: string[] = [];
+    let contentBlocked = false;
+    let blockReason = "";
 
     // Batch consistency instruction for multi-image requests
     const batchConsistency = imageCount > 1
@@ -340,10 +369,16 @@ serve(async (req) => {
             ? `${aspectPrompt}${batchConsistency}`
             : `${aspectPrompt}${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
 
-        const imageUrl = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY, aiModel);
+        const result = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY, aiModel);
 
-        if (imageUrl) {
-          images.push(imageUrl);
+        if (result && typeof result === "object" && "blocked" in result) {
+          // Content was blocked by safety filter
+          contentBlocked = true;
+          blockReason = result.reason;
+          console.warn(`Image ${i + 1} blocked by content safety filter`);
+          break; // No point retrying with same prompt
+        } else if (typeof result === "string") {
+          images.push(result);
           console.log(`Generated freestyle image ${i + 1}/${imageCount}`);
         } else {
           errors.push(`Image ${i + 1} failed to generate`);
@@ -364,6 +399,20 @@ serve(async (req) => {
       }
     }
 
+    // If content was blocked and no images were generated, return a 200 with block info
+    if (contentBlocked && images.length === 0) {
+      return new Response(
+        JSON.stringify({
+          images: [],
+          generatedCount: 0,
+          requestedCount: imageCount,
+          contentBlocked: true,
+          blockReason,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (images.length === 0) {
       return new Response(
         JSON.stringify({ error: "Failed to generate any images", details: errors }),
@@ -377,6 +426,8 @@ serve(async (req) => {
         generatedCount: images.length,
         requestedCount: imageCount,
         partialSuccess: images.length < imageCount,
+        contentBlocked: contentBlocked || undefined,
+        blockReason: contentBlocked ? blockReason : undefined,
         errors: errors.length > 0 ? errors : undefined,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

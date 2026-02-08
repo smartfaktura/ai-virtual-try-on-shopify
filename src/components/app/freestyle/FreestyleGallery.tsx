@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Expand, Trash2, Wand2, Copy } from 'lucide-react';
+import { Download, Expand, Trash2, Wand2, Copy, ShieldAlert, X, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
@@ -23,6 +23,12 @@ const STATUS_MESSAGES = [
   'Adding finishing touches…',
 ];
 
+export interface BlockedEntry {
+  id: string;
+  prompt: string;
+  reason: string;
+}
+
 interface GalleryImage {
   id: string;
   url: string;
@@ -38,6 +44,9 @@ interface FreestyleGalleryProps {
   onCopyPrompt?: (prompt: string) => void;
   generatingCount?: number;
   generatingProgress?: number;
+  blockedEntries?: BlockedEntry[];
+  onDismissBlocked?: (id: string) => void;
+  onEditBlockedPrompt?: (prompt: string) => void;
 }
 
 function GeneratingCard({ progress = 0, className }: { progress?: number; className?: string }) {
@@ -87,6 +96,64 @@ function GeneratingCard({ progress = 0, className }: { progress?: number; classN
   );
 }
 
+function ContentBlockedCard({
+  entry,
+  onDismiss,
+  onEditPrompt,
+  className,
+}: {
+  entry: BlockedEntry;
+  onDismiss?: (id: string) => void;
+  onEditPrompt?: (prompt: string) => void;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-4 px-6 py-8',
+        'border border-destructive/20 min-h-[300px] w-full h-full',
+        'bg-gradient-to-br from-destructive/5 via-destructive/10 to-destructive/5',
+        className,
+      )}
+    >
+      <div className="w-14 h-14 rounded-2xl bg-destructive/10 flex items-center justify-center">
+        <ShieldAlert className="w-7 h-7 text-destructive/60" />
+      </div>
+
+      <div className="text-center space-y-2 max-w-[260px]">
+        <h3 className="text-sm font-semibold text-foreground/80">Content Blocked</h3>
+        <p className="text-xs text-muted-foreground/70 leading-relaxed">{entry.reason}</p>
+      </div>
+
+      {entry.prompt && (
+        <p className="text-xs text-muted-foreground/40 italic text-center line-clamp-2 max-w-[240px]">
+          "{entry.prompt}"
+        </p>
+      )}
+
+      <div className="flex items-center gap-2 mt-1">
+        {onEditPrompt && (
+          <button
+            onClick={() => onEditPrompt(entry.prompt)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/60 text-foreground/70 hover:bg-muted transition-colors"
+          >
+            <Pencil className="w-3 h-3" />
+            Edit Prompt
+          </button>
+        )}
+        {onDismiss && (
+          <button
+            onClick={() => onDismiss(entry.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/40 text-muted-foreground/60 hover:bg-muted/60 transition-colors"
+          >
+            <X className="w-3 h-3" />
+            Dismiss
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 function ImageCard({
   img,
   idx,
@@ -191,8 +258,10 @@ function ImageCard({
   );
 }
 
-export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0 }: FreestyleGalleryProps) {
-  if (images.length === 0 && generatingCount === 0) {
+export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt }: FreestyleGalleryProps) {
+  const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0;
+
+  if (!hasContent) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-6">
         <div className="w-24 h-24 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
@@ -214,13 +283,25 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       ))
     : [];
 
-  const count = images.length + generatingCount;
+  const blockedCards = blockedEntries.map(entry => (
+    <ContentBlockedCard
+      key={`blocked-${entry.id}`}
+      entry={entry}
+      onDismiss={onDismissBlocked}
+      onEditPrompt={onEditBlockedPrompt}
+    />
+  ));
+
+  const count = images.length + generatingCount + blockedEntries.length;
 
   if (count <= 3) {
     return (
       <div className="flex items-stretch justify-center gap-3 px-6 pt-6">
         {generatingCards.map((card, i) => (
           <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)] min-w-[280px]">{card}</div>
+        ))}
+        {blockedCards.map((card, i) => (
+          <div key={`block-wrap-${i}`} className="max-h-[calc(100vh-400px)] min-w-[280px]">{card}</div>
         ))}
         {images.map((img, idx) => (
           <ImageCard
@@ -241,6 +322,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   return (
     <div className="grid grid-cols-3 gap-1 pt-3 px-1 pb-4">
       {generatingCards}
+      {blockedCards}
       {images.map((img, idx) => (
         <ImageCard
           key={img.id}
