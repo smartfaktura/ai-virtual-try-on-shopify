@@ -350,8 +350,8 @@ export default function BrandProfileWizard() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                   {COLOR_FEEL_OPTIONS.map(cf => (
                     <button
+                      type="button"
                       key={cf.value}
-                      onClick={() => update('color_temperature', cf.value)}
                       className={cn(
                         'text-left rounded-xl border overflow-hidden transition-all',
                         form.color_temperature === cf.value
