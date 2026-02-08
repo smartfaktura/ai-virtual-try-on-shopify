@@ -8,25 +8,67 @@ const corsHeaders = {
 
 interface FreestyleRequest {
   prompt: string;
-  sourceImage?: string; // Base64 data URL
-  modelImage?: string; // Base64 data URL
-  sceneImage?: string; // Base64 data URL
+  sourceImage?: string;
+  modelImage?: string;
+  sceneImage?: string;
   aspectRatio: string;
   imageCount: number;
   quality: "standard" | "high";
   polishPrompt: boolean;
+  modelContext?: string;
+  stylePresets?: string[];
 }
 
-function polishUserPrompt(rawPrompt: string): string {
-  return `Professional photography: ${rawPrompt}
+// ── Negative prompt (always appended when polish is on) ───────────────────
+const NEGATIVE_PROMPT = `
+CRITICAL — DO NOT include any of the following:
+- No text, watermarks, logos, labels, or signatures anywhere in the image
+- No distorted or extra fingers, hands, or limbs
+- No blurry or out-of-focus areas unless intentionally bokeh
+- No AI-looking skin smoothing or plastic textures
+- No collage layouts or split-screen compositions`;
 
-IMPORTANT PHOTOGRAPHY GUIDELINES:
-- Ultra high resolution, sharp focus, professional quality
-- Natural and realistic lighting, no AI artifacts
-- Commercial-grade composition and color accuracy
-- Clean, polished aesthetic suitable for e-commerce or editorial use`;
+// ── Context-aware prompt polish ───────────────────────────────────────────
+function polishUserPrompt(
+  rawPrompt: string,
+  context: { hasSource: boolean; hasModel: boolean; hasScene: boolean }
+): string {
+  const layers: string[] = [];
+
+  layers.push(`Professional photography: ${rawPrompt}`);
+
+  // Base quality layer (always)
+  layers.push(
+    "Ultra high resolution, sharp focus, natural lighting, commercial-grade color accuracy."
+  );
+
+  // Product / source image layer
+  if (context.hasSource) {
+    layers.push(
+      "PRODUCT ACCURACY: The product in the reference image must be reproduced with 100% fidelity — identical shape, color, texture, branding, and proportions. Do not modify, stylize, or reinterpret the product in any way."
+    );
+  }
+
+  // Model / portrait layer
+  if (context.hasModel) {
+    layers.push(
+      "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
+    );
+  }
+
+  // Scene / environment layer
+  if (context.hasScene) {
+    layers.push(
+      "ENVIRONMENT: Match the lighting direction and color temperature of the scene reference. Integrate the subject naturally into the environment with consistent shadows and reflections."
+    );
+  }
+
+  layers.push(NEGATIVE_PROMPT);
+
+  return layers.join("\n\n");
 }
 
+// ── AI image generation with retries ──────────────────────────────────────
 async function generateImage(
   prompt: string,
   images: Array<{ type: "image_url"; image_url: { url: string } }>,
@@ -103,6 +145,7 @@ async function generateImage(
   return null;
 }
 
+// ── Request handler ───────────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -126,9 +169,27 @@ serve(async (req) => {
       );
     }
 
+    // Append model text context if provided
+    let enrichedPrompt = body.prompt;
+    if (body.modelContext) {
+      enrichedPrompt = `${enrichedPrompt}\n\nModel reference: ${body.modelContext}`;
+    }
+
+    // Append style presets if provided
+    if (body.stylePresets && body.stylePresets.length > 0) {
+      enrichedPrompt = `${enrichedPrompt}\n\nStyle direction: ${body.stylePresets.join(", ")}`;
+    }
+
+    // Apply polish if enabled
+    const polishContext = {
+      hasSource: !!body.sourceImage,
+      hasModel: !!body.modelImage,
+      hasScene: !!body.sceneImage,
+    };
+
     const finalPrompt = body.polishPrompt
-      ? polishUserPrompt(body.prompt)
-      : body.prompt;
+      ? polishUserPrompt(enrichedPrompt, polishContext)
+      : enrichedPrompt;
 
     // Build image references
     const imageRefs: Array<{ type: "image_url"; image_url: { url: string } }> = [];
@@ -155,6 +216,8 @@ serve(async (req) => {
       hasSourceImage: !!body.sourceImage,
       hasModelImage: !!body.modelImage,
       hasSceneImage: !!body.sceneImage,
+      hasModelContext: !!body.modelContext,
+      stylePresets: body.stylePresets,
       aspectRatio: body.aspectRatio,
       imageCount: body.imageCount,
       quality: body.quality,
@@ -166,12 +229,17 @@ serve(async (req) => {
     const images: string[] = [];
     const errors: string[] = [];
 
+    // Batch consistency instruction for multi-image requests
+    const batchConsistency = imageCount > 1
+      ? "\n\nBATCH CONSISTENCY: Maintain the same color palette, lighting direction, overall mood, and visual style. Only vary composition, angle, and framing."
+      : "";
+
     for (let i = 0; i < imageCount; i++) {
       try {
         const variationPrompt =
           i === 0
-            ? aspectPrompt
-            : `${aspectPrompt}\n\nVariation ${i + 1}: Create a different composition while keeping the same subject and style.`;
+            ? `${aspectPrompt}${batchConsistency}`
+            : `${aspectPrompt}${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
 
         const imageUrl = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY, aiModel);
 
