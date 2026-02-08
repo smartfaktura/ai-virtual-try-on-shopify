@@ -3,19 +3,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TryOnAnimatedThumbnail } from '@/components/app/TryOnAnimatedThumbnail';
+import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
+import { workflowAnimations } from '@/components/app/workflowAnimationData';
 import type { Workflow } from '@/pages/Workflows';
 
-import imgVirtualTryOn from '@/assets/workflows/workflow-virtual-tryon.jpg';
-import imgSocialMedia from '@/assets/workflows/workflow-social-media.jpg';
-import imgProductListing from '@/assets/workflows/workflow-product-listing.jpg';
-import imgLifestyle from '@/assets/workflows/workflow-lifestyle.jpg';
-import imgWebsiteHero from '@/assets/workflows/workflow-website-hero.jpg';
-import imgAdRefresh from '@/assets/workflows/workflow-ad-refresh.jpg';
-import imgSelfieUGC from '@/assets/workflows/workflow-selfie-ugc.jpg';
-import imgFlatLay from '@/assets/workflows/workflow-flat-lay.jpg';
-import imgSeasonal from '@/assets/workflows/workflow-seasonal.jpg';
-import imgBeforeAfter from '@/assets/workflows/workflow-before-after.jpg';
 import imgFallback from '@/assets/templates/universal-clean.jpg';
 
 interface WorkflowCardProps {
@@ -24,24 +15,8 @@ interface WorkflowCardProps {
   isGenerating?: boolean;
 }
 
-const workflowImages: Record<string, string> = {
-  'Virtual Try-On Set': imgVirtualTryOn,
-  'Social Media Pack': imgSocialMedia,
-  'Product Listing Set': imgProductListing,
-  'Lifestyle Set': imgLifestyle,
-  'Website Hero Set': imgWebsiteHero,
-  'Ad Refresh Set': imgAdRefresh,
-  'Selfie / UGC Set': imgSelfieUGC,
-  'Flat Lay Set': imgFlatLay,
-  'Seasonal Campaign Set': imgSeasonal,
-  'Before & After Set': imgBeforeAfter,
-};
-
-const IS_TRYON_ANIMATED = 'Virtual Try-On Set';
-
 export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardProps) {
-  const thumbnail = workflow.preview_image_url || workflowImages[workflow.name] || imgFallback;
-  const isAnimatedTryOn = workflow.name === IS_TRYON_ANIMATED;
+  const animationSteps = workflowAnimations[workflow.name];
 
   return (
     <Card className="group hover:shadow-md transition-all hover:border-primary/30 overflow-hidden">
@@ -49,11 +24,11 @@ export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardP
       <div className="aspect-[3/4] overflow-hidden relative">
         {isGenerating ? (
           <Skeleton className="w-full h-full" />
-        ) : isAnimatedTryOn ? (
-          <TryOnAnimatedThumbnail />
+        ) : animationSteps ? (
+          <WorkflowAnimatedThumbnail steps={animationSteps} />
         ) : (
           <img
-            src={thumbnail}
+            src={workflow.preview_image_url || imgFallback}
             alt={workflow.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
@@ -76,7 +51,6 @@ export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardP
         <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
           {workflow.description}
         </p>
-
 
         {/* CTA */}
         <Button size="sm" className="w-full rounded-full font-semibold gap-1 mt-1 text-xs h-8" onClick={onSelect}>
