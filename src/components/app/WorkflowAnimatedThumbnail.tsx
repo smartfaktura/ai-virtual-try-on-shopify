@@ -48,13 +48,22 @@ function FloatingEl({ element }: { element: SceneElement }) {
     case 'scene':
       return (
         <div className="absolute" style={style}>
-          <div className="bg-white/90 backdrop-blur-md rounded-lg shadow-xl overflow-hidden flex items-center gap-2 pr-2.5">
-            <img src={element.image} className="w-10 h-12 object-cover" alt="" />
-            <div className="min-w-0">
+          <div className="wf-card bg-white rounded-xl overflow-hidden flex items-center gap-2.5 pr-3">
+            <img
+              src={element.image}
+              className="w-12 h-14 object-cover"
+              alt=""
+              style={{ imageRendering: 'auto' }}
+            />
+            <div className="min-w-0 py-1">
               {element.sublabel && (
-                <div className="text-[7px] text-muted-foreground uppercase tracking-wider leading-none mb-0.5">{element.sublabel}</div>
+                <div className="text-[7px] text-neutral-400 uppercase tracking-[0.08em] leading-none mb-0.5 font-medium">
+                  {element.sublabel}
+                </div>
               )}
-              <div className="text-[10px] font-semibold leading-tight whitespace-nowrap">{element.label}</div>
+              <div className="text-[11px] font-semibold leading-tight whitespace-nowrap text-neutral-800">
+                {element.label}
+              </div>
             </div>
           </div>
         </div>
@@ -62,11 +71,16 @@ function FloatingEl({ element }: { element: SceneElement }) {
 
     case 'model':
       return (
-        <div className="absolute flex flex-col items-center gap-1" style={style}>
-          <div className="bg-white/90 backdrop-blur-md rounded-full p-[3px] shadow-xl">
-            <img src={element.image} className="w-11 h-11 rounded-full object-cover" alt="" />
+        <div className="absolute flex flex-col items-center gap-1.5" style={style}>
+          <div className="wf-card-circle rounded-full p-[3px] bg-white">
+            <img
+              src={element.image}
+              className="w-[52px] h-[52px] rounded-full object-cover"
+              alt=""
+              style={{ imageRendering: 'auto' }}
+            />
           </div>
-          <span className="text-[8px] font-medium bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full">
+          <span className="text-[9px] font-semibold bg-white/95 text-neutral-700 px-2.5 py-[3px] rounded-full wf-card-shadow">
             {element.label}
           </span>
         </div>
@@ -75,7 +89,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
     case 'action':
       return (
         <div className="absolute" style={style}>
-          <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xl">
+          <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center wf-card-shadow">
             {element.icon}
           </div>
         </div>
@@ -84,9 +98,9 @@ function FloatingEl({ element }: { element: SceneElement }) {
     case 'badge':
       return (
         <div className="absolute" style={style}>
-          <div className="bg-white/90 backdrop-blur-md rounded-full px-2.5 py-1 shadow-xl flex items-center gap-1.5">
-            {element.icon}
-            <span className="text-[10px] font-semibold">{element.label}</span>
+          <div className="bg-white rounded-full px-3 py-1.5 wf-card-shadow flex items-center gap-1.5">
+            <span className="text-primary">{element.icon}</span>
+            <span className="text-[10px] font-semibold text-neutral-700">{element.label}</span>
           </div>
         </div>
       );
