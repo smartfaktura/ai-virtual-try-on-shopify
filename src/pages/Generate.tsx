@@ -1095,6 +1095,22 @@ export default function Generate() {
               </CardContent></Card>
             )}
 
+            {/* Crafted by team */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <div className="flex items-center">
+                {[avatarSophia, avatarZara, avatarKenji, avatarLuna].map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt="Team member"
+                    className="w-7 h-7 rounded-full border-2 border-background object-cover"
+                    style={{ marginLeft: i === 0 ? 0 : '-0.4rem' }}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Crafted by your studio team</p>
+            </div>
+
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
               {sourceType === 'scratch' ? (

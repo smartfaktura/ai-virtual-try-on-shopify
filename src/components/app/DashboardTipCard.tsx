@@ -66,11 +66,13 @@ export function DashboardTipCard() {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 flex items-start gap-3 shadow-sm animate-fade-in">
-      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <TipIcon className="w-4.5 h-4.5 text-primary" />
-      </div>
+      <img
+        src={tip.avatar}
+        alt={tip.memberName}
+        className="w-9 h-9 rounded-full object-cover flex-shrink-0 mt-0.5 border-2 border-primary/20"
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{tip.highlight}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{tip.memberName} · {tip.highlight}</p>
         <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{tip.text}</p>
       </div>
       <button
