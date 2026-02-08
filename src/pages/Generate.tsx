@@ -53,7 +53,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
-import type { Workflow } from '@/pages/Workflows';
+import type { Workflow } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';
 
 type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
