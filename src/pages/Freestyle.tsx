@@ -115,23 +115,23 @@ export default function Freestyle() {
         />
       </div>
 
-      {/* Sticky Bottom Prompt Bar — Glassmorphism */}
-      <div className="flex-shrink-0 relative">
-        {/* Loading progress line */}
-        {isLoading && (
-          <div className="absolute top-0 left-6 right-6">
-            <Progress value={progress} className="h-[2px] rounded-none bg-white/[0.06]" />
-          </div>
-        )}
+      {/* Floating Prompt Bar — Apple Light Style */}
+      <div className="flex-shrink-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2">
+        <div className="relative bg-background/80 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg p-4 sm:p-5">
+          {/* Loading progress line */}
+          {isLoading && (
+            <div className="absolute top-0 left-4 right-4">
+              <Progress value={progress} className="h-[2px] rounded-none bg-muted" />
+            </div>
+          )}
 
-        <div className="bg-sidebar/95 backdrop-blur-xl border-t border-white/[0.06] p-4 sm:p-5">
           {/* Prompt Input Row */}
           <div className="flex items-end gap-3 mb-3">
             {/* Attach Image */}
             <div className="flex-shrink-0">
               {sourceImagePreview ? (
                 <div className="relative w-11 h-11">
-                  <img src={sourceImagePreview} alt="Attached" className="w-11 h-11 rounded-xl object-cover ring-1 ring-white/10" />
+                  <img src={sourceImagePreview} alt="Attached" className="w-11 h-11 rounded-xl object-cover ring-1 ring-border" />
                   <button
                     onClick={removeSourceImage}
                     className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
@@ -142,9 +142,10 @@ export default function Freestyle() {
               ) : (
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-11 h-11 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center text-sidebar-foreground/40 hover:bg-white/[0.07] hover:text-sidebar-foreground/70 transition-all duration-200"
+                  className="flex items-center gap-2 h-11 px-3 rounded-xl border border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Upload image</span>
                 </button>
               )}
               <input
@@ -162,7 +163,7 @@ export default function Freestyle() {
               onChange={e => setPrompt(e.target.value)}
               placeholder="Describe what you want to create..."
               rows={2}
-              className="flex-1 bg-transparent border-none rounded-xl px-4 py-3 text-[15px] leading-relaxed text-sidebar-foreground placeholder:text-sidebar-foreground/30 resize-none focus:outline-none focus:ring-0"
+              className="flex-1 bg-transparent border-none rounded-xl px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0"
               onKeyDown={e => {
                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault();
@@ -177,14 +178,14 @@ export default function Freestyle() {
                 onClick={handleGenerate}
                 disabled={!canGenerate}
                 size="lg"
-                className="h-11 px-6 gap-2 rounded-xl shadow-lg shadow-primary/20"
+                className="h-12 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Sparkles className="w-4 h-4" />
                 )}
-                <span className="hidden sm:inline font-medium">Generate</span>
+                <span className="hidden sm:inline">Generate</span>
                 <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
               </Button>
             </div>

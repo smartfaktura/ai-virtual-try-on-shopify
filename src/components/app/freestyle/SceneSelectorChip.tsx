@@ -17,7 +17,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border border-white/[0.08] bg-white/[0.04] text-sidebar-foreground/80 hover:bg-white/[0.08] transition-colors">
+        <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
           {selectedScene ? (
             <>
               <img src={selectedScene.previewUrl} alt="" className="w-4 h-4 rounded-full object-cover" />

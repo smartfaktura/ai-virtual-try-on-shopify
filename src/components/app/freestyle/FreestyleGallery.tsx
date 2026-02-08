@@ -16,7 +16,7 @@ export function FreestyleGallery({ images, onDownload, onExpand }: FreestyleGall
   if (images.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-6">
-        <div className="w-24 h-24 rounded-3xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-6">
+        <div className="w-24 h-24 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
           <Wand2 className="w-10 h-10 text-muted-foreground/50" />
         </div>
         <h2 className="text-2xl font-light tracking-tight text-foreground/80 mb-3">
