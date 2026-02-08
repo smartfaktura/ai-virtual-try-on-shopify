@@ -1,76 +1,94 @@
 
-# Rebrand: framea.ai to VOVV.AI
+
+# Enhanced Freestyle Loading State
 
 ## Overview
 
-Replace all "framea.ai" / "Framea AI" / "fa" branding across the entire app with "VOVV.AI" / "VOVV AI" / "V" logo mark. This is a straightforward find-and-replace across 11 files touching the logo mark, brand name text, SEO metadata, and incidental references.
+Replace the blank gray skeleton square with an engaging, branded loading experience. When generating, users will see a team avatar with animated status text, a progress bar, and helpful time estimate -- turning the wait into a polished, human moment.
 
-## Brand Mapping
+## Current Problem
 
-| Old | New |
-|-----|-----|
-| framea.ai | VOVV.AI |
-| Framea AI | VOVV AI |
-| fa (logo mark) | V |
-| @FrameaAI | @VOVVAI |
-| framea-v1 (model name) | vovv-v1 |
+The loading state is a plain `<Skeleton />` square -- a flat gray rectangle with a pulse animation. No context about what's happening, no time estimate, and no personality. It feels broken rather than intentional.
 
-## Files to Update
+## Design
 
-### 1. index.html -- SEO and Meta Tags
-- Page title: "VOVV AI | Automated Visual Studio for E-commerce"
-- Meta author: "VOVV AI"
-- OG title: "VOVV AI | Automated Visual Studio for E-commerce"
-- Twitter site: "@VOVVAI"
+Each generating placeholder will show:
+1. A softly pulsing gradient background (not flat gray)
+2. A centered team avatar with a subtle glow ring animation
+3. A rotating status message (e.g., "Setting up the lighting...", "Composing the scene...")
+4. A slim progress bar below the avatar area
+5. A time estimate hint: "Usually takes 10-20 seconds"
 
-### 2. src/components/landing/LandingNav.tsx -- Landing Navigation
-- Logo mark text: "fa" to "V"
-- Brand name: "framea.ai" to "VOVV.AI"
+The overall vibe is: a studio team member is actively working on your image.
 
-### 3. src/components/landing/LandingFooter.tsx -- Landing Footer
-- Logo mark text: "fa" to "V"
-- Brand name: "framea.ai" to "VOVV.AI"
-- Copyright text: "framea.ai" to "VOVV.AI"
-- Tagline remains the same (no brand name in it)
+---
 
-### 4. src/pages/Auth.tsx -- Authentication Screen
-- Logo mark text: "fa" to "V"
-- Brand name: "framea.ai" to "VOVV.AI"
-- Photo credit: "Generated with VOVV.AI"
+## Changes
 
-### 5. src/components/app/AppShell.tsx -- App Sidebar
-- Logo mark text: "fa" to "V"
-- Brand name: "framea.ai" to "VOVV.AI"
+### File: `src/components/app/freestyle/FreestyleGallery.tsx`
 
-### 6. src/components/app/ProtectedRoute.tsx -- Loading Screen
-- Logo mark fallback text: "fa" to "V"
+**Replace `SkeletonCard` with a new `GeneratingCard` component:**
 
-### 7. src/components/app/StudioChat.tsx -- Chat Avatar Fallback
-- Avatar fallback text: "fa" to "V"
+- Remove the plain `<Skeleton>` usage
+- New component includes:
+  - A `rounded-xl` card with animated gradient background (`bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60` with a shimmer animation)
+  - A centered team avatar (randomly picked from a small pool: Sophia, Luna, Kenji) displayed in a `w-12 h-12` rounded-full with a pulsing ring border
+  - Below the avatar: a rotating status message that cycles every 3 seconds through phrases like:
+    - "Setting up the lighting..."
+    - "Composing the scene..."
+    - "Refining the details..."
+    - "Adding finishing touches..."
+  - A slim `<Progress>` bar showing the current generation progress (passed as a prop)
+  - A small hint line: "Usually 10-20s" in `text-xs text-muted-foreground/50`
 
-### 8. src/pages/Onboarding.tsx -- Onboarding Flow
-- Welcome toast: "Welcome to VOVV.AI!"
-- Discovery question text: "discover VOVV.AI"
-- Label text: "hear about VOVV.AI"
-- Photo credit: "Generated with VOVV.AI"
+**Props update:**
+- Change `generatingCount` to also accept a `generatingProgress` number (0-100)
+- The `FreestyleGalleryProps` interface gets: `generatingProgress?: number`
 
-### 9. src/pages/Settings.tsx -- Settings Page
-- Model version badge: "framea-v1" to "vovv-v1"
+**Layout:**
+- When count is <= 3 (centered flex layout): the generating card matches the `w-60` sizing
+- When in grid layout: the generating card fills the grid cell like images do
 
-### 10. src/components/landing/LandingFAQ.tsx -- FAQ Section
-- Brand reference in answer text: "framea.ai" to "VOVV.AI"
+### File: `src/pages/Freestyle.tsx`
 
-### 11. src/components/landing/SocialProofBar.tsx -- Social Proof
-- Trust metric: "Brands trust VOVV.AI"
+- Pass the `progress` value from `useGenerateFreestyle` to the gallery as `generatingProgress`
+- Update the `FreestyleGallery` call: add `generatingProgress={progress}`
 
-### 12. src/components/app/CompetitorComparison.tsx -- Pricing Comparison
-- Comparison name: "framea.ai" to "VOVV.AI"
+---
 
-### 13. src/components/landing/FeatureGrid.tsx -- Feature Section
-- Heading: "What VOVV.AI Delivers"
+## Technical Details
 
-## Notes
+### GeneratingCard component (inside FreestyleGallery.tsx)
 
-- The logo mark changes from "fa" (framea abbreviation) to "V" (VOVV abbreviation) -- bold, single letter, more striking in the small rounded square
-- No structural or layout changes -- purely text/content replacements
-- All 13 files updated in parallel for a clean, consistent rebrand
+- Import team avatars: `avatar-sophia.jpg`, `avatar-luna.jpg`, `avatar-kenji.jpg`
+- Use `useState` + `useEffect` with a 3-second `setInterval` to cycle through status messages
+- Pick a random avatar on mount using `useState(() => ...)` so it stays consistent during the generation
+- The progress bar uses the existing `<Progress>` component from `@/components/ui/progress`
+- The shimmer effect uses the existing `animate-pulse` class on the background
+
+### Status messages array
+
+```
+"Setting up the lighting..."
+"Composing the scene..."  
+"Styling the shot..."
+"Refining the details..."
+"Adjusting the colors..."
+"Adding finishing touches..."
+```
+
+### Avatar pool with names
+
+```
+{ name: "Sophia", avatar: avatar-sophia }
+{ name: "Luna", avatar: avatar-luna }
+{ name: "Kenji", avatar: avatar-kenji }
+```
+
+The name appears as a small label above the status text: "Sophia is working on this..."
+
+### Files modified
+
+1. `src/components/app/freestyle/FreestyleGallery.tsx` -- Replace SkeletonCard, add GeneratingCard, update props
+2. `src/pages/Freestyle.tsx` -- Pass `generatingProgress={progress}` to FreestyleGallery
+
