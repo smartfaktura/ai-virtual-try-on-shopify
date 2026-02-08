@@ -137,7 +137,7 @@ export function BuyCreditsModal() {
           </TabsContent>
 
           {/* Upgrade Plan Tab */}
-          <TabsContent value="upgrade" className="flex-1 overflow-y-auto space-y-3 mt-3">
+          <TabsContent value="upgrade" className="flex-1 overflow-y-auto space-y-4 mt-4">
             {recommendedPlan ? (
               <>
                 {/* Value-focused recommended plan card */}
