@@ -25,7 +25,7 @@ import type { BrandTone, BackgroundStyle } from '@/types';
 import { toast } from 'sonner';
 
 export default function Settings() {
-  const { balance, addCredits } = useCredits();
+  const { balance, plan, planConfig, addCredits } = useCredits();
 
   const [brandTone, setBrandTone] = useState<BrandTone>('clean');
   const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('studio');
@@ -48,10 +48,10 @@ export default function Settings() {
   const [inAppTips, setInAppTips] = useState(true);
 
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
-  const currentPlanId = 'growth';
+  const currentPlanId = plan;
 
-  const creditsTotal = 2500;
-  const creditsPercentage = (balance / creditsTotal) * 100;
+  const creditsTotal = planConfig.monthlyCredits;
+  const creditsPercentage = creditsTotal === Infinity ? 100 : (balance / creditsTotal) * 100;
 
   const handleSave = () => toast.success('Settings saved successfully!');
   const handlePlanSelect = (planId: string) => {
