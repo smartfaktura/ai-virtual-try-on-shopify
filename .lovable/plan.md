@@ -1,104 +1,278 @@
 
 
-# Upgrade Add Product Modal — Premium UI/UX
+# Kive-Style Credit Inflation: Profitable Pricing for VOVV.AI
 
-## Overview
+## The Kive Trick (What You Spotted)
 
-Refine the Add Product modal to match the app's luxury-restraint aesthetic with cleaner layout, better visual hierarchy, less text clutter, and a more polished feel throughout all four tabs.
+Kive charges **$40/mo for 2,000 credits** -- sounds generous. But each image costs **4-20 credits**. So 2,000 credits = only 100-500 images. The big number creates a perception of value while keeping margins healthy.
 
----
+Your current model: 1 credit = 1 standard image. That's too transparent and makes the numbers look small (100 credits at $9 feels stingy).
 
-## Changes
-
-### 1. `src/components/app/AddProductModal.tsx` — Modal Shell
-
-**Current issues:**
-- Generic dialog header with dense description text
-- Tab bar uses default shadcn styling (boxy, muted background pills)
-- No visual refinement on the container
-
-**Improvements:**
-- Remove the `DialogDescription` entirely — the tab labels make it self-explanatory
-- Style the tab bar as a borderless underline/pill strip with tighter spacing: `bg-transparent` with `rounded-full` individual triggers and a subtle active state
-- Add `p-0` to dialog content and use internal padding sections for better visual grouping
-- Widen slightly to `sm:max-w-[580px]` (tighter, more focused)
-
-### 2. `src/components/app/ManualProductTab.tsx` — Upload Tab
-
-**Current issues:**
-- Heavy "Product Images" and "Product Details" section headers with bold text
-- Drop zone is large and text-heavy (format info, file limits)
-- The Separator between images and details feels clunky
-- The "Sophia, Art Director" pro tip is a lot of text for a modal
-- Footer buttons feel disconnected
-
-**Improvements:**
-- Remove section headers ("Product Images", "Product Details") — the flow is self-evident (images first, then fields)
-- Simplify the drop zone: smaller padding (py-8), keep just the icon and one line "Drop images or browse" with the format info as a subtle single line below
-- Remove the `Separator` between images and form fields — use spacing (`space-y-5`) instead
-- Condense the pro tip: shorter text, remove the avatar, just a subtle `info` icon with "Cover image is used as AI reference"
-- Make form fields more compact: reduce gap between label and input, use smaller helper text
-- Footer: add subtle top border, keep cancel as ghost and save as primary with rounded-lg styling
-
-### 3. `src/components/app/StoreImportTab.tsx` — Store URL Tab
-
-**Current issues:**
-- The "Works with Shopify, WooCommerce..." paragraph is verbose
-- Preview card has basic border styling
-
-**Improvements:**
-- Replace the paragraph with inline platform badges: small icons/badges for Shopify, Etsy, Amazon, WooCommerce in a row — cleaner than a sentence
-- Give the extracted product preview card a subtle `bg-muted/30` background with `rounded-xl` for a card-in-card feel
-- Tighter spacing overall
-
-### 4. `src/components/app/CsvImportTab.tsx` — CSV Tab
-
-**Current issues:**
-- Drop zone has a lot of column-name text (`code` tags)
-- Table styling is basic
-
-**Improvements:**
-- Simplify the column hint: just "Required: title column. Optional: type, image_url, description" — shorter, cleaner
-- Give the table container `rounded-xl` and `overflow-hidden` for polished edges
-- Subtle alternating row background
-
-### 5. `src/components/app/MobileUploadTab.tsx` — Mobile Tab
-
-**Current issues:**
-- QR code section has standard card wrapping
-- "Waiting for upload..." text feels flat
-
-**Improvements:**
-- Give QR container a centered layout with subtle shadow and `rounded-2xl`
-- Style the waiting indicator as a more premium pill badge: `bg-muted/50 rounded-full px-3 py-1.5` with the pulsing dot
-
-### 6. `src/components/app/ProductImageGallery.tsx` — Image Tiles
-
-**Current issues:**
-- Tiles are `w-24 h-24` which feels a bit small inside a modal
-- "Cover" label at bottom is functional but could be more refined
-
-**Improvements:**
-- No size change needed (w-24 works well in the narrower modal)
-- Add `backdrop-blur-sm` to the Cover label for a glass effect
-- Smoother hover transitions
+**The fix: inflate credit costs per action, then give bigger credit numbers at higher prices.**
 
 ---
 
-## Visual Summary
+## Your Hard Constraint
 
-The overall goal is:
-- **Less text** — remove redundant labels and descriptions, let the UI speak
-- **Better grouping** — spacing instead of heavy separators/headers
-- **Premium feel** — rounded corners, subtle backgrounds, refined tab bar
-- **Consistency** — match the luxury-restraint aesthetic used throughout the app
+- **CAC (Customer Acquisition Cost): $35 per user**
+- You need to recover that within 2 months max
+- That means minimum ~$17.50/month gross profit per user
 
-## Files Changed
+---
 
-1. `src/components/app/AddProductModal.tsx` — Cleaner shell, refined tab bar
-2. `src/components/app/ManualProductTab.tsx` — Simplified dropzone, removed section headers, condensed pro tip
-3. `src/components/app/StoreImportTab.tsx` — Platform badges, refined preview card
-4. `src/components/app/CsvImportTab.tsx` — Cleaner column hints, polished table
-5. `src/components/app/MobileUploadTab.tsx` — Premium QR layout, refined waiting state
-6. `src/components/app/ProductImageGallery.tsx` — Glass-effect Cover label
+## Your Real Costs Per Generation
 
+| Action | Model Used | Your Cost |
+|---|---|---|
+| Standard image | gemini-2.5-flash-image | ~$0.06 |
+| High-quality image | gemini-3-pro-image-preview | ~$0.22 |
+| Virtual Try-On | gemini-2.5-flash-image (2 imgs) | ~$0.08 |
+| Video 5s standard | Kling std | ~$0.28 |
+| Video 5s pro | Kling pro | ~$0.98 |
+| Video 10s standard | Kling std | ~$0.56 |
+| Video 10s pro | Kling pro | ~$1.96 |
+
+---
+
+## New Credit System (Kive-Style Inflation)
+
+**Multiply all credit costs by 4x:**
+
+| Action | Old Credits | New Credits | Your Cost | Cost per Credit |
+|---|---|---|---|---|
+| Standard image | 1 | 4 | $0.06 | $0.015 |
+| High-quality image | 2 | 10 | $0.22 | $0.022 |
+| Virtual Try-On (std) | 3 | 8 | $0.08 | $0.010 |
+| Virtual Try-On (HQ) | -- | 15 | $0.25 | $0.017 |
+| Video 5s standard | -- | 30 | $0.28 | $0.009 |
+| Video 5s pro | -- | 60 | $0.98 | $0.016 |
+| Video 10s standard | -- | 50 | $0.56 | $0.011 |
+| Video 10s pro | -- | 100 | $1.96 | $0.020 |
+
+**Blended average cost per credit: ~$0.015**
+
+Now we can give users "1,000 credits" which sounds like Kive, but it's really ~250 standard images or ~100 HQ images.
+
+---
+
+## New Subscription Plans
+
+| Plan | Price | Credits | What Users Actually Get | Your COGS (at 60% use) | Gross Profit | Margin |
+|---|---|---|---|---|---|---|
+| Free | $0 | 20 (once) | ~5 standard images | ~$0.30 | -- | Acquisition |
+| Starter | $39/mo | 1,000 | ~250 std OR ~100 HQ | $9.00 | **$30.00** | **77%** |
+| Growth | $79/mo | 2,500 | ~625 std OR ~250 HQ | $22.50 | **$56.50** | **72%** |
+| Pro | $179/mo | 6,000 | ~1,500 std OR ~600 HQ | $54.00 | **$125.00** | **70%** |
+| Enterprise | Custom | Custom | Negotiated | -- | -- | 50%+ |
+
+### CAC Payback Math
+
+- **Starter ($39)**: $30 profit/month --> payback $35 CAC in **1.2 months**
+- **Growth ($79)**: $56.50 profit/month --> payback $35 CAC in **0.6 months**
+- **Pro ($179)**: $125 profit/month --> payback $35 CAC in **0.3 months**
+
+### Even at 100% Credit Utilization (Worst Case)
+
+| Plan | Price | COGS (100% use) | Profit | Margin |
+|---|---|---|---|---|
+| Starter | $39 | $15.00 | $24.00 | 62% |
+| Growth | $79 | $37.50 | $41.50 | 53% |
+| Pro | $179 | $90.00 | $89.00 | 50% |
+
+**Every plan stays profitable even if users consume every single credit.** No more negative margin scenarios.
+
+### Annual Pricing (20% discount)
+
+| Plan | Monthly | Annual (per month) | Annual Total |
+|---|---|---|---|
+| Starter | $39 | $31 | $372 |
+| Growth | $79 | $63 | $756 |
+| Pro | $179 | $143 | $1,716 |
+
+---
+
+## New Top-Up Packs (Always Profitable)
+
+| Pack | Credits | Price | Per Credit | Your Cost (60% use) | Margin |
+|---|---|---|---|---|---|
+| Boost | 500 | $15 | $0.030 | $4.50 | 70% |
+| Studio | 1,500 | $39 | $0.026 | $13.50 | 65% |
+| Scale | 4,000 | $89 | $0.022 | $36.00 | 60% |
+
+Top-ups are always more expensive per credit than subscription plans, incentivizing upgrades.
+
+---
+
+## Feature Gating
+
+| Feature | Free | Starter | Growth | Pro |
+|---|---|---|---|---|
+| Standard generation | Yes | Yes | Yes | Yes |
+| High-quality generation | -- | Yes | Yes | Yes |
+| Virtual Try-On | -- | -- | Yes | Yes |
+| Video generation | -- | -- | Yes | Yes |
+| Brand Profiles | 1 | 3 | 10 | Unlimited |
+| Creative Drops | -- | -- | Monthly | Weekly |
+| Bulk Generation | -- | -- | Yes | Yes |
+| Freestyle Studio | -- | Yes | Yes | Yes |
+| API access | -- | -- | -- | Yes |
+| Priority support | -- | -- | Yes | Yes |
+
+---
+
+## Monthly Projection at 500 Users
+
+Distribution: 35% Starter, 45% Growth, 15% Pro, 5% Free
+
+```text
+Revenue:
+  175 Starter x $39             =   $6,825
+  225 Growth x $79              =  $17,775
+  75 Pro x $179                 =  $13,425
+  Top-ups (~15% of users)       =   $3,500
+  Total                         =  $41,525
+
+Costs (at 60% utilization):
+  Starter: 175 x 600cr x $0.015 =  $1,575
+  Growth: 225 x 1500cr x $0.015 =  $5,063
+  Pro: 75 x 3600cr x $0.015     =  $4,050
+  Video/HQ premium reserve      =  $1,000
+  Infrastructure                =    $200
+  Total COGS                    =  $11,888
+
+Gross Profit                    =  $29,637 (71% margin)
+
+Operating:
+  Ads (50 new users x $35 CAC)  =  -$1,750
+  Tools/operations              =  -$1,000
+
+Net Monthly Contribution        =  $26,887
+```
+
+---
+
+## vs Kive Side-by-Side Comparison
+
+| | Kive Basic | VOVV Starter | Kive Pro | VOVV Growth |
+|---|---|---|---|---|
+| Price | $40/mo | $39/mo | $100/mo | $79/mo |
+| Credits | 2,000 | 1,000 | 5,000 | 2,500 |
+| Images (approx) | 100-500 | ~250 | 250-1,250 | ~625 |
+| Try-On | No | No | No | **Yes** |
+| Video | Yes | No (Growth+) | Yes | **Yes** |
+| Brand Profiles | Limited | 3 | Unlimited | 10 |
+| AI Studio Team | No | **Yes** | No | **Yes** |
+
+VOVV is competitively priced: slightly cheaper than Kive with unique features (Try-On, AI Studio Team, Creative Drops) as upgrade drivers.
+
+---
+
+## What Users See on the UI
+
+When generating, users see credit costs like:
+- "4 credits" for a standard image (instead of "1 credit")
+- "10 credits" for high-quality (instead of "2 credits")
+- "8 credits" for try-on (instead of "3 credits")
+
+And their plan shows "1,000 credits/month" which psychologically feels generous -- the same trick Kive uses.
+
+---
+
+## Files to Update
+
+### 1. `src/data/mockData.ts` (lines 1839-1927)
+
+Update `pricingPlans` array:
+- Starter: $39/mo, $372/yr, 1000 credits
+- Growth: $79/mo, $756/yr, 2500 credits (highlighted, "Most Popular")
+- Pro: $179/mo, $1716/yr, 6000 credits
+- Enterprise: unchanged
+- Update all feature lists to reflect gating
+
+Update `creditPacks` array:
+- Pack 1: 500 credits, $15, $0.030/credit
+- Pack 2: 1500 credits, $39, $0.026/credit, popular: true
+- Pack 3: 4000 credits, $89, $0.0223/credit
+
+### 2. `src/contexts/CreditContext.tsx`
+
+Update `calculateCost` function (line 108-114):
+- Standard: `count * 4` (was `count * 1`)
+- High quality: `count * 10` (was `count * 2`)
+- Virtual Try-On: `count * 8` (was `count * 3`)
+- Add video mode: `count * 30` (base)
+- Update `LOW_CREDIT_THRESHOLD` from 50 to 200
+- Update `CRITICAL_THRESHOLD` from 10 to 40
+
+### 3. `src/types/index.ts`
+
+- Add `'video'` to `GenerationMode` type
+- Free signup credits: change from 5 to 20 in relevant places
+
+### 4. `src/components/app/GenerationModeToggle.tsx` (line 21-22)
+
+- Product Shot: change `'1-2 credits/image'` to `'4-10 credits/image'`
+- Virtual Try-On: change `'3 credits/image'` to `'8-15 credits/image'`
+
+### 5. `src/components/app/GenerationModeCards.tsx` (lines 32, 65)
+
+- Product Photos: `'1-2 credits per image'` to `'4-10 credits per image'`
+- Virtual Try-On: `'3 credits per image'` to `'8-15 credits per image'`
+
+### 6. `src/components/app/GenerateConfirmModal.tsx` (line 40)
+
+- Change: `const creditsPerImage = quality === 'high' ? 2 : 1;`
+- To: `const creditsPerImage = quality === 'high' ? 10 : 4;`
+
+### 7. `src/components/app/TryOnConfirmModal.tsx` (line 42)
+
+- Change: `const creditsPerImage = 3;`
+- To: `const creditsPerImage = 8;`
+
+### 8. `src/pages/Generate.tsx` (line 415)
+
+- Change credit calculation from `3` / `2` / `1` to `8` / `10` / `4`
+
+### 9. `src/pages/Freestyle.tsx` (line 78)
+
+- Change: `const creditCost = imageCount * (quality === 'high' ? 2 : 1);`
+- To: `const creditCost = imageCount * (quality === 'high' ? 10 : 4);`
+
+### 10. `src/components/app/freestyle/FreestyleSettingsChips.tsx` (lines 186-187)
+
+- Change `'1 credit per image'` to `'4 credits per image'`
+- Change `'2 credits per image'` to `'10 credits per image'`
+
+### 11. `src/components/app/BulkSettingsCard.tsx` (lines 90, 97)
+
+- Change `'~1 credit/image'` to `'~4 credits/image'`
+- Change `'~3 credits/image'` to `'~8 credits/image'`
+
+### 12. `src/types/bulk.ts` (line 75)
+
+- Change: `const creditsPerImage = mode === 'virtual-try-on' ? 3 : 1;`
+- To: `const creditsPerImage = mode === 'virtual-try-on' ? 8 : 4;`
+
+### 13. `src/components/app/WorkflowCard.tsx` (line 80)
+
+- Change `* 3` to `* 8` and `* 2` to `* 4` for credit display
+
+### 14. `src/components/app/CompetitorComparison.tsx`
+
+- Update prices: VOVV.AI `$0.04`, Competitor A `$0.08`, Competitor B `$0.12`
+- Update savings text accordingly
+
+### 15. `src/pages/Settings.tsx`
+
+- Line 53: `creditsTotal` from 1000 to 2500 (Growth plan)
+- Line 245: Update quality labels to `'Standard (4 credits/image)'` and `'High (10 credits/image)'`
+- Line 268: Update `'500 credits/month'` to `'2,500 credits/month'`
+
+### 16. `src/components/landing/LandingPricing.tsx` (line 84)
+
+- Change divisor from 20 to 40 for "visual sets" calculation (since each set now costs more credits)
+
+### 17. Free signup credits
+
+- Update from 5 to 20 wherever the free credits value is set (database default on profiles table, any hardcoded references)
+- 20 free credits = 5 standard images (same as before, but the number "20" looks more generous)
