@@ -7,6 +7,7 @@ import type { ModelProfile, TryOnPose } from '@/types';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
+type BrandProfile = Tables<'brand_profiles'>;
 
 interface FreestylePromptPanelProps {
   prompt: string;
@@ -43,6 +44,18 @@ interface FreestylePromptPanelProps {
   onImageCountChange: (count: number) => void;
   stylePresets: string[];
   onStylePresetsChange: (ids: string[]) => void;
+  // Brand profile
+  selectedBrandProfile: BrandProfile | null;
+  onBrandProfileSelect: (profile: BrandProfile | null) => void;
+  brandProfilePopoverOpen: boolean;
+  onBrandProfilePopoverChange: (open: boolean) => void;
+  brandProfiles: BrandProfile[];
+  isLoadingBrandProfiles: boolean;
+  // Negatives
+  negatives: string[];
+  onNegativesChange: (negatives: string[]) => void;
+  negativesPopoverOpen: boolean;
+  onNegativesPopoverChange: (open: boolean) => void;
 }
 
 export function FreestylePromptPanel({
