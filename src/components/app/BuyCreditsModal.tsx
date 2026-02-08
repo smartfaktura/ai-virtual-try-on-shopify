@@ -198,7 +198,7 @@ export function BuyCreditsModal() {
 
                 {/* Alt plan for free users */}
                 {altPlan && (
-                  <div className="flex items-center justify-between p-2.5 rounded-lg border border-border bg-muted/30">
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/30">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium">{altPlan.name}</span>
                       <span className="text-[10px] text-muted-foreground">
