@@ -477,7 +477,7 @@ export default function BrandProfileWizard() {
                     onChange={e => setCustomRule(e.target.value)}
                     placeholder="Add custom exclusion…"
                     className="h-8 text-xs bg-background flex-1"
-                    onKeyDown={e => e.key === 'Enter' && addCustomChip('do_not_rules', customRule, setCustomRule)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addCustomChip('do_not_rules', customRule, setCustomRule); } }}
                   />
                   <Button
                     variant="ghost"
