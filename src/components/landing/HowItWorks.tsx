@@ -141,9 +141,9 @@ export function HowItWorks() {
             {/* Workflow selector visual */}
             <div className="flex justify-center lg:order-1">
               <div className="w-full max-w-sm">
-                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="rounded-2xl border border-border bg-card shadow-sm">
                   {/* Selection row */}
-                  <div className="p-3 border-b border-border">
+                  <div className="p-3 border-b border-border rounded-t-2xl">
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Your Selection</p>
                     <div className="flex items-center gap-2">
                       <HoverPreview src={cropTopProduct} alt="Product" label="Product" />
@@ -156,7 +156,7 @@ export function HowItWorks() {
                     </div>
                   </div>
                   {/* Generate button */}
-                  <div className="p-3">
+                  <div className="p-3 rounded-b-2xl">
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1.5">
                         {['Ad Refresh', 'Hero Set', 'Lifestyle'].map((wf) => (
