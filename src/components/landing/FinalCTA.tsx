@@ -2,6 +2,30 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+import avatarAmara from '@/assets/team/avatar-amara.jpg';
+import avatarKenji from '@/assets/team/avatar-kenji.jpg';
+import avatarLeo from '@/assets/team/avatar-leo.jpg';
+import avatarLuna from '@/assets/team/avatar-luna.jpg';
+import avatarMax from '@/assets/team/avatar-max.jpg';
+import avatarOmar from '@/assets/team/avatar-omar.jpg';
+import avatarSienna from '@/assets/team/avatar-sienna.jpg';
+import avatarSophia from '@/assets/team/avatar-sophia.jpg';
+import avatarYuki from '@/assets/team/avatar-yuki.jpg';
+import avatarZara from '@/assets/team/avatar-zara.jpg';
+
+const TEAM_AVATARS = [
+  { name: 'Sophia', src: avatarSophia },
+  { name: 'Kenji', src: avatarKenji },
+  { name: 'Zara', src: avatarZara },
+  { name: 'Leo', src: avatarLeo },
+  { name: 'Amara', src: avatarAmara },
+  { name: 'Luna', src: avatarLuna },
+  { name: 'Max', src: avatarMax },
+  { name: 'Omar', src: avatarOmar },
+  { name: 'Sienna', src: avatarSienna },
+  { name: 'Yuki', src: avatarYuki },
+];
+
 export function FinalCTA() {
   const navigate = useNavigate();
   return (
@@ -44,6 +68,22 @@ export function FinalCTA() {
             <Sparkles className="w-4 h-4 text-primary" />
             Cancel anytime
           </div>
+        </div>
+
+        {/* Team Avatars */}
+        <div className="flex flex-col items-center gap-3 mt-10">
+          <div className="flex items-center justify-center">
+            {TEAM_AVATARS.map((member, i) => (
+              <img
+                key={member.name}
+                src={member.src}
+                alt={member.name}
+                className="w-10 h-10 rounded-full border-2 border-background object-cover transition-transform duration-200 hover:scale-110 hover:z-10 relative"
+                style={{ marginLeft: i === 0 ? 0 : '-0.6rem' }}
+              />
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">Your studio team is ready</p>
         </div>
       </div>
     </section>
