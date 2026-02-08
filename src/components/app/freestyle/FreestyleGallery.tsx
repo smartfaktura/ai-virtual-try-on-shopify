@@ -180,7 +180,7 @@ function ImageCard({
   );
 }
 
-export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0 }: FreestyleGalleryProps) {
+export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0 }: FreestyleGalleryProps) {
   if (images.length === 0 && generatingCount === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-6">
