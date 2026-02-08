@@ -97,10 +97,13 @@ export function LandingNav() {
                 {link.label}
               </button>
             ))}
-            <div className="flex items-center gap-1.5 text-xs text-primary font-medium py-1">
+            <button
+              onClick={() => handleNavClick('#creative-drops')}
+              className="flex items-center gap-1.5 text-xs text-primary font-medium py-1 hover:text-primary/80 transition-colors"
+            >
               <Sparkles className="w-3 h-3" />
               Monthly Creative Drops
-            </div>
+            </button>
             <Button size="sm" className="rounded-full mt-2 font-semibold" onClick={() => navigate(user ? '/app' : '/auth')}>
               {user ? 'My Dashboard' : 'Start Free'}
             </Button>
