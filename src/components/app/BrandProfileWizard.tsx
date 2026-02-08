@@ -398,7 +398,7 @@ export default function BrandProfileWizard() {
                       className="w-24 h-8 text-xs bg-background"
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addColor(); } }}
                     />
-                    <Button variant="ghost" size="sm" className="h-8 px-2" onClick={addColor}>
+                    <Button type="button" variant="ghost" size="sm" className="h-8 px-2" onClick={addColor}>
                       <Plus className="w-3.5 h-3.5" />
                     </Button>
                   </div>
