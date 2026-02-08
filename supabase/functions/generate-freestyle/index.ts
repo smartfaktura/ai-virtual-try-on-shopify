@@ -231,9 +231,27 @@ serve(async (req) => {
       hasScene: !!body.sceneImage,
     };
 
-    const finalPrompt = body.polishPrompt
-      ? polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives)
-      : enrichedPrompt;
+    let finalPrompt: string;
+    if (body.polishPrompt) {
+      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives);
+    } else {
+      // Even without polish, apply brand context and negatives if provided
+      let unpolished = enrichedPrompt;
+      if (body.brandProfile) {
+        const bp = body.brandProfile;
+        const parts = [bp.tone, bp.lightingStyle, bp.backgroundStyle, bp.colorTemperature, bp.compositionBias].filter(Boolean);
+        if (parts.length > 0) unpolished += `\n\nBrand style: ${parts.join(", ")}`;
+      }
+      const allNeg: string[] = [
+        ...(body.brandProfile?.doNotRules || []),
+        ...(body.negatives || []),
+      ];
+      if (allNeg.length > 0) {
+        const dedupedNeg = [...new Set(allNeg.map(n => n.toLowerCase()))];
+        unpolished += `\n\nDo NOT include: ${dedupedNeg.join(", ")}`;
+      }
+      finalPrompt = unpolished;
+    }
 
     // Build image references
     const imageRefs: Array<{ type: "image_url"; image_url: { url: string } }> = [];
