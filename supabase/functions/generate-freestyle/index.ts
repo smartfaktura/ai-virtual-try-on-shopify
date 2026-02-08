@@ -10,6 +10,7 @@ interface FreestyleRequest {
   prompt: string;
   sourceImage?: string; // Base64 data URL
   modelImage?: string; // Base64 data URL
+  sceneImage?: string; // Base64 data URL
   aspectRatio: string;
   imageCount: number;
   quality: "standard" | "high";

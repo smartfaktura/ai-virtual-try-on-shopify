@@ -76,6 +76,7 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
           prompt: params.prompt,
           sourceImage: sourceImageBase64,
           modelImage: modelImageBase64,
+          sceneImage: sceneImageBase64,
           aspectRatio: params.aspectRatio,
           imageCount: params.imageCount,
           quality: params.quality,
