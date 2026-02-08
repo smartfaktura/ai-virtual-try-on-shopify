@@ -30,6 +30,7 @@ interface UseGenerateVideoResult {
     modelName?: string;
     aspectRatio?: '1:1' | '16:9' | '9:16';
     imageTailUrl?: string;
+    mode?: 'std' | 'pro';
   }) => void;
   reset: () => void;
   history: GeneratedVideo[];
