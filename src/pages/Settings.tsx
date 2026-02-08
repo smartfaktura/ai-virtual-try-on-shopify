@@ -242,8 +242,8 @@ export default function Settings() {
               <Select value={defaultQuality} onValueChange={v => setDefaultQuality(v as 'standard' | 'high')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Standard (1 credit/image)</SelectItem>
-                  <SelectItem value="high">High (2 credits/image)</SelectItem>
+                  <SelectItem value="standard">Standard (4 credits/image)</SelectItem>
+                  <SelectItem value="high">High (10 credits/image)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
