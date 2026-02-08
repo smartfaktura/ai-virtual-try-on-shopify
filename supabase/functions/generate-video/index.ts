@@ -20,7 +20,7 @@ async function createKlingJWT(accessKey: string, secretKey: string): Promise<str
   const header = base64url(new TextEncoder().encode(JSON.stringify({ alg: "HS256", typ: "JWT" })));
   const now = Math.floor(Date.now() / 1000);
   const payload = base64url(
-    new TextEncoder().encode(JSON.stringify({ iss: accessKey, exp: now + 1800, iat: now }))
+    new TextEncoder().encode(JSON.stringify({ iss: accessKey, exp: now + 1800, nbf: now - 5, iat: now }))
   );
   const data = `${header}.${payload}`;
   const key = await crypto.subtle.importKey(
