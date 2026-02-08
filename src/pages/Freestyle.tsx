@@ -60,6 +60,19 @@ export default function Freestyle() {
     enabled: !!user?.id,
   });
 
+  const { data: brandProfiles = [], isLoading: isLoadingBrandProfiles } = useQuery({
+    queryKey: ['brand-profiles', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('brand_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as BrandProfile[];
+    },
+    enabled: !!user?.id,
+  });
+
   const creditCost = imageCount * (quality === 'high' ? 2 : 1);
   const canGenerate = prompt.trim().length > 0 && !isLoading && balance >= creditCost;
 
