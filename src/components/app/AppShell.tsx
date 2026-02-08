@@ -151,11 +151,15 @@ export function AppShell({ children }: AppShellProps) {
         {/* Credits */}
         <div className={cn('border-t border-white/[0.06] pt-4', isCollapsed ? 'px-2 pb-2' : 'px-4 pb-3')}>
           {isCollapsed ? (
-            <div className="flex justify-center">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-sidebar-foreground/70" />
+            <button
+              onClick={() => navigate('/app/settings')}
+              className="flex justify-center w-full"
+              title="Upgrade plan"
+            >
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors">
+                <ArrowUpRight className="w-3.5 h-3.5 text-sidebar-foreground/70" />
               </div>
-            </div>
+            </button>
           ) : (
             <CreditIndicator />
           )}

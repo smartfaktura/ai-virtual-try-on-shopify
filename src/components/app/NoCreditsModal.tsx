@@ -69,8 +69,8 @@ export function NoCreditsModal({ open, onClose }: NoCreditsModalProps) {
           
           <div className="p-4 rounded-lg bg-muted border border-border flex items-center justify-between">
             <div>
-              <p className="font-semibold">Upgrade to Growth Plan</p>
-              <p className="text-sm text-muted-foreground">500 credits/month + Virtual Try-On</p>
+              <p className="font-semibold">Upgrade Your Plan</p>
+              <p className="text-sm text-muted-foreground">Get more monthly credits + unlock premium features</p>
             </div>
             <Button variant="outline" asChild>
               <a href="/app/settings">View Plans</a>
