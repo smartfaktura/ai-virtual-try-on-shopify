@@ -119,8 +119,8 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete }: Fre
               onExpand={onExpand}
               onDelete={onDelete}
               className={cn(
-                count === 1 && 'w-full max-h-[calc(100vh-280px)]',
-                count >= 2 && 'flex-1 min-w-0',
+                count === 1 && 'w-full max-h-[calc(100vh-320px)]',
+                count >= 2 && 'flex-1 min-w-0 max-h-[calc(100vh-320px)]',
               )}
             />
           ))}
