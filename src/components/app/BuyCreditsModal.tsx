@@ -94,8 +94,8 @@ export function BuyCreditsModal() {
 
         <Tabs defaultValue={isFree ? 'upgrade' : 'topup'} className="w-full flex-1 flex flex-col min-h-0">
           <TabsList className="w-full flex-shrink-0">
-            <TabsTrigger value="topup" className="flex-1 text-xs">Top Up</TabsTrigger>
-            <TabsTrigger value="upgrade" className="flex-1 text-xs">Upgrade Plan</TabsTrigger>
+            <TabsTrigger value="topup" className="flex-1 text-sm">Top Up</TabsTrigger>
+            <TabsTrigger value="upgrade" className="flex-1 text-sm">Upgrade Plan</TabsTrigger>
           </TabsList>
 
           {/* Top Up Tab */}
