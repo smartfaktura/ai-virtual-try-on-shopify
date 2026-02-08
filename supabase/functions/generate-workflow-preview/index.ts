@@ -9,25 +9,34 @@ const corsHeaders = {
 
 const workflowPrompts: Record<string, string> = {
   "Virtual Try-On Set":
-    "Ultra high resolution editorial fashion photography. A female model wearing a stylish cream knit outfit standing in a soft-lit professional studio. Full body shot, 3:4 portrait orientation, shallow depth of field, warm neutral tones, clean background. Magazine-quality fashion editorial.",
+    "Ultra high resolution bright editorial fashion photography. A beautiful female model wearing a stylish cream ribbed knit outfit standing in a luxurious soft-lit professional studio. Full body shot, 3:4 portrait orientation, shallow depth of field, warm golden-hour tones, clean creamy background. Ultra sharp details, bright natural lighting, premium magazine-quality fashion editorial. No text, no watermarks.",
+
   "Social Media Pack":
-    "Ultra high resolution vibrant social media lifestyle photography collage concept. A curated grid of lifestyle moments — coffee in hand, golden hour portrait, styled product flat lay, urban street snap. Bright saturated colors, 3:4 portrait orientation, aspirational and trendy commercial photography.",
+    "Ultra high resolution vibrant social media lifestyle photography. A curated aspirational scene — a beautiful woman in golden hour light holding a luxury skincare product, surrounded by soft bokeh and warm tones. Bright saturated colors, 3:4 portrait orientation, trendy commercial photography with natural sunshine. Ultra sharp, premium aesthetic. No text, no watermarks.",
+
   "Product Listing Set":
-    "Ultra high resolution clean e-commerce product photography. A luxury skincare bottle on a white marble surface with soft diffused studio lighting and minimal shadows. Crisp details, 3:4 portrait orientation, premium minimalist commercial product shot.",
+    "Ultra high resolution clean premium e-commerce product photography. A luxury glass skincare bottle on polished white marble surface with soft diffused natural studio lighting, minimal shadows, and gentle reflections. Crisp ultra-sharp details, 3:4 portrait orientation, bright airy minimalist commercial product shot. No text, no watermarks.",
+
   "Lifestyle Set":
-    "Ultra high resolution lifestyle product photography. An elegant candle and home decor items arranged in a cozy living room setting with warm ambient lighting, linen textures, and soft bokeh. 3:4 portrait orientation, editorial interior photography.",
+    "Ultra high resolution lifestyle product photography. An elegant soy candle and artisan home decor items beautifully arranged in a bright Scandinavian living room setting with warm morning sunlight streaming through sheer curtains, linen textures, and natural botanicals. 3:4 portrait orientation, bright warm editorial interior photography. Ultra sharp. No text, no watermarks.",
+
   "Website Hero Set":
-    "Ultra high resolution cinematic fashion editorial photograph. A model in an elegant flowing dress walking through a lush botanical garden with dramatic golden-hour natural lighting. 3:4 portrait orientation, wide composition, aspirational hero banner imagery.",
+    "Ultra high resolution cinematic fashion editorial photograph. A stunning model in an elegant flowing silk dress walking through a lush sun-drenched botanical garden with dramatic golden-hour backlighting and lens flare. 3:4 portrait orientation, wide aspirational composition, bright vibrant hero banner imagery. Ultra sharp details, premium aesthetic. No text, no watermarks.",
+
   "Ad Refresh Set":
-    "Ultra high resolution dynamic advertising fashion photography. A model in a bold streetwear outfit against a vibrant urban backdrop with graffiti walls and neon accents. High contrast, energetic composition, 3:4 portrait orientation, commercial ad campaign style.",
+    "Ultra high resolution dynamic advertising fashion photography. An athletic model in a bold modern streetwear outfit confidently posing against a vibrant colorful urban backdrop with warm golden light. High contrast, energetic confident composition, 3:4 portrait orientation, bright commercial ad campaign style. Ultra sharp, premium aesthetic. No text, no watermarks.",
+
   "Selfie / UGC Set":
-    "Ultra high resolution casual user-generated content style photo. A young woman taking a mirror selfie in a warm coffee shop, holding a skincare product, natural phone-camera aesthetic with soft warm tones. 3:4 portrait orientation, authentic and relatable UGC style.",
+    "Ultra high resolution casual user-generated content style photo. A beautiful young woman taking a bright well-lit mirror selfie in a stylish warm-toned cafe, casually holding a luxury skincare product. Natural phone-camera aesthetic with soft warm golden tones and natural window light. 3:4 portrait orientation, authentic and aspirational UGC style. Ultra sharp. No text, no watermarks.",
+
   "Flat Lay Set":
-    "Ultra high resolution overhead flat lay product photography. A beautifully arranged collection of fashion accessories, cosmetics, and lifestyle items on a clean white marble surface with eucalyptus leaves and gold accents. 3:4 portrait orientation, styled editorial flat lay.",
+    "Ultra high resolution overhead flat lay product photography. A beautifully styled arrangement of premium cosmetics, brushes, and skincare products on clean white marble with fresh eucalyptus sprigs and delicate gold accents. Bright natural top-down lighting, 3:4 portrait orientation, luxury editorial flat lay. Ultra sharp crisp details. No text, no watermarks.",
+
   "Seasonal Campaign Set":
-    "Ultra high resolution four-season product photography concept. A split composition showing the same elegant product across four seasonal settings — spring cherry blossoms, summer sunshine, autumn golden leaves, winter frost. 3:4 portrait orientation, cohesive campaign imagery.",
+    "Ultra high resolution seasonal product photography concept. A luxury skincare bottle elegantly surrounded by fresh spring cherry blossoms and soft pink petals with bright natural daylight and a clean pastel background. 3:4 portrait orientation, cohesive premium seasonal campaign imagery. Ultra sharp, bright aesthetic. No text, no watermarks.",
+
   "Before & After Set":
-    "Ultra high resolution before and after skincare transformation photography. A clean split-screen composition showing skin texture improvement, soft studio lighting, clinical yet aspirational aesthetic. 3:4 portrait orientation, wellness brand imagery.",
+    "Ultra high resolution bright skincare transformation photography. A close-up of radiant glowing skin with soft professional studio lighting, clean clinical yet aspirational aesthetic with bright white background. Dewey fresh skin texture, 3:4 portrait orientation, premium wellness brand imagery. Ultra sharp, bright and natural. No text, no watermarks.",
 };
 
 serve(async (req) => {
@@ -36,7 +45,7 @@ serve(async (req) => {
   }
 
   try {
-    const { workflow_id } = await req.json();
+    const { workflow_id, regenerate } = await req.json();
     if (!workflow_id) {
       return new Response(JSON.stringify({ error: "workflow_id is required" }), {
         status: 400,
@@ -54,7 +63,7 @@ serve(async (req) => {
     // Fetch workflow
     const { data: workflow, error: wfErr } = await supabase
       .from("workflows")
-      .select("name, description")
+      .select("name, description, preview_image_url")
       .eq("id", workflow_id)
       .single();
 
@@ -65,12 +74,20 @@ serve(async (req) => {
       });
     }
 
+    // Skip if already has preview and not regenerating
+    if (workflow.preview_image_url && !regenerate) {
+      return new Response(
+        JSON.stringify({ success: true, preview_image_url: workflow.preview_image_url, skipped: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const prompt = workflowPrompts[workflow.name] ||
-      `Ultra high resolution professional product photography representing "${workflow.name}". ${workflow.description}. 3:4 portrait orientation, commercial quality.`;
+      `Ultra high resolution professional product photography representing "${workflow.name}". ${workflow.description}. 3:4 portrait orientation, bright natural lighting, ultra sharp, premium aesthetic. No text, no watermarks.`;
 
     console.log(`Generating preview for "${workflow.name}" with prompt: ${prompt.substring(0, 100)}...`);
 
-    // Generate image via AI gateway
+    // Generate image via AI gateway — premium model
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -78,7 +95,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
+        model: "google/gemini-3-pro-image-preview",
         messages: [{ role: "user", content: prompt }],
         modalities: ["image", "text"],
       }),
@@ -120,7 +137,7 @@ serve(async (req) => {
     const ext = mimeMatch ? mimeMatch[1] : "png";
     const fileName = `${workflow_id}.${ext}`;
 
-    // Upload to storage bucket
+    // Upload to storage bucket (upsert to overwrite on regenerate)
     const { error: uploadErr } = await supabase.storage
       .from("workflow-previews")
       .upload(fileName, imageBytes, {
@@ -133,12 +150,12 @@ serve(async (req) => {
       throw new Error(`Storage upload failed: ${uploadErr.message}`);
     }
 
-    // Get public URL
+    // Get public URL with cache-busting timestamp
     const { data: publicUrlData } = supabase.storage
       .from("workflow-previews")
       .getPublicUrl(fileName);
 
-    const publicUrl = publicUrlData.publicUrl;
+    const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
 
     // Update workflow row with preview URL
     const { error: updateErr } = await supabase

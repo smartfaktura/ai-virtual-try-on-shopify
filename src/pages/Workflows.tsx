@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
 import { Button } from '@/components/ui/button';
