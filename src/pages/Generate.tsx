@@ -2,6 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette } from 'lucide-react';
+
+import avatarSophia from '@/assets/team/avatar-sophia.jpg';
+import avatarZara from '@/assets/team/avatar-zara.jpg';
+import avatarKenji from '@/assets/team/avatar-kenji.jpg';
+import avatarLuna from '@/assets/team/avatar-luna.jpg';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
