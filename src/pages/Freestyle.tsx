@@ -155,6 +155,7 @@ export default function Freestyle() {
             onDownload={handleDownload}
             onExpand={openLightbox}
             onDelete={handleDelete}
+            onCopyPrompt={setPrompt}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
