@@ -5,16 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Workflow } from '@/pages/Workflows';
 
-import imgVirtualTryOn from '@/assets/drops/drop-model-cream-bodysuit.jpg';
-import imgSocialMedia from '@/assets/showcase/food-coffee-artisan.jpg';
-import imgProductListing from '@/assets/showcase/skincare-serum-marble.jpg';
-import imgLifestyle from '@/assets/showcase/home-candle-evening.jpg';
-import imgWebsiteHero from '@/assets/showcase/fashion-dress-botanical.jpg';
-import imgAdRefresh from '@/assets/showcase/fashion-blazer-street.jpg';
-import imgSelfieUGC from '@/assets/drops/drop-model-pink-hoodie.jpg';
-import imgFlatLay from '@/assets/templates/clothing-flatlay.jpg';
-import imgSeasonal from '@/assets/showcase/food-honey-golden.jpg';
-import imgBeforeAfter from '@/assets/showcase/skincare-cream-botanical.jpg';
+import imgVirtualTryOn from '@/assets/workflows/workflow-virtual-tryon.jpg';
+import imgSocialMedia from '@/assets/workflows/workflow-social-media.jpg';
+import imgProductListing from '@/assets/workflows/workflow-product-listing.jpg';
+import imgLifestyle from '@/assets/workflows/workflow-lifestyle.jpg';
+import imgWebsiteHero from '@/assets/workflows/workflow-website-hero.jpg';
+import imgAdRefresh from '@/assets/workflows/workflow-ad-refresh.jpg';
+import imgSelfieUGC from '@/assets/workflows/workflow-selfie-ugc.jpg';
+import imgFlatLay from '@/assets/workflows/workflow-flat-lay.jpg';
+import imgSeasonal from '@/assets/workflows/workflow-seasonal.jpg';
+import imgBeforeAfter from '@/assets/workflows/workflow-before-after.jpg';
 import imgFallback from '@/assets/templates/universal-clean.jpg';
 
 interface WorkflowCardProps {
