@@ -59,6 +59,7 @@ const App = () => (
                       <Route path="/templates/:id" element={<Templates />} />
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/jobs/:id" element={<Jobs />} />
+                      <Route path="/video" element={<VideoGenerate />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>

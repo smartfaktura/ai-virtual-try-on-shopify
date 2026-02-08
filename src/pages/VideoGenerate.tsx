@@ -108,8 +108,10 @@ export default function VideoGenerate() {
     <div className="space-y-6">
       <PageHeader
         title="Video Generator"
-        description="Turn any image into an animated video clip using AI"
-      />
+        subtitle="Turn any image into an animated video clip using AI"
+      >
+        <div />
+      </PageHeader>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Left Column: Input */}
