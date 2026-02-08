@@ -98,7 +98,7 @@ export default function Onboarding() {
       toast.error('Failed to save profile. Please try again.');
       console.error(error);
     } else {
-      toast.success('Welcome to brandframe.ai!');
+      toast.success('Welcome to framea.ai!');
       navigate('/app', { replace: true });
     }
 
