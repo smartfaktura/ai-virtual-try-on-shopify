@@ -141,7 +141,7 @@ export function HowItWorks() {
             {/* Workflow selector visual */}
             <div className="flex justify-center lg:order-1">
               <div className="w-full max-w-sm">
-                <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="rounded-2xl border border-border bg-card shadow-sm">
                   {/* Selection row */}
                   <div className="p-3 border-b border-border">
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Your Selection</p>
