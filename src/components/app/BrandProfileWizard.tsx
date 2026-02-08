@@ -412,13 +412,16 @@ export default function BrandProfileWizard() {
                       key={kw}
                       onClick={() => toggleChip('brand_keywords', kw)}
                       className={cn(
-                        'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
                         form.brand_keywords.includes(kw)
                           ? 'bg-primary/10 border-primary/30 text-primary'
-                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted'
+                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                       )}
                     >
-                      {form.brand_keywords.includes(kw) && <Check className="w-2.5 h-2.5 inline mr-1" />}
+                      {form.brand_keywords.includes(kw)
+                        ? <X className="w-3 h-3 -ml-0.5" />
+                        : <Plus className="w-3 h-3 -ml-0.5" />
+                      }
                       {kw}
                     </button>
                   ))}
