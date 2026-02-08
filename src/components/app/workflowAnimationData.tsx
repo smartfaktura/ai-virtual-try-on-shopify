@@ -1,120 +1,253 @@
-import { Plus, User, MapPin, Sparkles, Instagram, Layout, Image, Palette, Sun, Moon, Leaf, Snowflake, Camera, Share2, Globe, Wand2, Shirt, Eye, ArrowLeftRight, Layers, Grid3X3, Star, Zap } from 'lucide-react';
-import type { AnimatedStep } from './WorkflowAnimatedThumbnail';
+import { Plus, User, MapPin, Sparkles, Layout, Image, Camera, Globe, Shirt, Eye, ArrowLeftRight, Layers, Grid3X3, Star, Zap, Palette, Sun, Leaf, Wand2 } from 'lucide-react';
+import type { SceneElement, WorkflowScene } from './WorkflowAnimatedThumbnail';
 
-// === Virtual Try-On Set ===
+/* ── Asset imports ── */
+
+// Virtual Try-On
 import tryonProduct from '@/assets/products/tank-white-1.jpg';
 import tryonModel from '@/assets/models/model-female-slim-american-blonde.jpg';
 import tryonScene from '@/assets/poses/pose-lifestyle-coffee.jpg';
 import tryonResult from '@/assets/drops/drop-model-cream-bodysuit.jpg';
 
-// === Social Media Pack ===
+// Social Media Pack
 import socialProduct from '@/assets/products/serum-vitamin-c.jpg';
-import socialScene1 from '@/assets/showcase/skincare-serum-morning.jpg';
-import socialScene2 from '@/assets/showcase/skincare-oil-lifestyle.jpg';
 import socialResult from '@/assets/workflows/workflow-social-media.jpg';
 
-// === Product Listing Set ===
+// Product Listing Set
 import listingProduct from '@/assets/products/cream-hyaluronic.jpg';
-import listingScene from '@/assets/showcase/skincare-serum-marble.jpg';
 import listingResult from '@/assets/workflows/workflow-product-listing.jpg';
 
-// === Lifestyle Set ===
+// Lifestyle Set
 import lifestyleProduct from '@/assets/products/candle-soy.jpg';
 import lifestyleScene from '@/assets/showcase/home-candle-scandi.jpg';
 import lifestyleResult from '@/assets/workflows/workflow-lifestyle.jpg';
 
-// === Website Hero Set ===
+// Website Hero Set
 import heroProduct from '@/assets/products/faux-fur-jacket-1.jpg';
 import heroModel from '@/assets/models/model-female-athletic-european.jpg';
-import heroScene from '@/assets/showcase/fashion-dress-botanical.jpg';
 import heroResult from '@/assets/workflows/workflow-website-hero.jpg';
 
-// === Ad Refresh Set ===
+// Ad Refresh Set
 import adProduct from '@/assets/products/leggings-black-1.jpg';
 import adModel from '@/assets/models/model-female-athletic-mixed.jpg';
 import adResult from '@/assets/workflows/workflow-ad-refresh.jpg';
 
-// === Selfie / UGC Set ===
+// Selfie / UGC Set
 import ugcProduct from '@/assets/products/lipstick-matte.jpg';
 import ugcModel from '@/assets/models/model-female-average-american-redhead.jpg';
 import ugcResult from '@/assets/workflows/workflow-selfie-ugc.jpg';
 
-// === Flat Lay Set ===
+// Flat Lay Set
 import flatProduct1 from '@/assets/products/powder-setting.jpg';
 import flatProduct2 from '@/assets/products/lipstick-matte.jpg';
 import flatResult from '@/assets/workflows/workflow-flat-lay.jpg';
 
-// === Seasonal Campaign Set ===
+// Seasonal Campaign Set
 import seasonProduct from '@/assets/products/retinol-treatment.jpg';
-import seasonSpring from '@/assets/showcase/skincare-cream-botanical.jpg';
 import seasonResult from '@/assets/workflows/workflow-seasonal.jpg';
 
-// === Before & After Set ===
+// Before & After Set
 import baProduct from '@/assets/products/serum-vitamin-c.jpg';
-import baBefore from '@/assets/showcase/skincare-set-minimal.jpg';
 import baResult from '@/assets/workflows/workflow-before-after.jpg';
 
-export const workflowAnimations: Record<string, AnimatedStep[]> = {
-  'Virtual Try-On Set': [
-    { image: tryonProduct, label: 'Upload Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
-    { image: tryonModel, label: 'Select Model', icon: <User className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
-    { image: tryonScene, label: 'Choose Scene', icon: <MapPin className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-left' },
-    { image: tryonResult, label: 'Result', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
-  ],
+/* ── Scene definitions ── */
 
-  'Social Media Pack': [
-    { image: socialProduct, label: 'Pick Product', icon: <Image className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
-    { image: socialScene1, label: 'Morning Light', icon: <Sun className="w-3.5 h-3.5" />, transition: 'slide-right' },
-    { image: socialScene2, label: 'Lifestyle Shot', icon: <Camera className="w-3.5 h-3.5" />, transition: 'slide-left' },
-    { image: socialResult, label: 'Feed Ready', icon: <Grid3X3 className="w-3.5 h-3.5" />, overlay: 'result', transition: 'scale' },
-  ],
+export const workflowScenes: Record<string, WorkflowScene> = {
 
-  'Product Listing Set': [
-    { image: listingProduct, label: 'Upload Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
-    { image: listingScene, label: 'Studio Setup', icon: <Layout className="w-3.5 h-3.5" />, overlay: 'action', transition: 'zoom' },
-    { image: listingResult, label: 'Listing Ready', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'slide-up' },
-  ],
+  'Virtual Try-On Set': {
+    background: tryonResult,
+    elements: [
+      {
+        type: 'product', image: tryonProduct, label: 'Tank Top', sublabel: 'Product',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
+        position: { top: '40%', left: '38%' }, enterDelay: 0.9, animation: 'pop',
+      },
+      {
+        type: 'model', image: tryonModel, label: 'Slim Blonde',
+        icon: <User className="w-3 h-3" />,
+        position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
+      },
+      {
+        type: 'scene', image: tryonScene, label: 'Coffee Shop', sublabel: 'Scene',
+        icon: <MapPin className="w-3 h-3" />,
+        position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
+      },
+    ],
+  },
 
-  'Lifestyle Set': [
-    { image: lifestyleProduct, label: 'Pick Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
-    { image: lifestyleScene, label: 'Choose Setting', icon: <MapPin className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
-    { image: lifestyleResult, label: 'In Context', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
-  ],
+  'Social Media Pack': {
+    background: socialResult,
+    elements: [
+      {
+        type: 'product', image: socialProduct, label: 'Vitamin C', sublabel: 'Product',
+        icon: <Image className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'badge', label: 'Story', icon: <Camera className="w-3 h-3" />,
+        position: { top: '34%', right: '8%' }, enterDelay: 0.9, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: 'Post', icon: <Grid3X3 className="w-3 h-3" />,
+        position: { top: '48%', right: '14%' }, enterDelay: 1.3, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: 'Reel', icon: <Sun className="w-3 h-3" />,
+        position: { top: '62%', right: '8%' }, enterDelay: 1.7, animation: 'slide-right',
+      },
+    ],
+  },
 
-  'Website Hero Set': [
-    { image: heroProduct, label: 'Select Product', icon: <Shirt className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
-    { image: heroModel, label: 'Choose Model', icon: <User className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-left' },
-    { image: heroScene, label: 'Set Location', icon: <Globe className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
-    { image: heroResult, label: 'Hero Shot', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
-  ],
+  'Product Listing Set': {
+    background: listingResult,
+    elements: [
+      {
+        type: 'product', image: listingProduct, label: 'HA Cream', sublabel: 'Product',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'badge', label: 'Studio', icon: <Layout className="w-3 h-3" />,
+        position: { top: '38%', right: '8%' }, enterDelay: 1.0, animation: 'slide-right',
+      },
+      {
+        type: 'action', label: '', icon: <Camera className="w-4 h-4" />,
+        position: { bottom: '24%', left: '38%' }, enterDelay: 1.6, animation: 'pop',
+      },
+    ],
+  },
 
-  'Ad Refresh Set': [
-    { image: adProduct, label: 'Pick Product', icon: <Zap className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
-    { image: adModel, label: 'Select Model', icon: <User className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
-    { image: adResult, label: 'Ad Ready', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'scale' },
-  ],
+  'Lifestyle Set': {
+    background: lifestyleResult,
+    elements: [
+      {
+        type: 'product', image: lifestyleProduct, label: 'Soy Candle', sublabel: 'Product',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '10%', right: '6%' }, enterDelay: 0.3, animation: 'slide-right',
+      },
+      {
+        type: 'scene', image: lifestyleScene, label: 'Scandi', sublabel: 'Setting',
+        icon: <MapPin className="w-3 h-3" />,
+        position: { bottom: '20%', left: '6%' }, enterDelay: 1.0, animation: 'slide-up',
+      },
+    ],
+  },
 
-  'Selfie / UGC Set': [
-    { image: ugcProduct, label: 'Choose Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
-    { image: ugcModel, label: 'Pick Creator', icon: <User className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-left' },
-    { image: ugcResult, label: 'UGC Ready', icon: <Star className="w-3.5 h-3.5" />, overlay: 'result', transition: 'slide-up' },
-  ],
+  'Website Hero Set': {
+    background: heroResult,
+    elements: [
+      {
+        type: 'product', image: heroProduct, label: 'Faux Fur', sublabel: 'Product',
+        icon: <Shirt className="w-3 h-3" />,
+        position: { top: '8%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'model', image: heroModel, label: 'Athletic',
+        icon: <User className="w-3 h-3" />,
+        position: { top: '32%', right: '6%' }, enterDelay: 1.0, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: 'Botanical', icon: <Globe className="w-3 h-3" />,
+        position: { bottom: '22%', left: '8%' }, enterDelay: 1.6, animation: 'slide-up',
+      },
+    ],
+  },
 
-  'Flat Lay Set': [
-    { image: flatProduct1, label: 'Add Products', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
-    { image: flatProduct2, label: 'Style Props', icon: <Palette className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
-    { image: flatResult, label: 'Flat Lay Done', icon: <Layers className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
-  ],
+  'Ad Refresh Set': {
+    background: adResult,
+    elements: [
+      {
+        type: 'product', image: adProduct, label: 'Leggings', sublabel: 'Product',
+        icon: <Zap className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'model', image: adModel, label: 'Athletic',
+        icon: <User className="w-3 h-3" />,
+        position: { top: '36%', right: '6%' }, enterDelay: 1.0, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: 'Refresh', icon: <Zap className="w-3 h-3" />,
+        position: { bottom: '22%', left: '30%' }, enterDelay: 1.6, animation: 'pop',
+      },
+    ],
+  },
 
-  'Seasonal Campaign Set': [
-    { image: seasonProduct, label: 'Pick Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
-    { image: seasonSpring, label: 'Spring Vibes', icon: <Leaf className="w-3.5 h-3.5" />, transition: 'slide-right' },
-    { image: seasonResult, label: '4 Seasons', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
-  ],
+  'Selfie / UGC Set': {
+    background: ugcResult,
+    elements: [
+      {
+        type: 'product', image: ugcProduct, label: 'Lipstick', sublabel: 'Product',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'model', image: ugcModel, label: 'Creator',
+        icon: <Star className="w-3 h-3" />,
+        position: { top: '34%', right: '6%' }, enterDelay: 1.0, animation: 'slide-right',
+      },
+    ],
+  },
 
-  'Before & After Set': [
-    { image: baProduct, label: 'Select Product', icon: <Eye className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
-    { image: baBefore, label: 'Before State', icon: <ArrowLeftRight className="w-3.5 h-3.5" />, transition: 'slide-left' },
-    { image: baResult, label: 'Transformation', icon: <Wand2 className="w-3.5 h-3.5" />, overlay: 'result', transition: 'scale' },
-  ],
+  'Flat Lay Set': {
+    background: flatResult,
+    elements: [
+      {
+        type: 'product', image: flatProduct1, label: 'Powder', sublabel: 'Product 1',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'product', image: flatProduct2, label: 'Lipstick', sublabel: 'Product 2',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '36%', right: '6%' }, enterDelay: 0.9, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: 'Arrange', icon: <Layers className="w-3 h-3" />,
+        position: { bottom: '22%', left: '28%' }, enterDelay: 1.5, animation: 'pop',
+      },
+    ],
+  },
+
+  'Seasonal Campaign Set': {
+    background: seasonResult,
+    elements: [
+      {
+        type: 'product', image: seasonProduct, label: 'Retinol', sublabel: 'Product',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'badge', label: 'Spring', icon: <Leaf className="w-3 h-3" />,
+        position: { top: '34%', right: '8%' }, enterDelay: 0.9, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: '4 Seasons', icon: <Palette className="w-3 h-3" />,
+        position: { bottom: '24%', left: '8%' }, enterDelay: 1.5, animation: 'slide-up',
+      },
+    ],
+  },
+
+  'Before & After Set': {
+    background: baResult,
+    elements: [
+      {
+        type: 'product', image: baProduct, label: 'Serum', sublabel: 'Product',
+        icon: <Eye className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'badge', label: 'Before', icon: <ArrowLeftRight className="w-3 h-3" />,
+        position: { top: '40%', left: '10%' }, enterDelay: 1.0, animation: 'slide-left',
+      },
+      {
+        type: 'badge', label: 'After', icon: <Wand2 className="w-3 h-3" />,
+        position: { top: '40%', right: '10%' }, enterDelay: 1.5, animation: 'slide-right',
+      },
+    ],
+  },
 };
