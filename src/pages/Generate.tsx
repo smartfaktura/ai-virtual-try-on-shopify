@@ -142,6 +142,17 @@ export default function Generate() {
 
   const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
   const { generate: generateProduct, isLoading: isProductGenerating, progress: productProgress } = useGenerateProduct();
+  const { generate: generateWorkflow, isLoading: isWorkflowGenerating, progress: workflowProgress } = useGenerateWorkflow();
+
+  // Workflow generation config shortcuts
+  const workflowConfig = activeWorkflow?.generation_config ?? null;
+  const hasWorkflowConfig = !!workflowConfig;
+  const variationStrategy = workflowConfig?.variation_strategy;
+  const uiConfig = workflowConfig?.ui_config;
+
+  // Selected variation indices for workflow generation
+  const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
+  const [workflowVariationLabels, setWorkflowVariationLabels] = useState<string[]>([]);
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
