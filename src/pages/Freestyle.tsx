@@ -152,6 +152,11 @@ export default function Freestyle() {
       colorTemperature: selectedBrandProfile.color_temperature,
       compositionBias: selectedBrandProfile.composition_bias,
       doNotRules: selectedBrandProfile.do_not_rules,
+      brandKeywords: (selectedBrandProfile as any).brand_keywords || [],
+      colorPalette: (selectedBrandProfile as any).color_palette || [],
+      preferredScenes: (selectedBrandProfile as any).preferred_scenes || [],
+      targetAudience: (selectedBrandProfile as any).target_audience || '',
+      photographyReference: (selectedBrandProfile as any).photography_reference || '',
     } : undefined;
 
     const result = await generate({

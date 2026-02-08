@@ -17,6 +17,7 @@ import Auth from '@/pages/Auth';
 import Onboarding from '@/pages/Onboarding';
 import NotFound from '@/pages/NotFound';
 import BrandProfiles from '@/pages/BrandProfiles';
+import BrandProfileWizard from '@/components/app/BrandProfileWizard';
 import Workflows from '@/pages/Workflows';
 import Products from '@/pages/Products';
 import CreativeDrops from '@/pages/CreativeDrops';
@@ -50,6 +51,8 @@ const App = () => (
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/products" element={<Products />} />
                       <Route path="/brand-profiles" element={<BrandProfiles />} />
+                      <Route path="/brand-profiles/new" element={<BrandProfileWizard />} />
+                      <Route path="/brand-profiles/:id/edit" element={<BrandProfileWizard />} />
                       <Route path="/workflows" element={<Workflows />} />
                       <Route path="/creative-drops" element={<CreativeDrops />} />
                       <Route path="/generate" element={<Generate />} />
