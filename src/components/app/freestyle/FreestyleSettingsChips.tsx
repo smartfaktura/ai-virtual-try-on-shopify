@@ -77,75 +77,75 @@ export function FreestyleSettingsChips({
 
         {/* Center group: Aspect ratio, Quality, Polish */}
         <div className="flex items-center gap-1.5 flex-wrap justify-center">
+          {/* Aspect Ratio */}
+          <Popover open={aspectPopoverOpen} onOpenChange={setAspectPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
+                <Square className="w-3.5 h-3.5" />
+                {aspectRatio}
+                <ChevronDown className="w-3 h-3 opacity-40" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-2" align="start">
+              {ASPECT_RATIOS.map(ar => (
+                <button
+                  key={ar.value}
+                  onClick={() => { onAspectRatioChange(ar.value); setAspectPopoverOpen(false); }}
+                  className={cn(
+                    'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2',
+                    aspectRatio === ar.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                  )}
+                >
+                  <ar.icon className="w-3.5 h-3.5" />
+                  {ar.label}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
 
-        {/* Aspect Ratio */}
-        <Popover open={aspectPopoverOpen} onOpenChange={setAspectPopoverOpen}>
-          <PopoverTrigger asChild>
-            <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
-              <Square className="w-3.5 h-3.5" />
-              {aspectRatio}
-              <ChevronDown className="w-3 h-3 opacity-40" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-40 p-2" align="start">
-            {ASPECT_RATIOS.map(ar => (
+          {/* Quality Toggle with Tooltip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
               <button
-                key={ar.value}
-                onClick={() => { onAspectRatioChange(ar.value); setAspectPopoverOpen(false); }}
+                onClick={onQualityToggle}
                 className={cn(
-                  'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2',
-                  aspectRatio === ar.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                  quality === 'high'
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
                 )}
               >
-                <ar.icon className="w-3.5 h-3.5" />
-                {ar.label}
+                {quality === 'high' ? '✦ High' : 'Standard'}
               </button>
-            ))}
-          </PopoverContent>
-        </Popover>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[220px] text-center">
+              {quality === 'standard'
+                ? 'Fast generation at standard resolution. 1 credit per image.'
+                : 'Higher detail and resolution output. 2 credits per image.'}
+            </TooltipContent>
+          </Tooltip>
 
-        {/* Quality Toggle with Tooltip */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={onQualityToggle}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border transition-colors',
-                quality === 'high'
-                  ? 'border-primary/30 bg-primary/10 text-primary'
-                  : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-              )}
-            >
-              {quality === 'high' ? '✦ High' : 'Standard'}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-[220px] text-center">
-            {quality === 'standard'
-              ? 'Fast generation at standard resolution. 1 credit per image.'
-              : 'Higher detail and resolution output. 2 credits per image.'}
-          </TooltipContent>
-        </Tooltip>
+          {/* Prompt Polish Toggle with Tooltip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70">
+                <Wand2 className="w-3.5 h-3.5" />
+                Polish
+                <Switch
+                  checked={polishPrompt}
+                  onCheckedChange={onPolishChange}
+                  className="scale-75 -my-1"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[240px] text-center">
+              AI automatically refines your prompt with professional photography techniques for better results.
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
-        {/* Prompt Polish Toggle with Tooltip */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70">
-              <Wand2 className="w-3.5 h-3.5" />
-              Polish
-              <Switch
-                checked={polishPrompt}
-                onCheckedChange={onPolishChange}
-                className="scale-75 -my-1"
-              />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-[240px] text-center">
-            AI automatically refines your prompt with professional photography techniques for better results.
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Image Count Stepper */}
-        <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70">
+        {/* Right group: Image Count Stepper */}
+        <div className="inline-flex items-center gap-1 h-8 px-2.5 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 flex-shrink-0">
           <button
             onClick={() => onImageCountChange(Math.max(1, imageCount - 1))}
             disabled={imageCount <= 1}
