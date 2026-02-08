@@ -478,6 +478,10 @@ export default function Generate() {
       const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, pose: 4, settings: 5, generating: 6, results: 6 };
       return map[currentStep] || 1;
     }
+    if (hasWorkflowConfig && uiConfig?.skip_template) {
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, settings: 3, generating: 4, results: 4 };
+      return map[currentStep] || 1;
+    }
     const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, template: 3, settings: 4, generating: 5, results: 5 };
     return map[currentStep] || 1;
   };
@@ -490,10 +494,14 @@ export default function Generate() {
         { name: 'Model' }, { name: 'Pose' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
+    if (hasWorkflowConfig && uiConfig?.skip_template) {
+      return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Settings' }, { name: 'Results' }];
+    }
     return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Template' }, { name: 'Settings' }, { name: 'Results' }];
   };
 
-  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : parseInt(imageCount) * (quality === 'high' ? 10 : 4);
+  const workflowImageCount = hasWorkflowConfig ? variationStrategy!.variations.length : parseInt(imageCount);
+  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 2 : 1) : parseInt(imageCount) * (quality === 'high' ? 10 : 4));
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 
