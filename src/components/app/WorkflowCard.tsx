@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
 import { workflowScenes } from '@/components/app/workflowAnimationData';
+import { SocialMediaGridThumbnail } from '@/components/app/SocialMediaGridThumbnail';
 import type { Workflow } from '@/pages/Workflows';
 
 import imgFallback from '@/assets/templates/universal-clean.jpg';
@@ -34,6 +35,8 @@ export function WorkflowCard({ workflow, onSelect, isGenerating, autoPlay, onHov
       >
         {isGenerating ? (
           <Skeleton className="w-full h-full" />
+        ) : workflow.name === 'Social Media Pack' ? (
+          <SocialMediaGridThumbnail isActive={isActive} />
         ) : scene ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isActive} />
         ) : (
