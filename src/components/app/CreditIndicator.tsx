@@ -1,19 +1,41 @@
-import { Wallet, PlusCircle, Sparkles } from 'lucide-react';
+import { Sparkles, PlusCircle, ArrowUpRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/contexts/CreditContext';
 
+const PLAN_NAME = 'Growth';
+const PLAN_CREDITS = 2500;
+
 export function CreditIndicator() {
-  const { balance, isLow, isCritical, isEmpty, openBuyModal } = useCredits();
+  const { balance, openBuyModal } = useCredits();
+  const navigate = useNavigate();
+
+  const usagePercent = Math.min(100, Math.max(3, (balance / PLAN_CREDITS) * 100));
 
   return (
-    <div className="p-3 rounded-xl bg-white/[0.06] space-y-2.5">
+    <div className="p-3 rounded-xl bg-white/[0.06] space-y-3">
+      {/* Plan name + Upgrade */}
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/40">
+          {PLAN_NAME} Plan
+        </span>
+        <button
+          onClick={() => navigate('/app/settings')}
+          className="flex items-center gap-0.5 text-[10px] font-semibold text-primary hover:text-primary/80 transition-colors"
+        >
+          Upgrade
+          <ArrowUpRight className="w-3 h-3" />
+        </button>
+      </div>
+
+      {/* Balance + Buy */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
             <Sparkles className="w-3.5 h-3.5 text-sidebar-foreground/70" />
           </div>
           <div>
-            <p className="text-[10px] text-sidebar-foreground/40 font-medium uppercase tracking-wide">Credits</p>
-            <p className="text-sm font-bold text-sidebar-foreground">{balance}</p>
+            <p className="text-sm font-bold text-sidebar-foreground leading-tight">{balance}</p>
+            <p className="text-[10px] text-sidebar-foreground/40">/ {PLAN_CREDITS.toLocaleString()}</p>
           </div>
         </div>
         <button
@@ -24,11 +46,12 @@ export function CreditIndicator() {
           <PlusCircle className="w-4 h-4" />
         </button>
       </div>
-      {/* Mini progress bar */}
+
+      {/* Progress bar */}
       <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
         <div
           className="h-full rounded-full bg-sidebar-foreground/30 transition-all duration-500"
-          style={{ width: `${Math.min(100, Math.max(5, (balance / 300) * 100))}%` }}
+          style={{ width: `${usagePercent}%` }}
         />
       </div>
     </div>
