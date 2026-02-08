@@ -140,7 +140,7 @@ export default function Freestyle() {
   };
 
   return (
-    <div className="fixed inset-0 lg:left-[calc(var(--sidebar-width,240px)+1.5rem)] bg-muted/30 z-0">
+    <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8 bg-muted/30" style={{ height: 'calc(100vh - 1.5rem)', minHeight: 0 }}>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
       {/* Scrollable content area */}
