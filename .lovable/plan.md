@@ -1,85 +1,70 @@
 
 
-## Freestyle Studio Redesign -- Modern Luxury UI + Scene Selector
+## Freestyle Studio -- Light Apple-Style Redesign
 
-Two main improvements: (1) a complete visual overhaul of the page to match the reference aesthetic, and (2) adding a Scene/Style selector chip that lets users pick from the existing 24 pose/environment library.
-
----
-
-### Problem 1: The UI looks dated
-
-The current prompt bar uses plain HTML textarea styling with harsh borders, small images, and a utilitarian layout. The reference shows a sleek, immersive experience where images fill the screen edge-to-edge and the prompt bar floats as a polished overlay.
-
-**What changes:**
-
-- **Gallery**: Switch from small grid with gaps to a large, immersive masonry layout. Images should be significantly larger -- 2 columns on mobile, 2-3 columns on desktop with minimal 2px gaps. Images fill the available space like a photo wall, not small thumbnails floating in whitespace.
-
-- **Prompt Bar**: Transform from a flat bordered textarea into a floating, rounded container with a frosted-glass/dark-glass aesthetic. The prompt area becomes a clean, borderless input inside a dark rounded container with subtle inner glow instead of a hard border. The + button and Generate button sit inline within this container.
-
-- **Settings Chips**: Refine the chip row with slightly more padding, smoother hover states, and a more polished feel. Add subtle backdrop blur to the entire bottom bar.
-
-- **Empty State**: Make it more visually inviting with larger icon and softer typography.
-
-- **Loading State**: Move the progress indicator into the prompt bar area itself (subtle progress line at the top of the bar).
+Transform the Freestyle Studio from a dark-themed interface to a clean, light grey/white Apple-inspired aesthetic with improved UX affordances.
 
 ---
 
-### Problem 2: No Scene/Style selector
+### Changes Overview
 
-Users currently can only type free-text prompts with no way to pick from the existing library of 24 professional scenes/environments (Studio, Lifestyle, Editorial, Streetwear). Adding this as a chip gives quick access to curated scene descriptions.
+**1. Light Apple-style prompt bar and page background**
 
-**What changes:**
+The current dark `bg-sidebar/95` prompt bar will be replaced with a clean white card using soft shadows and rounded corners, matching the app's existing warm-stone light theme. The page background stays the default `bg-background` (warm off-white). The prompt bar becomes a floating card with `rounded-2xl`, subtle border, and soft shadow -- similar to Apple's floating search bars.
 
-- Add a new **Scene** chip next to the Model chip in the settings row
-- Clicking it opens a popover showing scene thumbnails grouped by category (Studio, Lifestyle, Editorial, Streetwear)
-- When a scene is selected, its description is used as additional context for the generation (appended to the prompt or sent as a separate parameter)
-- The chip shows the selected scene name or "No Scene" by default
-- The scene data comes from the existing `mockTryOnPoses` array and pose images
+**2. "Upload image" label next to the + button**
+
+Currently the + button is unlabeled. A small "Upload image" text label will appear next to it so users immediately understand its purpose.
+
+**3. Quality chip with hover tooltip**
+
+The "Standard" button currently toggles to "High" with no explanation. It will get a tooltip on hover explaining the difference:
+- Standard: "Fast generation at standard resolution. 1 credit per image."
+- High: "Higher detail and resolution output. 2 credits per image."
+
+**4. Polish toggle with hover tooltip**
+
+The "Polish" chip will get a tooltip explaining: "AI automatically refines your prompt with professional photography techniques for better results."
+
+**5. More prominent CTA (Generate button)**
+
+The Generate button will be larger with stronger visual weight -- a filled primary button with bigger padding, slightly larger text, and a subtle shadow to make it stand out as the clear primary action.
+
+**6. Rounded corners on the prompt container**
+
+The entire bottom bar container will use `rounded-2xl` (or `rounded-t-2xl` if anchored to bottom) with proper shadow and border for a polished, modern card feel.
 
 ---
 
 ### Technical Details
 
-**File to modify: `src/pages/Freestyle.tsx`** (single file, complete rewrite of the JSX)
+**Files to modify:**
 
-**Imports to add:**
-- `mockTryOnPoses`, `poseCategoryLabels` from `@/data/mockData`
-- `TryOnPose` type from `@/types`
-- `Camera` icon from `lucide-react` (for the Scene chip)
+**`src/pages/Freestyle.tsx`**
+- Change the outer prompt bar wrapper from `bg-sidebar/95 backdrop-blur-xl border-t border-white/[0.06]` to a light-themed style: `bg-white/80 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg` with some margin from the edges
+- Add margin/padding so the prompt bar floats as a card within the page rather than being edge-to-edge
+- Change the + button from dark-themed colors (`bg-white/[0.03]`, `text-sidebar-foreground/40`) to light Apple-style (`bg-muted hover:bg-muted-foreground/10 text-muted-foreground`)
+- Add "Upload image" text label next to the + button
+- Change textarea text/placeholder colors from `text-sidebar-foreground` to `text-foreground` / `text-muted-foreground`
+- Make the Generate button larger: increase padding, add stronger shadow, use `size="lg"` with `h-12 px-8` and `text-sm font-semibold`
+- Change the progress bar colors to match light theme
+- Wrap the attached image preview in light-themed styling (white ring instead of white/10)
 
-**State to add:**
-- `selectedScene: TryOnPose | null` (default: null)
-- `scenePopoverOpen: boolean`
+**`src/components/app/freestyle/FreestyleSettingsChips.tsx`**
+- Change all chip colors from dark-themed (`border-white/[0.08]`, `bg-white/[0.04]`, `text-sidebar-foreground/80`) to light Apple-style (`border-border bg-muted/50 text-foreground/70 hover:bg-muted`)
+- Wrap the Quality chip in a Tooltip showing the standard vs high explanation
+- Wrap the Polish chip in a Tooltip explaining what prompt polishing does
+- Import `Tooltip, TooltipTrigger, TooltipContent, TooltipProvider` from `@/components/ui/tooltip`
 
-**Gallery changes (lines ~117-158):**
-- Empty state: Larger icon (w-24 h-24), lighter weight heading, more breathing room
-- Grid: Change to `grid-cols-2 lg:grid-cols-3 gap-0.5` for edge-to-edge photo wall feel
-- Remove `aspect-square` constraint -- let images display at natural ratio or use taller aspect ratios
-- Add rounded corners only to the outer container, not individual images
-- Hover overlay: Smooth gradient from bottom instead of full overlay, with download button positioned bottom-right
+**`src/components/app/freestyle/FreestyleGallery.tsx`**
+- Change empty state icon container from `bg-white/[0.03] border-white/[0.06]` to `bg-muted/50 border-border/50` (light theme)
+- Adjust text colors to use `text-foreground` and `text-muted-foreground`
 
-**Prompt bar changes (lines ~173-360):**
-- Outer container: Remove `border-t`, use `bg-[#1a1a2e]/95 backdrop-blur-xl` with rounded-2xl top corners, add subtle shadow upward
-- Prompt textarea: Remove border entirely, make it transparent background inside the dark container with lighter placeholder text. Increase font size slightly.
-- The + button: More refined circle with subtle ring on hover
-- Generate button: Larger, with gradient or accent color, rounded-xl
-- Settings chips: Slightly larger padding (px-3.5 py-2), refined borders with `border-white/8`
+**`src/components/app/freestyle/ModelSelectorChip.tsx`**
+- Change trigger button from dark chip colors to light Apple-style chip colors
 
-**Scene chip (new, in settings row):**
-- Positioned after Model chip
-- Shows selected scene thumbnail (tiny 16px circle) + name, or `Camera` icon + "No Scene"
-- Popover shows a scrollable grid of scene thumbnails grouped by category
-- Each category has a small label (Studio, Lifestyle, Editorial, Streetwear)
-- Clicking a scene selects it and closes popover
+**`src/components/app/freestyle/SceneSelectorChip.tsx`**
+- Change trigger button from dark chip colors to light Apple-style chip colors
 
-**Generation logic update:**
-- When a scene is selected, append the scene description to the prompt before sending
-- Pass scene info to the edge function as additional context
-- The edge function already handles prompt polishing, so the scene description will be naturally incorporated
-
-**No changes needed to:**
-- `useGenerateFreestyle.ts` -- the scene context gets merged into the prompt string before calling
-- `generate-freestyle` edge function -- receives the enhanced prompt as-is
-- `mockData.ts` -- uses existing `mockTryOnPoses` data
-- `AppShell.tsx` or `App.tsx` -- no routing changes
+**No backend changes needed.**
 
