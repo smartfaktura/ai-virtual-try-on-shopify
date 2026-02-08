@@ -1,57 +1,69 @@
 
 
-## Freestyle Studio -- Redesign Settings Chips into a Clean Toolbar
+## Freestyle Studio -- Sticky Prompt Bar and Full-Screen Gallery
 
-The current settings area has three problems visible in the screenshot:
-
-1. **Awkward spacing** -- `justify-between` with three groups creates a huge gap between "Upload/Model/Scene" and "1:1/Standard", making them look disconnected
-2. **Wrapping** -- The Polish chip drops to a second line unevenly, creating visual chaos
-3. **No visual hierarchy** -- All 7 controls compete for attention at the same level with no grouping logic
+Two changes to make the Freestyle page feel immersive and professional:
 
 ---
 
-### Design Approach
+### 1. Sticky Prompt Bar (Always Visible)
 
-Replace the single messy row with a clean **single-row flowing toolbar** using subtle vertical dividers between logical groups. All chips stay on one line with consistent sizing and natural spacing. On very narrow screens, the row scrolls horizontally rather than wrapping chaotically.
+The prompt panel currently lives inside the scrollable content area, so it scrolls off-screen when the gallery grows. The fix is to make the Freestyle page use a proper split layout:
 
-The new layout uses three logical groups separated by thin vertical lines:
+- The page becomes a flex column filling the full available height
+- The **gallery area** gets `flex-1 overflow-y-auto` so only the gallery scrolls
+- The **prompt panel** sits below the gallery with `flex-shrink-0`, always pinned at the bottom of the viewport
+- This way, scrolling the gallery never moves the prompt bar
+
+### 2. Full-Screen Edge-to-Edge Gallery
+
+Currently the images are constrained by:
+- AppShell's `max-w-7xl mx-auto p-4 sm:p-6 lg:p-8` wrapper (adds side padding + limits width)
+- Gallery's own `p-4 sm:p-6` padding
+- Grid's `rounded-xl` and `gap-[2px]`
+
+The fix:
+- Freestyle page uses negative margins to break out of AppShell's padding container, filling the full content width
+- Gallery removes its own internal padding
+- Images go edge-to-edge with minimal 1-2px gaps between them
+- Remove `rounded-xl` on the grid container for a clean, full-bleed look
+
+---
+
+### Technical Changes
+
+**File: `src/pages/Freestyle.tsx`**
+
+- Add negative margins to cancel AppShell's padding: `-mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8`
+- Adjust the height calculation to account for the removed vertical padding
+- Keep the current flex column structure (gallery scrolls, prompt bar stays at bottom)
+- Remove the extra `p-4 sm:p-6` padding from the gallery scroll container
+- Add a subtle top gradient/shadow on the prompt bar area so it visually separates from gallery content when scrolling
+
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+
+- Remove `rounded-xl` from the grid container (images go full-bleed)
+- Keep the minimal `gap-[2px]` between images for visual separation
+- Images remain at `aspect-[3/4]` with hover effects intact
+
+**No changes to AppShell, FreestylePromptPanel, or any other files.**
+
+### Visual Result
 
 ```text
-[ + Upload | Model v | Scene v ]  |  [ 1:1 v | Standard | Polish ]  |  [ - 1 + ]
++-----------------------------------------------------------+
+|  [Header bar]                                   [User v]  |
++-----------------------------------------------------------+
+|          |                                                 |
+| Sidebar  |  [img] [img] [img]  <-- edge to edge, no      |
+|          |  [img] [img] [img]      padding, scrollable    |
+|          |  [img] [img]                                    |
+|          |                                                 |
+|          |-------------------------------------------------|
+|          |  Describe what you want...          <-- STICKY  |
+|          |  [Upload | Model | Scene] | [1:1 | Std | ...]  |
+|          |                           [ Generate (1) ]      |
++-----------------------------------------------------------+
 ```
 
-- **Group 1 (Inputs)**: Upload, Model, Scene -- what goes *into* the generation
-- **Group 2 (Output)**: Aspect ratio, Quality, Polish -- *how* the output looks  
-- **Group 3 (Count)**: Image count stepper -- *how many* to generate
-
-Visual dividers (thin 16px-tall vertical lines in `border-border/30`) separate the groups while keeping everything in a single horizontal flow.
-
----
-
-### Specific Changes
-
-**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
-
-- Change outer container from `flex justify-between gap-2` to `flex items-center gap-1.5` with `overflow-x-auto` for mobile safety
-- Remove the three separate `<div>` group wrappers with different justification
-- Instead, render all chips in a flat row with thin vertical separator `<div>` elements between logical groups
-- The separator is a simple `<div className="w-px h-4 bg-border/40 mx-1" />` 
-- All chips get uniform height (`h-8`) and consistent padding (`px-3`)
-- Remove `flex-wrap` entirely -- the row stays single-line and scrolls if needed
-- Keep all existing tooltip logic for Quality and Polish
-
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
-
-- Minor padding adjustments to the settings row container
-- Ensure the upload button rendering matches the new chip style consistently (same `h-8 px-3 rounded-full` sizing)
-
-**File: `src/components/app/freestyle/ModelSelectorChip.tsx`**
-
-- Standardize trigger button height to `h-8` (currently uses `px-3.5 py-2` which may produce inconsistent height)
-
-**File: `src/components/app/freestyle/SceneSelectorChip.tsx`**
-
-- Standardize trigger button height to `h-8` (same fix as Model chip)
-
-**No backend, routing, or page-level changes needed.**
-
+The prompt bar stays visible at all times. The gallery scrolls independently behind it.
