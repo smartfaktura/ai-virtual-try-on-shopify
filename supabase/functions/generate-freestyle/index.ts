@@ -172,7 +172,7 @@ serve(async (req) => {
             ? aspectPrompt
             : `${aspectPrompt}\n\nVariation ${i + 1}: Create a different composition while keeping the same subject and style.`;
 
-        const imageUrl = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY);
+        const imageUrl = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY, aiModel);
 
         if (imageUrl) {
           images.push(imageUrl);
