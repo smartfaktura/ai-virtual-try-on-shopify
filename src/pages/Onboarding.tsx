@@ -185,12 +185,12 @@ export default function Onboarding() {
                   How did you find us?
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  This helps us understand how people discover framea.ai
+                  This helps us understand how people discover VOVV.AI
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <Label>Where did you hear about framea.ai? *</Label>
+                <Label>Where did you hear about VOVV.AI? *</Label>
                 <Select value={referralSource} onValueChange={setReferralSource}>
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder="Select an option" />
