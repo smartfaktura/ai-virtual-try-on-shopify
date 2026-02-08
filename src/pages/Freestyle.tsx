@@ -41,6 +41,7 @@ export default function Freestyle() {
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
   const [negatives, setNegatives] = useState<string[]>([]);
   const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
+  const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { generate, isLoading, progress } = useGenerateFreestyle();
