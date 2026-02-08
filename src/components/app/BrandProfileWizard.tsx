@@ -417,7 +417,7 @@ export default function BrandProfileWizard() {
                     onChange={e => setCustomKeyword(e.target.value)}
                     placeholder="Add custom keyword…"
                     className="h-8 text-xs bg-background flex-1"
-                    onKeyDown={e => e.key === 'Enter' && addCustomChip('brand_keywords', customKeyword, setCustomKeyword)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addCustomChip('brand_keywords', customKeyword, setCustomKeyword); } }}
                   />
                   <Button
                     variant="ghost"
