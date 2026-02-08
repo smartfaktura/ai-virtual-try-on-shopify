@@ -527,7 +527,7 @@ export default function BrandProfileWizard() {
               {/* Prompt preview */}
               <Collapsible open={reviewOpen} onOpenChange={setReviewOpen}>
                 <CollapsibleTrigger asChild>
-                  <button className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-sm hover:bg-primary/10 transition-colors">
+                  <button type="button" className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-sm hover:bg-primary/10 transition-colors">
                     <span className="flex items-center gap-2 text-xs font-medium">
                       <Eye className="w-3.5 h-3.5" />
                       What the AI will see
