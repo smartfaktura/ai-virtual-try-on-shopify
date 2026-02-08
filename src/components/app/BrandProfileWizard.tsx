@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Save, Loader2, ChevronDown, X, Plus, Check, Eye } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, Loader2, ChevronDown, X, Plus, Check, Eye, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,64 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { buildBrandPrompt, COLOR_FEEL_DESCRIPTIONS } from '@/lib/brandPromptBuilder';
 import type { BrandProfileData } from '@/lib/brandPromptBuilder';
+
+// Team avatar imports
+import avatarSienna from '@/assets/team/avatar-sienna.jpg';
+import avatarSophia from '@/assets/team/avatar-sophia.jpg';
+import avatarLuna from '@/assets/team/avatar-luna.jpg';
+import avatarKenji from '@/assets/team/avatar-kenji.jpg';
+
+// ── Team step tips ──────────────────────────────────────────────────────
+const STEP_TEAM_TIPS = [
+  {
+    avatars: [avatarSienna],
+    names: 'Sienna',
+    roles: 'Brand Consistency Manager',
+    message: "I'll memorize your brand identity and make sure every visual feels unmistakably yours.",
+  },
+  {
+    avatars: [avatarSophia, avatarLuna],
+    names: 'Sophia & Luna',
+    roles: 'Product Photographer + Retouch Specialist',
+    message: "We'll use your style preferences to dial in the perfect lighting, colors, and mood for every shoot.",
+  },
+  {
+    avatars: [avatarKenji],
+    names: 'Kenji',
+    roles: 'Campaign Art Director',
+    message: "Your exclusions become my guardrails. I'll make sure nothing off-brand ever makes it through.",
+  },
+];
+
+function TeamStepTip({ step }: { step: number }) {
+  const tip = STEP_TEAM_TIPS[step];
+  if (!tip) return null;
+
+  return (
+    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-primary/5 border border-primary/10">
+      {/* Avatar(s) */}
+      <div className="flex items-center flex-shrink-0">
+        {tip.avatars.map((avatar, i) => (
+          <img
+            key={i}
+            src={avatar}
+            alt={tip.names}
+            className={cn(
+              'w-8 h-8 rounded-full object-cover ring-2 ring-background',
+              i > 0 && '-ml-2'
+            )}
+          />
+        ))}
+      </div>
+      {/* Text */}
+      <div className="min-w-0">
+        <p className="text-xs font-semibold text-foreground leading-tight">{tip.names}</p>
+        <p className="text-[10px] text-muted-foreground leading-tight">{tip.roles}</p>
+        <p className="text-xs text-foreground/80 italic mt-1.5 leading-snug">"{tip.message}"</p>
+      </div>
+    </div>
+  );
+}
 
 const STEPS = ['Your Brand', 'Visual Style', 'Avoid These'] as const;
 
