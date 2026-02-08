@@ -1,132 +1,123 @@
 
+# Fix Edit Product: Show Existing Product Data Instead of Blank Form
 
-# Improve Products Page: Filters, Views, and Multi-Image Support
+## Problem
 
-## Overview
+Clicking the "Edit" (pencil) button on any product opens the same blank "Add Product" modal. It should open with the product's existing data pre-filled so users can edit the name, type, description, and manage images.
 
-Three major improvements to the Products experience:
-1. Enhanced Products page with filters and grid/list view toggle
-2. Multi-image support for products (upload multiple, set primary)
-3. Store import updated to pull all product images
+## Solution
 
----
+Add an edit mode to the existing modal flow. When a user clicks "Edit", the modal opens pre-populated with the product's current data and existing images loaded from the database.
 
-## 1. Products Page Redesign
+## Changes
 
-### Filter Bar
-Add a horizontal filter bar below the search with:
-- **Product Type** filter: dropdown showing all unique types from user's products (e.g., Candle Sand, Serum, T-Shirt)
-- **Sort by**: Newest first, Oldest first, Name A-Z, Name Z-A
-- Active filters shown as dismissible badges
+### 1. Products.tsx -- Track which product is being edited
 
-### View Toggle (Grid / List)
-- **Grid view** (current): 5-column card layout with thumbnails
-- **List view** (new): Full-width rows showing:
-  - Thumbnail (64x64)
-  - Product name (full, not truncated)
-  - Product type badge
-  - Description (truncated to 1 line)
-  - Number of images (e.g., "3 photos")
-  - Date added (e.g., "Feb 8, 2026")
-  - Edit / Delete actions on the right
+- Add an `editingProduct` state (`UserProduct | null`) alongside the existing `modalOpen` state
+- When the Edit button is clicked, set `editingProduct` to that product and open the modal
+- When the Add button is clicked, set `editingProduct` to null and open the modal
+- Pass `editingProduct` to `AddProductModal`
+- On modal close, clear `editingProduct`
 
-Toggle icon buttons (LayoutGrid / List) in the top-right area next to "Add Product".
+### 2. AddProductModal.tsx -- Support edit mode
 
----
+- Accept an optional `editingProduct` prop
+- Change the dialog title dynamically: "Edit Product" vs "Add Product"
+- When in edit mode, hide the tabs (Store URL, CSV, Mobile don't apply to editing) and show only the manual form
+- Pass the `editingProduct` data down to `ManualProductTab`
 
-## 2. Multi-Image Support
+### 3. ManualProductTab.tsx -- Pre-fill fields and update instead of insert
 
-### Database Change
-Create a new `product_images` table:
+- Accept an optional `editingProduct` prop
+- When `editingProduct` is provided:
+  - Pre-fill `title`, `productType`, and `description` from the product data
+  - Fetch existing images from the `product_images` table for that product and load them into the gallery (as existing images without `File` objects)
+  - Also include the product's primary `image_url` even if no rows exist in `product_images`
+- On save when editing:
+  - UPDATE the `user_products` row instead of INSERT
+  - Delete removed images from `product_images` (and optionally from storage)
+  - Insert newly added images into `product_images`
+  - Update the primary `image_url` on `user_products` if the primary selection changed
+- Change the submit button text from "Add Product" to "Save Changes"
 
-| Column | Type | Notes |
-|---|---|---|
-| id | uuid | Primary key |
-| product_id | uuid | Foreign key to user_products |
-| user_id | uuid | For RLS |
-| image_url | text | Signed URL |
-| storage_path | text | Path in product-uploads bucket |
-| position | integer | Order (0 = primary) |
-| created_at | timestamptz | Default now() |
+### 4. ProductImageGallery.tsx -- Handle existing images (no File object)
 
-RLS policies: users can only CRUD their own images. The existing `user_products.image_url` column will continue to hold the primary image URL for backward compatibility and fast queries.
-
-### Manual Upload Tab Changes
-- Allow uploading multiple images (up to 6)
-- Show a horizontal scrollable row of image previews
-- First uploaded image is automatically the primary
-- Users can click a "star" icon on any image to set it as primary
-- Drag-and-drop or click to add more images
-
-### Products Page: Image Count
-- Show a small badge on product cards (e.g., "3") if the product has more than 1 image
-- In list view, show "X photos" text
-
-### Product Detail / Edit
-- When editing a product, show all images in a mini gallery
-- Allow reordering, deleting individual images, or adding more
-- Click the star/crown icon to change the primary image
-
----
-
-## 3. Store Import: Extract All Images
-
-### Edge Function Update
-Update the AI prompt in `import-product/index.ts` to extract ALL product images (not just the primary). The response format changes to include an `images` array:
-
-```text
-- "image_urls": array of all product image URLs (absolute)
-```
-
-After extraction, download and upload ALL images to the product-uploads bucket, then insert rows into `product_images` for each.
-
----
+- The `ImageItem.file` field is already optional (`file?: File`), so existing images loaded from the database (which only have a URL, no File) are already supported
+- No changes needed to this component
 
 ## Technical Details
 
-### Files Created
+### Products.tsx
 
-**Migration SQL** (via migration tool)
-- Create `product_images` table with RLS policies
-- Add index on `product_id` and `user_id`
+```text
+// New state
+const [editingProduct, setEditingProduct] = useState<UserProduct | null>(null);
 
-### Files Modified
+// Edit button handler (grid and list views)
+onClick={() => { setEditingProduct(product); setModalOpen(true); }}
 
-**`src/pages/Products.tsx`**
-- Add state for `viewMode` ('grid' | 'list'), `typeFilter`, and `sortBy`
-- Add a query to fetch product image counts from `product_images`
-- Add filter bar component with product type dropdown and sort selector
-- Add view toggle buttons (LayoutGrid / List icons)
-- Add list view rendering with full product info rows
-- Update grid view cards to show image count badge
+// Add button handler  
+onClick={() => { setEditingProduct(null); setModalOpen(true); }}
 
-**`src/components/app/ManualProductTab.tsx`**
-- Change from single file state to `files: File[]` array (max 6)
-- Show horizontal preview strip with star (primary) and X (remove) buttons
-- Upload all files to storage, insert into `product_images` table
-- Set the first image as `image_url` on the `user_products` record
+// Modal close handler
+onOpenChange={(open) => { setModalOpen(open); if (!open) setEditingProduct(null); }}
 
-**`src/components/app/AddProductModal.tsx`**
-- Widen the modal slightly to accommodate the multi-image preview strip
+// Pass to modal
+<AddProductModal editingProduct={editingProduct} ... />
+```
 
-**`supabase/functions/import-product/index.ts`**
-- Update AI prompt to extract `image_urls` array (all product images)
-- Download and upload all images (up to 6) to storage
-- Return the full array in the response
+### AddProductModal.tsx
 
-**`src/components/app/StoreImportTab.tsx`**
-- Handle the new `image_urls` array from the import response
-- Show all extracted images in the preview
-- Insert all images into `product_images` on save
+```text
+// New prop
+editingProduct?: UserProduct | null;
 
-**`src/components/app/freestyle/ProductSelectorChip.tsx`**
-- No changes needed -- it already uses `image_url` (primary) which stays the same
+// Dynamic title
+<DialogTitle>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
 
-### New Component
+// Conditional rendering
+if editingProduct:
+  - Render ManualProductTab directly (no Tabs wrapper)
+  - Pass editingProduct to ManualProductTab
+else:
+  - Render existing Tabs UI unchanged
+```
 
-**`src/components/app/ProductImageGallery.tsx`**
-- Reusable mini gallery for showing/managing multiple product images
-- Used in both the ManualProductTab (during upload) and in a future product edit view
-- Shows images in a horizontal strip with star (set primary) and X (delete) controls
-- "Add more" button at the end
+### ManualProductTab.tsx
 
+```text
+// New prop  
+editingProduct?: UserProduct | null;
+
+// Pre-fill on mount (useEffect)
+useEffect(() => {
+  if (editingProduct) {
+    setTitle(editingProduct.title);
+    setProductType(editingProduct.product_type);
+    setDescription(editingProduct.description);
+    // Fetch existing images from product_images table
+    loadExistingImages(editingProduct.id);
+  }
+}, [editingProduct]);
+
+// New async function to load existing images
+async function loadExistingImages(productId) {
+  - Query product_images where product_id = productId, ordered by position
+  - If no rows found, fall back to creating a single image item from editingProduct.image_url
+  - Map rows to ImageItem[] with isPrimary = (position === 0)
+  - Set images state
+}
+
+// Save handler branches
+if editingProduct:
+  - Upload only NEW images (those with a File object)
+  - Delete removed images (compare initial IDs vs current IDs)
+  - UPDATE user_products row
+  - Update product_images table (delete removed, insert new, update positions)
+else:
+  - Existing INSERT logic (unchanged)
+```
+
+### UserProduct interface
+
+The `UserProduct` interface is already defined in `Products.tsx`. It will be passed through the components as-is -- no changes needed to the interface.
