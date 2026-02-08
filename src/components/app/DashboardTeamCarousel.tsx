@@ -9,8 +9,10 @@ import avatarMax from '@/assets/team/avatar-max.jpg';
 import avatarZara from '@/assets/team/avatar-zara.jpg';
 import avatarLeo from '@/assets/team/avatar-leo.jpg';
 
+const SOPHIA_VIDEO_URL = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/849393075369279549.mp4';
+
 const TEAM = [
-  { name: 'Sophia', role: 'Product Photographer', avatar: avatarSophia },
+  { name: 'Sophia', role: 'Product Photographer', avatar: avatarSophia, videoUrl: SOPHIA_VIDEO_URL },
   { name: 'Amara', role: 'Lifestyle Photographer', avatar: avatarAmara },
   { name: 'Kenji', role: 'Campaign Art Director', avatar: avatarKenji },
   { name: 'Yuki', role: 'Ad Creative Specialist', avatar: avatarYuki },
