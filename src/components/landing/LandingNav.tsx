@@ -98,8 +98,8 @@ export function LandingNav() {
               <Sparkles className="w-3 h-3" />
               Monthly Creative Drops
             </div>
-            <Button size="sm" className="rounded-full mt-2 font-semibold" onClick={() => navigate('/auth')}>
-              Start Free
+            <Button size="sm" className="rounded-full mt-2 font-semibold" onClick={() => navigate(user ? '/app' : '/auth')}>
+              {user ? 'My Dashboard' : 'Start Free'}
             </Button>
           </div>
         </div>
