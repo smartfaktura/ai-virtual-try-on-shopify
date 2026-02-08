@@ -1,7 +1,8 @@
-import { Pencil, Trash2, Sun, Camera, Layout, Tag } from 'lucide-react';
+import { Pencil, Trash2, Tag, Droplets } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { COLOR_FEEL_LABELS } from '@/lib/brandPromptBuilder';
 import type { BrandProfile } from '@/pages/BrandProfiles';
 
 interface BrandProfileCardProps {
@@ -19,6 +20,8 @@ const toneColors: Record<string, string> = {
 };
 
 export function BrandProfileCard({ profile, onEdit, onDelete }: BrandProfileCardProps) {
+  const colorFeelLabel = COLOR_FEEL_LABELS[profile.color_temperature] || profile.color_temperature;
+
   return (
     <Card className="group hover:shadow-md transition-shadow">
       <CardContent className="p-5 space-y-3">
@@ -35,20 +38,10 @@ export function BrandProfileCard({ profile, onEdit, onDelete }: BrandProfileCard
           </Badge>
         </div>
 
-        {/* Settings summary */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Sun className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate">{profile.lighting_style} · {profile.color_temperature}</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Camera className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate">{profile.background_style}</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Layout className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate">{profile.composition_bias}</span>
-          </div>
+        {/* Color Feel */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Droplets className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate">{colorFeelLabel}</span>
         </div>
 
         {/* Color palette dots */}

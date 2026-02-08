@@ -89,7 +89,7 @@ export function BrandProfileChip({
                 <div className="min-w-0 flex-1">
                     <p className="font-medium truncate text-xs">{profile.name}</p>
                     <p className="text-[10px] text-muted-foreground truncate">
-                      {profile.tone} · {profile.lighting_style} · {profile.color_temperature}
+                      {profile.tone} · {profile.color_temperature}
                     </p>
                     {(profile as any).brand_keywords?.length > 0 && (
                       <p className="text-[10px] text-muted-foreground/60 truncate mt-0.5">

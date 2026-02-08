@@ -1,377 +1,210 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  ArrowLeft, ArrowRight, Check, Sparkles, Sun, Camera, Layout, ShieldX, Eye,
-  Plus, X, Pencil,
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, Loader2, ChevronDown, X, Plus, Check, Eye } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  buildBrandPrompt,
-  getIdentityImpact,
-  getToneImpact,
-  getLightingImpact,
-  getCompositionImpact,
-  getExclusionImpact,
-  TONE_DESCRIPTIONS,
-  type BrandProfileData,
-} from '@/lib/brandPromptBuilder';
+import { cn } from '@/lib/utils';
+import { buildBrandPrompt, COLOR_FEEL_DESCRIPTIONS } from '@/lib/brandPromptBuilder';
+import type { BrandProfileData } from '@/lib/brandPromptBuilder';
 
-// ── Options ──────────────────────────────────────────────────────────────
+const STEPS = ['Your Brand', 'Visual Style', 'Avoid These'] as const;
 
-const TONE_OPTIONS = ['luxury', 'clean', 'bold', 'minimal', 'playful'];
-const LIGHTING_OPTIONS = ['soft diffused', 'dramatic side', 'natural window', 'studio flat', 'golden hour', 'high key'];
-const BACKGROUND_OPTIONS = ['studio', 'lifestyle', 'gradient', 'pattern', 'contextual'];
-const COLOR_TEMP_OPTIONS = ['warm', 'neutral', 'cool'];
-const COMPOSITION_OPTIONS = ['centered', 'rule-of-thirds', 'dynamic', 'symmetrical', 'off-center'];
-const SCENE_SUGGESTIONS = ['minimalist studio', 'outdoor natural light', 'urban street', 'cozy interior', 'beach/seaside', 'botanical garden', 'industrial loft', 'café setting'];
+// ── Mood options ─────────────────────────────────────────────────────────
+const MOOD_OPTIONS = [
+  { value: 'luxury', label: 'Luxury', description: 'Premium, sophisticated, elegant with refined details' },
+  { value: 'clean', label: 'Clean', description: 'Minimalist, uncluttered, modern and professional' },
+  { value: 'bold', label: 'Bold', description: 'Striking, high-contrast, attention-grabbing' },
+  { value: 'minimal', label: 'Minimal', description: 'Simple, lots of negative space, zen-like' },
+  { value: 'playful', label: 'Playful', description: 'Vibrant, energetic, fun and dynamic' },
+];
 
-const STEPS = [
-  { key: 'identity', label: 'Brand Identity', icon: Sparkles },
-  { key: 'tone', label: 'Visual Tone', icon: Eye },
-  { key: 'lighting', label: 'Lighting & Color', icon: Sun },
-  { key: 'composition', label: 'Composition', icon: Layout },
-  { key: 'exclusions', label: 'Exclusions', icon: ShieldX },
-  { key: 'review', label: 'Review & Save', icon: Check },
-] as const;
+// ── Color Feel options ──────────────────────────────────────────────────
+const COLOR_FEEL_OPTIONS = [
+  { value: 'warm-earthy', label: 'Warm & Earthy', description: 'Amber, terracotta, natural warmth', gradient: 'from-amber-200 to-orange-300' },
+  { value: 'cool-crisp', label: 'Cool & Crisp', description: 'Clean whites, blue undertones', gradient: 'from-sky-200 to-blue-300' },
+  { value: 'neutral-natural', label: 'Neutral & Natural', description: 'True-to-life, balanced colors', gradient: 'from-stone-200 to-gray-300' },
+  { value: 'rich-saturated', label: 'Rich & Saturated', description: 'Deep vivid colors, high impact', gradient: 'from-violet-300 to-rose-300' },
+  { value: 'muted-soft', label: 'Muted & Soft', description: 'Desaturated pastels, dreamy tones', gradient: 'from-pink-100 to-purple-100' },
+  { value: 'vibrant-bold', label: 'Vibrant & Bold', description: 'Bright, punchy, strong contrast', gradient: 'from-yellow-300 to-red-300' },
+];
 
-type StepKey = (typeof STEPS)[number]['key'];
+// ── Keyword suggestions ─────────────────────────────────────────────────
+const KEYWORD_SUGGESTIONS = [
+  'sustainable', 'handcrafted', 'premium', 'organic', 'artisan',
+  'modern', 'timeless', 'edgy', 'feminine', 'masculine',
+  'urban', 'natural', 'luxurious', 'affordable', 'innovative',
+];
 
-// ── Prompt Impact Box ────────────────────────────────────────────────────
+// ── Do-Not suggestions ──────────────────────────────────────────────────
+const DO_NOT_SUGGESTIONS = [
+  'busy backgrounds', 'neon colors', 'harsh shadows', 'cluttered scenes',
+  'overly saturated', 'dark moody', 'text overlays', 'collage layouts',
+  'stock photo feel', 'cartoon style', 'vintage filters', 'heavy vignette',
+];
 
-function PromptImpactBox({ text }: { text: string }) {
-  return (
-    <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/60 mb-1.5">Prompt Impact</p>
-      <pre className="text-xs text-foreground/70 whitespace-pre-wrap font-sans leading-relaxed">{text}</pre>
-    </div>
-  );
+interface FormData {
+  name: string;
+  brand_description: string;
+  target_audience: string;
+  tone: string;
+  color_temperature: string;
+  color_palette: string[];
+  brand_keywords: string[];
+  do_not_rules: string[];
 }
 
-// ── Chip Picker (for tags / keywords / scenes) ───────────────────────────
-
-function ChipPicker({
-  label,
-  items,
-  suggestions,
-  onAdd,
-  onRemove,
-  placeholder,
-}: {
-  label: string;
-  items: string[];
-  suggestions?: string[];
-  onAdd: (value: string) => void;
-  onRemove: (value: string) => void;
-  placeholder: string;
-}) {
-  const [inputValue, setInputValue] = useState('');
-
-  const addItem = () => {
-    const trimmed = inputValue.trim();
-    if (trimmed && !items.includes(trimmed)) {
-      onAdd(trimmed);
-      setInputValue('');
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addItem();
-    }
-  };
-
-  const unusedSuggestions = suggestions?.filter(s => !items.includes(s)) || [];
-
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <div className="flex gap-2">
-        <Input
-          placeholder={placeholder}
-          value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="h-9 text-sm"
-        />
-        <Button variant="outline" size="sm" onClick={addItem} type="button" className="h-9 px-3">
-          <Plus className="w-3.5 h-3.5" />
-        </Button>
-      </div>
-      {items.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {items.map((item, i) => (
-            <Badge key={i} variant="secondary" className="gap-1 pr-1 text-xs">
-              {item}
-              <button onClick={() => onRemove(item)} className="ml-0.5 hover:text-destructive">
-                <X className="w-3 h-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
-      {unusedSuggestions.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {unusedSuggestions.slice(0, 6).map(s => (
-            <button
-              key={s}
-              onClick={() => onAdd(s)}
-              className="text-[11px] px-2 py-0.5 rounded-full border border-dashed border-border text-muted-foreground hover:bg-muted transition-colors"
-            >
-              + {s}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Option Selector (radio-like chips) ───────────────────────────────────
-
-function OptionSelector({
-  label,
-  description,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  description?: string;
-  options: string[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="space-y-2">
-      <div>
-        <Label>{label}</Label>
-        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {options.map(opt => (
-          <button
-            key={opt}
-            onClick={() => onChange(opt)}
-            className={cn(
-              'px-3 py-1.5 rounded-lg text-sm font-medium border transition-all capitalize',
-              value === opt
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-card text-foreground/70 hover:bg-muted'
-            )}
-          >
-            {opt}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Color Palette Manager ────────────────────────────────────────────────
-
-function ColorPaletteInput({
-  colors,
-  onAdd,
-  onRemove,
-}: {
-  colors: string[];
-  onAdd: (color: string) => void;
-  onRemove: (color: string) => void;
-}) {
-  const [inputValue, setInputValue] = useState('');
-
-  const addColor = () => {
-    const trimmed = inputValue.trim();
-    if (trimmed && !colors.includes(trimmed)) {
-      onAdd(trimmed);
-      setInputValue('');
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <Label>Color Palette</Label>
-      <p className="text-xs text-muted-foreground">Add hex codes or color names (e.g. #F5E6D3, ivory, sage)</p>
-      <div className="flex gap-2">
-        <Input
-          placeholder="e.g. #F5E6D3 or ivory"
-          value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addColor(); } }}
-          className="h-9 text-sm"
-        />
-        <Button variant="outline" size="sm" onClick={addColor} type="button" className="h-9 px-3">
-          <Plus className="w-3.5 h-3.5" />
-        </Button>
-      </div>
-      {colors.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {colors.map((color, i) => {
-            const isHex = color.startsWith('#');
-            return (
-              <Badge key={i} variant="secondary" className="gap-1.5 pr-1 text-xs">
-                {isHex && (
-                  <span
-                    className="w-3 h-3 rounded-full border border-border flex-shrink-0"
-                    style={{ backgroundColor: color }}
-                  />
-                )}
-                {color}
-                <button onClick={() => onRemove(color)} className="ml-0.5 hover:text-destructive">
-                  <X className="w-3 h-3" />
-                </button>
-              </Badge>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Main Wizard Component ────────────────────────────────────────────────
+const defaultFormData: FormData = {
+  name: '',
+  brand_description: '',
+  target_audience: '',
+  tone: 'clean',
+  color_temperature: 'neutral-natural',
+  color_palette: [],
+  brand_keywords: [],
+  do_not_rules: [],
+};
 
 export default function BrandProfileWizard() {
-  const navigate = useNavigate();
-  const { id: editId } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { id } = useParams();
   const queryClient = useQueryClient();
+  const isEditing = !!id;
 
-  const isEditing = !!editId;
-
-  // Form state
   const [step, setStep] = useState(0);
-  const [name, setName] = useState('');
-  const [brandDescription, setBrandDescription] = useState('');
-  const [targetAudience, setTargetAudience] = useState('');
-  const [tone, setTone] = useState('clean');
-  const [brandKeywords, setBrandKeywords] = useState<string[]>([]);
-  const [lightingStyle, setLightingStyle] = useState('soft diffused');
-  const [colorTemperature, setColorTemperature] = useState('neutral');
-  const [colorPalette, setColorPalette] = useState<string[]>([]);
-  const [backgroundStyle, setBackgroundStyle] = useState('studio');
-  const [compositionBias, setCompositionBias] = useState('centered');
-  const [preferredScenes, setPreferredScenes] = useState<string[]>([]);
-  const [doNotRules, setDoNotRules] = useState<string[]>([]);
-  const [photographyReference, setPhotographyReference] = useState('');
+  const [form, setForm] = useState<FormData>(defaultFormData);
+  const [saving, setSaving] = useState(false);
+  const [customKeyword, setCustomKeyword] = useState('');
+  const [customRule, setCustomRule] = useState('');
+  const [newColor, setNewColor] = useState('#');
+  const [reviewOpen, setReviewOpen] = useState(false);
 
-  // Load profile for editing
-  const { data: existingProfile, isLoading: isLoadingProfile } = useQuery({
-    queryKey: ['brand-profile', editId],
+  // Load existing profile for editing
+  const { data: existing, isLoading: loadingExisting } = useQuery({
+    queryKey: ['brand-profile', id],
     queryFn: async () => {
-      if (!editId) return null;
-      const { data, error } = await supabase
-        .from('brand_profiles')
-        .select('*')
-        .eq('id', editId)
-        .single();
+      const { data, error } = await supabase.from('brand_profiles').select('*').eq('id', id!).single();
       if (error) throw error;
-      return data as unknown as BrandProfileData & { id: string; user_id: string };
+      return data;
     },
-    enabled: !!editId,
+    enabled: isEditing,
   });
 
   useEffect(() => {
-    if (existingProfile) {
-      setName(existingProfile.name);
-      setBrandDescription(existingProfile.brand_description || '');
-      setTargetAudience(existingProfile.target_audience || '');
-      setTone(existingProfile.tone || 'clean');
-      setBrandKeywords(existingProfile.brand_keywords || []);
-      setLightingStyle(existingProfile.lighting_style || 'soft diffused');
-      setColorTemperature(existingProfile.color_temperature || 'neutral');
-      setColorPalette(existingProfile.color_palette || []);
-      setBackgroundStyle(existingProfile.background_style || 'studio');
-      setCompositionBias(existingProfile.composition_bias || 'centered');
-      setPreferredScenes(existingProfile.preferred_scenes || []);
-      setDoNotRules(existingProfile.do_not_rules || []);
-      setPhotographyReference(existingProfile.photography_reference || '');
+    if (existing) {
+      setForm({
+        name: existing.name || '',
+        brand_description: existing.brand_description || '',
+        target_audience: existing.target_audience || '',
+        tone: existing.tone || 'clean',
+        color_temperature: existing.color_temperature || 'neutral-natural',
+        color_palette: existing.color_palette || [],
+        brand_keywords: existing.brand_keywords || [],
+        do_not_rules: existing.do_not_rules || [],
+      });
     }
-  }, [existingProfile]);
+  }, [existing]);
 
-  const currentData: Partial<BrandProfileData> = {
-    name,
-    brand_description: brandDescription,
-    target_audience: targetAudience,
-    tone,
-    brand_keywords: brandKeywords,
-    lighting_style: lightingStyle,
-    color_temperature: colorTemperature,
-    color_palette: colorPalette,
-    background_style: backgroundStyle,
-    composition_bias: compositionBias,
-    preferred_scenes: preferredScenes,
-    do_not_rules: doNotRules,
-    photography_reference: photographyReference,
+  const update = (key: keyof FormData, value: any) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const toggleChip = (key: 'brand_keywords' | 'do_not_rules', value: string) => {
+    setForm(prev => {
+      const arr = prev[key];
+      return { ...prev, [key]: arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value] };
+    });
   };
 
-  const { styleGuide } = buildBrandPrompt(currentData);
+  const addCustomChip = (key: 'brand_keywords' | 'do_not_rules', value: string, clearFn: (v: string) => void) => {
+    const trimmed = value.trim();
+    if (trimmed && !form[key].includes(trimmed)) {
+      update(key, [...form[key], trimmed]);
+    }
+    clearFn('');
+  };
 
-  // Save mutation
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error('Not authenticated');
+  const removeColor = (idx: number) => update('color_palette', form.color_palette.filter((_, i) => i !== idx));
+
+  const addColor = () => {
+    if (newColor.match(/^#[0-9A-Fa-f]{6}$/) && !form.color_palette.includes(newColor)) {
+      update('color_palette', [...form.color_palette, newColor]);
+      setNewColor('#');
+    }
+  };
+
+  // Build prompt preview
+  const promptData: Partial<BrandProfileData> = {
+    name: form.name,
+    brand_description: form.brand_description,
+    target_audience: form.target_audience,
+    tone: form.tone,
+    color_temperature: form.color_temperature,
+    color_palette: form.color_palette,
+    brand_keywords: form.brand_keywords,
+    do_not_rules: form.do_not_rules,
+  };
+  const promptPreview = buildBrandPrompt(promptData);
+
+  const canProceed = step === 0 ? form.name.trim().length > 0 : true;
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
       const payload = {
         user_id: user.id,
-        name,
-        brand_description: brandDescription,
-        target_audience: targetAudience,
-        tone,
-        brand_keywords: brandKeywords,
-        lighting_style: lightingStyle,
-        color_temperature: colorTemperature,
-        color_palette: colorPalette,
-        background_style: backgroundStyle,
-        composition_bias: compositionBias,
-        preferred_scenes: preferredScenes,
-        do_not_rules: doNotRules,
-        photography_reference: photographyReference,
+        name: form.name.trim(),
+        brand_description: form.brand_description.trim(),
+        target_audience: form.target_audience.trim(),
+        tone: form.tone,
+        color_temperature: form.color_temperature,
+        color_palette: form.color_palette,
+        brand_keywords: form.brand_keywords,
+        do_not_rules: form.do_not_rules,
+        // Leave removed fields at defaults
+        lighting_style: 'natural',
+        background_style: 'contextual',
+        composition_bias: 'varied',
+        preferred_scenes: [] as string[],
+        photography_reference: '',
       };
-      if (isEditing && editId) {
-        const { error } = await supabase.from('brand_profiles').update(payload).eq('id', editId);
+
+      if (isEditing) {
+        const { error } = await supabase.from('brand_profiles').update(payload).eq('id', id!);
         if (error) throw error;
+        toast.success('Brand profile updated');
       } else {
         const { error } = await supabase.from('brand_profiles').insert(payload);
         if (error) throw error;
+        toast.success('Brand profile created');
       }
-    },
-    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brand-profiles'] });
-      toast.success(isEditing ? 'Brand profile updated' : 'Brand profile created');
       navigate('/app/brand-profiles');
-    },
-    onError: () => toast.error('Failed to save brand profile'),
-  });
-
-  const canContinue = step === 0 ? name.trim().length > 0 : true;
-  const currentStepKey = STEPS[step].key;
-
-  const goToStep = (targetStep: number) => {
-    if (targetStep >= 0 && targetStep < STEPS.length) setStep(targetStep);
+    } catch (e) {
+      toast.error('Failed to save brand profile');
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (isEditing && isLoadingProfile) {
+  if (loadingExisting) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
       {/* Back button */}
       <button
         onClick={() => navigate('/app/brand-profiles')}
@@ -383,281 +216,315 @@ export default function BrandProfileWizard() {
 
       {/* Title */}
       <div>
-        <h1 className="text-xl font-semibold">{isEditing ? 'Edit Brand Profile' : 'Create Brand Profile'}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Step {step + 1} of {STEPS.length}: {STEPS[step].label}
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight">{isEditing ? 'Edit Profile' : 'New Brand Profile'}</h1>
+        <p className="text-sm text-muted-foreground mt-1">Define how your brand looks across every generation.</p>
       </div>
 
-      {/* Progress */}
-      <Progress value={((step + 1) / STEPS.length) * 100} className="h-1.5" />
-
-      {/* Step indicator chips */}
-      <div className="flex gap-1 overflow-x-auto pb-1">
-        {STEPS.map((s, i) => {
-          const Icon = s.icon;
-          return (
+      {/* Step indicator */}
+      <div className="flex items-center justify-center gap-0">
+        {STEPS.map((label, i) => (
+          <React.Fragment key={label}>
             <button
-              key={s.key}
-              onClick={() => { if (i < step || (i <= step && canContinue)) goToStep(i); }}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors whitespace-nowrap',
-                i === step
-                  ? 'bg-primary text-primary-foreground'
-                  : i < step
-                  ? 'bg-primary/10 text-primary cursor-pointer'
-                  : 'bg-muted text-muted-foreground'
-              )}
+              onClick={() => (i < step || canProceed) && setStep(i)}
+              className="flex items-center gap-2 group"
             >
-              <Icon className="w-3 h-3" />
-              {s.label}
+              <span
+                className={cn(
+                  'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all',
+                  i === step
+                    ? 'bg-primary text-primary-foreground'
+                    : i < step
+                      ? 'bg-primary/20 text-primary'
+                      : 'bg-muted text-muted-foreground'
+                )}
+              >
+                {i < step ? <Check className="w-3.5 h-3.5" /> : i + 1}
+              </span>
+              <span className={cn(
+                'text-xs font-medium hidden sm:inline transition-colors',
+                i === step ? 'text-foreground' : 'text-muted-foreground'
+              )}>
+                {label}
+              </span>
             </button>
-          );
-        })}
+            {i < STEPS.length - 1 && (
+              <div className={cn(
+                'w-10 h-px mx-2',
+                i < step ? 'bg-primary/30' : 'bg-border'
+              )} />
+            )}
+          </React.Fragment>
+        ))}
       </div>
 
-      {/* Step Content */}
-      <Card>
-        <CardContent className="p-6 space-y-5">
-          {/* Step 1: Brand Identity */}
-          {currentStepKey === 'identity' && (
+      {/* Step content */}
+      <Card className="border-border/50">
+        <CardContent className="p-6 space-y-6">
+
+          {/* ──────── STEP 1: Your Brand ──────── */}
+          {step === 0 && (
             <>
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="brand-name">Brand / Profile Name *</Label>
+                  <label className="text-sm font-medium">Brand Name *</label>
                   <Input
-                    id="brand-name"
-                    placeholder="e.g. My Premium Brand"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    autoFocus
+                    value={form.name}
+                    onChange={e => update('name', e.target.value)}
+                    placeholder="e.g. AURA Skincare"
+                    className="bg-background"
                   />
                 </div>
+
                 <div className="space-y-1.5">
-                  <Label htmlFor="brand-desc">Brand Description</Label>
+                  <label className="text-sm font-medium">Description</label>
                   <Textarea
-                    id="brand-desc"
-                    placeholder="What is your brand about? What makes it unique?"
-                    value={brandDescription}
-                    onChange={e => setBrandDescription(e.target.value)}
-                    rows={3}
+                    value={form.brand_description}
+                    onChange={e => update('brand_description', e.target.value)}
+                    placeholder="One or two sentences about your brand's identity…"
+                    rows={2}
+                    className="bg-background resize-none"
                   />
+                  <p className="text-[11px] text-muted-foreground">Helps the AI understand your brand personality.</p>
                 </div>
+
                 <div className="space-y-1.5">
-                  <Label htmlFor="target-audience">Target Audience</Label>
+                  <label className="text-sm font-medium">Target Audience</label>
                   <Input
-                    id="target-audience"
-                    placeholder="e.g. Women 25-40, eco-conscious, active lifestyle"
-                    value={targetAudience}
-                    onChange={e => setTargetAudience(e.target.value)}
+                    value={form.target_audience}
+                    onChange={e => update('target_audience', e.target.value)}
+                    placeholder="e.g. Women 25-40 interested in clean beauty"
+                    className="bg-background"
                   />
                 </div>
               </div>
-              <PromptImpactBox text={getIdentityImpact(currentData)} />
             </>
           )}
 
-          {/* Step 2: Visual Tone */}
-          {currentStepKey === 'tone' && (
+          {/* ──────── STEP 2: Visual Style ──────── */}
+          {step === 1 && (
             <>
-              <div className="space-y-5">
-                <div className="space-y-3">
-                  <div>
-                    <Label>What tone defines your brand?</Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      This sets the overall visual personality for all generated images.
-                    </p>
+              {/* Mood */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Mood</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {MOOD_OPTIONS.map(mood => (
+                    <button
+                      key={mood.value}
+                      onClick={() => update('tone', mood.value)}
+                      className={cn(
+                        'text-left p-4 rounded-xl border transition-all',
+                        form.tone === mood.value
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                          : 'border-border/50 hover:border-border hover:bg-muted/30'
+                      )}
+                    >
+                      <p className="text-sm font-medium">{mood.label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{mood.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Feel */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Color Feel</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {COLOR_FEEL_OPTIONS.map(cf => (
+                    <button
+                      key={cf.value}
+                      onClick={() => update('color_temperature', cf.value)}
+                      className={cn(
+                        'text-left rounded-xl border overflow-hidden transition-all',
+                        form.color_temperature === cf.value
+                          ? 'border-primary ring-1 ring-primary/20'
+                          : 'border-border/50 hover:border-border'
+                      )}
+                    >
+                      <div className={cn('h-2 w-full bg-gradient-to-r', cf.gradient)} />
+                      <div className="p-3 pt-2.5">
+                        <p className="text-sm font-medium">{cf.label}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{cf.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Brand Colors (optional) */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Brand Colors <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {form.color_palette.map((color, i) => (
+                    <button
+                      key={i}
+                      onClick={() => removeColor(i)}
+                      className="group relative w-8 h-8 rounded-lg border border-border flex-shrink-0 transition-transform hover:scale-105"
+                      style={{ backgroundColor: color }}
+                      title={`${color} — click to remove`}
+                    >
+                      <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 rounded-lg">
+                        <X className="w-3 h-3 text-white" />
+                      </span>
+                    </button>
+                  ))}
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      value={newColor}
+                      onChange={e => setNewColor(e.target.value)}
+                      placeholder="#F5E6D3"
+                      className="w-24 h-8 text-xs bg-background"
+                      onKeyDown={e => e.key === 'Enter' && addColor()}
+                    />
+                    <Button variant="ghost" size="sm" className="h-8 px-2" onClick={addColor}>
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {TONE_OPTIONS.map(t => (
-                      <button
-                        key={t}
-                        onClick={() => setTone(t)}
-                        className={cn(
-                          'px-4 py-3 rounded-lg border text-left transition-all',
-                          tone === t
-                            ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
-                            : 'border-border hover:bg-muted'
-                        )}
+                </div>
+              </div>
+
+              {/* Brand Keywords */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Brand Keywords</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {KEYWORD_SUGGESTIONS.map(kw => (
+                    <button
+                      key={kw}
+                      onClick={() => toggleChip('brand_keywords', kw)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
+                        form.brand_keywords.includes(kw)
+                          ? 'bg-primary/10 border-primary/30 text-primary'
+                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted'
+                      )}
+                    >
+                      {form.brand_keywords.includes(kw) && <Check className="w-2.5 h-2.5 inline mr-1" />}
+                      {kw}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <Input
+                    value={customKeyword}
+                    onChange={e => setCustomKeyword(e.target.value)}
+                    placeholder="Add custom keyword…"
+                    className="h-8 text-xs bg-background flex-1"
+                    onKeyDown={e => e.key === 'Enter' && addCustomChip('brand_keywords', customKeyword, setCustomKeyword)}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={() => addCustomChip('brand_keywords', customKeyword, setCustomKeyword)}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                {form.brand_keywords.filter(kw => !KEYWORD_SUGGESTIONS.includes(kw)).length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {form.brand_keywords.filter(kw => !KEYWORD_SUGGESTIONS.includes(kw)).map(kw => (
+                      <Badge
+                        key={kw}
+                        variant="secondary"
+                        className="text-[11px] cursor-pointer hover:bg-destructive/10"
+                        onClick={() => toggleChip('brand_keywords', kw)}
                       >
-                        <p className="text-sm font-medium capitalize">{t}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {TONE_DESCRIPTIONS[t] || t}
-                        </p>
-                      </button>
+                        {kw} <X className="w-2.5 h-2.5 ml-1" />
+                      </Badge>
                     ))}
                   </div>
-                </div>
-                <ChipPicker
-                  label="Brand Keywords"
-                  items={brandKeywords}
-                  suggestions={['sustainable', 'handcrafted', 'heritage', 'modern', 'organic', 'premium', 'artisanal', 'innovative']}
-                  onAdd={kw => setBrandKeywords(prev => [...prev, kw])}
-                  onRemove={kw => setBrandKeywords(prev => prev.filter(k => k !== kw))}
-                  placeholder="e.g. sustainable, handcrafted"
-                />
-              </div>
-              <PromptImpactBox text={getToneImpact(currentData)} />
-            </>
-          )}
-
-          {/* Step 3: Lighting & Color */}
-          {currentStepKey === 'lighting' && (
-            <>
-              <div className="space-y-5">
-                <OptionSelector
-                  label="Lighting Style"
-                  description="How should images be lit?"
-                  options={LIGHTING_OPTIONS}
-                  value={lightingStyle}
-                  onChange={setLightingStyle}
-                />
-                <OptionSelector
-                  label="Color Temperature"
-                  description="Overall warmth of the image."
-                  options={COLOR_TEMP_OPTIONS}
-                  value={colorTemperature}
-                  onChange={setColorTemperature}
-                />
-                <ColorPaletteInput
-                  colors={colorPalette}
-                  onAdd={c => setColorPalette(prev => [...prev, c])}
-                  onRemove={c => setColorPalette(prev => prev.filter(x => x !== c))}
-                />
-              </div>
-              <PromptImpactBox text={getLightingImpact(currentData)} />
-            </>
-          )}
-
-          {/* Step 4: Composition & Background */}
-          {currentStepKey === 'composition' && (
-            <>
-              <div className="space-y-5">
-                <OptionSelector
-                  label="Background Style"
-                  description="Default backdrop for product images."
-                  options={BACKGROUND_OPTIONS}
-                  value={backgroundStyle}
-                  onChange={setBackgroundStyle}
-                />
-                <OptionSelector
-                  label="Composition Bias"
-                  description="How the subject is framed."
-                  options={COMPOSITION_OPTIONS}
-                  value={compositionBias}
-                  onChange={setCompositionBias}
-                />
-                <ChipPicker
-                  label="Preferred Scenes"
-                  items={preferredScenes}
-                  suggestions={SCENE_SUGGESTIONS}
-                  onAdd={s => setPreferredScenes(prev => [...prev, s])}
-                  onRemove={s => setPreferredScenes(prev => prev.filter(x => x !== s))}
-                  placeholder="e.g. minimalist studio"
-                />
-              </div>
-              <PromptImpactBox text={getCompositionImpact(currentData)} />
-            </>
-          )}
-
-          {/* Step 5: Exclusion Rules */}
-          {currentStepKey === 'exclusions' && (
-            <>
-              <div className="space-y-5">
-                <ChipPicker
-                  label="Do-Not Rules"
-                  items={doNotRules}
-                  suggestions={['text overlays', 'busy backgrounds', 'watermarks', 'neon colors', 'heavy filters', 'cartoon style']}
-                  onAdd={r => setDoNotRules(prev => [...prev, r])}
-                  onRemove={r => setDoNotRules(prev => prev.filter(x => x !== r))}
-                  placeholder="e.g. no text overlays"
-                />
-                <div className="space-y-1.5">
-                  <Label htmlFor="photo-ref">Photography Reference Notes</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Any additional creative direction or photographic style references.
-                  </p>
-                  <Textarea
-                    id="photo-ref"
-                    placeholder="e.g. Inspired by kinfolk magazine aesthetic, muted earth tones, editorial feel"
-                    value={photographyReference}
-                    onChange={e => setPhotographyReference(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              </div>
-              <PromptImpactBox text={getExclusionImpact(currentData)} />
-            </>
-          )}
-
-          {/* Step 6: Review & Save */}
-          {currentStepKey === 'review' && (
-            <div className="space-y-5">
-              {/* Summary sections */}
-              <ReviewSection
-                title="Brand Identity"
-                stepIndex={0}
-                onEdit={() => goToStep(0)}
-                items={[
-                  { label: 'Name', value: name },
-                  { label: 'Description', value: brandDescription || '—' },
-                  { label: 'Target Audience', value: targetAudience || '—' },
-                ]}
-              />
-              <ReviewSection
-                title="Visual Tone"
-                stepIndex={1}
-                onEdit={() => goToStep(1)}
-                items={[
-                  { label: 'Tone', value: tone },
-                  { label: 'Keywords', value: brandKeywords.length > 0 ? brandKeywords.join(', ') : '—' },
-                ]}
-              />
-              <ReviewSection
-                title="Lighting & Color"
-                stepIndex={2}
-                onEdit={() => goToStep(2)}
-                items={[
-                  { label: 'Lighting', value: lightingStyle },
-                  { label: 'Temperature', value: colorTemperature },
-                  { label: 'Palette', value: colorPalette.length > 0 ? colorPalette.join(', ') : '—' },
-                ]}
-              />
-              <ReviewSection
-                title="Composition"
-                stepIndex={3}
-                onEdit={() => goToStep(3)}
-                items={[
-                  { label: 'Background', value: backgroundStyle },
-                  { label: 'Composition', value: compositionBias },
-                  { label: 'Scenes', value: preferredScenes.length > 0 ? preferredScenes.join(', ') : '—' },
-                ]}
-              />
-              <ReviewSection
-                title="Exclusions"
-                stepIndex={4}
-                onEdit={() => goToStep(4)}
-                items={[
-                  { label: 'Do-Not Rules', value: doNotRules.length > 0 ? doNotRules.join(', ') : '—' },
-                  { label: 'Photo Reference', value: photographyReference || '—' },
-                ]}
-              />
-
-              {/* Full prompt preview */}
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/60">
-                  Full Prompt Preview — What the AI receives
-                </p>
-                <pre className="text-xs text-foreground/70 whitespace-pre-wrap font-sans leading-relaxed">
-                  {styleGuide || 'No brand context configured.'}
-                </pre>
-                {doNotRules.length > 0 && (
-                  <pre className="text-xs text-destructive/70 whitespace-pre-wrap font-sans leading-relaxed mt-2">
-                    EXCLUDE: {doNotRules.join(', ')}
-                  </pre>
                 )}
               </div>
-            </div>
+            </>
+          )}
+
+          {/* ──────── STEP 3: Avoid These ──────── */}
+          {step === 2 && (
+            <>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium">Things to Avoid</label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">These are injected as negative prompts in every generation.</p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {DO_NOT_SUGGESTIONS.map(rule => (
+                    <button
+                      key={rule}
+                      onClick={() => toggleChip('do_not_rules', rule)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
+                        form.do_not_rules.includes(rule)
+                          ? 'bg-destructive/10 border-destructive/30 text-destructive'
+                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted'
+                      )}
+                    >
+                      {form.do_not_rules.includes(rule) && '✕ '}
+                      {rule}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    value={customRule}
+                    onChange={e => setCustomRule(e.target.value)}
+                    placeholder="Add custom exclusion…"
+                    className="h-8 text-xs bg-background flex-1"
+                    onKeyDown={e => e.key === 'Enter' && addCustomChip('do_not_rules', customRule, setCustomRule)}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2"
+                    onClick={() => addCustomChip('do_not_rules', customRule, setCustomRule)}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                {form.do_not_rules.filter(r => !DO_NOT_SUGGESTIONS.includes(r)).length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {form.do_not_rules.filter(r => !DO_NOT_SUGGESTIONS.includes(r)).map(rule => (
+                      <Badge
+                        key={rule}
+                        variant="secondary"
+                        className="text-[11px] cursor-pointer hover:bg-destructive/10"
+                        onClick={() => toggleChip('do_not_rules', rule)}
+                      >
+                        ✕ {rule} <X className="w-2.5 h-2.5 ml-1" />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Prompt preview */}
+              <Collapsible open={reviewOpen} onOpenChange={setReviewOpen}>
+                <CollapsibleTrigger asChild>
+                  <button className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-sm hover:bg-primary/10 transition-colors">
+                    <span className="flex items-center gap-2 text-xs font-medium">
+                      <Eye className="w-3.5 h-3.5" />
+                      What the AI will see
+                    </span>
+                    <ChevronDown className={cn('w-4 h-4 transition-transform', reviewOpen && 'rotate-180')} />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2">
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+                    {promptPreview.styleGuide ? (
+                      <pre className="text-[11px] text-foreground/80 whitespace-pre-wrap font-mono leading-relaxed">
+                        {promptPreview.styleGuide}
+                      </pre>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">Fill in your brand details to see the prompt preview.</p>
+                    )}
+                    {promptPreview.negatives.length > 0 && (
+                      <div className="pt-2 border-t border-primary/10">
+                        <p className="text-[10px] font-semibold text-destructive/70 uppercase tracking-wider mb-1">Excluded</p>
+                        <p className="text-[11px] text-foreground/70">{promptPreview.negatives.join(', ')}</p>
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </>
           )}
         </CardContent>
       </Card>
@@ -665,61 +532,25 @@ export default function BrandProfileWizard() {
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <Button
-          variant="outline"
-          onClick={() => step === 0 ? navigate('/app/brand-profiles') : goToStep(step - 1)}
+          variant="ghost"
+          onClick={() => step > 0 ? setStep(step - 1) : navigate('/app/brand-profiles')}
+          className="gap-1.5"
         >
-          <ArrowLeft className="w-4 h-4 mr-1.5" />
-          {step === 0 ? 'Cancel' : 'Back'}
+          <ArrowLeft className="w-4 h-4" />
+          {step > 0 ? 'Back' : 'Cancel'}
         </Button>
 
         {step < STEPS.length - 1 ? (
-          <Button onClick={() => goToStep(step + 1)} disabled={!canContinue}>
-            Continue
-            <ArrowRight className="w-4 h-4 ml-1.5" />
+          <Button onClick={() => setStep(step + 1)} disabled={!canProceed} className="gap-1.5">
+            Next
+            <ArrowRight className="w-4 h-4" />
           </Button>
         ) : (
-          <Button
-            onClick={() => saveMutation.mutate()}
-            disabled={!name.trim() || saveMutation.isPending}
-          >
-            {saveMutation.isPending ? 'Saving...' : isEditing ? 'Update Profile' : 'Create Profile'}
-            <Check className="w-4 h-4 ml-1.5" />
+          <Button onClick={handleSave} disabled={saving || !form.name.trim()} className="gap-1.5">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isEditing ? 'Save Changes' : 'Create Profile'}
           </Button>
         )}
-      </div>
-    </div>
-  );
-}
-
-// ── Review Section Helper ────────────────────────────────────────────────
-
-function ReviewSection({
-  title,
-  stepIndex,
-  onEdit,
-  items,
-}: {
-  title: string;
-  stepIndex: number;
-  onEdit: () => void;
-  items: Array<{ label: string; value: string }>;
-}) {
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <Button variant="ghost" size="sm" onClick={onEdit} className="h-7 px-2 text-xs">
-          <Pencil className="w-3 h-3 mr-1" />
-          Edit
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-        {items.map(({ label, value }) => (
-          <div key={label} className="text-xs">
-            <span className="text-muted-foreground">{label}: </span>
-            <span className="text-foreground capitalize">{value}</span>
-          </div>
-        ))}
       </div>
     </div>
   );

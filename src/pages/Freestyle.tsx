@@ -147,16 +147,11 @@ export default function Freestyle() {
     // Build brand profile context for the edge function
     const brandContext = selectedBrandProfile ? {
       tone: selectedBrandProfile.tone,
-      lightingStyle: selectedBrandProfile.lighting_style,
-      backgroundStyle: selectedBrandProfile.background_style,
-      colorTemperature: selectedBrandProfile.color_temperature,
-      compositionBias: selectedBrandProfile.composition_bias,
+      colorFeel: selectedBrandProfile.color_temperature,
       doNotRules: selectedBrandProfile.do_not_rules,
       brandKeywords: (selectedBrandProfile as any).brand_keywords || [],
       colorPalette: (selectedBrandProfile as any).color_palette || [],
-      preferredScenes: (selectedBrandProfile as any).preferred_scenes || [],
       targetAudience: (selectedBrandProfile as any).target_audience || '',
-      photographyReference: (selectedBrandProfile as any).photography_reference || '',
     } : undefined;
 
     const result = await generate({
