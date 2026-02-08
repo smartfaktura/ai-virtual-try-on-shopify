@@ -222,7 +222,16 @@ export default function Freestyle() {
     await deleteImage(imageId);
   }, [deleteImage]);
 
+  const handleDismissBlocked = useCallback((id: string) => {
+    setBlockedEntries(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  const handleEditBlockedPrompt = useCallback((blockedPrompt: string) => {
+    setPrompt(blockedPrompt);
+  }, []);
+
   const hasImages = savedImages.length > 0;
+  const hasBlocked = blockedEntries.length > 0;
   const showLoading = isLoadingImages && !hasImages;
 
   const galleryImages = savedImages.map(img => ({
