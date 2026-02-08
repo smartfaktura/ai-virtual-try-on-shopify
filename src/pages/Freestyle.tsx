@@ -100,6 +100,7 @@ export default function Freestyle() {
   }, [deleteImage]);
 
   const hasImages = savedImages.length > 0;
+  const showLoading = isLoadingImages && !hasImages;
 
   // Map saved images to gallery format
   const galleryImages = savedImages.map(img => ({
