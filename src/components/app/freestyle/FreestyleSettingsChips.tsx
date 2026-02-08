@@ -23,12 +23,13 @@ import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
 
-export type FreestyleAspectRatio = '1:1' | '3:4' | '4:5' | '16:9';
+export type FreestyleAspectRatio = '1:1' | '3:4' | '4:5' | '9:16' | '16:9';
 
 const ASPECT_RATIOS: { value: FreestyleAspectRatio; label: string; icon: typeof Square }[] = [
   { value: '1:1', label: '1:1', icon: Square },
   { value: '3:4', label: '3:4', icon: Smartphone },
   { value: '4:5', label: '4:5', icon: Smartphone },
+  { value: '9:16', label: '9:16', icon: Smartphone },
   { value: '16:9', label: '16:9', icon: RectangleHorizontal },
 ];
 
