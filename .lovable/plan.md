@@ -1,130 +1,100 @@
 
 
-## Secure Product Import System
+## Standalone Video Generation Page with Kling AI
 
-Build a complete product import system with four methods (manual upload, store URL import, CSV import, and mobile QR code upload), all secured so that files and data are strictly tied to the authenticated user's account.
+Create a dedicated "Video" page in the dashboard where users can upload or provide an image and generate animated videos using Kling AI's Image-to-Video API. This is completely separate from the existing image generation flow.
 
-### Security Improvements (Critical)
+### Secrets Required First
 
-The current `scratch-uploads` storage bucket has wide-open policies ("Anyone can upload/view/delete"). This will be replaced with a new **private** `product-uploads` bucket that uses user-scoped file paths (`{user_id}/filename.jpg`) and proper RLS policies:
+Before building, two API keys need to be added from your Kling AI developer console (https://app.klingai.com/global/dev/api-key):
 
-- **Upload**: Only authenticated users can upload to their own folder
-- **View**: Only the file owner can view their files
-- **Delete**: Only the file owner can delete their files
-
-The `import-product` and `mobile-upload` edge functions will both verify the user's JWT token before performing any action. The mobile upload flow uses a secure, time-limited session token stored in a database table with user association.
+- **KLING_ACCESS_KEY** -- your Kling API access key
+- **KLING_SECRET_KEY** -- your Kling API secret key
 
 ### What Gets Built
 
-**1. New Storage Bucket: `product-uploads`**
+**1. New sidebar nav item: "Video"**
 
-A private bucket with user-scoped RLS policies. All product images (manual, imported, CSV, mobile) flow through this bucket. File paths follow the pattern `{user_id}/{timestamp}-{random}.{ext}` so each user's files are isolated.
+A new "Video" entry in the sidebar navigation (under Main section), using the Video/Film icon, linking to `/app/video`.
 
-**2. Database Table: `mobile_upload_sessions`**
+**2. New page: Video Generator (`/app/video`)**
 
-A small table to securely bridge the desktop-to-mobile QR code flow:
-- `id` (uuid), `user_id` (uuid), `session_token` (text, unique), `image_url` (text, nullable), `status` (pending/uploaded/expired), `expires_at` (timestamp), `created_at` (timestamp)
-- RLS: users can only access their own sessions
-- Sessions auto-expire after 15 minutes
+A clean, standalone page with:
 
-**3. Edge Function: `import-product`**
+- **Image input area** -- drag-and-drop upload or paste an image URL. Shows a preview of the selected image
+- **Motion prompt** -- text input describing the desired animation (e.g., "gentle breeze, fabric flowing naturally, subtle camera push-in")
+- **Configuration options:**
+  - Model quality: Standard (kling-v2.1-standard, faster/cheaper) or Pro (kling-v2.1-pro, higher quality)
+  - Duration: 5 seconds or 10 seconds
+  - Aspect ratio: 1:1, 16:9, 9:16
+- **"Generate Video" button** -- kicks off the generation
+- **Progress state** -- shows elapsed time and a pulsing indicator while Kling processes (typically 1-3 minutes)
+- **Result area** -- video player with the finished MP4, plus a Download button
 
-Handles URL-based product imports with JWT verification:
-- Accepts a product URL (Shopify, WooCommerce, Etsy, Amazon, or any page with Open Graph tags)
-- Fetches the page HTML server-side
-- Uses AI (Gemini Flash) to extract: product title, primary image URL, and product type from the HTML/meta tags
-- Downloads the product image and uploads it to the secure `product-uploads` bucket under the user's folder
-- Returns structured product data (title, image URL, type)
-- Requires valid auth token -- rejects unauthenticated requests
+**3. Edge Function: `generate-video`**
 
-**4. Edge Function: `mobile-upload`**
+A backend function handling the Kling AI workflow:
 
-Handles the QR code mobile upload flow with two endpoints:
-- `POST /create-session`: (authenticated, desktop) Creates a new upload session with a random token, returns QR code URL
-- `POST /upload`: (public with session token validation) Accepts an image file from mobile, validates the session token hasn't expired, uploads to the user's secure folder, updates the session record
-- `GET /status?token=xxx`: (authenticated, desktop) Polls session status to detect when the mobile upload completes
+- **`action=create`**: Generates a JWT (HS256 signed with KLING_SECRET_KEY), submits an image-to-video task to Kling AI, returns the task ID
+- **`action=status`**: Polls the task status and returns the video URL when complete
+- Validates the user's auth token
+- Full error handling for rate limits, expired tasks, and API failures
 
-**5. Add Product Modal**
+**4. React Hook: `useGenerateVideo`**
 
-A dialog with four tabs replacing the current "Upload Product" button behavior:
+Manages the full lifecycle:
+- Sends the image + prompt to the edge function
+- Polls for status every 8 seconds
+- Exposes `status` (idle/creating/processing/complete/error), `videoUrl`, `error`, and `startGeneration()`
+- Cleans up polling on unmount
 
-- **Manual Upload**: Drag-and-drop image upload with product details form (title, type, description). Uses the secured upload hook to store in `product-uploads/{user_id}/`
-- **Import from Store**: Paste a URL, click Import. Shows a loading state while the edge function scrapes the product. Preview the extracted info before saving
-- **CSV Import**: Upload a CSV file with columns (title, product_type, image_url, description). Client-side parsing with preview table. Bulk-inserts into `user_products` with proper `user_id`
-- **Mobile Camera (QR)**: Desktop shows a QR code. Scan with phone to open a simple upload page. Desktop polls for completion and shows the image when ready
+### User Flow
 
-**6. Mobile Upload Page**
+1. Click "Video" in the sidebar
+2. Upload an image (drag-and-drop or file picker) or paste a URL
+3. Type a motion prompt describing the animation you want
+4. Pick quality (Standard/Pro), duration (5s/10s), and aspect ratio
+5. Click "Generate Video"
+6. Wait 1-3 minutes with a progress indicator
+7. Preview the video inline, download as MP4
 
-A new public route `/upload/:sessionToken`:
-- Clean, mobile-optimized page with large camera/upload button
-- Validates the session token is valid and not expired
-- Uploads image directly to `product-uploads` via the `mobile-upload` edge function
-- Shows success screen: "Photo sent to your desktop. You can close this tab."
-- No login required on mobile -- the session token links back to the desktop user's account securely
-
-**7. Updated File Upload Hook**
-
-The existing `useFileUpload` hook will be updated to:
-- Upload to the new `product-uploads` bucket instead of `scratch-uploads`
-- Prefix file paths with the authenticated user's ID
-- Include the auth token in requests
-
-### User Experience
-
-1. Click "+ Add Product" on the Products page
-2. Modal opens with four clear import options
-3. **Manual**: Upload image, fill details, save -- product appears in grid
-4. **Store URL**: Paste `https://myshop.com/products/cool-tee`, click Import. AI extracts title and image. Confirm and save
-5. **CSV**: Drop a CSV, preview rows in a table, click "Import All"
-6. **Mobile**: QR code appears on desktop. Scan with phone, take photo or pick from camera roll. Image appears on desktop within seconds, fill in details, save
-
-### Files Summary
+### Files
 
 **New files:**
-- `supabase/functions/import-product/index.ts` -- URL scraping edge function (JWT verified)
-- `supabase/functions/mobile-upload/index.ts` -- mobile session handler (JWT verified for session creation)
-- `src/components/app/AddProductModal.tsx` -- main modal with tab navigation
-- `src/components/app/ManualProductTab.tsx` -- manual upload tab
-- `src/components/app/StoreImportTab.tsx` -- URL import tab
-- `src/components/app/CsvImportTab.tsx` -- CSV import tab
-- `src/components/app/MobileUploadTab.tsx` -- QR code tab
-- `src/pages/MobileUpload.tsx` -- public mobile upload page
-- `src/lib/qrCode.ts` -- lightweight QR code canvas renderer
+- `supabase/functions/generate-video/index.ts` -- Kling AI edge function with JWT auth and task polling
+- `src/pages/VideoGenerate.tsx` -- standalone video generation page
+- `src/hooks/useGenerateVideo.ts` -- hook for video generation state and polling
 
 **Modified files:**
-- `src/pages/Products.tsx` -- replace navigate-to-generate with modal
-- `src/hooks/useFileUpload.ts` -- use secure bucket with user-scoped paths
-- `src/App.tsx` -- add `/upload/:sessionToken` public route
-- `supabase/config.toml` -- register `import-product` and `mobile-upload` edge functions
-
-**Database changes:**
-- New storage bucket `product-uploads` (private) with user-scoped RLS
-- New table `mobile_upload_sessions` with RLS policies
-- Tighten existing `scratch-uploads` bucket policies (or migrate to new bucket)
+- `src/App.tsx` -- add `/app/video` route
+- `src/components/app/AppShell.tsx` -- add "Video" nav item to sidebar
+- `supabase/config.toml` -- register `generate-video` function
 
 ### Technical Details
 
-**Storage RLS policies for `product-uploads`:**
-```text
-INSERT: auth.uid()::text = (storage.foldername(name))[1]
-SELECT: auth.uid()::text = (storage.foldername(name))[1]
-DELETE: auth.uid()::text = (storage.foldername(name))[1]
-```
+**Kling AI JWT (generated server-side in Deno):**
+- Header: `{ alg: "HS256", typ: "JWT" }`
+- Payload: `{ iss: KLING_ACCESS_KEY, exp: now + 1800, iat: now }`
+- Signed with: KLING_SECRET_KEY
 
-This ensures a user can only upload/view/delete files inside their own `{user_id}/` folder.
+**Kling API endpoints:**
+- Create task: `POST https://api-singapore.klingai.com/v1/videos/image2video`
+- Check status: `GET https://api-singapore.klingai.com/v1/videos/image2video/{task_id}`
 
-**Edge function security:**
-- `import-product`: `verify_jwt = true` in config.toml. Extracts user ID from the auth token. Uploads images to `product-uploads/{user_id}/`
-- `mobile-upload`: `verify_jwt = false` (mobile endpoint needs public access), but validates session tokens server-side and creates the Supabase admin client to verify ownership
+**Task statuses:** submitted -> processing -> succeed / failed
 
-**QR code generation:** Built with a small canvas-based utility (no external dependency). The QR encodes the URL `{app_origin}/upload/{sessionToken}`.
+**Polling strategy:**
+- Poll every 8 seconds via the edge function
+- Maximum ~50 polls (about 7 minutes timeout)
+- Show elapsed time to the user during processing
 
-**CSV parsing:** Uses the browser's built-in `FileReader` + manual CSV parsing (handles quoted fields). No new dependencies needed.
+**Edge function auth:**
+- `verify_jwt = false` in config.toml
+- Validates JWT via `getClaims()` in code for both create and status actions
+- User ID extracted from token for logging
 
-**Supported platforms for URL import:**
-- Shopify (detects `og:title`, `og:image`, product JSON-LD)
-- WooCommerce (similar meta tag extraction)
-- Etsy (Open Graph tags)
-- Amazon (product title + image from structured data)
-- Any page with `og:title` and `og:image` meta tags (generic fallback)
+**Image handling:**
+- Uploaded images go through the existing `useFileUpload` hook to the `product-uploads` bucket
+- The signed URL is passed to Kling AI (they need a publicly accessible image URL)
+- Alternatively, users can paste any public image URL directly
 
