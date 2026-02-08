@@ -106,6 +106,8 @@ function ImageCard({
   className?: string;
   natural?: boolean;
 }) {
+  const [loaded, setLoaded] = useState(false);
+
   const actionButtons = (
     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
       <div className="flex items-center gap-2">
