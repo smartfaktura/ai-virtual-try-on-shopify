@@ -158,7 +158,7 @@ export default function Products() {
                 <List className="w-4 h-4" />
               </Button>
             </div>
-            <Button onClick={() => setModalOpen(true)}>
+            <Button onClick={() => { setEditingProduct(null); setModalOpen(true); }}>
               <Plus className="w-4 h-4 mr-2" />
               Add Product
             </Button>
