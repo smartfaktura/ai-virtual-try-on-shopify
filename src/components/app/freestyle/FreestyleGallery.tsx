@@ -140,7 +140,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   const skeletons = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
-        <SkeletonCard key={`skeleton-${i}`} className="mb-1" />
+        <SkeletonCard key={`skeleton-${i}`} />
       ))
     : [];
 
