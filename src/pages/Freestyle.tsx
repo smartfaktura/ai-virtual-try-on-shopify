@@ -1,14 +1,20 @@
 import { useState, useRef, useCallback } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
 import { useGenerateFreestyle } from '@/hooks/useGenerateFreestyle';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useCredits } from '@/contexts/CreditContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
+import { supabase } from '@/integrations/supabase/client';
 import type { ModelProfile, TryOnPose } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
+import type { Tables } from '@/integrations/supabase/types';
+
+type UserProduct = Tables<'user_products'>;
 
 export default function Freestyle() {
   const [prompt, setPrompt] = useState('');
@@ -22,13 +28,30 @@ export default function Freestyle() {
   const [imageCount, setImageCount] = useState(1);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<UserProduct | null>(null);
+  const [productPopoverOpen, setProductPopoverOpen] = useState(false);
+  const [productSourced, setProductSourced] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { generate, isLoading, progress } = useGenerateFreestyle();
   const { balance, deductCredits, openBuyModal } = useCredits();
+  const { user } = useAuth();
   const { images: savedImages, isLoading: isLoadingImages, saveImage, deleteImage } = useFreestyleImages();
+
+  const { data: products = [], isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['user-products', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as UserProduct[];
+    },
+    enabled: !!user?.id,
+  });
 
   const creditCost = imageCount * (quality === 'high' ? 2 : 1);
   const canGenerate = prompt.trim().length > 0 && !isLoading && balance >= creditCost;
@@ -40,13 +63,35 @@ export default function Freestyle() {
     setSourceImagePreview(previewUrl);
     const base64 = await convertImageToBase64(previewUrl);
     setSourceImage(base64);
+    // Manual upload clears product selection
+    setSelectedProduct(null);
+    setProductSourced(false);
   }, []);
 
   const removeSourceImage = useCallback(() => {
     setSourceImage(null);
     setSourceImagePreview(null);
+    setSelectedProduct(null);
+    setProductSourced(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
+
+  const handleProductSelect = useCallback(async (product: UserProduct | null) => {
+    if (!product) {
+      if (productSourced) {
+        setSourceImage(null);
+        setSourceImagePreview(null);
+        setProductSourced(false);
+      }
+      setSelectedProduct(null);
+      return;
+    }
+    setSelectedProduct(product);
+    setSourceImagePreview(product.image_url);
+    setProductSourced(true);
+    const base64 = await convertImageToBase64(product.image_url);
+    setSourceImage(base64);
+  }, [productSourced]);
 
   const handleGenerate = useCallback(async () => {
     if (!canGenerate) {
@@ -82,7 +127,6 @@ export default function Freestyle() {
 
     if (result && result.images.length > 0) {
       deductCredits(creditCost);
-      // Save each generated image to storage + DB
       for (const imageUrl of result.images) {
         await saveImage(imageUrl, finalPrompt, aspectRatio, quality);
       }
@@ -108,7 +152,6 @@ export default function Freestyle() {
   const hasImages = savedImages.length > 0;
   const showLoading = isLoadingImages && !hasImages;
 
-  // Map saved images to gallery format
   const galleryImages = savedImages.map(img => ({
     id: img.id,
     url: img.url,
@@ -135,6 +178,12 @@ export default function Freestyle() {
     onSceneSelect: setSelectedScene,
     scenePopoverOpen,
     onScenePopoverChange: setScenePopoverOpen,
+    selectedProduct,
+    onProductSelect: handleProductSelect,
+    productPopoverOpen,
+    onProductPopoverChange: setProductPopoverOpen,
+    products,
+    isLoadingProducts,
     aspectRatio,
     onAspectRatioChange: setAspectRatio,
     quality,
