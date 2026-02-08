@@ -1,9 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Upload, ImagePlus } from 'lucide-react';
+import { ImagePlus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { ProductImageGallery } from './ProductImageGallery';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,8 +35,8 @@ interface ImageItem {
   src: string;
   file?: File;
   isPrimary: boolean;
-  dbId?: string; // ID from product_images table, for tracking existing images
-  storagePath?: string; // storage path for existing images
+  dbId?: string;
+  storagePath?: string;
 }
 
 const PRODUCT_TYPES = [
@@ -56,7 +59,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const initialImageIdsRef = useRef<string[]>([]);
 
-  // Pre-fill form when editing
   useEffect(() => {
     if (editingProduct) {
       setTitle(editingProduct.title);
@@ -78,21 +80,19 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (error) throw error;
 
       if (data && data.length > 0) {
-        const items: ImageItem[] = data.map((row, idx) => ({
+        const items: ImageItem[] = data.map((row) => ({
           id: `existing-${row.id}`,
           src: row.image_url,
           isPrimary: row.position === 0,
           dbId: row.id,
           storagePath: row.storage_path,
         }));
-        // Ensure at least one is primary
         if (!items.some(i => i.isPrimary) && items.length > 0) {
           items[0].isPrimary = true;
         }
         setImages(items);
         initialImageIdsRef.current = items.map(i => i.dbId!);
       } else if (fallbackImageUrl) {
-        // No product_images rows, create one from the main image_url
         setImages([{
           id: `fallback-${Date.now()}`,
           src: fallbackImageUrl,
@@ -102,7 +102,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       }
     } catch (err) {
       console.error('Failed to load product images:', err);
-      // Fallback to primary image
       if (fallbackImageUrl) {
         setImages([{
           id: `fallback-${Date.now()}`,
@@ -272,13 +271,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
 
     setIsUploading(true);
     try {
-      // 1. Determine which existing images were removed
       const currentDbIds = images.filter(i => i.dbId).map(i => i.dbId!);
       const removedDbIds = initialImageIdsRef.current.filter(id => !currentDbIds.includes(id));
 
-      // 2. Delete removed images from DB (and optionally from storage)
       if (removedDbIds.length > 0) {
-        // Get storage paths for cleanup
         const { data: removedRows } = await supabase
           .from('product_images')
           .select('storage_path')
@@ -286,7 +282,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
 
         await supabase.from('product_images').delete().in('id', removedDbIds);
 
-        // Clean up storage
         if (removedRows) {
           const pathsToDelete = removedRows
             .map(r => r.storage_path)
@@ -297,7 +292,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         }
       }
 
-      // 3. Upload new images (those with a File object)
       const newImages = images.filter(i => i.file);
       const uploadedNew: { imageItem: ImageItem; signedUrl: string; storagePath: string }[] = [];
 
@@ -306,7 +300,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         uploadedNew.push({ imageItem: img, signedUrl, storagePath });
       }
 
-      // 4. Compute positions and primary image URL
       let primarySignedUrl = '';
       const allFinalImages: { dbId?: string; signedUrl: string; storagePath: string; position: number; isNew: boolean }[] = [];
 
@@ -323,7 +316,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         }
       });
 
-      // 5. Update user_products row
       const { error: updateError } = await supabase
         .from('user_products')
         .update({
@@ -336,7 +328,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
 
       if (updateError) throw new Error(updateError.message);
 
-      // 6. Update positions of existing images
       for (const img of allFinalImages.filter(i => !i.isNew && i.dbId)) {
         await supabase
           .from('product_images')
@@ -344,7 +335,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           .eq('id', img.dbId!);
       }
 
-      // 7. Insert newly uploaded images
       const newRows = allFinalImages
         .filter(i => i.isNew)
         .map(i => ({
@@ -374,68 +364,100 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const isEditing = !!editingProduct;
 
   return (
-    <div className="space-y-5">
-      {/* Dropzone / Gallery */}
-      {isLoadingImages ? (
-        <div className="flex items-center justify-center min-h-[160px] rounded-lg border-2 border-dashed border-border">
-          <p className="text-sm text-muted-foreground">Loading images…</p>
-        </div>
-      ) : images.length === 0 ? (
-        <div
-          className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
-            dragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/40'
-          } min-h-[160px]`}
-          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-          onDragLeave={() => setDragActive(false)}
-          onDrop={handleDrop}
-        >
-          <ImagePlus className="w-10 h-10 text-muted-foreground mb-3" />
-          <p className="text-sm text-muted-foreground mb-2">
-            Drag & drop images or{' '}
-            <label className="text-primary cursor-pointer hover:underline">
-              browse
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  const files = Array.from(e.target.files || []);
-                  if (files.length) addFiles(files);
-                  e.target.value = '';
-                }}
-              />
-            </label>
-          </p>
-          <p className="text-xs text-muted-foreground">PNG, JPG, WebP — max 10 MB each · up to {MAX_IMAGES} images</p>
-        </div>
-      ) : (
-        <div
-          className={`rounded-lg border-2 border-dashed p-3 transition-colors ${
-            dragActive ? 'border-primary bg-primary/5' : 'border-border'
-          }`}
-          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-          onDragLeave={() => setDragActive(false)}
-          onDrop={handleDrop}
-        >
-          <p className="text-xs text-muted-foreground mb-2">
-            ★ = primary image · {images.length}/{MAX_IMAGES} images
-          </p>
-          <ProductImageGallery
-            images={images}
-            onSetPrimary={handleSetPrimary}
-            onRemove={handleRemove}
-            onAddFiles={addFiles}
-            maxImages={MAX_IMAGES}
-            disabled={isUploading}
-          />
-        </div>
-      )}
-
-      {/* Fields */}
+    <div className="space-y-6">
+      {/* ── Image Section ── */}
       <div className="space-y-3">
-        <div>
-          <Label htmlFor="product-title">Product Name *</Label>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Product Images</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Click the star to set the cover image
+            </p>
+          </div>
+          {images.length > 0 && (
+            <Badge variant="secondary" className="text-[11px] font-medium px-2 py-0.5">
+              {images.length}/{MAX_IMAGES}
+            </Badge>
+          )}
+        </div>
+
+        {isLoadingImages ? (
+          <div className="flex items-center justify-center min-h-[120px] rounded-xl bg-muted/40">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading images…
+            </div>
+          </div>
+        ) : images.length === 0 ? (
+          <div
+            className={`relative flex flex-col items-center justify-center rounded-xl p-10 transition-all duration-200 ${
+              dragActive
+                ? 'bg-primary/5 border-2 border-primary'
+                : 'bg-muted/40 hover:bg-muted/60'
+            } min-h-[140px] cursor-pointer`}
+            onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={handleDrop}
+            onClick={() => {
+              const input = document.getElementById('dropzone-file-input');
+              if (input) input.click();
+            }}
+          >
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+              <ImagePlus className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Drag & drop or{' '}
+              <span className="text-primary font-medium">browse</span>
+            </p>
+            <p className="text-xs text-muted-foreground/70 mt-1">
+              PNG, JPG, WebP — max 10 MB · up to {MAX_IMAGES}
+            </p>
+            <input
+              id="dropzone-file-input"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length) addFiles(files);
+                e.target.value = '';
+              }}
+            />
+          </div>
+        ) : (
+          <div
+            className={`rounded-xl p-3 transition-all duration-200 ${
+              dragActive ? 'bg-primary/5 ring-2 ring-primary/20' : 'bg-muted/30'
+            }`}
+            onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={handleDrop}
+          >
+            <ProductImageGallery
+              images={images}
+              onSetPrimary={handleSetPrimary}
+              onRemove={handleRemove}
+              onAddFiles={addFiles}
+              maxImages={MAX_IMAGES}
+              disabled={isUploading}
+            />
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* ── Product Details ── */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-foreground">Product Details</h3>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="product-title" className="text-sm font-medium">
+            Product Name <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="product-title"
             placeholder="e.g. Black Yoga Leggings"
@@ -443,10 +465,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
           />
+          <p className="text-xs text-muted-foreground">
+            This name will appear in your generations
+          </p>
         </div>
 
-        <div>
-          <Label htmlFor="product-type">Product Type</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="product-type" className="text-sm font-medium">
+            Product Type
+          </Label>
           <Select value={productType} onValueChange={setProductType}>
             <SelectTrigger>
               <SelectValue placeholder="Select type…" />
@@ -459,27 +486,35 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </Select>
         </div>
 
-        <div>
-          <Label htmlFor="product-desc">Description (optional)</Label>
-          <Input
+        <div className="space-y-1.5">
+          <Label htmlFor="product-desc" className="text-sm font-medium">
+            Description
+          </Label>
+          <Textarea
             id="product-desc"
-            placeholder="Brief description…"
+            placeholder="Brief description of your product…"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             maxLength={500}
+            rows={3}
+            className="resize-none"
           />
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-2">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
+      {/* ── Footer Actions ── */}
+      <div className="flex justify-end gap-2 pt-2 border-t border-border">
+        <Button variant="ghost" onClick={onClose} disabled={isUploading}>
+          Cancel
+        </Button>
         <Button
           onClick={handleSubmit}
           disabled={isUploading || isLoadingImages || !title.trim() || images.length === 0}
+          className="min-w-[120px]"
         >
           {isUploading ? (
             <>
-              <Upload className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               {isEditing ? 'Saving…' : 'Uploading…'}
             </>
           ) : (
