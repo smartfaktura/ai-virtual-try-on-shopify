@@ -623,6 +623,8 @@ export default function Generate() {
                     setCurrentStep('brand-profile');
                   } else if (isClothingProduct(product)) {
                     setCurrentStep('mode');
+                  } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+                    setCurrentStep('settings');
                   } else {
                     setCurrentStep('template');
                   }
