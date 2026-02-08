@@ -585,6 +585,8 @@ export default function Generate() {
                     setScratchUpload({ ...scratchUpload, uploadedUrl });
                     if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
+                    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+                      setCurrentStep('settings');
                     } else {
                       const isClothing = ['leggings', 'hoodie', 't-shirt', 'sports bra', 'jacket', 'tank top', 'joggers'].some(kw => scratchUpload.productInfo.productType.toLowerCase().includes(kw));
                       setCurrentStep(isClothing ? 'mode' : 'template');
