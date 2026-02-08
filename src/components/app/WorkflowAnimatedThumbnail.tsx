@@ -189,7 +189,7 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
       )}
 
       {/* Result overlay — slides up with bounce */}
-      {isActive && current.overlay === 'result' && !entering && (
+      {isActive && current.overlay === 'result' && animPhase === 'idle' && (
         <div className="absolute inset-0 z-10 flex items-end justify-center pb-14">
           <div
             className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg"
