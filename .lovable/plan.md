@@ -1,78 +1,48 @@
 
 
-# Make Credits and Plan Dynamic and Upgrade-Focused
+# Fix Buy Credits Modal: Layout, Math, and CRO Improvements
 
-## The Problem
+## Problems Identified
 
-The current user (info@tsimkus.lt / Tomas Simkus) is on the **free plan** with **180 credits**, but the app hardcodes "Growth Plan" everywhere with a 2,500 credit quota. This is misleading and breaks the upgrade funnel.
+1. **Broken savings math**: The savings calculation uses 2.6 cents/credit as the top-up comparison rate, but 2,500 credits at that rate = $65, which is LESS than the $79 Growth plan. This shows "Save $-14/month" -- a negative number that actively discourages upgrading.
 
-The sidebar shows "GROWTH PLAN" and "/ 2,500" when the user actually has no paid plan at all.
+2. **Progress bar overflow**: User has 180 credits on a Free plan (20 credits quota). The math `180/20 = 900%` caps at 100%, making the bar look completely full. This is confusing -- it looks like they've used everything when they actually have plenty.
 
-## What Changes
+3. **Modal too tall / overflows**: The Upgrade tab has too much vertical content (plan card + savings box + 5 features + button + alt plan + separator + compare link), causing it to overflow the viewport.
 
-### 1. CreditContext reads the plan from the database
-
-The `CreditContext` currently only fetches `credits_balance`. It will also fetch the `plan` field from the profiles table and expose it, along with a computed plan config (name, monthly quota, next upgrade tier).
-
-A plan configuration map will translate the database `plan` value into display info:
-
-```text
-free    -> "Free"     / 20 credits (signup bonus)  / upgrade to Starter
-starter -> "Starter"  / 1,000 credits/month        / upgrade to Growth
-growth  -> "Growth"   / 2,500 credits/month        / upgrade to Pro
-pro     -> "Pro"      / 6,000 credits/month        / upgrade to Enterprise
-```
-
-### 2. CreditIndicator shows real plan and smart upgrade CTA
-
-The sidebar credit widget will:
-- Display the actual plan name (e.g., "Free Plan" not "Growth Plan")
-- Show the correct credit quota for the plan
-- For free users: show a more prominent upgrade nudge
-- Progress bar scales to actual plan quota
-
-### 3. BuyCreditsModal becomes plan-aware
-
-The "Credits and Plan" modal will:
-- Show the actual current plan in the balance header
-- **Top Up tab**: Same credit packs but with correct "after" totals
-- **Upgrade Plan tab**: Show the recommended next plan based on current plan (not always Pro). For free users, highlight Growth (most popular). Show a side-by-side current vs. next plan comparison with clear benefits and savings
-
-### 4. Settings page uses dynamic plan
-
-The Settings page also hardcodes `currentPlanId = 'growth'` and `creditsTotal = 2500`. These will read from the CreditContext instead.
+4. **Weak CRO on Upgrade tab**: For a free user, the upgrade pitch buries the value proposition under a broken savings box and generic feature list.
 
 ---
 
-## Technical Details
+## Changes
 
-### File: `src/contexts/CreditContext.tsx`
-- Add `plan` state (string, default `'free'`)
-- Fetch `plan` alongside `credits_balance` from profiles table: `.select('credits_balance, plan')`
-- Add a `PLAN_CONFIG` map with quota, display name, and next plan ID for each tier
-- Export `plan`, `planConfig` (name, monthlyCredits, nextPlanId) in the context value
+### File: `src/components/app/BuyCreditsModal.tsx` -- Full Rewrite
 
-### File: `src/components/app/CreditIndicator.tsx`
-- Remove hardcoded `PLAN_NAME = 'Growth'` and `PLAN_CREDITS = 2500`
-- Read `plan` and `planConfig` from `useCredits()`
-- Display dynamic plan name and credits quota
-- For free plan users, make the "Upgrade" CTA more prominent (slightly larger, with a subtle highlight)
+**Balance section (top)**:
+- Keep compact: plan badge, credit count, quota
+- Fix progress bar: for free users where balance exceeds monthlyCredits, show a green "bonus" bar with a label like "180 credits available" without the misleading ratio
+- When balance > monthlyCredits, show progress as 100% with a subtle "bonus credits" note
 
-### File: `src/components/app/BuyCreditsModal.tsx`
-- Remove hardcoded `CURRENT_PLAN_ID = 'growth'` and `PLAN_CREDITS = 2500`
-- Read plan info from `useCredits()`
-- Dynamically determine `currentPlan` and `nextPlan` from `pricingPlans` based on the user's actual plan
-- For free users on the Upgrade tab: show Growth as "Recommended" (it's the most popular) with Starter as a smaller alternative
-- For Starter users: recommend Growth
-- For Growth users: recommend Pro
-- Update the balance header to show the real plan name and quota
-- Add a "Your current plan" vs "Recommended" comparison layout in the Upgrade tab
+**Top Up tab**:
+- Keep the 3-column credit pack grid
+- Each pack shows: credits, image count, price, per-credit rate, buy button
+- Remove "after purchase" line to reduce clutter
+- Keep "Credits never expire" note
 
-### File: `src/pages/Settings.tsx`
-- Remove hardcoded `currentPlanId = 'growth'` and `creditsTotal = 2500`
-- Read plan info from `useCredits()` context
-- The "Current Plan" card will show the actual plan badge and credit quota
+**Upgrade Plan tab -- CRO-optimized**:
+- Remove the broken savings calculation entirely
+- Replace with a value-focused pitch: highlight **feature unlocks** (Virtual Try-On, Video, Bulk Generation) not cost comparisons
+- For free users: show Growth as the primary recommendation with a clear "What you unlock" section
+- Show Starter as a compact alternative below
+- Tighten spacing: reduce padding, use smaller text where appropriate
+- Add `max-h` with `overflow-y-auto` on the tab content to prevent modal overflow
+- Keep "Compare all plans in Settings" link at bottom
 
-### File: `src/data/mockData.ts`
-- Add a `free` plan entry to `pricingPlans` array so it can be referenced (with 0 monthlyPrice and 20 credits)
+**Dialog sizing**:
+- Add `max-h-[85vh]` and `overflow-y-auto` to the dialog content wrapper to handle any overflow gracefully
+
+### File: `src/components/app/CreditIndicator.tsx` -- Minor Fix
+
+- Fix progress bar logic: when `balance > monthlyCredits` (free user with bonus credits), cap the visual at 100% but use a different color tint to indicate "over quota" in a positive way
+- No structural changes needed, just the progress calculation
 
