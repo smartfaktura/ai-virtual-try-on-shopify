@@ -86,9 +86,12 @@ function polishUserPrompt(
     layers.push(
       "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
     );
-    // Selfie composition layer
+    // Selfie composition + framing layer
     layers.push(
       "SELFIE COMPOSITION: Front-facing smartphone camera perspective. Slight high angle (camera held slightly above eye level). Arm-length or close-up distance from subject. Soft natural smartphone-style bokeh in background — NOT studio strobe bokeh. Authentic, candid facial expression — relaxed, genuine, not model-posed. Natural selfie framing with the subject centered or slightly off-center."
+    );
+    layers.push(
+      "SELFIE FRAMING: Subject's full head and hair must be fully visible within the frame with natural headroom above. Frame from mid-chest or shoulders upward — do NOT crop below the chin or above the forehead. Center the face in the upper-third of the frame following the rule of thirds."
     );
   } else {
     layers.push(`Professional photography: ${rawPrompt}`);
@@ -132,6 +135,12 @@ function polishUserPrompt(
         "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
       );
     }
+    // Product-only framing (no model involved)
+    if (!context.hasModel) {
+      layers.push(
+        "FRAMING: Center the product with balanced negative space on all sides. The product should occupy 50-70% of the frame with no cropping of edges."
+      );
+    }
   }
 
   // Model / portrait layer — strong identity matching
@@ -147,6 +156,10 @@ function polishUserPrompt(
     } else {
       layers.push(
         "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
+      );
+      // Framing for standard portrait/model shots
+      layers.push(
+        "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head — do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
       );
     }
   }
