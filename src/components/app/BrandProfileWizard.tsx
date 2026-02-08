@@ -411,8 +411,8 @@ export default function BrandProfileWizard() {
                 <div className="flex flex-wrap gap-1.5">
                   {KEYWORD_SUGGESTIONS.map(kw => (
                     <button
+                      type="button"
                       key={kw}
-                      onClick={() => toggleChip('brand_keywords', kw)}
                       className={cn(
                         'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
                         form.brand_keywords.includes(kw)
