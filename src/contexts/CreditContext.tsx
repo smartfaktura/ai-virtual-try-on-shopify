@@ -6,12 +6,28 @@ import type { ImageQuality, GenerationMode } from '@/types';
 const LOW_CREDIT_THRESHOLD = 200;
 const CRITICAL_THRESHOLD = 40;
 
+export interface PlanConfig {
+  name: string;
+  monthlyCredits: number;
+  nextPlanId: string | null;
+}
+
+export const PLAN_CONFIG: Record<string, PlanConfig> = {
+  free: { name: 'Free', monthlyCredits: 20, nextPlanId: 'starter' },
+  starter: { name: 'Starter', monthlyCredits: 1000, nextPlanId: 'growth' },
+  growth: { name: 'Growth', monthlyCredits: 2500, nextPlanId: 'pro' },
+  pro: { name: 'Pro', monthlyCredits: 6000, nextPlanId: 'enterprise' },
+  enterprise: { name: 'Enterprise', monthlyCredits: Infinity, nextPlanId: null },
+};
+
 interface CreditContextValue {
   balance: number;
   isLow: boolean;
   isCritical: boolean;
   isEmpty: boolean;
   isLoading: boolean;
+  plan: string;
+  planConfig: PlanConfig;
   
   deductCredits: (amount: number) => void;
   addCredits: (amount: number) => void;
@@ -29,6 +45,8 @@ const defaultValue: CreditContextValue = {
   isCritical: false,
   isEmpty: true,
   isLoading: true,
+  plan: 'free',
+  planConfig: PLAN_CONFIG.free,
   deductCredits: () => {},
   addCredits: () => {},
   buyModalOpen: false,

@@ -1838,6 +1838,22 @@ export const genderLabels: Record<string, string> = {
 // Pricing Plans
 export const pricingPlans: PricingPlan[] = [
   {
+    planId: 'free',
+    name: 'Free',
+    monthlyPrice: 0,
+    annualPrice: 0,
+    credits: 20,
+    features: [
+      '20 credits (signup bonus)',
+      'Standard workflows',
+      'Freestyle Studio',
+      '1 Brand Profile',
+      'Standard delivery',
+      'Community support',
+    ],
+    ctaText: 'Current Plan',
+  },
+  {
     planId: 'starter',
     name: 'Starter',
     monthlyPrice: 39,
