@@ -73,7 +73,7 @@ export function BuyCreditsModal() {
           <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                hasBonus ? 'bg-emerald-500' : 'bg-primary'
+                hasBonus ? 'bg-accent-foreground/60' : 'bg-primary'
               }`}
               style={{ width: `${usagePercent}%` }}
             />
