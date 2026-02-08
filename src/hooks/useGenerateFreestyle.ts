@@ -31,6 +31,8 @@ interface FreestyleResult {
   generatedCount: number;
   requestedCount: number;
   partialSuccess?: boolean;
+  contentBlocked?: boolean;
+  blockReason?: string;
   errors?: string[];
 }
 
