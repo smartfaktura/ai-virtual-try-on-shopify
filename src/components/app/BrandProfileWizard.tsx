@@ -475,13 +475,16 @@ export default function BrandProfileWizard() {
                       key={rule}
                       onClick={() => toggleChip('do_not_rules', rule)}
                       className={cn(
-                        'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
                         form.do_not_rules.includes(rule)
                           ? 'bg-destructive/10 border-destructive/30 text-destructive'
-                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted'
+                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                       )}
                     >
-                      {form.do_not_rules.includes(rule) && '✕ '}
+                      {form.do_not_rules.includes(rule)
+                        ? <X className="w-3 h-3 -ml-0.5" />
+                        : <Plus className="w-3 h-3 -ml-0.5" />
+                      }
                       {rule}
                     </button>
                   ))}
