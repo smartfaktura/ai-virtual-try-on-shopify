@@ -46,7 +46,7 @@ const TEAM: TeamMember[] = [
     name: 'Kenji',
     role: 'Campaign Art Director',
     avatar: avatarKenji,
-    videoUrl: `${VIDEO_BASE}/849398243640999964.mp4`,
+    videoUrl: `${VIDEO_BASE}/849400657458757636.mp4`,
     description:
       'Designs seasonal campaigns, promo visuals, and lookbook layouts that feel cohesive across every channel.',
   },
