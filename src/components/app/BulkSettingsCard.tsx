@@ -87,7 +87,7 @@ export function BulkSettingsCard({
               <RadioGroupItem value="product-only" id="mode-product" />
               <div>
                 <Label htmlFor="mode-product">Product Photography</Label>
-                <p className="text-xs text-muted-foreground">Use templates for product-focused shots (~1 credit/image)</p>
+                <p className="text-xs text-muted-foreground">Use templates for product-focused shots (~4 credits/image)</p>
               </div>
             </div>
             <div className="flex items-start space-x-2">
