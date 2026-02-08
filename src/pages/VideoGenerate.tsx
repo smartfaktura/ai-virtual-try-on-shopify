@@ -69,7 +69,7 @@ function VideoHistoryCard({ video }: { video: GeneratedVideo }) {
         )}
 
         {/* Duration badge */}
-        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/60 text-[10px] text-white font-medium">
+        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-foreground/60 text-[10px] text-background font-medium">
           {video.duration}s
         </div>
 
