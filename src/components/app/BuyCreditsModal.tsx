@@ -220,7 +220,7 @@ export function BuyCreditsModal() {
 
             <button
               onClick={handleUpgrade}
-              className="w-full text-center text-[11px] text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+              className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
             >
               Compare all plans in Settings
             </button>
