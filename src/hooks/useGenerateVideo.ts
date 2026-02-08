@@ -173,6 +173,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
           aspect_ratio: params.aspectRatio || '16:9',
         };
         if (params.imageTailUrl) body.image_tail = params.imageTailUrl;
+        if (params.mode) body.mode = params.mode;
 
         const { data, error: fnError } = await supabase.functions.invoke('generate-video', {
           body,

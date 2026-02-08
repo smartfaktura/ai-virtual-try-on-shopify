@@ -170,6 +170,7 @@ export default function VideoGenerate() {
       modelName,
       aspectRatio,
       imageTailUrl: loopMode ? url : undefined,
+      mode: loopMode ? 'pro' : undefined,
     });
   };
 
