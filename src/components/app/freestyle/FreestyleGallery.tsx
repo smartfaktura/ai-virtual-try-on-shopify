@@ -130,7 +130,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete }: Fre
   }
 
   return (
-    <div className="columns-2 lg:columns-3 gap-1 p-1">
+    <div className="columns-2 lg:columns-3 gap-1 p-1 pb-4">
       {images.map((img, idx) => (
         <ImageCard
           key={img.id}
