@@ -151,12 +151,16 @@ function ImageCard({
 
   if (natural) {
     return (
-      <div className={cn('group relative inline-block animate-fade-in', className)}>
+      <div className={cn('group relative inline-block', className)}>
         <img
           src={img.url}
           alt={`Generated ${idx + 1}`}
-          className="w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20"
+          className={cn(
+            'w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
+            loaded ? 'opacity-100' : 'opacity-0',
+          )}
           loading="lazy"
+          onLoad={() => setLoaded(true)}
         />
         <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
         {actionButtons}
