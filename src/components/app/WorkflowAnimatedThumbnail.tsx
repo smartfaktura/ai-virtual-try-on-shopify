@@ -11,6 +11,7 @@ export interface AnimatedStep {
 interface Props {
   steps: AnimatedStep[];
   stepDuration?: number;
+  isActive?: boolean;
 }
 
 const DEFAULT_DURATION = 2200;
