@@ -25,7 +25,7 @@ import type { BrandTone, BackgroundStyle } from '@/types';
 import { toast } from 'sonner';
 
 export default function Settings() {
-  const { balance, addCredits } = useCredits();
+  const { balance, plan, planConfig, addCredits } = useCredits();
 
   const [brandTone, setBrandTone] = useState<BrandTone>('clean');
   const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('studio');
@@ -48,10 +48,10 @@ export default function Settings() {
   const [inAppTips, setInAppTips] = useState(true);
 
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
-  const currentPlanId = 'growth';
+  const currentPlanId = plan;
 
-  const creditsTotal = 2500;
-  const creditsPercentage = (balance / creditsTotal) * 100;
+  const creditsTotal = planConfig.monthlyCredits;
+  const creditsPercentage = creditsTotal === Infinity ? 100 : (balance / creditsTotal) * 100;
 
   const handleSave = () => toast.success('Settings saved successfully!');
   const handlePlanSelect = (planId: string) => {
@@ -263,16 +263,19 @@ export default function Settings() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-semibold">Current Plan</h3>
-                    <Badge className="bg-primary/10 text-primary">Growth</Badge>
+                    <Badge className="bg-primary/10 text-primary">{planConfig.name}</Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">2,500 credits/month • Renews Feb 15, 2026</p>
+                  <p className="text-sm text-muted-foreground">
+                    {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
+                    {plan !== 'free' && ' • Renews Feb 15, 2026'}
+                  </p>
                 </div>
               </div>
               <Separator />
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Credits Remaining</span>
-                  <span className="text-sm font-semibold">{balance} / {creditsTotal}</span>
+                  <span className="text-sm font-semibold">{balance} / {creditsTotal === Infinity ? '∞' : creditsTotal}</span>
                 </div>
                 <Progress value={creditsPercentage} className="h-2" />
                 <p className="text-xs text-muted-foreground">Resets on the 1st of each month</p>

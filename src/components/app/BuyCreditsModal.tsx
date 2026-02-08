@@ -6,24 +6,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Wallet, ArrowUpRight, Check, Zap } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
+import { PLAN_CONFIG } from '@/contexts/CreditContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-const CURRENT_PLAN_ID = 'growth';
-const PLAN_CREDITS = 2500;
-
 export function BuyCreditsModal() {
-  const { balance, buyModalOpen, closeBuyModal, addCredits } = useCredits();
+  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, addCredits } = useCredits();
   const navigate = useNavigate();
 
-  const currentPlan = pricingPlans.find(p => p.planId === CURRENT_PLAN_ID)!;
-  const nextPlan = pricingPlans.find(p => p.planId === 'pro')!;
-  const usagePercent = Math.min(100, Math.max(3, (balance / PLAN_CREDITS) * 100));
+  const monthlyCredits = planConfig.monthlyCredits;
+  const usagePercent = monthlyCredits === Infinity
+    ? 100
+    : Math.min(100, Math.max(3, (balance / monthlyCredits) * 100));
 
-  // Calculate cost of buying equivalent credits as top-ups
-  // Using the best pack rate (pack_4000 at $0.0223/credit)
-  const nextPlanCredits = typeof nextPlan.credits === 'number' ? nextPlan.credits : 0;
-  const topUpCostForNextPlanCredits = Math.round(nextPlanCredits * 0.026);
+  // Determine recommended next plan
+  const nextPlanId = planConfig.nextPlanId;
+  const nextPlan = nextPlanId ? pricingPlans.find(p => p.planId === nextPlanId) : null;
+  const currentPlanData = pricingPlans.find(p => p.planId === plan);
+
+  // For free users, recommend Growth (most popular) as primary, Starter as alternative
+  const isFree = plan === 'free';
+  const recommendedPlan = isFree
+    ? pricingPlans.find(p => p.planId === 'growth')!
+    : nextPlan;
+  const altPlan = isFree
+    ? pricingPlans.find(p => p.planId === 'starter')!
+    : null;
+
+  // Calculate savings vs top-ups for recommended plan
+  const recommendedCredits = recommendedPlan && typeof recommendedPlan.credits === 'number' ? recommendedPlan.credits : 0;
+  const topUpCostForRecommended = Math.round(recommendedCredits * 0.026);
 
   const handlePurchase = (credits: number) => {
     addCredits(credits);
@@ -50,11 +62,13 @@ export function BuyCreditsModal() {
               <Wallet className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">Balance</span>
             </div>
-            <Badge variant="secondary" className="text-xs">{currentPlan.name} Plan</Badge>
+            <Badge variant="secondary" className="text-xs">{planConfig.name} Plan</Badge>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xl font-bold">{balance} credits</span>
-            <span className="text-xs text-muted-foreground">/ {PLAN_CREDITS.toLocaleString()} monthly</span>
+            <span className="text-xs text-muted-foreground">
+              / {monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()} {plan === 'free' ? 'bonus' : 'monthly'}
+            </span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
             <div
@@ -64,7 +78,7 @@ export function BuyCreditsModal() {
           </div>
         </div>
 
-        <Tabs defaultValue="topup" className="w-full">
+        <Tabs defaultValue={isFree ? 'upgrade' : 'topup'} className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="topup" className="flex-1">Top Up</TabsTrigger>
             <TabsTrigger value="upgrade" className="flex-1">Upgrade Plan</TabsTrigger>
@@ -114,49 +128,79 @@ export function BuyCreditsModal() {
 
           {/* Upgrade Plan Tab */}
           <TabsContent value="upgrade" className="space-y-4">
-            <div className="p-4 rounded-lg border-2 border-primary bg-primary/5 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span className="font-semibold">{nextPlan.name} Plan</span>
+            {recommendedPlan ? (
+              <>
+                <div className="p-4 rounded-lg border-2 border-primary bg-primary/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-primary" />
+                      <span className="font-semibold">{recommendedPlan.name} Plan</span>
+                    </div>
+                    <Badge className="bg-primary text-primary-foreground">
+                      {isFree ? 'Most Popular' : 'Recommended'}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold">${recommendedPlan.monthlyPrice}</span>
+                    <span className="text-sm text-muted-foreground">/month</span>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground">
+                    {typeof recommendedPlan.credits === 'number' ? recommendedPlan.credits.toLocaleString() : 'Unlimited'} credits/month
+                    {' '}• ≈ {typeof recommendedPlan.credits === 'number' ? Math.round(recommendedPlan.credits / 4).toLocaleString() : '∞'} images
+                  </p>
+
+                  {/* Savings highlight */}
+                  {recommendedCredits > 0 && recommendedPlan.monthlyPrice > 0 && (
+                    <div className="p-2.5 rounded-md bg-primary/10 text-sm">
+                      <span className="font-medium">Save vs top-ups: </span>
+                      <span className="text-muted-foreground">
+                        {recommendedCredits.toLocaleString()} credits as top-ups would cost ~${topUpCostForRecommended}
+                        {' '}— you save <span className="font-semibold text-primary">${topUpCostForRecommended - recommendedPlan.monthlyPrice}/month</span>
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Key features */}
+                  <ul className="space-y-1.5">
+                    {recommendedPlan.features.slice(0, 5).map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm">
+                        <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button className="w-full" onClick={handleUpgrade}>
+                    Upgrade to {recommendedPlan.name}
+                    <ArrowUpRight className="w-4 h-4 ml-1" />
+                  </Button>
                 </div>
-                <Badge className="bg-primary text-primary-foreground">Recommended</Badge>
+
+                {/* Alt plan for free users */}
+                {altPlan && (
+                  <div className="p-3 rounded-lg border border-border bg-muted/50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{altPlan.name} Plan</span>
+                        <span className="text-sm text-muted-foreground">— ${altPlan.monthlyPrice}/mo</span>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {typeof altPlan.credits === 'number' ? altPlan.credits.toLocaleString() : '∞'} credits
+                      </Badge>
+                    </div>
+                    <Button variant="outline" size="sm" className="w-full" onClick={handleUpgrade}>
+                      View {altPlan.name} Plan
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                You're on our highest plan! Contact sales for custom options.
               </div>
-
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold">${nextPlan.monthlyPrice}</span>
-                <span className="text-sm text-muted-foreground">/month</span>
-              </div>
-
-              <p className="text-sm text-muted-foreground">
-                {typeof nextPlan.credits === 'number' ? nextPlan.credits.toLocaleString() : 'Unlimited'} credits/month
-                {' '}• ≈ {typeof nextPlan.credits === 'number' ? Math.round(nextPlan.credits / 4).toLocaleString() : '∞'} images
-              </p>
-
-              {/* Savings highlight */}
-              <div className="p-2.5 rounded-md bg-primary/10 text-sm">
-                <span className="font-medium">Save vs top-ups: </span>
-                <span className="text-muted-foreground">
-                  {nextPlanCredits.toLocaleString()} credits as top-ups would cost ~${topUpCostForNextPlanCredits}
-                  {' '}— you save <span className="font-semibold text-primary">${topUpCostForNextPlanCredits - nextPlan.monthlyPrice}/month</span>
-                </span>
-              </div>
-
-              {/* Key features */}
-              <ul className="space-y-1.5">
-                {nextPlan.features.slice(0, 5).map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 text-sm">
-                    <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <Button className="w-full" onClick={handleUpgrade}>
-                Upgrade to {nextPlan.name}
-                <ArrowUpRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
+            )}
 
             <Separator />
 
