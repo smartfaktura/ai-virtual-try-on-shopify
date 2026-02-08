@@ -1,7 +1,27 @@
+import { useState, useEffect } from 'react';
 import { Download, Expand, Trash2, Wand2, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
+
+import avatarSophia from '@/assets/team/avatar-sophia.jpg';
+import avatarLuna from '@/assets/team/avatar-luna.jpg';
+import avatarKenji from '@/assets/team/avatar-kenji.jpg';
+
+const STUDIO_CREW = [
+  { name: 'Sophia', avatar: avatarSophia },
+  { name: 'Luna', avatar: avatarLuna },
+  { name: 'Kenji', avatar: avatarKenji },
+] as const;
+
+const STATUS_MESSAGES = [
+  'Setting up the lighting…',
+  'Composing the scene…',
+  'Styling the shot…',
+  'Refining the details…',
+  'Adjusting the colors…',
+  'Adding finishing touches…',
+];
 
 interface GalleryImage {
   id: string;
@@ -17,12 +37,51 @@ interface FreestyleGalleryProps {
   onDelete?: (imageId: string) => void;
   onCopyPrompt?: (prompt: string) => void;
   generatingCount?: number;
+  generatingProgress?: number;
 }
 
-function SkeletonCard({ className }: { className?: string }) {
+function GeneratingCard({ progress = 0, className }: { progress?: number; className?: string }) {
+  const [crew] = useState(() => STUDIO_CREW[Math.floor(Math.random() * STUDIO_CREW.length)]);
+  const [msgIdx, setMsgIdx] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setMsgIdx(i => (i + 1) % STATUS_MESSAGES.length), 3000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
-    <div className={cn('rounded-xl overflow-hidden', className)}>
-      <Skeleton className="w-full aspect-square" />
+    <div
+      className={cn(
+        'rounded-xl overflow-hidden aspect-square flex flex-col items-center justify-center gap-4 px-6 animate-pulse',
+        'bg-gradient-to-br from-muted/80 via-muted/50 to-muted/70',
+        className,
+      )}
+    >
+      {/* Avatar with glow ring */}
+      <div className="relative">
+        <div className="absolute -inset-1 rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]" />
+        <img
+          src={crew.avatar}
+          alt={crew.name}
+          className="relative w-12 h-12 rounded-full object-cover ring-2 ring-primary/40"
+        />
+      </div>
+
+      {/* Status text */}
+      <div className="text-center space-y-1 min-h-[3rem]">
+        <p className="text-xs font-medium text-foreground/70">
+          {crew.name} is working on this…
+        </p>
+        <p className="text-xs text-muted-foreground/60 transition-opacity duration-300">
+          {STATUS_MESSAGES[msgIdx]}
+        </p>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full max-w-[140px] space-y-1.5">
+        <Progress value={progress} className="h-1" />
+        <p className="text-[10px] text-muted-foreground/40 text-center">Usually 10–20s</p>
+      </div>
     </div>
   );
 }
