@@ -107,24 +107,42 @@ export default function Workflows() {
       subtitle="Choose an outcome-driven workflow to generate professional visual sets."
     >
       <div className="space-y-6">
-        {/* Admin action: generate missing previews */}
-        {!isLoading && workflowsMissingPreviews.length > 0 && (
-          <div className="flex justify-end">
+        {/* Admin actions: generate / regenerate previews */}
+        {!isLoading && workflows.length > 0 && (
+          <div className="flex justify-end gap-2">
+            {workflowsMissingPreviews.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                disabled={isAnyGenerating}
+                onClick={handleGenerateMissing}
+              >
+                {isAnyGenerating ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                {isAnyGenerating
+                  ? `Generating (${generatingIds.size} left)…`
+                  : `Generate ${workflowsMissingPreviews.length} Missing`}
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
               className="gap-1.5"
               disabled={isAnyGenerating}
-              onClick={handleGeneratePreviews}
+              onClick={handleRegenerateAll}
             >
               {isAnyGenerating ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Sparkles className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3.5 h-3.5" />
               )}
               {isAnyGenerating
                 ? `Generating (${generatingIds.size} left)…`
-                : `Generate ${workflowsMissingPreviews.length} Preview${workflowsMissingPreviews.length > 1 ? 's' : ''}`}
+                : `Regenerate All (${workflows.length})`}
             </Button>
           </div>
         )}
