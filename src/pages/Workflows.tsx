@@ -5,21 +5,10 @@ import { PageHeader } from '@/components/app/PageHeader';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import type { Workflow } from '@/types/workflow';
 
-export interface Workflow {
-  id: string;
-  name: string;
-  description: string;
-  default_image_count: number;
-  required_inputs: string[];
-  recommended_ratios: string[];
-  uses_tryon: boolean;
-  template_ids: string[];
-  is_system: boolean;
-  created_at: string;
-  sort_order: number;
-  preview_image_url: string | null;
-}
+// Re-export for backward compat
+export type { Workflow } from '@/types/workflow';
 
 export default function Workflows() {
   const navigate = useNavigate();
