@@ -19,6 +19,7 @@ export interface SceneElement {
 
 export interface WorkflowScene {
   background: string;
+  dynamicBackground?: string | null;
   elements: SceneElement[];
 }
 
