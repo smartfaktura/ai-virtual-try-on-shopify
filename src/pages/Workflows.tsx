@@ -29,6 +29,7 @@ export default function Workflows() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+  const [hoveredWorkflow, setHoveredWorkflow] = useState<string | null>(null);
 
   const { data: workflows = [], isLoading } = useQuery({
     queryKey: ['workflows'],
