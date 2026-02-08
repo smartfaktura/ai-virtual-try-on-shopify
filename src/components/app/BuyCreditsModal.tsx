@@ -80,14 +80,14 @@ export function BuyCreditsModal() {
             />
           </div>
           <div className="flex items-center justify-between mt-1">
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {hasBonus
                 ? `${balance} available (includes bonus)`
                 : `${balance} / ${monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()}`
               }
             </span>
             {hasBonus && (
-              <span className="text-[10px] text-primary font-medium">Bonus credits ✓</span>
+              <span className="text-xs text-primary font-medium">Bonus credits ✓</span>
             )}
           </div>
         </div>
