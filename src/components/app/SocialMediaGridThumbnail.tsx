@@ -87,7 +87,7 @@ export function SocialMediaGridThumbnail({ isActive = true }: Props) {
                   : {}),
               }}
             >
-              <span className="text-[8px] font-bold text-neutral-600 tracking-wide">
+              <span className="text-[8px] font-bold text-muted-foreground tracking-wide">
                 {item.ratio}
               </span>
             </div>
