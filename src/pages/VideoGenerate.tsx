@@ -113,6 +113,7 @@ export default function VideoGenerate() {
   const [duration, setDuration] = useState<'5' | '10'>('5');
   const [modelName, setModelName] = useState('kling-v2-1');
   const [aspectRatio, setAspectRatio] = useState<'1:1' | '16:9' | '9:16'>('16:9');
+  const [loopMode, setLoopMode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
