@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
 // Product images
-import cropTopProduct from '@/assets/drops/drop-model-white-crop.jpg';
+import cropTopProduct from '@/assets/products/tank-white-1.jpg';
 
 // Outcome images
-import outcomeImage from '@/assets/hero/hero-generate-outcome.jpg';
+import outcomeImage from '@/assets/hero/hero-output-yoga-result.jpg';
 
 // Visual set scenes (reuse existing hero outputs)
 import sceneStudio from '@/assets/hero/hero-output-studio.jpg';
@@ -17,8 +17,8 @@ import sceneRooftop from '@/assets/hero/hero-output-rooftop.jpg';
 import sceneUrban from '@/assets/hero/hero-output-urban.jpg';
 
 // Model + environment thumbs for step 2
-import modelThumb from '@/assets/models/model-female-slim-nordic.jpg';
-import envThumb from '@/assets/poses/pose-lifestyle-rooftop.jpg';
+import modelThumb from '@/assets/models/model-female-slim-american-blonde.jpg';
+import envThumb from '@/assets/hero/hero-output-yoga.jpg';
 
 export function HowItWorks() {
   const navigate = useNavigate();
