@@ -518,8 +518,10 @@ export type Database = {
           id: string
           is_system: boolean
           name: string
+          preview_image_url: string | null
           recommended_ratios: string[]
           required_inputs: string[]
+          sort_order: number
           template_ids: string[]
           uses_tryon: boolean
         }
@@ -530,8 +532,10 @@ export type Database = {
           id?: string
           is_system?: boolean
           name: string
+          preview_image_url?: string | null
           recommended_ratios?: string[]
           required_inputs?: string[]
+          sort_order?: number
           template_ids?: string[]
           uses_tryon?: boolean
         }
@@ -542,8 +546,10 @@ export type Database = {
           id?: string
           is_system?: boolean
           name?: string
+          preview_image_url?: string | null
           recommended_ratios?: string[]
           required_inputs?: string[]
+          sort_order?: number
           template_ids?: string[]
           uses_tryon?: boolean
         }
