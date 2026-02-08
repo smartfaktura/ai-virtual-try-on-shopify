@@ -154,6 +154,15 @@ export default function BrandProfileWizard() {
 
   const canProceed = step === 0 ? form.name.trim().length > 0 : true;
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step < STEPS.length - 1 && canProceed) {
+      setStep(step + 1);
+    } else if (step === STEPS.length - 1 && form.name.trim()) {
+      handleSave();
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
@@ -204,7 +213,7 @@ export default function BrandProfileWizard() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
+    <form onSubmit={handleFormSubmit} className="max-w-2xl mx-auto py-8 px-4 space-y-6">
       {/* Back button */}
       <button
         onClick={() => navigate('/app/brand-profiles')}
@@ -373,7 +382,7 @@ export default function BrandProfileWizard() {
                       onChange={e => setNewColor(e.target.value)}
                       placeholder="#F5E6D3"
                       className="w-24 h-8 text-xs bg-background"
-                      onKeyDown={e => e.key === 'Enter' && addColor()}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addColor(); } }}
                     />
                     <Button variant="ghost" size="sm" className="h-8 px-2" onClick={addColor}>
                       <Plus className="w-3.5 h-3.5" />
@@ -408,7 +417,7 @@ export default function BrandProfileWizard() {
                     onChange={e => setCustomKeyword(e.target.value)}
                     placeholder="Add custom keyword…"
                     className="h-8 text-xs bg-background flex-1"
-                    onKeyDown={e => e.key === 'Enter' && addCustomChip('brand_keywords', customKeyword, setCustomKeyword)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addCustomChip('brand_keywords', customKeyword, setCustomKeyword); } }}
                   />
                   <Button
                     variant="ghost"
@@ -468,7 +477,7 @@ export default function BrandProfileWizard() {
                     onChange={e => setCustomRule(e.target.value)}
                     placeholder="Add custom exclusion…"
                     className="h-8 text-xs bg-background flex-1"
-                    onKeyDown={e => e.key === 'Enter' && addCustomChip('do_not_rules', customRule, setCustomRule)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addCustomChip('do_not_rules', customRule, setCustomRule); } }}
                   />
                   <Button
                     variant="ghost"
@@ -541,17 +550,17 @@ export default function BrandProfileWizard() {
         </Button>
 
         {step < STEPS.length - 1 ? (
-          <Button onClick={() => setStep(step + 1)} disabled={!canProceed} className="gap-1.5">
+          <Button type="submit" disabled={!canProceed} className="gap-1.5">
             Next
             <ArrowRight className="w-4 h-4" />
           </Button>
         ) : (
-          <Button onClick={handleSave} disabled={saving || !form.name.trim()} className="gap-1.5">
+          <Button type="submit" disabled={saving || !form.name.trim()} className="gap-1.5">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {isEditing ? 'Save Changes' : 'Create Profile'}
           </Button>
         )}
       </div>
-    </div>
+    </form>
   );
 }
