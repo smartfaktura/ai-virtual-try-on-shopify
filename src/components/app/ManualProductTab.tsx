@@ -363,22 +363,19 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const isEditing = !!editingProduct;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* ── Image Section ── */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Product Images</h3>
-          </div>
-          {images.length > 0 && (
-            <Badge variant="secondary" className="text-[11px] font-medium px-2 py-0.5">
+      <div className="space-y-2.5">
+        {images.length > 0 && (
+          <div className="flex items-center justify-end">
+            <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5">
               {images.length}/{MAX_IMAGES}
             </Badge>
-          )}
-        </div>
+          </div>
+        )}
 
         {isLoadingImages ? (
-          <div className="flex items-center justify-center min-h-[120px] rounded-xl bg-muted/40">
+          <div className="flex items-center justify-center min-h-[100px] rounded-xl bg-muted/30">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               Loading images…
@@ -386,11 +383,11 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         ) : images.length === 0 ? (
           <div
-            className={`relative flex flex-col items-center justify-center rounded-xl p-10 transition-all duration-200 ${
+            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-8 ${
               dragActive
                 ? 'bg-primary/5 border-2 border-primary'
-                : 'bg-muted/40 hover:bg-muted/60'
-            } min-h-[140px] cursor-pointer`}
+                : 'bg-muted/30 hover:bg-muted/50 border border-dashed border-border'
+            } cursor-pointer`}
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
@@ -399,15 +396,14 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               if (input) input.click();
             }}
           >
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-              <ImagePlus className="w-6 h-6 text-muted-foreground" />
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-2.5">
+              <ImagePlus className="w-5 h-5 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">
-              Drag & drop or{' '}
-              <span className="text-primary font-medium">browse</span>
+              Drop images or <span className="text-primary font-medium">browse</span>
             </p>
-            <p className="text-xs text-muted-foreground/70 mt-1">
-              PNG, JPG, WebP — max 10 MB · up to {MAX_IMAGES}
+            <p className="text-[11px] text-muted-foreground/60 mt-1">
+              PNG, JPG, WebP · max 10 MB · up to {MAX_IMAGES}
             </p>
             <input
               id="dropzone-file-input"
@@ -426,7 +422,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         ) : (
           <div
             className={`rounded-xl p-3 transition-all duration-200 ${
-              dragActive ? 'bg-primary/5 ring-2 ring-primary/20' : 'bg-muted/30'
+              dragActive ? 'bg-primary/5 ring-2 ring-primary/20' : 'bg-muted/20'
             }`}
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
@@ -443,29 +439,21 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         )}
 
-        {/* Pro Tip */}
+        {/* Condensed Pro Tip */}
         {images.length > 0 && (
-          <div className="flex items-start gap-2.5 rounded-lg bg-muted/40 px-3 py-2.5">
-            <Avatar className="w-6 h-6 shrink-0 mt-0.5">
-              <AvatarImage src={avatarSophia} alt="Sophia" />
-              <AvatarFallback className="text-[10px]">S</AvatarFallback>
-            </Avatar>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              <span className="font-semibold text-foreground">Sophia, Art Director:</span>{' '}
-              The <span className="text-primary font-medium">cover image</span> (marked "Cover") is what our AI uses as the primary reference for generations. Pick your clearest, most representative angle.
+          <div className="flex items-center gap-1.5 px-1">
+            <Info className="w-3 h-3 text-muted-foreground shrink-0" />
+            <p className="text-[11px] text-muted-foreground">
+              The <span className="text-primary font-medium">cover</span> image is used as the primary AI reference
             </p>
           </div>
         )}
       </div>
 
-      <Separator />
-
       {/* ── Product Details ── */}
-      <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-foreground">Product Details</h3>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="product-title" className="text-sm font-medium">
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <Label htmlFor="product-title" className="text-xs font-medium">
             Product Name <span className="text-destructive">*</span>
           </Label>
           <Input
@@ -475,13 +463,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
           />
-          <p className="text-xs text-muted-foreground">
-            This name will appear in your generations
-          </p>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="product-type" className="text-sm font-medium">
+        <div className="space-y-1">
+          <Label htmlFor="product-type" className="text-xs font-medium">
             Product Type
           </Label>
           <Select value={productType} onValueChange={setProductType}>
@@ -496,35 +481,36 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </Select>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="product-desc" className="text-sm font-medium">
+        <div className="space-y-1">
+          <Label htmlFor="product-desc" className="text-xs font-medium">
             Description
           </Label>
           <Textarea
             id="product-desc"
-            placeholder="Brief description of your product…"
+            placeholder="Brief description…"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             maxLength={500}
-            rows={3}
+            rows={2}
             className="resize-none"
           />
         </div>
       </div>
 
       {/* ── Footer Actions ── */}
-      <div className="flex justify-end gap-2 pt-2 border-t border-border">
-        <Button variant="ghost" onClick={onClose} disabled={isUploading}>
+      <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+        <Button variant="ghost" size="sm" onClick={onClose} disabled={isUploading}>
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={isUploading || isLoadingImages || !title.trim() || images.length === 0}
-          className="min-w-[120px]"
+          size="sm"
+          className="min-w-[110px] rounded-lg"
         >
           {isUploading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
               {isEditing ? 'Saving…' : 'Uploading…'}
             </>
           ) : (

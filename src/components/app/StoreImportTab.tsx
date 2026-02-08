@@ -177,9 +177,9 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
 
       {/* Preview extracted product */}
       {extracted && !isImporting && (
-        <div className="border rounded-lg p-4 space-y-3 animate-fade-in">
+        <div className="bg-muted/30 rounded-xl p-4 space-y-3 animate-fade-in">
           <div className="flex gap-4">
-            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
+            <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0">
               <img
                 src={extracted.image_url}
                 alt={extracted.title}
