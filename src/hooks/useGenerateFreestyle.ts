@@ -4,16 +4,11 @@ import { convertImageToBase64 } from '@/lib/imageUtils';
 
 interface BrandProfileContext {
   tone: string;
-  lightingStyle: string;
-  backgroundStyle: string;
-  colorTemperature: string;
-  compositionBias: string;
+  colorFeel: string;
   doNotRules: string[];
   brandKeywords?: string[];
   colorPalette?: string[];
-  preferredScenes?: string[];
   targetAudience?: string;
-  photographyReference?: string;
 }
 
 interface FreestyleParams {
