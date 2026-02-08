@@ -330,6 +330,7 @@ export default function BrandProfileWizard() {
                     <button
                       type="button"
                       key={mood.value}
+                      onClick={() => update('tone', mood.value)}
                       className={cn(
                         'text-left p-4 rounded-xl border transition-all',
                         form.tone === mood.value
