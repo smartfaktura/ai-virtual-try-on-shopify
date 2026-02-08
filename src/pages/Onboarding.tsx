@@ -185,7 +185,7 @@ export default function Onboarding() {
                   How did you find us?
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  This helps us understand how people discover brandframe.ai
+                  This helps us understand how people discover framea.ai
                 </p>
               </div>
 
