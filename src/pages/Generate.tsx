@@ -1201,7 +1201,7 @@ export default function Generate() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold">Virtual Try-On uses {creditCost} credits</p>
-                  <p className="text-xs text-muted-foreground">{parseInt(imageCount)} images × 3 credits each</p>
+                  <p className="text-xs text-muted-foreground">{parseInt(imageCount)} images × 8 credits each</p>
                 </div>
                 <p className="font-semibold">{balance} credits available</p>
               </div>
