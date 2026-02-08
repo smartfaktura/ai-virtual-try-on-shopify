@@ -1,47 +1,78 @@
 
 
-## Improve "How It Works" Step 2 Images + Add Hover Popups
+## Integrate AI Team Touchpoints Across the App Dashboard
 
-### What's changing
+Bring the 10 AI studio professionals to life inside the `/app` experience with subtle, contextual micro-touches that remind users they have a full creative team working behind the scenes. These are lightweight additions -- no new pages, no heavy components.
 
-Two improvements to the "Three Steps to Automated Product Visuals" section:
+### Touchpoint 1: Team Avatar on the "Generating" Loading Screen
 
-**1. Regenerate 4 higher-quality, cohesive images using the pro model**
+**Where**: The generating/loading step in `/app/generate` (the card that says "Creating Your Images..." or "Creating Virtual Try-On...")
 
-The current AI-generated images don't feel connected enough. We'll regenerate all 4 formula images using `google/gemini-3-pro-image-preview` (higher quality model) with more specific prompts:
+**What**: Below the progress bar, show one team member avatar with a contextual message. The team member shown depends on the generation mode:
+- Product Photos: Sophia (Product Photographer) -- "Sophia is setting up the lighting..."
+- Virtual Try-On: Zara (Fashion Stylist) -- "Zara is styling the look..."
 
-- **Product**: Clean white crop top flatlay on pure white background -- professional e-commerce product shot, centered, soft shadows, no model
-- **Model**: Young blonde woman portrait, wearing a casual white t-shirt, soft studio lighting, light gray background, face forward, warm natural smile, supermodel quality
-- **Scene**: Empty modern yoga studio interior with warm wood floors, natural light from large windows, no people, clean and inviting
-- **Result**: The same blonde model from the portrait, now wearing the white crop top, standing in the same yoga studio, natural lifestyle photography, full body shot
+This makes the wait feel human rather than mechanical.
 
-This creates a visually convincing "formula" where visitors can see the product + model + scene combine into a realistic result.
+**Implementation**: In `src/pages/Generate.tsx`, add a small avatar + message row below the progress bar in the `generating` step section (around line 988-1003). Import 2 team avatars (Sophia, Zara).
 
-**2. Add hover popup preview on each thumbnail**
+---
 
-When a visitor hovers over any of the 4 formula thumbnails (Product, Model, Scene, Result), a larger preview image will appear as a floating card above/beside the thumbnail. This makes the section more engaging and interactive.
+### Touchpoint 2: Team Attribution on Completed Results
 
-- Uses a custom hover state (no extra library needed)
-- Shows a larger version of the image (~200x200px) in a rounded card with a subtle shadow
-- Appears with a smooth fade + scale animation
-- Positioned above the thumbnail, centered
-- Disappears when mouse leaves
+**Where**: The results step in `/app/generate`, as a subtle footer below the generated images grid
+
+**What**: A small "Crafted by your studio team" bar with 3-4 overlapping avatars (similar to the FinalCTA stacked avatars), giving the impression the team produced these visuals.
+
+**Implementation**: In `src/pages/Generate.tsx`, add a small component at the bottom of the results section (after the image grid, around line 1070+). Import a few team avatars and render them as an overlapping row with a label.
+
+---
+
+### Touchpoint 3: Contextual Tips with Team Faces
+
+**Where**: The existing `DashboardTipCard` component shown on the returning user dashboard
+
+**What**: Each rotating tip gets a team member avatar and attribution, making the tip feel like advice from a specific team member. For example:
+- "Schedule monthly Creative Drops..." -- attributed to Kenji (Campaign Art Director)
+- "Add a Brand Profile..." -- attributed to Sienna (Brand Consistency Manager)
+- "Virtual Try-On now supports 40+ models..." -- attributed to Zara (Fashion Stylist)
+- "Use Workflows..." -- attributed to Omar (CRO Visual Optimizer)
+
+**Implementation**: Update `src/components/app/DashboardTipCard.tsx` to import 4 team avatars and add `avatar` and `name` fields to each tip in the `TIPS` array. Display a small circular avatar next to the tip icon with the team member's name.
+
+---
+
+### Touchpoint 4: Activity Feed Team Attribution
+
+**Where**: The `ActivityFeed` component on the returning user dashboard
+
+**What**: Each activity row gets a tiny team avatar instead of (or alongside) the generic icon. This makes it feel like a team member performed the action:
+- Job completed: Sophia's avatar (she "shot" it)
+- Product uploaded: Max's avatar (he "processed" it)
+- Brand profile created: Sienna's avatar (she "approved" it)
+
+**Implementation**: Update `src/components/app/ActivityFeed.tsx` to import 3 team avatars and assign them based on activity type (`job-` gets Sophia, `product-` gets Max, `brand-` gets Sienna). Replace or supplement the icon with a small avatar.
+
+---
 
 ### Technical Details
 
-**File: `src/components/landing/HowItWorks.tsx`**
+**Files to modify:**
 
-- Add a `HoverPreview` inline component that wraps each formula thumbnail
-  - Uses `useState` for hover state and `onMouseEnter`/`onMouseLeave`
-  - Renders an absolutely-positioned enlarged image card on hover
-  - Smooth CSS transition (`opacity`, `scale`, `pointer-events`)
-- Replace the 4 static `div` + `img` blocks in Step 2 with the `HoverPreview` wrapper
-- Update imports to point to the 4 newly generated images
+1. **`src/pages/Generate.tsx`** (2 changes)
+   - Import `avatarSophia`, `avatarZara`, and a few more team avatars from `@/assets/team/`
+   - In the `generating` step (~line 988-1003): Add a flex row below the progress bar with a 32px circular avatar image and a short message like "Sophia is setting up the lighting..."
+   - In the `results` step (~line 1070+): Add a centered footer with 4 overlapping circular avatars (same pattern as FinalCTA) and text "Crafted by your studio team"
 
-**New assets to generate (overwriting existing):**
-- `src/assets/hero/hero-product-croptop.jpg` -- product flatlay
-- `src/assets/hero/hero-model-blonde.jpg` -- blonde model portrait in white tee
-- `src/assets/hero/hero-scene-yoga.jpg` -- empty yoga studio
-- `src/assets/hero/hero-result-yoga-blonde.jpg` -- composite result
+2. **`src/components/app/DashboardTipCard.tsx`**
+   - Import 4 team avatars (avatarKenji, avatarSienna, avatarZara, avatarOmar)
+   - Add `avatar` (image path) and `memberName` (string) to each item in the `TIPS` array
+   - Render a small circular avatar (w-8 h-8) next to the icon, with the member name in the tip highlight area
 
-All 4 images will be generated via an edge function using `google/gemini-3-pro-image-preview` for best quality, then saved as static assets.
+3. **`src/components/app/ActivityFeed.tsx`**
+   - Import 3 team avatars (avatarSophia, avatarMax, avatarSienna)
+   - Create a helper that maps activity `id` prefix to the corresponding avatar
+   - Replace the icon `div` with a circular avatar image, or show both side-by-side
+
+No new files or dependencies needed. All changes use existing avatar assets from `src/assets/team/`.
+
