@@ -232,7 +232,7 @@ serve(async (req) => {
     };
 
     const finalPrompt = body.polishPrompt
-      ? polishUserPrompt(enrichedPrompt, polishContext)
+      ? polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives)
       : enrichedPrompt;
 
     // Build image references
