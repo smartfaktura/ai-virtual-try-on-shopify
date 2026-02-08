@@ -48,6 +48,19 @@ interface FreestyleRequest {
   negatives?: string[];
 }
 
+// ── Selfie / UGC intent detection ─────────────────────────────────────────
+const SELFIE_KEYWORDS = [
+  'selfie', 'self-portrait', 'self portrait', 'front-facing', 'front facing',
+  'ugc', 'phone camera', 'mirror shot', 'mirror selfie', 'phone selfie',
+  'casual selfie', 'social media selfie', 'influencer selfie', 'vlog',
+  'arm-length', 'arm length', 'front camera', 'facecam',
+];
+
+function detectSelfieIntent(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  return SELFIE_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 // ── Negative prompt (always appended when polish is on) ───────────────────
 const NEGATIVE_PROMPT = `
 CRITICAL — DO NOT include any of the following:
