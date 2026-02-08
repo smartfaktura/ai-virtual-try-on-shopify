@@ -1,16 +1,108 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw } from 'lucide-react';
+import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw, History, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useGenerateVideo, VideoGenStatus } from '@/hooks/useGenerateVideo';
+import { useGenerateVideo, VideoGenStatus, GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 type ImageSource = 'upload' | 'url';
+
+function VideoHistoryCard({ video }: { video: GeneratedVideo }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handleDownload = () => {
+    if (!video.video_url) return;
+    const a = document.createElement('a');
+    a.href = video.video_url;
+    a.download = `video-${video.id.slice(0, 8)}.mp4`;
+    a.target = '_blank';
+    a.click();
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden group">
+      <div className="relative aspect-square bg-muted/30">
+        {video.status === 'complete' && video.video_url ? (
+          isPlaying ? (
+            <video
+              src={video.video_url}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+              onEnded={() => setIsPlaying(false)}
+            />
+          ) : (
+            <>
+              {video.source_image_url && (
+                <img
+                  src={video.source_image_url}
+                  alt="Source"
+                  className="w-full h-full object-cover"
+                />
+              )}
+              <button
+                onClick={() => setIsPlaying(true)}
+                className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
+                  <Play className="w-5 h-5 text-primary-foreground ml-0.5" />
+                </div>
+              </button>
+            </>
+          )
+        ) : video.status === 'processing' ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <X className="w-8 h-8 text-destructive/50" />
+          </div>
+        )}
+
+        {/* Duration badge */}
+        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/60 text-[10px] text-white font-medium">
+          {video.duration}s
+        </div>
+
+        {/* Status badge for non-complete */}
+        {video.status !== 'complete' && (
+          <div className={cn(
+            'absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-medium',
+            video.status === 'processing' ? 'bg-amber-500/80 text-white' : 'bg-destructive/80 text-white'
+          )}>
+            {video.status === 'processing' ? 'Processing' : 'Failed'}
+          </div>
+        )}
+      </div>
+
+      <div className="p-3 space-y-2">
+        <p className="text-xs text-muted-foreground line-clamp-2">
+          {video.prompt || 'No prompt (auto motion)'}
+        </p>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground/60">
+            {format(new Date(video.created_at), 'MMM d, HH:mm')}
+          </span>
+          {video.status === 'complete' && video.video_url && (
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={handleDownload}>
+              <Download className="w-3 h-3" />
+              MP4
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function VideoGenerate() {
   const [imageSource, setImageSource] = useState<ImageSource>('upload');
@@ -24,7 +116,7 @@ export default function VideoGenerate() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
-  const { status, videoUrl, error, elapsedSeconds, startGeneration, reset } = useGenerateVideo();
+  const { status, videoUrl, error, elapsedSeconds, startGeneration, reset, history, isLoadingHistory } = useGenerateVideo();
 
   const isGenerating = status === 'creating' || status === 'processing';
 
@@ -34,11 +126,9 @@ export default function VideoGenerate() {
       return;
     }
 
-    // Show local preview immediately
     const localUrl = URL.createObjectURL(file);
     setPreviewUrl(localUrl);
 
-    // Upload to get a signed URL
     const url = await upload(file);
     if (url) {
       setImageUrl(url);
@@ -95,7 +185,6 @@ export default function VideoGenerate() {
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // Estimate progress for the progress bar (typical 1-3 min)
   const estimatedProgress = status === 'creating'
     ? 5
     : status === 'processing'
@@ -103,6 +192,9 @@ export default function VideoGenerate() {
       : status === 'complete'
         ? 100
         : 0;
+
+  const completedVideos = history.filter(v => v.status === 'complete');
+  const processingVideos = history.filter(v => v.status === 'processing');
 
   return (
     <div className="space-y-6">
@@ -123,7 +215,6 @@ export default function VideoGenerate() {
               Source Image
             </h3>
 
-            {/* Source toggle */}
             <div className="flex gap-2">
               <button
                 onClick={() => setImageSource('upload')}
@@ -151,7 +242,6 @@ export default function VideoGenerate() {
               </button>
             </div>
 
-            {/* Upload zone or URL input */}
             {imageSource === 'upload' ? (
               previewUrl ? (
                 <div className="relative rounded-lg overflow-hidden border border-border">
@@ -244,7 +334,6 @@ export default function VideoGenerate() {
           <div className="rounded-xl border border-border bg-card p-5 space-y-4">
             <h3 className="text-sm font-semibold">Configuration</h3>
 
-            {/* Model Quality */}
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Model</label>
               <div className="flex gap-2">
@@ -270,7 +359,6 @@ export default function VideoGenerate() {
               </div>
             </div>
 
-            {/* Duration */}
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Duration</label>
               <div className="flex gap-2">
@@ -292,7 +380,6 @@ export default function VideoGenerate() {
               </div>
             </div>
 
-            {/* Aspect Ratio */}
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Aspect Ratio</label>
               <div className="flex gap-2">
@@ -420,6 +507,39 @@ export default function VideoGenerate() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Video History Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <History className="w-5 h-5 text-primary" />
+            Video History
+          </h2>
+          {history.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {completedVideos.length} completed{processingVideos.length > 0 ? ` · ${processingVideos.length} in progress` : ''}
+            </span>
+          )}
+        </div>
+
+        {isLoadingHistory ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : history.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border py-12 text-center">
+            <Film className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+            <p className="text-sm text-muted-foreground">No videos yet</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Generated videos will appear here</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {history.map((video) => (
+              <VideoHistoryCard key={video.id} video={video} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
