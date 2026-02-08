@@ -40,7 +40,7 @@ function ImageCard({
       <img
         src={img.url}
         alt={`Generated ${idx + 1}`}
-        className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+        className="w-full h-auto max-h-[inherit] object-contain transition-transform duration-500 group-hover:scale-[1.02]"
         loading="lazy"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -119,8 +119,8 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete }: Fre
               onExpand={onExpand}
               onDelete={onDelete}
               className={cn(
-                count === 1 && 'w-full max-h-[calc(100vh-280px)]',
-                count >= 2 && 'flex-1 min-w-0',
+                count === 1 && 'w-full max-h-[calc(100vh-320px)]',
+                count >= 2 && 'flex-1 min-w-0 max-h-[calc(100vh-320px)]',
               )}
             />
           ))}
