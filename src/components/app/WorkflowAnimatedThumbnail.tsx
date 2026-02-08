@@ -206,6 +206,15 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
       )}
 
       <style>{`
+        .wf-card {
+          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.6);
+        }
+        .wf-card-circle {
+          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.15), 0 0 0 2px rgba(255,255,255,0.8);
+        }
+        .wf-card-shadow {
+          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
+        }
         @keyframes wf-ken-burns {
           0% { transform: scale(1) translate(0,0); }
           100% { transform: scale(1.05) translate(-0.5%, -0.5%); }
