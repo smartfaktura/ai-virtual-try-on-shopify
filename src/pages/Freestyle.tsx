@@ -292,6 +292,7 @@ export default function Freestyle() {
     onBrandProfilePopoverChange: setBrandProfilePopoverOpen,
     brandProfiles,
     isLoadingBrandProfiles,
+    onFileDrop: handleFileDrop,
     negatives,
     onNegativesChange: setNegatives,
     negativesPopoverOpen,
