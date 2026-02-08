@@ -1,100 +1,84 @@
 
 
-## Standalone Video Generation Page with Kling AI
+## Generate Happy Sophia Video + Save Videos to Platform
 
-Create a dedicated "Video" page in the dashboard where users can upload or provide an image and generate animated videos using Kling AI's Image-to-Video API. This is completely separate from the existing image generation flow.
+### Part 1: Generate New Video with Happy Vibe Prompt
 
-### Secrets Required First
+We'll trigger a new Kling AI video generation for the Sophia avatar using a descriptive text prompt that conveys a happy, energetic brand vibe. The prompt will describe Sophia's personality as a creative AI photographer who's excited about helping brands create stunning visuals.
 
-Before building, two API keys need to be added from your Kling AI developer console (https://app.klingai.com/global/dev/api-key):
+**Prompt to use:**
+> "A warm, confident smile spreading across her face, gentle head tilt, eyes sparkling with creative energy. Soft natural lighting, subtle hair movement as if a gentle breeze. She looks welcoming and enthusiastic, embodying the spirit of a passionate AI photography professional ready to bring brands to life. Smooth, cinematic motion."
 
-- **KLING_ACCESS_KEY** -- your Kling API access key
-- **KLING_SECRET_KEY** -- your Kling API secret key
+**Settings:**
+- Model: V2.1 (best quality)
+- Duration: 5 seconds
+- Aspect ratio: 1:1 (matches avatar cards)
+- Source: The already-uploaded Sophia avatar from `scratch-uploads/test/avatar-sophia.jpg`
 
-### What Gets Built
+### Part 2: Save Generated Videos to the Platform
 
-**1. New sidebar nav item: "Video"**
+Currently, generated videos exist only as temporary Kling AI URLs that expire. We need a proper system to persist and display them.
 
-A new "Video" entry in the sidebar navigation (under Main section), using the Video/Film icon, linking to `/app/video`.
+#### Step 1 -- Create a `generated_videos` database table
 
-**2. New page: Video Generator (`/app/video`)**
+A new table to store video generation history:
 
-A clean, standalone page with:
+| Column | Type | Purpose |
+|--------|------|---------|
+| id | uuid (PK) | Unique identifier |
+| user_id | uuid | Owner (linked to auth) |
+| source_image_url | text | The original image used |
+| prompt | text | The motion prompt used |
+| video_url | text | Permanent URL to stored video |
+| kling_task_id | text | Kling API task reference |
+| model_name | text | Which model was used |
+| duration | text | 5 or 10 seconds |
+| aspect_ratio | text | 1:1, 16:9, or 9:16 |
+| status | text | queued, processing, complete, failed |
+| created_at | timestamptz | When it was created |
 
-- **Image input area** -- drag-and-drop upload or paste an image URL. Shows a preview of the selected image
-- **Motion prompt** -- text input describing the desired animation (e.g., "gentle breeze, fabric flowing naturally, subtle camera push-in")
-- **Configuration options:**
-  - Model quality: Standard (kling-v2.1-standard, faster/cheaper) or Pro (kling-v2.1-pro, higher quality)
-  - Duration: 5 seconds or 10 seconds
-  - Aspect ratio: 1:1, 16:9, 9:16
-- **"Generate Video" button** -- kicks off the generation
-- **Progress state** -- shows elapsed time and a pulsing indicator while Kling processes (typically 1-3 minutes)
-- **Result area** -- video player with the finished MP4, plus a Download button
+RLS policies will ensure users can only see/manage their own videos.
 
-**3. Edge Function: `generate-video`**
+#### Step 2 -- Create a `generated-videos` storage bucket
 
-A backend function handling the Kling AI workflow:
+A new public storage bucket to permanently store the MP4 files downloaded from Kling AI's temporary URLs.
 
-- **`action=create`**: Generates a JWT (HS256 signed with KLING_SECRET_KEY), submits an image-to-video task to Kling AI, returns the task ID
-- **`action=status`**: Polls the task status and returns the video URL when complete
-- Validates the user's auth token
-- Full error handling for rate limits, expired tasks, and API failures
+#### Step 3 -- Update the edge function to auto-save
 
-**4. React Hook: `useGenerateVideo`**
+When the status poll detects a completed video (`succeed`), the edge function will:
+1. Download the MP4 from Kling's temporary URL
+2. Upload it to the `generated-videos` storage bucket
+3. Save the permanent URL + metadata to the `generated_videos` table
+4. Return the permanent URL to the frontend
 
-Manages the full lifecycle:
-- Sends the image + prompt to the edge function
-- Polls for status every 8 seconds
-- Exposes `status` (idle/creating/processing/complete/error), `videoUrl`, `error`, and `startGeneration()`
-- Cleans up polling on unmount
+#### Step 4 -- Update the Video Generator page
 
-### User Flow
+- After generation completes, show the video player with the permanent URL
+- Add a **"Video History"** section below the generator showing all previously generated videos in a grid
+- Each history card shows: thumbnail (first frame), prompt snippet, date, duration, and a play/download button
 
-1. Click "Video" in the sidebar
-2. Upload an image (drag-and-drop or file picker) or paste a URL
-3. Type a motion prompt describing the animation you want
-4. Pick quality (Standard/Pro), duration (5s/10s), and aspect ratio
-5. Click "Generate Video"
-6. Wait 1-3 minutes with a progress indicator
-7. Preview the video inline, download as MP4
+#### Step 5 -- Update the hook
 
-### Files
-
-**New files:**
-- `supabase/functions/generate-video/index.ts` -- Kling AI edge function with JWT auth and task polling
-- `src/pages/VideoGenerate.tsx` -- standalone video generation page
-- `src/hooks/useGenerateVideo.ts` -- hook for video generation state and polling
-
-**Modified files:**
-- `src/App.tsx` -- add `/app/video` route
-- `src/components/app/AppShell.tsx` -- add "Video" nav item to sidebar
-- `supabase/config.toml` -- register `generate-video` function
+Modify `useGenerateVideo` to:
+- Accept an optional `onComplete` callback
+- Return the saved video record from the database after completion
 
 ### Technical Details
 
-**Kling AI JWT (generated server-side in Deno):**
-- Header: `{ alg: "HS256", typ: "JWT" }`
-- Payload: `{ iss: KLING_ACCESS_KEY, exp: now + 1800, iat: now }`
-- Signed with: KLING_SECRET_KEY
+**Files to create:**
+- Database migration for `generated_videos` table + `generated-videos` bucket + RLS policies
 
-**Kling API endpoints:**
-- Create task: `POST https://api-singapore.klingai.com/v1/videos/image2video`
-- Check status: `GET https://api-singapore.klingai.com/v1/videos/image2video/{task_id}`
+**Files to modify:**
+- `supabase/functions/generate-video/index.ts` -- Add save logic (download MP4 from Kling, upload to bucket, insert DB record)
+- `src/hooks/useGenerateVideo.ts` -- Return saved video data, add history fetching
+- `src/pages/VideoGenerate.tsx` -- Add video history grid below the generator
+- `src/integrations/supabase/types.ts` -- Will auto-update with new table types
 
-**Task statuses:** submitted -> processing -> succeed / failed
+**Flow diagram:**
 
-**Polling strategy:**
-- Poll every 8 seconds via the edge function
-- Maximum ~50 polls (about 7 minutes timeout)
-- Show elapsed time to the user during processing
-
-**Edge function auth:**
-- `verify_jwt = false` in config.toml
-- Validates JWT via `getClaims()` in code for both create and status actions
-- User ID extracted from token for logging
-
-**Image handling:**
-- Uploaded images go through the existing `useFileUpload` hook to the `product-uploads` bucket
-- The signed URL is passed to Kling AI (they need a publicly accessible image URL)
-- Alternatively, users can paste any public image URL directly
+1. User clicks Generate with prompt
+2. Edge function creates Kling task, inserts DB row (status: processing)
+3. Frontend polls for status
+4. On completion: edge function downloads MP4 from Kling, uploads to permanent bucket, updates DB row with final URL
+5. Frontend receives permanent URL, displays video, refreshes history grid
 
