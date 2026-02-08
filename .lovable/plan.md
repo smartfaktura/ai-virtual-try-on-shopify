@@ -1,28 +1,47 @@
 
 
-## Add Team Avatars to the Final CTA Section
+## Improve "How It Works" Step 2 Images + Add Hover Popups
 
-Add a row of all 10 team member avatars below the CTA button area to create the impression that "your team is waiting for you." This reinforces the Studio Team narrative from earlier on the page and gives a personal, inviting feel right before the user signs up.
+### What's changing
 
-### Design
+Two improvements to the "Three Steps to Automated Product Visuals" section:
 
-Below the trust badges ("Free to try", "No prompts", "Cancel anytime"), add a cluster of overlapping circular avatars (like a stacked avatar group) with a subtle label like "Your team is ready" or similar. The avatars will use the same static images already imported elsewhere (from `src/assets/team/`).
+**1. Regenerate 4 higher-quality, cohesive images using the pro model**
 
-Layout:
-- 10 circular avatars, slightly overlapping (negative margin), centered
-- Each avatar has a white ring border for separation
-- A small text label underneath: "Your studio team is ready"
-- Subtle scale-up animation on hover for a lively feel
+The current AI-generated images don't feel connected enough. We'll regenerate all 4 formula images using `google/gemini-3-pro-image-preview` (higher quality model) with more specific prompts:
+
+- **Product**: Clean white crop top flatlay on pure white background -- professional e-commerce product shot, centered, soft shadows, no model
+- **Model**: Young blonde woman portrait, wearing a casual white t-shirt, soft studio lighting, light gray background, face forward, warm natural smile, supermodel quality
+- **Scene**: Empty modern yoga studio interior with warm wood floors, natural light from large windows, no people, clean and inviting
+- **Result**: The same blonde model from the portrait, now wearing the white crop top, standing in the same yoga studio, natural lifestyle photography, full body shot
+
+This creates a visually convincing "formula" where visitors can see the product + model + scene combine into a realistic result.
+
+**2. Add hover popup preview on each thumbnail**
+
+When a visitor hovers over any of the 4 formula thumbnails (Product, Model, Scene, Result), a larger preview image will appear as a floating card above/beside the thumbnail. This makes the section more engaging and interactive.
+
+- Uses a custom hover state (no extra library needed)
+- Shows a larger version of the image (~200x200px) in a rounded card with a subtle shadow
+- Appears with a smooth fade + scale animation
+- Positioned above the thumbnail, centered
+- Disappears when mouse leaves
 
 ### Technical Details
 
-**File: `src/components/landing/FinalCTA.tsx`**
+**File: `src/components/landing/HowItWorks.tsx`**
 
-- Import all 10 team avatar images from `src/assets/team/`
-- Create a `TEAM_AVATARS` array with name and avatar image
-- Add a new `div` after the trust badges section containing:
-  - A flex row of overlapping circular avatar images (w-10 h-10 or w-12 h-12, rounded-full, border-2 border-background, -ml-3 for overlap)
-  - A subtle text label below: "Your studio team is ready"
-- Avatars will use the static `.jpg` images (not videos) to keep the section lightweight
+- Add a `HoverPreview` inline component that wraps each formula thumbnail
+  - Uses `useState` for hover state and `onMouseEnter`/`onMouseLeave`
+  - Renders an absolutely-positioned enlarged image card on hover
+  - Smooth CSS transition (`opacity`, `scale`, `pointer-events`)
+- Replace the 4 static `div` + `img` blocks in Step 2 with the `HoverPreview` wrapper
+- Update imports to point to the 4 newly generated images
 
-No other files need to change.
+**New assets to generate (overwriting existing):**
+- `src/assets/hero/hero-product-croptop.jpg` -- product flatlay
+- `src/assets/hero/hero-model-blonde.jpg` -- blonde model portrait in white tee
+- `src/assets/hero/hero-scene-yoga.jpg` -- empty yoga studio
+- `src/assets/hero/hero-result-yoga-blonde.jpg` -- composite result
+
+All 4 images will be generated via an edge function using `google/gemini-3-pro-image-preview` for best quality, then saved as static assets.
