@@ -49,6 +49,8 @@ export const COLOR_FEEL_DESCRIPTIONS: Record<string, string> = {
   'rich-saturated': 'deep saturated colors, bold and vivid palette, high color impact',
   'muted-soft': 'desaturated pastels, soft muted tones, dreamy and gentle palette',
   'vibrant-bold': 'high energy colors, bright and punchy, strong contrast',
+  'monochrome': 'black, white, and grayscale tones, achromatic, high contrast',
+  'pastel-dreamy': 'soft pastel tones, lavender, baby pink, baby blue, light and airy',
 };
 
 // ── Color Feel friendly labels ──────────────────────────────────────────
@@ -59,6 +61,8 @@ export const COLOR_FEEL_LABELS: Record<string, string> = {
   'rich-saturated': 'Rich & Saturated',
   'muted-soft': 'Muted & Soft',
   'vibrant-bold': 'Vibrant & Bold',
+  'monochrome': 'Monochrome',
+  'pastel-dreamy': 'Pastel & Dreamy',
 };
 
 // ── Full prompt builder ──────────────────────────────────────────────────
