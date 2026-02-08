@@ -7,9 +7,12 @@ export function CreditIndicator() {
   const navigate = useNavigate();
 
   const monthlyCredits = planConfig.monthlyCredits;
+  const hasBonus = balance > monthlyCredits && monthlyCredits !== Infinity;
   const usagePercent = monthlyCredits === Infinity
     ? 100
-    : Math.min(100, Math.max(3, (balance / monthlyCredits) * 100));
+    : hasBonus
+      ? 100
+      : Math.min(100, Math.max(3, (balance / monthlyCredits) * 100));
 
   const isFree = plan === 'free';
 
@@ -60,7 +63,9 @@ export function CreditIndicator() {
       {/* Progress bar */}
       <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
         <div
-          className="h-full rounded-full bg-sidebar-foreground/30 transition-all duration-500"
+          className={`h-full rounded-full transition-all duration-500 ${
+            hasBonus ? 'bg-primary/50' : 'bg-sidebar-foreground/30'
+          }`}
           style={{ width: `${usagePercent}%` }}
         />
       </div>
