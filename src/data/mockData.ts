@@ -1672,6 +1672,140 @@ export const mockTryOnPoses: TryOnPose[] = [
     description: 'Night scene with neon signs and urban glow',
     previewUrl: poseStreetwearNeon,
   },
+  // === PRODUCT ENVIRONMENT SCENES ===
+  // Clean Studio (3)
+  {
+    poseId: 'scene_001',
+    name: 'White Seamless',
+    category: 'clean-studio',
+    description: 'Pure white infinity backdrop, even lighting, e-commerce ready',
+    previewUrl: templateClothingStudio,
+  },
+  {
+    poseId: 'scene_002',
+    name: 'Gradient Backdrop',
+    category: 'clean-studio',
+    description: 'Smooth gradient background for premium product positioning',
+    previewUrl: templateUniversalGradient,
+  },
+  {
+    poseId: 'scene_003',
+    name: 'Minimalist Platform',
+    category: 'clean-studio',
+    description: 'Clean pedestal or platform with soft shadows',
+    previewUrl: templateUniversalClean,
+  },
+  // Surface & Texture (3)
+  {
+    poseId: 'scene_004',
+    name: 'Marble Surface',
+    category: 'surface',
+    description: 'Polished marble surface with elegant reflections',
+    previewUrl: showcaseSkincareSerumMarble,
+  },
+  {
+    poseId: 'scene_005',
+    name: 'Wooden Table',
+    category: 'surface',
+    description: 'Warm rustic wood surface with natural grain texture',
+    previewUrl: showcaseFoodPastaRustic,
+  },
+  {
+    poseId: 'scene_006',
+    name: 'Concrete Slab',
+    category: 'surface',
+    description: 'Raw concrete surface for industrial-modern aesthetic',
+    previewUrl: showcaseHomeConcrete,
+  },
+  // Flat Lay (2)
+  {
+    poseId: 'scene_007',
+    name: 'Overhead Clean',
+    category: 'flat-lay',
+    description: 'Top-down view on clean surface, minimal props',
+    previewUrl: templateClothingFlatlay,
+  },
+  {
+    poseId: 'scene_008',
+    name: 'Styled Flat Lay',
+    category: 'flat-lay',
+    description: 'Curated overhead arrangement with complementary props',
+    previewUrl: templateCosmeticsPastel,
+  },
+  // Kitchen & Dining (3)
+  {
+    poseId: 'scene_009',
+    name: 'Rustic Kitchen',
+    category: 'kitchen',
+    description: 'Farmhouse-style kitchen with warm natural light',
+    previewUrl: showcaseFoodHoneyFarmhouse,
+  },
+  {
+    poseId: 'scene_010',
+    name: 'Bright Countertop',
+    category: 'kitchen',
+    description: 'Clean, bright kitchen countertop with modern styling',
+    previewUrl: showcaseFoodBreadBakery,
+  },
+  {
+    poseId: 'scene_011',
+    name: 'Café Table',
+    category: 'kitchen',
+    description: 'Artisan café setting with coffee culture vibes',
+    previewUrl: showcaseFoodCoffeeArtisan,
+  },
+  // Living Space (3)
+  {
+    poseId: 'scene_012',
+    name: 'Japandi Shelf',
+    category: 'living-space',
+    description: 'Zen-inspired minimal shelf with natural materials',
+    previewUrl: showcaseHomeVasesJapandi,
+  },
+  {
+    poseId: 'scene_013',
+    name: 'Cozy Evening',
+    category: 'living-space',
+    description: 'Warm candlelit interior with soft textiles',
+    previewUrl: showcaseHomeCandleEvening,
+  },
+  {
+    poseId: 'scene_014',
+    name: 'Morning Bedroom',
+    category: 'living-space',
+    description: 'Bright morning light streaming into a styled bedroom',
+    previewUrl: showcaseHomeBedroomMorning,
+  },
+  // Bathroom & Vanity (2)
+  {
+    poseId: 'scene_015',
+    name: 'Marble Vanity',
+    category: 'bathroom',
+    description: 'Elegant bathroom vanity with marble surfaces',
+    previewUrl: showcaseSkincareOilBathroom,
+  },
+  {
+    poseId: 'scene_016',
+    name: 'Bright Bathroom',
+    category: 'bathroom',
+    description: 'Clean, bright bathroom with natural light and botanicals',
+    previewUrl: showcaseSkincareCreamBotanical,
+  },
+  // Botanical (2)
+  {
+    poseId: 'scene_017',
+    name: 'Garden Setting',
+    category: 'botanical',
+    description: 'Lush garden environment with natural greenery',
+    previewUrl: showcaseFashionDressGarden,
+  },
+  {
+    poseId: 'scene_018',
+    name: 'Botanical Arrangement',
+    category: 'botanical',
+    description: 'Styled botanical backdrop with leaves and flowers',
+    previewUrl: showcaseFashionDressBotanical,
+  },
 ];
 
 export const poseCategoryLabels: Record<string, string> = {
