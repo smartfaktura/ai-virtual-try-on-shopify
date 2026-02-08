@@ -139,6 +139,11 @@ export function FreestylePromptPanel({
           polishPrompt={polishPrompt} onPolishChange={onPolishChange}
           imageCount={imageCount} onImageCountChange={onImageCountChange}
           stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
+          selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
+          brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
+          brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
+          negatives={negatives} onNegativesChange={onNegativesChange}
+          negativesPopoverOpen={negativesPopoverOpen} onNegativesPopoverChange={onNegativesPopoverChange}
         />
       </div>
 
