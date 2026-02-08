@@ -36,6 +36,10 @@ export default function Freestyle() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [stylePresets, setStylePresets] = useState<string[]>([]);
+  const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
+  const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
+  const [negatives, setNegatives] = useState<string[]>([]);
+  const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { generate, isLoading, progress } = useGenerateFreestyle();
