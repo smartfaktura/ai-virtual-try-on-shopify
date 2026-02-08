@@ -1,71 +1,70 @@
 
-# Expand Scene Library with Category Filters
 
-## What's Changing
+# Add AI Studio Team Touchpoints to Brand Profile Wizard
 
-The Scene selector currently has 24 scenes, ALL focused on fashion/model poses (Studio, Lifestyle, Editorial, Streetwear). This doesn't serve users who photograph skincare, food, or home products. We'll add product-focused scene environments and introduce filter tabs so users can quickly find what they need.
+## Overview
 
-## New Scene Categories
+Add contextual, encouraging messages from relevant AI Studio Team members at each step of the Brand Profile wizard. This creates a sense that real specialists are guiding the user through the process and will personally take care of their brand identity.
 
-Currently there are 4 categories, all people-focused. We'll add 4 new product-environment categories:
+## Design
 
-| Filter Tab | Sub-categories included | Purpose |
+Each wizard step will show a small "team tip" banner at the top of the step content, featuring:
+- A circular avatar of the relevant team specialist (living video avatar)
+- The specialist's name and role
+- A short, reassuring message explaining how they'll use this information
+
+The banner will be compact (not intrusive) -- a subtle card with a soft accent background, sitting right below the step indicator and above the form fields.
+
+## Team Member Mapping Per Step
+
+| Step | Specialist | Why |
 |---|---|---|
-| **All** | Everything | Default view |
-| **On-Model** | Studio, Lifestyle, Editorial, Streetwear | Existing 24 fashion scenes |
-| **Product** | Clean Studio, Surface/Texture, Flat Lay | General product photography |
-| **Food & Home** | Kitchen/Dining, Living Space | Category-specific environments |
-| **Beauty** | Bathroom/Vanity, Botanical | Skincare & wellness settings |
+| **Step 1: Your Brand** | **Sienna** - Brand Consistency Manager | She ensures every visual matches your brand DNA. Perfect for the identity/description step. |
+| **Step 2: Visual Style** | **Sophia** - Product Photographer + **Luna** - Retouch Specialist | Sophia handles lighting/composition, Luna handles color correction. Both are relevant to visual style choices. |
+| **Step 3: Avoid These** | **Kenji** - Campaign Art Director | He designs cohesive campaigns. Knowing what to avoid helps him keep everything on-brand. |
 
-## New Scenes to Add (~18 new scenes)
+## Messages
 
-**Clean Studio (3 scenes)** -- using template assets
-- White Seamless, Gradient Backdrop, Minimalist Platform
+- **Step 1 (Sienna):** "I'll memorize your brand identity and make sure every visual feels unmistakably yours."
+- **Step 2 (Sophia + Luna):** "We'll use your style preferences to dial in the perfect lighting, colors, and mood for every shoot."
+- **Step 3 (Kenji):** "Your exclusions become my guardrails. I'll make sure nothing off-brand ever makes it through."
 
-**Surface & Texture (3 scenes)** -- using showcase assets
-- Marble Surface, Wooden Table, Concrete Slab
+## UI Component
 
-**Flat Lay (2 scenes)** -- using template assets
-- Overhead Clean, Styled Flat Lay
+A new `TeamStepTip` inline component inside `BrandProfileWizard.tsx`:
 
-**Kitchen & Dining (3 scenes)** -- using food showcase assets
-- Rustic Kitchen, Bright Countertop, Cafe Table
+```text
++----------------------------------------------------------+
+|  [avatar] [avatar]  Sophia & Luna                        |
+|  Product Photographer + Retouch Specialist               |
+|  "We'll use your style preferences to dial in the        |
+|   perfect lighting, colors, and mood for every shoot."   |
++----------------------------------------------------------+
+```
 
-**Living Space (3 scenes)** -- using home showcase assets
-- Japandi Shelf, Cozy Evening, Morning Bedroom
-
-**Bathroom & Vanity (2 scenes)** -- using skincare showcase assets
-- Marble Vanity, Bright Bathroom
-
-**Botanical (2 scenes)** -- using showcase assets
-- Garden Setting, Botanical Arrangement
-
-## UI Changes to SceneSelectorChip
-
-- Replace "No Scene" text with a conditional "Clear selection" button (only shown when a scene is active)
-- Add an X button on the chip itself for quick deselect (matching Model and Product selectors)
-- Add horizontal filter tabs at the top: **All | On-Model | Product | Food & Home | Beauty**
-- Move scene names below images instead of overlaying them (matching the Product/Model selector pattern)
-- Slightly wider popover (w-96 instead of w-80) for better browsing
+- Rounded card with `bg-primary/5 border-primary/10` styling
+- Avatar(s) displayed as small circular images (32x32px)
+- Subtle, not distracting -- blends with the wizard's existing aesthetic
+- On steps with 2 specialists, avatars are stacked/overlapping slightly
 
 ## Technical Details
 
-### Files Modified
+### File Modified: `src/components/app/BrandProfileWizard.tsx`
 
-**`src/types/index.ts`**
-- Expand `PoseCategory` union type to include new categories:
-  `'studio' | 'lifestyle' | 'editorial' | 'streetwear' | 'clean-studio' | 'surface' | 'flat-lay' | 'kitchen' | 'living-space' | 'bathroom' | 'botanical'`
+1. **Add imports** for the team avatar images at the top of the file:
+   - `avatarSienna`, `avatarSophia`, `avatarLuna`, `avatarKenji`
 
-**`src/data/mockData.ts`**
-- Add ~18 new imports from `src/assets/showcase/` and `src/assets/templates/` to use as scene preview images
-- Add ~18 new entries to `mockTryOnPoses` array with the new categories
-- Expand `poseCategoryLabels` with labels for all new categories
+2. **Define a `STEP_TEAM_TIPS` array** containing the team tip configuration for each step:
+   - Each entry has: `avatars` (array of image paths), `names` (string), `roles` (string), `message` (string)
 
-**`src/components/app/freestyle/SceneSelectorChip.tsx`**
-- Add a `sceneFilter` state with tabs: All, On-Model, Product, Food & Home, Beauty
-- Define a mapping from each filter tab to which `PoseCategory` values it includes
-- Filter the displayed categories based on the active tab
-- Move scene names below images (matching Product/Model pattern)
-- Replace "No Scene" with conditional "Clear selection"
-- Add X button on the chip for quick deselect
-- Widen the popover from w-80 to w-96
+3. **Add a `TeamStepTip` component** (inline, not a separate file) that renders the tip banner:
+   - Takes the current step index and renders the corresponding tip
+   - Displays overlapping avatars for multi-specialist steps
+   - Shows the personalized message in italic quotes
+
+4. **Insert the `TeamStepTip`** inside `<CardContent>` at the very top, before the step-specific form content:
+   - Positioned right after the `<CardContent className="p-6 space-y-6">` opening
+   - Renders before the `{step === 0 && ...}` conditional blocks
+
+5. **Add a final reassurance message** at the save step: When the user is on Step 3, add a small footer note below the navigation buttons saying something like "Your entire studio team will apply this profile to every generation."
+
