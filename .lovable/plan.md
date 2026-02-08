@@ -1,32 +1,79 @@
 
 
-## Change "Workflows" Nav Link to "Team"
+## Fix Virtual Try-On Generate Button
 
-### What Changes
+### Root Cause
 
-Update the landing page navigation so the first link says **"Team"** instead of "Workflows" and scrolls to the Studio Team section ("10 AI Professionals. Zero Overhead.") instead of the features section.
+The "Generate" button on the try-on Settings step doesn't directly start generation. Instead, it opens a second confirmation modal (TryOnConfirmModal). This creates a confusing double-confirmation UX since the Settings page already shows a full preview, model/pose summary, credit cost, and the generate button -- essentially doing the job of a confirmation step.
+
+Additionally, there's a hardcoded cost label bug: the settings page says "1 images x 3 credits each" when the actual cost per try-on image is 8 credits.
+
+### What Will Change
+
+1. **Remove the redundant confirmation step for try-on** -- clicking "Generate" on the Settings page will directly start the generation instead of opening another modal
+2. **Fix the silent failure** when product is missing -- show a proper error message instead of doing nothing
+3. **Fix the hardcoded credit label** -- change "3 credits each" to correctly show 8 credits per try-on image
 
 ### Technical Details
 
-**File: `src/components/landing/LandingNav.tsx`**
+**File: `src/pages/Generate.tsx`**
 
-Two changes:
+Three changes:
 
-1. **Update the nav link label and target** (line 8):
-   - Change `{ label: 'Workflows', href: '#features' }` to `{ label: 'Team', href: '#team' }`
+**Change 1 -- Direct generation on try-on (line 331-334)**
 
-2. **Add an `id` anchor to the Studio Team section** so the smooth scroll has a target:
+In `handleGenerateClick`, instead of opening the TryOnConfirmModal, call `handleTryOnConfirmGenerate()` directly:
 
-**File: `src/components/landing/StudioTeamSection.tsx`**
+Before:
+```typescript
+if (generationMode === 'virtual-try-on') {
+  if (!selectedModel || !selectedPose) { toast.error('...'); return; }
+  setTryOnConfirmModalOpen(true); return;
+}
+```
 
-- Add `id="team"` to the `<section>` element (line 65):
-  - From: `<section className="py-20 sm:py-28 bg-muted/30">`
-  - To: `<section id="team" className="py-20 sm:py-28 bg-muted/30">`
+After:
+```typescript
+if (generationMode === 'virtual-try-on') {
+  if (!selectedModel || !selectedPose) { toast.error('...'); return; }
+  handleTryOnConfirmGenerate(); return;
+}
+```
+
+**Change 2 -- Fix silent return (line 328)**
+
+Before:
+```typescript
+if (!selectedProduct) return;
+```
+
+After:
+```typescript
+if (!selectedProduct && !(sourceType === 'scratch' && scratchUpload)) {
+  toast.error('Please select a product first');
+  return;
+}
+```
+
+**Change 3 -- Fix credit cost label (line 1201)**
+
+Before:
+```typescript
+<p className="text-xs text-muted-foreground">
+  {parseInt(imageCount)} images x 3 credits each
+</p>
+```
+
+After:
+```typescript
+<p className="text-xs text-muted-foreground">
+  {parseInt(imageCount)} images x 8 credits each
+</p>
+```
 
 ### Files Changed
 
 | File | Action | Description |
 |---|---|---|
-| `src/components/landing/LandingNav.tsx` | Edit | Change "Workflows" label to "Team", href from `#features` to `#team` |
-| `src/components/landing/StudioTeamSection.tsx` | Edit | Add `id="team"` to the section element |
+| `src/pages/Generate.tsx` | Edit | Skip confirm modal for try-on, fix silent failure, fix credit label |
 
