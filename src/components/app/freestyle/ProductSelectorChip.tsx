@@ -74,14 +74,13 @@ export function ProductSelectorChip({
           </div>
         ) : (
           <>
-            {products.length > 5 && (
-              <Input
-                placeholder="Search products..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="h-8 text-xs mb-2"
-              />
-            )}
+            <Input
+              placeholder="Search products..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="h-8 text-xs mb-2"
+              autoFocus
+            />
             <button
               onClick={() => { onSelect(null); onOpenChange(false); }}
               className={cn(
