@@ -481,6 +481,7 @@ export default function BrandProfileWizard() {
                     <button
                       type="button"
                       key={rule}
+                      onClick={() => toggleChip('do_not_rules', rule)}
                       className={cn(
                         'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
                         form.do_not_rules.includes(rule)
