@@ -136,7 +136,27 @@ export function FreestylePromptPanel({
   );
 
   return (
-    <div className="relative bg-background/80 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg overflow-hidden">
+    <div
+      className={`relative bg-background/80 backdrop-blur-xl border rounded-2xl shadow-lg overflow-hidden transition-colors duration-200 ${
+        isDragOver
+          ? 'border-primary border-2 ring-2 ring-primary/20'
+          : 'border-border/60'
+      }`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drag overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-20 bg-primary/5 backdrop-blur-[2px] flex items-center justify-center rounded-2xl">
+          <div className="flex flex-col items-center gap-2 text-primary">
+            <ImagePlus className="w-8 h-8" />
+            <span className="text-sm font-medium">Drop image here</span>
+          </div>
+        </div>
+      )}
+
       {isLoading && (
         <div className="absolute top-0 left-0 right-0 z-10">
           <Progress value={progress} className="h-[2px] rounded-none bg-muted" />
