@@ -41,6 +41,8 @@ interface FreestylePromptPanelProps {
   onPolishChange: (v: boolean) => void;
   imageCount: number;
   onImageCountChange: (count: number) => void;
+  stylePresets: string[];
+  onStylePresetsChange: (ids: string[]) => void;
 }
 
 export function FreestylePromptPanel({
@@ -55,6 +57,7 @@ export function FreestylePromptPanel({
   quality, onQualityToggle,
   polishPrompt, onPolishChange,
   imageCount, onImageCountChange,
+  stylePresets, onStylePresetsChange,
 }: FreestylePromptPanelProps) {
   const uploadButton = sourceImagePreview ? (
     <div className="relative w-9 h-9 flex-shrink-0">
@@ -119,6 +122,7 @@ export function FreestylePromptPanel({
           quality={quality} onQualityToggle={onQualityToggle}
           polishPrompt={polishPrompt} onPolishChange={onPolishChange}
           imageCount={imageCount} onImageCountChange={onImageCountChange}
+          stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
         />
       </div>
 
