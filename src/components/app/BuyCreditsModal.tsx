@@ -153,7 +153,7 @@ export function BuyCreditsModal() {
                   </div>
 
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold">${recommendedPlan.monthlyPrice}</span>
+                    <span className="text-3xl font-bold">${recommendedPlan.monthlyPrice}</span>
                     <span className="text-xs text-muted-foreground">/mo</span>
                     <span className="text-xs text-muted-foreground ml-1">•</span>
                     <span className="text-xs text-muted-foreground ml-1">
