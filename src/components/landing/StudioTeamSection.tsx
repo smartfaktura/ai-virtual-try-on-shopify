@@ -43,6 +43,14 @@ const TEAM: TeamMember[] = [
       'Places your products in real-world scenes so customers see them in context. Perfect for social media and storytelling.',
   },
   {
+    name: 'Luna',
+    role: 'Retouch Specialist',
+    avatar: avatarLuna,
+    videoUrl: `${VIDEO_BASE}/849398707518439436.mp4`,
+    description:
+      'Handles color correction, background cleanup, and pixel-level refinement. Every image leaves polished and flawless.',
+  },
+  {
     name: 'Kenji',
     role: 'Campaign Art Director',
     avatar: avatarKenji,
@@ -73,14 +81,6 @@ const TEAM: TeamMember[] = [
     videoUrl: `${VIDEO_BASE}/849398695958937689.mp4`,
     description:
       'Ensures every visual matches your brand DNA. Locks your look so every image feels unmistakably yours.',
-  },
-  {
-    name: 'Luna',
-    role: 'Retouch Specialist',
-    avatar: avatarLuna,
-    videoUrl: `${VIDEO_BASE}/849398707518439436.mp4`,
-    description:
-      'Handles color correction, background cleanup, and pixel-level refinement. Every image leaves polished and flawless.',
   },
   {
     name: 'Max',
