@@ -14,6 +14,13 @@ const categoryInfo: Record<PoseCategory, { title: string; recommendation: string
   lifestyle: { title: 'Lifestyle', recommendation: 'Best for social media & marketing' },
   editorial: { title: 'Editorial', recommendation: 'Best for campaigns & lookbooks' },
   streetwear: { title: 'Streetwear', recommendation: 'Best for urban & youth brands' },
+  'clean-studio': { title: 'Clean Studio', recommendation: 'Best for product-only photography' },
+  surface: { title: 'Surface & Texture', recommendation: 'Best for product detail shots' },
+  'flat-lay': { title: 'Flat Lay', recommendation: 'Best for overhead compositions' },
+  kitchen: { title: 'Kitchen & Dining', recommendation: 'Best for food & beverage products' },
+  'living-space': { title: 'Living Space', recommendation: 'Best for home & decor products' },
+  bathroom: { title: 'Bathroom & Vanity', recommendation: 'Best for skincare & beauty' },
+  botanical: { title: 'Botanical', recommendation: 'Best for wellness & natural products' },
 };
 
 export function PoseCategorySection({ category, poses, selectedPoseId, onSelectPose }: PoseCategorySectionProps) {

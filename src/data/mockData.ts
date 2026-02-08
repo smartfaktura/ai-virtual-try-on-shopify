@@ -1164,6 +1164,26 @@ import poseStreetwearBasketball from '@/assets/poses/pose-streetwear-basketball.
 import poseStreetwearUnderpass from '@/assets/poses/pose-streetwear-underpass.jpg';
 import poseStreetwearNeon from '@/assets/poses/pose-streetwear-neon.jpg';
 
+// Scene environment images (product photography)
+import templateClothingStudio from '@/assets/templates/clothing-studio.jpg';
+import templateUniversalGradient from '@/assets/templates/universal-gradient.jpg';
+import templateUniversalClean from '@/assets/templates/universal-clean.jpg';
+import showcaseSkincareSerumMarble from '@/assets/showcase/skincare-serum-marble.jpg';
+import showcaseFoodPastaRustic from '@/assets/showcase/food-pasta-rustic.jpg';
+import showcaseHomeConcrete from '@/assets/templates/home-concrete.jpg';
+import templateClothingFlatlay from '@/assets/templates/clothing-flatlay.jpg';
+import templateCosmeticsPastel from '@/assets/templates/cosmetics-pastel.jpg';
+import showcaseFoodCoffeeArtisan from '@/assets/showcase/food-coffee-artisan.jpg';
+import showcaseFoodHoneyFarmhouse from '@/assets/showcase/food-honey-farmhouse.jpg';
+import showcaseFoodBreadBakery from '@/assets/showcase/food-bread-bakery.jpg';
+import showcaseHomeVasesJapandi from '@/assets/showcase/home-vases-japandi.jpg';
+import showcaseHomeCandleEvening from '@/assets/showcase/home-candle-evening.jpg';
+import showcaseHomeBedroomMorning from '@/assets/showcase/home-bedroom-morning.jpg';
+import showcaseSkincareOilBathroom from '@/assets/showcase/skincare-oil-bathroom.jpg';
+import showcaseSkincareCreamBotanical from '@/assets/showcase/skincare-cream-botanical.jpg';
+import showcaseFashionDressGarden from '@/assets/showcase/fashion-dress-garden.jpg';
+import showcaseFashionDressBotanical from '@/assets/showcase/fashion-dress-botanical.jpg';
+
 export const mockModels: ModelProfile[] = [
   {
     modelId: 'model_001',
