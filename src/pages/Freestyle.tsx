@@ -3,6 +3,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
+import type { BlockedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
 import { STYLE_PRESETS } from '@/components/app/freestyle/StylePresetChips';
 import { useGenerateFreestyle } from '@/hooks/useGenerateFreestyle';

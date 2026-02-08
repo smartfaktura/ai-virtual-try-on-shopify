@@ -258,8 +258,10 @@ function ImageCard({
   );
 }
 
-export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0 }: FreestyleGalleryProps) {
-  if (images.length === 0 && generatingCount === 0) {
+export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt }: FreestyleGalleryProps) {
+  const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0;
+
+  if (!hasContent) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-6">
         <div className="w-24 h-24 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
@@ -281,13 +283,25 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       ))
     : [];
 
-  const count = images.length + generatingCount;
+  const blockedCards = blockedEntries.map(entry => (
+    <ContentBlockedCard
+      key={`blocked-${entry.id}`}
+      entry={entry}
+      onDismiss={onDismissBlocked}
+      onEditPrompt={onEditBlockedPrompt}
+    />
+  ));
+
+  const count = images.length + generatingCount + blockedEntries.length;
 
   if (count <= 3) {
     return (
       <div className="flex items-stretch justify-center gap-3 px-6 pt-6">
         {generatingCards.map((card, i) => (
           <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)] min-w-[280px]">{card}</div>
+        ))}
+        {blockedCards.map((card, i) => (
+          <div key={`block-wrap-${i}`} className="max-h-[calc(100vh-400px)] min-w-[280px]">{card}</div>
         ))}
         {images.map((img, idx) => (
           <ImageCard
@@ -308,6 +322,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   return (
     <div className="grid grid-cols-3 gap-1 pt-3 px-1 pb-4">
       {generatingCards}
+      {blockedCards}
       {images.map((img, idx) => (
         <ImageCard
           key={img.id}
