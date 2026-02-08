@@ -23,12 +23,14 @@ interface TeamMember {
   videoUrl?: string;
 }
 
+const VIDEO_BASE = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc';
+
 const TEAM: TeamMember[] = [
   {
     name: 'Sophia',
     role: 'Product Photographer',
     avatar: avatarSophia,
-    videoUrl: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/849395850555686932.mp4',
+    videoUrl: `${VIDEO_BASE}/849395850555686932.mp4`,
     description:
       'Crafts pixel-perfect e-commerce listings, hero shots, and catalog visuals with studio-grade lighting and composition.',
   },
