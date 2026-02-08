@@ -4,10 +4,10 @@ import type { SceneElement, WorkflowScene } from './WorkflowAnimatedThumbnail';
 /* ── Asset imports ── */
 
 // Virtual Try-On
-import tryonProduct from '@/assets/products/tank-white-1.jpg';
-import tryonModel from '@/assets/models/model-female-slim-american-blonde.jpg';
-import tryonScene from '@/assets/poses/pose-lifestyle-coffee.jpg';
-import tryonResult from '@/assets/drops/drop-model-cream-bodysuit.jpg';
+import tryonProduct from '@/assets/workflows/workflow-tryon-product-flatlay.png';
+import tryonModel from '@/assets/models/model-female-average-european.jpg';
+import tryonScene from '@/assets/poses/pose-editorial-minimal.jpg';
+import tryonResult from '@/assets/workflows/workflow-tryon-result.png';
 
 // Social Media Pack
 import socialProduct from '@/assets/products/serum-vitamin-c.jpg';
