@@ -18,6 +18,7 @@ const navItems = [
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
   { label: 'Templates', icon: LayoutTemplate, path: '/app/templates' },
   { label: 'Video', icon: Film, path: '/app/video' },
+  { label: 'Freestyle', icon: Wand2, path: '/app/freestyle' },
   { label: 'Library', icon: Image, path: '/app/library' },
 ];
 
