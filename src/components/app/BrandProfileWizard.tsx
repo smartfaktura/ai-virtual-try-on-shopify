@@ -345,7 +345,7 @@ export default function BrandProfileWizard() {
               {/* Color Feel */}
               <div className="space-y-3">
                 <label className="text-sm font-medium">Color Feel</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                   {COLOR_FEEL_OPTIONS.map(cf => (
                     <button
                       key={cf.value}
@@ -357,10 +357,14 @@ export default function BrandProfileWizard() {
                           : 'border-border/50 hover:border-border'
                       )}
                     >
-                      <div className={cn('h-2 w-full bg-gradient-to-r', cf.gradient)} />
-                      <div className="p-3 pt-2.5">
-                        <p className="text-sm font-medium">{cf.label}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{cf.description}</p>
+                      <div className="h-6 w-full flex">
+                        {cf.colors.map((color, i) => (
+                          <div key={i} className="flex-1 h-full" style={{ backgroundColor: color }} />
+                        ))}
+                      </div>
+                      <div className="p-3 pt-2">
+                        <p className="text-xs font-medium">{cf.label}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{cf.description}</p>
                       </div>
                     </button>
                   ))}
