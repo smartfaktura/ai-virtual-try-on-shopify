@@ -59,6 +59,11 @@ export default function Freestyle() {
       modelImageBase64 = await convertImageToBase64(selectedModel.previewUrl);
     }
 
+    let sceneImageBase64: string | undefined;
+    if (selectedScene) {
+      sceneImageBase64 = await convertImageToBase64(selectedScene.previewUrl);
+    }
+
     let finalPrompt = prompt;
     if (selectedScene) {
       finalPrompt = `${prompt}. Scene/Environment: ${selectedScene.description}`;
@@ -68,6 +73,7 @@ export default function Freestyle() {
       prompt: finalPrompt,
       sourceImage: sourceImage || undefined,
       modelImage: modelImageBase64,
+      sceneImage: sceneImageBase64,
       aspectRatio,
       imageCount,
       quality,

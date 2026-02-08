@@ -10,6 +10,7 @@ interface FreestyleRequest {
   prompt: string;
   sourceImage?: string; // Base64 data URL
   modelImage?: string; // Base64 data URL
+  sceneImage?: string; // Base64 data URL
   aspectRatio: string;
   imageCount: number;
   quality: "standard" | "high";
@@ -29,7 +30,8 @@ IMPORTANT PHOTOGRAPHY GUIDELINES:
 async function generateImage(
   prompt: string,
   images: Array<{ type: "image_url"; image_url: { url: string } }>,
-  apiKey: string
+  apiKey: string,
+  model: string
 ): Promise<string | null> {
   const maxRetries = 2;
 
@@ -49,7 +51,7 @@ async function generateImage(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image",
+            model,
             messages: [{ role: "user", content }],
             modalities: ["image", "text"],
           }),
@@ -136,17 +138,27 @@ serve(async (req) => {
     if (body.modelImage) {
       imageRefs.push({ type: "image_url", image_url: { url: body.modelImage } });
     }
+    if (body.sceneImage) {
+      imageRefs.push({ type: "image_url", image_url: { url: body.sceneImage } });
+    }
 
     // Add aspect ratio instruction
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
+
+    // Select model based on quality
+    const aiModel = body.quality === "high"
+      ? "google/gemini-3-pro-image-preview"
+      : "google/gemini-2.5-flash-image";
 
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
       hasSourceImage: !!body.sourceImage,
       hasModelImage: !!body.modelImage,
+      hasSceneImage: !!body.sceneImage,
       aspectRatio: body.aspectRatio,
       imageCount: body.imageCount,
       quality: body.quality,
+      model: aiModel,
       polished: body.polishPrompt,
     });
 
@@ -161,7 +173,7 @@ serve(async (req) => {
             ? aspectPrompt
             : `${aspectPrompt}\n\nVariation ${i + 1}: Create a different composition while keeping the same subject and style.`;
 
-        const imageUrl = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY);
+        const imageUrl = await generateImage(variationPrompt, imageRefs, LOVABLE_API_KEY, aiModel);
 
         if (imageUrl) {
           images.push(imageUrl);

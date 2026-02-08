@@ -6,6 +6,7 @@ interface FreestyleParams {
   prompt: string;
   sourceImage?: string;
   modelImage?: string;
+  sceneImage?: string;
   aspectRatio: string;
   imageCount: number;
   quality: 'standard' | 'high';
@@ -60,6 +61,11 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
         modelImageBase64 = await convertImageToBase64(params.modelImage);
       }
 
+      let sceneImageBase64: string | undefined;
+      if (params.sceneImage) {
+        sceneImageBase64 = await convertImageToBase64(params.sceneImage);
+      }
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-freestyle`, {
         method: 'POST',
         headers: {
@@ -70,6 +76,7 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
           prompt: params.prompt,
           sourceImage: sourceImageBase64,
           modelImage: modelImageBase64,
+          sceneImage: sceneImageBase64,
           aspectRatio: params.aspectRatio,
           imageCount: params.imageCount,
           quality: params.quality,
