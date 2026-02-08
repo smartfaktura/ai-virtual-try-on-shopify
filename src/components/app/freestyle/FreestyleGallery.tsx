@@ -96,7 +96,66 @@ function GeneratingCard({ progress = 0, className }: { progress?: number; classN
   );
 }
 
-function ImageCard({
+function ContentBlockedCard({
+  entry,
+  onDismiss,
+  onEditPrompt,
+  className,
+}: {
+  entry: BlockedEntry;
+  onDismiss?: (id: string) => void;
+  onEditPrompt?: (prompt: string) => void;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-4 px-6 py-8',
+        'border border-destructive/20 min-h-[300px] w-full h-full',
+        'bg-gradient-to-br from-destructive/5 via-destructive/10 to-destructive/5',
+        className,
+      )}
+    >
+      <div className="w-14 h-14 rounded-2xl bg-destructive/10 flex items-center justify-center">
+        <ShieldAlert className="w-7 h-7 text-destructive/60" />
+      </div>
+
+      <div className="text-center space-y-2 max-w-[260px]">
+        <h3 className="text-sm font-semibold text-foreground/80">Content Blocked</h3>
+        <p className="text-xs text-muted-foreground/70 leading-relaxed">{entry.reason}</p>
+      </div>
+
+      {entry.prompt && (
+        <p className="text-xs text-muted-foreground/40 italic text-center line-clamp-2 max-w-[240px]">
+          "{entry.prompt}"
+        </p>
+      )}
+
+      <div className="flex items-center gap-2 mt-1">
+        {onEditPrompt && (
+          <button
+            onClick={() => onEditPrompt(entry.prompt)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/60 text-foreground/70 hover:bg-muted transition-colors"
+          >
+            <Pencil className="w-3 h-3" />
+            Edit Prompt
+          </button>
+        )}
+        {onDismiss && (
+          <button
+            onClick={() => onDismiss(entry.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/40 text-muted-foreground/60 hover:bg-muted/60 transition-colors"
+          >
+            <X className="w-3 h-3" />
+            Dismiss
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
   img,
   idx,
   onDownload,
