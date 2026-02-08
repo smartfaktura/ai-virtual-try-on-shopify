@@ -277,6 +277,9 @@ export default function Generate() {
       setCurrentStep('brand-profile');
     } else if (activeWorkflow?.uses_tryon || isClothingProduct(product)) {
       setCurrentStep('mode');
+    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+      // Workflow config skips template — go straight to settings
+      setCurrentStep('settings');
     } else {
       setCurrentStep('template');
     }
