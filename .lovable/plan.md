@@ -1,53 +1,45 @@
 
-## Fix: Make Selected Model Actually Appear in Generated Images
 
-### The Problem
-When you select a model like Charlotte, her reference image is sent to the AI but the images arrive as an unlabeled flat array. The AI sees 3 images and a text prompt but doesn't know which image is the product, which is the person to replicate, and which is the scene. The text only says "Model reference: female, athletic build, European" -- which is a generic description, not an instruction to use that exact person.
+## Fix: Aspect Ratio Not Being Enforced in Generated Images
+
+### Root Cause
+
+The aspect ratio selected in the UI (e.g., 1:1) is only appended as a text instruction inside the prompt:
+```
+Output aspect ratio: 1:1
+```
+
+The AI model treats this as a *suggestion*, not a hard constraint. For fashion/portrait content, it naturally defaults to taller ratios like 4:3 or 3:4, ignoring the text instruction entirely.
 
 ### The Fix
 
-Update the **edge function** (`supabase/functions/generate-freestyle/index.ts`) to:
-
-**1. Label each image inline with text**
-
-Instead of passing images as:
-```text
-[text prompt] [image] [image] [image]
-```
-
-Structure the multimodal content array as:
-```text
-[text prompt]
-[text: "PRODUCT REFERENCE IMAGE:"] [product image]
-[text: "MODEL REFERENCE — replicate this exact person:"] [model image]
-[text: "SCENE/ENVIRONMENT REFERENCE:"] [scene image]
-```
-
-This way the AI knows exactly what each image represents.
-
-**2. Add strong face/identity fidelity instructions**
-
-Update the `polishUserPrompt` function's model section from the current generic:
-> "PORTRAIT QUALITY: Natural and realistic skin texture..."
-
-To an explicit identity-matching instruction:
-> "MODEL IDENTITY: The generated person MUST be the exact same person shown in the model reference image. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions. This is a specific real person -- do not generate a different person who merely shares the same gender or ethnicity."
-
-**3. Restructure the `generateImage` function**
-
-Change the signature to accept labeled image groups instead of a flat array, so each image is preceded by its role label in the content array sent to the AI.
+The AI Gateway supports a dedicated `image_config` parameter that enforces the aspect ratio at the API level -- guaranteeing the output dimensions match the user's selection.
 
 ### Technical Changes
 
 **File: `supabase/functions/generate-freestyle/index.ts`**
 
-- Modify `generateImage()` to accept a structured content array instead of separate prompt + images parameters
-- Build the content array in the request handler with interleaved text labels and images:
-  - `"PRODUCT/SOURCE REFERENCE IMAGE (reproduce this product exactly):"` before source image
-  - `"MODEL REFERENCE IMAGE (use this exact person's face, hair, body, and skin tone):"` before model image
-  - `"SCENE/ENVIRONMENT REFERENCE IMAGE (match this setting and lighting):"` before scene image
-- Update the polish function's model block to include strong identity-matching language
-- Add `modelContext` details (gender, build, ethnicity) directly into the model label for reinforcement
+1. **Pass `aspectRatio` into `generateImage()`** -- add it as a parameter so the function can include it in the API request body.
+
+2. **Add `image_config` to the API request body:**
+   ```json
+   {
+     "model": "...",
+     "messages": [...],
+     "modalities": ["image", "text"],
+     "image_config": {
+       "aspect_ratio": "1:1"
+     }
+   }
+   ```
+
+3. **Keep the text instruction as a secondary reinforcement** -- the text prompt will still mention the aspect ratio as a hint, but the `image_config` parameter will be the authoritative control.
+
+### What Changes
+- `generateImage()` function signature gets an `aspectRatio` parameter
+- The `fetch()` call body includes the new `image_config` field
+- Each call in the generation loop passes the selected aspect ratio through
 
 ### No Frontend Changes Needed
-The frontend already sends all the correct data. This is purely a backend prompt engineering fix in the edge function.
+The frontend already correctly sends the aspect ratio value. This is purely a backend fix to use the proper API parameter instead of relying on text instructions.
+
