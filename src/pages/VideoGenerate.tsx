@@ -407,8 +407,27 @@ export default function VideoGenerate() {
                     {r}
                   </button>
                 ))}
-              </div>
             </div>
+
+            {/* Loop Mode Toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-3">
+              <div className="flex items-center gap-2">
+                <Repeat className="w-4 h-4 text-primary" />
+                <div>
+                  <span className="text-sm font-medium">Loop Mode</span>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                    <Info className="w-3 h-3 inline" />
+                    Uses same image as start &amp; end frame for seamless looping
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={loopMode}
+                onCheckedChange={setLoopMode}
+                disabled={isGenerating}
+              />
+            </div>
+          </div>
           </div>
 
           {/* Generate Button */}
