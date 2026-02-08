@@ -28,12 +28,14 @@ const MOOD_OPTIONS = [
 
 // ── Color Feel options ──────────────────────────────────────────────────
 const COLOR_FEEL_OPTIONS = [
-  { value: 'warm-earthy', label: 'Warm & Earthy', description: 'Amber, terracotta, natural warmth', gradient: 'from-amber-200 to-orange-300' },
-  { value: 'cool-crisp', label: 'Cool & Crisp', description: 'Clean whites, blue undertones', gradient: 'from-sky-200 to-blue-300' },
-  { value: 'neutral-natural', label: 'Neutral & Natural', description: 'True-to-life, balanced colors', gradient: 'from-stone-200 to-gray-300' },
-  { value: 'rich-saturated', label: 'Rich & Saturated', description: 'Deep vivid colors, high impact', gradient: 'from-violet-300 to-rose-300' },
-  { value: 'muted-soft', label: 'Muted & Soft', description: 'Desaturated pastels, dreamy tones', gradient: 'from-pink-100 to-purple-100' },
-  { value: 'vibrant-bold', label: 'Vibrant & Bold', description: 'Bright, punchy, strong contrast', gradient: 'from-yellow-300 to-red-300' },
+  { value: 'warm-earthy', label: 'Warm & Earthy', description: 'Amber, terracotta, natural warmth', colors: ['#D4A574', '#C2784E', '#E8C4A0', '#A0522D'] },
+  { value: 'cool-crisp', label: 'Cool & Crisp', description: 'Clean whites, blue undertones', colors: ['#B8D4E8', '#7EB0D5', '#D6E8F4', '#5A9BC5'] },
+  { value: 'neutral-natural', label: 'Neutral & Natural', description: 'True-to-life, balanced colors', colors: ['#C8BEB4', '#A69E94', '#DDD8D2', '#8C857C'] },
+  { value: 'rich-saturated', label: 'Rich & Saturated', description: 'Deep vivid colors, high impact', colors: ['#8B3A8B', '#C44D4D', '#2E6B8A', '#D4A040'] },
+  { value: 'muted-soft', label: 'Muted & Soft', description: 'Desaturated pastels, dreamy tones', colors: ['#E8D5E0', '#D5D0E8', '#D0E0D5', '#E8E0D0'] },
+  { value: 'vibrant-bold', label: 'Vibrant & Bold', description: 'Bright, punchy, strong contrast', colors: ['#FF6B35', '#FFD23F', '#06D6A0', '#EF476F'] },
+  { value: 'monochrome', label: 'Monochrome', description: 'Black, white, and grayscale', colors: ['#1A1A1A', '#666666', '#AAAAAA', '#E5E5E5'] },
+  { value: 'pastel-dreamy', label: 'Pastel & Dreamy', description: 'Soft pinks, lavenders, baby blue', colors: ['#F4C2D7', '#C9B1E8', '#B5D8F0', '#F0E4A6'] },
 ];
 
 // ── Keyword suggestions ─────────────────────────────────────────────────
