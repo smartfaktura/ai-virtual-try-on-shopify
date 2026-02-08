@@ -141,11 +141,11 @@ export function BuyCreditsModal() {
             {recommendedPlan ? (
               <>
                 {/* Value-focused recommended plan card */}
-                <div className="p-3.5 rounded-lg border-2 border-primary bg-primary/5 space-y-3">
+                <div className="p-5 rounded-xl border-2 border-primary bg-primary/5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <Zap className="w-4 h-4 text-primary" />
-                      <span className="font-semibold text-sm">{recommendedPlan.name}</span>
+                      <span className="font-semibold text-base">{recommendedPlan.name}</span>
                     </div>
                     <Badge className="bg-primary text-primary-foreground text-[9px]">
                       {isFree ? 'Most Popular' : 'Recommended'}
