@@ -73,6 +73,10 @@ export function FreestyleSettingsChips({
           onOpenChange={onScenePopoverChange}
           onSelect={onSceneSelect}
         />
+        </div>
+
+        {/* Center group: Aspect ratio, Quality, Polish */}
+        <div className="flex items-center gap-1.5 flex-wrap justify-center">
 
         {/* Aspect Ratio */}
         <Popover open={aspectPopoverOpen} onOpenChange={setAspectPopoverOpen}>
