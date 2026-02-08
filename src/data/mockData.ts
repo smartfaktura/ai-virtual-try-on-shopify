@@ -1659,6 +1659,13 @@ export const poseCategoryLabels: Record<string, string> = {
   lifestyle: 'Lifestyle',
   editorial: 'Editorial',
   streetwear: 'Streetwear',
+  'clean-studio': 'Clean Studio',
+  surface: 'Surface & Texture',
+  'flat-lay': 'Flat Lay',
+  kitchen: 'Kitchen & Dining',
+  'living-space': 'Living Space',
+  bathroom: 'Bathroom & Vanity',
+  botanical: 'Botanical',
 };
 
 export const bodyTypeLabels: Record<string, string> = {
