@@ -71,7 +71,7 @@ export function BuyCreditsModal() {
             </div>
             <Badge variant="secondary" className="text-[10px]">{planConfig.name}</Badge>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 hasBonus ? 'bg-accent-foreground/60' : 'bg-primary'
