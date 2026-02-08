@@ -500,10 +500,10 @@ export default function BrandProfileWizard() {
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addCustomChip('do_not_rules', customRule, setCustomRule); } }}
                   />
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="h-8 px-2"
-                    onClick={() => addCustomChip('do_not_rules', customRule, setCustomRule)}
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </Button>
