@@ -6,6 +6,7 @@ interface FreestyleParams {
   prompt: string;
   sourceImage?: string;
   modelImage?: string;
+  sceneImage?: string;
   aspectRatio: string;
   imageCount: number;
   quality: 'standard' | 'high';
