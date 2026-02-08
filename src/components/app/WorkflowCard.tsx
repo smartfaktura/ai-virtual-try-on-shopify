@@ -38,6 +38,8 @@ export function WorkflowCard({ workflow, onSelect, isGenerating, autoPlay, onHov
           <Skeleton className="w-full h-full" />
         ) : workflow.name === 'Social Media Pack' ? (
           <SocialMediaGridThumbnail isActive={isActive} />
+        ) : workflow.name === 'Website Hero Set' ? (
+          <HeroBannerThumbnail isActive={isActive} />
         ) : scene ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isActive} />
         ) : (
