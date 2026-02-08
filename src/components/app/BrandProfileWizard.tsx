@@ -550,17 +550,17 @@ export default function BrandProfileWizard() {
         </Button>
 
         {step < STEPS.length - 1 ? (
-          <Button onClick={() => setStep(step + 1)} disabled={!canProceed} className="gap-1.5">
+          <Button type="submit" disabled={!canProceed} className="gap-1.5">
             Next
             <ArrowRight className="w-4 h-4" />
           </Button>
         ) : (
-          <Button onClick={handleSave} disabled={saving || !form.name.trim()} className="gap-1.5">
+          <Button type="submit" disabled={saving || !form.name.trim()} className="gap-1.5">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {isEditing ? 'Save Changes' : 'Create Profile'}
           </Button>
         )}
       </div>
-    </div>
+    </form>
   );
 }
