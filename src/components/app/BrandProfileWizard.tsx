@@ -383,6 +383,7 @@ export default function BrandProfileWizard() {
                     <button
                       type="button"
                       key={i}
+                      onClick={() => removeColor(i)}
                       className="group relative w-8 h-8 rounded-lg border border-border flex-shrink-0 transition-transform hover:scale-105"
                       style={{ backgroundColor: color }}
                       title={`${color} — click to remove`}
