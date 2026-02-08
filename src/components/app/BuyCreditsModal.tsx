@@ -165,13 +165,13 @@ export function BuyCreditsModal() {
 
                   {/* Feature unlock grid — the CRO focus */}
                   {isFree && (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2.5">
                       {featureUnlocks.map(({ icon: Icon, label, desc }) => (
-                        <div key={label} className="flex items-start gap-2 p-2 rounded-md bg-background/60">
-                          <Icon className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                        <div key={label} className="flex items-start gap-2 p-3 rounded-md bg-background/60">
+                          <Icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-xs font-medium leading-tight">{label}</p>
-                            <p className="text-[10px] text-muted-foreground leading-tight">{desc}</p>
+                            <p className="text-sm font-medium leading-tight">{label}</p>
+                            <p className="text-xs text-muted-foreground leading-tight">{desc}</p>
                           </div>
                         </div>
                       ))}
