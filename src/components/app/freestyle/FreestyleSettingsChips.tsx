@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Square, Smartphone, RectangleHorizontal, ChevronDown,
+  Square, RectangleHorizontal, ChevronDown,
   Minus, Plus, Wand2, Image as ImageIcon,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
