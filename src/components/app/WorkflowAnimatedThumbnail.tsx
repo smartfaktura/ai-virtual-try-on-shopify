@@ -16,7 +16,7 @@ interface Props {
 
 const DEFAULT_DURATION = 2200;
 
-export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATION }: Props) {
+export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATION, isActive = true }: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -28,10 +28,22 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
     }, 500);
   }, [steps.length]);
 
+  // Reset to first frame when deactivated
   useEffect(() => {
+    if (!isActive) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setActiveStep(0);
+        setIsTransitioning(false);
+      }, 300);
+    }
+  }, [isActive]);
+
+  useEffect(() => {
+    if (!isActive) return;
     const interval = setInterval(advance, stepDuration);
     return () => clearInterval(interval);
-  }, [advance, stepDuration]);
+  }, [advance, stepDuration, isActive]);
 
   const current = steps[activeStep];
 
