@@ -144,13 +144,20 @@ serve(async (req) => {
     // Add aspect ratio instruction
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
 
+    // Select model based on quality
+    const aiModel = body.quality === "high"
+      ? "google/gemini-3-pro-image-preview"
+      : "google/gemini-2.5-flash-image";
+
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
       hasSourceImage: !!body.sourceImage,
       hasModelImage: !!body.modelImage,
+      hasSceneImage: !!body.sceneImage,
       aspectRatio: body.aspectRatio,
       imageCount: body.imageCount,
       quality: body.quality,
+      model: aiModel,
       polished: body.polishPrompt,
     });
 
