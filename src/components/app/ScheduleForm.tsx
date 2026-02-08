@@ -32,7 +32,7 @@ export function ScheduleForm({ open, onClose }: ScheduleFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase.from('workflows').select('*').order('name');
       if (error) throw error;
-      return data as Workflow[];
+      return data as unknown as Workflow[];
     },
     enabled: open,
   });
