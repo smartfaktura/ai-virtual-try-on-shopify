@@ -382,7 +382,7 @@ export default function BrandProfileWizard() {
                       onChange={e => setNewColor(e.target.value)}
                       placeholder="#F5E6D3"
                       className="w-24 h-8 text-xs bg-background"
-                      onKeyDown={e => e.key === 'Enter' && addColor()}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addColor(); } }}
                     />
                     <Button variant="ghost" size="sm" className="h-8 px-2" onClick={addColor}>
                       <Plus className="w-3.5 h-3.5" />
