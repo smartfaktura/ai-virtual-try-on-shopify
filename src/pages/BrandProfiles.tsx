@@ -77,9 +77,9 @@ export default function BrandProfiles() {
 
         {/* Content */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-48 rounded-lg bg-muted animate-pulse" />
+          <div className="space-y-3">
+            {[1, 2].map(i => (
+              <div key={i} className="h-28 rounded-xl bg-muted/50 animate-pulse" />
             ))}
           </div>
         ) : profiles.length === 0 ? (
@@ -90,7 +90,7 @@ export default function BrandProfiles() {
             icon={<Palette className="w-10 h-10 text-muted-foreground" />}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-3">
             {profiles.map(profile => (
               <BrandProfileCard
                 key={profile.id}
