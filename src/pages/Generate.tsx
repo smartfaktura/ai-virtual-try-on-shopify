@@ -34,6 +34,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGenerateTryOn } from '@/hooks/useGenerateTryOn';
 import { useGenerateProduct } from '@/hooks/useGenerateProduct';
+import { useGenerateWorkflow } from '@/hooks/useGenerateWorkflow';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
 import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
@@ -53,7 +54,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
-import type { Workflow } from '@/pages/Workflows';
+import type { Workflow } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';
 
 type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
@@ -73,7 +74,7 @@ export default function Generate() {
       if (!workflowId) return null;
       const { data, error } = await supabase.from('workflows').select('*').eq('id', workflowId).single();
       if (error) return null;
-      return data as Workflow;
+      return data as unknown as Workflow;
     },
     enabled: !!workflowId,
   });
@@ -141,6 +142,17 @@ export default function Generate() {
 
   const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
   const { generate: generateProduct, isLoading: isProductGenerating, progress: productProgress } = useGenerateProduct();
+  const { generate: generateWorkflow, isLoading: isWorkflowGenerating, progress: workflowProgress } = useGenerateWorkflow();
+
+  // Workflow generation config shortcuts
+  const workflowConfig = activeWorkflow?.generation_config ?? null;
+  const hasWorkflowConfig = !!workflowConfig;
+  const variationStrategy = workflowConfig?.variation_strategy;
+  const uiConfig = workflowConfig?.ui_config;
+
+  // Selected variation indices for workflow generation
+  const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
+  const [workflowVariationLabels, setWorkflowVariationLabels] = useState<string[]>([]);
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
@@ -148,22 +160,35 @@ export default function Generate() {
       if (activeWorkflow.uses_tryon) {
         setGenerationMode('virtual-try-on');
       }
-      // Set aspect ratio from workflow recommendations
-      if (activeWorkflow.recommended_ratios?.length > 0) {
+      // Set aspect ratio from workflow config or recommendations
+      if (workflowConfig?.fixed_settings?.aspect_ratios?.length) {
+        const firstRatio = workflowConfig.fixed_settings.aspect_ratios[0] as AspectRatio;
+        if (['1:1', '4:5', '16:9'].includes(firstRatio)) {
+          setAspectRatio(firstRatio);
+        }
+      } else if (activeWorkflow.recommended_ratios?.length > 0) {
         const firstRatio = activeWorkflow.recommended_ratios[0] as AspectRatio;
         if (['1:1', '4:5', '16:9'].includes(firstRatio)) {
           setAspectRatio(firstRatio);
         }
       }
-      // Auto-select template from workflow's template_ids
-      if (activeWorkflow.template_ids?.length > 0) {
+      // Set quality from workflow config
+      if (workflowConfig?.fixed_settings?.quality) {
+        setQuality(workflowConfig.fixed_settings.quality as ImageQuality);
+      }
+      // Auto-select all variations by default
+      if (variationStrategy?.variations?.length) {
+        setSelectedVariationIndices(new Set(variationStrategy.variations.map((_, i) => i)));
+      }
+      // Auto-select template from workflow's template_ids (only if no config)
+      if (!workflowConfig && activeWorkflow.template_ids?.length > 0) {
         const matchingTemplate = mockTemplates.find(t =>
           activeWorkflow.template_ids.some(tid => t.templateId.includes(tid) || t.name.toLowerCase().includes(tid.replace(/-/g, ' ')))
         );
         if (matchingTemplate) setSelectedTemplate(matchingTemplate);
       }
     }
-  }, [activeWorkflow]);
+  }, [activeWorkflow, workflowConfig, variationStrategy]);
 
   // Apply brand profile settings when selected
   useEffect(() => {
@@ -252,6 +277,9 @@ export default function Generate() {
       setCurrentStep('brand-profile');
     } else if (activeWorkflow?.uses_tryon || isClothingProduct(product)) {
       setCurrentStep('mode');
+    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+      // Workflow config skips template — go straight to settings
+      setCurrentStep('settings');
     } else {
       setCurrentStep('template');
     }
@@ -260,6 +288,8 @@ export default function Generate() {
   const handleBrandProfileContinue = () => {
     if (activeWorkflow?.uses_tryon) {
       setCurrentStep('model');
+    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+      setCurrentStep('settings');
     } else if (isClothingProduct(selectedProduct)) {
       setCurrentStep('mode');
     } else {
@@ -302,6 +332,11 @@ export default function Generate() {
       if (!selectedModel || !selectedPose) { toast.error('Please select a model and pose first'); return; }
       setTryOnConfirmModalOpen(true); return;
     }
+    // Workflow-config path: skip template requirement
+    if (hasWorkflowConfig) {
+      handleWorkflowGenerate();
+      return;
+    }
     if (!selectedTemplate) { toast.error('Please select a template first'); return; }
     setConfirmModalOpen(true);
   };
@@ -329,6 +364,52 @@ export default function Generate() {
       setGeneratingProgress(100);
       setCurrentStep('results');
       toast.success(`Generated ${result.generatedCount} images! Used ${result.generatedCount * 3} credits.`);
+    } else setCurrentStep('settings');
+  };
+
+  const handleWorkflowGenerate = async () => {
+    if (!selectedProduct && !scratchUpload) return;
+    let sourceImageUrl = '';
+    let productData = { title: '', productType: '', description: '' };
+    if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
+      sourceImageUrl = scratchUpload.uploadedUrl;
+      productData = scratchUpload.productInfo;
+    } else if (selectedProduct) {
+      const selectedImageId = Array.from(selectedSourceImages)[0];
+      const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
+      sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
+      productData = { title: selectedProduct.title, productType: selectedProduct.productType, description: selectedProduct.description };
+    }
+    if (!sourceImageUrl) { toast.error('No source image available'); return; }
+    setCurrentStep('generating');
+    setGeneratingProgress(0);
+    const result = await generateWorkflow({
+      workflowId: activeWorkflow!.id,
+      product: { ...productData, imageUrl: sourceImageUrl },
+      brandProfile: selectedBrandProfile ? {
+        tone: selectedBrandProfile.tone,
+        background_style: selectedBrandProfile.background_style,
+        lighting_style: selectedBrandProfile.lighting_style,
+        color_temperature: selectedBrandProfile.color_temperature,
+        brand_keywords: selectedBrandProfile.brand_keywords,
+        color_palette: selectedBrandProfile.color_palette,
+        target_audience: selectedBrandProfile.target_audience,
+        do_not_rules: selectedBrandProfile.do_not_rules,
+        composition_bias: selectedBrandProfile.composition_bias,
+        preferred_scenes: selectedBrandProfile.preferred_scenes,
+        photography_reference: selectedBrandProfile.photography_reference,
+      } : undefined,
+      selectedVariations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+      quality,
+    });
+    if (result && result.images.length > 0) {
+      setGeneratedImages(result.images);
+      setWorkflowVariationLabels(result.variations?.map(v => v.label) || []);
+      setGeneratingProgress(100);
+      setCurrentStep('results');
+      const creditUsed = result.generatedCount * (quality === 'high' ? 2 : 1);
+      deductCredits(creditUsed);
+      toast.success(`Generated ${result.generatedCount} ${activeWorkflow?.name} images!`);
     } else setCurrentStep('settings');
   };
 
@@ -397,6 +478,10 @@ export default function Generate() {
       const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, pose: 4, settings: 5, generating: 6, results: 6 };
       return map[currentStep] || 1;
     }
+    if (hasWorkflowConfig && uiConfig?.skip_template) {
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, settings: 3, generating: 4, results: 4 };
+      return map[currentStep] || 1;
+    }
     const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, template: 3, settings: 4, generating: 5, results: 5 };
     return map[currentStep] || 1;
   };
@@ -409,10 +494,14 @@ export default function Generate() {
         { name: 'Model' }, { name: 'Pose' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
+    if (hasWorkflowConfig && uiConfig?.skip_template) {
+      return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Settings' }, { name: 'Results' }];
+    }
     return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Template' }, { name: 'Settings' }, { name: 'Results' }];
   };
 
-  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : parseInt(imageCount) * (quality === 'high' ? 10 : 4);
+  const workflowImageCount = hasWorkflowConfig ? variationStrategy!.variations.length : parseInt(imageCount);
+  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 2 : 1) : parseInt(imageCount) * (quality === 'high' ? 10 : 4));
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 
@@ -496,6 +585,8 @@ export default function Generate() {
                     setScratchUpload({ ...scratchUpload, uploadedUrl });
                     if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
+                    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+                      setCurrentStep('settings');
                     } else {
                       const isClothing = ['leggings', 'hoodie', 't-shirt', 'sports bra', 'jacket', 'tank top', 'joggers'].some(kw => scratchUpload.productInfo.productType.toLowerCase().includes(kw));
                       setCurrentStep(isClothing ? 'mode' : 'template');
@@ -532,6 +623,8 @@ export default function Generate() {
                     setCurrentStep('brand-profile');
                   } else if (isClothingProduct(product)) {
                     setCurrentStep('mode');
+                  } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+                    setCurrentStep('settings');
                   } else {
                     setCurrentStep('template');
                   }
@@ -676,7 +769,8 @@ export default function Generate() {
         )}
 
         {/* Template Selection */}
-        {(currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && (selectedProduct || scratchUpload) && (
+        {/* Template Selection — only for non-workflow or workflows without config */}
+        {!hasWorkflowConfig && (currentStep === 'template' || (currentStep === 'settings' && generationMode === 'product-only')) && (selectedProduct || scratchUpload) && (
           <>
             {/* Selected Product Card */}
             <Card><CardContent className="p-5 space-y-3">
@@ -930,7 +1024,136 @@ export default function Generate() {
           </>
         )}
 
-        {/* Settings for Virtual Try-On */}
+        {/* Workflow-Specific Settings */}
+        {hasWorkflowConfig && currentStep === 'settings' && generationMode !== 'virtual-try-on' && (selectedProduct || scratchUpload) && (
+          <div className="space-y-4">
+            {/* Product summary */}
+            <Card><CardContent className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{sourceType === 'scratch' ? 'Uploaded Image' : 'Selected Product'}</span>
+                <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                  <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
+                  <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? scratchUpload?.productInfo.productType : `${selectedProduct?.vendor} • ${selectedProduct?.productType}`}</p>
+                </div>
+              </div>
+              {selectedBrandProfile && (
+                <div className="pt-2 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Palette className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">{selectedBrandProfile.name}</span>
+                      <Badge variant="secondary" className="text-[10px] capitalize">{selectedBrandProfile.tone}</Badge>
+                    </div>
+                    <Button variant="link" size="sm" onClick={() => setCurrentStep('brand-profile')}>Change</Button>
+                  </div>
+                </div>
+              )}
+            </CardContent></Card>
+
+            {/* Variation Strategy Preview */}
+            <Card><CardContent className="p-5 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold">What You'll Get</h3>
+                <p className="text-sm text-muted-foreground">
+                  {variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
+                   variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
+                   variationStrategy?.type === 'layout' ? 'Different layout compositions' :
+                   variationStrategy?.type === 'paired' ? 'Before and after comparison' :
+                   variationStrategy?.type === 'angle' ? 'Multiple angles and perspectives' :
+                   variationStrategy?.type === 'mood' ? 'Different mood and energy styles' :
+                   variationStrategy?.type === 'surface' ? 'Different surface and styling options' :
+                   variationStrategy?.type === 'scene' ? 'Different lifestyle scenes' :
+                   'Workflow-specific variations'}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {variationStrategy?.variations.map((v, i) => (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      setSelectedVariationIndices(prev => {
+                        const next = new Set(prev);
+                        if (next.has(i)) { if (next.size > 1) next.delete(i); }
+                        else next.add(i);
+                        return next;
+                      });
+                    }}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedVariationIndices.has(i)
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{v.label}</p>
+                      {v.aspect_ratio && <Badge variant="outline" className="text-[10px]">{v.aspect_ratio}</Badge>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{v.instruction}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Click to toggle variations. {selectedVariationIndices.size} of {variationStrategy?.variations.length} selected.
+              </p>
+            </CardContent></Card>
+
+            {/* Quality & Settings */}
+            <Card><CardContent className="p-5 space-y-4">
+              <h3 className="text-base font-semibold">Generation Settings</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Quality</Label>
+                  <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard (1 credit/img)</SelectItem>
+                      <SelectItem value="high">High (2 credits/img)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Aspect Ratio</Label>
+                  {uiConfig?.lock_aspect_ratio ? (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{workflowConfig?.fixed_settings?.aspect_ratios?.[0] || aspectRatio}</Badge>
+                      <span className="text-xs text-muted-foreground">Locked by workflow</span>
+                    </div>
+                  ) : variationStrategy?.type === 'multi-ratio' ? (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">Multiple</Badge>
+                      <span className="text-xs text-muted-foreground">Each variation uses its own ratio</span>
+                    </div>
+                  ) : (
+                    <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                  )}
+                </div>
+              </div>
+            </CardContent></Card>
+
+            {/* Cost summary */}
+            <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">Total: {selectedVariationIndices.size * (quality === 'high' ? 2 : 1)} credits</p>
+                <p className="text-xs text-muted-foreground">{selectedVariationIndices.size} variation{selectedVariationIndices.size !== 1 ? 's' : ''} × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''}</p>
+              </div>
+              <p className="text-sm">{balance} credits available</p>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'))}>Back</Button>
+              <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0}>
+                Generate {selectedVariationIndices.size} {activeWorkflow?.name} Images
+              </Button>
+            </div>
+          </div>
+        )}
+
         {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (
           <div className="space-y-4">
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} />
@@ -995,13 +1218,21 @@ export default function Generate() {
               {generationMode === 'virtual-try-on' ? <User className="w-7 h-7 text-primary" /> : <Image className="w-7 h-7 text-primary" />}
             </div>
             <div className="text-center">
-              <h2 className="text-lg font-semibold">{generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}</h2>
+              <h2 className="text-lg font-semibold">
+                {generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' :
+                 hasWorkflowConfig ? `Creating ${activeWorkflow?.name}...` : 'Creating Your Images...'}
+              </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` : `Creating ${imageCount} images of "${selectedProduct?.title}"`}
+                {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
+                 hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variations of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
+                 `Creating ${imageCount} images of "${selectedProduct?.title}"`}
               </p>
             </div>
             <div className="w-full max-w-md">
-              <Progress value={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : productProgress, 100)} className="h-2" />
+              <Progress value={Math.min(
+                generationMode === 'virtual-try-on' ? tryOnProgress :
+                hasWorkflowConfig ? workflowProgress : productProgress, 100
+              )} className="h-2" />
             </div>
             {/* Team member working message */}
             <div className="flex items-center gap-2.5">
@@ -1013,10 +1244,14 @@ export default function Generate() {
               <p className="text-sm text-muted-foreground italic">
                 {generationMode === 'virtual-try-on'
                   ? 'Zara is styling the look...'
+                  : hasWorkflowConfig ? `Sophia is crafting your ${activeWorkflow?.name?.toLowerCase()}...`
                   : 'Sophia is setting up the lighting...'}
               </p>
             </div>
-            <p className="text-xs text-muted-foreground">{generationMode === 'virtual-try-on' ? '20-30 seconds' : '10-15 seconds'}</p>
+            <p className="text-xs text-muted-foreground">
+              {generationMode === 'virtual-try-on' ? '20-30 seconds' :
+               hasWorkflowConfig ? `${selectedVariationIndices.size * 10}-${selectedVariationIndices.size * 15} seconds` : '10-15 seconds'}
+            </p>
             <Button variant="link" onClick={handleCancelGeneration}><X className="w-4 h-4 mr-1" /> Cancel</Button>
           </CardContent></Card>
         )}
@@ -1053,6 +1288,12 @@ export default function Generate() {
                 {generatedImages.map((url, index) => (
                   <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
                     <img src={url} alt={`Generated ${index + 1}`} className="w-full aspect-square object-cover" onClick={() => toggleImageSelection(index)} />
+                    {/* Variation label overlay */}
+                    {workflowVariationLabels[index] && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-6">
+                        <p className="text-white text-xs font-medium">{workflowVariationLabels[index]}</p>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2" onClick={() => toggleImageSelection(index)}>
                       <button onClick={e => { e.stopPropagation(); handleImageClick(index); }} className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white" title="View full size">
                         <Maximize2 className="w-4 h-4" />
@@ -1083,12 +1324,14 @@ export default function Generate() {
               </div>
             </CardContent></Card>
 
-            {(selectedTemplate || generationMode === 'virtual-try-on') && (
+            {(selectedTemplate || generationMode === 'virtual-try-on' || hasWorkflowConfig) && (
               <Card><CardContent className="p-5 space-y-2">
                 <h3 className="text-sm font-semibold">Generation Summary</h3>
                 <div className="p-3 bg-muted rounded-lg font-mono text-sm">
                   {generationMode === 'virtual-try-on'
                     ? `Virtual Try-On: ${selectedModel?.name} wearing ${scratchUpload?.productInfo.title || selectedProduct?.title} in ${selectedPose?.name} pose`
+                    : hasWorkflowConfig
+                    ? `${activeWorkflow?.name}: ${workflowVariationLabels.join(' → ')} for "${scratchUpload?.productInfo.title || selectedProduct?.title}"`
                     : `${selectedTemplate?.promptBlueprint.sceneDescription}. ${scratchUpload?.productInfo.title || selectedProduct?.title}. ${selectedTemplate?.promptBlueprint.lighting}.`
                   }
                 </div>

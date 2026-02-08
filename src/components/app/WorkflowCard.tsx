@@ -8,7 +8,7 @@ import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThum
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import { SocialMediaGridThumbnail } from '@/components/app/SocialMediaGridThumbnail';
 import { HeroBannerThumbnail } from '@/components/app/HeroBannerThumbnail';
-import type { Workflow } from '@/pages/Workflows';
+import type { Workflow } from '@/types/workflow';
 
 import imgFallback from '@/assets/templates/universal-clean.jpg';
 

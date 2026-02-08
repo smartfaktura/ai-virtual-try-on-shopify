@@ -123,7 +123,7 @@ export default function Dashboard() {
         .select('*')
         .order('name');
       if (error) throw error;
-      return data as Workflow[];
+      return data as unknown as Workflow[];
     },
     enabled: !!user,
   });
