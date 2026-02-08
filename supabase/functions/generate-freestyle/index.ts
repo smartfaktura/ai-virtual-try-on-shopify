@@ -6,6 +6,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+interface BrandProfileContext {
+  tone: string;
+  lightingStyle: string;
+  backgroundStyle: string;
+  colorTemperature: string;
+  compositionBias: string;
+  doNotRules: string[];
+}
+
 interface FreestyleRequest {
   prompt: string;
   sourceImage?: string;
@@ -17,6 +26,8 @@ interface FreestyleRequest {
   polishPrompt: boolean;
   modelContext?: string;
   stylePresets?: string[];
+  brandProfile?: BrandProfileContext;
+  negatives?: string[];
 }
 
 // ── Negative prompt (always appended when polish is on) ───────────────────
