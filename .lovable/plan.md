@@ -1,167 +1,136 @@
 
 
-# Advanced Brand Profiles with Wizard Setup
+# Simplified Brand Profile Wizard -- Modern, Clean Redesign
 
-## Overview
+## Problem with Current Wizard
 
-Replace the current popup-based brand profile form with a full-page, step-by-step wizard. Each step focuses on one creative dimension, includes optimized prompt instructions that explain how the value impacts generation, and saves to the user's account. The brand profile data then feeds directly into all generation endpoints (Freestyle, Product, Try-On) as structured prompt context.
+The current 6-step wizard is overloaded with technical photography jargon (composition bias, lighting style, color temperature). It forces choices that lock every future generation into the same look -- e.g., always "centered" composition, always "studio flat" lighting. This is counterproductive for a tool that should produce varied, brand-consistent images. The visual design also feels form-heavy and outdated compared to the rest of the app's luxury-minimal aesthetic.
 
----
+## New Approach: 3 Simple Steps
 
-## Current State
+Collapse from 6 steps to 3 easy steps. Focus on **brand feel** rather than technical camera settings. Remove composition bias and single-choice lighting/background (those belong at generation time, not brand level). Keep the wizard on the same page (`/app/brand-profiles/new` and `/:id/edit`) with the same styling system.
 
-- Brand profiles are created/edited via a modal dialog (`BrandProfileForm`) with all fields stacked in a single scrollable form
-- Fields: name, description, tone, lighting style, background style, color temperature, composition bias, do-not rules
-- Already integrated with Freestyle generation but not deeply with Generate (product/try-on) edge functions
-- The database table `brand_profiles` already has the correct columns and RLS policies
+### Step 1: Your Brand
+- Brand name (required)
+- Short description (optional, 1-2 sentences)
+- Target audience (optional, short text)
 
----
+### Step 2: Visual Style
+- **Mood** -- visual card grid (replaces "tone"), same options but presented as large clickable mood cards with descriptions: Luxury, Clean, Bold, Minimal, Playful
+- **Color Feel** -- new simplified selector replacing color temperature + color palette. Options: `Warm & Earthy`, `Cool & Crisp`, `Neutral & Natural`, `Rich & Saturated`, `Muted & Soft`, `Vibrant & Bold`. Each maps to prompt text behind the scenes. Users can optionally add brand hex colors below.
+- **Brand Keywords** -- chip picker with suggestions (sustainable, handcrafted, premium, etc.)
 
-## What Changes
+### Step 3: Avoid These
+- **Do-Not Rules** -- chip-style selector with common suggestions + custom input
+- Combined "Review" section at the bottom showing the live prompt impact preview before saving
 
-### 1. New Database Columns (Migration)
+### Removed Fields
+- **Composition Bias** -- removed entirely (bad to lock all shots to same composition)
+- **Lighting Style** as a single forced choice -- removed (the AI should pick lighting contextually)
+- **Background Style** as a single forced choice -- removed (varies per generation)
+- **Color Temperature** -- replaced by the friendlier "Color Feel" selector
+- **Photography Reference** -- removed (niche, rarely used)
+- **Preferred Scenes** -- removed from brand profile (belongs at generation time)
+- **Separate Review step** -- integrated into Step 3 bottom section
 
-Add richer fields to `brand_profiles` to support more detailed prompt generation:
+### Database Impact
+- The existing columns remain (backward compatible) but the wizard simply stops writing to `composition_bias`, `lighting_style`, `background_style`, `preferred_scenes`, `photography_reference` -- they keep their defaults
+- No new migration needed. The new `color_feel` concept maps to the existing `color_temperature` column (reused with new values)
 
-- `color_palette text[] DEFAULT '{}'` -- hex codes or named colors (e.g., `['#F5E6D3', '#2C3E50', 'ivory']`)
-- `brand_keywords text[] DEFAULT '{}'` -- words that describe the brand DNA (e.g., `['sustainable', 'handcrafted', 'heritage']`)
-- `preferred_scenes text[] DEFAULT '{}'` -- scene/environment preferences (e.g., `['minimalist studio', 'outdoor natural light']`)
-- `target_audience text DEFAULT ''` -- who the brand targets (e.g., `'women 25-40, eco-conscious'`)
-- `photography_reference text DEFAULT ''` -- free-text field for photographic style reference notes
-
-### 2. Full-Page Wizard (replaces modal)
-
-Create a new route `/app/brand-profiles/new` (and `/app/brand-profiles/:id/edit`) that renders a dedicated wizard page with a stepped progress bar.
-
-**Wizard Steps:**
-
-| Step | Title | Fields | Prompt Impact Shown |
-|------|-------|--------|-------------------|
-| 1 | Brand Identity | Name, Description, Target Audience | "These anchor every prompt so the AI knows your brand's personality" |
-| 2 | Visual Tone | Tone selector, Brand Keywords | Shows live preview text: e.g., selecting "luxury" displays "This adds: premium, sophisticated, elegant with refined details" |
-| 3 | Lighting and Color | Lighting Style, Color Temperature, Color Palette | Shows: "Prompt will include: Soft diffused lighting, warm color temperature, palette: ivory, sage, gold" |
-| 4 | Composition and Background | Background Style, Composition Bias, Preferred Scenes | Shows: "Prompt will include: studio background, centered composition" |
-| 5 | Exclusion Rules | Do-Not Rules (chips with add custom), Photography Reference notes | Shows: "These are injected as negative prompts in every generation" |
-| 6 | Review and Save | Summary card showing all selections with edit buttons per section | Full prompt preview showing exactly what text gets injected |
-
-Each step will have:
-- Clear heading with a one-line explanation
-- A small "Prompt Impact" info box at the bottom showing exactly what text will be injected into the AI prompt based on current selections
-- Back / Continue navigation buttons
-- Progress indicator at the top
-
-### 3. Brand Profile List Page Updates
-
-- Remove the dialog-based form trigger
-- "Create Profile" button now navigates to `/app/brand-profiles/new`
-- "Edit" button on each card navigates to `/app/brand-profiles/:id/edit`
-- Update `BrandProfileCard` to show new fields (keywords as tags, color palette as color dots)
-
-### 4. Edge Function Prompt Enrichment
-
-Update `generate-freestyle/index.ts` and `generate-product/index.ts` to use the new fields:
-
-- `brand_keywords` get appended as: `"Brand DNA keywords: sustainable, handcrafted, heritage"`
-- `color_palette` becomes: `"Preferred color palette: ivory, sage, gold"`
-- `preferred_scenes` becomes: `"Preferred environments: minimalist studio, outdoor natural light"`
-- `target_audience` becomes context for model and scene selection guidance
-- `photography_reference` gets injected as supplementary creative direction
-
-### 5. Integration with Generate Page
-
-The existing Generate page already has brand profile selection (step 2). Enhance it to:
-- Pass the new extended fields (`brand_keywords`, `color_palette`, `preferred_scenes`, `target_audience`, `photography_reference`) alongside existing fields to edge functions
-- Show a richer summary when a brand profile is selected (including keywords and palette)
+### Prompt Builder Updates
+- `brandPromptBuilder.ts` updated to handle the new "Color Feel" values and generate richer, less restrictive prompt text
+- Instead of "Lighting: studio flat", the builder produces guidance like "Prefer warm, earthy tones with natural warmth" -- giving the AI creative freedom while maintaining brand feel
 
 ---
 
-## File Changes
+## Detailed File Changes
 
-### New Files
-- `src/components/app/BrandProfileWizard.tsx` -- The multi-step wizard component with all 6 steps, progress bar, and prompt-impact previews
-- `src/lib/brandPromptBuilder.ts` -- Shared utility that takes a brand profile object and returns structured prompt text (used by both the wizard preview and edge functions)
+### `src/components/app/BrandProfileWizard.tsx` -- Full Rewrite
+- 3 steps instead of 6: "Your Brand", "Visual Style", "Avoid These"
+- Visual mood card grid for tone selection (large cards with icon/description, not small text chips)
+- Color Feel selector as a 2x3 grid of visual cards with color gradient previews
+- Inline prompt impact preview at the bottom of Step 3 (no separate review step)
+- Sleek progress indicator (3 dots/segments instead of 6 chips)
+- Same `max-w-2xl mx-auto` layout, same card styling
+- Save button on Step 3 with inline prompt preview above it
 
-### Modified Files
-- `src/pages/BrandProfiles.tsx` -- Remove dialog state, navigate to wizard route instead
-- `src/components/app/BrandProfileCard.tsx` -- Show new fields (keywords, palette colors), edit navigates to wizard
-- `src/App.tsx` -- Add routes for `/app/brand-profiles/new` and `/app/brand-profiles/:id/edit`
-- `src/components/app/BrandProfileForm.tsx` -- Keep for backward compat but deprecate (wizard replaces it)
-- `supabase/functions/generate-freestyle/index.ts` -- Extend `BrandProfileContext` interface and `polishUserPrompt` to use new fields
-- `supabase/functions/generate-product/index.ts` -- Accept and use brand profile data in `buildPrompt`
-- `src/hooks/useGenerateFreestyle.ts` -- Extend `BrandProfileContext` interface with new fields
-- `src/pages/Freestyle.tsx` -- Pass new brand profile fields to generation
-- `src/pages/Generate.tsx` -- Pass new brand profile fields to product generation
-- `src/components/app/freestyle/BrandProfileChip.tsx` -- Show richer info (keywords, palette) in the popover
+### `src/lib/brandPromptBuilder.ts` -- Update
+- Add `COLOR_FEEL_DESCRIPTIONS` mapping (e.g., `'warm-earthy' -> 'warm earth tones, natural warmth, amber and terracotta accents'`)
+- Simplify `buildBrandPrompt` to not produce overly rigid instructions for composition/background
+- Remove composition and lighting from the style guide output (they were making all images look the same)
+- Keep the individual step impact functions but simplify them to match 3 steps
 
-### Database Migration
-```sql
-ALTER TABLE brand_profiles
-  ADD COLUMN IF NOT EXISTS color_palette text[] NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS brand_keywords text[] NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS preferred_scenes text[] NOT NULL DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS target_audience text NOT NULL DEFAULT '',
-  ADD COLUMN IF NOT EXISTS photography_reference text NOT NULL DEFAULT '';
-```
+### `src/components/app/BrandProfileCard.tsx` -- Update
+- Remove composition bias and lighting display rows
+- Show Color Feel as a styled label instead
+- Keep color palette dots and keyword tags
 
----
+### `src/components/app/freestyle/BrandProfileChip.tsx` -- Minor update
+- Remove composition/lighting from the popover summary
+- Show Color Feel instead
 
-## Wizard UX Detail
+### `supabase/functions/generate-freestyle/index.ts` -- Update
+- Update `BrandProfileContext` to use the new Color Feel field
+- Remove rigid composition/lighting injection
+- Use the friendlier prompt text from the updated builder logic
 
-Each wizard step renders inside a centered card (max-width ~640px) with:
-
-```text
-+----------------------------------------------+
-|  [=====-----]  Step 2 of 6: Visual Tone      |
-+----------------------------------------------+
-|                                               |
-|  What tone defines your brand?                |
-|  This sets the overall visual personality.    |
-|                                               |
-|  [luxury] [clean] [bold] [minimal] [playful]  |
-|                                               |
-|  Brand Keywords (optional)                    |
-|  [sustainable] [handcrafted] [+Add]           |
-|                                               |
-|  +------------------------------------------+|
-|  | PROMPT IMPACT                             ||
-|  | Visual tone: luxury                       ||
-|  | Brand DNA: sustainable, handcrafted       ||
-|  +------------------------------------------+|
-|                                               |
-|  [< Back]                      [Continue >]  |
-+----------------------------------------------+
-```
-
-The "Review and Save" step shows the full assembled prompt text so the user can see exactly what the AI will receive. Each section has an "Edit" button to jump back to that step.
+### `supabase/functions/generate-product/index.ts` -- Update
+- Same changes as freestyle: use Color Feel, remove rigid composition instructions
 
 ---
 
-## Prompt Builder Logic (`brandPromptBuilder.ts`)
+## Visual Design for New Wizard
 
-This shared function generates the exact prompt text from a brand profile:
+**Step indicator**: 3 minimal dots with connecting lines at the top, active dot is filled primary color.
 
-```
-Input: BrandProfile object
-Output: {
-  styleGuide: string,    // "BRAND STYLE GUIDE:\nVisual tone: luxury..."
-  negatives: string[],   // merged do-not rules
-  summary: string        // human-readable summary for UI display
-}
-```
+**Mood cards (Step 2)**: 
+- 5 cards in a responsive grid (2-3 columns)
+- Each card: ~120px tall, rounded-xl, subtle border
+- Selected state: primary border + light primary background tint
+- Contains: mood name (capitalized), 1-line description in muted text
 
-This is used in:
-1. The wizard "Review" step to show the user what gets injected
-2. Each wizard step's "Prompt Impact" preview
-3. Edge functions to build the actual prompt
+**Color Feel cards (Step 2)**:
+- 6 cards in a 2x3 grid
+- Each card: rounded-lg, left border with gradient matching the color feel
+- Contains: name + short description
+- Selected state: primary ring + tinted background
+
+**Prompt Impact (Step 3 bottom)**:
+- Collapsible section titled "What the AI will see"
+- Shows the assembled brand style guide text
+- Styled with the existing `border-primary/20 bg-primary/5` pattern
 
 ---
 
-## Summary of Deliverables
+## Technical Details
 
-1. Database migration adding 5 new columns to `brand_profiles`
-2. Full-page wizard with 6 steps, prompt-impact previews, and review screen
-3. Shared prompt builder utility for consistent prompt generation
-4. Updated edge functions using richer brand context
-5. Updated brand profile cards showing new data
-6. Route updates for wizard navigation
+### Color Feel Mapping
+
+| UI Label | Stored Value | Prompt Text |
+|----------|-------------|-------------|
+| Warm and Earthy | warm-earthy | warm earth tones, natural warmth, amber and terracotta accents |
+| Cool and Crisp | cool-crisp | cool tones, clean whites, blue and silver undertones |
+| Neutral and Natural | neutral-natural | true-to-life colors, balanced exposure, no heavy grading |
+| Rich and Saturated | rich-saturated | deep saturated colors, bold and vivid palette, high color impact |
+| Muted and Soft | muted-soft | desaturated pastels, soft muted tones, dreamy and gentle palette |
+| Vibrant and Bold | vibrant-bold | high energy colors, bright and punchy, strong contrast |
+
+These values are stored in the existing `color_temperature` column (repurposed with richer values).
+
+### Brand Palette (Optional Add-on in Step 2)
+
+Below the Color Feel cards, an optional "Brand Colors" section lets users add hex colors. These are stored in the existing `color_palette` array column. The prompt builder appends them as: `"Brand accent colors: #F5E6D3, #2C3E50"`.
+
+### Files Summary
+
+| File | Action |
+|------|--------|
+| `src/components/app/BrandProfileWizard.tsx` | Rewrite (3-step simplified wizard) |
+| `src/lib/brandPromptBuilder.ts` | Update (Color Feel mapping, remove rigid fields) |
+| `src/components/app/BrandProfileCard.tsx` | Update (remove composition/lighting rows) |
+| `src/components/app/freestyle/BrandProfileChip.tsx` | Update (simplified summary) |
+| `supabase/functions/generate-freestyle/index.ts` | Update (new brand context shape) |
+| `supabase/functions/generate-product/index.ts` | Update (new brand context shape) |
+
+No database migration needed -- reuses existing columns with new values.
 
