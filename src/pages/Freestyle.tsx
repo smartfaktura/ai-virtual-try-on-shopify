@@ -143,7 +143,12 @@ export default function Freestyle() {
     <div className="relative h-[calc(100vh-3.5rem)] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
-      {hasImages ? (
+      {showLoading ? (
+        /* Loading State */
+        <div className="flex-1 h-full flex flex-col items-center justify-center">
+          <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
+        </div>
+      ) : hasImages ? (
         <>
           {/* Gallery — full viewport, scrollable, with bottom padding for floating bar */}
           <div className="h-full overflow-y-auto pb-52">
