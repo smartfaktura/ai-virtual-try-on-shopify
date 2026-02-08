@@ -87,14 +87,14 @@ export function BulkSettingsCard({
               <RadioGroupItem value="product-only" id="mode-product" />
               <div>
                 <Label htmlFor="mode-product">Product Photography</Label>
-                <p className="text-xs text-muted-foreground">Use templates for product-focused shots (~1 credit/image)</p>
+                <p className="text-xs text-muted-foreground">Use templates for product-focused shots (~4 credits/image)</p>
               </div>
             </div>
             <div className="flex items-start space-x-2">
               <RadioGroupItem value="virtual-try-on" id="mode-tryon" disabled={!allClothing} />
               <div>
                 <Label htmlFor="mode-tryon" className={!allClothing ? 'text-muted-foreground' : ''}>Virtual Try-On</Label>
-                <p className="text-xs text-muted-foreground">Place clothing on AI models (~3 credits/image)</p>
+                <p className="text-xs text-muted-foreground">Place clothing on AI models (~8 credits/image)</p>
               </div>
             </div>
           </RadioGroup>

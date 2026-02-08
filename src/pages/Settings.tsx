@@ -50,7 +50,7 @@ export default function Settings() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const currentPlanId = 'growth';
 
-  const creditsTotal = 1000;
+  const creditsTotal = 2500;
   const creditsPercentage = (balance / creditsTotal) * 100;
 
   const handleSave = () => toast.success('Settings saved successfully!');
@@ -242,8 +242,8 @@ export default function Settings() {
               <Select value={defaultQuality} onValueChange={v => setDefaultQuality(v as 'standard' | 'high')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Standard (1 credit/image)</SelectItem>
-                  <SelectItem value="high">High (2 credits/image)</SelectItem>
+                  <SelectItem value="standard">Standard (4 credits/image)</SelectItem>
+                  <SelectItem value="high">High (10 credits/image)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -265,7 +265,7 @@ export default function Settings() {
                     <h3 className="text-base font-semibold">Current Plan</h3>
                     <Badge className="bg-primary/10 text-primary">Growth</Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">500 credits/month • Renews Feb 15, 2026</p>
+                  <p className="text-sm text-muted-foreground">2,500 credits/month • Renews Feb 15, 2026</p>
                 </div>
               </div>
               <Separator />

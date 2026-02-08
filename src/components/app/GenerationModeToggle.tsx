@@ -18,8 +18,8 @@ interface ModeOption {
 }
 
 const modeOptions: ModeOption[] = [
-  { id: 'product-only', icon: ImageIcon, title: 'Product Shot', subtitle: 'Focus on the product itself', creditCost: '1-2 credits/image', useCases: ['Detail shots', 'Flat lay', 'Studio backgrounds', 'E-commerce listings'] },
-  { id: 'virtual-try-on', icon: User, title: 'Virtual Try-On', subtitle: 'See it on a model', creditCost: '3 credits/image', useCases: ['Lookbooks', 'Social media', 'Lifestyle shots', 'Model photography'], badgeText: 'AI-Powered' },
+  { id: 'product-only', icon: ImageIcon, title: 'Product Shot', subtitle: 'Focus on the product itself', creditCost: '4-10 credits/image', useCases: ['Detail shots', 'Flat lay', 'Studio backgrounds', 'E-commerce listings'] },
+  { id: 'virtual-try-on', icon: User, title: 'Virtual Try-On', subtitle: 'See it on a model', creditCost: '8-15 credits/image', useCases: ['Lookbooks', 'Social media', 'Lifestyle shots', 'Model photography'], badgeText: 'AI-Powered' },
 ];
 
 export function GenerationModeToggle({ mode, onChange }: GenerationModeToggleProps) {

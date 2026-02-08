@@ -29,7 +29,7 @@ export function GenerationModeCards({ compact = false }: GenerationModeCardsProp
         </div>
         {!compact && (
           <p className="text-xs text-muted-foreground mt-3">
-            1–2 credits per image
+            4–10 credits per image
           </p>
         )}
         <Button
@@ -62,7 +62,7 @@ export function GenerationModeCards({ compact = false }: GenerationModeCardsProp
         </div>
         {!compact && (
           <p className="text-xs text-muted-foreground mt-3">
-            3 credits per image
+            8 credits per image
           </p>
         )}
         <Button

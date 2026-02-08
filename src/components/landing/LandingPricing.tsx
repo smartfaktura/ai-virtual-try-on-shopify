@@ -36,7 +36,7 @@ export function LandingPricing() {
               }`}
             >
               Annual
-              <span className="ml-1.5 text-xs text-primary font-bold">Save 17%</span>
+              <span className="ml-1.5 text-xs text-primary font-bold">Save 20%</span>
             </button>
           </div>
         </div>
@@ -81,7 +81,7 @@ export function LandingPricing() {
                   </p>
                   {typeof plan.credits === 'number' && (
                     <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                      ≈ {Math.round(plan.credits / 20)} visual sets
+                      ≈ {Math.round(plan.credits / 40)} visual sets
                     </p>
                   )}
                 </div>

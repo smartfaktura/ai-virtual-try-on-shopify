@@ -75,7 +75,7 @@ export default function Freestyle() {
     enabled: !!user?.id,
   });
 
-  const creditCost = imageCount * (quality === 'high' ? 2 : 1);
+  const creditCost = imageCount * (quality === 'high' ? 10 : 4);
   const canGenerate = prompt.trim().length > 0 && !isLoading && balance >= creditCost;
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -183,8 +183,8 @@ export function FreestyleSettingsChips({
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-[220px] text-center">
               {quality === 'standard'
-                ? 'Fast generation at standard resolution. 1 credit per image.'
-                : 'Higher detail and resolution output. 2 credits per image.'}
+                ? 'Fast generation at standard resolution. 4 credits per image.'
+                : 'Higher detail and resolution output. 10 credits per image.'}
             </TooltipContent>
           </Tooltip>
 
