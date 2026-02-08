@@ -17,6 +17,7 @@ import Auth from '@/pages/Auth';
 import Onboarding from '@/pages/Onboarding';
 import NotFound from '@/pages/NotFound';
 import BrandProfiles from '@/pages/BrandProfiles';
+import BrandProfileWizard from '@/components/app/BrandProfileWizard';
 import Workflows from '@/pages/Workflows';
 import Products from '@/pages/Products';
 import CreativeDrops from '@/pages/CreativeDrops';
