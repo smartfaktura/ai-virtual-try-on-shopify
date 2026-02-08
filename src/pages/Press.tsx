@@ -1,6 +1,7 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { Megaphone, Download, Mail, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 

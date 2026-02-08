@@ -24,6 +24,17 @@ import CreativeDrops from '@/pages/CreativeDrops';
 import MobileUpload from '@/pages/MobileUpload';
 import VideoGenerate from '@/pages/VideoGenerate';
 import Freestyle from '@/pages/Freestyle';
+import About from '@/pages/About';
+import Blog from '@/pages/Blog';
+import Careers from '@/pages/Careers';
+import Press from '@/pages/Press';
+import HelpCenter from '@/pages/HelpCenter';
+import Contact from '@/pages/Contact';
+import Status from '@/pages/Status';
+import Changelog from '@/pages/Changelog';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import TermsOfService from '@/pages/TermsOfService';
+import CookiePolicy from '@/pages/CookiePolicy';
 
 const queryClient = new QueryClient();
 
@@ -40,6 +51,23 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
+
+            {/* Company pages */}
+            <Route path="/about" element={<About />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/press" element={<Press />} />
+
+            {/* Support pages */}
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/status" element={<Status />} />
+            <Route path="/changelog" element={<Changelog />} />
+
+            {/* Legal pages */}
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/cookies" element={<CookiePolicy />} />
 
             {/* Protected app routes */}
             <Route
