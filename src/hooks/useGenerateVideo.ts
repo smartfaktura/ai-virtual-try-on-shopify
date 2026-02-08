@@ -117,7 +117,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
             image_url: params.imageUrl,
             prompt: params.prompt || '',
             duration: params.duration || '5',
-            model_name: params.modelName || 'kling-v2-master',
+            model_name: params.modelName || 'kling-v2-1',
             aspect_ratio: params.aspectRatio || '16:9',
           },
         });

@@ -18,7 +18,7 @@ export default function VideoGenerate() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState<'5' | '10'>('5');
-  const [modelName, setModelName] = useState('kling-v2-master');
+  const [modelName, setModelName] = useState('kling-v2-1');
   const [aspectRatio, setAspectRatio] = useState<'1:1' | '16:9' | '9:16'>('16:9');
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -249,8 +249,8 @@ export default function VideoGenerate() {
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Model</label>
               <div className="flex gap-2">
                 {[
-                  { value: 'kling-v2-master', label: 'Master', desc: 'Best quality' },
-                  { value: 'kling-v1-6-standard', label: 'Standard', desc: 'Faster' },
+                  { value: 'kling-v2-1', label: 'V2.1', desc: 'Best quality' },
+                  { value: 'kling-v1-6', label: 'V1.6', desc: 'Faster' },
                 ].map((opt) => (
                   <button
                     key={opt.value}
