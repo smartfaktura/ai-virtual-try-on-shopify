@@ -1,25 +1,30 @@
 
 
-## Remove "Generate Previews" Button from Workflows Page
+## Add 9:16 Story Format to Image Size Options
 
 ### What Changes
 
-Remove the admin "Generate X Previews" button and all its associated logic from `src/pages/Workflows.tsx`.
+Add a **9:16** vertical (story/reel) aspect ratio option to the Freestyle studio's Image Size selector. This is the standard format for Instagram Stories, TikTok, YouTube Shorts, and similar vertical content.
 
 ### Technical Details
 
-**File: `src/pages/Workflows.tsx`**
+**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
 
-Remove the following:
-- The `generatingIds` state and `setGeneratingIds`
-- The `workflowsMissingPreviews` computed variable
-- The `handleGeneratePreviews` async function
-- The `isAnyGenerating` computed variable
-- The entire conditional block that renders the "Generate X Previews" button (the `<div className="flex justify-end">` section)
-- The `Sparkles` and `Loader2` icon imports (no longer needed)
-- The `useQueryClient` import and `queryClient` variable (only used by the preview generation)
-- The `toast` import (only used by the preview generation)
-- The `supabase` import (only used by the preview generation)
+1. Update the `FreestyleAspectRatio` type to include `'9:16'`:
+   - From: `'1:1' | '3:4' | '4:5' | '16:9'`
+   - To: `'1:1' | '3:4' | '4:5' | '9:16' | '16:9'`
 
-The `hoveredWorkflow` state, workflow query, navigation, and card rendering all stay intact since they power the workflow grid and auto-play behavior.
+2. Add the 9:16 entry to the `ASPECT_RATIOS` array, placed between 4:5 and 16:9 (ordering from square to tallest vertical, then horizontal):
+   - `{ value: '9:16', label: '9:16', icon: Smartphone }`
+
+The updated order will be:
+| Ratio | Type | Use Case |
+|---|---|---|
+| 1:1 | Square | Instagram Feed |
+| 3:4 | Portrait | General portrait |
+| 4:5 | Portrait | Instagram portrait |
+| 9:16 | Tall vertical | Stories, Reels, TikTok |
+| 16:9 | Landscape | YouTube, website heroes |
+
+No changes needed in the backend edge function -- it already passes the aspect ratio string directly to the AI model, so `9:16` will work without modification.
 
