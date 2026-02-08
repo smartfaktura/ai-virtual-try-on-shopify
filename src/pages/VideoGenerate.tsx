@@ -249,8 +249,8 @@ export default function VideoGenerate() {
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Model</label>
               <div className="flex gap-2">
                 {[
-                  { value: 'kling-v2-master', label: 'Master', desc: 'Best quality' },
-                  { value: 'kling-v1-6-standard', label: 'Standard', desc: 'Faster' },
+                  { value: 'kling-v2-1', label: 'V2.1', desc: 'Best quality' },
+                  { value: 'kling-v1-6', label: 'V1.6', desc: 'Faster' },
                 ].map((opt) => (
                   <button
                     key={opt.value}
