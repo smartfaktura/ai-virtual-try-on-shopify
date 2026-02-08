@@ -14,24 +14,28 @@ interface WorkflowCardProps {
   workflow: Workflow;
   onSelect: () => void;
   isGenerating?: boolean;
+  autoPlay?: boolean;
+  onHoverChange?: (hovered: boolean) => void;
 }
 
-export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardProps) {
+export function WorkflowCard({ workflow, onSelect, isGenerating, autoPlay, onHoverChange }: WorkflowCardProps) {
   const scene = workflowScenes[workflow.name];
   const [isHovered, setIsHovered] = useState(false);
+
+  const isActive = autoPlay ? (isHovered || autoPlay) : isHovered;
 
   return (
     <Card className="group hover:shadow-md transition-all hover:border-primary/30 overflow-hidden">
       {/* Hero image — portrait */}
       <div
         className="aspect-[3/4] overflow-hidden relative"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={() => { setIsHovered(true); onHoverChange?.(true); }}
+        onMouseLeave={() => { setIsHovered(false); onHoverChange?.(false); }}
       >
         {isGenerating ? (
           <Skeleton className="w-full h-full" />
         ) : scene ? (
-          <WorkflowAnimatedThumbnail scene={scene} isActive={isHovered} />
+          <WorkflowAnimatedThumbnail scene={scene} isActive={isActive} />
         ) : (
           <img
             src={workflow.preview_image_url || imgFallback}

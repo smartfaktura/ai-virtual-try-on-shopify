@@ -29,6 +29,7 @@ export default function Workflows() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+  const [hoveredWorkflow, setHoveredWorkflow] = useState<string | null>(null);
 
   const { data: workflows = [], isLoading } = useQuery({
     queryKey: ['workflows'],
@@ -142,6 +143,8 @@ export default function Workflows() {
                 workflow={workflow}
                 onSelect={() => handleCreateVisualSet(workflow)}
                 isGenerating={generatingIds.has(workflow.id)}
+                autoPlay={workflow.name === 'Virtual Try-On Set' && hoveredWorkflow !== null ? hoveredWorkflow === workflow.name : workflow.name === 'Virtual Try-On Set'}
+                onHoverChange={(hovered) => setHoveredWorkflow(hovered ? workflow.name : null)}
               />
             ))}
           </div>
