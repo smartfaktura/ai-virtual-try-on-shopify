@@ -298,7 +298,7 @@ export default function Freestyle() {
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
           </div>
-        ) : hasImages || isLoading ? (
+        ) : hasImages || isLoading || hasBlocked ? (
           <FreestyleGallery
             images={galleryImages}
             onDownload={handleDownload}
@@ -307,6 +307,9 @@ export default function Freestyle() {
             onCopyPrompt={setPrompt}
             generatingCount={isLoading ? imageCount : 0}
             generatingProgress={progress}
+            blockedEntries={blockedEntries}
+            onDismissBlocked={handleDismissBlocked}
+            onEditBlockedPrompt={handleEditBlockedPrompt}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
