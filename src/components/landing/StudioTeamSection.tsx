@@ -177,12 +177,25 @@ export function StudioTeamSection() {
               >
                 {/* Character image card */}
                 <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-card border border-border shadow-sm group-hover:shadow-lg group-hover:border-primary/30 transition-all duration-300">
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                  />
+                  {member.videoUrl ? (
+                    <video
+                      src={member.videoUrl}
+                      poster={member.avatar}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="none"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <img
+                      src={member.avatar}
+                      alt={member.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  )}
                 </div>
 
                 {/* Info */}
