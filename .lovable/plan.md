@@ -1,111 +1,85 @@
 
-## Freestyle Studio -- Open-Ended Creative Generation
 
-A new dedicated page at `/app/freestyle` where users have full creative control. Unlike the structured Generate flow (product + template + brand profile), this is a single-screen creative playground inspired by the reference screenshot. Users write their own prompt, optionally upload an image, optionally pick a model, choose output settings, and generate -- all on one page. Results appear in a growing gallery grid below the prompt bar.
+## Freestyle Studio Redesign -- Modern Luxury UI + Scene Selector
 
-### Layout (Single Page, No Steps)
+Two main improvements: (1) a complete visual overhaul of the page to match the reference aesthetic, and (2) adding a Scene/Style selector chip that lets users pick from the existing 24 pose/environment library.
 
-The page has two main areas stacked vertically:
+---
 
-1. **Results Gallery** (top) -- a masonry-style grid showing all generated images from this session, newest first. Each image gets a hover overlay with a download button. Starts empty with a stylish empty state.
+### Problem 1: The UI looks dated
 
-2. **Prompt Bar + Settings** (bottom, sticky) -- a dark-themed bottom bar (similar to the reference) with:
-   - A text prompt input with an "attach image" button (+ icon) on the left
-   - Settings chips below the prompt: Model selector, Aspect Ratio, Resolution (likes), Prompt Polish toggle, Image count
-   - A "Generate" button on the right showing the credit cost
+The current prompt bar uses plain HTML textarea styling with harsh borders, small images, and a utilitarian layout. The reference shows a sleek, immersive experience where images fill the screen edge-to-edge and the prompt bar floats as a polished overlay.
 
-### Features
+**What changes:**
 
-**Prompt Input**
-- Large text area for free-form prompt (placeholder: "Describe what you want to create...")
-- Plus (+) button opens file upload (same drag-and-drop pattern as UploadSourceCard)
-- When an image is attached, show a small thumbnail preview next to the prompt
+- **Gallery**: Switch from small grid with gaps to a large, immersive masonry layout. Images should be significantly larger -- 2 columns on mobile, 2-3 columns on desktop with minimal 2px gaps. Images fill the available space like a photo wall, not small thumbnails floating in whitespace.
 
-**Optional Model Selection**
-- Clicking the "Model" chip opens a popover/dropdown showing the existing model library (reuses `mockModels`)
-- Shows selected model as a small avatar chip, or "No Model" by default
-- Character reference concept from the screenshot
+- **Prompt Bar**: Transform from a flat bordered textarea into a floating, rounded container with a frosted-glass/dark-glass aesthetic. The prompt area becomes a clean, borderless input inside a dark rounded container with subtle inner glow instead of a hard border. The + button and Generate button sit inline within this container.
 
-**Output Settings (chips below prompt)**
-- **Aspect Ratio**: 1:1, 3:4, 4:5, 16:9 (clickable chip cycles or opens dropdown)
-- **Resolution**: Standard (1 credit) / High (2 credits)
-- **Prompt Polish**: On/Off toggle -- when on, the AI refines the prompt before generating (adds 0 extra credits, just better prompting)
-- **Count**: 1-4 images (stepper with - / +)
+- **Settings Chips**: Refine the chip row with slightly more padding, smoother hover states, and a more polished feel. Add subtle backdrop blur to the entire bottom bar.
 
-**Credit Cost**
-- Standard quality: 1 credit per image
-- High quality: 2 credits per image
-- Shown on the Generate button: "Generate (4 credits)"
+- **Empty State**: Make it more visually inviting with larger icon and softer typography.
 
-**Results Gallery**
-- Images appear in a responsive grid (2 cols mobile, 3-4 cols desktop)
-- Each image card has a hover overlay with:
-  - Download button (downloads immediately on click)
-  - Expand/lightbox button
-- No selection/publish flow -- this is pure freestyle exploration
-- Uses the existing ImageLightbox for full-screen view
+- **Loading State**: Move the progress indicator into the prompt bar area itself (subtle progress line at the top of the bar).
 
-**Generation**
-- Uses a new edge function `generate-freestyle` that accepts a raw prompt + optional image + optional model reference
-- Simpler than `generate-product` -- no template or brand profile overhead
-- Still uses `google/gemini-2.5-flash-image` via Lovable AI Gateway
+---
+
+### Problem 2: No Scene/Style selector
+
+Users currently can only type free-text prompts with no way to pick from the existing library of 24 professional scenes/environments (Studio, Lifestyle, Editorial, Streetwear). Adding this as a chip gives quick access to curated scene descriptions.
+
+**What changes:**
+
+- Add a new **Scene** chip next to the Model chip in the settings row
+- Clicking it opens a popover showing scene thumbnails grouped by category (Studio, Lifestyle, Editorial, Streetwear)
+- When a scene is selected, its description is used as additional context for the generation (appended to the prompt or sent as a separate parameter)
+- The chip shows the selected scene name or "No Scene" by default
+- The scene data comes from the existing `mockTryOnPoses` array and pose images
+
+---
 
 ### Technical Details
 
-**New files to create:**
+**File to modify: `src/pages/Freestyle.tsx`** (single file, complete rewrite of the JSX)
 
-1. **`src/pages/Freestyle.tsx`** -- Main page component
-   - Sticky bottom prompt bar with dark background (bg-sidebar or similar)
-   - Prompt textarea + attach image button
-   - Settings chips row: Model, Aspect Ratio, Resolution, Polish, Count
-   - Generate button with credit cost display
-   - Results gallery grid above the prompt bar
-   - Download on hover for each generated image
-   - Uses existing `useFileUpload` hook for image uploads
-   - Uses existing `useCredits` for credit management
-   - Reuses `ImageLightbox` for full-screen view
-   - Reuses `mockModels` data for model selection
-   - Reuses `ModelSelectorCard` pattern in a popover for model picking
+**Imports to add:**
+- `mockTryOnPoses`, `poseCategoryLabels` from `@/data/mockData`
+- `TryOnPose` type from `@/types`
+- `Camera` icon from `lucide-react` (for the Scene chip)
 
-2. **`src/hooks/useGenerateFreestyle.ts`** -- Generation hook
-   - Accepts: prompt (string), sourceImage (base64, optional), modelImage (base64, optional), aspectRatio, imageCount, quality, polishPrompt (boolean)
-   - Calls the `generate-freestyle` edge function
-   - Returns array of generated image URLs
-   - Handles progress, loading state, errors (429/402)
+**State to add:**
+- `selectedScene: TryOnPose | null` (default: null)
+- `scenePopoverOpen: boolean`
 
-3. **`supabase/functions/generate-freestyle/index.ts`** -- Edge function
-   - Accepts raw prompt + optional image + optional model reference image
-   - If prompt polish is on, prepends professional photography instructions to the user's prompt
-   - Calls `google/gemini-2.5-flash-image` with the prompt (and optional images)
-   - Returns generated images as base64 data URLs
-   - Handles rate limits (429) and payment (402) errors
+**Gallery changes (lines ~117-158):**
+- Empty state: Larger icon (w-24 h-24), lighter weight heading, more breathing room
+- Grid: Change to `grid-cols-2 lg:grid-cols-3 gap-0.5` for edge-to-edge photo wall feel
+- Remove `aspect-square` constraint -- let images display at natural ratio or use taller aspect ratios
+- Add rounded corners only to the outer container, not individual images
+- Hover overlay: Smooth gradient from bottom instead of full overlay, with download button positioned bottom-right
 
-**Files to modify:**
+**Prompt bar changes (lines ~173-360):**
+- Outer container: Remove `border-t`, use `bg-[#1a1a2e]/95 backdrop-blur-xl` with rounded-2xl top corners, add subtle shadow upward
+- Prompt textarea: Remove border entirely, make it transparent background inside the dark container with lighter placeholder text. Increase font size slightly.
+- The + button: More refined circle with subtle ring on hover
+- Generate button: Larger, with gradient or accent color, rounded-xl
+- Settings chips: Slightly larger padding (px-3.5 py-2), refined borders with `border-white/8`
 
-4. **`src/App.tsx`** -- Add route `/app/freestyle` pointing to `Freestyle` page
+**Scene chip (new, in settings row):**
+- Positioned after Model chip
+- Shows selected scene thumbnail (tiny 16px circle) + name, or `Camera` icon + "No Scene"
+- Popover shows a scrollable grid of scene thumbnails grouped by category
+- Each category has a small label (Studio, Lifestyle, Editorial, Streetwear)
+- Clicking a scene selects it and closes popover
 
-5. **`src/components/app/AppShell.tsx`** -- Add "Freestyle" nav item to sidebar between "Generate" CTA and the Main nav section (or within Main nav). Uses `Wand2` or `Brush` icon from lucide-react.
+**Generation logic update:**
+- When a scene is selected, append the scene description to the prompt before sending
+- Pass scene info to the edge function as additional context
+- The edge function already handles prompt polishing, so the scene description will be naturally incorporated
 
-6. **`supabase/config.toml`** -- Add `[functions.generate-freestyle]` with `verify_jwt = false`
+**No changes needed to:**
+- `useGenerateFreestyle.ts` -- the scene context gets merged into the prompt string before calling
+- `generate-freestyle` edge function -- receives the enhanced prompt as-is
+- `mockData.ts` -- uses existing `mockTryOnPoses` data
+- `AppShell.tsx` or `App.tsx` -- no routing changes
 
-### UI Design Details
-
-**Bottom Prompt Bar** (inspired by reference):
-- Dark background (`bg-[#1a1a1a]` or `bg-sidebar`)
-- Rounded container with the prompt input
-- Left side: + button for image upload
-- Right side: Generate button (primary color, shows credit cost)
-- Below prompt: row of setting chips with subtle borders
-- Chips are small, rounded-full buttons showing current value
-
-**Results Grid**:
-- `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3`
-- Each image has `rounded-lg overflow-hidden` with `aspect-square object-cover`
-- Hover overlay: semi-transparent black with centered download icon button
-- Empty state: centered illustration with "Your creations will appear here" text
-
-**Model Selector Popover**:
-- Opens from the "Model" chip
-- Shows a compact grid (3 cols) of model thumbnails using existing `ModelSelectorCard` styling
-- Includes existing filter bar (gender, body type)
-- Selected model shown as tiny avatar on the chip
