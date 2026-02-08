@@ -84,11 +84,11 @@ serve(async (req) => {
 
     // ---- CREATE task ----
     if (action === "create") {
-      const { image_url, prompt, duration = "5", model_name = "kling-v2-1", mode = "std", aspect_ratio = "16:9" } = body;
+      const { image_url, image_tail, prompt, duration = "5", model_name = "kling-v2-1", mode = "std", aspect_ratio = "16:9" } = body;
 
       if (!image_url) throw new Error("image_url is required");
 
-      console.log(`[generate-video] Creating task for user ${userId}, model=${model_name}, mode=${mode}, duration=${duration}`);
+      console.log(`[generate-video] Creating task for user ${userId}, model=${model_name}, mode=${mode}, duration=${duration}, has_tail=${!!image_tail}`);
 
       const klingBody: Record<string, unknown> = {
         model_name,
@@ -99,6 +99,7 @@ serve(async (req) => {
 
       if (prompt) klingBody.prompt = prompt;
       if (aspect_ratio) klingBody.aspect_ratio = aspect_ratio;
+      if (image_tail) klingBody.image_tail = image_tail;
 
       const res = await fetch(`${KLING_API_BASE}/videos/image2video`, {
         method: "POST",

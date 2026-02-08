@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw, History, Trash2 } from 'lucide-react';
+import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw, History, Trash2, Repeat, Info } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
 import { useGenerateVideo, VideoGenStatus, GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { toast } from 'sonner';
@@ -112,6 +113,7 @@ export default function VideoGenerate() {
   const [duration, setDuration] = useState<'5' | '10'>('5');
   const [modelName, setModelName] = useState('kling-v2-1');
   const [aspectRatio, setAspectRatio] = useState<'1:1' | '16:9' | '9:16'>('16:9');
+  const [loopMode, setLoopMode] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -161,7 +163,15 @@ export default function VideoGenerate() {
       toast.error('Please provide an image first');
       return;
     }
-    startGeneration({ imageUrl: url, prompt, duration, modelName, aspectRatio });
+    startGeneration({
+      imageUrl: url,
+      prompt,
+      duration,
+      modelName,
+      aspectRatio,
+      imageTailUrl: loopMode ? url : undefined,
+      mode: loopMode ? 'pro' : undefined,
+    });
   };
 
   const handleDownload = () => {
@@ -398,8 +408,27 @@ export default function VideoGenerate() {
                     {r}
                   </button>
                 ))}
-              </div>
             </div>
+
+            {/* Loop Mode Toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/20 p-3">
+              <div className="flex items-center gap-2">
+                <Repeat className="w-4 h-4 text-primary" />
+                <div>
+                  <span className="text-sm font-medium">Loop Mode</span>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                    <Info className="w-3 h-3 inline" />
+                    Same start &amp; end frame for seamless loop (uses Pro mode)
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={loopMode}
+                onCheckedChange={setLoopMode}
+                disabled={isGenerating}
+              />
+            </div>
+          </div>
           </div>
 
           {/* Generate Button */}
