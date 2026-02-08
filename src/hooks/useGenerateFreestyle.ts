@@ -96,6 +96,8 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
           polishPrompt: params.polishPrompt,
           modelContext: params.modelContext,
           stylePresets: params.stylePresets,
+          brandProfile: params.brandProfile,
+          negatives: params.negatives,
         }),
       });
 

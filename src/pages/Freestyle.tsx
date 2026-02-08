@@ -144,6 +144,16 @@ export default function Freestyle() {
       .map(id => STYLE_PRESETS.find(p => p.id === id)?.keywords)
       .filter(Boolean) as string[];
 
+    // Build brand profile context for the edge function
+    const brandContext = selectedBrandProfile ? {
+      tone: selectedBrandProfile.tone,
+      lightingStyle: selectedBrandProfile.lighting_style,
+      backgroundStyle: selectedBrandProfile.background_style,
+      colorTemperature: selectedBrandProfile.color_temperature,
+      compositionBias: selectedBrandProfile.composition_bias,
+      doNotRules: selectedBrandProfile.do_not_rules,
+    } : undefined;
+
     const result = await generate({
       prompt: finalPrompt,
       sourceImage: sourceImage || undefined,
@@ -155,6 +165,8 @@ export default function Freestyle() {
       polishPrompt,
       modelContext,
       stylePresets: activePresetKeywords.length > 0 ? activePresetKeywords : undefined,
+      brandProfile: brandContext,
+      negatives: negatives.length > 0 ? negatives : undefined,
     });
 
     if (result && result.images.length > 0) {
@@ -170,7 +182,7 @@ export default function Freestyle() {
         });
       }
     }
-  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage, stylePresets]);
+  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage, stylePresets]);
 
   const handleDownload = useCallback(async (imageUrl: string, index: number) => {
     try {
