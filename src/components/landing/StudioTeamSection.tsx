@@ -23,12 +23,14 @@ interface TeamMember {
   videoUrl?: string;
 }
 
+const VIDEO_BASE = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc';
+
 const TEAM: TeamMember[] = [
   {
     name: 'Sophia',
     role: 'Product Photographer',
     avatar: avatarSophia,
-    videoUrl: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/849395850555686932.mp4',
+    videoUrl: `${VIDEO_BASE}/849395850555686932.mp4`,
     description:
       'Crafts pixel-perfect e-commerce listings, hero shots, and catalog visuals with studio-grade lighting and composition.',
   },
@@ -36,6 +38,7 @@ const TEAM: TeamMember[] = [
     name: 'Amara',
     role: 'Lifestyle Photographer',
     avatar: avatarAmara,
+    videoUrl: `${VIDEO_BASE}/849398236443574344.mp4`,
     description:
       'Places your products in real-world scenes so customers see them in context. Perfect for social media and storytelling.',
   },
@@ -43,6 +46,7 @@ const TEAM: TeamMember[] = [
     name: 'Kenji',
     role: 'Campaign Art Director',
     avatar: avatarKenji,
+    videoUrl: `${VIDEO_BASE}/849398243640999964.mp4`,
     description:
       'Designs seasonal campaigns, promo visuals, and lookbook layouts that feel cohesive across every channel.',
   },
@@ -50,6 +54,7 @@ const TEAM: TeamMember[] = [
     name: 'Yuki',
     role: 'Ad Creative Specialist',
     avatar: avatarYuki,
+    videoUrl: `${VIDEO_BASE}/849398252540657664.mp4`,
     description:
       'Builds ad-ready visuals optimized for Meta, Google, TikTok, and Amazon. Knows which formats drive clicks.',
   },
@@ -57,6 +62,7 @@ const TEAM: TeamMember[] = [
     name: 'Omar',
     role: 'CRO Visual Optimizer',
     avatar: avatarOmar,
+    videoUrl: `${VIDEO_BASE}/849398684226822188.mp4`,
     description:
       'Analyzes composition, color psychology, and visual hierarchy to produce images that drive revenue.',
   },
@@ -64,6 +70,7 @@ const TEAM: TeamMember[] = [
     name: 'Sienna',
     role: 'Brand Consistency Manager',
     avatar: avatarSienna,
+    videoUrl: `${VIDEO_BASE}/849398695958937689.mp4`,
     description:
       'Ensures every visual matches your brand DNA. Locks your look so every image feels unmistakably yours.',
   },
@@ -71,6 +78,7 @@ const TEAM: TeamMember[] = [
     name: 'Luna',
     role: 'Retouch Specialist',
     avatar: avatarLuna,
+    videoUrl: `${VIDEO_BASE}/849398707518439436.mp4`,
     description:
       'Handles color correction, background cleanup, and pixel-level refinement. Every image leaves polished and flawless.',
   },
@@ -78,6 +86,7 @@ const TEAM: TeamMember[] = [
     name: 'Max',
     role: 'Export & Format Engineer',
     avatar: avatarMax,
+    videoUrl: `${VIDEO_BASE}/849399340514426899.mp4`,
     description:
       'Auto-sizes and formats every visual for Shopify, Amazon, Meta, and Google. One click, every platform covered.',
   },
@@ -85,6 +94,7 @@ const TEAM: TeamMember[] = [
     name: 'Zara',
     role: 'Fashion Stylist',
     avatar: avatarZara,
+    videoUrl: `${VIDEO_BASE}/849399354389184514.mp4`,
     description:
       'Curates outfits, coordinates colors, and styles virtual try-on shoots so every garment looks its absolute best.',
   },
@@ -92,6 +102,7 @@ const TEAM: TeamMember[] = [
     name: 'Leo',
     role: 'Scene & Set Designer',
     avatar: avatarLeo,
+    videoUrl: `${VIDEO_BASE}/849399365948022876.mp4`,
     description:
       'Builds backgrounds, props, and environments. From rustic tabletops to sleek studios, he sets the perfect scene.',
   },
