@@ -50,7 +50,7 @@ export default function Settings() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const currentPlanId = 'growth';
 
-  const creditsTotal = 1000;
+  const creditsTotal = 2500;
   const creditsPercentage = (balance / creditsTotal) * 100;
 
   const handleSave = () => toast.success('Settings saved successfully!');
