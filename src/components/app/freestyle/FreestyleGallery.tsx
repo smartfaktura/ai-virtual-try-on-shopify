@@ -101,10 +101,10 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete }: Fre
   // Adaptive layout: centered for 1-3 images, masonry for 4+
   if (count <= 3) {
     return (
-      <div className="flex items-center justify-center h-full px-6">
+      <div className="px-6 pt-6">
         <div
           className={cn(
-            'flex gap-3 items-start justify-center',
+            'flex gap-3 items-start justify-center mx-auto',
             count === 1 && 'max-w-lg w-full',
             count === 2 && 'max-w-3xl w-full',
             count === 3 && 'max-w-4xl w-full',
@@ -119,7 +119,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete }: Fre
               onExpand={onExpand}
               onDelete={onDelete}
               className={cn(
-                count === 1 && 'w-full',
+                count === 1 && 'w-full max-h-[calc(100vh-280px)]',
                 count >= 2 && 'flex-1 min-w-0',
               )}
             />
