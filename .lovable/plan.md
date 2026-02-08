@@ -1,66 +1,57 @@
 
 
-## Freestyle Studio -- Clean Up Control Panel Layout
+## Freestyle Studio -- Redesign Settings Chips into a Clean Toolbar
 
-The current prompt panel has messy alignment: the upload button, textarea, and generate button are all crammed into one row, and the settings chips below wrap awkwardly with no visual grouping. This redesign creates a clear visual hierarchy with proper spacing.
+The current settings area has three problems visible in the screenshot:
 
----
-
-### New Layout Structure
-
-The panel will be reorganized into three clear rows inside the rounded card:
-
-**Row 1 -- Prompt Input (full width)**
-A clean, full-width textarea spanning the entire card width. No buttons competing for space on this row. Larger text, generous padding.
-
-**Row 2 -- Settings Chips (horizontally organized)**
-All settings in a single row with logical grouping:
-- Left group: Upload image button, Model chip, Scene chip
-- Center group: Aspect ratio, Quality, Polish toggle
-- Right group: Image count stepper
-
-A subtle visual separator (or just extra spacing) between groups keeps things tidy.
-
-**Row 3 -- Action Bar**
-The Generate button sits on its own row, right-aligned and visually prominent. Full-width on mobile for easy tapping. This gives it breathing room and makes it unmissable.
+1. **Awkward spacing** -- `justify-between` with three groups creates a huge gap between "Upload/Model/Scene" and "1:1/Standard", making them look disconnected
+2. **Wrapping** -- The Polish chip drops to a second line unevenly, creating visual chaos
+3. **No visual hierarchy** -- All 7 controls compete for attention at the same level with no grouping logic
 
 ---
 
-### Technical Details
+### Design Approach
 
-**File: `src/pages/Freestyle.tsx`**
+Replace the single messy row with a clean **single-row flowing toolbar** using subtle vertical dividers between logical groups. All chips stay on one line with consistent sizing and natural spacing. On very narrow screens, the row scrolls horizontally rather than wrapping chaotically.
 
-Changes to the prompt bar JSX (both empty state and has-images versions):
-- Move the textarea to its own full-width row at the top of the card
-- Move the upload image button out of the textarea row and into the settings chips row
-- Move the Generate button to its own row below settings, right-aligned
-- Add `items-center` and proper `gap` spacing
-- Increase textarea to `rows={3}` with proper min-height for a more spacious input feel
-- Add a subtle `border-b border-border/40` divider between the prompt row and settings row
+The new layout uses three logical groups separated by thin vertical lines:
+
+```text
+[ + Upload | Model v | Scene v ]  |  [ 1:1 v | Standard | Polish ]  |  [ - 1 + ]
+```
+
+- **Group 1 (Inputs)**: Upload, Model, Scene -- what goes *into* the generation
+- **Group 2 (Output)**: Aspect ratio, Quality, Polish -- *how* the output looks  
+- **Group 3 (Count)**: Image count stepper -- *how many* to generate
+
+Visual dividers (thin 16px-tall vertical lines in `border-border/30`) separate the groups while keeping everything in a single horizontal flow.
+
+---
+
+### Specific Changes
 
 **File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
 
-Changes to accept and render the upload button inline:
-- Add props for the upload button element (or render the upload button inside this component)
-- Alternative: Keep upload button in Freestyle.tsx but render it as the first item in the settings row
-- Ensure all chips use consistent sizing (`h-9` or `h-8` uniformly)
-- Add `justify-between` on the settings row so items spread nicely with the image count stepper pushed to the right
+- Change outer container from `flex justify-between gap-2` to `flex items-center gap-1.5` with `overflow-x-auto` for mobile safety
+- Remove the three separate `<div>` group wrappers with different justification
+- Instead, render all chips in a flat row with thin vertical separator `<div>` elements between logical groups
+- The separator is a simple `<div className="w-px h-4 bg-border/40 mx-1" />` 
+- All chips get uniform height (`h-8`) and consistent padding (`px-3`)
+- Remove `flex-wrap` entirely -- the row stays single-line and scrolls if needed
+- Keep all existing tooltip logic for Quality and Polish
 
-**No other files need changes.**
+**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
 
-### Visual Result
+- Minor padding adjustments to the settings row container
+- Ensure the upload button rendering matches the new chip style consistently (same `h-8 px-3 rounded-full` sizing)
 
-```text
-+--------------------------------------------------+
-|                                                  |
-|  Describe what you want to create...             |
-|                                                  |
-|                                                  |
-|--------------------------------------------------|
-|  + Upload  | Model v | Scene v | 1:1 | Std | Polish  |  - 1 + |
-|--------------------------------------------------|
-|                              [ * Generate (1) ]  |
-+--------------------------------------------------+
-```
+**File: `src/components/app/freestyle/ModelSelectorChip.tsx`**
 
-Clean rows, clear hierarchy, prominent CTA, no cramped elements.
+- Standardize trigger button height to `h-8` (currently uses `px-3.5 py-2` which may produce inconsistent height)
+
+**File: `src/components/app/freestyle/SceneSelectorChip.tsx`**
+
+- Standardize trigger button height to `h-8` (same fix as Model chip)
+
+**No backend, routing, or page-level changes needed.**
+
