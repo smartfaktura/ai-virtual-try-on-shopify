@@ -58,10 +58,13 @@ export function LandingNav() {
             </button>
           ))}
           {/* Creative Drops badge */}
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+          <button
+            onClick={() => handleNavClick('#creative-drops')}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors cursor-pointer"
+          >
             <Sparkles className="w-3 h-3" />
             Monthly Creative Drops
-          </div>
+          </button>
         </div>
 
         {/* Desktop CTA */}
