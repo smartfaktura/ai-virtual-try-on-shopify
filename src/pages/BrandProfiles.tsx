@@ -1,11 +1,10 @@
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { BrandProfileCard } from '@/components/app/BrandProfileCard';
-import { BrandProfileForm } from '@/components/app/BrandProfileForm';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -21,6 +20,11 @@ export interface BrandProfile {
   color_temperature: string;
   composition_bias: string;
   do_not_rules: string[];
+  color_palette: string[];
+  brand_keywords: string[];
+  preferred_scenes: string[];
+  target_audience: string;
+  photography_reference: string;
   created_at: string;
   updated_at: string;
 }
@@ -29,9 +33,8 @@ export type BrandProfileInsert = Omit<BrandProfile, 'id' | 'created_at' | 'updat
 
 export default function BrandProfiles() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingProfile, setEditingProfile] = useState<BrandProfile | null>(null);
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['brand-profiles'],
@@ -41,7 +44,7 @@ export default function BrandProfiles() {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as BrandProfile[];
+      return data as unknown as BrandProfile[];
     },
     enabled: !!user,
   });
@@ -58,21 +61,6 @@ export default function BrandProfiles() {
     onError: () => toast.error('Failed to delete brand profile'),
   });
 
-  const handleEdit = (profile: BrandProfile) => {
-    setEditingProfile(profile);
-    setFormOpen(true);
-  };
-
-  const handleCreate = () => {
-    setEditingProfile(null);
-    setFormOpen(true);
-  };
-
-  const handleFormClose = () => {
-    setFormOpen(false);
-    setEditingProfile(null);
-  };
-
   return (
     <PageHeader
       title="Brand Profiles"
@@ -81,7 +69,7 @@ export default function BrandProfiles() {
       <div className="space-y-6">
         {/* Actions */}
         <div className="flex justify-end">
-          <Button onClick={handleCreate}>
+          <Button onClick={() => navigate('/app/brand-profiles/new')}>
             <Plus className="w-4 h-4 mr-2" />
             Create Profile
           </Button>
@@ -98,7 +86,7 @@ export default function BrandProfiles() {
           <EmptyStateCard
             heading="No brand profiles yet"
             description="Create your first Brand Profile to ensure every generated image matches your brand's visual identity."
-            action={{ content: 'Create Brand Profile', onAction: handleCreate }}
+            action={{ content: 'Create Brand Profile', onAction: () => navigate('/app/brand-profiles/new') }}
             icon={<Palette className="w-10 h-10 text-muted-foreground" />}
           />
         ) : (
@@ -107,20 +95,13 @@ export default function BrandProfiles() {
               <BrandProfileCard
                 key={profile.id}
                 profile={profile}
-                onEdit={() => handleEdit(profile)}
+                onEdit={() => navigate(`/app/brand-profiles/${profile.id}/edit`)}
                 onDelete={() => deleteMutation.mutate(profile.id)}
               />
             ))}
           </div>
         )}
       </div>
-
-      {/* Form Dialog */}
-      <BrandProfileForm
-        open={formOpen}
-        onClose={handleFormClose}
-        profile={editingProfile}
-      />
     </PageHeader>
   );
 }
