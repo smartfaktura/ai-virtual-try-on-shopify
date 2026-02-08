@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, X, Sparkles, Loader2 } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { Plus, X, Sparkles, Loader2, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
