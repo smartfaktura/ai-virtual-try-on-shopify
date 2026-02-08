@@ -171,17 +171,26 @@ export default function Freestyle() {
       negatives: negatives.length > 0 ? negatives : undefined,
     });
 
-    if (result && result.images.length > 0) {
-      deductCredits(creditCost);
-      for (const imageUrl of result.images) {
-        await saveImage(imageUrl, {
-          prompt: finalPrompt,
-          aspectRatio,
-          quality,
-          modelId: selectedModel?.modelId ?? null,
-          sceneId: selectedScene?.poseId ?? null,
-          productId: selectedProduct?.id ?? null,
-        });
+    if (result) {
+      if (result.contentBlocked) {
+        // Add a blocked entry to show in gallery
+        setBlockedEntries(prev => [{
+          id: crypto.randomUUID(),
+          prompt: prompt,
+          reason: result.blockReason || 'This prompt was flagged by our content safety system.',
+        }, ...prev]);
+      } else if (result.images.length > 0) {
+        deductCredits(creditCost);
+        for (const imageUrl of result.images) {
+          await saveImage(imageUrl, {
+            prompt: finalPrompt,
+            aspectRatio,
+            quality,
+            modelId: selectedModel?.modelId ?? null,
+            sceneId: selectedScene?.poseId ?? null,
+            productId: selectedProduct?.id ?? null,
+          });
+        }
       }
     }
   }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage, stylePresets]);
