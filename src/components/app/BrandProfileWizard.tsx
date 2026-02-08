@@ -53,6 +53,9 @@ const DO_NOT_SUGGESTIONS = [
   'busy backgrounds', 'neon colors', 'harsh shadows', 'cluttered scenes',
   'overly saturated', 'dark moody', 'text overlays', 'collage layouts',
   'stock photo feel', 'cartoon style', 'vintage filters', 'heavy vignette',
+  'watermarks', 'people/models', 'hands visible', 'blurry images',
+  'lens flare', 'flat lighting', 'unrealistic colors', 'AI artifacts',
+  'reflections', 'props/accessories', 'patterned backgrounds', 'low contrast',
 ];
 
 interface FormData {
