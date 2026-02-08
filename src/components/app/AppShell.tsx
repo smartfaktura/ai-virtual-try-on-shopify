@@ -56,9 +56,9 @@ export function AppShell({ children }: AppShellProps) {
       <div className="px-5 pt-6 pb-6 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-            <span className="text-primary-foreground font-bold text-sm">bf</span>
+            <span className="text-primary-foreground font-bold text-sm">fa</span>
           </div>
-          <span className="font-bold text-lg text-sidebar-foreground tracking-tight">brandframe.ai</span>
+          <span className="font-bold text-lg text-sidebar-foreground tracking-tight">framea.ai</span>
         </div>
       </div>
 

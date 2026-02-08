@@ -98,7 +98,7 @@ export default function Onboarding() {
       toast.error('Failed to save profile. Please try again.');
       console.error(error);
     } else {
-      toast.success('Welcome to brandframe.ai!');
+      toast.success('Welcome to framea.ai!');
       navigate('/app', { replace: true });
     }
 
@@ -185,12 +185,12 @@ export default function Onboarding() {
                   How did you find us?
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                  This helps us understand how people discover brandframe.ai
+                  This helps us understand how people discover framea.ai
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <Label>Where did you hear about brandframe.ai? *</Label>
+                <Label>Where did you hear about framea.ai? *</Label>
                 <Select value={referralSource} onValueChange={setReferralSource}>
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder="Select an option" />
@@ -276,7 +276,7 @@ export default function Onboarding() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         <div className="absolute bottom-8 left-8 right-8">
           <p className="text-white/90 text-sm font-medium">
-            Generated with brandframe.ai
+            Generated with framea.ai
           </p>
         </div>
       </div>
