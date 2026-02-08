@@ -143,65 +143,43 @@ export default function Freestyle() {
     <div className="relative h-[calc(100vh-2rem)] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8 bg-muted/30">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
-      {showLoading ? (
-        <div className="flex-1 h-full flex flex-col items-center justify-center">
-          <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
-        </div>
-      ) : hasImages && savedImages.length <= 3 ? (
-        /* Few images: scrollable layout, prompt bar NOT floating */
-        <div className="h-full overflow-y-auto">
-          <div className="flex flex-col items-center justify-center min-h-full px-4 sm:px-6 py-8">
-            <div className="w-full flex-1 flex items-center justify-center mb-6">
-              <FreestyleGallery
-                images={galleryImages}
-                onDownload={handleDownload}
-                onExpand={openLightbox}
-                onDelete={handleDelete}
-              />
-            </div>
-            <div className="w-full max-w-3xl">
-              <FreestylePromptPanel {...panelProps} />
-            </div>
+      {/* Scrollable content area */}
+      <div className="h-full overflow-y-auto pb-52">
+        {showLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
           </div>
-        </div>
-      ) : hasImages ? (
-        /* Many images: masonry with floating prompt bar */
-        <>
-          <div className="h-full overflow-y-auto pb-52">
-            <FreestyleGallery
-              images={galleryImages}
-              onDownload={handleDownload}
-              onExpand={openLightbox}
-              onDelete={handleDelete}
-            />
+        ) : hasImages ? (
+          <FreestyleGallery
+            images={galleryImages}
+            onDownload={handleDownload}
+            onExpand={openLightbox}
+            onDelete={handleDelete}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
+            <div className="w-20 h-20 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
+              <Sparkles className="w-8 h-8 text-muted-foreground/40" />
+            </div>
+            <h2 className="text-2xl font-light tracking-tight text-foreground/80 mb-2">
+              Freestyle Studio
+            </h2>
+            <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed text-center">
+              Describe what you want to create, attach a reference, pick a model or scene.
+            </p>
           </div>
+        )}
+      </div>
 
-          {/* Gradient fade above prompt bar */}
-          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none" />
+      {/* Gradient fade above prompt bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none" />
 
-          {/* Floating Prompt Bar */}
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none z-10">
-            <div className="max-w-3xl mx-auto pointer-events-auto">
-              <FreestylePromptPanel {...panelProps} />
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="flex-1 h-full flex flex-col items-center justify-center px-4 sm:px-6">
-          <div className="w-20 h-20 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
-            <Sparkles className="w-8 h-8 text-muted-foreground/40" />
-          </div>
-          <h2 className="text-2xl font-light tracking-tight text-foreground/80 mb-2">
-            Freestyle Studio
-          </h2>
-          <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed text-center mb-8">
-            Describe what you want to create, attach a reference, pick a model or scene.
-          </p>
-          <div className="w-full max-w-3xl">
-            <FreestylePromptPanel {...panelProps} />
-          </div>
+      {/* Always-pinned Prompt Bar */}
+      <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none z-10">
+        <div className="max-w-3xl mx-auto pointer-events-auto">
+          <FreestylePromptPanel {...panelProps} />
         </div>
-      )}
+      </div>
 
       {savedImages.length > 0 && (
         <ImageLightbox
