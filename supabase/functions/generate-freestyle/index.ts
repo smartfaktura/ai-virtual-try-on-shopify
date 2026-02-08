@@ -151,6 +151,10 @@ function polishUserPrompt(
       layers.push(
         "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
       );
+      // Framing for standard portrait/model shots
+      layers.push(
+        "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head — do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
+      );
     }
   }
 
