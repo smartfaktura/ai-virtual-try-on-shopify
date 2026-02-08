@@ -28,12 +28,14 @@ const MOOD_OPTIONS = [
 
 // ── Color Feel options ──────────────────────────────────────────────────
 const COLOR_FEEL_OPTIONS = [
-  { value: 'warm-earthy', label: 'Warm & Earthy', description: 'Amber, terracotta, natural warmth', gradient: 'from-amber-200 to-orange-300' },
-  { value: 'cool-crisp', label: 'Cool & Crisp', description: 'Clean whites, blue undertones', gradient: 'from-sky-200 to-blue-300' },
-  { value: 'neutral-natural', label: 'Neutral & Natural', description: 'True-to-life, balanced colors', gradient: 'from-stone-200 to-gray-300' },
-  { value: 'rich-saturated', label: 'Rich & Saturated', description: 'Deep vivid colors, high impact', gradient: 'from-violet-300 to-rose-300' },
-  { value: 'muted-soft', label: 'Muted & Soft', description: 'Desaturated pastels, dreamy tones', gradient: 'from-pink-100 to-purple-100' },
-  { value: 'vibrant-bold', label: 'Vibrant & Bold', description: 'Bright, punchy, strong contrast', gradient: 'from-yellow-300 to-red-300' },
+  { value: 'warm-earthy', label: 'Warm & Earthy', description: 'Amber, terracotta, natural warmth', colors: ['#D4A574', '#C2784E', '#E8C4A0', '#A0522D'] },
+  { value: 'cool-crisp', label: 'Cool & Crisp', description: 'Clean whites, blue undertones', colors: ['#B8D4E8', '#7EB0D5', '#D6E8F4', '#5A9BC5'] },
+  { value: 'neutral-natural', label: 'Neutral & Natural', description: 'True-to-life, balanced colors', colors: ['#C8BEB4', '#A69E94', '#DDD8D2', '#8C857C'] },
+  { value: 'rich-saturated', label: 'Rich & Saturated', description: 'Deep vivid colors, high impact', colors: ['#8B3A8B', '#C44D4D', '#2E6B8A', '#D4A040'] },
+  { value: 'muted-soft', label: 'Muted & Soft', description: 'Desaturated pastels, dreamy tones', colors: ['#E8D5E0', '#D5D0E8', '#D0E0D5', '#E8E0D0'] },
+  { value: 'vibrant-bold', label: 'Vibrant & Bold', description: 'Bright, punchy, strong contrast', colors: ['#FF6B35', '#FFD23F', '#06D6A0', '#EF476F'] },
+  { value: 'monochrome', label: 'Monochrome', description: 'Black, white, and grayscale', colors: ['#1A1A1A', '#666666', '#AAAAAA', '#E5E5E5'] },
+  { value: 'pastel-dreamy', label: 'Pastel & Dreamy', description: 'Soft pinks, lavenders, baby blue', colors: ['#F4C2D7', '#C9B1E8', '#B5D8F0', '#F0E4A6'] },
 ];
 
 // ── Keyword suggestions ─────────────────────────────────────────────────
@@ -41,6 +43,9 @@ const KEYWORD_SUGGESTIONS = [
   'sustainable', 'handcrafted', 'premium', 'organic', 'artisan',
   'modern', 'timeless', 'edgy', 'feminine', 'masculine',
   'urban', 'natural', 'luxurious', 'affordable', 'innovative',
+  'vintage', 'eco-friendly', 'minimalist', 'high-end', 'bohemian',
+  'clinical', 'sporty', 'cozy', 'sophisticated', 'youthful',
+  'professional', 'rustic', 'futuristic', 'wholesome', 'sleek',
 ];
 
 // ── Do-Not suggestions ──────────────────────────────────────────────────
@@ -48,6 +53,9 @@ const DO_NOT_SUGGESTIONS = [
   'busy backgrounds', 'neon colors', 'harsh shadows', 'cluttered scenes',
   'overly saturated', 'dark moody', 'text overlays', 'collage layouts',
   'stock photo feel', 'cartoon style', 'vintage filters', 'heavy vignette',
+  'watermarks', 'people/models', 'hands visible', 'blurry images',
+  'lens flare', 'flat lighting', 'unrealistic colors', 'AI artifacts',
+  'reflections', 'props/accessories', 'patterned backgrounds', 'low contrast',
 ];
 
 interface FormData {
@@ -337,7 +345,7 @@ export default function BrandProfileWizard() {
               {/* Color Feel */}
               <div className="space-y-3">
                 <label className="text-sm font-medium">Color Feel</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                   {COLOR_FEEL_OPTIONS.map(cf => (
                     <button
                       key={cf.value}
@@ -349,10 +357,14 @@ export default function BrandProfileWizard() {
                           : 'border-border/50 hover:border-border'
                       )}
                     >
-                      <div className={cn('h-2 w-full bg-gradient-to-r', cf.gradient)} />
-                      <div className="p-3 pt-2.5">
-                        <p className="text-sm font-medium">{cf.label}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{cf.description}</p>
+                      <div className="h-6 w-full flex">
+                        {cf.colors.map((color, i) => (
+                          <div key={i} className="flex-1 h-full" style={{ backgroundColor: color }} />
+                        ))}
+                      </div>
+                      <div className="p-3 pt-2">
+                        <p className="text-xs font-medium">{cf.label}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{cf.description}</p>
                       </div>
                     </button>
                   ))}
@@ -400,13 +412,16 @@ export default function BrandProfileWizard() {
                       key={kw}
                       onClick={() => toggleChip('brand_keywords', kw)}
                       className={cn(
-                        'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
                         form.brand_keywords.includes(kw)
                           ? 'bg-primary/10 border-primary/30 text-primary'
-                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted'
+                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                       )}
                     >
-                      {form.brand_keywords.includes(kw) && <Check className="w-2.5 h-2.5 inline mr-1" />}
+                      {form.brand_keywords.includes(kw)
+                        ? <X className="w-3 h-3 -ml-0.5" />
+                        : <Plus className="w-3 h-3 -ml-0.5" />
+                      }
                       {kw}
                     </button>
                   ))}
@@ -460,13 +475,16 @@ export default function BrandProfileWizard() {
                       key={rule}
                       onClick={() => toggleChip('do_not_rules', rule)}
                       className={cn(
-                        'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors',
                         form.do_not_rules.includes(rule)
                           ? 'bg-destructive/10 border-destructive/30 text-destructive'
-                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted'
+                          : 'bg-muted/50 border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                       )}
                     >
-                      {form.do_not_rules.includes(rule) && '✕ '}
+                      {form.do_not_rules.includes(rule)
+                        ? <X className="w-3 h-3 -ml-0.5" />
+                        : <Plus className="w-3 h-3 -ml-0.5" />
+                      }
                       {rule}
                     </button>
                   ))}
