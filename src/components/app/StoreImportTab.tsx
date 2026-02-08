@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Globe, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,8 @@ interface StoreImportTabProps {
 interface ExtractedProduct {
   title: string;
   image_url: string;
+  image_urls?: string[];
+  storage_paths?: string[];
   product_type: string;
   description: string;
   storage_path: string;
@@ -63,15 +65,40 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
     setIsSaving(true);
 
     try {
-      const { error: insertError } = await supabase.from('user_products').insert({
-        user_id: user.id,
-        title: extracted.title,
-        product_type: extracted.product_type || '',
-        description: extracted.description || '',
-        image_url: extracted.image_url,
-      });
+      // Insert product record
+      const { data: productData, error: insertError } = await supabase
+        .from('user_products')
+        .insert({
+          user_id: user.id,
+          title: extracted.title,
+          product_type: extracted.product_type || '',
+          description: extracted.description || '',
+          image_url: extracted.image_url,
+        })
+        .select('id')
+        .single();
 
       if (insertError) throw new Error(insertError.message);
+
+      // Insert all images into product_images table
+      const imageUrls = extracted.image_urls || [extracted.image_url];
+      const storagePaths = extracted.storage_paths || [extracted.storage_path];
+
+      const imageRows = imageUrls.map((imgUrl, i) => ({
+        product_id: productData.id,
+        user_id: user.id,
+        image_url: imgUrl,
+        storage_path: storagePaths[i] || '',
+        position: i,
+      }));
+
+      const { error: imagesError } = await supabase
+        .from('product_images')
+        .insert(imageRows);
+
+      if (imagesError) {
+        console.error('Failed to insert product images:', imagesError);
+      }
 
       toast.success('Product imported!');
       onProductAdded();
@@ -92,6 +119,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
   };
 
   const platform = url ? detectPlatform(url) : null;
+  const imageCount = extracted?.image_urls?.length || (extracted ? 1 : 0);
 
   return (
     <div className="space-y-5">
@@ -123,7 +151,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
 
       {/* Supported platforms hint */}
       <p className="text-xs text-muted-foreground">
-        Works with Shopify, WooCommerce, Etsy, Amazon, and any page with product meta tags.
+        Works with Shopify, WooCommerce, Etsy, Amazon, and any page with product meta tags. All product images will be imported automatically.
       </p>
 
       {/* Error */}
@@ -138,7 +166,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
       {isImporting && (
         <div className="flex flex-col items-center py-8 gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Extracting product data…</p>
+          <p className="text-sm text-muted-foreground">Extracting product data & all images…</p>
         </div>
       )}
 
@@ -155,14 +183,37 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
             </div>
             <div className="flex-1 min-w-0 space-y-1">
               <p className="font-medium text-sm truncate">{extracted.title}</p>
-              {extracted.product_type && (
-                <Badge variant="secondary" className="text-[10px]">{extracted.product_type}</Badge>
-              )}
+              <div className="flex items-center gap-2">
+                {extracted.product_type && (
+                  <Badge variant="secondary" className="text-[10px]">{extracted.product_type}</Badge>
+                )}
+                {imageCount > 1 && (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <ImageIcon className="w-3 h-3" />
+                    {imageCount} images
+                  </span>
+                )}
+              </div>
               {extracted.description && (
                 <p className="text-xs text-muted-foreground line-clamp-2">{extracted.description}</p>
               )}
             </div>
           </div>
+
+          {/* Show all extracted images as thumbnails */}
+          {extracted.image_urls && extracted.image_urls.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {extracted.image_urls.map((imgUrl, i) => (
+                <div key={i} className="w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0 border border-border">
+                  <img
+                    src={imgUrl}
+                    alt={`Product image ${i + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setExtracted(null)}>
