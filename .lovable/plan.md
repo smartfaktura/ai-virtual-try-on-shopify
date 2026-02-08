@@ -1,39 +1,88 @@
 
-
-## Add Framing & Composition Control to Freestyle Generation
-
-### Problem
-The AI model sometimes positions the subject too low in the frame, cutting off the head or leaving too much empty space above/below. There are no explicit framing instructions in the current prompt engineering telling the AI where to place the subject.
+## Improve Website Hero Set — Landscape Banner Carousel Animation
 
 ### What Changes
 
-Add **automatic framing instructions** to the `generate-freestyle` edge function that ensure proper subject positioning based on the type of shot being generated.
+Transform the **Website Hero Set** workflow card from the current portrait (3:4) layout with floating elements into a **landscape hero banner carousel** that showcases 3 different hero banners cycling through. Each banner will demonstrate the "website hero" use case with horizontal compositions featuring negative space for text overlays and CTA buttons — exactly like real website hero sections.
+
+Additionally, regenerate a new AI preview image for the workflow using the edge function.
+
+### Design Concept
+
+The card will use a custom animation component (similar to how `SocialMediaGridThumbnail` is a custom component for the Social Media Pack). Instead of floating product/model chips over a portrait image, it will:
+
+1. Show a **landscape 16:9 hero banner** centered within the portrait card
+2. **Cycle through 3 different hero banner compositions** with crossfade transitions
+3. Each banner features a **product/model on one side** with **negative space on the other** containing mock text headlines and CTA button elements
+4. The "Generated" badge pops in after the carousel cycles
+
+### Visual Layout (per banner frame)
+
+```text
++---------------------------+
+|                           |
+|  +---------------------+ |
+|  |         HERO BANNER  | |
+|  | [Product/  | Headline| |
+|  |  Model     | Subtext | |
+|  |  Image]    | [CTA]   | |
+|  +---------------------+ |
+|                           |
++---------------------------+
+```
+
+Three banner variations:
+1. **Fashion** — Model in blazer (left), headline + CTA (right), warm golden tones
+2. **Skincare** — Serum product (left), headline + CTA (right), clean minimal aesthetic
+3. **Home/Lifestyle** — Candle scene (right), headline + CTA (left), cozy warm tones
 
 ### Technical Details
 
-**File: `supabase/functions/generate-freestyle/index.ts`**
+**1. New Component: `src/components/app/HeroBannerThumbnail.tsx`**
+- Custom carousel component specifically for the Website Hero Set card
+- Uses 3 hero banner images from existing assets as backgrounds
+- Each banner has a semi-transparent overlay on one side simulating negative space with mock UI elements (headline text lines, subtext, and a CTA button shape)
+- Crossfade animation between the 3 banners on a timed loop
+- Ends with a "Generated" sparkle badge like other workflow cards
+- Accepts `isActive` prop for hover-triggered animation (consistent with other cards)
 
-1. **Add a FRAMING layer when a model/person is involved** (`context.hasModel` is true or the prompt mentions a person):
+**2. Update: `src/components/app/workflowAnimationData.tsx`**
+- Remove the `'Website Hero Set'` entry from `workflowScenes` (no longer needed since the card gets its own component)
+- Remove the associated asset imports (`heroProduct`, `heroModel`, `heroResult`)
 
-   For **selfie shots** (when `isSelfie` is true), update the SELFIE COMPOSITION layer to include:
-   - "Subject's full head and hair must be fully visible within the frame with natural headroom above"
-   - "Frame from mid-chest or shoulders upward -- do NOT crop below the chin or above the forehead"
-   - "Center the face in the upper-third of the frame following the rule of thirds"
+**3. Update: `src/components/app/WorkflowCard.tsx`**
+- Add a conditional branch for `workflow.name === 'Website Hero Set'` (similar to the existing `Social Media Pack` branch)
+- Render `HeroBannerThumbnail` instead of `WorkflowAnimatedThumbnail` for this workflow
 
-   For **standard portrait/model shots** (non-selfie, but has model reference), add a new FRAMING layer:
-   - "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head -- do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
+**4. Update: `supabase/functions/generate-workflow-preview/index.ts`**
+- Update the `Website Hero Set` prompt to generate a **16:9 landscape** hero banner with explicit negative space instructions
+- New prompt will emphasize: wide-format composition, product/model positioned on one side, clean negative space on the opposite side for text overlay, professional website banner aesthetic
 
-2. **Add framing guidance for product-only shots** (no model, has source product):
-   - "FRAMING: Center the product with balanced negative space on all sides. The product should occupy 50-70% of the frame with no cropping of edges."
+**5. Trigger preview regeneration**
+- Call the edge function to generate a fresh preview image for the Website Hero Set workflow
 
-These instructions are automatically applied during prompt polish -- no UI changes needed. The framing will improve for all future generations without users needing to manually specify it.
+### Animation Flow
 
-### Summary of Changes
-
-| Shot Type | New Framing Instruction |
+| Time | What Happens |
 |---|---|
-| Selfie (with person) | Full head visible, face in upper-third, frame from shoulders up |
-| Portrait (with model ref) | Full head + hair visible, proper headroom, rule of thirds |
-| Product only | Centered, 50-70% frame, no edge cropping |
+| 0.0s | Banner 1 fades in (fashion blazer, model left, text right) |
+| 2.5s | Crossfade to Banner 2 (skincare, product left, text right) |
+| 5.0s | Crossfade to Banner 3 (home decor, scene right, text left) |
+| 7.0s | Shimmer sweep effect |
+| 7.5s | "3 Heroes" badge pops in |
+| 9.0s | Loop restarts |
 
-One file changed: `supabase/functions/generate-freestyle/index.ts`
+### Assets Used (existing, no new uploads needed)
+
+- Banner 1 background: `fashion-blazer-golden.jpg`
+- Banner 2 background: `skincare-serum-marble.jpg`
+- Banner 3 background: `home-candle-evening.jpg`
+
+### Files Changed
+
+| File | Action |
+|---|---|
+| `src/components/app/HeroBannerThumbnail.tsx` | **New** — Hero banner carousel component |
+| `src/components/app/WorkflowCard.tsx` | **Edit** — Add conditional for Website Hero Set |
+| `src/components/app/workflowAnimationData.tsx` | **Edit** — Remove Website Hero Set entry + unused imports |
+| `supabase/functions/generate-workflow-preview/index.ts` | **Edit** — Update prompt for landscape hero banner |
