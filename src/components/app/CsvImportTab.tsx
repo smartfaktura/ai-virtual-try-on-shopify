@@ -199,11 +199,8 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
                 />
               </label>
             </p>
-            <p className="text-xs text-muted-foreground">
-              Required column: <code className="bg-muted px-1 rounded">title</code>. Optional:{' '}
-              <code className="bg-muted px-1 rounded">product_type</code>,{' '}
-              <code className="bg-muted px-1 rounded">image_url</code>,{' '}
-              <code className="bg-muted px-1 rounded">description</code>
+            <p className="text-[11px] text-muted-foreground">
+              Required: <span className="font-medium text-foreground">title</span>. Optional: type, image_url, description
             </p>
           </div>
 
