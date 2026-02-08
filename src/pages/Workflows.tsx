@@ -48,29 +48,6 @@ export default function Workflows() {
       title="Workflows"
       subtitle="Choose an outcome-driven workflow to generate professional visual sets."
     >
-      <div className="space-y-6">
-        {/* Admin action: generate missing previews */}
-        {!isLoading && workflowsMissingPreviews.length > 0 && (
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              disabled={isAnyGenerating}
-              onClick={handleGeneratePreviews}
-            >
-              {isAnyGenerating ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="w-3.5 h-3.5" />
-              )}
-              {isAnyGenerating
-                ? `Generating (${generatingIds.size} left)…`
-                : `Generate ${workflowsMissingPreviews.length} Preview${workflowsMissingPreviews.length > 1 ? 's' : ''}`}
-            </Button>
-          </div>
-        )}
-
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
@@ -84,14 +61,13 @@ export default function Workflows() {
                 key={workflow.id}
                 workflow={workflow}
                 onSelect={() => handleCreateVisualSet(workflow)}
-                isGenerating={generatingIds.has(workflow.id)}
+                isGenerating={false}
                 autoPlay={workflow.name === 'Virtual Try-On Set' && hoveredWorkflow !== null ? hoveredWorkflow === workflow.name : workflow.name === 'Virtual Try-On Set'}
                 onHoverChange={(hovered) => setHoveredWorkflow(hovered ? workflow.name : null)}
               />
             ))}
           </div>
         )}
-      </div>
     </PageHeader>
   );
 }
