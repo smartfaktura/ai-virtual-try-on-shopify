@@ -1,36 +1,44 @@
 
 
-## StudioTeamSection Improvements
+## Rebrand: brandframe.ai → framea.ai
 
-Three changes to the landing page Studio Team carousel:
+A global find-and-replace across all files where the brand name appears. The logo icon will change from **"bf"** to **"fa"** to match the new name.
 
-### 1. Reorder Team: Move Luna Before Kenji
-Luna (Retouch Specialist, currently position 7) will be moved to position 3 in the array, right before Kenji (Campaign Art Director). The new order will be:
-Sophia, Amara, **Luna**, Kenji, Yuki, Omar, Sienna, Max, Zara, Leo
+### Changes Summary
 
-### 2. Remove Scrollbar
-The carousel currently shows a visible scrollbar at the bottom (seen in the screenshot). This will be hidden by:
-- Removing the `scrollbar-thin` class and the `scrollbarColor` inline style
-- Adding `scrollbar-width: none` and `-ms-overflow-style: none` CSS to fully hide the scrollbar (matching the approach already used in `DashboardTeamCarousel.tsx`)
+**11 files** will be updated:
 
-### 3. Add Slow Auto-Rotate
-The carousel will automatically scroll through team members at a slow, continuous pace:
-- Uses a `setInterval` that scrolls the container by a small pixel amount (e.g., 1px) every ~30ms for a smooth, continuous drift
-- Pauses auto-scroll when the user hovers over the carousel or manually interacts with the navigation arrows
-- Resumes auto-scroll when the user stops hovering
-- Wraps back to the start when reaching the end
+| File | What Changes |
+|------|-------------|
+| `index.html` | Page title, meta description, author, OG tags, Twitter handle |
+| `src/components/landing/LandingNav.tsx` | Logo icon "bf" → "fa", brand text |
+| `src/components/landing/LandingFooter.tsx` | Logo icon "bf" → "fa", brand text, copyright |
+| `src/components/landing/LandingFAQ.tsx` | FAQ answer text |
+| `src/components/landing/SocialProofBar.tsx` | Social proof label |
+| `src/components/landing/FeatureGrid.tsx` | Section heading |
+| `src/pages/Auth.tsx` | Logo icon "bf" → "fa", brand text, image caption |
+| `src/pages/Onboarding.tsx` | Toast message, question labels, image caption |
+| `src/pages/Settings.tsx` | Model badge "brandframe-v1" → "framea-v1" |
+| `src/components/app/AppShell.tsx` | Sidebar logo icon "bf" → "fa", brand text |
+| `src/components/app/CompetitorComparison.tsx` | Comparison table name |
+| `src/components/app/StudioChat.tsx` | Avatar fallback "bf" → "fa" |
+| `src/components/app/ProtectedRoute.tsx` | Loading spinner logo "bf" → "fa" |
 
----
+### Detailed Replacements
 
-### Technical Details
+**Brand name text:**
+- `brandframe.ai` → `framea.ai` (all lowercase instances)
+- `BrandFrame AI` → `Framea AI` (title case in SEO meta)
+- `Brandframe.ai` → `Framea.ai` (sentence case in headings)
 
-**File: `src/components/landing/StudioTeamSection.tsx`**
+**Logo icon text:**
+- `bf` → `fa` (inside the small rounded logo square, across 6 files)
 
-- **TEAM array reorder**: Move the Luna object from index 6 to index 2 (before Kenji at current index 2)
-- **State additions**: Add `isHovered` state ref and `intervalRef` for the auto-scroll timer
-- **useEffect hook**: Set up the auto-scroll interval that scrolls the container rightward by ~1px every 30ms. When it reaches the end, it resets to the beginning. Cleans up on unmount.
-- **Event handlers**: Add `onMouseEnter`/`onMouseLeave` on the carousel container to pause/resume the auto-scroll. Also pause when arrow buttons are clicked.
-- **Scrollbar removal**: Replace `className="... scrollbar-thin"` with hidden scrollbar styles: `scrollbarWidth: 'none', msOverflowStyle: 'none'` and remove the `scrollbarColor` style
+**Model version badge:**
+- `brandframe-v1` → `framea-v1`
 
-No changes needed to `DashboardTeamCarousel.tsx` for this request (it already has hidden scrollbar and a different layout).
+**Twitter handle:**
+- `@BrandFrameAI` → `@FrameaAI`
+
+No structural or layout changes -- purely text replacements.
 
