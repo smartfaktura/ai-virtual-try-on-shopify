@@ -35,16 +35,11 @@ export function SocialMediaGridThumbnail({ isActive = true }: Props) {
 
   return (
     <div
-      className="relative w-full h-full overflow-hidden bg-neutral-100"
+      className="relative w-full h-full overflow-hidden bg-muted"
       key={isActive ? iteration : 'static'}
     >
       {/* Soft gradient background */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(145deg, #f8f6f3 0%, #ede9e3 40%, #e8e4de 100%)',
-        }}
-      />
+      <div className="absolute inset-0 bg-muted" />
 
       {/* Multi-ratio grid */}
       <div
