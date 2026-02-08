@@ -99,10 +99,10 @@ export function BuyCreditsModal() {
           </TabsList>
 
           {/* Top Up Tab */}
-          <TabsContent value="topup" className="flex-1 overflow-y-auto space-y-3 mt-3">
-            <p className="text-xs text-muted-foreground">Credits never expire • Use across all modes</p>
+          <TabsContent value="topup" className="flex-1 overflow-y-auto space-y-4 mt-4">
+            <p className="text-sm text-muted-foreground">Credits never expire • Use across all modes</p>
 
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-3">
               {creditPacks.map((pack) => (
                 <div
                   key={pack.packId}
