@@ -154,8 +154,7 @@ function ContentBlockedCard({
     </div>
   );
 }
-
-
+function ImageCard({
   img,
   idx,
   onDownload,
