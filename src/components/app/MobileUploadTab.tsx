@@ -222,23 +222,23 @@ export function MobileUploadTab({ onProductAdded, onClose }: MobileUploadTabProp
           <p className="text-sm text-muted-foreground">Creating secure session…</p>
         </div>
       ) : qrUrl ? (
-        <div className="flex flex-col items-center gap-4">
-          <div className="bg-background p-3 rounded-xl border shadow-sm">
-            <img src={qrUrl} alt="Scan QR code" className="w-[220px] h-[220px]" />
+        <div className="flex flex-col items-center gap-5 py-2">
+          <div className="bg-background p-4 rounded-2xl border shadow-md">
+            <img src={qrUrl} alt="Scan QR code" className="w-[200px] h-[200px]" />
           </div>
           <div className="text-center space-y-1">
             <p className="text-sm font-medium flex items-center gap-2 justify-center">
               <Smartphone className="w-4 h-4" />
               Scan with your phone
             </p>
-            <p className="text-xs text-muted-foreground">
-              Take a photo or pick from camera roll. It'll appear here automatically.
+            <p className="text-[11px] text-muted-foreground">
+              Take a photo or pick from camera roll
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-primary animate-pulse-subtle" />
-            <span className="text-xs text-muted-foreground">Waiting for upload…</span>
+          <div className="flex items-center gap-2 bg-muted/40 rounded-full px-3 py-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[11px] text-muted-foreground">Waiting for upload…</span>
           </div>
         </div>
       ) : null}

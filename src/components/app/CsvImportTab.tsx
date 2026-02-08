@@ -199,11 +199,8 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
                 />
               </label>
             </p>
-            <p className="text-xs text-muted-foreground">
-              Required column: <code className="bg-muted px-1 rounded">title</code>. Optional:{' '}
-              <code className="bg-muted px-1 rounded">product_type</code>,{' '}
-              <code className="bg-muted px-1 rounded">image_url</code>,{' '}
-              <code className="bg-muted px-1 rounded">description</code>
+            <p className="text-[11px] text-muted-foreground">
+              Required: <span className="font-medium text-foreground">title</span>. Optional: type, image_url, description
             </p>
           </div>
 
@@ -238,27 +235,27 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
           </div>
 
           {/* Rows table */}
-          <div className="max-h-[300px] overflow-auto border rounded-lg">
+          <div className="max-h-[300px] overflow-auto rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-muted/50 sticky top-0">
+              <thead className="bg-muted/40 sticky top-0">
                 <tr>
-                  <th className="text-left p-2 font-medium">Title</th>
-                  <th className="text-left p-2 font-medium">Type</th>
-                  <th className="text-left p-2 font-medium">Image</th>
-                  <th className="text-left p-2 font-medium w-16">Status</th>
+                  <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Title</th>
+                  <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Type</th>
+                  <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Image</th>
+                  <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground w-16">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.slice(0, 50).map((row, i) => (
-                  <tr key={i} className={`border-t ${!row.valid ? 'bg-destructive/5' : ''}`}>
-                    <td className="p-2 truncate max-w-[200px]">{row.title || '—'}</td>
-                    <td className="p-2 truncate max-w-[120px]">{row.product_type || '—'}</td>
-                    <td className="p-2 truncate max-w-[150px] text-xs text-muted-foreground">{row.image_url ? '✓' : '—'}</td>
-                    <td className="p-2">
+                  <tr key={i} className={`border-t border-border/50 ${!row.valid ? 'bg-destructive/5' : i % 2 === 1 ? 'bg-muted/15' : ''}`}>
+                    <td className="px-3 py-2 truncate max-w-[200px] text-sm">{row.title || '—'}</td>
+                    <td className="px-3 py-2 truncate max-w-[120px] text-sm text-muted-foreground">{row.product_type || '—'}</td>
+                    <td className="px-3 py-2 truncate max-w-[150px] text-xs text-muted-foreground">{row.image_url ? '✓' : '—'}</td>
+                    <td className="px-3 py-2">
                       {row.valid ? (
                         <Check className="w-3.5 h-3.5 text-primary" />
                       ) : (
-                        <span className="text-xs text-destructive">{row.error}</span>
+                        <span className="text-[11px] text-destructive">{row.error}</span>
                       )}
                     </td>
                   </tr>
@@ -266,7 +263,7 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
               </tbody>
             </table>
             {rows.length > 50 && (
-              <p className="p-2 text-xs text-muted-foreground text-center">
+              <p className="px-3 py-2 text-[11px] text-muted-foreground text-center bg-muted/20">
                 Showing first 50 of {rows.length} rows
               </p>
             )}

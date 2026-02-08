@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Globe, FileSpreadsheet, Smartphone } from 'lucide-react';
 import { ManualProductTab } from './ManualProductTab';
@@ -30,58 +30,75 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto rounded-2xl">
-        <DialogHeader>
-          <DialogTitle>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
-          <DialogDescription>
-            {editingProduct
-              ? 'Update your product details and images'
-              : 'Upload product images and fill in the details'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[580px] max-h-[85vh] overflow-y-auto rounded-2xl p-0">
+        <div className="px-6 pt-6 pb-2">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold tracking-tight">
+              {editingProduct ? 'Edit Product' : 'Add Product'}
+            </DialogTitle>
+          </DialogHeader>
+        </div>
 
         {editingProduct ? (
-          <ManualProductTab
-            onProductAdded={onProductAdded}
-            onClose={handleClose}
-            editingProduct={editingProduct}
-          />
+          <div className="px-6 pb-6">
+            <ManualProductTab
+              onProductAdded={onProductAdded}
+              onClose={handleClose}
+              editingProduct={editingProduct}
+            />
+          </div>
         ) : (
           <Tabs defaultValue="manual" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="manual" className="text-xs gap-1.5">
-                <Upload className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Upload</span>
-              </TabsTrigger>
-              <TabsTrigger value="store" className="text-xs gap-1.5">
-                <Globe className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Store URL</span>
-              </TabsTrigger>
-              <TabsTrigger value="csv" className="text-xs gap-1.5">
-                <FileSpreadsheet className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">CSV</span>
-              </TabsTrigger>
-              <TabsTrigger value="mobile" className="text-xs gap-1.5">
-                <Smartphone className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Mobile</span>
-              </TabsTrigger>
-            </TabsList>
+            <div className="px-6">
+              <TabsList className="w-full bg-transparent p-0 h-auto gap-1 border-b border-border rounded-none justify-start">
+                <TabsTrigger
+                  value="manual"
+                  className="rounded-full px-3.5 py-1.5 text-xs font-medium data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload
+                </TabsTrigger>
+                <TabsTrigger
+                  value="store"
+                  className="rounded-full px-3.5 py-1.5 text-xs font-medium data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  Store URL
+                </TabsTrigger>
+                <TabsTrigger
+                  value="csv"
+                  className="rounded-full px-3.5 py-1.5 text-xs font-medium data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  CSV
+                </TabsTrigger>
+                <TabsTrigger
+                  value="mobile"
+                  className="rounded-full px-3.5 py-1.5 text-xs font-medium data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  Mobile
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="manual">
-              <ManualProductTab onProductAdded={onProductAdded} onClose={handleClose} />
-            </TabsContent>
+            <div className="px-6 pb-6 pt-4">
+              <TabsContent value="manual" className="mt-0">
+                <ManualProductTab onProductAdded={onProductAdded} onClose={handleClose} />
+              </TabsContent>
 
-            <TabsContent value="store">
-              <StoreImportTab onProductAdded={onProductAdded} onClose={handleClose} />
-            </TabsContent>
+              <TabsContent value="store" className="mt-0">
+                <StoreImportTab onProductAdded={onProductAdded} onClose={handleClose} />
+              </TabsContent>
 
-            <TabsContent value="csv">
-              <CsvImportTab onProductAdded={onProductAdded} onClose={handleClose} />
-            </TabsContent>
+              <TabsContent value="csv" className="mt-0">
+                <CsvImportTab onProductAdded={onProductAdded} onClose={handleClose} />
+              </TabsContent>
 
-            <TabsContent value="mobile">
-              <MobileUploadTab onProductAdded={onProductAdded} onClose={handleClose} />
-            </TabsContent>
+              <TabsContent value="mobile" className="mt-0">
+                <MobileUploadTab onProductAdded={onProductAdded} onClose={handleClose} />
+              </TabsContent>
+            </div>
           </Tabs>
         )}
       </DialogContent>

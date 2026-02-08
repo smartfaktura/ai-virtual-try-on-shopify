@@ -86,7 +86,7 @@ export function ProductImageGallery({
 
           {/* Primary label at bottom */}
           {img.isPrimary && (
-            <div className="absolute bottom-0 inset-x-0 bg-primary/85 text-primary-foreground text-[9px] font-semibold text-center py-[2px] uppercase tracking-wider">
+            <div className="absolute bottom-0 inset-x-0 bg-primary/80 backdrop-blur-sm text-primary-foreground text-[9px] font-semibold text-center py-[2px] uppercase tracking-wider">
               Cover
             </div>
           )}
