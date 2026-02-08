@@ -1,117 +1,94 @@
 
 
-## Create All Footer Link Pages
+## Team Avatar Hover Popup with Living Videos
 
-### Overview
+### What This Does
 
-Create 11 new public pages for every link in the footer that currently points to `#`. These pages will share a common layout wrapper (LandingNav + LandingFooter) and follow the existing visual style.
+When users hover over any static team avatar (on the About page grid or the Final CTA stacked avatars), a polished popup card appears showing:
+- The animated "living avatar" video (auto-playing, looped)
+- Team member name and role
+- Short description of what they do
 
-### Pages to Create
+This creates a delightful discovery moment and ties the static avatars back to the living characters from the Studio Team section.
 
-**Company (4 pages)**
-- `/about` -- Full content page with VOVV.AI story, mission, vision, and team section using existing avatar assets
-- `/blog` -- "Coming Soon" page with headline, description, and email signup input
-- `/careers` -- Full content page with company culture section and open positions (placeholder roles)
-- `/press` -- Press kit page with brand assets section, press contact info, and media mentions
+### Where It Applies
 
-**Support (4 pages)**
-- `/help` -- FAQ-style help center with categorized questions (Getting Started, Billing, Workflows, etc.) using the existing Accordion component
-- `/contact` -- Working contact form with name, email, subject dropdown, and message textarea
-- `/status` -- System status page with health indicators for Platform, API, CDN, and Generation Engine
-- `/changelog` -- Version history timeline with release notes (v1.3, v1.2, v1.1, v1.0)
+1. **About page** (`/about`) -- The 10 circular team avatars in the "Meet the Team" grid
+2. **Final CTA section** -- The 10 stacked overlapping avatars with "Your studio team is ready"
 
-**Legal (3 pages)**
-- `/privacy` -- Template privacy policy with VOVV.AI branding and standard sections
-- `/terms` -- Template terms of service with VOVV.AI branding
-- `/cookies` -- Template cookie policy with VOVV.AI branding
+### Design
 
-### Shared Layout
-
-All pages will use a consistent wrapper:
+The hover popup uses Radix HoverCard (already installed) with this layout:
 
 ```text
-LandingNav (sticky, same as landing page)
-  Page Content (max-w-4xl, centered, padded)
-LandingFooter (same as landing page)
++---------------------------+
+|  [Video - aspect 4:5]     |
+|  Living avatar playing     |
+|                            |
++---------------------------+
+|  Name          Role Badge  |
+|  Description text...       |
++---------------------------+
 ```
+
+- Video auto-plays on hover, pauses when popup closes
+- Card has rounded corners, border, shadow (matches existing card aesthetic)
+- Positioned above or below the avatar depending on space
+- Smooth fade-in animation using existing `animate-in` utilities
+- Card width: ~220px to keep it compact but readable
 
 ### Technical Details
 
-**1. Page Layout Component: `src/components/landing/PageLayout.tsx`**
+**1. Create shared team data: `src/data/teamData.ts`**
 
-A reusable wrapper that renders LandingNav + main content + LandingFooter. All 11 pages will use this to avoid duplicating the nav/footer in every file.
+Extract the team member array (names, roles, descriptions, avatar imports, video URLs) into a single shared file. This eliminates the current duplication across `StudioTeamSection.tsx`, `DashboardTeamCarousel.tsx`, `FinalCTA.tsx`, and `About.tsx`.
 
-**2. New Page Files (11 files in `src/pages/`)**
+**2. Create hover card component: `src/components/landing/TeamAvatarHoverCard.tsx`**
 
-| File | Route | Description |
+A reusable wrapper component that:
+- Accepts `children` (the avatar trigger element) and a `member` object
+- Uses Radix `HoverCard` from `@radix-ui/react-hover-card`
+- Renders the video player + name/role/description inside the popup content
+- Video loads with `preload="none"` and starts playing only when the popup opens
+- Includes a subtle scale-in + fade animation on open
+
+**3. Update `src/pages/About.tsx`**
+
+- Import shared team data from `teamData.ts` (replacing local array)
+- Wrap each avatar `<div>` with `<TeamAvatarHoverCard>`
+- The existing circular avatar becomes the hover trigger
+- Add descriptions to the team data (currently About only has name + role)
+
+**4. Update `src/components/landing/FinalCTA.tsx`**
+
+- Import shared team data from `teamData.ts`
+- Wrap each stacked avatar `<img>` with `<TeamAvatarHoverCard>`
+- The overlapping layout stays the same; popup appears on hover
+
+**5. Update `src/components/landing/StudioTeamSection.tsx`**
+
+- Import team data from shared `teamData.ts` instead of defining it locally
+
+**6. Update `src/components/app/DashboardTeamCarousel.tsx`**
+
+- Import team data from shared `teamData.ts` instead of defining it locally
+
+### Hover Card Behavior
+
+- **Open delay**: 200ms (prevents accidental triggers)
+- **Close delay**: 150ms (gives time to move to the card if needed)
+- **Video**: Starts playing when popup opens, resets when it closes
+- **Positioning**: `side="top"` by default with `avoidCollisions` enabled so it flips if near screen edge
+- **Mobile**: HoverCard gracefully degrades -- it won't trigger on touch devices (Radix handles this)
+
+### Files Changed
+
+| File | Action | Description |
 |---|---|---|
-| `About.tsx` | `/about` | Company story, mission statement, values grid (3 cards: Innovation, Diversity, Simplicity), and team grid using existing avatar images |
-| `Blog.tsx` | `/blog` | "Coming Soon" page with brief copy, email input + "Notify Me" button, and topic preview chips (AI Photography, E-commerce Tips, etc.) |
-| `Careers.tsx` | `/careers` | Culture section with 3 value cards, open positions list with role, team, location, and type badges |
-| `Press.tsx` | `/press` | Brand guidelines summary, download brand kit CTA, press contact email, and media mention cards |
-| `HelpCenter.tsx` | `/help` | Categorized FAQ using Accordion component, organized into 4-5 categories (Getting Started, Billing, Workflows, Account, Image Quality) |
-| `Contact.tsx` | `/contact` | Contact form (name, email, subject select, message textarea), plus sidebar with email, response time, and social links |
-| `Status.tsx` | `/status` | Status dashboard showing service health cards (Platform, API, CDN, Generation Engine) with green/yellow/red indicators and uptime percentage |
-| `Changelog.tsx` | `/changelog` | Timeline-style version history with dates, version numbers, and categorized changes (New, Improved, Fixed) |
-| `PrivacyPolicy.tsx` | `/privacy` | Template privacy policy with "Last updated" date, standard sections (Data Collection, Usage, Sharing, Rights, Contact) |
-| `TermsOfService.tsx` | `/terms` | Template terms of service with standard sections (Acceptance, Account, Usage, IP, Limitation, Termination) |
-| `CookiePolicy.tsx` | `/cookies` | Template cookie policy with cookie types table, opt-out instructions, and contact info |
+| `src/data/teamData.ts` | New | Shared team member data with avatars, videos, roles, descriptions |
+| `src/components/landing/TeamAvatarHoverCard.tsx` | New | Reusable Radix HoverCard with video + info popup |
+| `src/pages/About.tsx` | Edit | Use shared data + wrap avatars with hover card |
+| `src/components/landing/FinalCTA.tsx` | Edit | Use shared data + wrap avatars with hover card |
+| `src/components/landing/StudioTeamSection.tsx` | Edit | Import from shared data instead of local array |
+| `src/components/app/DashboardTeamCarousel.tsx` | Edit | Import from shared data instead of local array |
 
-**3. Route Registration: Update `src/App.tsx`**
-
-Add 11 new public routes before the `/app/*` block:
-
-```text
-/about        -> About
-/blog         -> Blog
-/careers      -> Careers
-/press        -> Press
-/help         -> HelpCenter
-/contact      -> Contact
-/status       -> Status
-/changelog    -> Changelog
-/privacy      -> PrivacyPolicy
-/terms        -> TermsOfService
-/cookies      -> CookiePolicy
-```
-
-**4. Update Footer Links: `src/components/landing/LandingFooter.tsx`**
-
-Replace `<a href="#">` with react-router `<Link to="/about">` etc. Map each footer link text to its route. Also update the Product column links to scroll anchors on the landing page (e.g., `/#pricing`, `/#features`).
-
-### Content Approach
-
-**Company pages** -- Written as realistic VOVV.AI content:
-- About: "Founded to eliminate the bottleneck of product photography for e-commerce brands"
-- Careers: 4-5 placeholder roles (ML Engineer, Product Designer, Growth Lead, etc.)
-- Press: Brand facts (founded year, team size, images generated stat)
-
-**Support pages** -- Functional and detailed:
-- Help Center: 15-20 real questions pulled from existing FAQ + new ones about workflows, credits, brand profiles
-- Contact: Form with toast feedback on submit (no backend -- just UI)
-- Status: All systems showing "Operational" with 99.9% uptime
-- Changelog: 4 version entries with realistic feature lists matching existing features
-
-**Legal pages** -- Template text clearly branded as VOVV.AI:
-- Each starts with "Last updated: February 2026"
-- Each ends with "Questions? Contact us at legal@vovv.ai"
-- Marked as templates (not legal advice)
-
-### Files Changed Summary
-
-| File | Action |
-|---|---|
-| `src/components/landing/PageLayout.tsx` | **New** -- Shared nav + footer wrapper |
-| `src/pages/About.tsx` | **New** |
-| `src/pages/Blog.tsx` | **New** |
-| `src/pages/Careers.tsx` | **New** |
-| `src/pages/Press.tsx` | **New** |
-| `src/pages/HelpCenter.tsx` | **New** |
-| `src/pages/Contact.tsx` | **New** |
-| `src/pages/Status.tsx` | **New** |
-| `src/pages/Changelog.tsx` | **New** |
-| `src/pages/PrivacyPolicy.tsx` | **New** |
-| `src/pages/TermsOfService.tsx` | **New** |
-| `src/pages/CookiePolicy.tsx` | **New** |
-| `src/App.tsx` | **Edit** -- Add 11 public routes |
-| `src/components/landing/LandingFooter.tsx` | **Edit** -- Replace `#` hrefs with router Links |
