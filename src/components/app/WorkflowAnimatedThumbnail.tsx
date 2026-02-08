@@ -81,20 +81,19 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const advance = useCallback(() => {
-    setEntering(true);
-    setPrevStep((prev) => {
-      // prev is the old prevStep; we want to set it to current activeStep
-      return null; // will be set below
-    });
-    setPrevStep(activeStep);
-    setActiveStep((prev) => (prev + 1) % steps.length);
+    setActiveStep((prevActive) => {
+      setPrevStep(prevActive);
+      setEntering(true);
 
-    // Let the enter transition play, then clear prevStep
-    timeoutRef.current = setTimeout(() => {
-      setEntering(false);
-      setPrevStep(null);
-    }, 650);
-  }, [steps.length, activeStep]);
+      // Clear entering state after transition completes
+      timeoutRef.current = setTimeout(() => {
+        setEntering(false);
+        setPrevStep(null);
+      }, 650);
+
+      return (prevActive + 1) % steps.length;
+    });
+  }, [steps.length]);
 
   // Reset on deactivate
   useEffect(() => {
