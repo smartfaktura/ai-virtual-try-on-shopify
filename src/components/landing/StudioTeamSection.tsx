@@ -112,6 +112,8 @@ export function StudioTeamSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const isHoveredRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const updateScrollState = () => {
     const el = scrollRef.current;
@@ -129,6 +131,39 @@ export function StudioTeamSection() {
       behavior: 'smooth',
     });
   };
+
+  // Auto-scroll effect
+  useEffect(() => {
+    const startAutoScroll = () => {
+      if (intervalRef.current) return;
+      intervalRef.current = setInterval(() => {
+        const el = scrollRef.current;
+        if (!el || isHoveredRef.current) return;
+        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
+          el.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          el.scrollLeft += 1;
+        }
+        updateScrollState();
+      }, 30);
+    };
+
+    startAutoScroll();
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    isHoveredRef.current = true;
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    isHoveredRef.current = false;
+  }, []);
 
   return (
     <section className="py-20 sm:py-28 bg-muted/30">
