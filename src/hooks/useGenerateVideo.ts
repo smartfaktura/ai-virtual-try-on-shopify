@@ -152,6 +152,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       duration?: '5' | '10';
       modelName?: string;
       aspectRatio?: '1:1' | '16:9' | '9:16';
+      imageTailUrl?: string;
     }) => {
       cleanup();
       setStatus('creating');
@@ -160,15 +161,18 @@ export function useGenerateVideo(): UseGenerateVideoResult {
       setElapsedSeconds(0);
 
       try {
+        const body: Record<string, unknown> = {
+          action: 'create',
+          image_url: params.imageUrl,
+          prompt: params.prompt || '',
+          duration: params.duration || '5',
+          model_name: params.modelName || 'kling-v2-1',
+          aspect_ratio: params.aspectRatio || '16:9',
+        };
+        if (params.imageTailUrl) body.image_tail = params.imageTailUrl;
+
         const { data, error: fnError } = await supabase.functions.invoke('generate-video', {
-          body: {
-            action: 'create',
-            image_url: params.imageUrl,
-            prompt: params.prompt || '',
-            duration: params.duration || '5',
-            model_name: params.modelName || 'kling-v2-1',
-            aspect_ratio: params.aspectRatio || '16:9',
-          },
+          body,
         });
 
         if (fnError) throw new Error(fnError.message);
