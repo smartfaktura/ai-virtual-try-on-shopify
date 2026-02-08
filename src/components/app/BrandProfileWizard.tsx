@@ -561,8 +561,8 @@ export default function BrandProfileWizard() {
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <Button
+          type="button"
           variant="ghost"
-          onClick={() => step > 0 ? setStep(step - 1) : navigate('/app/brand-profiles')}
           className="gap-1.5"
         >
           <ArrowLeft className="w-4 h-4" />
