@@ -34,7 +34,7 @@ export function GenerationModeCards({ compact = false }: GenerationModeCardsProp
         )}
         <Button
           className="w-full rounded-full font-semibold gap-2 mt-4 shadow-lg shadow-primary/25"
-          onClick={() => navigate('/app/generate')}
+          onClick={() => navigate('/app/freestyle')}
         >
           {compact ? 'Generate' : 'Start Generating'}
           <ArrowRight className="w-4 h-4" />
