@@ -22,6 +22,7 @@ import Products from '@/pages/Products';
 import CreativeDrops from '@/pages/CreativeDrops';
 import MobileUpload from '@/pages/MobileUpload';
 import VideoGenerate from '@/pages/VideoGenerate';
+import Freestyle from '@/pages/Freestyle';
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/jobs/:id" element={<Jobs />} />
                       <Route path="/video" element={<VideoGenerate />} />
+                      <Route path="/freestyle" element={<Freestyle />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
