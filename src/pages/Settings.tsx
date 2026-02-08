@@ -275,7 +275,7 @@ export default function Settings() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Credits Remaining</span>
-                  <span className="text-sm font-semibold">{balance} / {creditsTotal}</span>
+                  <span className="text-sm font-semibold">{balance} / {creditsTotal === Infinity ? '∞' : creditsTotal}</span>
                 </div>
                 <Progress value={creditsPercentage} className="h-2" />
                 <p className="text-xs text-muted-foreground">Resets on the 1st of each month</p>

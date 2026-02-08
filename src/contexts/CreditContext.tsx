@@ -146,6 +146,8 @@ export function CreditProvider({ children }: CreditProviderProps) {
         isCritical,
         isEmpty,
         isLoading,
+        plan,
+        planConfig,
         deductCredits,
         addCredits,
         buyModalOpen,
