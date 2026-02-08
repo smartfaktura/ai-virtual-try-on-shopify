@@ -56,6 +56,8 @@ interface FreestylePromptPanelProps {
   onNegativesChange: (negatives: string[]) => void;
   negativesPopoverOpen: boolean;
   onNegativesPopoverChange: (open: boolean) => void;
+  // Drag and drop
+  onFileDrop?: (file: File) => void;
 }
 
 export function FreestylePromptPanel({
