@@ -53,7 +53,7 @@ function GeneratingCard({ progress = 0, className }: { progress?: number; classN
     <div
       className={cn(
         'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-5 px-8',
-        'border border-border/30',
+        'border border-border/30 min-h-[300px] w-full h-full',
         'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
         className,
       )}
@@ -106,6 +106,8 @@ function ImageCard({
   className?: string;
   natural?: boolean;
 }) {
+  const [loaded, setLoaded] = useState(false);
+
   const actionButtons = (
     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
       <div className="flex items-center gap-2">
@@ -149,12 +151,16 @@ function ImageCard({
 
   if (natural) {
     return (
-      <div className={cn('group relative inline-block animate-fade-in', className)}>
+      <div className={cn('group relative inline-block', className)}>
         <img
           src={img.url}
           alt={`Generated ${idx + 1}`}
-          className="w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20"
+          className={cn(
+            'w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
+            loaded ? 'opacity-100' : 'opacity-0',
+          )}
           loading="lazy"
+          onLoad={() => setLoaded(true)}
         />
         <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
         {actionButtons}
@@ -165,15 +171,19 @@ function ImageCard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl animate-fade-in shadow-md shadow-black/20',
+        'group relative overflow-hidden rounded-xl shadow-md shadow-black/20',
         className,
       )}
     >
       <img
         src={img.url}
         alt={`Generated ${idx + 1}`}
-        className="w-full h-auto object-cover"
+        className={cn(
+          'w-full h-auto object-cover transition-opacity duration-700 ease-out',
+          loaded ? 'opacity-100' : 'opacity-0',
+        )}
         loading="lazy"
+        onLoad={() => setLoaded(true)}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       {actionButtons}
@@ -208,9 +218,9 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   if (count <= 3) {
     return (
-      <div className="flex items-start justify-center gap-3 px-6 pt-6">
+      <div className="flex items-stretch justify-center gap-3 px-6 pt-6">
         {generatingCards.map((card, i) => (
-          <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)] aspect-square">{card}</div>
+          <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)] min-w-[280px]">{card}</div>
         ))}
         {images.map((img, idx) => (
           <ImageCard

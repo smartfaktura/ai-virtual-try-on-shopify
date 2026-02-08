@@ -235,7 +235,7 @@
 /* Animation utilities */
 @layer utilities {
   .animate-fade-in {
-    animation: fadeIn 0.2s ease-out;
+    animation: fadeIn 0.5s ease-out;
   }
 
   .animate-slide-up {
@@ -249,9 +249,11 @@
   @keyframes fadeIn {
     from {
       opacity: 0;
+      transform: scale(0.98);
     }
     to {
       opacity: 1;
+      transform: scale(1);
     }
   }
 
