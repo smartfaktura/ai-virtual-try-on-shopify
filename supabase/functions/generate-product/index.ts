@@ -92,7 +92,25 @@ CRITICAL REQUIREMENTS:
 
 3. Brand Guidelines:
    - Tone: ${toneDesc}
-   - Background Style: ${bgDesc}
+   - Background Style: ${bgDesc}${
+     brandSettings.lightingStyle ? `\n   - Lighting: ${brandSettings.lightingStyle}` : ''
+   }${
+     brandSettings.colorTemperature ? `\n   - Color Temperature: ${brandSettings.colorTemperature}` : ''
+   }${
+     brandSettings.compositionBias ? `\n   - Composition: ${brandSettings.compositionBias}` : ''
+   }${
+     brandSettings.brandKeywords && brandSettings.brandKeywords.length > 0
+       ? `\n   - Brand DNA: ${brandSettings.brandKeywords.join(", ")}` : ''
+   }${
+     brandSettings.colorPalette && brandSettings.colorPalette.length > 0
+       ? `\n   - Preferred Palette: ${brandSettings.colorPalette.join(", ")}` : ''
+   }${
+     brandSettings.preferredScenes && brandSettings.preferredScenes.length > 0
+       ? `\n   - Preferred Environments: ${brandSettings.preferredScenes.join(", ")}` : ''
+   }${
+     brandSettings.photographyReference
+       ? `\n   - Creative Direction: ${brandSettings.photographyReference}` : ''
+   }
 
 4. Composition Requirements:
    - DO: ${doConstraints}
