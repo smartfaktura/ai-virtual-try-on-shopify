@@ -1,36 +1,50 @@
 
 
-## Fix Image Visibility and White Border Artifacts
+## Add "Upload Image" Label and "Add Product" Chip to Freestyle Prompt Bar
 
-Two issues to resolve: the generated image still extends behind the prompt bar, and white stripes appear around image edges.
-
----
-
-### Issue 1: Image overlapping the prompt bar
-
-**Root Cause**: The Freestyle page sits inside AppShell's `<main>` which wraps content in a `<div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">`. The page uses negative margins to break out of this padding, but sets `height: 100vh` which is the full browser viewport -- not the actual available space inside the main area. Combined with the inner scrollable div also scrolling, the image's `max-h-[calc(100vh-320px)]` doesn't leave enough real room for the prompt bar.
-
-**Fix in `src/components/app/freestyle/FreestyleGallery.tsx`**:
-- Increase the max-height clearance from `calc(100vh - 320px)` to `calc(100vh - 400px)` for single images. This accounts for the prompt panel height (~240px), the AppShell padding (~32px top + bottom), plus breathing room.
-- For 2-3 images side by side, use the same increased clearance.
-
-### Issue 2: White stripes around image edges
-
-**Root Cause**: The ImageCard has `bg-muted/30` as a background fill and uses `object-contain`, which means portrait images don't fill the full container width. The remaining space shows the background color as visible light stripes on the sides.
-
-**Fix in `src/components/app/freestyle/FreestyleGallery.tsx`**:
-- For single-image display, change the approach: instead of a fixed-width container with `object-contain`, let the image size naturally using `w-auto h-auto max-h-[...] mx-auto` so it takes its natural proportions without any container background showing.
-- Remove `bg-muted/30` from the single-image card (no background means no stripes).
-- Keep `rounded-xl` and `shadow` on the image itself for polish.
-- For the masonry grid (4+ images), keep the current approach since `object-contain` works well in columns.
+Two changes to the freestyle prompt panel's settings chips row:
 
 ---
 
-### Summary of Changes
+### Change 1: Show "Upload Image" text on the Upload button
+
+Currently the upload button only shows "+ Upload" (with "Upload" hidden on small screens). Update the label to read **"Upload Image"** and keep it visible at all sizes.
+
+**File**: `src/components/app/freestyle/FreestylePromptPanel.tsx`
+- Change the upload button label from `Upload` to `Upload Image`
+- Remove `hidden sm:inline` so the text is always visible
+
+---
+
+### Change 2: Add "Add Product" chip to select from user's products
+
+Add a new chip button in the settings row that opens a popover with the user's saved products (from the `user_products` table). When a product is selected, its image is loaded as the source image reference for generation.
+
+**Files to create/modify**:
 
 | File | Change |
 |------|--------|
-| `src/components/app/freestyle/FreestyleGallery.tsx` | For 1-3 images: remove fixed-width container approach, use naturally-sized image with `w-auto h-auto` centered with `mx-auto`, increase max-height to `calc(100vh - 400px)`, remove `bg-muted/30` from card to eliminate white stripes. Keep masonry layout for 4+ images as-is. |
+| `src/components/app/freestyle/ProductSelectorChip.tsx` | **New file.** A chip component styled identically to Model/Scene chips. Opens a popover that fetches `user_products` for the current user. Shows a scrollable list with product thumbnails, titles, and product types. If no products exist, shows "No products yet" with a link to the Products page. On select, calls `onSelect(product)` callback. |
+| `src/components/app/freestyle/FreestyleSettingsChips.tsx` | Add the ProductSelectorChip between the Upload button and Model chip. Pass through new props: `selectedProduct`, `onProductSelect`, `productPopoverOpen`, `onProductPopoverChange`. |
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Thread the new product-related props through to FreestyleSettingsChips. |
+| `src/pages/Freestyle.tsx` | Add state for `selectedProduct` and its popover. Fetch user products with `useQuery` from `user_products`. When a product is selected, convert its `image_url` to base64 and set it as the source image (same as manual upload). Wire all props to the prompt panel. |
 
-Single file change, no backend modifications needed.
+### Product Selector Chip Behavior
+
+- Chip label: "Add Product" (with a Package icon) when nothing selected
+- When a product is selected: shows product thumbnail + title, with an X to deselect
+- Popover contents: search input + scrollable grid of user products (image + title + type)
+- Empty state: "No products yet" message with a button/link to `/app/products`
+- Selecting a product automatically sets it as the source image for generation
+- Deselecting clears the source image (if it was set by the product selector)
+
+### Data Flow
+
+```text
+user_products table --> useQuery fetch --> ProductSelectorChip popover
+  --> user selects product --> product.image_url set as sourceImage
+  --> image sent to generate-freestyle edge function as reference
+```
+
+No backend or database changes needed -- the `user_products` table already exists with RLS policies in place.
 
