@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navLinks = [
   { label: 'Workflows', href: '#features' },
@@ -12,6 +13,7 @@ const navLinks = [
 
 export function LandingNav() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -64,8 +66,8 @@ export function LandingNav() {
 
         {/* Desktop CTA */}
         <div className="hidden md:block">
-          <Button size="sm" className="rounded-full px-6 font-semibold" onClick={() => navigate('/auth')}>
-            Start Free
+          <Button size="sm" className="rounded-full px-6 font-semibold" onClick={() => navigate(user ? '/app' : '/auth')}>
+            {user ? 'My Dashboard' : 'Start Free'}
           </Button>
         </div>
 
@@ -96,8 +98,8 @@ export function LandingNav() {
               <Sparkles className="w-3 h-3" />
               Monthly Creative Drops
             </div>
-            <Button size="sm" className="rounded-full mt-2 font-semibold" onClick={() => navigate('/auth')}>
-              Start Free
+            <Button size="sm" className="rounded-full mt-2 font-semibold" onClick={() => navigate(user ? '/app' : '/auth')}>
+              {user ? 'My Dashboard' : 'Start Free'}
             </Button>
           </div>
         </div>
