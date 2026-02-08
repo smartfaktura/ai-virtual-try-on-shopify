@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Package, Palette, Layers, Calendar, Image, Settings, LogOut, Menu, X, ChevronDown, Sparkles } from 'lucide-react';
+import { Home, Package, Palette, Layers, Calendar, Image, Film, Settings, LogOut, Menu, X, ChevronDown, Sparkles } from 'lucide-react';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +16,7 @@ const navItems = [
   { label: 'Brand Profiles', icon: Palette, path: '/app/brand-profiles' },
   { label: 'Workflows', icon: Layers, path: '/app/workflows' },
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
+  { label: 'Video', icon: Film, path: '/app/video' },
   { label: 'Library', icon: Image, path: '/app/library' },
 ];
 

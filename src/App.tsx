@@ -21,6 +21,7 @@ import Workflows from '@/pages/Workflows';
 import Products from '@/pages/Products';
 import CreativeDrops from '@/pages/CreativeDrops';
 import MobileUpload from '@/pages/MobileUpload';
+import VideoGenerate from '@/pages/VideoGenerate';
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
                       <Route path="/templates/:id" element={<Templates />} />
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/jobs/:id" element={<Jobs />} />
+                      <Route path="/video" element={<VideoGenerate />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
