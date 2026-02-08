@@ -7,9 +7,12 @@ export function CreditIndicator() {
   const navigate = useNavigate();
 
   const monthlyCredits = planConfig.monthlyCredits;
+  const hasBonus = balance > monthlyCredits && monthlyCredits !== Infinity;
   const usagePercent = monthlyCredits === Infinity
     ? 100
-    : Math.min(100, Math.max(3, (balance / monthlyCredits) * 100));
+    : hasBonus
+      ? 100
+      : Math.min(100, Math.max(3, (balance / monthlyCredits) * 100));
 
   const isFree = plan === 'free';
 
