@@ -1,28 +1,4 @@
-import avatarSophia from '@/assets/team/avatar-sophia.jpg';
-import avatarAmara from '@/assets/team/avatar-amara.jpg';
-import avatarKenji from '@/assets/team/avatar-kenji.jpg';
-import avatarYuki from '@/assets/team/avatar-yuki.jpg';
-import avatarOmar from '@/assets/team/avatar-omar.jpg';
-import avatarSienna from '@/assets/team/avatar-sienna.jpg';
-import avatarLuna from '@/assets/team/avatar-luna.jpg';
-import avatarMax from '@/assets/team/avatar-max.jpg';
-import avatarZara from '@/assets/team/avatar-zara.jpg';
-import avatarLeo from '@/assets/team/avatar-leo.jpg';
-
-const VIDEO_BASE = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc';
-
-const TEAM = [
-  { name: 'Sophia', role: 'Product Photographer', avatar: avatarSophia, videoUrl: `${VIDEO_BASE}/849395850555686932.mp4` },
-  { name: 'Amara', role: 'Lifestyle Photographer', avatar: avatarAmara, videoUrl: `${VIDEO_BASE}/849398236443574344.mp4` },
-  { name: 'Kenji', role: 'Campaign Art Director', avatar: avatarKenji, videoUrl: `${VIDEO_BASE}/849400657458757636.mp4` },
-  { name: 'Yuki', role: 'Ad Creative Specialist', avatar: avatarYuki, videoUrl: `${VIDEO_BASE}/849398252540657664.mp4` },
-  { name: 'Omar', role: 'CRO Visual Optimizer', avatar: avatarOmar, videoUrl: `${VIDEO_BASE}/849398684226822188.mp4` },
-  { name: 'Sienna', role: 'Brand Consistency Manager', avatar: avatarSienna, videoUrl: `${VIDEO_BASE}/849398695958937689.mp4` },
-  { name: 'Luna', role: 'Retouch Specialist', avatar: avatarLuna, videoUrl: `${VIDEO_BASE}/849398707518439436.mp4` },
-  { name: 'Max', role: 'Export & Format Engineer', avatar: avatarMax, videoUrl: `${VIDEO_BASE}/849399340514426899.mp4` },
-  { name: 'Zara', role: 'Fashion Stylist', avatar: avatarZara, videoUrl: `${VIDEO_BASE}/849399354389184514.mp4` },
-  { name: 'Leo', role: 'Scene & Set Designer', avatar: avatarLeo, videoUrl: `${VIDEO_BASE}/849399365948022876.mp4` },
-];
+import { TEAM_MEMBERS } from '@/data/teamData';
 
 export function DashboardTeamCarousel() {
   return (
