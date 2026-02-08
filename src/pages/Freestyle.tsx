@@ -28,7 +28,7 @@ export default function Freestyle() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { generate, isLoading, progress } = useGenerateFreestyle();
   const { balance, deductCredits, openBuyModal } = useCredits();
-  const { images: savedImages, saveImage, deleteImage } = useFreestyleImages();
+  const { images: savedImages, isLoading: isLoadingImages, saveImage, deleteImage } = useFreestyleImages();
 
   const creditCost = imageCount * (quality === 'high' ? 2 : 1);
   const canGenerate = prompt.trim().length > 0 && !isLoading && balance >= creditCost;
