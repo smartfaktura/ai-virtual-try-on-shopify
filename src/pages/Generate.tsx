@@ -1214,13 +1214,21 @@ export default function Generate() {
               {generationMode === 'virtual-try-on' ? <User className="w-7 h-7 text-primary" /> : <Image className="w-7 h-7 text-primary" />}
             </div>
             <div className="text-center">
-              <h2 className="text-lg font-semibold">{generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' : 'Creating Your Images...'}</h2>
+              <h2 className="text-lg font-semibold">
+                {generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' :
+                 hasWorkflowConfig ? `Creating ${activeWorkflow?.name}...` : 'Creating Your Images...'}
+              </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` : `Creating ${imageCount} images of "${selectedProduct?.title}"`}
+                {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
+                 hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variations of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
+                 `Creating ${imageCount} images of "${selectedProduct?.title}"`}
               </p>
             </div>
             <div className="w-full max-w-md">
-              <Progress value={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : productProgress, 100)} className="h-2" />
+              <Progress value={Math.min(
+                generationMode === 'virtual-try-on' ? tryOnProgress :
+                hasWorkflowConfig ? workflowProgress : productProgress, 100
+              )} className="h-2" />
             </div>
             {/* Team member working message */}
             <div className="flex items-center gap-2.5">
@@ -1232,10 +1240,14 @@ export default function Generate() {
               <p className="text-sm text-muted-foreground italic">
                 {generationMode === 'virtual-try-on'
                   ? 'Zara is styling the look...'
+                  : hasWorkflowConfig ? `Sophia is crafting your ${activeWorkflow?.name?.toLowerCase()}...`
                   : 'Sophia is setting up the lighting...'}
               </p>
             </div>
-            <p className="text-xs text-muted-foreground">{generationMode === 'virtual-try-on' ? '20-30 seconds' : '10-15 seconds'}</p>
+            <p className="text-xs text-muted-foreground">
+              {generationMode === 'virtual-try-on' ? '20-30 seconds' :
+               hasWorkflowConfig ? `${selectedVariationIndices.size * 10}-${selectedVariationIndices.size * 15} seconds` : '10-15 seconds'}
+            </p>
             <Button variant="link" onClick={handleCancelGeneration}><X className="w-4 h-4 mr-1" /> Cancel</Button>
           </CardContent></Card>
         )}
