@@ -21,6 +21,7 @@ import Workflows from '@/pages/Workflows';
 import Products from '@/pages/Products';
 import CreativeDrops from '@/pages/CreativeDrops';
 import MobileUpload from '@/pages/MobileUpload';
+import VideoGenerate from '@/pages/VideoGenerate';
 
 const queryClient = new QueryClient();
 
