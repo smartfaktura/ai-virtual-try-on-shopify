@@ -1,72 +1,53 @@
 
+## Fix: Make Selected Model Actually Appear in Generated Images
 
-## Generate Professional AI Images for All Workflow Previews
+### The Problem
+When you select a model like Charlotte, her reference image is sent to the AI but the images arrive as an unlabeled flat array. The AI sees 3 images and a text prompt but doesn't know which image is the product, which is the person to replicate, and which is the scene. The text only says "Model reference: female, athletic build, European" -- which is a generic description, not an instruction to use that exact person.
 
-### What We'll Do
-Generate 10 high-quality, professional background images -- one for each workflow card -- using the premium AI image model (`google/gemini-3-pro-image-preview`). These replace the current static asset photos with purpose-built, ultra-sharp, bright editorial images that match each workflow's theme.
+### The Fix
 
-### Image Prompts (What Gets Generated)
+Update the **edge function** (`supabase/functions/generate-freestyle/index.ts`) to:
 
-Each workflow gets a tailored prompt designed for bright, sharp, premium aesthetics:
+**1. Label each image inline with text**
 
-| Workflow | Image Concept |
-|---|---|
-| **Virtual Try-On** | Editorial fashion: model in a cream knit outfit, soft studio light, warm tones |
-| **Social Media Pack** | Vibrant lifestyle grid: golden hour portrait, styled flat lay, aspirational |
-| **Product Listing** | Clean e-commerce: luxury skincare on white marble, crisp studio lighting |
-| **Lifestyle** | Home editorial: candle and decor in cozy setting, warm ambient light |
-| **Website Hero** | Cinematic fashion: model in flowing dress, botanical garden, golden hour |
-| **Ad Refresh** | Dynamic streetwear: bold outfit, vibrant urban backdrop, high energy |
-| **Selfie / UGC** | Authentic mirror selfie: warm coffee shop, skincare product, natural feel |
-| **Flat Lay** | Styled overhead: cosmetics and accessories on white marble, gold accents |
-| **Seasonal Campaign** | Four-season split: same product across spring, summer, autumn, winter |
-| **Before and After** | Skincare transformation: clean split composition, soft clinical aesthetic |
-
-### How It Works
-
+Instead of passing images as:
 ```text
-Edge Function                              Storage
-+---------------------------------+       +-----------------+
-| generate-workflow-preview       |       | workflow-       |
-|                                 |       | previews bucket |
-| For each workflow:              |       |                 |
-|   1. Build premium prompt       | ----> | workflow-id.png |
-|   2. Call gemini-3-pro-image    |       |                 |
-|   3. Upload to storage          |       +-----------------+
-|   4. Save URL to DB             |
-+---------------------------------+
-                                           Frontend
-                                    +-------------------+
-                                    | WorkflowCard      |
-                                    |   background =    |
-                                    |   preview_image_  |
-                                    |   url (from DB)   |
-                                    +-------------------+
+[text prompt] [image] [image] [image]
 ```
+
+Structure the multimodal content array as:
+```text
+[text prompt]
+[text: "PRODUCT REFERENCE IMAGE:"] [product image]
+[text: "MODEL REFERENCE — replicate this exact person:"] [model image]
+[text: "SCENE/ENVIRONMENT REFERENCE:"] [scene image]
+```
+
+This way the AI knows exactly what each image represents.
+
+**2. Add strong face/identity fidelity instructions**
+
+Update the `polishUserPrompt` function's model section from the current generic:
+> "PORTRAIT QUALITY: Natural and realistic skin texture..."
+
+To an explicit identity-matching instruction:
+> "MODEL IDENTITY: The generated person MUST be the exact same person shown in the model reference image. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions. This is a specific real person -- do not generate a different person who merely shares the same gender or ethnicity."
+
+**3. Restructure the `generateImage` function**
+
+Change the signature to accept labeled image groups instead of a flat array, so each image is preceded by its role label in the content array sent to the AI.
 
 ### Technical Changes
 
-**1. Update the Edge Function (`generate-workflow-preview/index.ts`)**
-- Switch from `google/gemini-2.5-flash-image` to `google/gemini-3-pro-image-preview` for higher quality output
-- Enhance all 10 prompts with brighter, sharper, more editorial language (adding "bright natural lighting", "ultra sharp", "premium aesthetic", etc.)
-- Add a `regenerate` flag so existing previews can be overwritten
+**File: `supabase/functions/generate-freestyle/index.ts`**
 
-**2. Update Animation Data (`workflowAnimationData.tsx`)**
-- Make the `background` field accept either a static import or a dynamic URL string
-- Add a helper function `getSceneWithDynamicBg(workflowName, dynamicUrl?)` that returns the scene with the dynamic URL as background when available, falling back to the static asset
+- Modify `generateImage()` to accept a structured content array instead of separate prompt + images parameters
+- Build the content array in the request handler with interleaved text labels and images:
+  - `"PRODUCT/SOURCE REFERENCE IMAGE (reproduce this product exactly):"` before source image
+  - `"MODEL REFERENCE IMAGE (use this exact person's face, hair, body, and skin tone):"` before model image
+  - `"SCENE/ENVIRONMENT REFERENCE IMAGE (match this setting and lighting):"` before scene image
+- Update the polish function's model block to include strong identity-matching language
+- Add `modelContext` details (gender, build, ethnicity) directly into the model label for reinforcement
 
-**3. Update Workflow Card (`WorkflowCard.tsx`)**
-- Pass `workflow.preview_image_url` into the scene data so the animated thumbnail uses the AI-generated background when available
-- Fall back to the existing static asset if no generated URL exists yet
-
-**4. Update Workflows Page (`Workflows.tsx`)**
-- Change the "Generate Previews" button to also offer "Regenerate All" so all 10 can be refreshed
-- Sequential generation (one at a time) to avoid rate limits, with progress feedback via toasts
-
-### Execution Flow
-1. User clicks "Generate 10 Previews" button on the Workflows page
-2. Edge function generates images one at a time using the premium model
-3. Each image is uploaded to the `workflow-previews` storage bucket
-4. The `preview_image_url` column is updated in the database
-5. The frontend refreshes after each successful generation, showing images as they appear
-6. The animated thumbnail uses the new AI-generated image as its background
+### No Frontend Changes Needed
+The frontend already sends all the correct data. This is purely a backend prompt engineering fix in the edge function.
