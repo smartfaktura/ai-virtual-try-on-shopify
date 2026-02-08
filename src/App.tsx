@@ -75,8 +75,7 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-        <BuyCreditsModal />
+          <BuyCreditsModal />
       </CreditProvider>
     </AuthProvider>
   </QueryClientProvider>
