@@ -332,6 +332,11 @@ export default function Generate() {
       if (!selectedModel || !selectedPose) { toast.error('Please select a model and pose first'); return; }
       setTryOnConfirmModalOpen(true); return;
     }
+    // Workflow-config path: skip template requirement
+    if (hasWorkflowConfig) {
+      handleWorkflowGenerate();
+      return;
+    }
     if (!selectedTemplate) { toast.error('Please select a template first'); return; }
     setConfirmModalOpen(true);
   };
