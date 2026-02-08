@@ -32,6 +32,14 @@ interface ProductRequest {
   brandSettings: {
     tone: string;
     backgroundStyle: string;
+    brandKeywords?: string[];
+    colorPalette?: string[];
+    preferredScenes?: string[];
+    targetAudience?: string;
+    photographyReference?: string;
+    lightingStyle?: string;
+    colorTemperature?: string;
+    compositionBias?: string;
   };
   aspectRatio: "1:1" | "4:5" | "16:9";
   imageCount: number;
