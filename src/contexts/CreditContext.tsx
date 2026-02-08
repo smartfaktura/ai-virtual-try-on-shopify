@@ -64,13 +64,15 @@ interface CreditProviderProps {
 export function CreditProvider({ children }: CreditProviderProps) {
   const { user } = useAuth();
   const [balance, setBalance] = useState(0);
+  const [plan, setPlan] = useState('free');
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   
-  // Fetch real credits from profiles table
+  // Fetch real credits and plan from profiles table
   useEffect(() => {
     if (!user) {
       setBalance(0);
+      setPlan('free');
       setIsLoading(false);
       return;
     }
@@ -79,12 +81,13 @@ export function CreditProvider({ children }: CreditProviderProps) {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('credits_balance')
+        .select('credits_balance, plan')
         .eq('user_id', user.id)
         .single();
       
       if (!error && data) {
         setBalance(data.credits_balance);
+        setPlan(data.plan || 'free');
       }
       setIsLoading(false);
     };
@@ -92,6 +95,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
     fetchCredits();
   }, [user]);
   
+  const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
   const isLow = balance > 0 && balance < LOW_CREDIT_THRESHOLD;
   const isCritical = balance > 0 && balance < CRITICAL_THRESHOLD;
   const isEmpty = balance === 0;
