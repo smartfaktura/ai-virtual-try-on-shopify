@@ -22,6 +22,7 @@ const ASPECT_RATIOS: { value: FreestyleAspectRatio; label: string; icon: typeof 
 ];
 
 interface FreestyleSettingsChipsProps {
+  uploadButton?: React.ReactNode;
   selectedModel: ModelProfile | null;
   onModelSelect: (model: ModelProfile | null) => void;
   modelPopoverOpen: boolean;
