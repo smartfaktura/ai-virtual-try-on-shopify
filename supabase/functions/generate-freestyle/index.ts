@@ -189,6 +189,7 @@ async function generateImage(
             model,
             messages: [{ role: "user", content }],
             modalities: ["image", "text"],
+            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
         }
       );
