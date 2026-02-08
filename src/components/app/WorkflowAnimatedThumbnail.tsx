@@ -66,7 +66,7 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
       ))}
 
       {/* Action overlay */}
-      {current.overlay === 'action' && !isTransitioning && (
+      {isActive && current.overlay === 'action' && !isTransitioning && (
         <div className="absolute inset-0 z-10 bg-black/20 flex items-center justify-center">
           <div className="animate-scale-in">
             <div className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
@@ -77,7 +77,7 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
       )}
 
       {/* Result overlay */}
-      {current.overlay === 'result' && !isTransitioning && (
+      {isActive && current.overlay === 'result' && !isTransitioning && (
         <div className="absolute inset-0 z-10 flex items-end justify-center pb-16">
           <div className="animate-scale-in flex items-center gap-1 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-lg">
             <Sparkles className="w-3 h-3 text-primary" />
