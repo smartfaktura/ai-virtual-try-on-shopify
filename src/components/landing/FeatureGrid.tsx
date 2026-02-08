@@ -107,7 +107,7 @@ export function FeatureGrid() {
             AI-Powered Studio
           </div>
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4 leading-[1.1]">
-            What Framea.ai Delivers
+            What VOVV.AI Delivers
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto text-base sm:text-lg">
             Your AI photography team handles everything &mdash; from monthly libraries to one-off editorial campaigns.
