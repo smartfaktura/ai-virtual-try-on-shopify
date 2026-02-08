@@ -143,7 +143,7 @@ export function HowItWorks() {
               <div className="w-full max-w-sm">
                 <div className="rounded-2xl border border-border bg-card shadow-sm">
                   {/* Selection row */}
-                  <div className="p-3 border-b border-border">
+                  <div className="p-3 border-b border-border rounded-t-2xl">
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Your Selection</p>
                     <div className="flex items-center gap-2">
                       <HoverPreview src={cropTopProduct} alt="Product" label="Product" />
