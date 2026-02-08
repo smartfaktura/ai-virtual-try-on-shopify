@@ -190,7 +190,7 @@ export function BuyCreditsModal() {
                     </ul>
                   )}
 
-                  <Button className="w-full" size="sm" onClick={handleUpgrade}>
+                  <Button className="w-full" onClick={handleUpgrade}>
                     Upgrade to {recommendedPlan.name}
                     <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
