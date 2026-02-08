@@ -6,6 +6,24 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Color Feel mapping
+const COLOR_FEEL_DESCRIPTIONS: Record<string, string> = {
+  'warm-earthy': 'warm earth tones, natural warmth, amber and terracotta accents',
+  'cool-crisp': 'cool tones, clean whites, blue and silver undertones',
+  'neutral-natural': 'true-to-life colors, balanced exposure, no heavy grading',
+  'rich-saturated': 'deep saturated colors, bold and vivid palette, high color impact',
+  'muted-soft': 'desaturated pastels, soft muted tones, dreamy and gentle palette',
+  'vibrant-bold': 'high energy colors, bright and punchy, strong contrast',
+};
+
+const TONE_DESCRIPTIONS: Record<string, string> = {
+  luxury: 'premium, sophisticated, elegant with refined details',
+  clean: 'minimalist, uncluttered, modern and professional',
+  bold: 'striking, high-contrast, attention-grabbing',
+  minimal: 'extremely simple, lots of negative space, zen-like',
+  playful: 'vibrant, energetic, fun with dynamic composition',
+};
+
 interface PromptBlueprint {
   sceneDescription: string;
   lighting: string;
@@ -22,7 +40,7 @@ interface ProductRequest {
     title: string;
     productType: string;
     description: string;
-    imageUrl: string; // Base64 encoded
+    imageUrl: string;
   };
   template: {
     name: string;
@@ -31,15 +49,17 @@ interface ProductRequest {
   };
   brandSettings: {
     tone: string;
-    backgroundStyle: string;
+    colorFeel?: string; // new Color Feel value
     brandKeywords?: string[];
     colorPalette?: string[];
-    preferredScenes?: string[];
     targetAudience?: string;
-    photographyReference?: string;
+    // Legacy fields (still accepted for backward compat)
+    backgroundStyle?: string;
     lightingStyle?: string;
     colorTemperature?: string;
     compositionBias?: string;
+    preferredScenes?: string[];
+    photographyReference?: string;
   };
   aspectRatio: "1:1" | "4:5" | "16:9";
   imageCount: number;
@@ -49,29 +69,32 @@ function buildPrompt(req: ProductRequest): string {
   const { product, template, brandSettings } = req;
   const { promptBlueprint } = template;
 
-  // Build constraint strings
   const doConstraints = promptBlueprint.constraints.do.join(", ");
   const dontConstraints = promptBlueprint.constraints.dont.join(", ");
 
-  // Map brand tone to descriptive style
-  const toneDescriptions: Record<string, string> = {
-    luxury: "premium, sophisticated, elegant with refined details",
-    clean: "minimalist, uncluttered, modern and professional",
-    playful: "vibrant, energetic, fun with dynamic composition",
-    bold: "striking, high-contrast, attention-grabbing",
-    minimal: "extremely simple, lots of negative space, zen-like",
-  };
-  const toneDesc = toneDescriptions[brandSettings.tone] || toneDescriptions.clean;
+  const toneDesc = TONE_DESCRIPTIONS[brandSettings.tone] || TONE_DESCRIPTIONS.clean;
 
-  // Map background style to description
-  const bgStyleDescriptions: Record<string, string> = {
-    studio: "clean professional studio backdrop",
-    lifestyle: "natural lifestyle environment",
-    gradient: "smooth gradient background",
-    pattern: "subtle textured pattern backdrop",
-    contextual: "relevant contextual environment",
-  };
-  const bgDesc = bgStyleDescriptions[brandSettings.backgroundStyle] || bgStyleDescriptions.studio;
+  // Build brand guidelines section
+  const brandLines: string[] = [
+    `   - Tone: ${toneDesc}`,
+  ];
+
+  // Color Feel (preferred) or legacy color temperature
+  const colorFeel = brandSettings.colorFeel || brandSettings.colorTemperature;
+  if (colorFeel) {
+    const colorDesc = COLOR_FEEL_DESCRIPTIONS[colorFeel] || colorFeel;
+    brandLines.push(`   - Color direction: ${colorDesc}`);
+  }
+
+  if (brandSettings.brandKeywords && brandSettings.brandKeywords.length > 0) {
+    brandLines.push(`   - Brand DNA: ${brandSettings.brandKeywords.join(", ")}`);
+  }
+  if (brandSettings.colorPalette && brandSettings.colorPalette.length > 0) {
+    brandLines.push(`   - Brand accent colors: ${brandSettings.colorPalette.join(", ")}`);
+  }
+  if (brandSettings.targetAudience) {
+    brandLines.push(`   - Target audience: ${brandSettings.targetAudience}`);
+  }
 
   const prompt = `Create a professional e-commerce product photograph featuring the EXACT product shown in [PRODUCT IMAGE].
 
@@ -91,26 +114,7 @@ CRITICAL REQUIREMENTS:
    - Background: ${promptBlueprint.backgroundRules}
 
 3. Brand Guidelines:
-   - Tone: ${toneDesc}
-   - Background Style: ${bgDesc}${
-     brandSettings.lightingStyle ? `\n   - Lighting: ${brandSettings.lightingStyle}` : ''
-   }${
-     brandSettings.colorTemperature ? `\n   - Color Temperature: ${brandSettings.colorTemperature}` : ''
-   }${
-     brandSettings.compositionBias ? `\n   - Composition: ${brandSettings.compositionBias}` : ''
-   }${
-     brandSettings.brandKeywords && brandSettings.brandKeywords.length > 0
-       ? `\n   - Brand DNA: ${brandSettings.brandKeywords.join(", ")}` : ''
-   }${
-     brandSettings.colorPalette && brandSettings.colorPalette.length > 0
-       ? `\n   - Preferred Palette: ${brandSettings.colorPalette.join(", ")}` : ''
-   }${
-     brandSettings.preferredScenes && brandSettings.preferredScenes.length > 0
-       ? `\n   - Preferred Environments: ${brandSettings.preferredScenes.join(", ")}` : ''
-   }${
-     brandSettings.photographyReference
-       ? `\n   - Creative Direction: ${brandSettings.photographyReference}` : ''
-   }
+${brandLines.join("\n")}
 
 4. Composition Requirements:
    - DO: ${doConstraints}
@@ -232,7 +236,6 @@ serve(async (req) => {
 
     const body: ProductRequest = await req.json();
 
-    // Validate required fields
     if (!body.product || !body.template) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: product or template" }),
@@ -250,10 +253,8 @@ serve(async (req) => {
     const images: string[] = [];
     const errors: string[] = [];
 
-    // Generate images sequentially to avoid rate limits
     for (let i = 0; i < imageCount; i++) {
       try {
-        // Add slight variation to each prompt for variety
         const variationPrompt =
           i === 0
             ? prompt
@@ -283,7 +284,6 @@ serve(async (req) => {
         errors.push(`Image ${i + 1}: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
 
-      // Small delay between generations to avoid rate limits
       if (i < imageCount - 1) {
         await new Promise((r) => setTimeout(r, 500));
       }

@@ -6,18 +6,31 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Color Feel mapping (matches brandPromptBuilder.ts)
+const COLOR_FEEL_DESCRIPTIONS: Record<string, string> = {
+  'warm-earthy': 'warm earth tones, natural warmth, amber and terracotta accents',
+  'cool-crisp': 'cool tones, clean whites, blue and silver undertones',
+  'neutral-natural': 'true-to-life colors, balanced exposure, no heavy grading',
+  'rich-saturated': 'deep saturated colors, bold and vivid palette, high color impact',
+  'muted-soft': 'desaturated pastels, soft muted tones, dreamy and gentle palette',
+  'vibrant-bold': 'high energy colors, bright and punchy, strong contrast',
+};
+
+const TONE_DESCRIPTIONS: Record<string, string> = {
+  luxury: 'premium, sophisticated, elegant with refined details',
+  clean: 'minimalist, uncluttered, modern and professional',
+  bold: 'striking, high-contrast, attention-grabbing',
+  minimal: 'extremely simple, lots of negative space, zen-like',
+  playful: 'vibrant, energetic, fun with dynamic composition',
+};
+
 interface BrandProfileContext {
   tone: string;
-  lightingStyle: string;
-  backgroundStyle: string;
-  colorTemperature: string;
-  compositionBias: string;
+  colorFeel: string; // Color Feel value (e.g., 'warm-earthy')
   doNotRules: string[];
   brandKeywords?: string[];
   colorPalette?: string[];
-  preferredScenes?: string[];
   targetAudience?: string;
-  photographyReference?: string;
 }
 
 interface FreestyleRequest {
@@ -60,28 +73,25 @@ function polishUserPrompt(
     "Ultra high resolution, sharp focus, natural lighting, commercial-grade color accuracy."
   );
 
-  // Brand profile layer — injects tone, lighting, and composition preferences
+  // Brand profile layer
   if (brandProfile) {
     const brandParts: string[] = [];
-    if (brandProfile.tone) brandParts.push(`Visual tone: ${brandProfile.tone}`);
-    if (brandProfile.lightingStyle) brandParts.push(`Lighting: ${brandProfile.lightingStyle}`);
-    if (brandProfile.backgroundStyle) brandParts.push(`Background preference: ${brandProfile.backgroundStyle}`);
-    if (brandProfile.colorTemperature) brandParts.push(`Color temperature: ${brandProfile.colorTemperature}`);
-    if (brandProfile.compositionBias) brandParts.push(`Composition: ${brandProfile.compositionBias}`);
+    if (brandProfile.tone) {
+      const toneDesc = TONE_DESCRIPTIONS[brandProfile.tone] || brandProfile.tone;
+      brandParts.push(`Visual tone: ${toneDesc}`);
+    }
+    if (brandProfile.colorFeel) {
+      const colorDesc = COLOR_FEEL_DESCRIPTIONS[brandProfile.colorFeel] || brandProfile.colorFeel;
+      brandParts.push(`Color direction: ${colorDesc}`);
+    }
     if (brandProfile.brandKeywords && brandProfile.brandKeywords.length > 0) {
       brandParts.push(`Brand DNA keywords: ${brandProfile.brandKeywords.join(", ")}`);
     }
     if (brandProfile.colorPalette && brandProfile.colorPalette.length > 0) {
-      brandParts.push(`Preferred color palette: ${brandProfile.colorPalette.join(", ")}`);
-    }
-    if (brandProfile.preferredScenes && brandProfile.preferredScenes.length > 0) {
-      brandParts.push(`Preferred environments: ${brandProfile.preferredScenes.join(", ")}`);
+      brandParts.push(`Brand accent colors: ${brandProfile.colorPalette.join(", ")}`);
     }
     if (brandProfile.targetAudience) {
       brandParts.push(`Target audience: ${brandProfile.targetAudience}`);
-    }
-    if (brandProfile.photographyReference) {
-      brandParts.push(`Creative direction: ${brandProfile.photographyReference}`);
     }
     if (brandParts.length > 0) {
       layers.push(`BRAND STYLE GUIDE:\n${brandParts.join(". ")}.`);
@@ -111,11 +121,9 @@ function polishUserPrompt(
 
   // Build combined negatives list
   const allNegatives: string[] = [];
-  // Add brand profile do-not rules
   if (brandProfile?.doNotRules && brandProfile.doNotRules.length > 0) {
     allNegatives.push(...brandProfile.doNotRules);
   }
-  // Add user-selected negatives
   if (userNegatives && userNegatives.length > 0) {
     allNegatives.push(...userNegatives);
   }
@@ -259,7 +267,12 @@ serve(async (req) => {
       let unpolished = enrichedPrompt;
       if (body.brandProfile) {
         const bp = body.brandProfile;
-        const parts = [bp.tone, bp.lightingStyle, bp.backgroundStyle, bp.colorTemperature, bp.compositionBias].filter(Boolean);
+        const parts: string[] = [];
+        if (bp.tone) parts.push(bp.tone);
+        if (bp.colorFeel) {
+          const colorDesc = COLOR_FEEL_DESCRIPTIONS[bp.colorFeel] || bp.colorFeel;
+          parts.push(colorDesc);
+        }
         if (parts.length > 0) unpolished += `\n\nBrand style: ${parts.join(", ")}`;
       }
       const allNeg: string[] = [
@@ -302,6 +315,7 @@ serve(async (req) => {
       stylePresets: body.stylePresets,
       hasBrandProfile: !!body.brandProfile,
       brandTone: body.brandProfile?.tone,
+      brandColorFeel: body.brandProfile?.colorFeel,
       negativesCount: body.negatives?.length || 0,
       aspectRatio: body.aspectRatio,
       imageCount: body.imageCount,
