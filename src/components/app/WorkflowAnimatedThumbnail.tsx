@@ -76,32 +76,51 @@ function getTransitionStyles(
 
 export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATION, isActive = true }: Props) {
   const [activeStep, setActiveStep] = useState(0);
-  const [prevStep, setPrevStep] = useState<number | null>(null);
-  const [entering, setEntering] = useState(false);
+  const [displayStep, setDisplayStep] = useState(0); // what's visually shown
+  const [prevDisplayStep, setPrevDisplayStep] = useState<number | null>(null);
+  const [animPhase, setAnimPhase] = useState<'idle' | 'entering'>('idle');
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const rafRef = useRef<number>();
 
   const advance = useCallback(() => {
-    setActiveStep((prevActive) => {
-      setPrevStep(prevActive);
-      setEntering(true);
-
-      // Clear entering state after transition completes
-      timeoutRef.current = setTimeout(() => {
-        setEntering(false);
-        setPrevStep(null);
-      }, 650);
-
-      return (prevActive + 1) % steps.length;
-    });
+    setActiveStep((prev) => (prev + 1) % steps.length);
   }, [steps.length]);
+
+  // When activeStep changes, trigger the enter animation
+  useEffect(() => {
+    if (activeStep === displayStep) return;
+
+    setPrevDisplayStep(displayStep);
+    setAnimPhase('entering');
+
+    // Double RAF: first frame applies starting position, second frame triggers transition
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = requestAnimationFrame(() => {
+        setDisplayStep(activeStep);
+        setAnimPhase('idle');
+
+        // Clear previous step after transition
+        timeoutRef.current = setTimeout(() => {
+          setPrevDisplayStep(null);
+        }, 700);
+      });
+    });
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [activeStep]); // intentionally not including displayStep to avoid loop
 
   // Reset on deactivate
   useEffect(() => {
     if (!isActive) {
-      setEntering(false);
-      setPrevStep(null);
-      // Small delay so the first frame fades in cleanly
-      const t = setTimeout(() => setActiveStep(0), 200);
+      setPrevDisplayStep(null);
+      setAnimPhase('idle');
+      const t = setTimeout(() => {
+        setActiveStep(0);
+        setDisplayStep(0);
+      }, 200);
       return () => clearTimeout(t);
     }
   }, [isActive]);
@@ -116,8 +135,7 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
     };
   }, [advance, stepDuration, isActive]);
 
-  const current = steps[activeStep];
-  const currentTransition = current.transition || 'slide-right';
+  const current = steps[displayStep];
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
@@ -126,15 +144,17 @@ export function WorkflowAnimatedThumbnail({ steps, stepDuration = DEFAULT_DURATI
         const stepTransition = step.transition || 'slide-right';
         let phase: 'enter' | 'active' | 'exit' | 'hidden';
 
-        if (i === activeStep) {
-          phase = entering ? 'enter' : 'active';
-        } else if (i === prevStep && entering) {
+        if (i === displayStep && animPhase === 'idle') {
+          phase = 'active';
+        } else if (i === activeStep && animPhase === 'entering') {
+          // New step waiting to enter — show at start position
+          phase = 'enter';
+        } else if (i === prevDisplayStep) {
           phase = 'exit';
         } else {
           phase = 'hidden';
         }
 
-        // Force 'enter' -> 'active' via requestAnimationFrame
         const style = getTransitionStyles(stepTransition, phase);
 
         return (
