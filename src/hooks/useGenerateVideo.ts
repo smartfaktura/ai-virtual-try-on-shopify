@@ -4,6 +4,20 @@ import { toast } from 'sonner';
 
 export type VideoGenStatus = 'idle' | 'creating' | 'processing' | 'complete' | 'error';
 
+export interface GeneratedVideo {
+  id: string;
+  source_image_url: string;
+  prompt: string;
+  video_url: string | null;
+  kling_task_id: string | null;
+  model_name: string;
+  duration: string;
+  aspect_ratio: string;
+  status: string;
+  created_at: string;
+  completed_at: string | null;
+}
+
 interface UseGenerateVideoResult {
   status: VideoGenStatus;
   videoUrl: string | null;
@@ -17,6 +31,9 @@ interface UseGenerateVideoResult {
     aspectRatio?: '1:1' | '16:9' | '9:16';
   }) => void;
   reset: () => void;
+  history: GeneratedVideo[];
+  isLoadingHistory: boolean;
+  refreshHistory: () => void;
 }
 
 const POLL_INTERVAL = 8000;
@@ -27,6 +44,8 @@ export function useGenerateVideo(): UseGenerateVideoResult {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [history, setHistory] = useState<GeneratedVideo[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -41,6 +60,33 @@ export function useGenerateVideo(): UseGenerateVideoResult {
   }, []);
 
   useEffect(() => cleanup, [cleanup]);
+
+  const fetchHistory = useCallback(async () => {
+    try {
+      setIsLoadingHistory(true);
+      const { data, error: fetchError } = await supabase
+        .from('generated_videos')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (fetchError) {
+        console.error('[useGenerateVideo] History fetch error:', fetchError);
+        return;
+      }
+
+      setHistory((data as GeneratedVideo[]) || []);
+    } catch (err) {
+      console.error('[useGenerateVideo] History fetch error:', err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, []);
+
+  // Load history on mount
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
   const reset = useCallback(() => {
     cleanup();
@@ -82,11 +128,14 @@ export function useGenerateVideo(): UseGenerateVideoResult {
           setStatus('complete');
           setVideoUrl(data.video_url);
           toast.success('Video generated successfully!');
+          // Refresh history to include the new video
+          fetchHistory();
         } else if (data.status === 'failed') {
           cleanup();
           setStatus('error');
           setError(data.error || 'Video generation failed');
           toast.error(data.error || 'Video generation failed');
+          fetchHistory();
         }
         // else still processing — keep polling
       } catch (err) {
@@ -94,7 +143,7 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         // Don't stop polling on transient errors, just log
       }
     }, POLL_INTERVAL);
-  }, [cleanup]);
+  }, [cleanup, fetchHistory]);
 
   const startGeneration = useCallback(
     async (params: {
@@ -140,5 +189,15 @@ export function useGenerateVideo(): UseGenerateVideoResult {
     [cleanup, startPolling]
   );
 
-  return { status, videoUrl, error, elapsedSeconds, startGeneration, reset };
+  return {
+    status,
+    videoUrl,
+    error,
+    elapsedSeconds,
+    startGeneration,
+    reset,
+    history,
+    isLoadingHistory,
+    refreshHistory: fetchHistory,
+  };
 }

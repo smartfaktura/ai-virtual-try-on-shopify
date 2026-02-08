@@ -153,6 +153,54 @@ export type Database = {
           },
         ]
       }
+      generated_videos: {
+        Row: {
+          aspect_ratio: string
+          completed_at: string | null
+          created_at: string
+          duration: string
+          error_message: string | null
+          id: string
+          kling_task_id: string | null
+          model_name: string
+          prompt: string
+          source_image_url: string
+          status: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          aspect_ratio?: string
+          completed_at?: string | null
+          created_at?: string
+          duration?: string
+          error_message?: string | null
+          id?: string
+          kling_task_id?: string | null
+          model_name?: string
+          prompt?: string
+          source_image_url: string
+          status?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          aspect_ratio?: string
+          completed_at?: string | null
+          created_at?: string
+          duration?: string
+          error_message?: string | null
+          id?: string
+          kling_task_id?: string | null
+          model_name?: string
+          prompt?: string
+          source_image_url?: string
+          status?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       generation_jobs: {
         Row: {
           brand_profile_id: string | null
