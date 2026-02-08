@@ -104,114 +104,142 @@ export default function Freestyle() {
     setLightboxOpen(true);
   }, []);
 
+  const hasImages = generatedImages.length > 0;
+
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-      {/* Results Gallery */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-        <FreestyleGallery
-          images={generatedImages}
-          onDownload={handleDownload}
-          onExpand={openLightbox}
-        />
-      </div>
-
-      {/* Floating Prompt Bar — Apple Light Style */}
-      <div className="flex-shrink-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2">
-        <div className="relative bg-background/80 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg p-4 sm:p-5">
-          {/* Loading progress line */}
-          {isLoading && (
-            <div className="absolute top-0 left-4 right-4">
-              <Progress value={progress} className="h-[2px] rounded-none bg-muted" />
-            </div>
-          )}
-
-          {/* Prompt Input Row */}
-          <div className="flex items-end gap-3 mb-3">
-            {/* Attach Image */}
-            <div className="flex-shrink-0">
-              {sourceImagePreview ? (
-                <div className="relative w-11 h-11">
-                  <img src={sourceImagePreview} alt="Attached" className="w-11 h-11 rounded-xl object-cover ring-1 ring-border" />
-                  <button
-                    onClick={removeSourceImage}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 h-11 px-3 rounded-xl border border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="text-xs font-medium hidden sm:inline">Upload image</span>
-                </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
-
-            {/* Prompt Textarea */}
-            <textarea
-              value={prompt}
-              onChange={e => setPrompt(e.target.value)}
-              placeholder="Describe what you want to create..."
-              rows={2}
-              className="flex-1 bg-transparent border-none rounded-xl px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0"
-              onKeyDown={e => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault();
-                  handleGenerate();
-                }
-              }}
+      {hasImages ? (
+        <>
+          {/* Results Gallery — scrollable, prompt bar at bottom */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <FreestyleGallery
+              images={generatedImages}
+              onDownload={handleDownload}
+              onExpand={openLightbox}
             />
-
-            {/* Generate Button */}
-            <div className="flex-shrink-0">
-              <Button
-                onClick={handleGenerate}
-                disabled={!canGenerate}
-                size="lg"
-                className="h-12 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4" />
-                )}
-                <span className="hidden sm:inline">Generate</span>
-                <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
-              </Button>
-            </div>
           </div>
 
-          {/* Settings Chips Row */}
-          <FreestyleSettingsChips
-            selectedModel={selectedModel}
-            onModelSelect={setSelectedModel}
-            modelPopoverOpen={modelPopoverOpen}
-            onModelPopoverChange={setModelPopoverOpen}
-            selectedScene={selectedScene}
-            onSceneSelect={setSelectedScene}
-            scenePopoverOpen={scenePopoverOpen}
-            onScenePopoverChange={setScenePopoverOpen}
-            aspectRatio={aspectRatio}
-            onAspectRatioChange={setAspectRatio}
-            quality={quality}
-            onQualityToggle={() => setQuality(q => q === 'standard' ? 'high' : 'standard')}
-            polishPrompt={polishPrompt}
-            onPolishChange={setPolishPrompt}
-            imageCount={imageCount}
-            onImageCountChange={setImageCount}
-          />
+          {/* Bottom Floating Prompt Bar */}
+          <div className="flex-shrink-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2">
+            <div className="relative bg-background/80 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg p-4 sm:p-5">
+              {isLoading && (
+                <div className="absolute top-0 left-4 right-4">
+                  <Progress value={progress} className="h-[2px] rounded-none bg-muted" />
+                </div>
+              )}
+              <div className="flex items-end gap-3 mb-3">
+                <div className="flex-shrink-0">
+                  {sourceImagePreview ? (
+                    <div className="relative w-11 h-11">
+                      <img src={sourceImagePreview} alt="Attached" className="w-11 h-11 rounded-xl object-cover ring-1 ring-border" />
+                      <button onClick={removeSourceImage} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 h-11 px-3 rounded-xl border border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200">
+                      <Plus className="w-4 h-4" />
+                      <span className="text-xs font-medium hidden sm:inline">Upload image</span>
+                    </button>
+                  )}
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                </div>
+                <textarea
+                  value={prompt}
+                  onChange={e => setPrompt(e.target.value)}
+                  placeholder="Describe what you want to create..."
+                  rows={2}
+                  className="flex-1 bg-transparent border-none rounded-xl px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0"
+                  onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleGenerate(); } }}
+                />
+                <div className="flex-shrink-0">
+                  <Button onClick={handleGenerate} disabled={!canGenerate} size="lg" className="h-12 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold">
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    <span className="hidden sm:inline">Generate</span>
+                    <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
+                  </Button>
+                </div>
+              </div>
+              <FreestyleSettingsChips
+                selectedModel={selectedModel} onModelSelect={setSelectedModel}
+                modelPopoverOpen={modelPopoverOpen} onModelPopoverChange={setModelPopoverOpen}
+                selectedScene={selectedScene} onSceneSelect={setSelectedScene}
+                scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={setScenePopoverOpen}
+                aspectRatio={aspectRatio} onAspectRatioChange={setAspectRatio}
+                quality={quality} onQualityToggle={() => setQuality(q => q === 'standard' ? 'high' : 'standard')}
+                polishPrompt={polishPrompt} onPolishChange={setPolishPrompt}
+                imageCount={imageCount} onImageCountChange={setImageCount}
+              />
+            </div>
+          </div>
+        </>
+      ) : (
+        /* Empty State — centered prompt panel */
+        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6">
+          <div className="w-20 h-20 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
+            <Sparkles className="w-8 h-8 text-muted-foreground/40" />
+          </div>
+          <h2 className="text-2xl font-light tracking-tight text-foreground/80 mb-2">
+            Freestyle Studio
+          </h2>
+          <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed text-center mb-8">
+            Describe what you want to create, attach a reference, pick a model or scene.
+          </p>
+
+          <div className="w-full max-w-2xl">
+            <div className="relative bg-background/80 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg p-4 sm:p-5">
+              {isLoading && (
+                <div className="absolute top-0 left-4 right-4">
+                  <Progress value={progress} className="h-[2px] rounded-none bg-muted" />
+                </div>
+              )}
+              <div className="flex items-end gap-3 mb-3">
+                <div className="flex-shrink-0">
+                  {sourceImagePreview ? (
+                    <div className="relative w-11 h-11">
+                      <img src={sourceImagePreview} alt="Attached" className="w-11 h-11 rounded-xl object-cover ring-1 ring-border" />
+                      <button onClick={removeSourceImage} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 h-11 px-3 rounded-xl border border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200">
+                      <Plus className="w-4 h-4" />
+                      <span className="text-xs font-medium hidden sm:inline">Upload image</span>
+                    </button>
+                  )}
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                </div>
+                <textarea
+                  value={prompt}
+                  onChange={e => setPrompt(e.target.value)}
+                  placeholder="Describe what you want to create..."
+                  rows={2}
+                  className="flex-1 bg-transparent border-none rounded-xl px-4 py-3 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0"
+                  onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleGenerate(); } }}
+                />
+                <div className="flex-shrink-0">
+                  <Button onClick={handleGenerate} disabled={!canGenerate} size="lg" className="h-12 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold">
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    <span className="hidden sm:inline">Generate</span>
+                    <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
+                  </Button>
+                </div>
+              </div>
+              <FreestyleSettingsChips
+                selectedModel={selectedModel} onModelSelect={setSelectedModel}
+                modelPopoverOpen={modelPopoverOpen} onModelPopoverChange={setModelPopoverOpen}
+                selectedScene={selectedScene} onSceneSelect={setSelectedScene}
+                scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={setScenePopoverOpen}
+                aspectRatio={aspectRatio} onAspectRatioChange={setAspectRatio}
+                quality={quality} onQualityToggle={() => setQuality(q => q === 'standard' ? 'high' : 'standard')}
+                polishPrompt={polishPrompt} onPolishChange={setPolishPrompt}
+                imageCount={imageCount} onImageCountChange={setImageCount}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lightbox */}
       {generatedImages.length > 0 && (
