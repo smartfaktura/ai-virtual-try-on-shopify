@@ -68,6 +68,21 @@ function polishUserPrompt(
     if (brandProfile.backgroundStyle) brandParts.push(`Background preference: ${brandProfile.backgroundStyle}`);
     if (brandProfile.colorTemperature) brandParts.push(`Color temperature: ${brandProfile.colorTemperature}`);
     if (brandProfile.compositionBias) brandParts.push(`Composition: ${brandProfile.compositionBias}`);
+    if (brandProfile.brandKeywords && brandProfile.brandKeywords.length > 0) {
+      brandParts.push(`Brand DNA keywords: ${brandProfile.brandKeywords.join(", ")}`);
+    }
+    if (brandProfile.colorPalette && brandProfile.colorPalette.length > 0) {
+      brandParts.push(`Preferred color palette: ${brandProfile.colorPalette.join(", ")}`);
+    }
+    if (brandProfile.preferredScenes && brandProfile.preferredScenes.length > 0) {
+      brandParts.push(`Preferred environments: ${brandProfile.preferredScenes.join(", ")}`);
+    }
+    if (brandProfile.targetAudience) {
+      brandParts.push(`Target audience: ${brandProfile.targetAudience}`);
+    }
+    if (brandProfile.photographyReference) {
+      brandParts.push(`Creative direction: ${brandProfile.photographyReference}`);
+    }
     if (brandParts.length > 0) {
       layers.push(`BRAND STYLE GUIDE:\n${brandParts.join(". ")}.`);
     }
