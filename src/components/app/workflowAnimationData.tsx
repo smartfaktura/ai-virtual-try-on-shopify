@@ -56,65 +56,65 @@ import baResult from '@/assets/workflows/workflow-before-after.jpg';
 
 export const workflowAnimations: Record<string, AnimatedStep[]> = {
   'Virtual Try-On Set': [
-    { image: tryonProduct, label: 'Upload Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: tryonModel, label: 'Select Model', icon: <User className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: tryonScene, label: 'Choose Scene', icon: <MapPin className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: tryonResult, label: 'Result', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: tryonProduct, label: 'Upload Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
+    { image: tryonModel, label: 'Select Model', icon: <User className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
+    { image: tryonScene, label: 'Choose Scene', icon: <MapPin className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-left' },
+    { image: tryonResult, label: 'Result', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
   ],
 
   'Social Media Pack': [
-    { image: socialProduct, label: 'Pick Product', icon: <Image className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: socialScene1, label: 'Morning Light', icon: <Sun className="w-3.5 h-3.5" /> },
-    { image: socialScene2, label: 'Lifestyle Shot', icon: <Camera className="w-3.5 h-3.5" /> },
-    { image: socialResult, label: 'Feed Ready', icon: <Grid3X3 className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: socialProduct, label: 'Pick Product', icon: <Image className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
+    { image: socialScene1, label: 'Morning Light', icon: <Sun className="w-3.5 h-3.5" />, transition: 'slide-right' },
+    { image: socialScene2, label: 'Lifestyle Shot', icon: <Camera className="w-3.5 h-3.5" />, transition: 'slide-left' },
+    { image: socialResult, label: 'Feed Ready', icon: <Grid3X3 className="w-3.5 h-3.5" />, overlay: 'result', transition: 'scale' },
   ],
 
   'Product Listing Set': [
-    { image: listingProduct, label: 'Upload Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: listingScene, label: 'Studio Setup', icon: <Layout className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: listingResult, label: 'Listing Ready', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: listingProduct, label: 'Upload Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
+    { image: listingScene, label: 'Studio Setup', icon: <Layout className="w-3.5 h-3.5" />, overlay: 'action', transition: 'zoom' },
+    { image: listingResult, label: 'Listing Ready', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'slide-up' },
   ],
 
   'Lifestyle Set': [
-    { image: lifestyleProduct, label: 'Pick Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: lifestyleScene, label: 'Choose Setting', icon: <MapPin className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: lifestyleResult, label: 'In Context', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: lifestyleProduct, label: 'Pick Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
+    { image: lifestyleScene, label: 'Choose Setting', icon: <MapPin className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
+    { image: lifestyleResult, label: 'In Context', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
   ],
 
   'Website Hero Set': [
-    { image: heroProduct, label: 'Select Product', icon: <Shirt className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: heroModel, label: 'Choose Model', icon: <User className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: heroScene, label: 'Set Location', icon: <Globe className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: heroResult, label: 'Hero Shot', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: heroProduct, label: 'Select Product', icon: <Shirt className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
+    { image: heroModel, label: 'Choose Model', icon: <User className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-left' },
+    { image: heroScene, label: 'Set Location', icon: <Globe className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
+    { image: heroResult, label: 'Hero Shot', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
   ],
 
   'Ad Refresh Set': [
-    { image: adProduct, label: 'Pick Product', icon: <Zap className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: adModel, label: 'Select Model', icon: <User className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: adResult, label: 'Ad Ready', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: adProduct, label: 'Pick Product', icon: <Zap className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
+    { image: adModel, label: 'Select Model', icon: <User className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
+    { image: adResult, label: 'Ad Ready', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'scale' },
   ],
 
   'Selfie / UGC Set': [
-    { image: ugcProduct, label: 'Choose Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: ugcModel, label: 'Pick Creator', icon: <User className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: ugcResult, label: 'UGC Ready', icon: <Star className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: ugcProduct, label: 'Choose Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
+    { image: ugcModel, label: 'Pick Creator', icon: <User className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-left' },
+    { image: ugcResult, label: 'UGC Ready', icon: <Star className="w-3.5 h-3.5" />, overlay: 'result', transition: 'slide-up' },
   ],
 
   'Flat Lay Set': [
-    { image: flatProduct1, label: 'Add Products', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: flatProduct2, label: 'Style Props', icon: <Palette className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: flatResult, label: 'Flat Lay Done', icon: <Layers className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: flatProduct1, label: 'Add Products', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-right' },
+    { image: flatProduct2, label: 'Style Props', icon: <Palette className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
+    { image: flatResult, label: 'Flat Lay Done', icon: <Layers className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
   ],
 
   'Seasonal Campaign Set': [
-    { image: seasonProduct, label: 'Pick Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: seasonSpring, label: 'Spring Vibes', icon: <Leaf className="w-3.5 h-3.5" /> },
-    { image: seasonResult, label: '4 Seasons', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: seasonProduct, label: 'Pick Product', icon: <Plus className="w-3.5 h-3.5" />, overlay: 'action', transition: 'scale' },
+    { image: seasonSpring, label: 'Spring Vibes', icon: <Leaf className="w-3.5 h-3.5" />, transition: 'slide-right' },
+    { image: seasonResult, label: '4 Seasons', icon: <Sparkles className="w-3.5 h-3.5" />, overlay: 'result', transition: 'zoom' },
   ],
 
   'Before & After Set': [
-    { image: baProduct, label: 'Select Product', icon: <Eye className="w-3.5 h-3.5" />, overlay: 'action' },
-    { image: baBefore, label: 'Before State', icon: <ArrowLeftRight className="w-3.5 h-3.5" /> },
-    { image: baResult, label: 'Transformation', icon: <Wand2 className="w-3.5 h-3.5" />, overlay: 'result' },
+    { image: baProduct, label: 'Select Product', icon: <Eye className="w-3.5 h-3.5" />, overlay: 'action', transition: 'slide-up' },
+    { image: baBefore, label: 'Before State', icon: <ArrowLeftRight className="w-3.5 h-3.5" />, transition: 'slide-left' },
+    { image: baResult, label: 'Transformation', icon: <Wand2 className="w-3.5 h-3.5" />, overlay: 'result', transition: 'scale' },
   ],
 };
