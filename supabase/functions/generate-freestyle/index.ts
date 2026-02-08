@@ -140,13 +140,33 @@ function polishUserPrompt(
   return layers.join("\n\n");
 }
 
+// Content-block detection helpers
+function isContentBlocked(data: Record<string, unknown>): boolean {
+  const choice = (data.choices as Array<Record<string, unknown>>)?.[0];
+  if (!choice) return false;
+  const finishReason = String(choice.finish_reason || "");
+  if (/PROHIBIT|BLOCK|SAFETY|RECITATION/i.test(finishReason)) return true;
+  const content = String((choice.message as Record<string, unknown>)?.content || "");
+  if (/I cannot fulfill|I('m| am) unable to|violates .* policy|inappropriate|not able to generate/i.test(content)) return true;
+  return false;
+}
+
+function extractBlockReason(data: Record<string, unknown>): string {
+  const choice = (data.choices as Array<Record<string, unknown>>)?.[0];
+  const content = String((choice?.message as Record<string, unknown>)?.content || "").trim();
+  if (content.length > 10 && content.length < 300) return content;
+  return "This prompt was flagged by our content safety system. Try rephrasing with different terms.";
+}
+
+type GenerateResult = string | { blocked: true; reason: string } | null;
+
 // ── AI image generation with retries ──────────────────────────────────────
 async function generateImage(
   prompt: string,
   images: Array<{ type: "image_url"; image_url: { url: string } }>,
   apiKey: string,
   model: string
-): Promise<string | null> {
+): Promise<GenerateResult> {
   const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -192,6 +212,13 @@ async function generateImage(
       const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
       if (!imageUrl) {
+        // Check for content policy block before retrying
+        if (isContentBlocked(data)) {
+          const reason = extractBlockReason(data);
+          console.warn("Content blocked by safety filter:", reason);
+          return { blocked: true, reason };
+        }
+
         console.error("No image in response:", JSON.stringify(data).slice(0, 500));
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 1000));
