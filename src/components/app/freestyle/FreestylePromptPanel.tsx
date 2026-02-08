@@ -71,6 +71,9 @@ export function FreestylePromptPanel({
   polishPrompt, onPolishChange,
   imageCount, onImageCountChange,
   stylePresets, onStylePresetsChange,
+  selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
+  brandProfiles, isLoadingBrandProfiles,
+  negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
 }: FreestylePromptPanelProps) {
   const uploadButton = sourceImagePreview ? (
     <div className="relative w-9 h-9 flex-shrink-0">
