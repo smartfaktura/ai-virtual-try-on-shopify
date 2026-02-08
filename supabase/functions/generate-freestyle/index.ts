@@ -135,6 +135,12 @@ function polishUserPrompt(
         "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
       );
     }
+    // Product-only framing (no model involved)
+    if (!context.hasModel) {
+      layers.push(
+        "FRAMING: Center the product with balanced negative space on all sides. The product should occupy 50-70% of the frame with no cropping of edges."
+      );
+    }
   }
 
   // Model / portrait layer — strong identity matching
