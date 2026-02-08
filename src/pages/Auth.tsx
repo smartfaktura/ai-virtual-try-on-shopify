@@ -60,9 +60,9 @@ export default function Auth() {
               className="inline-flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity"
             >
               <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">fa</span>
+                <span className="text-primary-foreground font-bold text-sm">V</span>
               </div>
-              <span className="font-bold text-lg text-foreground tracking-tight">framea.ai</span>
+              <span className="font-bold text-lg text-foreground tracking-tight">VOVV.AI</span>
             </button>
 
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
@@ -163,7 +163,7 @@ export default function Auth() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         <div className="absolute bottom-8 left-8 right-8">
           <p className="text-white/90 text-sm font-medium">
-            Generated with framea.ai
+            Generated with VOVV.AI
           </p>
         </div>
       </div>

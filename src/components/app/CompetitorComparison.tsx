@@ -3,7 +3,7 @@ import { CheckCircle } from 'lucide-react';
 
 export function CompetitorComparison() {
   const comparisons = [
-    { name: 'framea.ai', price: '$0.008', highlight: true },
+    { name: 'VOVV.AI', price: '$0.008', highlight: true },
     { name: 'Competitor A', price: '$0.03', highlight: false },
     { name: 'Competitor B', price: '$0.05', highlight: false },
   ];

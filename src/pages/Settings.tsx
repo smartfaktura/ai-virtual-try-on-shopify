@@ -234,7 +234,7 @@ export default function Settings() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm">Model:</span>
-              <Badge variant="secondary">framea-v1</Badge>
+              <Badge variant="secondary">vovv-v1</Badge>
               <span className="text-xs text-muted-foreground">(Latest stable version)</span>
             </div>
             <div className="space-y-2">
