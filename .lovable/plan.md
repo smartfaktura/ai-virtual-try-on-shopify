@@ -1,51 +1,49 @@
 
 
-## Fix: Always-Visible Prompt Bar
+## Fix Freestyle Image Visibility and Prompt Bar Layout
 
-The prompt bar should be pinned to the bottom of the Freestyle page in **all states** (empty, few images, many images) so the Generate button is never cut off or scrolled out of view.
-
----
-
-### Problem
-
-Currently there are 3 different layout modes:
-1. **Empty state**: Prompt bar is inline, centered vertically -- works fine
-2. **1-3 images**: Prompt bar is part of scrollable content -- **breaks** because it scrolls off-screen
-3. **4+ images**: Prompt bar is floating/absolute at bottom -- works fine
-
-### Solution
-
-Unify the layout so the prompt bar is **always pinned at the bottom** of the viewport in a fixed position. The gallery/content area sits above it and scrolls independently with enough bottom padding to avoid overlap.
-
-**Single layout pattern for all states:**
-
-```text
-+--------------------------------------------------+
-|                                                  |
-|   Gallery / Empty State (scrollable area)        |
-|   padding-bottom: enough to clear prompt bar     |
-|                                                  |
-+--------------------------------------------------+
-|  ~~~ gradient fade ~~~                           |
-|  +--------------------------------------------+  |
-|  |  Prompt bar (always pinned at bottom)      |  |
-|  +--------------------------------------------+  |
-+--------------------------------------------------+
-```
+Two issues to resolve: the generated image gets cropped/clipped by the container, and the prompt bar overlaps content improperly.
 
 ---
 
-### Changes
+### Root Cause
+
+The Freestyle page uses negative margins to break out of AppShell's padding, combined with `overflow-hidden` and a fixed height of `calc(100vh - 2rem)`. When a single image is generated, the gallery centers it vertically in `h-full` with no max-height constraint, so the image overflows the visible area and gets cut off by the container bounds and the prompt bar overlay.
+
+---
+
+### Fix 1: Constrain the single-image view
+
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+
+For the 1-3 image layout (lines 102-129):
+- Add `max-h` constraints so images never exceed the visible area minus prompt bar space
+- For a single image: limit height to approximately `calc(100vh - 280px)` (leaving room for the prompt bar + some breathing room)
+- Use `object-contain` instead of `object-cover` on the `<img>` so the full image is always visible without cropping
+- Remove `h-full` centering on the wrapper (which forces vertical centering that pushes content behind the prompt bar) and instead use `pt-6` with top alignment so images start from the top and scroll naturally
+
+### Fix 2: Adjust the gallery container in Freestyle.tsx
 
 **File: `src/pages/Freestyle.tsx`**
 
-- Remove the 3-way conditional layout (empty / few images / many images)
-- Replace with a unified structure:
-  - **Content area**: Takes full height, scrollable, with `pb-52` (or similar) to clear the prompt bar
-    - If no images: show centered empty state (icon + heading + description)
-    - If loading: show spinner
-    - If images: show gallery
-  - **Floating prompt bar**: Always absolute-positioned at the bottom with gradient fade above it -- same pattern currently used for 4+ images, now used for ALL states
-- The empty state will show its icon/text centered in the scroll area, with the prompt bar pinned below -- visually identical to current but structurally consistent
+- The scrollable content area (line 147) already has `pb-52` which should be sufficient, but the gallery's `h-full` + `flex items-center justify-center` for 1-3 images fights against the scroll padding
+- The gallery wrapper for few images should NOT use `h-full` centering -- it should flow from the top with padding, allowing the scroll area to work properly
 
-This is a single-file change to `src/pages/Freestyle.tsx` only. No changes to `FreestylePromptPanel` or `FreestyleGallery`.
+### Fix 3: Image card styling
+
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+
+In the `ImageCard` component:
+- Change the `<img>` from `object-cover` to `object-contain` with a subtle background color so the full generated image is always visible
+- Add `rounded-xl` and a light background (`bg-muted/30`) behind the image so non-square images look clean against the page background
+
+---
+
+### Summary of Changes
+
+| File | Change |
+|------|--------|
+| `src/components/app/freestyle/FreestyleGallery.tsx` | Remove `h-full` centering for 1-3 images layout, use top-aligned flow with padding instead. Add max-height constraint on single images. Switch from `object-cover` to `object-contain` with background fill so images are fully visible. |
+| `src/pages/Freestyle.tsx` | Minor padding adjustments to ensure the scroll area provides enough clearance above the prompt bar |
+
+No backend or database changes needed.
