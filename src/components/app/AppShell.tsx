@@ -117,7 +117,7 @@ export function AppShell({ children }: AppShellProps) {
         {/* Generate CTA */}
         <div className={cn('pt-5 pb-2', isCollapsed ? 'px-2' : 'px-4')}>
           <button
-            onClick={() => handleNav('/app/generate')}
+            onClick={() => handleNav('/app/freestyle')}
             className={cn(
               'w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25',
               isCollapsed ? 'px-2 py-3 text-xs' : 'px-3 py-3 text-sm'
