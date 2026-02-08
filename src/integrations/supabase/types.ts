@@ -153,6 +153,36 @@ export type Database = {
           },
         ]
       }
+      freestyle_generations: {
+        Row: {
+          aspect_ratio: string
+          created_at: string
+          id: string
+          image_url: string
+          prompt: string
+          quality: string
+          user_id: string
+        }
+        Insert: {
+          aspect_ratio?: string
+          created_at?: string
+          id?: string
+          image_url: string
+          prompt: string
+          quality?: string
+          user_id: string
+        }
+        Update: {
+          aspect_ratio?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          prompt?: string
+          quality?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       generated_videos: {
         Row: {
           aspect_ratio: string

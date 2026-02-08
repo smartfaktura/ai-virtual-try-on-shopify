@@ -4,16 +4,11 @@ import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
 import { useGenerateFreestyle } from '@/hooks/useGenerateFreestyle';
+import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useCredits } from '@/contexts/CreditContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import type { ModelProfile, TryOnPose } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
-
-interface GeneratedImage {
-  url: string;
-  prompt: string;
-  timestamp: number;
-}
 
 export default function Freestyle() {
   const [prompt, setPrompt] = useState('');
@@ -25,7 +20,6 @@ export default function Freestyle() {
   const [quality, setQuality] = useState<'standard' | 'high'>('standard');
   const [polishPrompt, setPolishPrompt] = useState(true);
   const [imageCount, setImageCount] = useState(1);
-  const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -34,6 +28,7 @@ export default function Freestyle() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { generate, isLoading, progress } = useGenerateFreestyle();
   const { balance, deductCredits, openBuyModal } = useCredits();
+  const { images: savedImages, saveImage, deleteImage } = useFreestyleImages();
 
   const creditCost = imageCount * (quality === 'high' ? 2 : 1);
   const canGenerate = prompt.trim().length > 0 && !isLoading && balance >= creditCost;
@@ -81,14 +76,12 @@ export default function Freestyle() {
 
     if (result && result.images.length > 0) {
       deductCredits(creditCost);
-      const newImages: GeneratedImage[] = result.images.map(url => ({
-        url,
-        prompt: finalPrompt,
-        timestamp: Date.now(),
-      }));
-      setGeneratedImages(prev => [...newImages, ...prev]);
+      // Save each generated image to storage + DB
+      for (const imageUrl of result.images) {
+        await saveImage(imageUrl, finalPrompt, aspectRatio, quality);
+      }
     }
-  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits]);
+  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage]);
 
   const handleDownload = useCallback((imageUrl: string, index: number) => {
     const a = document.createElement('a');
@@ -102,7 +95,19 @@ export default function Freestyle() {
     setLightboxOpen(true);
   }, []);
 
-  const hasImages = generatedImages.length > 0;
+  const handleDelete = useCallback(async (imageId: string) => {
+    await deleteImage(imageId);
+  }, [deleteImage]);
+
+  const hasImages = savedImages.length > 0;
+
+  // Map saved images to gallery format
+  const galleryImages = savedImages.map(img => ({
+    id: img.id,
+    url: img.url,
+    prompt: img.prompt,
+    aspectRatio: img.aspectRatio,
+  }));
 
   const panelProps = {
     prompt,
@@ -134,28 +139,31 @@ export default function Freestyle() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8">
+    <div className="relative h-[calc(100vh-3.5rem)] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
       {hasImages ? (
         <>
-          {/* Results Gallery — scrollable, edge-to-edge */}
-          <div className="flex-1 overflow-y-auto min-h-0">
+          {/* Gallery — full viewport, scrollable, with bottom padding for floating bar */}
+          <div className="h-full overflow-y-auto pb-52">
             <FreestyleGallery
-              images={generatedImages}
+              images={galleryImages}
               onDownload={handleDownload}
               onExpand={openLightbox}
+              onDelete={handleDelete}
             />
           </div>
 
-          {/* Sticky Prompt Bar — always pinned at bottom */}
-          <div className="flex-shrink-0 border-t border-border/50 bg-background/80 backdrop-blur-xl px-4 sm:px-6 pb-4 sm:pb-5 pt-3 shadow-[0_-4px_16px_-4px_hsl(var(--foreground)/0.05)]">
-            <FreestylePromptPanel {...panelProps} />
+          {/* Floating Prompt Bar — absolute overlay at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none">
+            <div className="max-w-3xl mx-auto pointer-events-auto">
+              <FreestylePromptPanel {...panelProps} />
+            </div>
           </div>
         </>
       ) : (
         /* Empty State — centered prompt panel */
-        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6">
+        <div className="flex-1 h-full flex flex-col items-center justify-center px-4 sm:px-6">
           <div className="w-20 h-20 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
             <Sparkles className="w-8 h-8 text-muted-foreground/40" />
           </div>
@@ -172,14 +180,14 @@ export default function Freestyle() {
       )}
 
       {/* Lightbox */}
-      {generatedImages.length > 0 && (
+      {savedImages.length > 0 && (
         <ImageLightbox
-          images={generatedImages.map(i => i.url)}
+          images={savedImages.map(i => i.url)}
           currentIndex={lightboxIndex}
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
-          onDownload={(idx) => handleDownload(generatedImages[idx].url, idx)}
+          onDownload={(idx) => handleDownload(savedImages[idx].url, idx)}
         />
       )}
     </div>
