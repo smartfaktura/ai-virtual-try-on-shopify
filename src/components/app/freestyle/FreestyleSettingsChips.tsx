@@ -6,6 +6,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import avatarLuna from '@/assets/team/avatar-luna.jpg';
@@ -127,14 +128,11 @@ export function FreestyleSettingsChips({
             </TooltipContent>
           </Tooltip>
 
-          {/* Prompt Polish Toggle with Tooltip */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70">
-                <Avatar className="w-5 h-5 -ml-0.5">
-                  <AvatarImage src={avatarLuna} alt="Luna" />
-                  <AvatarFallback className="text-[8px]">L</AvatarFallback>
-                </Avatar>
+          {/* Prompt Polish Toggle with HoverCard */}
+          <HoverCard openDelay={200} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 cursor-default">
+                <Wand2 className="w-3.5 h-3.5" />
                 Polish
                 <Switch
                   checked={polishPrompt}
@@ -142,11 +140,23 @@ export function FreestyleSettingsChips({
                   className="scale-75 -my-1"
                 />
               </div>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[260px] text-center">
-              <span className="font-medium">Luna</span> (Retouch Specialist) refines your prompt with professional photography techniques for better results.
-            </TooltipContent>
-          </Tooltip>
+            </HoverCardTrigger>
+            <HoverCardContent side="top" align="center" className="w-72 p-4">
+              <div className="flex items-start gap-3">
+                <Avatar className="w-12 h-12 flex-shrink-0 ring-2 ring-primary/20">
+                  <AvatarImage src={avatarLuna} alt="Luna" />
+                  <AvatarFallback className="text-sm">L</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">Luna</p>
+                  <p className="text-xs text-primary font-medium">Retouch Specialist</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Refines your prompt with professional photography lighting, composition, and mood techniques for studio-quality results.
+                  </p>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         </div>
 
         {/* Right group: Image Count Stepper */}
