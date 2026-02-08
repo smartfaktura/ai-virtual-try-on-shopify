@@ -1,52 +1,114 @@
 
 
-## Freestyle Studio -- Sticky Prompt Bar and Full-Screen Gallery
+## Freestyle Studio -- Floating Prompt Bar, Masonry Grid, and Persistent Image Storage
 
-Two changes to make the Freestyle page feel immersive and professional:
-
----
-
-### 1. Sticky Prompt Bar (Always Visible)
-
-The prompt panel currently lives inside the scrollable content area, so it scrolls off-screen when the gallery grows. The fix is to make the Freestyle page use a proper split layout:
-
-- The page becomes a flex column filling the full available height
-- The **gallery area** gets `flex-1 overflow-y-auto` so only the gallery scrolls
-- The **prompt panel** sits below the gallery with `flex-shrink-0`, always pinned at the bottom of the viewport
-- This way, scrolling the gallery never moves the prompt bar
-
-### 2. Full-Screen Edge-to-Edge Gallery
-
-Currently the images are constrained by:
-- AppShell's `max-w-7xl mx-auto p-4 sm:p-6 lg:p-8` wrapper (adds side padding + limits width)
-- Gallery's own `p-4 sm:p-6` padding
-- Grid's `rounded-xl` and `gap-[2px]`
-
-The fix:
-- Freestyle page uses negative margins to break out of AppShell's padding container, filling the full content width
-- Gallery removes its own internal padding
-- Images go edge-to-edge with minimal 1-2px gaps between them
-- Remove `rounded-xl` on the grid container for a clean, full-bleed look
+Three major improvements to make Freestyle Studio feel like a professional creative tool:
 
 ---
 
-### Technical Changes
+### 1. Floating Prompt Bar (Overlay on Images)
+
+Currently the prompt bar sits in a separate section below the gallery, pushing content up. Like the Higgsfield reference, it should float ON TOP of the gallery as a translucent overlay anchored to the bottom.
+
+**How it works:**
+- The gallery takes up the full viewport height (no flex split)
+- The prompt panel is positioned with `position: absolute` at the bottom of the page, centered, with generous horizontal padding
+- A strong upward shadow and `backdrop-blur-xl` creates a floating card effect over the images
+- The gallery gets extra bottom padding (matching the prompt bar height) so the last row of images isn't hidden behind it
+- When the user scrolls through the gallery, images slide behind the floating prompt bar
 
 **File: `src/pages/Freestyle.tsx`**
+- Change the layout from flex-column split to a single scrollable container with `position: relative`
+- Move the prompt panel to `absolute bottom-4 left-4 right-4` (or centered with max-width)
+- Add bottom padding to the gallery scroll area to account for the floating bar height
+- Remove the `border-t` divider since it no longer sits in a separate section
 
-- Add negative margins to cancel AppShell's padding: `-mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8`
-- Adjust the height calculation to account for the removed vertical padding
-- Keep the current flex column structure (gallery scrolls, prompt bar stays at bottom)
-- Remove the extra `p-4 sm:p-6` padding from the gallery scroll container
-- Add a subtle top gradient/shadow on the prompt bar area so it visually separates from gallery content when scrolling
+---
+
+### 2. Masonry Grid with Actual Aspect Ratios
+
+Currently all images are forced to `aspect-[3/4]` regardless of what was generated. A 16:9 thumbnail gets cropped into a portrait frame.
+
+**How it works:**
+- Replace the CSS Grid with a CSS Columns masonry layout (`columns-2 lg:columns-3`)
+- Each image uses its natural aspect ratio (no forced `aspect-[3/4]`)
+- Images load with `onLoad` to detect natural dimensions and fade in smoothly
+- The `break-inside-avoid` property prevents images from being split across columns
+- Small gap between items using `mb-[2px]` and `gap-[2px]` on columns
+- Each `GeneratedImage` type gets an `aspectRatio` field so we know what ratio was requested
 
 **File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+- Change from `grid grid-cols-2 lg:grid-cols-3` to `columns-2 lg:columns-3 gap-[2px]`
+- Remove `aspect-[3/4]` from images, use `w-full h-auto` instead
+- Add `break-inside-avoid mb-[2px]` to each image card
+- Add `onDelete` prop for the delete button
+- Add a delete button (Trash icon) to the hover overlay alongside download and expand
 
-- Remove `rounded-xl` from the grid container (images go full-bleed)
-- Keep the minimal `gap-[2px]` between images for visual separation
-- Images remain at `aspect-[3/4]` with hover effects intact
+---
 
-**No changes to AppShell, FreestylePromptPanel, or any other files.**
+### 3. Save Generated Images to User Account
+
+Currently images are only held in React state and lost on page refresh. They need to be persisted.
+
+**Database: New `freestyle_generations` table**
+
+```text
+freestyle_generations
+  - id (uuid, primary key)
+  - user_id (uuid, references auth.users, not null)
+  - image_url (text, not null) -- public URL from storage
+  - prompt (text, not null)
+  - aspect_ratio (text, default '1:1')
+  - quality (text, default 'standard')
+  - created_at (timestamptz, default now())
+```
+
+RLS policies:
+- Users can SELECT their own rows (`user_id = auth.uid()`)
+- Users can INSERT their own rows (`user_id = auth.uid()`)
+- Users can DELETE their own rows (`user_id = auth.uid()`)
+
+**Storage: New `freestyle-images` bucket**
+- Public bucket so images can be displayed directly via URL
+- RLS: authenticated users can upload to their own folder (`user_id/filename`)
+- RLS: authenticated users can delete from their own folder
+
+**Flow:**
+1. Edge function generates base64 image(s)
+2. Client receives base64 data URLs
+3. Client converts each base64 to a Blob and uploads to `freestyle-images/{user_id}/{uuid}.png`
+4. Client gets back the public URL
+5. Client inserts a row into `freestyle_generations` with the public URL, prompt, and aspect ratio
+6. On page load, client fetches all `freestyle_generations` for the current user, ordered by `created_at DESC`
+
+**File: `src/hooks/useFreestyleImages.ts`** (new)
+- Hook that manages loading saved images from the database on mount
+- Provides `saveImage(base64, prompt, aspectRatio)` -- uploads to storage, inserts DB row
+- Provides `deleteImage(id)` -- deletes from storage and DB
+- Returns `images`, `isLoading`, `saveImage`, `deleteImage`
+
+**File: `src/hooks/useGenerateFreestyle.ts`**
+- No changes needed -- it still returns base64 URLs
+- The save logic moves to the page level after generation succeeds
+
+**File: `src/pages/Freestyle.tsx`**
+- Import and use `useFreestyleImages` hook
+- On mount, load saved images and populate the gallery
+- After generation succeeds, save each image via the hook
+- Pass `onDelete` handler to the gallery
+- Merge newly generated (unsaved) images with saved images for instant display
+
+---
+
+### 4. Delete on Hover
+
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+- Add a `Trash2` icon button to the hover overlay (alongside Download and Expand)
+- Add `onDelete(imageId: string)` to the component props
+- Show a brief confirmation toast or immediate delete with undo option
+- The delete button appears on the left side of the hover overlay to separate it from download/expand
+
+---
 
 ### Visual Result
 
@@ -55,15 +117,29 @@ The fix:
 |  [Header bar]                                   [User v]  |
 +-----------------------------------------------------------+
 |          |                                                 |
-| Sidebar  |  [img] [img] [img]  <-- edge to edge, no      |
-|          |  [img] [img] [img]      padding, scrollable    |
-|          |  [img] [img]                                    |
+| Sidebar  |  [  16:9 wide img  ] [portrait]                |
+|          |  [square] [ 4:5 ]    [  16:9   ]               |
+|          |  [portrait]          [square   ]               |
+|          |  [  16:9 wide img  ] [portrait ]               |
 |          |                                                 |
-|          |-------------------------------------------------|
-|          |  Describe what you want...          <-- STICKY  |
-|          |  [Upload | Model | Scene] | [1:1 | Std | ...]  |
-|          |                           [ Generate (1) ]      |
+|          |  +-------------------------------------------+  |
+|          |  |  Describe what you want...       FLOATING |  |
+|          |  |  [Upload|Model|Scene] | [1:1|Std|Polish]  |  |
+|          |  |                          [Generate (1)]   |  |
+|          |  +-------------------------------------------+  |
 +-----------------------------------------------------------+
 ```
 
-The prompt bar stays visible at all times. The gallery scrolls independently behind it.
+Hover on any image reveals: `[Trash] ... [Download] [Expand]`
+
+---
+
+### Technical Details -- Files Changed
+
+| File | Action |
+|------|--------|
+| `src/pages/Freestyle.tsx` | Refactor layout to relative container with floating prompt bar; integrate `useFreestyleImages` hook for persistence; add delete handler |
+| `src/components/app/freestyle/FreestyleGallery.tsx` | CSS columns masonry; natural aspect ratios; add delete button on hover; accept `onDelete` prop |
+| `src/hooks/useFreestyleImages.ts` | **New** -- load/save/delete images from database and storage |
+| Database migration | Create `freestyle_generations` table with RLS; create `freestyle-images` storage bucket with RLS |
+
