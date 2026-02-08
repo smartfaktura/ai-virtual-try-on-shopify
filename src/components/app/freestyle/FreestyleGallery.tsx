@@ -33,14 +33,14 @@ function ImageCard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-lg animate-fade-in shadow-md shadow-black/20',
+        'group relative overflow-hidden rounded-xl animate-fade-in shadow-md shadow-black/20 bg-muted/30',
         className,
       )}
     >
       <img
         src={img.url}
         alt={`Generated ${idx + 1}`}
-        className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+        className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
         loading="lazy"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -101,10 +101,10 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete }: Fre
   // Adaptive layout: centered for 1-3 images, masonry for 4+
   if (count <= 3) {
     return (
-      <div className="flex items-center justify-center h-full px-6">
+      <div className="px-6 pt-6">
         <div
           className={cn(
-            'flex gap-3 items-start justify-center',
+            'flex gap-3 items-start justify-center mx-auto',
             count === 1 && 'max-w-lg w-full',
             count === 2 && 'max-w-3xl w-full',
             count === 3 && 'max-w-4xl w-full',
@@ -119,7 +119,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete }: Fre
               onExpand={onExpand}
               onDelete={onDelete}
               className={cn(
-                count === 1 && 'w-full',
+                count === 1 && 'w-full max-h-[calc(100vh-280px)]',
                 count >= 2 && 'flex-1 min-w-0',
               )}
             />
