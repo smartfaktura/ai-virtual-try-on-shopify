@@ -150,7 +150,7 @@ export function StudioChat() {
               <div className="flex gap-2.5">
                 <Avatar className="w-7 h-7 flex-shrink-0 mt-0.5">
                   <AvatarImage src={avatarSophia} alt="Team" />
-                  <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">bf</AvatarFallback>
+                  <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">fa</AvatarFallback>
                 </Avatar>
                 <div className="bg-muted rounded-2xl rounded-bl-md px-3.5 py-3 flex gap-1">
                   <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />

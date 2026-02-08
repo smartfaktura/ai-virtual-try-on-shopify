@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     q: 'Can I really stop doing photoshoots?',
-    a: 'For most e-commerce visual needs, yes. Brands use brandframe.ai to replace recurring product shoots for ads, listings, and campaigns. You may still want photoshoots for flagship campaigns, but your day-to-day visual output is fully automated.',
+    a: 'For most e-commerce visual needs, yes. Brands use framea.ai to replace recurring product shoots for ads, listings, and campaigns. You may still want photoshoots for flagship campaigns, but your day-to-day visual output is fully automated.',
   },
   {
     q: 'What is a Visual Set?',

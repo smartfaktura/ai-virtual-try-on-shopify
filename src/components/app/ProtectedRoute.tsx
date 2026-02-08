@@ -31,7 +31,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center animate-pulse">
-            <span className="text-primary-foreground font-bold text-sm">bf</span>
+            <span className="text-primary-foreground font-bold text-sm">fa</span>
           </div>
           <p className="text-sm text-muted-foreground">Loading…</p>
         </div>

@@ -163,7 +163,7 @@ export default function Auth() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         <div className="absolute bottom-8 left-8 right-8">
           <p className="text-white/90 text-sm font-medium">
-            Generated with brandframe.ai
+            Generated with framea.ai
           </p>
         </div>
       </div>

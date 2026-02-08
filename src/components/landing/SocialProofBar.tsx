@@ -4,7 +4,7 @@ const metrics = [
   { icon: Image, value: '50,000+', label: 'Visuals generated' },
   { icon: Clock, value: '12s', label: 'Avg. delivery time' },
   { icon: RefreshCw, value: 'Monthly', label: 'Visuals refreshed automatically' },
-  { icon: TrendingUp, value: '2,000+', label: 'Brands trust brandframe.ai' },
+  { icon: TrendingUp, value: '2,000+', label: 'Brands trust framea.ai' },
 ];
 
 const placeholderLogos = ['Brand A', 'Brand B', 'Brand C', 'Brand D', 'Brand E'];
