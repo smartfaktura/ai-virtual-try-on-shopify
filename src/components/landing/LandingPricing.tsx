@@ -77,7 +77,7 @@ export function LandingPricing() {
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground mt-1">
-                    {typeof plan.credits === 'number' ? `${plan.credits.toLocaleString()} visuals/month` : 'Unlimited visuals'}
+                    {typeof plan.credits === 'number' ? `${plan.credits.toLocaleString()} credits/month` : 'Unlimited visuals'}
                   </p>
                   {typeof plan.credits === 'number' && (
                     <p className="text-[10px] text-muted-foreground/70 mt-0.5">
