@@ -22,10 +22,7 @@ import lifestyleProduct from '@/assets/products/candle-soy.jpg';
 import lifestyleScene from '@/assets/showcase/home-candle-scandi.jpg';
 import lifestyleResult from '@/assets/workflows/workflow-lifestyle.jpg';
 
-// Website Hero Set
-import heroProduct from '@/assets/products/faux-fur-jacket-1.jpg';
-import heroModel from '@/assets/models/model-female-athletic-european.jpg';
-import heroResult from '@/assets/workflows/workflow-website-hero.jpg';
+// Website Hero Set — uses HeroBannerThumbnail component directly
 
 // Ad Refresh Set
 import adProduct from '@/assets/products/leggings-black-1.jpg';
@@ -116,25 +113,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     ],
   },
 
-  'Website Hero Set': {
-    background: heroResult,
-    elements: [
-      {
-        type: 'product', image: heroProduct, label: 'Faux Fur', sublabel: 'Product',
-        icon: <Shirt className="w-3 h-3" />,
-        position: { top: '8%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
-      },
-      {
-        type: 'model', image: heroModel, label: 'Athletic',
-        icon: <User className="w-3 h-3" />,
-        position: { top: '32%', right: '6%' }, enterDelay: 1.0, animation: 'slide-right',
-      },
-      {
-        type: 'badge', label: 'Botanical', icon: <Globe className="w-3 h-3" />,
-        position: { bottom: '22%', left: '8%' }, enterDelay: 1.6, animation: 'slide-up',
-      },
-    ],
-  },
+  // Website Hero Set — uses HeroBannerThumbnail component directly
 
   'Ad Refresh Set': {
     background: adResult,

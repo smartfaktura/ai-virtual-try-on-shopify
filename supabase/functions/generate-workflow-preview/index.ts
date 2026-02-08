@@ -17,7 +17,7 @@ const workflowPrompts: Record<string, string> = {
   "Lifestyle Set":
     "Ultra high resolution lifestyle product photography. An elegant candle and home decor items arranged in a cozy living room setting with warm ambient lighting, linen textures, and soft bokeh. 3:4 portrait orientation, editorial interior photography.",
   "Website Hero Set":
-    "Ultra high resolution cinematic fashion editorial photograph. A model in an elegant flowing dress walking through a lush botanical garden with dramatic golden-hour natural lighting. 3:4 portrait orientation, wide composition, aspirational hero banner imagery.",
+    "Ultra high resolution cinematic 16:9 landscape website hero banner photograph. A model in an elegant blazer standing on the left third of the frame against a warm golden-hour architectural backdrop. The right half of the image is clean negative space with soft blurred background, designed for text overlay and CTA buttons. Professional website hero banner composition with dramatic lighting, shallow depth of field, and aspirational commercial editorial quality. Wide horizontal format.",
   "Ad Refresh Set":
     "Ultra high resolution dynamic advertising fashion photography. A model in a bold streetwear outfit against a vibrant urban backdrop with graffiti walls and neon accents. High contrast, energetic composition, 3:4 portrait orientation, commercial ad campaign style.",
   "Selfie / UGC Set":
