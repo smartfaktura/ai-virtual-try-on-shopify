@@ -42,6 +42,7 @@ interface FreestyleSettingsChipsProps {
 }
 
 export function FreestyleSettingsChips({
+  uploadButton,
   selectedModel, onModelSelect, modelPopoverOpen, onModelPopoverChange,
   selectedScene, onSceneSelect, scenePopoverOpen, onScenePopoverChange,
   aspectRatio, onAspectRatioChange,
@@ -53,7 +54,10 @@ export function FreestyleSettingsChips({
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-2">
+        {/* Left group: Upload, Model, Scene */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {uploadButton}
         {/* Model Selector */}
         <ModelSelectorChip
           selectedModel={selectedModel}
