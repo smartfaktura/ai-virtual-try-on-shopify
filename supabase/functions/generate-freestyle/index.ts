@@ -137,6 +137,9 @@ serve(async (req) => {
     if (body.modelImage) {
       imageRefs.push({ type: "image_url", image_url: { url: body.modelImage } });
     }
+    if (body.sceneImage) {
+      imageRefs.push({ type: "image_url", image_url: { url: body.sceneImage } });
+    }
 
     // Add aspect ratio instruction
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
