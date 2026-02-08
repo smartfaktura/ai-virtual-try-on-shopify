@@ -1,66 +1,36 @@
 
 
-## Generate Seamless Looping Sophia Video
+## StudioTeamSection Improvements
 
-### The Trick: Same Image as Start and End Frame
+Three changes to the landing page Studio Team carousel:
 
-The Kling AI API supports an `image_tail` parameter (end frame control). By passing the **same Sophia avatar image** as both the start frame (`image`) and the end frame (`image_tail`), the AI generates motion that naturally returns to the original position -- creating a perfect, never-ending loop.
+### 1. Reorder Team: Move Luna Before Kenji
+Luna (Retouch Specialist, currently position 7) will be moved to position 3 in the array, right before Kenji (Campaign Art Director). The new order will be:
+Sophia, Amara, **Luna**, Kenji, Yuki, Omar, Sienna, Max, Zara, Leo
 
-This is a well-documented technique: "Use the same image for start and end to auto-create a smooth loop."
+### 2. Remove Scrollbar
+The carousel currently shows a visible scrollbar at the bottom (seen in the screenshot). This will be hidden by:
+- Removing the `scrollbar-thin` class and the `scrollbarColor` inline style
+- Adding `scrollbar-width: none` and `-ms-overflow-style: none` CSS to fully hide the scrollbar (matching the approach already used in `DashboardTeamCarousel.tsx`)
 
-### Loop-Optimized Prompt
+### 3. Add Slow Auto-Rotate
+The carousel will automatically scroll through team members at a slow, continuous pace:
+- Uses a `setInterval` that scrolls the container by a small pixel amount (e.g., 1px) every ~30ms for a smooth, continuous drift
+- Pauses auto-scroll when the user hovers over the carousel or manually interacts with the navigation arrows
+- Resumes auto-scroll when the user stops hovering
+- Wraps back to the start when reaching the end
 
-The prompt describes symmetrical motion -- movement that goes out and comes back:
+---
 
-> "A warm smile slowly spreading across her face, gentle head tilt to one side then gracefully returning to center, soft natural lighting, subtle hair movement as if a light breeze passes then settles. Eyes sparkling with creative energy. Smooth, cinematic motion with gentle return to starting pose."
+### Technical Details
 
-### Generation Settings
+**File: `src/components/landing/StudioTeamSection.tsx`**
 
-| Setting | Value |
-|---------|-------|
-| Model | kling-v2-1 |
-| Duration | 5 seconds |
-| Aspect ratio | 1:1 (matches avatar cards) |
-| Mode | std |
-| Source image | `https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/scratch-uploads/test/avatar-sophia.jpg` |
-| Tail image | Same URL as source (forces return to original position) |
+- **TEAM array reorder**: Move the Luna object from index 6 to index 2 (before Kenji at current index 2)
+- **State additions**: Add `isHovered` state ref and `intervalRef` for the auto-scroll timer
+- **useEffect hook**: Set up the auto-scroll interval that scrolls the container rightward by ~1px every 30ms. When it reaches the end, it resets to the beginning. Cleans up on unmount.
+- **Event handlers**: Add `onMouseEnter`/`onMouseLeave` on the carousel container to pause/resume the auto-scroll. Also pause when arrow buttons are clicked.
+- **Scrollbar removal**: Replace `className="... scrollbar-thin"` with hidden scrollbar styles: `scrollbarWidth: 'none', msOverflowStyle: 'none'` and remove the `scrollbarColor` style
 
-### Changes Required
-
-#### 1. Edge Function -- Add `image_tail` support
-
-Update `supabase/functions/generate-video/index.ts` to accept and forward the `image_tail` parameter to the Kling API. This is a non-breaking addition -- existing calls without `image_tail` continue to work as before.
-
-```text
-// Add image_tail to destructuring
-const { image_url, image_tail, prompt, duration, model_name, mode, aspect_ratio } = body;
-
-// Pass to Kling body when provided
-if (image_tail) klingBody.image_tail = image_tail;
-```
-
-#### 2. Hook -- Add `imageTailUrl` parameter
-
-Update `src/hooks/useGenerateVideo.ts` to accept an optional `imageTailUrl` in the `startGeneration` params, and pass it as `image_tail` to the edge function.
-
-#### 3. Video Generator Page -- Add Loop Mode toggle
-
-Update `src/pages/VideoGenerate.tsx` to add a "Loop Mode" switch in the configuration panel. When enabled, the same source image is automatically used as both start and end frame. A small info note explains: "Uses same image as start + end frame for seamless looping."
-
-#### 4. Trigger the Generation
-
-After deploying the edge function update, trigger a new video generation with Sophia's avatar using the loop-optimized prompt and `image_tail` set to the same source URL.
-
-#### 5. Update Landing Page
-
-Once the new looping video completes, update `src/components/landing/StudioTeamSection.tsx` to point Sophia's `videoUrl` to the new seamless-loop version.
-
-### Files Modified
-
-| File | Change |
-|------|--------|
-| `supabase/functions/generate-video/index.ts` | Accept and forward `image_tail` parameter to Kling API |
-| `src/hooks/useGenerateVideo.ts` | Add optional `imageTailUrl` to generation params |
-| `src/pages/VideoGenerate.tsx` | Add Loop Mode toggle switch in config section |
-| `src/components/landing/StudioTeamSection.tsx` | Update Sophia's video URL after new video completes |
+No changes needed to `DashboardTeamCarousel.tsx` for this request (it already has hidden scrollbar and a different layout).
 
