@@ -13,6 +13,11 @@ interface BrandProfileContext {
   colorTemperature: string;
   compositionBias: string;
   doNotRules: string[];
+  brandKeywords?: string[];
+  colorPalette?: string[];
+  preferredScenes?: string[];
+  targetAudience?: string;
+  photographyReference?: string;
 }
 
 interface FreestyleRequest {
