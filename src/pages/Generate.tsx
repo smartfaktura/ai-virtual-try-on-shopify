@@ -160,22 +160,35 @@ export default function Generate() {
       if (activeWorkflow.uses_tryon) {
         setGenerationMode('virtual-try-on');
       }
-      // Set aspect ratio from workflow recommendations
-      if (activeWorkflow.recommended_ratios?.length > 0) {
+      // Set aspect ratio from workflow config or recommendations
+      if (workflowConfig?.fixed_settings?.aspect_ratios?.length) {
+        const firstRatio = workflowConfig.fixed_settings.aspect_ratios[0] as AspectRatio;
+        if (['1:1', '4:5', '16:9'].includes(firstRatio)) {
+          setAspectRatio(firstRatio);
+        }
+      } else if (activeWorkflow.recommended_ratios?.length > 0) {
         const firstRatio = activeWorkflow.recommended_ratios[0] as AspectRatio;
         if (['1:1', '4:5', '16:9'].includes(firstRatio)) {
           setAspectRatio(firstRatio);
         }
       }
-      // Auto-select template from workflow's template_ids
-      if (activeWorkflow.template_ids?.length > 0) {
+      // Set quality from workflow config
+      if (workflowConfig?.fixed_settings?.quality) {
+        setQuality(workflowConfig.fixed_settings.quality as ImageQuality);
+      }
+      // Auto-select all variations by default
+      if (variationStrategy?.variations?.length) {
+        setSelectedVariationIndices(new Set(variationStrategy.variations.map((_, i) => i)));
+      }
+      // Auto-select template from workflow's template_ids (only if no config)
+      if (!workflowConfig && activeWorkflow.template_ids?.length > 0) {
         const matchingTemplate = mockTemplates.find(t =>
           activeWorkflow.template_ids.some(tid => t.templateId.includes(tid) || t.name.toLowerCase().includes(tid.replace(/-/g, ' ')))
         );
         if (matchingTemplate) setSelectedTemplate(matchingTemplate);
       }
     }
-  }, [activeWorkflow]);
+  }, [activeWorkflow, workflowConfig, variationStrategy]);
 
   // Apply brand profile settings when selected
   useEffect(() => {
