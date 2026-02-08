@@ -3,8 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 
-const LOW_CREDIT_THRESHOLD = 50;
-const CRITICAL_THRESHOLD = 10;
+const LOW_CREDIT_THRESHOLD = 200;
+const CRITICAL_THRESHOLD = 40;
 
 interface CreditContextValue {
   balance: number;
