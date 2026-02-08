@@ -1,8 +1,9 @@
-import { Image, Users, Ratio, ArrowRight } from 'lucide-react';
+import { Users, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TryOnAnimatedThumbnail } from '@/components/app/TryOnAnimatedThumbnail';
 import type { Workflow } from '@/pages/Workflows';
 
 import imgVirtualTryOn from '@/assets/workflows/workflow-virtual-tryon.jpg';
@@ -36,8 +37,11 @@ const workflowImages: Record<string, string> = {
   'Before & After Set': imgBeforeAfter,
 };
 
+const IS_TRYON_ANIMATED = 'Virtual Try-On Set';
+
 export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardProps) {
   const thumbnail = workflow.preview_image_url || workflowImages[workflow.name] || imgFallback;
+  const isAnimatedTryOn = workflow.name === IS_TRYON_ANIMATED;
 
   return (
     <Card className="group hover:shadow-md transition-all hover:border-primary/30 overflow-hidden">
@@ -45,6 +49,8 @@ export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardP
       <div className="aspect-[3/4] overflow-hidden relative">
         {isGenerating ? (
           <Skeleton className="w-full h-full" />
+        ) : isAnimatedTryOn ? (
+          <TryOnAnimatedThumbnail />
         ) : (
           <img
             src={thumbnail}
