@@ -154,6 +154,15 @@ export default function BrandProfileWizard() {
 
   const canProceed = step === 0 ? form.name.trim().length > 0 : true;
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step < STEPS.length - 1 && canProceed) {
+      setStep(step + 1);
+    } else if (step === STEPS.length - 1 && form.name.trim()) {
+      handleSave();
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
