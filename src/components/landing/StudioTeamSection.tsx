@@ -183,7 +183,7 @@ export function StudioTeamSection() {
         </div>
 
         {/* Carousel */}
-        <div className="relative">
+        <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
           {/* Navigation arrows */}
           <button
             onClick={() => scroll('left')}
@@ -212,8 +212,8 @@ export function StudioTeamSection() {
           <div
             ref={scrollRef}
             onScroll={updateScrollState}
-            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin"
-            style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
+            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {TEAM.map((member) => (
               <div
