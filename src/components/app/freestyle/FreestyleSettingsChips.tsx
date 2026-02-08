@@ -83,6 +83,9 @@ export function FreestyleSettingsChips({
   polishPrompt, onPolishChange,
   imageCount, onImageCountChange,
   stylePresets, onStylePresetsChange,
+  selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
+  brandProfiles, isLoadingBrandProfiles,
+  negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
 }: FreestyleSettingsChipsProps) {
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
 
