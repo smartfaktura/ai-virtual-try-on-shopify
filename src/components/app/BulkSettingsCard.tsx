@@ -94,7 +94,7 @@ export function BulkSettingsCard({
               <RadioGroupItem value="virtual-try-on" id="mode-tryon" disabled={!allClothing} />
               <div>
                 <Label htmlFor="mode-tryon" className={!allClothing ? 'text-muted-foreground' : ''}>Virtual Try-On</Label>
-                <p className="text-xs text-muted-foreground">Place clothing on AI models (~3 credits/image)</p>
+                <p className="text-xs text-muted-foreground">Place clothing on AI models (~8 credits/image)</p>
               </div>
             </div>
           </RadioGroup>

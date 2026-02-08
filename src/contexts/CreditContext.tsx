@@ -107,10 +107,13 @@ export function CreditProvider({ children }: CreditProviderProps) {
   
   const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => {
     const { count, quality, mode } = settings;
-    if (mode === 'virtual-try-on') {
-      return count * 3;
+    if (mode === 'video') {
+      return count * 30;
     }
-    return count * (quality === 'high' ? 2 : 1);
+    if (mode === 'virtual-try-on') {
+      return count * 8;
+    }
+    return count * (quality === 'high' ? 10 : 4);
   }, []);
   
   return (

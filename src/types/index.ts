@@ -132,7 +132,7 @@ export interface BrandSettings {
 }
 
 // Generation Mode
-export type GenerationMode = 'product-only' | 'virtual-try-on';
+export type GenerationMode = 'product-only' | 'virtual-try-on' | 'video';
 
 // Virtual Try-On Types
 export type ModelGender = 'male' | 'female' | 'non-binary';

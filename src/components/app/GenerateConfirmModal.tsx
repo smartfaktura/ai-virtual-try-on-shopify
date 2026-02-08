@@ -37,7 +37,7 @@ export function GenerateConfirmModal({
 }: GenerateConfirmModalProps) {
   if (!product || !template) return null;
 
-  const creditsPerImage = quality === 'high' ? 2 : 1;
+  const creditsPerImage = quality === 'high' ? 10 : 4;
   const totalCredits = imageCount * creditsPerImage;
   const hasEnoughCredits = creditsRemaining >= totalCredits;
   

@@ -33,7 +33,7 @@ export function CompetitorComparison() {
               <p className="text-xl font-bold">{comp.price}</p>
               <p className="text-sm text-muted-foreground">per image</p>
               {comp.highlight && (
-                <p className="mt-2 text-sm text-primary font-semibold">You save up to 84%</p>
+                <p className="mt-2 text-sm text-primary font-semibold">You save up to 67%</p>
               )}
             </div>
           ))}

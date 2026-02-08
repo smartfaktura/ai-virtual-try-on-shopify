@@ -412,7 +412,7 @@ export default function Generate() {
     return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Template' }, { name: 'Settings' }, { name: 'Results' }];
   };
 
-  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 3 : parseInt(imageCount) * (quality === 'high' ? 2 : 1);
+  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : parseInt(imageCount) * (quality === 'high' ? 10 : 4);
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 

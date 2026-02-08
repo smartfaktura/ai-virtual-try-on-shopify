@@ -265,7 +265,7 @@ export default function Settings() {
                     <h3 className="text-base font-semibold">Current Plan</h3>
                     <Badge className="bg-primary/10 text-primary">Growth</Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">500 credits/month • Renews Feb 15, 2026</p>
+                  <p className="text-sm text-muted-foreground">2,500 credits/month • Renews Feb 15, 2026</p>
                 </div>
               </div>
               <Separator />

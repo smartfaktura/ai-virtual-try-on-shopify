@@ -77,7 +77,7 @@ export function WorkflowCard({ workflow, onSelect }: WorkflowCardProps) {
           <div className="flex items-center gap-1 text-muted-foreground">
             <Image className="w-3 h-3" />
             <span className="text-[10px] font-medium">
-              {workflow.default_image_count} images · ~{workflow.uses_tryon ? workflow.default_image_count * 3 : workflow.default_image_count * 2} credits
+              {workflow.default_image_count} images · ~{workflow.uses_tryon ? workflow.default_image_count * 8 : workflow.default_image_count * 4} credits
             </span>
           </div>
         </div>

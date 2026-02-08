@@ -36,7 +36,7 @@ export function LandingPricing() {
               }`}
             >
               Annual
-              <span className="ml-1.5 text-xs text-primary font-bold">Save 17%</span>
+              <span className="ml-1.5 text-xs text-primary font-bold">Save 20%</span>
             </button>
           </div>
         </div>
