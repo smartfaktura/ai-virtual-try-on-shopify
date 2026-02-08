@@ -170,7 +170,8 @@ type GenerateResult = string | { blocked: true; reason: string } | null;
 async function generateImage(
   content: ContentItem[],
   apiKey: string,
-  model: string
+  model: string,
+  aspectRatio?: string
 ): Promise<GenerateResult> {
   const maxRetries = 2;
 
