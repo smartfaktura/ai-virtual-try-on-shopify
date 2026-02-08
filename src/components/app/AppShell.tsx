@@ -1,6 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Package, Palette, Layers, Calendar, Image, Film, LayoutTemplate, Settings, LogOut, Menu, X, ChevronDown, Sparkles, Wand2 } from 'lucide-react';
+import {
+  Home, Package, Palette, Layers, Calendar, Image, Film,
+  LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
+  Sparkles, Wand2, ChevronUp,
+} from 'lucide-react';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,12 +30,21 @@ const configItems = [
   { label: 'Settings', icon: Settings, path: '/app/settings' },
 ];
 
+const STORAGE_KEY = 'sidebar-collapsed';
+
 export function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch { return false; }
+  });
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, String(collapsed)); } catch {}
+  }, [collapsed]);
 
   const handleSignOut = useCallback(async () => {
     await signOut();
@@ -52,152 +65,196 @@ export function AppShell({ children }: AppShellProps) {
     setSidebarOpen(false);
   };
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      {/* Logo — matches landing nav */}
-      <div className="px-5 pt-6 pb-6 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-            <span className="text-primary-foreground font-bold text-sm">fa</span>
-          </div>
-          <span className="font-bold text-lg text-sidebar-foreground tracking-tight">framea.ai</span>
-        </div>
-      </div>
+  const NavItemButton = ({ item }: { item: typeof navItems[0] }) => (
+    <button
+      onClick={() => handleNav(item.path)}
+      className={cn(
+        'w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 relative group',
+        collapsed ? 'justify-center px-0 py-3' : 'px-3 py-3',
+        isActive(item.path)
+          ? 'bg-white/[0.08] text-white'
+          : 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
+      )}
+      title={collapsed ? item.label : undefined}
+    >
+      {/* Active accent bar */}
+      {isActive(item.path) && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
+      )}
+      <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+      {!collapsed && <span>{item.label}</span>}
+    </button>
+  );
 
-      {/* Generate CTA */}
-      <div className="px-3 pt-5 pb-2">
-        <button
-          onClick={() => handleNav('/app/generate')}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25"
-        >
-          <Sparkles className="w-4 h-4" />
-          Generate
-        </button>
-      </div>
+  const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => {
+    const isCollapsed = isMobile ? false : collapsed;
 
-      {/* Main Nav */}
-      <nav className="flex-1 px-3 py-3 space-y-1">
-        <p className="px-3 py-1.5 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/35">Main</p>
-        {navItems.map((item) => (
-          <button
-            key={item.path}
-            onClick={() => handleNav(item.path)}
-            className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
-              isActive(item.path)
-                ? 'bg-white/[0.1] text-white'
-                : 'text-white/60 hover:bg-white/[0.04] hover:text-white/80'
+    return (
+      <div className="flex flex-col h-full">
+        {/* Logo + Collapse Toggle */}
+        <div className={cn('flex items-center border-b border-white/[0.06]', isCollapsed ? 'justify-center px-3 pt-6 pb-5' : 'justify-between px-5 pt-6 pb-5')}>
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => handleNav('/app')}>
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+              <span className="text-primary-foreground font-bold text-sm">fa</span>
+            </div>
+            {!isCollapsed && (
+              <span className="font-bold text-lg text-sidebar-foreground tracking-tight">framea.ai</span>
             )}
-          >
-            <item.icon className="w-4 h-4 flex-shrink-0" />
-            {item.label}
-          </button>
-        ))}
-
-        <div className="pt-8">
-          <p className="px-3 py-1.5 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/35">Configuration</p>
-          {configItems.map((item) => (
+          </div>
+          {!isMobile && (
             <button
-              key={item.path}
-              onClick={() => handleNav(item.path)}
+              onClick={() => setCollapsed(c => !c)}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
-                isActive(item.path)
-                  ? 'bg-white/[0.1] text-white'
-                  : 'text-white/60 hover:bg-white/[0.04] hover:text-white/80'
+                'p-1.5 rounded-lg text-sidebar-foreground/30 hover:text-sidebar-foreground/60 hover:bg-white/[0.04] transition-colors',
+                isCollapsed && 'mt-3'
               )}
             >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
-              {item.label}
+              {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </button>
-          ))}
+          )}
         </div>
-      </nav>
 
-      {/* Credits */}
-      <div className="px-3 pb-4 border-t border-white/[0.06] pt-4">
-        <CreditIndicator />
+        {/* Generate CTA */}
+        <div className={cn('pt-5 pb-2', isCollapsed ? 'px-2' : 'px-4')}>
+          <button
+            onClick={() => handleNav('/app/generate')}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold transition-all duration-150 hover:bg-primary/90 shadow-lg shadow-primary/25',
+              isCollapsed ? 'px-2 py-3 text-xs' : 'px-3 py-3 text-sm'
+            )}
+            title={isCollapsed ? 'Generate' : undefined}
+          >
+            <Sparkles className="w-4 h-4 flex-shrink-0" />
+            {!isCollapsed && 'Generate'}
+          </button>
+        </div>
+
+        {/* Main Nav */}
+        <nav className={cn('flex-1 py-4 space-y-1 overflow-y-auto', isCollapsed ? 'px-2' : 'px-4')}>
+          {!isCollapsed && (
+            <p className="px-3 py-2 mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/30">Main</p>
+          )}
+          {navItems.map((item) => (
+            <NavItemButton key={item.path} item={item} />
+          ))}
+
+          <div className="pt-6">
+            {!isCollapsed && (
+              <p className="px-3 py-2 mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/30">Configuration</p>
+            )}
+            {configItems.map((item) => (
+              <NavItemButton key={item.path} item={item} />
+            ))}
+          </div>
+        </nav>
+
+        {/* Credits */}
+        <div className={cn('border-t border-white/[0.06] pt-4', isCollapsed ? 'px-2 pb-2' : 'px-4 pb-3')}>
+          {isCollapsed ? (
+            <div className="flex justify-center">
+              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-sidebar-foreground/70" />
+              </div>
+            </div>
+          ) : (
+            <CreditIndicator />
+          )}
+        </div>
+
+        {/* User Profile */}
+        <div className={cn('border-t border-white/[0.06] relative', isCollapsed ? 'px-2 py-3' : 'px-4 py-3')}>
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className={cn(
+              'w-full flex items-center rounded-xl transition-colors hover:bg-white/[0.04]',
+              isCollapsed ? 'justify-center p-2' : 'gap-3 p-2'
+            )}
+          >
+            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
+              {initials}
+            </div>
+            {!isCollapsed && (
+              <>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-medium text-sidebar-foreground truncate">{displayName}</p>
+                  <p className="text-[11px] text-sidebar-foreground/40 truncate">{userEmail}</p>
+                </div>
+                <ChevronUp className="w-3.5 h-3.5 text-sidebar-foreground/30 flex-shrink-0" />
+              </>
+            )}
+          </button>
+
+          {/* User dropdown — anchored above */}
+          {userMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+              <div className={cn(
+                'absolute bottom-full mb-2 w-52 bg-popover border border-border rounded-xl shadow-xl z-50 py-1 overflow-hidden',
+                isCollapsed ? 'left-1/2 -translate-x-1/2' : 'left-3'
+              )}>
+                <div className="px-3 py-2.5 border-b border-border">
+                  <p className="text-sm font-semibold">{displayName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+                </div>
+                <button
+                  onClick={() => { navigate('/app/settings'); setUserMenuOpen(false); }}
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  Account settings
+                </button>
+                <button
+                  onClick={() => { handleSignOut(); setUserMenuOpen(false); }}
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign out
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-60 flex-col bg-sidebar border-r border-sidebar-border">
+      {/* Desktop Floating Sidebar */}
+      <aside
+        className={cn(
+          'hidden lg:flex flex-col bg-sidebar m-3 rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/20 transition-all duration-300 flex-shrink-0',
+          collapsed ? 'w-[72px]' : 'w-[240px]'
+        )}
+      >
         <SidebarContent />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-sidebar shadow-xl">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <aside className="absolute left-0 top-0 bottom-0 w-[260px] bg-sidebar shadow-2xl">
             <div className="absolute top-4 right-3">
               <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg text-sidebar-foreground/70 hover:bg-white/[0.04]">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <SidebarContent />
+            <SidebarContent isMobile />
           </aside>
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Mobile Hamburger (floating) */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="fixed top-4 left-4 z-40 lg:hidden p-2.5 rounded-xl bg-background/80 backdrop-blur-lg border border-border shadow-lg"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Main Content — no header */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="h-14 bg-background/80 backdrop-blur-xl flex items-center justify-between px-4 flex-shrink-0 border-b border-border shadow-sm">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-muted"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
-          <div className="flex-1" />
-
-          {/* User Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-muted transition-colors"
-            >
-              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
-                {initials}
-              </div>
-              <span className="hidden sm:block text-sm font-medium">{displayName}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-            </button>
-
-            {userMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 w-56 bg-popover border border-border rounded-2xl shadow-lg z-50 py-1 overflow-hidden">
-                  <div className="px-3 py-2.5 border-b border-border">
-                    <p className="text-sm font-semibold">{displayName}</p>
-                    <p className="text-xs text-muted-foreground">{userEmail}</p>
-                  </div>
-                  <button
-                    onClick={() => { navigate('/app/settings'); setUserMenuOpen(false); }}
-                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
-                  >
-                    <Settings className="w-4 h-4" />
-                    Account settings
-                  </button>
-                  <button
-                    onClick={() => { handleSignOut(); setUserMenuOpen(false); }}
-                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sign out
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </header>
-
-        {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
             {children}
