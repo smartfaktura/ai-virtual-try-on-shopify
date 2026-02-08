@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Globe, FileSpreadsheet, Smartphone } from 'lucide-react';
 import { ManualProductTab } from './ManualProductTab';
@@ -30,9 +30,14 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
           <DialogTitle>{editingProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
+          <DialogDescription>
+            {editingProduct
+              ? 'Update your product details and images'
+              : 'Upload product images and fill in the details'}
+          </DialogDescription>
         </DialogHeader>
 
         {editingProduct ? (
