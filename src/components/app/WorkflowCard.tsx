@@ -71,28 +71,6 @@ export function WorkflowCard({ workflow, onSelect, isGenerating }: WorkflowCardP
           {workflow.description}
         </p>
 
-        {/* Ratios + Credit cost */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1">
-            <Ratio className="w-2.5 h-2.5 text-muted-foreground" />
-            <div className="flex gap-0.5">
-              {workflow.recommended_ratios.map(ratio => (
-                <span
-                  key={ratio}
-                  className="inline-block px-1 py-0.5 text-[9px] font-medium bg-secondary text-secondary-foreground rounded"
-                >
-                  {ratio}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Image className="w-2.5 h-2.5" />
-            <span className="text-[9px] font-medium">
-              {workflow.default_image_count} img · ~{workflow.uses_tryon ? workflow.default_image_count * 8 : workflow.default_image_count * 4} cr
-            </span>
-          </div>
-        </div>
 
         {/* CTA */}
         <Button size="sm" className="w-full rounded-full font-semibold gap-1 mt-1 text-xs h-8" onClick={onSelect}>
