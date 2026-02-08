@@ -49,7 +49,7 @@ export function getIdentityImpact(data: Partial<BrandProfileData>): string {
   if (data.target_audience) parts.push(`Target audience: ${data.target_audience}`);
   return parts.length > 0
     ? parts.join('\n')
-    : 'These anchor every prompt so the AI knows your brand's personality.';
+    : 'These anchor every prompt so the AI knows your brand\'s personality.';
 }
 
 export function getToneImpact(data: Partial<BrandProfileData>): string {
