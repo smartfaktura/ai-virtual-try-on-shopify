@@ -2,6 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette } from 'lucide-react';
+
+import avatarSophia from '@/assets/team/avatar-sophia.jpg';
+import avatarZara from '@/assets/team/avatar-zara.jpg';
+import avatarKenji from '@/assets/team/avatar-kenji.jpg';
+import avatarLuna from '@/assets/team/avatar-luna.jpg';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -998,6 +1003,19 @@ export default function Generate() {
             <div className="w-full max-w-md">
               <Progress value={Math.min(generationMode === 'virtual-try-on' ? tryOnProgress : productProgress, 100)} className="h-2" />
             </div>
+            {/* Team member working message */}
+            <div className="flex items-center gap-2.5">
+              <img
+                src={generationMode === 'virtual-try-on' ? avatarZara : avatarSophia}
+                alt={generationMode === 'virtual-try-on' ? 'Zara' : 'Sophia'}
+                className="w-8 h-8 rounded-full object-cover border-2 border-primary/20"
+              />
+              <p className="text-sm text-muted-foreground italic">
+                {generationMode === 'virtual-try-on'
+                  ? 'Zara is styling the look...'
+                  : 'Sophia is setting up the lighting...'}
+              </p>
+            </div>
             <p className="text-xs text-muted-foreground">{generationMode === 'virtual-try-on' ? '20-30 seconds' : '10-15 seconds'}</p>
             <Button variant="link" onClick={handleCancelGeneration}><X className="w-4 h-4 mr-1" /> Cancel</Button>
           </CardContent></Card>
@@ -1076,6 +1094,22 @@ export default function Generate() {
                 </div>
               </CardContent></Card>
             )}
+
+            {/* Crafted by team */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <div className="flex items-center">
+                {[avatarSophia, avatarZara, avatarKenji, avatarLuna].map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt="Team member"
+                    className="w-7 h-7 rounded-full border-2 border-background object-cover"
+                    style={{ marginLeft: i === 0 ? 0 : '-0.4rem' }}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Crafted by your studio team</p>
+            </div>
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>

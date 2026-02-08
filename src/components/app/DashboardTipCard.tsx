@@ -2,10 +2,17 @@ import { useState, useEffect } from 'react';
 import { Lightbulb, X, Sparkles, Calendar, Palette } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+import avatarKenji from '@/assets/team/avatar-kenji.jpg';
+import avatarSienna from '@/assets/team/avatar-sienna.jpg';
+import avatarZara from '@/assets/team/avatar-zara.jpg';
+import avatarOmar from '@/assets/team/avatar-omar.jpg';
+
 interface Tip {
   icon: LucideIcon;
   text: string;
   highlight: string;
+  avatar: string;
+  memberName: string;
 }
 
 const TIPS: Tip[] = [
@@ -13,21 +20,29 @@ const TIPS: Tip[] = [
     icon: Calendar,
     text: 'Schedule monthly Creative Drops to automate fresh visuals for your store.',
     highlight: 'Automate your content',
+    avatar: avatarKenji,
+    memberName: 'Kenji',
   },
   {
     icon: Palette,
     text: 'Add a Brand Profile to keep all your product visuals consistent across campaigns.',
     highlight: 'Stay on brand',
+    avatar: avatarSienna,
+    memberName: 'Sienna',
   },
   {
     icon: Sparkles,
     text: 'Virtual Try-On now supports 40+ diverse AI models with unique poses and environments.',
     highlight: 'New feature',
+    avatar: avatarZara,
+    memberName: 'Zara',
   },
   {
     icon: Lightbulb,
     text: 'Use Workflows to generate complete visual sets — ads, listings, and hero images — in one click.',
     highlight: 'Work smarter',
+    avatar: avatarOmar,
+    memberName: 'Omar',
   },
 ];
 
@@ -51,11 +66,13 @@ export function DashboardTipCard() {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 flex items-start gap-3 shadow-sm animate-fade-in">
-      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <TipIcon className="w-4.5 h-4.5 text-primary" />
-      </div>
+      <img
+        src={tip.avatar}
+        alt={tip.memberName}
+        className="w-9 h-9 rounded-full object-cover flex-shrink-0 mt-0.5 border-2 border-primary/20"
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{tip.highlight}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{tip.memberName} · {tip.highlight}</p>
         <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{tip.text}</p>
       </div>
       <button

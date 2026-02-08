@@ -5,6 +5,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import type { LucideIcon } from 'lucide-react';
 
+import avatarSophia from '@/assets/team/avatar-sophia.jpg';
+import avatarMax from '@/assets/team/avatar-max.jpg';
+import avatarSienna from '@/assets/team/avatar-sienna.jpg';
+
+const getTeamAvatar = (activityId: string) => {
+  if (activityId.startsWith('job-')) return { src: avatarSophia, name: 'Sophia' };
+  if (activityId.startsWith('product-')) return { src: avatarMax, name: 'Max' };
+  if (activityId.startsWith('brand-')) return { src: avatarSienna, name: 'Sienna' };
+  return null;
+};
+
 interface ActivityItem {
   id: string;
   icon: LucideIcon;
@@ -92,9 +103,16 @@ export function ActivityFeed() {
             const Icon = activity.icon;
             return (
               <div key={activity.id} className="flex items-center gap-3 px-5 py-3.5">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-4 h-4 text-primary" />
-                </div>
+                {(() => {
+                  const team = getTeamAvatar(activity.id);
+                  return team ? (
+                    <img src={team.src} alt={team.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-border" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </div>
+                  );
+                })()}
                 <p className="text-sm text-foreground flex-1 min-w-0 truncate">{activity.text}</p>
                 <span className="text-xs text-muted-foreground flex-shrink-0">{activity.time}</span>
               </div>
