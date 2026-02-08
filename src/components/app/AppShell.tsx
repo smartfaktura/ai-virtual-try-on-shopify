@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Package, Palette, Layers, Calendar, Image, Film, LayoutTemplate, Settings, LogOut, Menu, X, ChevronDown, Sparkles } from 'lucide-react';
+import { Home, Package, Palette, Layers, Calendar, Image, Film, LayoutTemplate, Settings, LogOut, Menu, X, ChevronDown, Sparkles, Wand2 } from 'lucide-react';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
 import { useAuth } from '@/contexts/AuthContext';
