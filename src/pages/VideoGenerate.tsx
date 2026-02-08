@@ -417,7 +417,7 @@ export default function VideoGenerate() {
                   <span className="text-sm font-medium">Loop Mode</span>
                   <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
                     <Info className="w-3 h-3 inline" />
-                    Uses same image as start &amp; end frame for seamless looping
+                    Same start &amp; end frame for seamless loop (uses Pro mode)
                   </p>
                 </div>
               </div>
