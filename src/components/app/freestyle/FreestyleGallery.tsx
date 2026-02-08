@@ -140,7 +140,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   const skeletons = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
-        <SkeletonCard key={`skeleton-${i}`} className="mb-1" />
+        <SkeletonCard key={`skeleton-${i}`} />
       ))
     : [];
 
@@ -169,7 +169,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   }
 
   return (
-    <div className="columns-3 gap-3 p-3 pb-4">
+    <div className="grid grid-cols-3 gap-1 p-1 pb-4">
       {skeletons}
       {images.map((img, idx) => (
         <ImageCard
@@ -180,7 +180,6 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           onExpand={onExpand}
           onDelete={onDelete}
           onCopyPrompt={onCopyPrompt}
-          className="mb-1"
         />
       ))}
     </div>
