@@ -140,13 +140,13 @@ export default function Freestyle() {
   };
 
   return (
-    <div className="relative h-[calc(100vh-3.5rem)] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8">
+    <div className="relative h-[calc(100vh-3.5rem)] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8 bg-neutral-950">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
       {showLoading ? (
         /* Loading State */
         <div className="flex-1 h-full flex flex-col items-center justify-center">
-          <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
+          <Loader2 className="w-8 h-8 text-white/30 animate-spin" />
         </div>
       ) : hasImages ? (
         <>
@@ -160,23 +160,26 @@ export default function Freestyle() {
             />
           </div>
 
+          {/* Gradient fade above prompt bar */}
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-neutral-950 via-neutral-950/80 to-transparent pointer-events-none" />
+
           {/* Floating Prompt Bar — absolute overlay at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none">
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none z-10">
             <div className="max-w-3xl mx-auto pointer-events-auto">
               <FreestylePromptPanel {...panelProps} />
             </div>
           </div>
         </>
       ) : (
-        /* Empty State — centered prompt panel */
+        /* Empty State — centered prompt panel on dark bg */
         <div className="flex-1 h-full flex flex-col items-center justify-center px-4 sm:px-6">
-          <div className="w-20 h-20 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">
-            <Sparkles className="w-8 h-8 text-muted-foreground/40" />
+          <div className="w-20 h-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+            <Sparkles className="w-8 h-8 text-white/25" />
           </div>
-          <h2 className="text-2xl font-light tracking-tight text-foreground/80 mb-2">
+          <h2 className="text-2xl font-light tracking-tight text-white/80 mb-2">
             Freestyle Studio
           </h2>
-          <p className="text-sm text-muted-foreground/60 max-w-sm leading-relaxed text-center mb-8">
+          <p className="text-sm text-white/40 max-w-sm leading-relaxed text-center mb-8">
             Describe what you want to create, attach a reference, pick a model or scene.
           </p>
           <div className="w-full max-w-2xl">
