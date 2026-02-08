@@ -156,7 +156,7 @@ export function HowItWorks() {
                     </div>
                   </div>
                   {/* Generate button */}
-                  <div className="p-3">
+                  <div className="p-3 rounded-b-2xl">
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1.5">
                         {['Ad Refresh', 'Hero Set', 'Lifestyle'].map((wf) => (
