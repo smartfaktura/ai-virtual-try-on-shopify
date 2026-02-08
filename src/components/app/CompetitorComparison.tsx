@@ -3,9 +3,9 @@ import { CheckCircle } from 'lucide-react';
 
 export function CompetitorComparison() {
   const comparisons = [
-    { name: 'VOVV.AI', price: '$0.008', highlight: true },
-    { name: 'Competitor A', price: '$0.03', highlight: false },
-    { name: 'Competitor B', price: '$0.05', highlight: false },
+    { name: 'VOVV.AI', price: '$0.04', highlight: true },
+    { name: 'Competitor A', price: '$0.08', highlight: false },
+    { name: 'Competitor B', price: '$0.12', highlight: false },
   ];
 
   return (
