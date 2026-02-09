@@ -10,15 +10,15 @@ import fauxFurJacket from '@/assets/products/faux-fur-jacket-1.jpg';
 import joggersBeige from '@/assets/products/joggers-beige-1.jpg';
 
 const goodExamples = [
-  { src: tankWhite, label: 'Clear front-facing garment' },
+  { src: tankWhite, label: 'Clear front-facing photo' },
   { src: sportsBra, label: 'Single item, well-lit' },
   { src: leggingsBlack, label: 'Clean background' },
 ];
 
 const badExamples = [
-  { src: fauxFurJacket, label: 'Covered / cropped garment' },
-  { src: hoodieGray, label: 'Busy background' },
-  { src: joggersBeige, label: 'Multiple items / flat lay' },
+  { src: fauxFurJacket, label: 'Clothing hidden under layers' },
+  { src: hoodieGray, label: 'Low contrast, hard to detect' },
+  { src: joggersBeige, label: 'Cropped — missing full outfit' },
 ];
 
 export function TryOnUploadGuide() {
@@ -111,13 +111,13 @@ export function TryOnUploadGuide() {
           {activeTab === 'good' ? (
             <>
               <p className="text-[11px] text-muted-foreground">
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Tip:</span> Use a front-facing photo of a single garment on a model, mannequin, or clean hanger. Well-lit with minimal wrinkles works best.
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Tip:</span> Use a front-facing photo of a single clothing item on a model, mannequin, or clean hanger. Well-lit with minimal wrinkles works best.
               </p>
             </>
           ) : (
             <>
               <p className="text-[11px] text-muted-foreground">
-                <span className="text-destructive font-medium">Avoid:</span> Flat-lay photos, selfie-style shots, group photos, or images where accessories cover the garment. Bad lighting reduces quality.
+                <span className="text-destructive font-medium">Avoid:</span> Flat-lay photos, selfie-style shots, group photos, or images where accessories cover the clothing. Bad lighting reduces quality.
               </p>
             </>
           )}

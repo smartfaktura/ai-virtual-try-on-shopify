@@ -638,11 +638,11 @@ export default function Generate() {
           <Card><CardContent className="p-5 space-y-5">
             <div>
               <h2 className="text-base font-semibold">
-                {activeWorkflow?.uses_tryon ? 'Select Your Garment' : 'How do you want to start?'}
+                {activeWorkflow?.uses_tryon ? 'Select Your Clothing' : 'How do you want to start?'}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {activeWorkflow?.uses_tryon
-                  ? 'Choose a garment from your products or upload a new photo to try on.'
+                  ? 'Choose a clothing item from your products or upload a new photo to try on.'
                   : 'Choose whether to use existing products or upload your own image file.'}
               </p>
             </div>
@@ -665,7 +665,7 @@ export default function Generate() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-lg font-semibold">From My Products</p>
-                      <p className="text-sm text-muted-foreground">Select a garment you've already added to your product library</p>
+                      <p className="text-sm text-muted-foreground">Select a clothing item you've already added to your product library</p>
                     </div>
                     {sourceType === 'product' && (
                       <div className="flex items-center gap-2">
@@ -692,7 +692,7 @@ export default function Generate() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-lg font-semibold">Upload New Photo</p>
-                      <p className="text-sm text-muted-foreground">Upload a garment photo — model shots, mannequin, or hanger photos work best</p>
+                      <p className="text-sm text-muted-foreground">Upload a clothing photo — model shots, mannequin, or hanger photos work best</p>
                     </div>
                     {sourceType === 'scratch' && (
                       <div className="flex items-center gap-2">
@@ -717,7 +717,7 @@ export default function Generate() {
           <Card><CardContent className="p-5 space-y-5">
             <div>
               <h2 className="text-base font-semibold">
-                {activeWorkflow?.uses_tryon ? 'Upload Your Garment Photo' : 'Upload Your Image'}
+                {activeWorkflow?.uses_tryon ? 'Upload Your Clothing Photo' : 'Upload Your Image'}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {activeWorkflow?.uses_tryon
@@ -761,11 +761,11 @@ export default function Generate() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base font-semibold">
-                  {activeWorkflow?.uses_tryon ? 'Select a Garment' : 'Select Product(s)'}
+                  {activeWorkflow?.uses_tryon ? 'Select a Clothing Item' : 'Select Product(s)'}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {activeWorkflow?.uses_tryon
-                    ? 'Choose the garment you want to try on a model.'
+                    ? 'Choose the clothing item you want to try on a model.'
                     : 'Choose one or multiple products. 2+ products will use bulk generation.'}
                 </p>
               </div>
@@ -782,7 +782,7 @@ export default function Generate() {
                 <div className="text-center py-10 space-y-3">
                   <Package className="w-12 h-12 mx-auto text-muted-foreground/30" />
                   <p className="text-sm text-muted-foreground">No products in your library yet.</p>
-                  <p className="text-xs text-muted-foreground">Add garments to your product library, or upload a photo directly.</p>
+                  <p className="text-xs text-muted-foreground">Add clothing items to your product library, or upload a photo directly.</p>
                   <div className="flex items-center justify-center gap-3">
                     <Link to="/app/products">
                       <Button variant="outline" size="sm">Add Products</Button>
@@ -930,7 +930,7 @@ export default function Generate() {
             {generationMode === 'virtual-try-on' && (
               <Alert><AlertDescription>
                 <p className="font-semibold">✨ Virtual Try-On Mode</p>
-                <p className="text-sm">AI will digitally dress your selected model in your garment. Uses 3 credits per image.</p>
+                <p className="text-sm">AI will digitally dress your selected model in your clothing. Uses 3 credits per image.</p>
               </AlertDescription></Alert>
             )}
             {generationMode === 'product-only' && (
@@ -950,7 +950,7 @@ export default function Generate() {
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <h2 className="text-base font-semibold">Select a Model</h2>
-                <p className="text-sm text-muted-foreground">Choose the model who will wear your garment</p>
+                <p className="text-sm text-muted-foreground">Choose the model who will wear your clothing</p>
               </div>
               <ModelFilterBar genderFilter={modelGenderFilter} bodyTypeFilter={modelBodyTypeFilter} ageFilter={modelAgeFilter}
                 onGenderChange={setModelGenderFilter} onBodyTypeChange={setModelBodyTypeFilter} onAgeChange={setModelAgeFilter} />
