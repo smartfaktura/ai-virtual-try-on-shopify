@@ -120,7 +120,6 @@ export interface GenerationSettings {
   count: 1 | 4 | 8;
   aspectRatio: AspectRatio;
   quality: ImageQuality;
-  preserveAccuracy: boolean;
 }
 
 export interface BrandSettings {
