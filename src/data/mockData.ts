@@ -1677,6 +1677,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Silhouette against floor-to-ceiling window with natural light',
     previewUrl: poseEditorialWindow,
+    previewUrlMale: poseEditorialWindowMale,
   },
   {
     poseId: 'pose_019',
