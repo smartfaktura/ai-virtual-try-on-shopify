@@ -1218,10 +1218,6 @@ export default function Generate() {
                         </div>
                       </div>
                       <NegativesChipSelector value={negatives} onChange={setNegatives} />
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="preserve" checked={preserveAccuracy} onCheckedChange={v => setPreserveAccuracy(!!v)} />
-                        <Label htmlFor="preserve">Keep product looking exactly as-is</Label>
-                      </div>
                     </div>
                   )}
                 </CardContent></Card>
