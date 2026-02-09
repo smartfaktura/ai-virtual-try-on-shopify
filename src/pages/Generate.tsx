@@ -56,6 +56,12 @@ import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, A
 import { toast } from 'sonner';
 import type { Workflow } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';
+import type { Tables } from '@/integrations/supabase/types';
+import { TryOnUploadGuide } from '@/components/app/TryOnUploadGuide';
+import { Shirt, Upload as UploadIcon, Package, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+type UserProduct = Tables<'user_products'>;
 
 type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
