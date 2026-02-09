@@ -1553,6 +1553,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'studio',
     description: 'Dynamic walking motion with flowing fabric, clean background',
     previewUrl: poseStudioMovement,
+    previewUrlMale: poseStudioMovementMale,
   },
   {
     poseId: 'pose_003',
