@@ -457,6 +457,14 @@ export default function Generate() {
       const creditUsed = result.generatedCount * (quality === 'high' ? 2 : 1);
       deductCredits(creditUsed);
       toast.success(`Generated ${result.generatedCount} ${activeWorkflow?.name} images!`);
+      if (user) {
+        supabase.from('generation_jobs').insert({
+          user_id: user.id, results: result.images as any, status: 'completed',
+          completed_at: new Date().toISOString(), workflow_id: activeWorkflow?.id || null,
+          product_id: selectedProduct?.id || null, brand_profile_id: selectedBrandProfileId || null,
+          ratio: aspectRatio, quality, requested_count: workflowImageCount, credits_used: creditUsed,
+        }).then(({ error }) => { if (!error) toast.success('Saved to your library', { duration: 2000 }); });
+      }
     } else setCurrentStep('settings');
   };
 
