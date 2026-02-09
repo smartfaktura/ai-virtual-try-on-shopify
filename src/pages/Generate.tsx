@@ -717,7 +717,7 @@ export default function Generate() {
           <Card><CardContent className="p-5 space-y-5">
             <div>
               <h2 className="text-base font-semibold">
-                {activeWorkflow?.uses_tryon ? 'Upload Your Garment Photo' : 'Upload Your Image'}
+                {activeWorkflow?.uses_tryon ? 'Upload Your Clothing Photo' : 'Upload Your Image'}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {activeWorkflow?.uses_tryon
