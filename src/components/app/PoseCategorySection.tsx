@@ -1,4 +1,4 @@
-import type { TryOnPose, PoseCategory } from '@/types';
+import type { TryOnPose, PoseCategory, ModelGender } from '@/types';
 import { PoseSelectorCard } from './PoseSelectorCard';
 
 interface PoseCategorySectionProps {
@@ -6,6 +6,7 @@ interface PoseCategorySectionProps {
   poses: TryOnPose[];
   selectedPoseId: string | null;
   onSelectPose: (pose: TryOnPose) => void;
+  selectedGender?: ModelGender;
 }
 
 const categoryInfo: Record<PoseCategory, { title: string; recommendation: string }> = {
