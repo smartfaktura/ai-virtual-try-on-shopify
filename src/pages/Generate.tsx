@@ -951,7 +951,7 @@ export default function Generate() {
               </div>
               <ModelFilterBar genderFilter={modelGenderFilter} bodyTypeFilter={modelBodyTypeFilter} ageFilter={modelAgeFilter}
                 onGenderChange={setModelGenderFilter} onBodyTypeChange={setModelBodyTypeFilter} onAgeChange={setModelAgeFilter} />
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {filteredModels.map(model => (
                   <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModel?.modelId === model.modelId} onSelect={() => handleSelectModel(model)} />
                 ))}
