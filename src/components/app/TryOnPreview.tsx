@@ -1,5 +1,5 @@
 import { Plus, ArrowRight } from 'lucide-react';
-import type { Product, ModelProfile, TryOnPose, ScratchUpload } from '@/types';
+import type { Product, ModelProfile, TryOnPose, ScratchUpload, ModelGender } from '@/types';
 import { Card } from '@/components/ui/card';
 
 interface TryOnPreviewProps {
@@ -8,9 +8,11 @@ interface TryOnPreviewProps {
   model: ModelProfile | null;
   pose: TryOnPose | null;
   creditCost?: number;
+  selectedGender?: ModelGender;
 }
 
-export function TryOnPreview({ product, scratchUpload, model, pose, creditCost = 0 }: TryOnPreviewProps) {
+export function TryOnPreview({ product, scratchUpload, model, pose, creditCost = 0, selectedGender }: TryOnPreviewProps) {
+  const poseImage = selectedGender === 'male' && pose?.previewUrlMale ? pose.previewUrlMale : pose?.previewUrl;
   const productImageUrl = product?.images[0]?.url || scratchUpload?.previewUrl;
   const productTitle = product?.title || scratchUpload?.productInfo.title || '';
   const hasProduct = !!(product || scratchUpload);
