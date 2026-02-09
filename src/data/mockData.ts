@@ -1672,6 +1672,49 @@ export const mockTryOnPoses: TryOnPose[] = [
     description: 'Night scene with neon signs and urban glow',
     previewUrl: poseStreetwearNeon,
   },
+  // === EXPANDED ON-MODEL SCENES ===
+  {
+    poseId: 'pose_025',
+    name: 'Gym & Fitness',
+    category: 'lifestyle',
+    description: 'Athletic setting with gym equipment and natural light',
+    previewUrl: poseLifestyleRooftop,
+  },
+  {
+    poseId: 'pose_026',
+    name: 'Shopping District',
+    category: 'streetwear',
+    description: 'Busy shopping area with storefronts and street energy',
+    previewUrl: poseStreetwearStairs,
+  },
+  {
+    poseId: 'pose_027',
+    name: 'Resort Poolside',
+    category: 'lifestyle',
+    description: 'Luxury resort pool area with warm golden light',
+    previewUrl: poseLifestyleBeach,
+  },
+  {
+    poseId: 'pose_028',
+    name: 'Art Gallery',
+    category: 'editorial',
+    description: 'White gallery space with art installations and clean lines',
+    previewUrl: poseEditorialMinimal,
+  },
+  {
+    poseId: 'pose_029',
+    name: 'Autumn Park',
+    category: 'lifestyle',
+    description: 'Fall foliage with warm golden tones and soft light',
+    previewUrl: poseLifestylePark,
+  },
+  {
+    poseId: 'pose_030',
+    name: 'Warehouse Loft',
+    category: 'editorial',
+    description: 'Raw industrial loft with large windows and exposed brick',
+    previewUrl: poseEditorialWindow,
+  },
   // === PRODUCT ENVIRONMENT SCENES ===
   // Clean Studio (3)
   {

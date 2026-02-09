@@ -1,6 +1,5 @@
 import type { TryOnPose, PoseCategory } from '@/types';
 import { PoseSelectorCard } from './PoseSelectorCard';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface PoseCategorySectionProps {
   category: PoseCategory;
@@ -33,16 +32,11 @@ export function PoseCategorySection({ category, poses, selectedPoseId, onSelectP
         <h3 className="font-bold text-sm">{info.title}</h3>
         <span className="text-[10px] sm:text-xs text-muted-foreground">• {info.recommendation}</span>
       </div>
-      <ScrollArea className="w-full whitespace-nowrap -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-3 sm:gap-4 pb-3 sm:pb-4">
-          {poses.map((pose) => (
-            <div key={pose.poseId} className="w-[140px] sm:w-[180px] flex-shrink-0">
-              <PoseSelectorCard pose={pose} isSelected={selectedPoseId === pose.poseId} onSelect={() => onSelectPose(pose)} />
-            </div>
-          ))}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {poses.map((pose) => (
+          <PoseSelectorCard key={pose.poseId} pose={pose} isSelected={selectedPoseId === pose.poseId} onSelect={() => onSelectPose(pose)} />
+        ))}
+      </div>
     </div>
   );
 }
