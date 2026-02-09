@@ -930,7 +930,7 @@ export default function Generate() {
             {generationMode === 'virtual-try-on' && (
               <Alert><AlertDescription>
                 <p className="font-semibold">✨ Virtual Try-On Mode</p>
-                <p className="text-sm">AI will digitally dress your selected model in your garment. Uses 3 credits per image.</p>
+                <p className="text-sm">AI will digitally dress your selected model in your clothing. Uses 3 credits per image.</p>
               </AlertDescription></Alert>
             )}
             {generationMode === 'product-only' && (
