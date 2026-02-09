@@ -591,10 +591,75 @@ export default function Generate() {
         {currentStep === 'source' && (
           <Card><CardContent className="p-5 space-y-5">
             <div>
-              <h2 className="text-base font-semibold">How do you want to start?</h2>
-              <p className="text-sm text-muted-foreground">Choose whether to use existing products or upload your own image file.</p>
+              <h2 className="text-base font-semibold">
+                {activeWorkflow?.uses_tryon ? 'Select Your Garment' : 'How do you want to start?'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {activeWorkflow?.uses_tryon
+                  ? 'Choose a garment from your products or upload a new photo to try on.'
+                  : 'Choose whether to use existing products or upload your own image file.'}
+              </p>
             </div>
-            <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); }} />
+            {activeWorkflow?.uses_tryon ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => { setSourceType('product'); setSelectedProduct(null); setScratchUpload(null); }}
+                  className={`p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
+                    sourceType === 'product'
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-primary/50 hover:bg-muted'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                      sourceType === 'product' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      <Shirt className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-lg font-semibold">From My Products</p>
+                      <p className="text-sm text-muted-foreground">Select a garment you've already added to your product library</p>
+                    </div>
+                    {sourceType === 'product' && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="text-sm font-medium">Selected</span>
+                      </div>
+                    )}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setSourceType('scratch'); setSelectedProduct(null); setScratchUpload(null); }}
+                  className={`p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
+                    sourceType === 'scratch'
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-primary/50 hover:bg-muted'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                      sourceType === 'scratch' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      <UploadIcon className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-lg font-semibold">Upload New Photo</p>
+                      <p className="text-sm text-muted-foreground">Upload a garment photo — model shots, mannequin, or hanger photos work best</p>
+                    </div>
+                    {sourceType === 'scratch' && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="text-sm font-medium">Selected</span>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              </div>
+            ) : (
+              <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); }} />
+            )}
             <div className="flex justify-end">
               <Button onClick={() => setCurrentStep(sourceType === 'product' ? 'product' : 'upload')}>Continue</Button>
             </div>
