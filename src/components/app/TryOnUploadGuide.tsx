@@ -117,7 +117,7 @@ export function TryOnUploadGuide() {
           ) : (
             <>
               <p className="text-[11px] text-muted-foreground">
-                <span className="text-destructive font-medium">Avoid:</span> Flat-lay photos, selfie-style shots, group photos, or images where accessories cover the garment. Bad lighting reduces quality.
+                <span className="text-destructive font-medium">Avoid:</span> Flat-lay photos, selfie-style shots, group photos, or images where accessories cover the clothing. Bad lighting reduces quality.
               </p>
             </>
           )}

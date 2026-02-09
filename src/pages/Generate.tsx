@@ -950,7 +950,7 @@ export default function Generate() {
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <h2 className="text-base font-semibold">Select a Model</h2>
-                <p className="text-sm text-muted-foreground">Choose the model who will wear your garment</p>
+                <p className="text-sm text-muted-foreground">Choose the model who will wear your clothing</p>
               </div>
               <ModelFilterBar genderFilter={modelGenderFilter} bodyTypeFilter={modelBodyTypeFilter} ageFilter={modelAgeFilter}
                 onGenderChange={setModelGenderFilter} onBodyTypeChange={setModelBodyTypeFilter} onAgeChange={setModelAgeFilter} />
