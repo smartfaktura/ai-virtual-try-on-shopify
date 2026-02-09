@@ -1601,6 +1601,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Urban street style against graffiti wall, hip-hop inspired',
     previewUrl: poseStreetwearUrban,
+    previewUrlMale: poseStreetwearUrbanMale,
   },
   {
     poseId: 'pose_010',
