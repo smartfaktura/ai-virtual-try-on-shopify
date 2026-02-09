@@ -208,6 +208,11 @@ export default function Generate() {
     }
   }, [activeWorkflow, workflowConfig, variationStrategy]);
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
   // Apply brand profile settings when selected
   useEffect(() => {
     if (selectedBrandProfile) {
