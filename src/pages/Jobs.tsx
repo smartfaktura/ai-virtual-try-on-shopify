@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Search, LayoutGrid, List, Image, Sparkles, Camera } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -11,242 +10,141 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
 import { PageHeader } from '@/components/app/PageHeader';
-import { StatusBadge } from '@/components/app/StatusBadge';
-import { PublishModal } from '@/components/app/PublishModal';
-import { JobDetailModal } from '@/components/app/JobDetailModal';
-import { mockJobs, mockProducts, categoryLabels } from '@/data/mockData';
-import type { JobStatus, GenerationJob, Product } from '@/types';
+import { LibraryImageCard } from '@/components/app/LibraryImageCard';
+import { useLibraryItems, type LibraryTab, type LibrarySortBy } from '@/hooks/useLibraryItems';
 
 export default function Jobs() {
-  const navigate = useNavigate();
+  const [tab, setTab] = useState<LibraryTab>('all');
+  const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<JobStatus | 'all'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const [publishModalOpen, setPublishModalOpen] = useState(false);
-  const [selectedJobForPublish, setSelectedJobForPublish] = useState<GenerationJob | null>(null);
-  const [selectedImageUrlsForPublish, setSelectedImageUrlsForPublish] = useState<string[]>([]);
+  const { data: items = [], isLoading } = useLibraryItems(tab, sortBy, searchQuery);
 
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [selectedJobForDetail, setSelectedJobForDetail] = useState<GenerationJob | null>(null);
-
-  const handleViewJob = (job: GenerationJob) => {
-    setSelectedJobForDetail(job);
-    setDetailModalOpen(true);
+  const counts = {
+    all: items.length,
+    generations: items.filter(i => i.source === 'generation').length,
+    freestyle: items.filter(i => i.source === 'freestyle').length,
   };
 
-  const handlePublishClick = (job: GenerationJob, specificUrls?: string[]) => {
-    setSelectedJobForPublish(job);
-    const urlsToPublish = specificUrls || job.results.filter(r => !r.publishedToShopify).map(r => r.imageUrl);
-    setSelectedImageUrlsForPublish(urlsToPublish);
-    setPublishModalOpen(true);
-  };
-
-  const handlePublish = (mode: 'add' | 'replace', variantId?: string) => {
-    if (!selectedJobForPublish) return;
-    const count = selectedImageUrlsForPublish.length;
-    toast.success(`${count} image${count !== 1 ? 's' : ''} ${mode === 'add' ? 'added to' : 'replaced on'} "${selectedJobForPublish.productSnapshot.title}"!`);
-    setPublishModalOpen(false);
-    setSelectedJobForPublish(null);
-    setSelectedImageUrlsForPublish([]);
-  };
-
-  const getProductForJob = (job: GenerationJob): Product | null => {
-    return mockProducts.find(p => p.id === job.productId) || null;
-  };
-
-  const filteredJobs = mockJobs.filter(job => {
-    if (statusFilter !== 'all' && job.status !== statusFilter) return false;
-    if (categoryFilter !== 'all' && job.templateSnapshot.category !== categoryFilter) return false;
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        job.productSnapshot.title.toLowerCase().includes(query) ||
-        job.templateSnapshot.name.toLowerCase().includes(query)
-      );
-    }
-    return true;
-  });
-
-  const statusCounts = {
-    all: mockJobs.length,
-    queued: mockJobs.filter(j => j.status === 'queued').length,
-    generating: mockJobs.filter(j => j.status === 'generating').length,
-    completed: mockJobs.filter(j => j.status === 'completed').length,
-    failed: mockJobs.filter(j => j.status === 'failed').length,
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  const displayItems = tab === 'all' ? items : items.filter(i => i.source === tab);
 
   return (
-    <PageHeader title="Jobs">
-      <div className="space-y-4">
-        {/* Status summary cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {[
-            { key: 'all', label: 'All Jobs', count: statusCounts.all },
-            { key: 'queued', label: 'Queued', count: statusCounts.queued },
-            { key: 'generating', label: 'Generating', count: statusCounts.generating },
-            { key: 'completed', label: 'Completed', count: statusCounts.completed },
-            { key: 'failed', label: 'Failed', count: statusCounts.failed },
-          ].map(item => (
-            <Card
-              key={item.key}
-              className={`cursor-pointer transition-opacity ${statusFilter === item.key ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
-              onClick={() => setStatusFilter(item.key as JobStatus | 'all')}
+    <PageHeader title="Library" subtitle="Your generated images and freestyle creations">
+      <div className="space-y-5">
+        {/* Tabs + View toggle */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as LibraryTab)}>
+            <TabsList>
+              <TabsTrigger value="all" className="gap-1.5">
+                <Image className="w-3.5 h-3.5" /> All
+              </TabsTrigger>
+              <TabsTrigger value="generations" className="gap-1.5">
+                <Camera className="w-3.5 h-3.5" /> Generations
+              </TabsTrigger>
+              <TabsTrigger value="freestyle" className="gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" /> Freestyle
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="icon"
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              className="h-8 w-8"
+              onClick={() => setViewMode('grid')}
             >
-              <CardContent className="p-4 text-center space-y-1">
-                <p className="text-2xl font-bold">{item.count}</p>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </CardContent>
-            </Card>
-          ))}
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              className="h-8 w-8"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
-        {/* Filters and table */}
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by product or template..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={v => setStatusFilter(v as JobStatus | 'all')}>
-                <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="queued">Queued</SelectItem>
-                  <SelectItem value="generating">Generating</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {Object.entries(categoryLabels).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Filters */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search prompts, workflows..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as LibrarySortBy)}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product & Template</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredJobs.map(job => {
-                    const unpublishedCount = job.results.filter(r => !r.publishedToShopify).length;
-                    const publishedCount = job.results.filter(r => r.publishedToShopify).length;
-                    return (
-                      <TableRow key={job.jobId}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                              <img
-                                src={job.productSnapshot.images[0]?.url || '/placeholder.svg'}
-                                alt={job.productSnapshot.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm truncate max-w-[180px]">{job.productSnapshot.title}</p>
-                              <p className="text-xs text-muted-foreground">{job.templateSnapshot.name}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell><StatusBadge status={job.status} /></TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {job.requestedCount} × {job.ratio} • {job.creditsUsed > 0 ? `${job.creditsUsed} cr` : '—'}
-                          {publishedCount > 0 && ` • ${publishedCount}/${job.results.length} ✓`}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{formatDate(job.createdAt)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button size="sm" variant="outline" onClick={() => handleViewJob(job)}>View</Button>
-                            {job.status === 'failed' && (
-                              <Button size="sm" onClick={() => navigate('/app/generate')}>Retry</Button>
-                            )}
-                            {job.status === 'completed' && unpublishedCount > 0 && (
-                              <Button size="sm" onClick={() => handlePublishClick(job)}>
-                                Download {unpublishedCount}
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-
-            {filteredJobs.length === 0 && (
-              <div className="text-center py-8 space-y-2">
-                <p className="text-sm text-muted-foreground">No jobs found matching your filters.</p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setStatusFilter('all');
-                    setCategoryFilter('all');
-                  }}
-                >
-                  Clear filters
-                </Button>
+        {/* Content */}
+        {isLoading ? (
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="break-inside-avoid mb-4">
+                <div className="rounded-2xl bg-muted animate-pulse" style={{ height: `${180 + (i % 3) * 60}px` }} />
               </div>
+            ))}
+          </div>
+        ) : displayItems.length === 0 ? (
+          <div className="text-center py-16 space-y-3">
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
+              <Image className="w-7 h-7 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {searchQuery ? 'No results match your search.' : 'No creations yet. Start generating to build your library.'}
+            </p>
+            {searchQuery && (
+              <Button variant="outline" size="sm" onClick={() => setSearchQuery('')}>
+                Clear search
+              </Button>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
+            {displayItems.map(item => (
+              <LibraryImageCard key={item.id} item={item} />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {displayItems.map(item => (
+              <div
+                key={item.id}
+                className="flex items-center gap-4 p-3 rounded-xl border border-border bg-card hover:bg-accent/50 transition-colors"
+              >
+                <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+                  <img src={item.imageUrl} alt={item.label} className="w-full h-full object-cover" loading="lazy" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{item.label}</p>
+                  {item.prompt && (
+                    <p className="text-xs text-muted-foreground truncate">{item.prompt}</p>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">{item.date}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                  {item.source === 'freestyle' ? 'Freestyle' : 'Generation'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      <PublishModal
-        open={publishModalOpen}
-        onClose={() => {
-          setPublishModalOpen(false);
-          setSelectedJobForPublish(null);
-          setSelectedImageUrlsForPublish([]);
-        }}
-        onPublish={handlePublish}
-        selectedImages={selectedImageUrlsForPublish}
-        product={selectedJobForPublish ? getProductForJob(selectedJobForPublish) : null}
-        existingImages={selectedJobForPublish?.productSnapshot.images || []}
-      />
-
-      <JobDetailModal
-        open={detailModalOpen}
-        onClose={() => {
-          setDetailModalOpen(false);
-          setSelectedJobForDetail(null);
-        }}
-        job={selectedJobForDetail}
-        onPublish={(job, selectedUrls) => {
-          setDetailModalOpen(false);
-          setSelectedJobForDetail(null);
-          handlePublishClick(job, selectedUrls);
-        }}
-        onRetry={() => navigate('/app/generate')}
-      />
     </PageHeader>
   );
 }
