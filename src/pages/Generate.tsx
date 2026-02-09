@@ -782,7 +782,7 @@ export default function Generate() {
                 <div className="text-center py-10 space-y-3">
                   <Package className="w-12 h-12 mx-auto text-muted-foreground/30" />
                   <p className="text-sm text-muted-foreground">No products in your library yet.</p>
-                  <p className="text-xs text-muted-foreground">Add garments to your product library, or upload a photo directly.</p>
+                  <p className="text-xs text-muted-foreground">Add clothing items to your product library, or upload a photo directly.</p>
                   <div className="flex items-center justify-center gap-3">
                     <Link to="/app/products">
                       <Button variant="outline" size="sm">Add Products</Button>
