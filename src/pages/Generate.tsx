@@ -145,7 +145,7 @@ export default function Generate() {
   const [imageCount, setImageCount] = useState<'1' | '4' | '8'>('4');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [quality, setQuality] = useState<ImageQuality>('standard');
-  const [preserveAccuracy, setPreserveAccuracy] = useState(true);
+
 
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
