@@ -1701,6 +1701,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Dynamic motion blur effect with flowing hair/fabric',
     previewUrl: poseEditorialMotion,
+    previewUrlMale: poseEditorialMotionMale,
   },
   // Streetwear Category (+3)
   {
@@ -1709,6 +1710,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Urban playground with chain-link fence backdrop',
     previewUrl: poseStreetwearBasketball,
+    previewUrlMale: poseStreetwearBasketballMale,
   },
   {
     poseId: 'pose_023',
@@ -1716,6 +1718,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Industrial tunnel with dramatic overhead lighting',
     previewUrl: poseStreetwearUnderpass,
+    previewUrlMale: poseStreetwearUnderpassMale,
   },
   {
     poseId: 'pose_024',
@@ -1723,6 +1726,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Night scene with neon signs and urban glow',
     previewUrl: poseStreetwearNeon,
+    previewUrlMale: poseStreetwearNeonMale,
   },
   // === EXPANDED ON-MODEL SCENES ===
   {
@@ -1731,6 +1735,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Athletic setting with gym equipment and natural light',
     previewUrl: poseLifestyleRooftop,
+    previewUrlMale: poseLifestyleGymMale,
   },
   {
     poseId: 'pose_026',
@@ -1738,6 +1743,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Busy shopping area with storefronts and street energy',
     previewUrl: poseStreetwearStairs,
+    previewUrlMale: poseStreetwearShoppingMale,
   },
   {
     poseId: 'pose_027',
@@ -1745,6 +1751,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Luxury resort pool area with warm golden light',
     previewUrl: poseLifestyleBeach,
+    previewUrlMale: poseLifestyleResortMale,
   },
   {
     poseId: 'pose_028',
@@ -1752,6 +1759,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'White gallery space with art installations and clean lines',
     previewUrl: poseEditorialMinimal,
+    previewUrlMale: poseEditorialGalleryMale,
   },
   {
     poseId: 'pose_029',
@@ -1759,6 +1767,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Fall foliage with warm golden tones and soft light',
     previewUrl: poseLifestylePark,
+    previewUrlMale: poseLifestyleAutumnMale,
   },
   {
     poseId: 'pose_030',
@@ -1766,6 +1775,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Raw industrial loft with large windows and exposed brick',
     previewUrl: poseEditorialWindow,
+    previewUrlMale: poseEditorialWarehouseMale,
   },
   // === PRODUCT ENVIRONMENT SCENES ===
   // Clean Studio (3)
