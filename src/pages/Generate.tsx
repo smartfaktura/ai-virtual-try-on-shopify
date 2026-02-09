@@ -902,11 +902,6 @@ export default function Generate() {
         {currentStep === 'model' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} />
-            {!selectedModel && popularCombinations.length > 0 && (
-              <Card><CardContent className="p-5">
-                <PopularCombinations combinations={popularCombinations} onSelect={(model, pose) => { setSelectedModel(model); setSelectedPose(pose); setCurrentStep('settings'); }} />
-              </CardContent></Card>
-            )}
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <h2 className="text-base font-semibold">Select a Model</h2>
