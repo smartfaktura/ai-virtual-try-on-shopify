@@ -733,9 +733,19 @@ export default function Generate() {
                   </p>
                 </div>
                 <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
-              onUpdateProductInfo={info => { if (scratchUpload) setScratchUpload({ ...scratchUpload, productInfo: info }); }}
-              isUploading={isUploading}
-            />
+                  onUpdateProductInfo={info => { if (scratchUpload) setScratchUpload({ ...scratchUpload, productInfo: info }); }}
+                  isUploading={isUploading}
+                />
+              </div>
+
+              {/* Right column: Guide (only for try-on, before upload) */}
+              {activeWorkflow?.uses_tryon && !scratchUpload && (
+                <div className="order-first lg:order-last">
+                  <TryOnUploadGuide />
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
               <Button disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
