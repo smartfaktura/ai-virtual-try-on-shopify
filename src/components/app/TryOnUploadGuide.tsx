@@ -10,7 +10,7 @@ import fauxFurJacket from '@/assets/products/faux-fur-jacket-1.jpg';
 import joggersBeige from '@/assets/products/joggers-beige-1.jpg';
 
 const goodExamples = [
-  { src: tankWhite, label: 'Clear front-facing garment' },
+  { src: tankWhite, label: 'Clear front-facing photo' },
   { src: sportsBra, label: 'Single item, well-lit' },
   { src: leggingsBlack, label: 'Clean background' },
 ];
