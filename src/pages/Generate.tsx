@@ -361,7 +361,7 @@ export default function Generate() {
   };
 
   const handleSelectModel = (model: ModelProfile) => { setSelectedModel(model); toast.success(`Model "${model.name}" selected!`); };
-  const handleSelectPose = (pose: TryOnPose) => { setSelectedPose(pose); toast.success(`Pose "${pose.name}" selected!`); };
+  const handleSelectPose = (pose: TryOnPose) => { setSelectedPose(pose); toast.success(`Scene "${pose.name}" selected!`); };
   const handleCancelGeneration = () => { setCurrentStep('settings'); setGeneratingProgress(0); toast.info('Generation cancelled'); };
 
   const handleGenerateClick = () => {
