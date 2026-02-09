@@ -761,7 +761,7 @@ export default function Generate() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base font-semibold">
-                  {activeWorkflow?.uses_tryon ? 'Select a Garment' : 'Select Product(s)'}
+                  {activeWorkflow?.uses_tryon ? 'Select a Clothing Item' : 'Select Product(s)'}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {activeWorkflow?.uses_tryon
