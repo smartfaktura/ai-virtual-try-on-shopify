@@ -1,45 +1,67 @@
 
 
-## Gender-Matched Scene Previews
+## Redesign Library Page + Include Freestyle Generations + Dashboard Recent Creations
 
-### Problem
-All 24 scene/pose preview thumbnails show **female models**. When a user selects a male model (like Omar), the scene gallery still displays women, which looks inconsistent and confusing.
+### Current Problems
 
-### Solution
-Add a `previewUrlMale` field to each pose and use AI image generation to create 24 matching male pose images. The scene selector will then show the appropriate gender's preview based on the currently selected model.
+1. **Library uses mock data** -- The entire Jobs.tsx page reads from `mockJobs` (hardcoded mock data), not from the actual `generation_jobs` or `freestyle_generations` database tables
+2. **No freestyle images** -- Freestyle generations are completely absent from both the Library and Dashboard
+3. **Table-only layout** -- A plain data table is not ideal for an image library; users want to see their creations visually
+4. **Title says "Jobs"** -- Should reflect "Library" since that's the sidebar label
 
-### Steps
+### Redesigned Library Page
 
-**1. Generate 24 male pose images using AI**
-Use the Lovable AI image generation (Gemini) to create male equivalents for all 24 poses, matching the same environments and compositions. Save them to `src/assets/poses/` with a `-male` suffix (e.g., `pose-studio-front-male.jpg`).
+The Library will become a **visual gallery** with two tabs and optional filters:
 
-**2. Update the `TryOnPose` type**
-Add an optional `previewUrlMale` field:
+```text
++--------------------------------------------------+
+|  Library                                          |
+|  Your generated images and freestyle creations    |
+|                                                   |
+|  [All]  [Generations]  [Freestyle]     [Grid/List]|
+|                                                   |
+|  Search...          Status v      Sort: Newest v  |
+|                                                   |
+|  +-------+  +-------+  +-------+  +-------+      |
+|  |       |  |       |  |       |  |       |      |
+|  | img   |  | img   |  | img   |  | img   |      |
+|  |       |  |       |  |       |  |       |      |
+|  +-------+  +-------+  +-------+  +-------+      |
+|  Product    Freestyle   Product    Freestyle       |
+|  Oct 15     Oct 14      Oct 13     Oct 12         |
++--------------------------------------------------+
+```
 
-| Field | Type | Description |
+**Gallery view (default)**: Masonry-style grid of image cards with hover overlays showing prompt/product info, download button, and delete for freestyle images.
+
+**List view (toggle)**: Compact table similar to current design but pulling real data.
+
+### Data Sources
+
+| Tab | Database Table | Key Fields |
 |---|---|---|
-| `previewUrlMale` | `string` (optional) | Male version of the scene preview |
+| Generations | `generation_jobs` | results (image URLs), product, workflow, status, credits |
+| Freestyle | `freestyle_generations` | image_url, prompt, aspect_ratio, quality, model/scene/product IDs |
 
-**3. Update `mockData.ts`**
-- Import all 24 new male pose images
-- Add `previewUrlMale` to each entry in `mockTryOnPoses`
+Both are merged into a unified `LibraryItem` type sorted by `created_at` for the "All" tab.
 
-**4. Update `PoseSelectorCard` component**
-Accept an optional `selectedGender` prop. When set to `'male'` and a `previewUrlMale` exists, display the male preview image instead.
+### Dashboard: Recent Creations Update
 
-**5. Update `PoseCategorySection` component**
-Pass the selected model's gender down to each `PoseSelectorCard`.
+Update `RecentCreationsGallery.tsx` to also query `freestyle_generations` and merge results with generation job images, sorted by date. This gives the dashboard a complete view of all user creations.
 
-**6. Update `Generate.tsx`**
-Pass `selectedModel?.gender` through the pose category section so it reaches the cards.
+### Files to Change
 
-### Files Changed
-- `src/types/index.ts` -- add `previewUrlMale` to `TryOnPose`
-- `src/assets/poses/` -- 24 new AI-generated male pose images
-- `src/data/mockData.ts` -- import male images, add to pose data
-- `src/components/app/PoseSelectorCard.tsx` -- use gender-aware preview
-- `src/components/app/PoseCategorySection.tsx` -- pass gender prop
-- `src/pages/Generate.tsx` -- pass selected model gender to pose sections
+1. **`src/pages/Jobs.tsx`** -- Complete rewrite: rename to Library, replace mock data with real DB queries (generation_jobs + freestyle_generations), add gallery grid view with image cards, keep list view as toggle, add tabs for All/Generations/Freestyle
+2. **`src/components/app/RecentCreationsGallery.tsx`** -- Add a second query for `freestyle_generations`, merge with generation job results, sort by date
+3. **`src/components/app/LibraryImageCard.tsx`** (new) -- Reusable card component for gallery view showing image thumbnail, hover overlay with details, download/delete actions
+4. **`src/types/index.ts`** -- Add `LibraryItem` union type for unified display
 
-### Note
-Generating 24 AI images will take some time. Each image will match the composition, environment, and lighting of its female counterpart but feature a male model.
+### Key Design Decisions
+
+- Gallery grid uses `columns-2 md:columns-3 lg:columns-4` masonry layout for visual variety
+- Each card shows: image, source badge (Workflow name or "Freestyle"), date, and hover actions
+- Freestyle images get a delete button; generation job images do not (jobs cannot be deleted per RLS)
+- Status filters only apply to the Generations tab (freestyle images are always "completed")
+- The "All" tab interleaves both sources sorted by creation date
+- Maintains the luxury minimalist aesthetic with rounded-2xl cards, subtle borders, and hover transitions
+
