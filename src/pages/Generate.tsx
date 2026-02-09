@@ -58,7 +58,6 @@ import type { Workflow } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';
 import type { Tables } from '@/integrations/supabase/types';
 import { TryOnUploadGuide } from '@/components/app/TryOnUploadGuide';
-import { Shirt, Upload as UploadIcon, Package, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 type UserProduct = Tables<'user_products'>;
