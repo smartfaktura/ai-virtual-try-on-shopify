@@ -1,15 +1,23 @@
 
 
-## Rename "Select Your Clothing" to Better Label
+## Move Brand Profiles to Configuration Section
 
 ### Problem
-The step 1 heading says "Select Your Clothing" which is confusing -- this step is about choosing a product for the virtual try-on, not just "clothing." The stepper already calls it "Product."
+Brand Profiles is a one-time setup item, not a daily-use feature. It's cluttering the main navigation alongside high-frequency items like Dashboard, Products, and Workflows.
 
 ### Change
 
-**File: `src/pages/Generate.tsx` (line 642)**
+**File: `src/components/app/AppShell.tsx`**
 
-Rename the heading from `"Select Your Clothing"` to `"Add Your Product"` -- this matches the stepper label ("Product") and is clearer about the action (adding a product to try on).
+Move the "Brand Profiles" entry from the `navItems` array to the `configItems` array, placing it above Settings. This puts it in the "Configuration" section of the sidebar where it logically belongs as a setup-once feature.
 
-The subtitle on line 644 already says "Choose a clothing item from your products or upload a new photo to try on" which is fine and can stay.
+Before:
+- **Main**: Dashboard, Products, Brand Profiles, Workflows, Creative Drops, Templates, Video, Freestyle, Library
+- **Configuration**: Settings
+
+After:
+- **Main**: Dashboard, Products, Workflows, Creative Drops, Templates, Video, Freestyle, Library
+- **Configuration**: Brand Profiles, Settings
+
+One line moved from one array to another -- no other files affected.
 
