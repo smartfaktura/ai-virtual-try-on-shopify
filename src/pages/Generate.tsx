@@ -958,7 +958,7 @@ export default function Generate() {
               </div>
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setCurrentStep(activeWorkflow?.uses_tryon ? 'brand-profile' : 'mode')}>Back</Button>
-                <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Pose</Button>
+                <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
               </div>
             </CardContent></Card>
           </div>
