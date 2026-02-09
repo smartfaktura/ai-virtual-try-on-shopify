@@ -642,7 +642,7 @@ export default function Generate() {
               </h2>
               <p className="text-sm text-muted-foreground">
                 {activeWorkflow?.uses_tryon
-                  ? 'Choose a garment from your products or upload a new photo to try on.'
+                  ? 'Choose a clothing item from your products or upload a new photo to try on.'
                   : 'Choose whether to use existing products or upload your own image file.'}
               </p>
             </div>
