@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette } from 'lucide-react';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2 } from 'lucide-react';
 
 import avatarSophia from '@/assets/team/avatar-sophia.jpg';
 import avatarZara from '@/assets/team/avatar-zara.jpg';
@@ -56,6 +56,10 @@ import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, A
 import { toast } from 'sonner';
 import type { Workflow } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';
+import type { Tables } from '@/integrations/supabase/types';
+import { TryOnUploadGuide } from '@/components/app/TryOnUploadGuide';
+
+type UserProduct = Tables<'user_products'>;
 
 type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
@@ -87,6 +91,20 @@ export default function Generate() {
       return data as BrandProfile[];
     },
     enabled: !!user,
+  });
+
+  // Fetch real user products from database for try-on workflows
+  const { data: userProducts = [], isLoading: isLoadingUserProducts } = useQuery({
+    queryKey: ['user-products', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as UserProduct[];
+    },
+    enabled: !!user?.id && !!activeWorkflow?.uses_tryon,
   });
 
   const [currentStep, setCurrentStep] = useState<Step>('source');
@@ -245,6 +263,20 @@ export default function Generate() {
       product.tags.some(tag => clothingKeywords.some(kw => tag.toLowerCase().includes(kw)));
   };
 
+  // Map a DB UserProduct to the app's Product type
+  const mapUserProductToProduct = (up: UserProduct): Product => ({
+    id: up.id,
+    title: up.title,
+    vendor: 'My Products',
+    productType: up.product_type,
+    tags: up.tags || [],
+    description: up.description,
+    images: [{ id: `img-${up.id}`, url: up.image_url }],
+    status: 'active',
+    createdAt: up.created_at,
+    updatedAt: up.updated_at,
+  });
+
   const detectProductCategory = (product: Product | null): TemplateCategory | null => {
     if (!product) return null;
     const type = product.productType.toLowerCase();
@@ -275,7 +307,10 @@ export default function Generate() {
     // Go to brand profile step if profiles exist
     if (brandProfiles.length > 0) {
       setCurrentStep('brand-profile');
-    } else if (activeWorkflow?.uses_tryon || isClothingProduct(product)) {
+    } else if (activeWorkflow?.uses_tryon) {
+      // Skip mode step for try-on workflows
+      setCurrentStep('model');
+    } else if (isClothingProduct(product)) {
       setCurrentStep('mode');
     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
       // Workflow config skips template — go straight to settings
@@ -557,10 +592,75 @@ export default function Generate() {
         {currentStep === 'source' && (
           <Card><CardContent className="p-5 space-y-5">
             <div>
-              <h2 className="text-base font-semibold">How do you want to start?</h2>
-              <p className="text-sm text-muted-foreground">Choose whether to use existing products or upload your own image file.</p>
+              <h2 className="text-base font-semibold">
+                {activeWorkflow?.uses_tryon ? 'Select Your Garment' : 'How do you want to start?'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {activeWorkflow?.uses_tryon
+                  ? 'Choose a garment from your products or upload a new photo to try on.'
+                  : 'Choose whether to use existing products or upload your own image file.'}
+              </p>
             </div>
-            <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); }} />
+            {activeWorkflow?.uses_tryon ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => { setSourceType('product'); setSelectedProduct(null); setScratchUpload(null); }}
+                  className={`p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
+                    sourceType === 'product'
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-primary/50 hover:bg-muted'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                      sourceType === 'product' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      <Shirt className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-lg font-semibold">From My Products</p>
+                      <p className="text-sm text-muted-foreground">Select a garment you've already added to your product library</p>
+                    </div>
+                    {sourceType === 'product' && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="text-sm font-medium">Selected</span>
+                      </div>
+                    )}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setSourceType('scratch'); setSelectedProduct(null); setScratchUpload(null); }}
+                  className={`p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
+                    sourceType === 'scratch'
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-primary/50 hover:bg-muted'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                      sourceType === 'scratch' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      <UploadIcon className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-lg font-semibold">Upload New Photo</p>
+                      <p className="text-sm text-muted-foreground">Upload a garment photo — model shots, mannequin, or hanger photos work best</p>
+                    </div>
+                    {sourceType === 'scratch' && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="text-sm font-medium">Selected</span>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              </div>
+            ) : (
+              <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); }} />
+            )}
             <div className="flex justify-end">
               <Button onClick={() => setCurrentStep(sourceType === 'product' ? 'product' : 'upload')}>Continue</Button>
             </div>
@@ -571,9 +671,16 @@ export default function Generate() {
         {currentStep === 'upload' && (
           <Card><CardContent className="p-5 space-y-5">
             <div>
-              <h2 className="text-base font-semibold">Upload Your Image</h2>
-              <p className="text-sm text-muted-foreground">Upload a product image from your computer.</p>
+              <h2 className="text-base font-semibold">
+                {activeWorkflow?.uses_tryon ? 'Upload Your Garment Photo' : 'Upload Your Image'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {activeWorkflow?.uses_tryon
+                  ? 'Upload a clear photo of the clothing item you want to try on.'
+                  : 'Upload a product image from your computer.'}
+              </p>
             </div>
+            {activeWorkflow?.uses_tryon && !scratchUpload && <TryOnUploadGuide />}
             <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
               onUpdateProductInfo={info => { if (scratchUpload) setScratchUpload({ ...scratchUpload, productInfo: info }); }}
               isUploading={isUploading}
@@ -586,7 +693,9 @@ export default function Generate() {
                   const uploadedUrl = await uploadFile(scratchUpload.file);
                   if (uploadedUrl) {
                     setScratchUpload({ ...scratchUpload, uploadedUrl });
-                    if (brandProfiles.length > 0) {
+                    if (activeWorkflow?.uses_tryon) {
+                      setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                    } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
                       setCurrentStep('settings');
@@ -606,34 +715,101 @@ export default function Generate() {
           <Card><CardContent className="p-5 space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-semibold">Select Product(s)</h2>
-                <p className="text-sm text-muted-foreground">Choose one or multiple products. 2+ products will use bulk generation.</p>
+                <h2 className="text-base font-semibold">
+                  {activeWorkflow?.uses_tryon ? 'Select a Garment' : 'Select Product(s)'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {activeWorkflow?.uses_tryon
+                    ? 'Choose the garment you want to try on a model.'
+                    : 'Choose one or multiple products. 2+ products will use bulk generation.'}
+                </p>
               </div>
               <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
             </div>
-            <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+
+            {/* Try-on: show real DB products */}
+            {activeWorkflow?.uses_tryon ? (
+              isLoadingUserProducts ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : userProducts.length === 0 ? (
+                <div className="text-center py-10 space-y-3">
+                  <Package className="w-12 h-12 mx-auto text-muted-foreground/30" />
+                  <p className="text-sm text-muted-foreground">No products in your library yet.</p>
+                  <p className="text-xs text-muted-foreground">Add garments to your product library, or upload a photo directly.</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <Link to="/app/products">
+                      <Button variant="outline" size="sm">Add Products</Button>
+                    </Link>
+                    <Button variant="secondary" size="sm" onClick={() => { setSourceType('scratch'); setCurrentStep('upload'); }}>
+                      Upload Instead
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                  {userProducts.map(up => {
+                    const isSelected = selectedProductIds.has(up.id);
+                    return (
+                      <button
+                        key={up.id}
+                        type="button"
+                        onClick={() => setSelectedProductIds(new Set([up.id]))}
+                        className={`flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left ${
+                          isSelected
+                            ? 'border-primary ring-2 ring-primary/30'
+                            : 'border-transparent hover:border-border'
+                        }`}
+                      >
+                        <img src={up.image_url} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
+                        <div className="px-1.5 py-1.5 bg-card">
+                          <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
+                          {up.product_type && (
+                            <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+            )}
+
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
               <Button disabled={selectedProductIds.size === 0} onClick={() => {
-                const selected = mockProducts.filter(p => selectedProductIds.has(p.id));
-                if (selected.length === 1) {
-                  const product = selected[0];
-                  setSelectedProduct(product);
-                  if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
-                  const cat = detectProductCategory(product);
-                  if (cat) setSelectedCategory(cat);
-                  if (brandProfiles.length > 0) {
-                    setCurrentStep('brand-profile');
-                  } else if (isClothingProduct(product)) {
-                    setCurrentStep('mode');
-                  } else if (uiConfig?.skip_template && hasWorkflowConfig) {
-                    setCurrentStep('settings');
-                  } else {
-                    setCurrentStep('template');
+                if (activeWorkflow?.uses_tryon) {
+                  const selectedUp = userProducts.find(p => selectedProductIds.has(p.id));
+                  if (selectedUp) {
+                    const product = mapUserProductToProduct(selectedUp);
+                    setSelectedProduct(product);
+                    setSelectedSourceImages(new Set([product.images[0].id]));
+                    setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                   }
-                } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
+                } else {
+                  const selected = mockProducts.filter(p => selectedProductIds.has(p.id));
+                  if (selected.length === 1) {
+                    const product = selected[0];
+                    setSelectedProduct(product);
+                    if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
+                    const cat = detectProductCategory(product);
+                    if (cat) setSelectedCategory(cat);
+                    if (brandProfiles.length > 0) {
+                      setCurrentStep('brand-profile');
+                    } else if (isClothingProduct(product)) {
+                      setCurrentStep('mode');
+                    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+                      setCurrentStep('settings');
+                    } else {
+                      setCurrentStep('template');
+                    }
+                  } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
+                }
               }}>
-                {selectedProductIds.size === 0 ? 'Select at least 1' : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
+                {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? 'Continue' : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
               </Button>
             </div>
           </CardContent></Card>
