@@ -970,8 +970,8 @@ export default function Generate() {
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
-                <h2 className="text-base font-semibold">Select a Pose</h2>
-                <p className="text-sm text-muted-foreground">Choose how your model will be positioned</p>
+                <h2 className="text-base font-semibold">Select a Scene</h2>
+                <p className="text-sm text-muted-foreground">Choose the scene and environment for your shoot</p>
               </div>
               {Object.entries(posesByCategory).map(([category, poses]) => (
                 <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseId={selectedPose?.poseId || null} onSelectPose={handleSelectPose} />
