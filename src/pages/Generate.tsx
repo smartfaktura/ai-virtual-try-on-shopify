@@ -210,7 +210,7 @@ export default function Generate() {
 
   // Scroll to top when step changes
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentStep]);
 
   // Apply brand profile settings when selected
@@ -361,7 +361,7 @@ export default function Generate() {
   };
 
   const handleSelectModel = (model: ModelProfile) => { setSelectedModel(model); toast.success(`Model "${model.name}" selected!`); };
-  const handleSelectPose = (pose: TryOnPose) => { setSelectedPose(pose); toast.success(`Pose "${pose.name}" selected!`); };
+  const handleSelectPose = (pose: TryOnPose) => { setSelectedPose(pose); toast.success(`Scene "${pose.name}" selected!`); };
   const handleCancelGeneration = () => { setCurrentStep('settings'); setGeneratingProgress(0); toast.info('Generation cancelled'); };
 
   const handleGenerateClick = () => {
@@ -372,7 +372,7 @@ export default function Generate() {
     const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode });
     if (balance < cost) { setNoCreditsModalOpen(true); return; }
     if (generationMode === 'virtual-try-on') {
-      if (!selectedModel || !selectedPose) { toast.error('Please select a model and pose first'); return; }
+      if (!selectedModel || !selectedPose) { toast.error('Please select a model and scene first'); return; }
       handleTryOnConfirmGenerate(); return;
     }
     // Workflow-config path: skip template requirement
@@ -571,7 +571,7 @@ export default function Generate() {
       return [
         { name: sourceType === 'scratch' ? 'Source' : 'Product' },
         { name: 'Brand' },
-        { name: 'Model' }, { name: 'Pose' }, { name: 'Settings' }, { name: 'Results' },
+        { name: 'Model' }, { name: 'Scene' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
@@ -958,7 +958,7 @@ export default function Generate() {
               </div>
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setCurrentStep(activeWorkflow?.uses_tryon ? 'brand-profile' : 'mode')}>Back</Button>
-                <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Pose</Button>
+                <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
               </div>
             </CardContent></Card>
           </div>
@@ -970,8 +970,8 @@ export default function Generate() {
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
-                <h2 className="text-base font-semibold">Select a Pose</h2>
-                <p className="text-sm text-muted-foreground">Choose how your model will be positioned</p>
+                <h2 className="text-base font-semibold">Select a Scene</h2>
+                <p className="text-sm text-muted-foreground">Choose the scene and environment for your shoot</p>
               </div>
               {Object.entries(posesByCategory).map(([category, poses]) => (
                 <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseId={selectedPose?.poseId || null} onSelectPose={handleSelectPose} />
