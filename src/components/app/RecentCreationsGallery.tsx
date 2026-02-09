@@ -28,16 +28,18 @@ export function RecentCreationsGallery() {
   const { data: creations = [] } = useQuery({
     queryKey: ['recent-creations', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const items: CreationItem[] = [];
+
+      // Fetch generation jobs
+      const { data: jobs, error: jobsError } = await supabase
         .from('generation_jobs')
         .select('id, results, created_at, workflows(name), user_products(title, image_url)')
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
         .limit(12);
-      if (error) throw error;
+      if (jobsError) throw jobsError;
 
-      const items: CreationItem[] = [];
-      for (const job of data ?? []) {
+      for (const job of jobs ?? []) {
         const results = job.results as any;
         if (Array.isArray(results) && results.length > 0) {
           for (const r of results.slice(0, 2)) {
@@ -46,20 +48,40 @@ export function RecentCreationsGallery() {
               items.push({
                 id: job.id,
                 imageUrl: url,
-                label: job.workflows?.name || 'Generated',
+                label: (job.workflows as any)?.name || 'Generated',
                 date: new Date(job.created_at).toLocaleDateString(),
               });
             }
           }
-        } else if (job.user_products?.image_url) {
+        } else if ((job.user_products as any)?.image_url) {
           items.push({
             id: job.id,
-            imageUrl: job.user_products.image_url,
-            label: job.workflows?.name || 'Generated',
+            imageUrl: (job.user_products as any).image_url,
+            label: (job.workflows as any)?.name || 'Generated',
             date: new Date(job.created_at).toLocaleDateString(),
           });
         }
       }
+
+      // Fetch freestyle generations
+      const { data: freestyle, error: freestyleError } = await supabase
+        .from('freestyle_generations')
+        .select('id, image_url, prompt, created_at')
+        .order('created_at', { ascending: false })
+        .limit(8);
+      if (freestyleError) throw freestyleError;
+
+      for (const f of freestyle ?? []) {
+        items.push({
+          id: f.id,
+          imageUrl: f.image_url,
+          label: 'Freestyle',
+          date: new Date(f.created_at).toLocaleDateString(),
+        });
+      }
+
+      // Sort by date descending and take first 10
+      items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       return items.slice(0, 10);
     },
     enabled: !!user,
