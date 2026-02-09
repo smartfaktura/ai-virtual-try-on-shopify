@@ -16,9 +16,9 @@ const goodExamples = [
 ];
 
 const badExamples = [
-  { src: fauxFurJacket, label: 'Covered / cropped garment' },
-  { src: hoodieGray, label: 'Busy background' },
-  { src: joggersBeige, label: 'Multiple items / flat lay' },
+  { src: fauxFurJacket, label: 'Clothing hidden under layers' },
+  { src: hoodieGray, label: 'Low contrast, hard to detect' },
+  { src: joggersBeige, label: 'Cropped — missing full outfit' },
 ];
 
 export function TryOnUploadGuide() {
