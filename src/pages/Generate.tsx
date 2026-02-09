@@ -670,9 +670,16 @@ export default function Generate() {
         {currentStep === 'upload' && (
           <Card><CardContent className="p-5 space-y-5">
             <div>
-              <h2 className="text-base font-semibold">Upload Your Image</h2>
-              <p className="text-sm text-muted-foreground">Upload a product image from your computer.</p>
+              <h2 className="text-base font-semibold">
+                {activeWorkflow?.uses_tryon ? 'Upload Your Garment Photo' : 'Upload Your Image'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {activeWorkflow?.uses_tryon
+                  ? 'Upload a clear photo of the clothing item you want to try on.'
+                  : 'Upload a product image from your computer.'}
+              </p>
             </div>
+            {activeWorkflow?.uses_tryon && !scratchUpload && <TryOnUploadGuide />}
             <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
               onUpdateProductInfo={info => { if (scratchUpload) setScratchUpload({ ...scratchUpload, productInfo: info }); }}
               isUploading={isUploading}
