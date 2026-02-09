@@ -665,7 +665,7 @@ export default function Generate() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-lg font-semibold">From My Products</p>
-                      <p className="text-sm text-muted-foreground">Select a garment you've already added to your product library</p>
+                      <p className="text-sm text-muted-foreground">Select a clothing item you've already added to your product library</p>
                     </div>
                     {sourceType === 'product' && (
                       <div className="flex items-center gap-2">
