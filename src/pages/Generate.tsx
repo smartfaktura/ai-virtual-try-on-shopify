@@ -484,6 +484,26 @@ export default function Generate() {
       setGeneratingProgress(100);
       setCurrentStep('results');
       toast.success(`Generated ${result.generatedCount} images! Used ${result.generatedCount * 3} credits.`);
+      // Auto-save to library
+      if (user) {
+        supabase.from('generation_jobs').insert({
+          user_id: user.id,
+          results: result.images as any,
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          workflow_id: activeWorkflow?.id || null,
+          product_id: selectedProduct?.id || null,
+          brand_profile_id: selectedBrandProfileId || null,
+          ratio: aspectRatio,
+          quality,
+          requested_count: parseInt(imageCount),
+          credits_used: result.generatedCount * 8,
+          prompt_final: `Virtual Try-On: ${selectedModel?.name} in ${selectedPose?.name} pose`,
+        }).then(({ error }) => {
+          if (error) console.error('Failed to save to library:', error);
+          else toast.success('Saved to your library', { duration: 2000 });
+        });
+      }
     } else setCurrentStep('settings');
   };
 
