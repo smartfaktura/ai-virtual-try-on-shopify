@@ -1558,7 +1558,7 @@ export default function Generate() {
             </div>
 
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Saved to your library</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-primary" /> Saved to your library</p>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
                 <Button variant="outline" onClick={() => {
