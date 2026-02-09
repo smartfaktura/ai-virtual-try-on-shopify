@@ -145,7 +145,7 @@ export default function Generate() {
   const [imageCount, setImageCount] = useState<'1' | '4' | '8'>('4');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [quality, setQuality] = useState<ImageQuality>('standard');
-  const [preserveAccuracy, setPreserveAccuracy] = useState(true);
+
 
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -1218,10 +1218,6 @@ export default function Generate() {
                         </div>
                       </div>
                       <NegativesChipSelector value={negatives} onChange={setNegatives} />
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="preserve" checked={preserveAccuracy} onCheckedChange={v => setPreserveAccuracy(!!v)} />
-                        <Label htmlFor="preserve">Keep product looking exactly as-is</Label>
-                      </div>
                     </div>
                   )}
                 </CardContent></Card>
@@ -1407,10 +1403,6 @@ export default function Generate() {
                 <div><Label>Quality</Label><p className="text-sm text-muted-foreground mt-1">Virtual Try-On uses High quality by default</p></div>
               </div>
               <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
-              <div className="flex items-center space-x-2">
-                <Checkbox id="preserveTryOn" checked={preserveAccuracy} onCheckedChange={v => setPreserveAccuracy(!!v)} />
-                <Label htmlFor="preserveTryOn">Keep product looking exactly as-is</Label>
-              </div>
             </CardContent></Card>
 
             <Alert><AlertDescription>
