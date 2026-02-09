@@ -1,6 +1,5 @@
 import type { TryOnPose, PoseCategory } from '@/types';
 import { PoseSelectorCard } from './PoseSelectorCard';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface PoseCategorySectionProps {
   category: PoseCategory;
