@@ -45,7 +45,7 @@ export function TryOnPreview({ product, scratchUpload, model, pose, creditCost =
         <div className="flex justify-center gap-3 sm:gap-4 pt-2 border-t border-border">
           <StatusPill label="Product" completed={hasProduct} />
           <StatusPill label="Model" completed={!!model} />
-          <StatusPill label="Pose" completed={!!pose} />
+          <StatusPill label="Scene" completed={!!pose} />
         </div>
       </div>
     </Card>
