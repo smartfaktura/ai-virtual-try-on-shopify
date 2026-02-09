@@ -402,6 +402,15 @@ export default function Generate() {
       setGeneratingProgress(100);
       setCurrentStep('results');
       toast.success(`Generated ${result.generatedCount} images! Used ${result.generatedCount * 3} credits.`);
+      if (user) {
+        supabase.from('generation_jobs').insert({
+          user_id: user.id, results: result.images as any, status: 'completed',
+          completed_at: new Date().toISOString(), product_id: selectedProduct?.id || null,
+          brand_profile_id: selectedBrandProfileId || null, ratio: aspectRatio, quality,
+          requested_count: parseInt(imageCount), credits_used: result.generatedCount * (quality === 'high' ? 10 : 4),
+          template_id: selectedTemplate?.templateId || null,
+        }).then(({ error }) => { if (!error) toast.success('Saved to your library', { duration: 2000 }); });
+      }
     } else setCurrentStep('settings');
   };
 
