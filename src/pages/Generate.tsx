@@ -692,7 +692,9 @@ export default function Generate() {
                   const uploadedUrl = await uploadFile(scratchUpload.file);
                   if (uploadedUrl) {
                     setScratchUpload({ ...scratchUpload, uploadedUrl });
-                    if (brandProfiles.length > 0) {
+                    if (activeWorkflow?.uses_tryon) {
+                      setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                    } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
                       setCurrentStep('settings');
