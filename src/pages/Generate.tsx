@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2 } from 'lucide-react';
 
