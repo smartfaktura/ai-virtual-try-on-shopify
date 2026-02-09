@@ -308,7 +308,10 @@ export default function Generate() {
     // Go to brand profile step if profiles exist
     if (brandProfiles.length > 0) {
       setCurrentStep('brand-profile');
-    } else if (activeWorkflow?.uses_tryon || isClothingProduct(product)) {
+    } else if (activeWorkflow?.uses_tryon) {
+      // Skip mode step for try-on workflows
+      setCurrentStep('model');
+    } else if (isClothingProduct(product)) {
       setCurrentStep('mode');
     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
       // Workflow config skips template — go straight to settings
