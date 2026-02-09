@@ -1561,6 +1561,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Candid street style, walking in city with golden hour light',
     previewUrl: poseLifestyleWalking,
+    previewUrlMale: poseLifestyleWalkingMale,
   },
   {
     poseId: 'pose_004',
