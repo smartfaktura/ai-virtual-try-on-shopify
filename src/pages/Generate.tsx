@@ -1403,10 +1403,6 @@ export default function Generate() {
                 <div><Label>Quality</Label><p className="text-sm text-muted-foreground mt-1">Virtual Try-On uses High quality by default</p></div>
               </div>
               <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
-              <div className="flex items-center space-x-2">
-                <Checkbox id="preserveTryOn" checked={preserveAccuracy} onCheckedChange={v => setPreserveAccuracy(!!v)} />
-                <Label htmlFor="preserveTryOn">Keep product looking exactly as-is</Label>
-              </div>
             </CardContent></Card>
 
             <Alert><AlertDescription>
