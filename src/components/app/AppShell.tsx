@@ -17,7 +17,6 @@ interface AppShellProps {
 const navItems = [
   { label: 'Dashboard', icon: Home, path: '/app' },
   { label: 'Products', icon: Package, path: '/app/products' },
-  { label: 'Brand Profiles', icon: Palette, path: '/app/brand-profiles' },
   { label: 'Workflows', icon: Layers, path: '/app/workflows' },
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
   { label: 'Templates', icon: LayoutTemplate, path: '/app/templates' },
@@ -27,6 +26,7 @@ const navItems = [
 ];
 
 const configItems = [
+  { label: 'Brand Profiles', icon: Palette, path: '/app/brand-profiles' },
   { label: 'Settings', icon: Settings, path: '/app/settings' },
 ];
 
