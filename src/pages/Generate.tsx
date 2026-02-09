@@ -639,7 +639,7 @@ export default function Generate() {
           <Card><CardContent className="p-5 space-y-5">
             <div>
               <h2 className="text-base font-semibold">
-                {activeWorkflow?.uses_tryon ? 'Select Your Clothing' : 'How do you want to start?'}
+                {activeWorkflow?.uses_tryon ? 'Add Your Product' : 'How do you want to start?'}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {activeWorkflow?.uses_tryon
