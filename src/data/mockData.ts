@@ -1545,6 +1545,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'studio',
     description: 'Elegant three-quarter turn, professional studio lighting',
     previewUrl: poseStudioProfile,
+    previewUrlMale: poseStudioProfileMale,
   },
   {
     poseId: 'pose_007',
