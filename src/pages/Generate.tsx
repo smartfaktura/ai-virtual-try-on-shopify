@@ -571,7 +571,7 @@ export default function Generate() {
       return [
         { name: sourceType === 'scratch' ? 'Source' : 'Product' },
         { name: 'Brand' },
-        { name: 'Model' }, { name: 'Pose' }, { name: 'Settings' }, { name: 'Results' },
+        { name: 'Model' }, { name: 'Scene' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
