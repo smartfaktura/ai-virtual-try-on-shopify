@@ -111,7 +111,7 @@ export function TryOnUploadGuide() {
           {activeTab === 'good' ? (
             <>
               <p className="text-[11px] text-muted-foreground">
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Tip:</span> Use a front-facing photo of a single garment on a model, mannequin, or clean hanger. Well-lit with minimal wrinkles works best.
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Tip:</span> Use a front-facing photo of a single clothing item on a model, mannequin, or clean hanger. Well-lit with minimal wrinkles works best.
               </p>
             </>
           ) : (
