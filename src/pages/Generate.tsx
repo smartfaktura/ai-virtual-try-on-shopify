@@ -1520,17 +1520,16 @@ export default function Generate() {
               <p className="text-xs text-muted-foreground">Crafted by your studio team</p>
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
-              {sourceType === 'scratch' ? (
-                <Button onClick={() => setProductAssignmentModalOpen(true)} disabled={selectedForPublish.size === 0}>
-                  Assign {selectedForPublish.size} to Product
-                </Button>
-              ) : (
-                <Button onClick={handlePublishClick} disabled={selectedForPublish.size === 0}>
-                  Publish {selectedForPublish.size} to "{selectedProduct?.title}"
-                </Button>
-              )}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Saved to your library</p>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
+                <Button variant="outline" onClick={() => {
+                  if (selectedForPublish.size === 0) { toast.error('Select images to download'); return; }
+                  selectedForPublish.forEach(idx => handleDownloadImage(idx));
+                }}><Download className="w-4 h-4 mr-2" /> Download Selected ({selectedForPublish.size})</Button>
+                <Button onClick={() => navigate('/app/library')}>View in Library</Button>
+              </div>
             </div>
           </div>
         )}
