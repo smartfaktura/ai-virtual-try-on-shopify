@@ -1609,6 +1609,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Cool casual pose sitting on concrete stairs, industrial vibe',
     previewUrl: poseStreetwearStairs,
+    previewUrlMale: poseStreetwearStairsMale,
   },
   // === EXPANDED POSE LIBRARY (14 new poses) ===
   // Studio Category (+3)
