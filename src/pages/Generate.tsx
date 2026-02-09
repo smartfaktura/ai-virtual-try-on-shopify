@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2 } from 'lucide-react';
@@ -715,21 +716,37 @@ export default function Generate() {
         {/* Upload Step */}
         {currentStep === 'upload' && (
           <Card><CardContent className="p-5 space-y-5">
-            <div>
-              <h2 className="text-base font-semibold">
-                {activeWorkflow?.uses_tryon ? 'Upload Your Clothing Photo' : 'Upload Your Image'}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {activeWorkflow?.uses_tryon
-                  ? 'Upload a clear photo of the clothing item you want to try on.'
-                  : 'Upload a product image from your computer.'}
-              </p>
+            <div className={cn(
+              activeWorkflow?.uses_tryon && !scratchUpload
+                ? 'grid grid-cols-1 lg:grid-cols-2 gap-6'
+                : ''
+            )}>
+              {/* Left column: Upload area */}
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-base font-semibold">
+                    {activeWorkflow?.uses_tryon ? 'Upload Your Clothing Photo' : 'Upload Your Image'}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {activeWorkflow?.uses_tryon
+                      ? 'Upload a clear photo of the clothing item you want to try on.'
+                      : 'Upload a product image from your computer.'}
+                  </p>
+                </div>
+                <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
+                  onUpdateProductInfo={info => { if (scratchUpload) setScratchUpload({ ...scratchUpload, productInfo: info }); }}
+                  isUploading={isUploading}
+                />
+              </div>
+
+              {/* Right column: Guide (only for try-on, before upload) */}
+              {activeWorkflow?.uses_tryon && !scratchUpload && (
+                <div className="order-first lg:order-last">
+                  <TryOnUploadGuide />
+                </div>
+              )}
             </div>
-            {activeWorkflow?.uses_tryon && !scratchUpload && <TryOnUploadGuide />}
-            <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
-              onUpdateProductInfo={info => { if (scratchUpload) setScratchUpload({ ...scratchUpload, productInfo: info }); }}
-              isUploading={isUploading}
-            />
+
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
               <Button disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}

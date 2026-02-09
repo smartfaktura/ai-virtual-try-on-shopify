@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils';
 import tankWhite from '@/assets/products/tank-white-1.jpg';
 import sportsBra from '@/assets/products/sports-bra-black-1.jpg';
 import leggingsBlack from '@/assets/products/leggings-black-1.jpg';
-import hoodieGray from '@/assets/products/hoodie-gray-1.jpg';
-import fauxFurJacket from '@/assets/products/faux-fur-jacket-1.jpg';
-import joggersBeige from '@/assets/products/joggers-beige-1.jpg';
+import avoidFlatlay from '@/assets/products/avoid-flatlay.jpg';
+import avoidLowcontrast from '@/assets/products/avoid-lowcontrast.jpg';
+import avoidCropped from '@/assets/products/avoid-cropped.jpg';
 
 const goodExamples = [
   { src: tankWhite, label: 'Clear front-facing photo' },
@@ -16,9 +16,9 @@ const goodExamples = [
 ];
 
 const badExamples = [
-  { src: fauxFurJacket, label: 'Clothing hidden under layers' },
-  { src: hoodieGray, label: 'Low contrast, hard to detect' },
-  { src: joggersBeige, label: 'Cropped — missing full outfit' },
+  { src: avoidFlatlay, label: 'Flat-lay, not on a person' },
+  { src: avoidLowcontrast, label: 'Too dark, low contrast' },
+  { src: avoidCropped, label: 'Cropped, missing full view' },
 ];
 
 export function TryOnUploadGuide() {
@@ -48,7 +48,7 @@ export function TryOnUploadGuide() {
           type="button"
           onClick={() => handleTabClick('good')}
           className={cn(
-            'flex-1 py-2.5 px-4 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5',
+            'flex-1 py-2 px-3 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5',
             activeTab === 'good'
               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500'
               : 'text-muted-foreground hover:bg-muted/50'
@@ -61,7 +61,7 @@ export function TryOnUploadGuide() {
           type="button"
           onClick={() => handleTabClick('bad')}
           className={cn(
-            'flex-1 py-2.5 px-4 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5',
+            'flex-1 py-2 px-3 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5',
             activeTab === 'bad'
               ? 'bg-destructive/10 text-destructive border-b-2 border-destructive'
               : 'text-muted-foreground hover:bg-muted/50'
@@ -72,12 +72,12 @@ export function TryOnUploadGuide() {
         </button>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <div className="grid grid-cols-3 gap-3">
+      {/* Content with animation */}
+      <div className="p-3">
+        <div key={activeTab} className="grid grid-cols-3 gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
           {examples.map((ex, i) => (
-            <div key={`${activeTab}-${i}`} className="relative group animate-in fade-in duration-500">
-              <div className="aspect-[3/4] rounded-lg overflow-hidden border border-border bg-muted">
+            <div key={i} className="relative group">
+              <div className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
                 <img
                   src={ex.src}
                   alt={ex.label}
@@ -87,19 +87,19 @@ export function TryOnUploadGuide() {
               {/* Badge */}
               <div
                 className={cn(
-                  'absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center shadow-sm',
+                  'absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center shadow-sm',
                   activeTab === 'good'
                     ? 'bg-emerald-500 text-white'
                     : 'bg-destructive text-destructive-foreground'
                 )}
               >
                 {activeTab === 'good' ? (
-                  <Check className="w-3 h-3" strokeWidth={3} />
+                  <Check className="w-2.5 h-2.5" strokeWidth={3} />
                 ) : (
-                  <X className="w-3 h-3" strokeWidth={3} />
+                  <X className="w-2.5 h-2.5" strokeWidth={3} />
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground mt-1.5 text-center leading-tight">
+              <p className="text-[10px] text-muted-foreground mt-1 text-center leading-tight">
                 {ex.label}
               </p>
             </div>
@@ -107,19 +107,15 @@ export function TryOnUploadGuide() {
         </div>
 
         {/* Tips text */}
-        <div className="mt-3 space-y-1">
+        <div className="mt-2">
           {activeTab === 'good' ? (
-            <>
-              <p className="text-[11px] text-muted-foreground">
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Tip:</span> Use a front-facing photo of a single clothing item on a model, mannequin, or clean hanger. Well-lit with minimal wrinkles works best.
-              </p>
-            </>
+            <p className="text-[11px] text-muted-foreground">
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">Tip:</span> Use a front-facing photo of a single item on a model or mannequin. Well-lit with minimal wrinkles.
+            </p>
           ) : (
-            <>
-              <p className="text-[11px] text-muted-foreground">
-                <span className="text-destructive font-medium">Avoid:</span> Flat-lay photos, selfie-style shots, group photos, or images where accessories cover the clothing. Bad lighting reduces quality.
-              </p>
-            </>
+            <p className="text-[11px] text-muted-foreground">
+              <span className="text-destructive font-medium">Avoid:</span> Flat-lay photos, dark/low-contrast shots, or cropped images missing parts of the garment.
+            </p>
           )}
         </div>
       </div>
@@ -129,7 +125,7 @@ export function TryOnUploadGuide() {
         <div className="h-0.5 bg-muted overflow-hidden">
           <div
             key={activeTab}
-            className="h-full bg-primary/40 animate-[progress_4s_linear]"
+            className="h-full bg-primary/40"
             style={{ animation: 'progress 4s linear forwards' }}
           />
         </div>
