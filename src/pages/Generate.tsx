@@ -1458,10 +1458,15 @@ export default function Generate() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className={`grid gap-4 ${
+                generatedImages.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
+                generatedImages.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' :
+                generatedImages.length <= 4 ? 'grid-cols-2 md:grid-cols-3' :
+                'grid-cols-2 md:grid-cols-4'
+              }`}>
                 {generatedImages.map((url, index) => (
                   <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
-                    <img src={url} alt={`Generated ${index + 1}`} className="w-full aspect-square object-cover" onClick={() => toggleImageSelection(index)} />
+                    <img src={url} alt={`Generated ${index + 1}`} className="w-full aspect-[3/4] object-cover" onClick={() => toggleImageSelection(index)} />
                     {/* Variation label overlay */}
                     {workflowVariationLabels[index] && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-6">
