@@ -1540,11 +1540,6 @@ export default function Generate() {
               </div>
             </CardContent></Card>
 
-  // Scroll to top when step changes
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentStep]);
-
 
             {/* Crafted by team */}
             <div className="flex items-center justify-center gap-3 pt-2">
