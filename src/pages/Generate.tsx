@@ -718,7 +718,7 @@ export default function Generate() {
           <Card><CardContent className="p-5 space-y-5">
             <div className={cn(
               activeWorkflow?.uses_tryon && !scratchUpload
-                ? 'grid grid-cols-1 lg:grid-cols-2 gap-6'
+                ? 'grid grid-cols-1 lg:grid-cols-[1fr,220px] gap-4'
                 : ''
             )}>
               {/* Left column: Upload area */}
@@ -739,7 +739,7 @@ export default function Generate() {
                 />
               </div>
 
-              {/* Right column: Guide (only for try-on, before upload) */}
+              {/* Right column: Compact guide (try-on only, before upload) */}
               {activeWorkflow?.uses_tryon && !scratchUpload && (
                 <div className="order-first lg:order-last">
                   <TryOnUploadGuide />
