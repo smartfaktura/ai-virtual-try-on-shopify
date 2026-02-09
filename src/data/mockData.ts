@@ -1164,6 +1164,38 @@ import poseStreetwearBasketball from '@/assets/poses/pose-streetwear-basketball.
 import poseStreetwearUnderpass from '@/assets/poses/pose-streetwear-underpass.jpg';
 import poseStreetwearNeon from '@/assets/poses/pose-streetwear-neon.jpg';
 
+// Male pose preview images
+import poseStudioFrontMale from '@/assets/poses/pose-studio-front-male.jpg';
+import poseStudioProfileMale from '@/assets/poses/pose-studio-profile-male.jpg';
+import poseStudioMovementMale from '@/assets/poses/pose-studio-movement-male.jpg';
+import poseLifestyleWalkingMale from '@/assets/poses/pose-lifestyle-walking-male.jpg';
+import poseLifestyleSeatedMale from '@/assets/poses/pose-lifestyle-seated-male.jpg';
+import poseLifestyleGardenMale from '@/assets/poses/pose-lifestyle-garden-male.jpg';
+import poseEditorialDramaticMale from '@/assets/poses/pose-editorial-dramatic-male.jpg';
+import poseEditorialMinimalMale from '@/assets/poses/pose-editorial-minimal-male.jpg';
+import poseStreetwearUrbanMale from '@/assets/poses/pose-streetwear-urban-male.jpg';
+import poseStreetwearStairsMale from '@/assets/poses/pose-streetwear-stairs-male.jpg';
+import poseStudioBackMale from '@/assets/poses/pose-studio-back-male.jpg';
+import poseStudioCloseupMale from '@/assets/poses/pose-studio-closeup-male.jpg';
+import poseStudioArmsMale from '@/assets/poses/pose-studio-arms-male.jpg';
+import poseLifestyleCoffeeMale from '@/assets/poses/pose-lifestyle-coffee-male.jpg';
+import poseLifestyleBeachMale from '@/assets/poses/pose-lifestyle-beach-male.jpg';
+import poseLifestyleParkMale from '@/assets/poses/pose-lifestyle-park-male.jpg';
+import poseLifestyleRooftopMale from '@/assets/poses/pose-lifestyle-rooftop-male.jpg';
+import poseEditorialWindowMale from '@/assets/poses/pose-editorial-window-male.jpg';
+import poseEditorialMoodyMale from '@/assets/poses/pose-editorial-moody-male.jpg';
+import poseEditorialArtisticMale from '@/assets/poses/pose-editorial-artistic-male.jpg';
+import poseEditorialMotionMale from '@/assets/poses/pose-editorial-motion-male.jpg';
+import poseStreetwearBasketballMale from '@/assets/poses/pose-streetwear-basketball-male.jpg';
+import poseStreetwearUnderpassMale from '@/assets/poses/pose-streetwear-underpass-male.jpg';
+import poseStreetwearNeonMale from '@/assets/poses/pose-streetwear-neon-male.jpg';
+import poseLifestyleGymMale from '@/assets/poses/pose-lifestyle-gym-male.jpg';
+import poseStreetwearShoppingMale from '@/assets/poses/pose-streetwear-shopping-male.jpg';
+import poseLifestyleResortMale from '@/assets/poses/pose-lifestyle-resort-male.jpg';
+import poseEditorialGalleryMale from '@/assets/poses/pose-editorial-gallery-male.jpg';
+import poseLifestyleAutumnMale from '@/assets/poses/pose-lifestyle-autumn-male.jpg';
+import poseEditorialWarehouseMale from '@/assets/poses/pose-editorial-warehouse-male.jpg';
+
 // Scene environment images (product photography)
 import templateClothingStudio from '@/assets/templates/clothing-studio.jpg';
 import templateUniversalGradient from '@/assets/templates/universal-gradient.jpg';
