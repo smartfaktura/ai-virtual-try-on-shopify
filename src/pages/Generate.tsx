@@ -714,34 +714,101 @@ export default function Generate() {
           <Card><CardContent className="p-5 space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-semibold">Select Product(s)</h2>
-                <p className="text-sm text-muted-foreground">Choose one or multiple products. 2+ products will use bulk generation.</p>
+                <h2 className="text-base font-semibold">
+                  {activeWorkflow?.uses_tryon ? 'Select a Garment' : 'Select Product(s)'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {activeWorkflow?.uses_tryon
+                    ? 'Choose the garment you want to try on a model.'
+                    : 'Choose one or multiple products. 2+ products will use bulk generation.'}
+                </p>
               </div>
               <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
             </div>
-            <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+
+            {/* Try-on: show real DB products */}
+            {activeWorkflow?.uses_tryon ? (
+              isLoadingUserProducts ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : userProducts.length === 0 ? (
+                <div className="text-center py-10 space-y-3">
+                  <Package className="w-12 h-12 mx-auto text-muted-foreground/30" />
+                  <p className="text-sm text-muted-foreground">No products in your library yet.</p>
+                  <p className="text-xs text-muted-foreground">Add garments to your product library, or upload a photo directly.</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <Link to="/app/products">
+                      <Button variant="outline" size="sm">Add Products</Button>
+                    </Link>
+                    <Button variant="secondary" size="sm" onClick={() => { setSourceType('scratch'); setCurrentStep('upload'); }}>
+                      Upload Instead
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                  {userProducts.map(up => {
+                    const isSelected = selectedProductIds.has(up.id);
+                    return (
+                      <button
+                        key={up.id}
+                        type="button"
+                        onClick={() => setSelectedProductIds(new Set([up.id]))}
+                        className={`flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left ${
+                          isSelected
+                            ? 'border-primary ring-2 ring-primary/30'
+                            : 'border-transparent hover:border-border'
+                        }`}
+                      >
+                        <img src={up.image_url} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
+                        <div className="px-1.5 py-1.5 bg-card">
+                          <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
+                          {up.product_type && (
+                            <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+            )}
+
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
               <Button disabled={selectedProductIds.size === 0} onClick={() => {
-                const selected = mockProducts.filter(p => selectedProductIds.has(p.id));
-                if (selected.length === 1) {
-                  const product = selected[0];
-                  setSelectedProduct(product);
-                  if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
-                  const cat = detectProductCategory(product);
-                  if (cat) setSelectedCategory(cat);
-                  if (brandProfiles.length > 0) {
-                    setCurrentStep('brand-profile');
-                  } else if (isClothingProduct(product)) {
-                    setCurrentStep('mode');
-                  } else if (uiConfig?.skip_template && hasWorkflowConfig) {
-                    setCurrentStep('settings');
-                  } else {
-                    setCurrentStep('template');
+                if (activeWorkflow?.uses_tryon) {
+                  const selectedUp = userProducts.find(p => selectedProductIds.has(p.id));
+                  if (selectedUp) {
+                    const product = mapUserProductToProduct(selectedUp);
+                    setSelectedProduct(product);
+                    setSelectedSourceImages(new Set([product.images[0].id]));
+                    setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                   }
-                } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
+                } else {
+                  const selected = mockProducts.filter(p => selectedProductIds.has(p.id));
+                  if (selected.length === 1) {
+                    const product = selected[0];
+                    setSelectedProduct(product);
+                    if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
+                    const cat = detectProductCategory(product);
+                    if (cat) setSelectedCategory(cat);
+                    if (brandProfiles.length > 0) {
+                      setCurrentStep('brand-profile');
+                    } else if (isClothingProduct(product)) {
+                      setCurrentStep('mode');
+                    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+                      setCurrentStep('settings');
+                    } else {
+                      setCurrentStep('template');
+                    }
+                  } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
+                }
               }}>
-                {selectedProductIds.size === 0 ? 'Select at least 1' : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
+                {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? 'Continue' : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
               </Button>
             </div>
           </CardContent></Card>
