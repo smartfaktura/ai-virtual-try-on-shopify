@@ -26,6 +26,7 @@ const navItems = [
 ];
 
 const configItems = [
+  { label: 'Brand Profiles', icon: Palette, path: '/app/brand-profiles' },
   { label: 'Settings', icon: Settings, path: '/app/settings' },
 ];
 
