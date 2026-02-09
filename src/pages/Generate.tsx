@@ -265,6 +265,20 @@ export default function Generate() {
       product.tags.some(tag => clothingKeywords.some(kw => tag.toLowerCase().includes(kw)));
   };
 
+  // Map a DB UserProduct to the app's Product type
+  const mapUserProductToProduct = (up: UserProduct): Product => ({
+    id: up.id,
+    title: up.title,
+    vendor: 'My Products',
+    productType: up.product_type,
+    tags: up.tags || [],
+    description: up.description,
+    images: [{ id: `img-${up.id}`, url: up.image_url }],
+    status: 'active',
+    createdAt: up.created_at,
+    updatedAt: up.updated_at,
+  });
+
   const detectProductCategory = (product: Product | null): TemplateCategory | null => {
     if (!product) return null;
     const type = product.productType.toLowerCase();
