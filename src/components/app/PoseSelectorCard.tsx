@@ -1,4 +1,4 @@
-import type { TryOnPose } from '@/types';
+import type { TryOnPose, ModelGender } from '@/types';
 import { poseCategoryLabels } from '@/data/mockData';
 import { Badge } from '@/components/ui/badge';
 
@@ -6,9 +6,14 @@ interface PoseSelectorCardProps {
   pose: TryOnPose;
   isSelected: boolean;
   onSelect: () => void;
+  selectedGender?: ModelGender;
 }
 
-export function PoseSelectorCard({ pose, isSelected, onSelect }: PoseSelectorCardProps) {
+export function PoseSelectorCard({ pose, isSelected, onSelect, selectedGender }: PoseSelectorCardProps) {
+  const displayImage = selectedGender === 'male' && pose.previewUrlMale
+    ? pose.previewUrlMale
+    : pose.previewUrl;
+
   return (
     <div
       onClick={onSelect}
@@ -17,7 +22,7 @@ export function PoseSelectorCard({ pose, isSelected, onSelect }: PoseSelectorCar
       }`}
     >
       <div className="aspect-[4/5] overflow-hidden bg-muted">
-        <img src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        <img src={displayImage} alt={pose.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
       </div>
       <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
         <Badge className="text-[8px] sm:text-[10px] px-1.5 py-0.5 bg-foreground/80 text-background border-0 shadow-sm backdrop-blur-sm">

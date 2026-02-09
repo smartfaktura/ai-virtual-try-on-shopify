@@ -1,4 +1,4 @@
-import type { TryOnPose, PoseCategory } from '@/types';
+import type { TryOnPose, PoseCategory, ModelGender } from '@/types';
 import { PoseSelectorCard } from './PoseSelectorCard';
 
 interface PoseCategorySectionProps {
@@ -6,6 +6,7 @@ interface PoseCategorySectionProps {
   poses: TryOnPose[];
   selectedPoseId: string | null;
   onSelectPose: (pose: TryOnPose) => void;
+  selectedGender?: ModelGender;
 }
 
 const categoryInfo: Record<PoseCategory, { title: string; recommendation: string }> = {
@@ -22,7 +23,7 @@ const categoryInfo: Record<PoseCategory, { title: string; recommendation: string
   botanical: { title: 'Botanical', recommendation: 'Best for wellness & natural products' },
 };
 
-export function PoseCategorySection({ category, poses, selectedPoseId, onSelectPose }: PoseCategorySectionProps) {
+export function PoseCategorySection({ category, poses, selectedPoseId, onSelectPose, selectedGender }: PoseCategorySectionProps) {
   const info = categoryInfo[category];
   if (poses.length === 0) return null;
 
@@ -34,7 +35,7 @@ export function PoseCategorySection({ category, poses, selectedPoseId, onSelectP
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {poses.map((pose) => (
-          <PoseSelectorCard key={pose.poseId} pose={pose} isSelected={selectedPoseId === pose.poseId} onSelect={() => onSelectPose(pose)} />
+          <PoseSelectorCard key={pose.poseId} pose={pose} isSelected={selectedPoseId === pose.poseId} onSelect={() => onSelectPose(pose)} selectedGender={selectedGender} />
         ))}
       </div>
     </div>

@@ -1164,6 +1164,38 @@ import poseStreetwearBasketball from '@/assets/poses/pose-streetwear-basketball.
 import poseStreetwearUnderpass from '@/assets/poses/pose-streetwear-underpass.jpg';
 import poseStreetwearNeon from '@/assets/poses/pose-streetwear-neon.jpg';
 
+// Male pose preview images
+import poseStudioFrontMale from '@/assets/poses/pose-studio-front-male.jpg';
+import poseStudioProfileMale from '@/assets/poses/pose-studio-profile-male.jpg';
+import poseStudioMovementMale from '@/assets/poses/pose-studio-movement-male.jpg';
+import poseLifestyleWalkingMale from '@/assets/poses/pose-lifestyle-walking-male.jpg';
+import poseLifestyleSeatedMale from '@/assets/poses/pose-lifestyle-seated-male.jpg';
+import poseLifestyleGardenMale from '@/assets/poses/pose-lifestyle-garden-male.jpg';
+import poseEditorialDramaticMale from '@/assets/poses/pose-editorial-dramatic-male.jpg';
+import poseEditorialMinimalMale from '@/assets/poses/pose-editorial-minimal-male.jpg';
+import poseStreetwearUrbanMale from '@/assets/poses/pose-streetwear-urban-male.jpg';
+import poseStreetwearStairsMale from '@/assets/poses/pose-streetwear-stairs-male.jpg';
+import poseStudioBackMale from '@/assets/poses/pose-studio-back-male.jpg';
+import poseStudioCloseupMale from '@/assets/poses/pose-studio-closeup-male.jpg';
+import poseStudioArmsMale from '@/assets/poses/pose-studio-arms-male.jpg';
+import poseLifestyleCoffeeMale from '@/assets/poses/pose-lifestyle-coffee-male.jpg';
+import poseLifestyleBeachMale from '@/assets/poses/pose-lifestyle-beach-male.jpg';
+import poseLifestyleParkMale from '@/assets/poses/pose-lifestyle-park-male.jpg';
+import poseLifestyleRooftopMale from '@/assets/poses/pose-lifestyle-rooftop-male.jpg';
+import poseEditorialWindowMale from '@/assets/poses/pose-editorial-window-male.jpg';
+import poseEditorialMoodyMale from '@/assets/poses/pose-editorial-moody-male.jpg';
+import poseEditorialArtisticMale from '@/assets/poses/pose-editorial-artistic-male.jpg';
+import poseEditorialMotionMale from '@/assets/poses/pose-editorial-motion-male.jpg';
+import poseStreetwearBasketballMale from '@/assets/poses/pose-streetwear-basketball-male.jpg';
+import poseStreetwearUnderpassMale from '@/assets/poses/pose-streetwear-underpass-male.jpg';
+import poseStreetwearNeonMale from '@/assets/poses/pose-streetwear-neon-male.jpg';
+import poseLifestyleGymMale from '@/assets/poses/pose-lifestyle-gym-male.jpg';
+import poseStreetwearShoppingMale from '@/assets/poses/pose-streetwear-shopping-male.jpg';
+import poseLifestyleResortMale from '@/assets/poses/pose-lifestyle-resort-male.jpg';
+import poseEditorialGalleryMale from '@/assets/poses/pose-editorial-gallery-male.jpg';
+import poseLifestyleAutumnMale from '@/assets/poses/pose-lifestyle-autumn-male.jpg';
+import poseEditorialWarehouseMale from '@/assets/poses/pose-editorial-warehouse-male.jpg';
+
 // Scene environment images (product photography)
 import templateClothingStudio from '@/assets/templates/clothing-studio.jpg';
 import templateUniversalGradient from '@/assets/templates/universal-gradient.jpg';
@@ -1505,6 +1537,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'studio',
     description: 'Classic lookbook pose, full body front view with clean white background',
     previewUrl: poseStudioFront,
+    previewUrlMale: poseStudioFrontMale,
   },
   {
     poseId: 'pose_002',
@@ -1512,6 +1545,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'studio',
     description: 'Elegant three-quarter turn, professional studio lighting',
     previewUrl: poseStudioProfile,
+    previewUrlMale: poseStudioProfileMale,
   },
   {
     poseId: 'pose_007',
@@ -1519,6 +1553,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'studio',
     description: 'Dynamic walking motion with flowing fabric, clean background',
     previewUrl: poseStudioMovement,
+    previewUrlMale: poseStudioMovementMale,
   },
   {
     poseId: 'pose_003',
@@ -1526,6 +1561,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Candid street style, walking in city with golden hour light',
     previewUrl: poseLifestyleWalking,
+    previewUrlMale: poseLifestyleWalkingMale,
   },
   {
     poseId: 'pose_004',
@@ -1533,6 +1569,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Casual seated pose in modern interior with natural light',
     previewUrl: poseLifestyleSeated,
+    previewUrlMale: poseLifestyleSeatedMale,
   },
   {
     poseId: 'pose_008',
@@ -1540,6 +1577,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Relaxed outdoor pose in beautiful botanical garden setting',
     previewUrl: poseLifestyleGarden,
+    previewUrlMale: poseLifestyleGardenMale,
   },
   {
     poseId: 'pose_005',
@@ -1547,6 +1585,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'High-fashion pose with dramatic lighting and dark backdrop',
     previewUrl: poseEditorialDramatic,
+    previewUrlMale: poseEditorialDramaticMale,
   },
   {
     poseId: 'pose_009',
@@ -1554,6 +1593,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Elegant minimal pose with geometric window shadows',
     previewUrl: poseEditorialMinimal,
+    previewUrlMale: poseEditorialMinimalMale,
   },
   {
     poseId: 'pose_006',
@@ -1561,6 +1601,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Urban street style against graffiti wall, hip-hop inspired',
     previewUrl: poseStreetwearUrban,
+    previewUrlMale: poseStreetwearUrbanMale,
   },
   {
     poseId: 'pose_010',
@@ -1568,6 +1609,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Cool casual pose sitting on concrete stairs, industrial vibe',
     previewUrl: poseStreetwearStairs,
+    previewUrlMale: poseStreetwearStairsMale,
   },
   // === EXPANDED POSE LIBRARY (14 new poses) ===
   // Studio Category (+3)
@@ -1577,6 +1619,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'studio',
     description: 'Elegant back pose showing garment rear details, shoulders angled',
     previewUrl: poseStudioBack,
+    previewUrlMale: poseStudioBackMale,
   },
   {
     poseId: 'pose_012',
@@ -1584,6 +1627,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'studio',
     description: 'Torso-focused crop highlighting fabric texture and fit',
     previewUrl: poseStudioCloseup,
+    previewUrlMale: poseStudioCloseupMale,
   },
   {
     poseId: 'pose_013',
@@ -1591,6 +1635,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'studio',
     description: 'Confident pose with crossed arms, direct eye contact',
     previewUrl: poseStudioArms,
+    previewUrlMale: poseStudioArmsMale,
   },
   // Lifestyle Category (+4)
   {
@@ -1599,6 +1644,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Relaxed pose at cafe table with natural morning light',
     previewUrl: poseLifestyleCoffee,
+    previewUrlMale: poseLifestyleCoffeeMale,
   },
   {
     poseId: 'pose_015',
@@ -1606,6 +1652,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Coastal lifestyle scene with golden sunset backdrop',
     previewUrl: poseLifestyleBeach,
+    previewUrlMale: poseLifestyleBeachMale,
   },
   {
     poseId: 'pose_016',
@@ -1613,6 +1660,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Casual outdoor pose on wooden park bench with greenery',
     previewUrl: poseLifestylePark,
+    previewUrlMale: poseLifestyleParkMale,
   },
   {
     poseId: 'pose_017',
@@ -1620,6 +1668,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Urban rooftop with city skyline in background at dusk',
     previewUrl: poseLifestyleRooftop,
+    previewUrlMale: poseLifestyleRooftopMale,
   },
   // Editorial Category (+4)
   {
@@ -1628,6 +1677,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Silhouette against floor-to-ceiling window with natural light',
     previewUrl: poseEditorialWindow,
+    previewUrlMale: poseEditorialWindowMale,
   },
   {
     poseId: 'pose_019',
@@ -1635,6 +1685,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Low-key studio lighting with single dramatic side light',
     previewUrl: poseEditorialMoody,
+    previewUrlMale: poseEditorialMoodyMale,
   },
   {
     poseId: 'pose_020',
@@ -1642,6 +1693,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'High-fashion pose with abstract geometric backdrop',
     previewUrl: poseEditorialArtistic,
+    previewUrlMale: poseEditorialArtisticMale,
   },
   {
     poseId: 'pose_021',
@@ -1649,6 +1701,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Dynamic motion blur effect with flowing hair/fabric',
     previewUrl: poseEditorialMotion,
+    previewUrlMale: poseEditorialMotionMale,
   },
   // Streetwear Category (+3)
   {
@@ -1657,6 +1710,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Urban playground with chain-link fence backdrop',
     previewUrl: poseStreetwearBasketball,
+    previewUrlMale: poseStreetwearBasketballMale,
   },
   {
     poseId: 'pose_023',
@@ -1664,6 +1718,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Industrial tunnel with dramatic overhead lighting',
     previewUrl: poseStreetwearUnderpass,
+    previewUrlMale: poseStreetwearUnderpassMale,
   },
   {
     poseId: 'pose_024',
@@ -1671,6 +1726,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Night scene with neon signs and urban glow',
     previewUrl: poseStreetwearNeon,
+    previewUrlMale: poseStreetwearNeonMale,
   },
   // === EXPANDED ON-MODEL SCENES ===
   {
@@ -1679,6 +1735,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Athletic setting with gym equipment and natural light',
     previewUrl: poseLifestyleRooftop,
+    previewUrlMale: poseLifestyleGymMale,
   },
   {
     poseId: 'pose_026',
@@ -1686,6 +1743,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'streetwear',
     description: 'Busy shopping area with storefronts and street energy',
     previewUrl: poseStreetwearStairs,
+    previewUrlMale: poseStreetwearShoppingMale,
   },
   {
     poseId: 'pose_027',
@@ -1693,6 +1751,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Luxury resort pool area with warm golden light',
     previewUrl: poseLifestyleBeach,
+    previewUrlMale: poseLifestyleResortMale,
   },
   {
     poseId: 'pose_028',
@@ -1700,6 +1759,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'White gallery space with art installations and clean lines',
     previewUrl: poseEditorialMinimal,
+    previewUrlMale: poseEditorialGalleryMale,
   },
   {
     poseId: 'pose_029',
@@ -1707,6 +1767,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Fall foliage with warm golden tones and soft light',
     previewUrl: poseLifestylePark,
+    previewUrlMale: poseLifestyleAutumnMale,
   },
   {
     poseId: 'pose_030',
@@ -1714,6 +1775,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Raw industrial loft with large windows and exposed brick',
     previewUrl: poseEditorialWindow,
+    previewUrlMale: poseEditorialWarehouseMale,
   },
   // === PRODUCT ENVIRONMENT SCENES ===
   // Clean Studio (3)
