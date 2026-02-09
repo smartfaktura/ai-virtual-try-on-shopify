@@ -1668,6 +1668,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Urban rooftop with city skyline in background at dusk',
     previewUrl: poseLifestyleRooftop,
+    previewUrlMale: poseLifestyleRooftopMale,
   },
   // Editorial Category (+4)
   {
