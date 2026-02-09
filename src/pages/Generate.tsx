@@ -602,7 +602,7 @@ export default function Generate() {
                   <p className="font-semibold">{activeWorkflow.name}</p>
                   <p className="text-xs text-muted-foreground">{activeWorkflow.description}</p>
                 </div>
-                <Badge variant="secondary">{activeWorkflow.default_image_count} images</Badge>
+                <Badge variant="secondary">{activeWorkflow.uses_tryon ? 'Try-On' : 'Workflow'}</Badge>
               </div>
             </AlertDescription>
           </Alert>
