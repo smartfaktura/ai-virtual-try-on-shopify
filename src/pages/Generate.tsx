@@ -210,7 +210,7 @@ export default function Generate() {
 
   // Scroll to top when step changes
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentStep]);
 
   // Apply brand profile settings when selected
