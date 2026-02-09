@@ -1693,6 +1693,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'High-fashion pose with abstract geometric backdrop',
     previewUrl: poseEditorialArtistic,
+    previewUrlMale: poseEditorialArtisticMale,
   },
   {
     poseId: 'pose_021',
