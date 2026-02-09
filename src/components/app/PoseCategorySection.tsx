@@ -35,7 +35,7 @@ export function PoseCategorySection({ category, poses, selectedPoseId, onSelectP
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {poses.map((pose) => (
-          <PoseSelectorCard key={pose.poseId} pose={pose} isSelected={selectedPoseId === pose.poseId} onSelect={() => onSelectPose(pose)} />
+          <PoseSelectorCard key={pose.poseId} pose={pose} isSelected={selectedPoseId === pose.poseId} onSelect={() => onSelectPose(pose)} selectedGender={selectedGender} />
         ))}
       </div>
     </div>

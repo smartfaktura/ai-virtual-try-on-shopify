@@ -977,7 +977,7 @@ export default function Generate() {
                 <p className="text-sm text-muted-foreground">Choose the scene and environment for your shoot</p>
               </div>
               {Object.entries(posesByCategory).map(([category, poses]) => (
-                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseId={selectedPose?.poseId || null} onSelectPose={handleSelectPose} />
+                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseId={selectedPose?.poseId || null} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} />
               ))}
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>

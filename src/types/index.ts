@@ -155,6 +155,7 @@ export interface TryOnPose {
   category: PoseCategory;
   description: string;
   previewUrl: string;
+  previewUrlMale?: string;
 }
 
 // Dashboard metrics
