@@ -94,8 +94,10 @@ export function CreditProvider({ children }: CreditProviderProps) {
   }, [user]);
   
   const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
-  const isLow = balance > 0 && balance < LOW_CREDIT_THRESHOLD;
-  const isCritical = balance > 0 && balance < CRITICAL_THRESHOLD;
+  const lowThreshold = planConfig.monthlyCredits === Infinity ? 0 : Math.round(planConfig.monthlyCredits * 0.2);
+  const criticalThreshold = planConfig.monthlyCredits === Infinity ? 0 : Math.round(planConfig.monthlyCredits * 0.05);
+  const isLow = balance > 0 && balance < lowThreshold;
+  const isCritical = balance > 0 && balance < criticalThreshold;
   const isEmpty = balance === 0;
   
   const deductCredits = useCallback(async (amount: number) => {
