@@ -1660,6 +1660,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'lifestyle',
     description: 'Casual outdoor pose on wooden park bench with greenery',
     previewUrl: poseLifestylePark,
+    previewUrlMale: poseLifestyleParkMale,
   },
   {
     poseId: 'pose_017',
