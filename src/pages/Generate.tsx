@@ -95,6 +95,20 @@ export default function Generate() {
     enabled: !!user,
   });
 
+  // Fetch real user products from database for try-on workflows
+  const { data: userProducts = [], isLoading: isLoadingUserProducts } = useQuery({
+    queryKey: ['user-products', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as UserProduct[];
+    },
+    enabled: !!user?.id && !!activeWorkflow?.uses_tryon,
+  });
+
   const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
