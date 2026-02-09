@@ -402,6 +402,15 @@ export default function Generate() {
       setGeneratingProgress(100);
       setCurrentStep('results');
       toast.success(`Generated ${result.generatedCount} images! Used ${result.generatedCount * 3} credits.`);
+      if (user) {
+        supabase.from('generation_jobs').insert({
+          user_id: user.id, results: result.images as any, status: 'completed',
+          completed_at: new Date().toISOString(), product_id: selectedProduct?.id || null,
+          brand_profile_id: selectedBrandProfileId || null, ratio: aspectRatio, quality,
+          requested_count: parseInt(imageCount), credits_used: result.generatedCount * (quality === 'high' ? 10 : 4),
+          template_id: selectedTemplate?.templateId || null,
+        }).then(({ error }) => { if (!error) toast.success('Saved to your library', { duration: 2000 }); });
+      }
     } else setCurrentStep('settings');
   };
 
@@ -448,6 +457,14 @@ export default function Generate() {
       const creditUsed = result.generatedCount * (quality === 'high' ? 2 : 1);
       deductCredits(creditUsed);
       toast.success(`Generated ${result.generatedCount} ${activeWorkflow?.name} images!`);
+      if (user) {
+        supabase.from('generation_jobs').insert({
+          user_id: user.id, results: result.images as any, status: 'completed',
+          completed_at: new Date().toISOString(), workflow_id: activeWorkflow?.id || null,
+          product_id: selectedProduct?.id || null, brand_profile_id: selectedBrandProfileId || null,
+          ratio: aspectRatio, quality, requested_count: workflowImageCount, credits_used: creditUsed,
+        }).then(({ error }) => { if (!error) toast.success('Saved to your library', { duration: 2000 }); });
+      }
     } else setCurrentStep('settings');
   };
 
@@ -484,6 +501,26 @@ export default function Generate() {
       setGeneratingProgress(100);
       setCurrentStep('results');
       toast.success(`Generated ${result.generatedCount} images! Used ${result.generatedCount * 3} credits.`);
+      // Auto-save to library
+      if (user) {
+        supabase.from('generation_jobs').insert({
+          user_id: user.id,
+          results: result.images as any,
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          workflow_id: activeWorkflow?.id || null,
+          product_id: selectedProduct?.id || null,
+          brand_profile_id: selectedBrandProfileId || null,
+          ratio: aspectRatio,
+          quality,
+          requested_count: parseInt(imageCount),
+          credits_used: result.generatedCount * 8,
+          prompt_final: `Virtual Try-On: ${selectedModel?.name} in ${selectedPose?.name} pose`,
+        }).then(({ error }) => {
+          if (error) console.error('Failed to save to library:', error);
+          else toast.success('Saved to your library', { duration: 2000 });
+        });
+      }
     } else setCurrentStep('settings');
   };
 
@@ -1458,10 +1495,15 @@ export default function Generate() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className={`grid gap-4 ${
+                generatedImages.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
+                generatedImages.length === 2 ? 'grid-cols-2 max-w-2xl mx-auto' :
+                generatedImages.length <= 4 ? 'grid-cols-2 md:grid-cols-3' :
+                'grid-cols-2 md:grid-cols-4'
+              }`}>
                 {generatedImages.map((url, index) => (
                   <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
-                    <img src={url} alt={`Generated ${index + 1}`} className="w-full aspect-square object-cover" onClick={() => toggleImageSelection(index)} />
+                    <img src={url} alt={`Generated ${index + 1}`} className="w-full aspect-[3/4] object-cover" onClick={() => toggleImageSelection(index)} />
                     {/* Variation label overlay */}
                     {workflowVariationLabels[index] && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-6">
@@ -1498,19 +1540,6 @@ export default function Generate() {
               </div>
             </CardContent></Card>
 
-            {(selectedTemplate || generationMode === 'virtual-try-on' || hasWorkflowConfig) && (
-              <Card><CardContent className="p-5 space-y-2">
-                <h3 className="text-sm font-semibold">Generation Summary</h3>
-                <div className="p-3 bg-muted rounded-lg font-mono text-sm">
-                  {generationMode === 'virtual-try-on'
-                    ? `Virtual Try-On: ${selectedModel?.name} wearing ${scratchUpload?.productInfo.title || selectedProduct?.title} in ${selectedPose?.name} pose`
-                    : hasWorkflowConfig
-                    ? `${activeWorkflow?.name}: ${workflowVariationLabels.join(' → ')} for "${scratchUpload?.productInfo.title || selectedProduct?.title}"`
-                    : `${selectedTemplate?.promptBlueprint.sceneDescription}. ${scratchUpload?.productInfo.title || selectedProduct?.title}. ${selectedTemplate?.promptBlueprint.lighting}.`
-                  }
-                </div>
-              </CardContent></Card>
-            )}
 
             {/* Crafted by team */}
             <div className="flex items-center justify-center gap-3 pt-2">
@@ -1528,17 +1557,16 @@ export default function Generate() {
               <p className="text-xs text-muted-foreground">Crafted by your studio team</p>
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
-              {sourceType === 'scratch' ? (
-                <Button onClick={() => setProductAssignmentModalOpen(true)} disabled={selectedForPublish.size === 0}>
-                  Assign {selectedForPublish.size} to Product
-                </Button>
-              ) : (
-                <Button onClick={handlePublishClick} disabled={selectedForPublish.size === 0}>
-                  Publish {selectedForPublish.size} to "{selectedProduct?.title}"
-                </Button>
-              )}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-primary" /> Saved to your library</p>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
+                <Button variant="outline" onClick={() => {
+                  if (selectedForPublish.size === 0) { toast.error('Select images to download'); return; }
+                  selectedForPublish.forEach(idx => handleDownloadImage(idx));
+                }}><Download className="w-4 h-4 mr-2" /> Download Selected ({selectedForPublish.size})</Button>
+                <Button onClick={() => navigate('/app/library')}>View in Library</Button>
+              </div>
             </div>
           </div>
         )}
