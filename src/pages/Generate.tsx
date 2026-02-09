@@ -1371,17 +1371,27 @@ export default function Generate() {
 
         {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (
           <div className="space-y-4">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} />
             <Card><CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Selected Model & Pose</span>
+                <span className="text-sm text-muted-foreground">Selected Model & Scene</span>
                 <Button variant="link" size="sm" onClick={() => setCurrentStep('model')}>Change</Button>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg overflow-hidden"><img src={selectedModel.previewUrl} alt="" className="w-full h-full object-cover" /></div>
-                <div>
-                  <p className="text-sm font-medium">{selectedModel.name}</p>
-                  <p className="text-xs text-muted-foreground">{selectedPose.name}</p>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20"><img src={selectedModel.previewUrl} alt="" className="w-full h-full object-cover" /></div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Model</p>
+                    <p className="text-sm font-medium">{selectedModel.name}</p>
+                  </div>
+                </div>
+                <Separator orientation="vertical" className="h-10" />
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-primary/20"><img src={selectedModel?.gender === 'male' && selectedPose.previewUrlMale ? selectedPose.previewUrlMale : selectedPose.previewUrl} alt="" className="w-full h-full object-cover" /></div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Scene</p>
+                    <p className="text-sm font-medium">{selectedPose.name}</p>
+                  </div>
                 </div>
               </div>
             </CardContent></Card>
