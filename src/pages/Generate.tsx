@@ -1503,19 +1503,6 @@ export default function Generate() {
               </div>
             </CardContent></Card>
 
-            {(selectedTemplate || generationMode === 'virtual-try-on' || hasWorkflowConfig) && (
-              <Card><CardContent className="p-5 space-y-2">
-                <h3 className="text-sm font-semibold">Generation Summary</h3>
-                <div className="p-3 bg-muted rounded-lg font-mono text-sm">
-                  {generationMode === 'virtual-try-on'
-                    ? `Virtual Try-On: ${selectedModel?.name} wearing ${scratchUpload?.productInfo.title || selectedProduct?.title} in ${selectedPose?.name} pose`
-                    : hasWorkflowConfig
-                    ? `${activeWorkflow?.name}: ${workflowVariationLabels.join(' → ')} for "${scratchUpload?.productInfo.title || selectedProduct?.title}"`
-                    : `${selectedTemplate?.promptBlueprint.sceneDescription}. ${scratchUpload?.productInfo.title || selectedProduct?.title}. ${selectedTemplate?.promptBlueprint.lighting}.`
-                  }
-                </div>
-              </CardContent></Card>
-            )}
 
             {/* Crafted by team */}
             <div className="flex items-center justify-center gap-3 pt-2">
