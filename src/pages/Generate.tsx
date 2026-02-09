@@ -765,7 +765,7 @@ export default function Generate() {
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {activeWorkflow?.uses_tryon
-                    ? 'Choose the garment you want to try on a model.'
+                    ? 'Choose the clothing item you want to try on a model.'
                     : 'Choose one or multiple products. 2+ products will use bulk generation.'}
                 </p>
               </div>
