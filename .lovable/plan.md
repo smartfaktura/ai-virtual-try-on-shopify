@@ -1,17 +1,45 @@
 
 
-## Remove "Keep product looking exactly as-is" Checkbox
+## Gender-Matched Scene Previews
 
-### Why Remove It
-The checkbox is **non-functional** — it stores a local state value (`preserveAccuracy`) that is never sent to any backend function or generation hook. It has zero effect on the generated images. Removing it eliminates user confusion without losing any functionality.
+### Problem
+All 24 scene/pose preview thumbnails show **female models**. When a user selects a male model (like Omar), the scene gallery still displays women, which looks inconsistent and confusing.
 
-### Change
+### Solution
+Add a `previewUrlMale` field to each pose and use AI image generation to create 24 matching male pose images. The scene selector will then show the appropriate gender's preview based on the currently selected model.
 
-**File: `src/pages/Generate.tsx`**
+### Steps
 
-1. Remove the `preserveAccuracy` state variable (line ~148)
-2. Remove the checkbox block from the regular generation settings section (lines ~1221-1224)
-3. Remove the checkbox block from the Virtual Try-On settings section (lines ~1410-1413)
+**1. Generate 24 male pose images using AI**
+Use the Lovable AI image generation (Gemini) to create male equivalents for all 24 poses, matching the same environments and compositions. Save them to `src/assets/poses/` with a `-male` suffix (e.g., `pose-studio-front-male.jpg`).
 
-That's it — one file, three small deletions. No other files reference this value.
+**2. Update the `TryOnPose` type**
+Add an optional `previewUrlMale` field:
 
+| Field | Type | Description |
+|---|---|---|
+| `previewUrlMale` | `string` (optional) | Male version of the scene preview |
+
+**3. Update `mockData.ts`**
+- Import all 24 new male pose images
+- Add `previewUrlMale` to each entry in `mockTryOnPoses`
+
+**4. Update `PoseSelectorCard` component**
+Accept an optional `selectedGender` prop. When set to `'male'` and a `previewUrlMale` exists, display the male preview image instead.
+
+**5. Update `PoseCategorySection` component**
+Pass the selected model's gender down to each `PoseSelectorCard`.
+
+**6. Update `Generate.tsx`**
+Pass `selectedModel?.gender` through the pose category section so it reaches the cards.
+
+### Files Changed
+- `src/types/index.ts` -- add `previewUrlMale` to `TryOnPose`
+- `src/assets/poses/` -- 24 new AI-generated male pose images
+- `src/data/mockData.ts` -- import male images, add to pose data
+- `src/components/app/PoseSelectorCard.tsx` -- use gender-aware preview
+- `src/components/app/PoseCategorySection.tsx` -- pass gender prop
+- `src/pages/Generate.tsx` -- pass selected model gender to pose sections
+
+### Note
+Generating 24 AI images will take some time. Each image will match the composition, environment, and lighting of its female counterpart but feature a male model.
