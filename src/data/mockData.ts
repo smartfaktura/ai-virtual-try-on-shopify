@@ -1685,6 +1685,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Low-key studio lighting with single dramatic side light',
     previewUrl: poseEditorialMoody,
+    previewUrlMale: poseEditorialMoodyMale,
   },
   {
     poseId: 'pose_020',
