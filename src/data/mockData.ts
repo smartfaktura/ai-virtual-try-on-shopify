@@ -1635,6 +1635,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'studio',
     description: 'Confident pose with crossed arms, direct eye contact',
     previewUrl: poseStudioArms,
+    previewUrlMale: poseStudioArmsMale,
   },
   // Lifestyle Category (+4)
   {
