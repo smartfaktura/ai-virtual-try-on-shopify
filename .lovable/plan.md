@@ -1,108 +1,65 @@
 
 
-## Polish: Virtual Try-On Product Step
+## Polish: Virtual Try-On Results Step
 
-Redesign the product/source step for the Virtual Try-On workflow to connect real user products from the database and add educational guidance for "From Scratch" uploads (inspired by the Botika reference screenshots).
-
----
-
-### 1. Connect Real User Products from Database
-
-**Problem**: The product selection step currently uses `mockProducts` (hardcoded demo data). Users who have added real products to their account (stored in `user_products` table) never see them in the workflow.
-
-**Fix**: When the Virtual Try-On workflow is active, fetch `user_products` from the database and display them in the product grid alongside (or instead of) mock products. Reuse the same query pattern already used in Freestyle (`src/pages/Freestyle.tsx`) and Products pages.
-
-**Changes in `src/pages/Generate.tsx`**:
-- Add a `useQuery` call to fetch `user_products` for the current user (same pattern as Freestyle page line 54-58)
-- In the product selection step, show real DB products as selectable cards (with thumbnail, title, product type)
-- When a DB product is selected, map it to the existing `Product` type so the rest of the flow works unchanged
-- Keep "From Scratch" upload as an alternative option
-- Show an empty state with a link to `/app/products` if no products exist
+Three changes: bigger images, remove Generation Summary, and auto-save generated images to the database for later access.
 
 ---
 
-### 2. Redesign Source Step for Try-On Context
+### 1. Make Generated Images Larger
 
-**Problem**: The current source step is generic ("How do you want to start?") and doesn't guide users about what makes a good try-on image.
+**Problem**: The results grid uses `grid-cols-2 md:grid-cols-4` making each image tiny (especially with only 1-2 images).
 
-**Fix**: When `activeWorkflow?.uses_tryon`, replace the generic source step with a try-on-specific layout:
-- Two clear options: "Select from My Products" and "Upload New Image"
-- Each option has a clothing-specific icon and description
-- The description for "Upload" specifically mentions: garment photos, mannequin shots, or flat lays of clothing
+**Fix**: Use responsive column logic based on image count:
+- 1 image: single column, max-width ~400px, centered
+- 2 images: `grid-cols-2` with larger cards
+- 3-4 images: `grid-cols-2 md:grid-cols-3`
+- 5+: keep current `grid-cols-2 md:grid-cols-4`
 
-**Changes in `src/pages/Generate.tsx`**:
-- Conditionally render a try-on-specific source step when `activeWorkflow?.uses_tryon`
+Also change the aspect ratio from `aspect-square` to `aspect-[3/4]` since try-on images are portrait-oriented.
+
+**Changes in `src/pages/Generate.tsx`** (lines 1461-1487):
+- Dynamic grid classes based on `generatedImages.length`
+- Portrait aspect ratio for try-on results
 
 ---
 
-### 3. Add Educational Image Guide for "From Scratch" Upload
+### 2. Remove Generation Summary Card
 
-**Problem**: When users choose "From Scratch" for try-on, there's no guidance about what kinds of images work well and what to avoid. The Botika reference shows a two-panel guide with example images.
+**Problem**: The "Generation Summary" card (lines 1501-1513) shows a raw prompt string that adds no value for the user.
 
-**Fix**: Create a new component `TryOnUploadGuide` that appears above or alongside the upload area when in try-on mode. It shows two animated/toggling sections:
+**Fix**: Delete the entire Generation Summary card block.
 
-**"What Works Best" section** (green checkmarks):
-- Clear front-facing garment on model or mannequin
-- Single garment, well-lit, wrinkle-free
-- Headless/cropped model shots showing the full garment
-- Simple, clean background
+**Changes in `src/pages/Generate.tsx`** (lines 1501-1513):
+- Remove the card entirely
 
-**"What to Avoid" section** (red X marks):
-- Covered/cropped garments, selfie-style photos
-- Flat lay images (garment laid flat, not on body/mannequin)
-- Group photos with multiple people
-- Accessories covering the garment, bad lighting
+---
+
+### 3. Auto-Save Generated Images to Database
+
+**Problem**: Generated images exist only in local state. If the user navigates away, they're gone. Users want to access them later for download.
+
+**Fix**: When generation completes and images are available, automatically save each image to the `generation_jobs` table (which already exists and stores `results` as JSON, plus `user_id`, `product_id`, `workflow_id`, etc.). The generation hooks already create a job record -- we just need to ensure the results are persisted properly.
 
 **Implementation**:
-- New component: `src/components/app/TryOnUploadGuide.tsx`
-- Uses a simple toggle or auto-cycling animation between "What Works Best" and "What to Avoid"
-- Each panel shows 3 illustrative thumbnails with green check or red X badges (matching the Botika reference UI)
-- Uses existing product assets from `src/assets/products/` for the example thumbnails (e.g., `tank-white-1.jpg` as a good example, `faux-fur-jacket-1.jpg` styled differently)
-- The guide text is concise, not overwhelming
-
----
-
-### 4. Enhance Upload Step for Try-On Context
-
-**Problem**: The upload step title says "Upload Your Image" generically. For try-on, it should be clothing-specific.
-
-**Fix**: When in try-on workflow:
-- Title: "Upload Your Garment Photo"
-- Subtitle: "Upload a clear photo of the clothing item you want to try on"
-- Show the `TryOnUploadGuide` component between the title and the upload area
-- The upload area's placeholder text changes to "Drag & drop your garment photo"
-- Product type dropdown auto-filters to clothing-only types
-
-**Changes in `src/pages/Generate.tsx`** (upload step section):
-- Conditionally use try-on-specific copy
-- Render `TryOnUploadGuide` above `UploadSourceCard`
-
----
-
-### 5. Skip "Mode" Step for Try-On Workflows
-
-**Problem**: After product selection, try-on workflows still route to a "Mode" step asking users to choose between "product-only" and "virtual-try-on" -- redundant since the workflow is always try-on.
-
-**Fix**: When `activeWorkflow?.uses_tryon`, skip the mode step entirely in product selection handlers:
-- In the product selection `onClick` (line 617-639): route to `'brand-profile'` or `'model'` instead of `'mode'`
-- In the upload step completion (line 584-598): same fix
-- The mode is already set to `'virtual-try-on'` via `useEffect`
+- After generation completes (when `generatedImages` are set), insert/update a `generation_jobs` row with the results array containing image URLs
+- Add a "Saved to Library" toast confirmation so users know images are persisted
+- The existing `/app/library` route already reads from `generation_jobs`, so images will automatically appear there
 
 **Changes in `src/pages/Generate.tsx`**:
-- Product selection handler: check `activeWorkflow?.uses_tryon` before `isClothingProduct` check
-- Upload completion handler: check `activeWorkflow?.uses_tryon` before clothing check
+- Add a `useEffect` or callback after generation completes to save the job to `generation_jobs` with `results` containing the image URLs, `status: 'completed'`, `workflow_id`, `product_id`, etc.
+- Show a subtle "Saved to your library" indicator in the results step
+- Update the bottom action bar: replace "Publish" / "Assign to Product" with simpler "Download Selected" and "View in Library" buttons
 
 ---
 
-### Summary of File Changes
+### Summary of Changes
 
-| File | Action | Description |
+| File | Lines | Change |
 |---|---|---|
-| `src/components/app/TryOnUploadGuide.tsx` | **New** | Educational guide component with "What Works Best" / "What to Avoid" panels, example thumbnails with check/X badges, auto-cycling animation |
-| `src/pages/Generate.tsx` | **Edit** | Add `user_products` query; show DB products in product step for try-on; try-on-specific source step copy; render TryOnUploadGuide in upload step; skip mode step for try-on workflows; try-on-specific upload copy |
+| `src/pages/Generate.tsx` | 1461-1487 | Dynamic grid sizing based on image count; portrait aspect ratio |
+| `src/pages/Generate.tsx` | 1501-1513 | Remove Generation Summary card |
+| `src/pages/Generate.tsx` | ~440-460 (generation complete handler) | Auto-save results to `generation_jobs` table |
+| `src/pages/Generate.tsx` | 1531-1542 | Simplify action buttons to Download + View in Library |
 
-### Notes
-- The `TryOnUploadGuide` component will use existing product assets from `src/assets/products/` as illustrative examples (no new images needed)
-- DB products are mapped to the existing `Product` type interface so all downstream logic (generation, preview, etc.) works without changes
-- The guide auto-cycles between the two panels every 4 seconds with a smooth crossfade, or users can click to toggle manually
-
+No new files or database migrations needed -- `generation_jobs` table already has the right schema.
