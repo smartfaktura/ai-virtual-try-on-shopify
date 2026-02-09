@@ -23,7 +23,7 @@ const categoryInfo: Record<PoseCategory, { title: string; recommendation: string
   botanical: { title: 'Botanical', recommendation: 'Best for wellness & natural products' },
 };
 
-export function PoseCategorySection({ category, poses, selectedPoseId, onSelectPose }: PoseCategorySectionProps) {
+export function PoseCategorySection({ category, poses, selectedPoseId, onSelectPose, selectedGender }: PoseCategorySectionProps) {
   const info = categoryInfo[category];
   if (poses.length === 0) return null;
 
