@@ -1,5 +1,5 @@
 import { Plus, ArrowRight } from 'lucide-react';
-import type { Product, ModelProfile, TryOnPose, ScratchUpload } from '@/types';
+import type { Product, ModelProfile, TryOnPose, ScratchUpload, ModelGender } from '@/types';
 import { Card } from '@/components/ui/card';
 
 interface TryOnPreviewProps {
@@ -8,9 +8,11 @@ interface TryOnPreviewProps {
   model: ModelProfile | null;
   pose: TryOnPose | null;
   creditCost?: number;
+  selectedGender?: ModelGender;
 }
 
-export function TryOnPreview({ product, scratchUpload, model, pose, creditCost = 0 }: TryOnPreviewProps) {
+export function TryOnPreview({ product, scratchUpload, model, pose, creditCost = 0, selectedGender }: TryOnPreviewProps) {
+  const poseImage = selectedGender === 'male' && pose?.previewUrlMale ? pose.previewUrlMale : pose?.previewUrl;
   const productImageUrl = product?.images[0]?.url || scratchUpload?.previewUrl;
   const productTitle = product?.title || scratchUpload?.productInfo.title || '';
   const hasProduct = !!(product || scratchUpload);
@@ -29,7 +31,7 @@ export function TryOnPreview({ product, scratchUpload, model, pose, creditCost =
           <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center"><Plus className="w-3 h-3 text-muted-foreground" /></div>
           <Thumb image={model?.previewUrl} label="Model" active={!!model} round />
           <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center"><Plus className="w-3 h-3 text-muted-foreground" /></div>
-          <Thumb image={pose?.previewUrl} label="Pose" active={!!pose} />
+          <Thumb image={poseImage} label="Scene" active={!!pose} />
           {hasAllSelections && (
             <>
               <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center"><ArrowRight className="w-3 h-3 text-primary" /></div>
@@ -43,7 +45,7 @@ export function TryOnPreview({ product, scratchUpload, model, pose, creditCost =
         <div className="flex justify-center gap-3 sm:gap-4 pt-2 border-t border-border">
           <StatusPill label="Product" completed={hasProduct} />
           <StatusPill label="Model" completed={!!model} />
-          <StatusPill label="Pose" completed={!!pose} />
+          <StatusPill label="Scene" completed={!!pose} />
         </div>
       </div>
     </Card>
