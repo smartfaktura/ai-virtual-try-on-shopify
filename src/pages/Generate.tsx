@@ -692,7 +692,7 @@ export default function Generate() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-lg font-semibold">Upload New Photo</p>
-                      <p className="text-sm text-muted-foreground">Upload a garment photo — model shots, mannequin, or hanger photos work best</p>
+                      <p className="text-sm text-muted-foreground">Upload a clothing photo — model shots, mannequin, or hanger photos work best</p>
                     </div>
                     {sourceType === 'scratch' && (
                       <div className="flex items-center gap-2">
