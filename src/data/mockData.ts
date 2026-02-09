@@ -1593,6 +1593,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     category: 'editorial',
     description: 'Elegant minimal pose with geometric window shadows',
     previewUrl: poseEditorialMinimal,
+    previewUrlMale: poseEditorialMinimalMale,
   },
   {
     poseId: 'pose_006',
