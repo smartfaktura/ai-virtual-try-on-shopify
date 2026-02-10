@@ -97,13 +97,18 @@ export default function Jobs() {
     setSelectedIds(new Set());
   };
 
-  const handleDeleteItem = async (item: LibraryItem) => {
-    if (!window.confirm('Delete this image?')) return;
+  const handleDeleteItem = useCallback((item: LibraryItem) => {
+    setDeleteTarget(item);
+  }, []);
+
+  const confirmDelete = async () => {
+    const item = deleteTarget;
+    if (!item) return;
+    setDeleteTarget(null);
     try {
       if (item.source === 'freestyle') {
         await supabase.from('freestyle_generations').delete().eq('id', item.id);
       } else {
-        // item.id is "jobId-index" format
         const dashIndex = item.id.lastIndexOf('-');
         const jobId = item.id.substring(0, dashIndex);
         const imageIndex = parseInt(item.id.substring(dashIndex + 1), 10);
