@@ -1650,7 +1650,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_015',
     name: 'Beach Sunset',
     category: 'lifestyle',
-    description: 'Coastal lifestyle scene with golden sunset backdrop',
+    description: 'Model walking barefoot along the shore at golden hour, wind gently blowing hair, one hand brushing hair back, relaxed coastal lifestyle mood',
     previewUrl: poseLifestyleBeach,
     previewUrlMale: poseLifestyleBeachMale,
   },
