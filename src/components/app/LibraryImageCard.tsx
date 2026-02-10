@@ -2,6 +2,17 @@ import { useState } from 'react';
 import { Sparkles, Camera, Download, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+function getAspectClass(ratio?: string) {
+  switch (ratio) {
+    case '1:1': return 'aspect-square';
+    case '3:4': return 'aspect-[3/4]';
+    case '4:5': return 'aspect-[4/5]';
+    case '9:16': return 'aspect-[9/16]';
+    case '16:9': return 'aspect-video';
+    default: return 'aspect-[3/4]';
+  }
+}
+
 export interface LibraryItem {
   id: string;
   imageUrl: string;
