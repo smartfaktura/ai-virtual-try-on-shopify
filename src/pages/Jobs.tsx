@@ -107,7 +107,8 @@ export default function Jobs() {
     setDeleteTarget(null);
     try {
       if (item.source === 'freestyle') {
-        await supabase.from('freestyle_generations').delete().eq('id', item.id);
+        const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
+        if (error) throw error;
       } else {
         const dashIndex = item.id.lastIndexOf('-');
         const jobId = item.id.substring(0, dashIndex);
@@ -122,10 +123,12 @@ export default function Jobs() {
         if (job) {
           const results = job.results as any[];
           if (results.length <= 1) {
-            await supabase.from('generation_jobs').delete().eq('id', jobId);
+            const { error } = await supabase.from('generation_jobs').delete().eq('id', jobId);
+            if (error) throw error;
           } else {
             const updated = results.filter((_, i) => i !== imageIndex);
-            await supabase.from('generation_jobs').update({ results: updated }).eq('id', jobId);
+            const { error } = await supabase.from('generation_jobs').update({ results: updated }).eq('id', jobId);
+            if (error) throw error;
           }
         }
       }
