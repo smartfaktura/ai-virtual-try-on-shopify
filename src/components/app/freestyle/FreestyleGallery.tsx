@@ -181,7 +181,7 @@ function ImageCard({
       <div className="flex items-center gap-2">
         {onDelete && (
           <button
-            onClick={() => onDelete(img.id)}
+            onClick={(e) => { e.stopPropagation(); onDelete(img.id); }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500/40 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
@@ -189,7 +189,8 @@ function ImageCard({
         )}
         {onCopyPrompt && (
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               onCopyPrompt(img.prompt);
               toast.success('Prompt copied to editor');
             }}
@@ -201,7 +202,7 @@ function ImageCard({
         )}
         {onAddAsScene && (
           <button
-            onClick={() => onAddAsScene(img.url)}
+            onClick={(e) => { e.stopPropagation(); onAddAsScene(img.url); }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
             title="Add as Scene"
           >
@@ -210,7 +211,7 @@ function ImageCard({
         )}
         {onAddAsModel && (
           <button
-            onClick={() => onAddAsModel(img.url)}
+            onClick={(e) => { e.stopPropagation(); onAddAsModel(img.url); }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
             title="Add as Model"
           >
@@ -220,16 +221,10 @@ function ImageCard({
       </div>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => onDownload(img.url, idx)}
+          onClick={(e) => { e.stopPropagation(); onDownload(img.url, idx); }}
           className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
         >
           <Download className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => onExpand(idx)}
-          className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
-        >
-          <Expand className="w-4 h-4" />
         </button>
       </div>
     </div>
