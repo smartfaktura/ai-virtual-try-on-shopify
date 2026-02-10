@@ -101,7 +101,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect 
 
         <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
           {visibleCategories.map(cat => {
-            const poses = mockTryOnPoses.filter(p => p.category === cat);
+            const poses = allPoses.filter(p => p.category === cat);
             if (poses.length === 0) return null;
             return (
               <div key={cat}>
