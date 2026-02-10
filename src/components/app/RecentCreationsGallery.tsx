@@ -83,7 +83,7 @@ export function RecentCreationsGallery() {
 
       // Sort by date descending and take first 10
       items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      return items.slice(0, 10);
+      return items.slice(0, 5);
     },
     enabled: !!user,
   });
