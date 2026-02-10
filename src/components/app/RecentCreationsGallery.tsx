@@ -13,7 +13,7 @@ import imgShowcase4 from '@/assets/showcase/home-candle-evening.jpg';
 import imgShowcase5 from '@/assets/showcase/fashion-activewear-studio.jpg';
 import imgShowcase6 from '@/assets/showcase/skincare-cream-botanical.jpg';
 
-const PLACEHOLDER_IMAGES = [imgShowcase1, imgShowcase2, imgShowcase3, imgShowcase4, imgShowcase5, imgShowcase6];
+const PLACEHOLDER_IMAGES = [imgShowcase1, imgShowcase2, imgShowcase3, imgShowcase4, imgShowcase5];
 
 interface CreationItem {
   id: string;
