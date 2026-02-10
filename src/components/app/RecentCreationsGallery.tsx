@@ -107,7 +107,7 @@ export function RecentCreationsGallery() {
     : PLACEHOLDER_IMAGES.map((img, i) => ({
         id: `placeholder-${i}`,
         imageUrl: img,
-        label: ['Product Shot', 'Lifestyle', 'Ad Creative', 'Editorial', 'On-Model', 'Campaign'][i],
+        label: ['Product Shot', 'Lifestyle', 'Ad Creative', 'Editorial', 'On-Model'][i],
         date: 'Sample',
       }));
 
