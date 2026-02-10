@@ -12,6 +12,12 @@ const SORTS: { id: LibrarySortBy; label: string }[] = [
   { id: 'oldest', label: 'Oldest' },
 ];
 
+const SOURCE_FILTERS: { id: LibrarySourceFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'generation', label: 'Generations' },
+  { id: 'freestyle', label: 'Freestyle' },
+];
+
 function useColumnCount() {
   const [count, setCount] = useState(4);
   useEffect(() => {
