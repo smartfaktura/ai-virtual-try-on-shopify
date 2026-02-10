@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import type { TryOnPose } from '@/types';
@@ -13,6 +13,9 @@ interface DiscoverCardProps {
   onClick: () => void;
   isSaved?: boolean;
   onToggleSave?: (e: React.MouseEvent) => void;
+  isFeatured?: boolean;
+  isAdmin?: boolean;
+  onToggleFeatured?: (e: React.MouseEvent) => void;
 }
 
 export function DiscoverCard({ item, onClick, isSaved, onToggleSave }: DiscoverCardProps) {
