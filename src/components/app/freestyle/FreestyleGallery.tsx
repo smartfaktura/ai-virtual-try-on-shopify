@@ -61,9 +61,10 @@ interface FreestyleGalleryProps {
   onEditBlockedPrompt?: (prompt: string) => void;
 }
 
-function GeneratingCard({ progress = 0, className }: { progress?: number; className?: string }) {
+function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: number; aspectRatio?: string; className?: string }) {
   const [crew] = useState(() => STUDIO_CREW[Math.floor(Math.random() * STUDIO_CREW.length)]);
   const [msgIdx, setMsgIdx] = useState(0);
+  const cssRatio = RATIO_MAP[aspectRatio || '1:1'] || '1/1';
 
   useEffect(() => {
     const id = setInterval(() => setMsgIdx(i => (i + 1) % STATUS_MESSAGES.length), 3000);
@@ -74,10 +75,11 @@ function GeneratingCard({ progress = 0, className }: { progress?: number; classN
     <div
       className={cn(
         'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-5 px-8',
-        'border border-border/30 min-h-[300px] w-full h-full',
+        'border border-border/30 w-full',
         'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
         className,
       )}
+      style={{ aspectRatio: cssRatio }}
     >
       {/* Avatar with glow ring */}
       <div className="relative">
