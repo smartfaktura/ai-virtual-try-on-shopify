@@ -98,166 +98,148 @@ export function DiscoverDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="sr-only">
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            {isPreset ? 'Inspiration preset details' : 'Scene details'}
-          </DialogDescription>
+          <DialogDescription>Details</DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Image */}
-          <div className="aspect-[3/4] rounded-xl overflow-hidden bg-muted">
-            <img
-              src={imageUrl}
-              alt={title}
-              className="w-full h-full object-cover"
-            />
+        {/* Image */}
+        <div className="w-full bg-muted rounded-t-lg overflow-hidden">
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-full max-h-[50vh] object-contain"
+          />
+        </div>
+
+        <div className="flex flex-col gap-5 px-6 pb-6">
+          {/* Title + badges */}
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">{title}</h2>
+            <div className="flex flex-wrap gap-1.5">
+              <Badge variant="secondary" className="text-xs">{category}</Badge>
+              {isPreset && (
+                <>
+                  <Badge variant="outline" className="text-xs">{item.data.aspect_ratio}</Badge>
+                  {item.data.quality === 'high' && <Badge variant="secondary" className="text-xs">HD</Badge>}
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Generate Prompt */}
-          <div className="flex flex-col gap-2">
+          {/* Generate Prompt section */}
+          <div className="space-y-3">
             <Button
               variant="outline"
-              size="sm"
               onClick={handleGeneratePrompt}
               disabled={isGenerating}
-              className="w-full"
+              className="w-full h-11 rounded-xl"
             >
               {isGenerating ? (
-                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Analyzing image…</>
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing image…</>
               ) : (
-                <><Sparkles className="w-3.5 h-3.5 mr-1.5" /> Generate Prompt</>
+                <><Sparkles className="w-4 h-4 mr-2" /> Generate Prompt</>
               )}
             </Button>
 
             {generatedPrompt && (
-              <div className="space-y-2">
-                <div className="bg-muted/50 rounded-lg p-3 text-xs leading-relaxed border border-border/50 max-h-32 overflow-y-auto">
+              <div className="space-y-2.5">
+                <div className="bg-muted/50 rounded-xl p-4 text-sm leading-relaxed border border-border/50 max-h-36 overflow-y-auto">
                   {generatedPrompt}
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCopyGenerated} className="flex-1">
-                    <Copy className="w-3 h-3 mr-1" /> Copy
+                  <Button variant="outline" size="sm" onClick={handleCopyGenerated} className="flex-1 rounded-lg">
+                    <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy
                   </Button>
-                  <Button size="sm" onClick={handleUseGenerated} className="flex-1">
-                    Use in Freestyle <ArrowRight className="w-3 h-3 ml-1" />
+                  <Button size="sm" onClick={handleUseGenerated} className="flex-1 rounded-lg">
+                    Use in Freestyle <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                   </Button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Details */}
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap gap-1.5">
-              <Badge variant="secondary">{category}</Badge>
-              {isPreset && (
-                <>
-                  <Badge variant="outline">{item.data.aspect_ratio}</Badge>
-                  {item.data.quality === 'high' && (
-                    <Badge variant="secondary">HD</Badge>
-                  )}
-                </>
-              )}
-            </div>
-
-            {isPreset && item.data.model_name && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Model</p>
-                <p className="text-sm">{item.data.model_name}</p>
-              </div>
-            )}
-
-            <div>
-              <p className="text-xs text-muted-foreground mb-1.5">
-                {isPreset ? 'Prompt' : 'Description'}
-              </p>
-              <div className="bg-muted/50 rounded-lg p-3 text-sm leading-relaxed border border-border/50">
-                {description}
-              </div>
-            </div>
-
-            {isPreset && item.data.tags && item.data.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {item.data.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div className="flex flex-col gap-2 mt-auto pt-2">
-              <div className="flex gap-2">
-                {isPreset && (
-                  <Button variant="outline" size="sm" onClick={handleCopy} className="flex-1">
-                    <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy
-                  </Button>
-                )}
-                <Button size="sm" onClick={() => onUseItem(item)} className="flex-1">
-                  {isPreset ? 'Use Prompt' : 'Use Scene'}{' '}
-                  <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                </Button>
-              </div>
-              <div className="flex gap-2">
-                {onToggleSave && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onToggleSave}
-                    className={cn('flex-1', isSaved && 'text-destructive border-destructive/30')}
-                  >
-                    <Heart className={cn('w-3.5 h-3.5 mr-1.5', isSaved && 'fill-current')} />
-                    {isSaved ? 'Saved' : 'Save'}
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { onSearchSimilar(item); onClose(); }}
-                  className="flex-1"
-                >
-                  <Search className="w-3.5 h-3.5 mr-1.5" /> Similar
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Related */}
-        {relatedItems.length > 0 && (
-          <div className="pt-4 border-t border-border mt-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              More like this
+          {/* Description / Prompt */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              {isPreset ? 'Prompt' : 'Description'}
             </p>
-            <div className="grid grid-cols-4 gap-2">
-              {relatedItems.map((ri) => {
-                const riImage = ri.type === 'preset' ? ri.data.image_url : ri.data.previewUrl;
-                const riTitle = ri.type === 'preset' ? ri.data.title : ri.data.name;
-                const riKey = ri.type === 'preset' ? `p-${ri.data.id}` : `s-${ri.data.poseId}`;
-                return (
-                  <button
-                    key={riKey}
-                    onClick={() => onSelectRelated(ri)}
-                    className="aspect-[3/4] rounded-lg overflow-hidden bg-muted hover:ring-2 ring-primary transition-all"
-                  >
-                    <img
-                      src={riImage}
-                      alt={riTitle}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                );
-              })}
+            <div className="bg-muted/30 rounded-xl p-4 text-sm leading-relaxed border border-border/30">
+              {description}
             </div>
           </div>
-        )}
+
+          {/* Tags */}
+          {isPreset && item.data.tags && item.data.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {item.data.tags.map((tag) => (
+                <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-muted/60 text-muted-foreground">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Primary CTA */}
+          <Button onClick={() => onUseItem(item)} className="w-full h-12 rounded-xl text-sm font-medium">
+            {isPreset ? 'Use Prompt' : 'Use Scene'}
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+
+          {/* Secondary actions */}
+          <div className="flex gap-2">
+            {isPreset && (
+              <Button variant="outline" size="sm" onClick={handleCopy} className="flex-1 rounded-lg">
+                <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy Prompt
+              </Button>
+            )}
+            {onToggleSave && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onToggleSave}
+                className={cn('flex-1 rounded-lg', isSaved && 'text-destructive border-destructive/30')}
+              >
+                <Heart className={cn('w-3.5 h-3.5 mr-1.5', isSaved && 'fill-current')} />
+                {isSaved ? 'Saved' : 'Save'}
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { onSearchSimilar(item); onClose(); }}
+              className="flex-1 rounded-lg"
+            >
+              <Search className="w-3.5 h-3.5 mr-1.5" /> Similar
+            </Button>
+          </div>
+
+          {/* Related */}
+          {relatedItems.length > 0 && (
+            <div className="pt-4 border-t border-border/50">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
+                More like this
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {relatedItems.map((ri) => {
+                  const riImage = ri.type === 'preset' ? ri.data.image_url : ri.data.previewUrl;
+                  const riTitle = ri.type === 'preset' ? ri.data.title : ri.data.name;
+                  const riKey = ri.type === 'preset' ? `p-${ri.data.id}` : `s-${ri.data.poseId}`;
+                  return (
+                    <button
+                      key={riKey}
+                      onClick={() => onSelectRelated(ri)}
+                      className="aspect-[3/4] rounded-lg overflow-hidden bg-muted hover:ring-2 ring-primary transition-all"
+                    >
+                      <img src={riImage} alt={riTitle} className="w-full h-full object-cover" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
