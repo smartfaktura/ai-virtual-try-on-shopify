@@ -118,15 +118,16 @@ export function DiscoverDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[200] animate-in fade-in duration-200"
+      className="fixed top-0 left-0 right-0 bottom-0 z-[200] animate-in fade-in duration-200"
+      style={{ margin: 0, padding: 0 }}
       onClick={onClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/90" />
+      <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/90" />
 
       {/* Split layout */}
       <div
-        className="relative z-10 flex flex-col md:flex-row w-full h-full inset-0 absolute"
+        className="fixed top-0 left-0 right-0 bottom-0 z-10 flex flex-col md:flex-row"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left — Image showcase */}
