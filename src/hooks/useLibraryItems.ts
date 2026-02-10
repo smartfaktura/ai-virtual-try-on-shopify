@@ -15,7 +15,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
       const q = searchQuery.toLowerCase();
 
       // Fetch generation jobs
-      if (sourceFilter !== 'freestyle') {
+      {
       const { data: jobs, error: jobsError } = await supabase
         .from('generation_jobs')
         .select('id, results, created_at, status, ratio, quality, prompt_final, workflows(name), user_products(title)')
