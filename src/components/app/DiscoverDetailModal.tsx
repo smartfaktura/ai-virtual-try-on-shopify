@@ -130,7 +130,7 @@ export function DiscoverDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left — Image showcase */}
-        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center bg-black/50 p-4 md:p-10">
+        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-4 md:p-10">
           <img
             src={imageUrl}
             alt={title}
