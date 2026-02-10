@@ -10,6 +10,8 @@ import { useSavedItems } from '@/hooks/useSavedItems';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFeaturedItems, useToggleFeatured } from '@/hooks/useFeaturedItems';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useAdminSubmissions } from '@/hooks/useDiscoverSubmissions';
+import { AdminSubmissionsPanel } from '@/components/app/AdminSubmissionsPanel';
 import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -137,6 +139,7 @@ export default function Discover() {
   const { isFeatured, featuredMap } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
   const { asPoses: customScenePoses } = useCustomScenes();
+  const { pendingCount: adminPendingCount } = useAdminSubmissions();
   const columnCount = useColumnCount();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -297,7 +300,14 @@ export default function Discover() {
     <div className="space-y-8 py-8 px-1">
       {/* Header */}
       <div className="space-y-1.5">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Discover</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Discover</h1>
+          {isAdmin && adminPendingCount > 0 && (
+            <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+              {adminPendingCount} pending
+            </span>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">Browse curated prompts and styles for inspiration</p>
       </div>
 
@@ -396,6 +406,13 @@ export default function Discover() {
             </div>
           );
         })()
+      )}
+
+      {/* Admin submissions panel */}
+      {isAdmin && (
+        <div className="pt-8 border-t border-border/30">
+          <AdminSubmissionsPanel />
+        </div>
       )}
 
       {/* Detail modal */}

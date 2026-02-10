@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2 } from 'lucide-react';
+import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
+import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 
 import avatarSophia from '@/assets/team/avatar-sophia.jpg';
 import avatarLuna from '@/assets/team/avatar-luna.jpg';
@@ -171,6 +172,7 @@ function ImageCard({
   onCopyPrompt,
   onAddAsScene,
   onAddAsModel,
+  onShareToDiscover,
   className,
   natural,
 }: {
@@ -182,6 +184,7 @@ function ImageCard({
   onCopyPrompt?: (prompt: string) => void;
   onAddAsScene?: (imageUrl: string) => void;
   onAddAsModel?: (imageUrl: string) => void;
+  onShareToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
   className?: string;
   natural?: boolean;
 }) {
@@ -231,6 +234,15 @@ function ImageCard({
         )}
       </div>
       <div className="flex items-center gap-2">
+        {onShareToDiscover && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onShareToDiscover(img); }}
+            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary/40 transition-colors"
+            title="Share to Discover"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={(e) => { e.stopPropagation(); onDownload(img.url, idx); }}
           className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
@@ -302,6 +314,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const { isAdmin } = useIsAdmin();
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
+  const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
 
   const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0;
 
@@ -323,6 +336,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   const adminSceneHandler = isAdmin ? (url: string) => setSceneModalUrl(url) : undefined;
   const adminModelHandler = isAdmin ? (url: string) => setModelModalUrl(url) : undefined;
+  const shareHandler = (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => setShareImg(img);
 
   const generatingCards = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
@@ -352,6 +366,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       onCopyPrompt={onCopyPrompt}
       onAddAsScene={adminSceneHandler}
       onAddAsModel={adminModelHandler}
+      onShareToDiscover={shareHandler}
       natural={natural}
     />
   ));
@@ -363,6 +378,16 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       )}
       {modelModalUrl && (
         <AddModelModal open={!!modelModalUrl} onClose={() => setModelModalUrl(null)} imageUrl={modelModalUrl} />
+      )}
+      {shareImg && (
+        <SubmitToDiscoverModal
+          open={!!shareImg}
+          onClose={() => setShareImg(null)}
+          imageUrl={shareImg.url}
+          prompt={shareImg.prompt}
+          aspectRatio={shareImg.aspectRatio}
+          sourceGenerationId={shareImg.id}
+        />
       )}
     </>
   );
