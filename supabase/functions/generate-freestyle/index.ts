@@ -167,7 +167,7 @@ function polishUserPrompt(
   // Scene / environment layer
   if (context.hasScene) {
     layers.push(
-      "ENVIRONMENT: Match the lighting direction and color temperature of the SCENE REFERENCE IMAGE. Integrate the subject naturally into the environment with consistent shadows and reflections."
+      "ENVIRONMENT: The subject MUST be placed in the EXACT environment shown in the SCENE REFERENCE IMAGE. Reproduce the same location, background elements, props, foliage, architecture, and atmosphere. Match the lighting direction, color temperature, and time of day. The final image should look like it was photographed in that exact location. Do NOT substitute a different environment or background."
     );
   }
 
