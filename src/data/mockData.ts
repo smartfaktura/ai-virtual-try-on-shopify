@@ -1642,7 +1642,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_014',
     name: 'Coffee Shop Casual',
     category: 'lifestyle',
-    description: 'Relaxed pose at cafe table with natural morning light',
+    description: 'Model sitting at a café table holding a coffee cup, relaxed posture with a soft smile, natural morning light through large café windows',
     previewUrl: poseLifestyleCoffee,
     previewUrlMale: poseLifestyleCoffeeMale,
   },
