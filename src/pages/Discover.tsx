@@ -110,6 +110,10 @@ export default function Discover() {
   const navigate = useNavigate();
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const { isSaved, toggleSave, savedItems } = useSavedItems();
+  const { isAdmin } = useIsAdmin();
+  const { isFeatured, featuredMap } = useFeaturedItems();
+  const toggleFeatured = useToggleFeatured();
+  const { asPoses: customScenePoses } = useCustomScenes();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
