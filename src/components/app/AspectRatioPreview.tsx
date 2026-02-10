@@ -12,7 +12,7 @@ const ratioConfig: Record<AspectRatio, { width: number; height: number; label: s
   '16:9': { width: 16, height: 9, label: 'Wide', useCase: 'Banners & Facebook' },
 };
 
-const sizeConfig = { small: 40, medium: 60, large: 80 };
+const sizeConfig = { small: 44, medium: 60, large: 80 };
 
 export function AspectRatioPreview({ ratio, size = 'medium' }: AspectRatioPreviewProps) {
   const config = ratioConfig[ratio];
@@ -20,7 +20,7 @@ export function AspectRatioPreview({ ratio, size = 'medium' }: AspectRatioPrevie
   const aspectRatio = config.width / config.height;
   let width: number, height: number;
   if (aspectRatio > 1) { width = maxSize; height = maxSize / aspectRatio; }
-  else { height = maxSize; width = maxSize * aspectRatio; }
+  else { height = maxSize; width = Math.max(maxSize * aspectRatio, 28); }
 
   return (
     <div className="flex flex-col items-center gap-1">
