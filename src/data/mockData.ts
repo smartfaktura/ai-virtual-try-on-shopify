@@ -1567,7 +1567,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_004',
     name: 'Relaxed Seated',
     category: 'lifestyle',
-    description: 'Casual seated pose in modern interior with natural light',
+    description: 'Model sitting casually in a modern chair, one leg crossed over the other, leaning back relaxed, natural window light in contemporary interior',
     previewUrl: poseLifestyleSeated,
     previewUrlMale: poseLifestyleSeatedMale,
   },
