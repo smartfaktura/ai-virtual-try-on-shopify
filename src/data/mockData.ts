@@ -1666,7 +1666,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_017',
     name: 'Rooftop City',
     category: 'lifestyle',
-    description: 'Urban rooftop with city skyline in background at dusk',
+    description: 'Model standing at a rooftop railing gazing over the city skyline, relaxed lean on the rail, twilight sky with city lights glowing below',
     previewUrl: poseLifestyleRooftop,
     previewUrlMale: poseLifestyleRooftopMale,
   },
