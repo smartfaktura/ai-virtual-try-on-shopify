@@ -1,6 +1,6 @@
-import { Copy, ArrowRight, Camera, Heart } from 'lucide-react';
+import { useState } from 'react';
+import { Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import type { TryOnPose } from '@/types';
 
@@ -18,17 +18,27 @@ interface DiscoverCardProps {
 export function DiscoverCard({ item, onClick, isSaved, onToggleSave }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
+  const [loaded, setLoaded] = useState(false);
 
   return (
     <div
       className="group relative rounded-lg overflow-hidden cursor-pointer break-inside-avoid mb-1 bg-muted"
       onClick={onClick}
     >
+      {/* Shimmer placeholder */}
+      {!loaded && (
+        <div className="w-full aspect-[3/4] animate-pulse bg-muted" />
+      )}
+
       <img
         src={imageUrl}
         alt={isScene ? item.data.name : item.data.title}
-        className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.03]"
+        className={cn(
+          'w-full h-auto block transition-opacity duration-500 group-hover:scale-[1.03] transition-transform',
+          loaded ? 'opacity-100' : 'opacity-0 absolute inset-0'
+        )}
         loading="lazy"
+        onLoad={() => setLoaded(true)}
       />
 
       {/* Save button overlay */}
