@@ -30,6 +30,7 @@ function useColumnCount() {
 export default function Jobs() {
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
 
   const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
   const columnCount = useColumnCount();
