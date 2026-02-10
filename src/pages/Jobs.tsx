@@ -102,6 +102,7 @@ export default function Jobs() {
   const confirmDelete = async () => {
     const item = deleteTarget;
     if (!item) return;
+    console.log('[Library] Deleting item:', item.id, item.source);
     try {
       if (item.source === 'freestyle') {
         const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
@@ -115,7 +116,7 @@ export default function Jobs() {
           .from('generation_jobs')
           .select('results')
           .eq('id', jobId)
-          .single();
+          .maybeSingle();
 
         if (job) {
           const results = job.results as any[];
@@ -131,7 +132,8 @@ export default function Jobs() {
       }
       queryClient.invalidateQueries({ queryKey: ['library'] });
       toast.success('Image deleted');
-    } catch {
+    } catch (err) {
+      console.error('[Library] Delete failed:', err);
       toast.error('Failed to delete image');
     } finally {
       setDeleteTarget(null);
