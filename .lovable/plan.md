@@ -1,62 +1,50 @@
 
 
-## Add Delete Button on Library Image Cards
+## Fix Freestyle Gallery: Masonry Layout and Clickable Images
 
-### What Changes
+### Problem 1: White Spacing / Non-Masonry Layout
 
-Add a delete (X) button on the bottom-left of each library image card, visible on hover -- opposite the existing download button on the bottom-right. Clicking it deletes the image after a brief confirmation.
+The current Freestyle gallery uses two layouts:
+- **3 or fewer images**: A horizontal flex row with natural sizing
+- **4+ images**: A `grid grid-cols-3 gap-1` fixed grid
 
-### How It Works
+The fixed grid forces all cells to the same height, creating white space when images have different aspect ratios. We need to switch to a true masonry layout using flex columns (the same approach used in Library and Discover).
 
-- **Freestyle items**: Delete the row from `freestyle_generations` table (same logic already in the detail modal)
-- **Generation items**: Generation jobs can have multiple result images. Since each card maps to one image within a job's `results` array, deletion will remove that specific image URL from the array. If it's the last image, the entire job row is deleted.
+### Problem 2: Click to Preview
+
+Currently, users must click the small Expand icon to open the lightbox. The entire image should be clickable to open the preview, with action buttons (delete, copy, download) still working independently via `stopPropagation`.
 
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/app/LibraryImageCard.tsx` | Add `onDelete` callback prop; render a Trash2/X icon button in bottom-left of hover overlay; call `e.stopPropagation()` then `onDelete` |
-| `src/pages/Jobs.tsx` | Implement `handleDeleteItem` function that handles both freestyle and generation deletions; pass it as `onDelete` to each card; invalidate library queries after delete |
+| `src/components/app/freestyle/FreestyleGallery.tsx` | Replace grid layout with flex-column masonry; make entire image card clickable for lightbox; keep action buttons independent |
 
 ### Technical Details
 
-**LibraryImageCard.tsx -- add delete button in hover overlay (bottom section):**
-
-The existing bottom row has date on the left and download on the right. We'll put the delete button next to the date on the left side:
+**Masonry layout (replacing the grid for 4+ images):**
 
 ```tsx
-// Bottom row of hover overlay
-<div className="flex justify-between items-end">
-  <div className="flex items-center gap-2">
-    <span className="text-[10px] text-white/60">{item.date}</span>
-    {!selectMode && (
-      <button
-        onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-        className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-red-500/70 transition-colors"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
-    )}
+// Distribute items into 3 columns by index
+const columns = [[], [], []];
+allCards.forEach((card, i) => columns[i % 3].push(card));
+
+return (
+  <div className="flex gap-1 pt-3 px-1 pb-4">
+    {columns.map((col, i) => (
+      <div key={i} className="flex-1 flex flex-col gap-1">
+        {col}
+      </div>
+    ))}
   </div>
-  {/* Download button stays on the right */}
-</div>
+);
 ```
 
-**Jobs.tsx -- delete handler:**
+**Make image clickable:**
 
-```tsx
-const handleDeleteItem = async (item: LibraryItem) => {
-  if (item.source === 'freestyle') {
-    await supabase.from('freestyle_generations').delete().eq('id', item.id);
-  } else {
-    // item.id is "jobId-index" format
-    const [jobId, indexStr] = item.id.split('-');
-    // Fetch current results, remove the image, update or delete the job
-  }
-  queryClient.invalidateQueries({ queryKey: ['library'] });
-  toast.success('Image deleted');
-};
-```
+Wrap the image area with an `onClick={() => onExpand(idx)}` on the card container itself. Action buttons already use individual click handlers -- we add `e.stopPropagation()` to each to prevent triggering the lightbox. The dedicated Expand button can be removed since the whole card now serves that purpose, keeping the overlay cleaner.
 
-A confirmation step (e.g., `window.confirm` or a brief toast with undo) will be added to prevent accidental deletions.
+**Small images layout (3 or fewer):**
+
+Keep the current horizontal centered layout but also make images clickable for preview.
 
