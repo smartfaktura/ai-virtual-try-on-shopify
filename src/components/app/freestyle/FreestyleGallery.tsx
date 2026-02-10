@@ -241,9 +241,19 @@ function ImageCard({
     </div>
   );
 
+  const imgAspectStyle = img.aspectRatio ? { aspectRatio: RATIO_MAP[img.aspectRatio] || undefined } : undefined;
+
   if (natural) {
     return (
-      <div className={cn('group relative inline-block cursor-pointer animate-fade-in', className)} onClick={() => onExpand(idx)}>
+      <div
+        className={cn(
+          'group relative inline-block cursor-pointer animate-fade-in',
+          !loaded && 'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer rounded-xl',
+          className,
+        )}
+        style={imgAspectStyle}
+        onClick={() => onExpand(idx)}
+      >
         <img
           src={img.url}
           alt={`Generated ${idx + 1}`}
@@ -251,7 +261,8 @@ function ImageCard({
             'w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
             loaded ? 'opacity-100' : 'opacity-0',
           )}
-          loading="lazy"
+          loading="eager"
+          decoding="async"
           onLoad={() => setLoaded(true)}
         />
         <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -264,18 +275,21 @@ function ImageCard({
     <div
       className={cn(
         'group relative overflow-hidden rounded-xl shadow-md shadow-black/20 cursor-pointer animate-fade-in',
+        !loaded && 'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
         className,
       )}
+      style={imgAspectStyle}
       onClick={() => onExpand(idx)}
     >
       <img
         src={img.url}
         alt={`Generated ${idx + 1}`}
         className={cn(
-          'w-full h-auto object-cover transition-opacity duration-700 ease-out',
+          'w-full h-full object-cover transition-opacity duration-700 ease-out',
           loaded ? 'opacity-100' : 'opacity-0',
         )}
-        loading="lazy"
+        loading="eager"
+        decoding="async"
         onLoad={() => setLoaded(true)}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
