@@ -116,6 +116,39 @@ export function DiscoverDetailModal({
             />
           </div>
 
+          {/* Generate Prompt */}
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGeneratePrompt}
+              disabled={isGenerating}
+              className="w-full"
+            >
+              {isGenerating ? (
+                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Analyzing image…</>
+              ) : (
+                <><Sparkles className="w-3.5 h-3.5 mr-1.5" /> Generate Prompt</>
+              )}
+            </Button>
+
+            {generatedPrompt && (
+              <div className="space-y-2">
+                <div className="bg-muted/50 rounded-lg p-3 text-xs leading-relaxed border border-border/50 max-h-32 overflow-y-auto">
+                  {generatedPrompt}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleCopyGenerated} className="flex-1">
+                    <Copy className="w-3 h-3 mr-1" /> Copy
+                  </Button>
+                  <Button size="sm" onClick={handleUseGenerated} className="flex-1">
+                    Use in Freestyle <ArrowRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Details */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-1.5">
