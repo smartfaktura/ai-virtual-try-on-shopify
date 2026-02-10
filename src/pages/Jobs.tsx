@@ -5,6 +5,9 @@ import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImag
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import JSZip from 'jszip';
 
 const SORTS: { id: LibrarySortBy; label: string }[] = [
