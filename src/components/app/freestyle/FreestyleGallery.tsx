@@ -326,7 +326,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   const generatingCards = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
-        <GeneratingCard key={`generating-${i}`} progress={generatingProgress} />
+        <GeneratingCard key={`generating-${i}`} progress={generatingProgress} aspectRatio={generatingAspectRatio} />
       ))
     : [];
 
