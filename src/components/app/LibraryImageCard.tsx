@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Download, Trash2, Sparkles, Camera } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Download, Trash2, Sparkles, Camera, User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { AddSceneModal } from '@/components/app/AddSceneModal';
+import { AddModelModal } from '@/components/app/AddModelModal';
 
 export interface LibraryItem {
   id: string;
@@ -25,7 +27,11 @@ interface LibraryImageCardProps {
 
 export function LibraryImageCard({ item }: LibraryImageCardProps) {
   const [deleting, setDeleting] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
+  const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { isAdmin } = useIsAdmin();
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -62,33 +68,38 @@ export function LibraryImageCard({ item }: LibraryImageCardProps) {
   };
 
   return (
-    <div className="group relative break-inside-avoid mb-4">
-      <div className="relative rounded-2xl overflow-hidden border border-border bg-card shadow-sm transition-shadow duration-300 group-hover:shadow-md">
+    <>
+      <div className="group relative rounded-lg overflow-hidden cursor-pointer break-inside-avoid mb-1 bg-muted">
+        {/* Shimmer placeholder */}
+        {!loaded && (
+          <div className="w-full aspect-[3/4] animate-pulse bg-muted" />
+        )}
+
         <img
           src={item.imageUrl}
           alt={item.label}
-          className="w-full h-auto object-cover"
+          className={cn(
+            'w-full h-auto block transition-opacity duration-500 group-hover:scale-[1.03] transition-transform',
+            loaded ? 'opacity-100' : 'opacity-0 absolute inset-0'
+          )}
           loading="lazy"
+          onLoad={() => setLoaded(true)}
         />
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-3">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-between p-3 hidden [@media(hover:hover)]:flex">
           {/* Top: badge */}
           <div className="flex justify-between items-start">
-            <Badge
-              variant="secondary"
-              className={`text-[10px] gap-1 ${
-                item.source === 'freestyle'
-                  ? 'bg-white/20 text-white backdrop-blur-sm border-white/10'
-                  : 'bg-white/20 text-white backdrop-blur-sm border-white/10'
-              }`}
-            >
+            <span className={cn(
+              'text-[10px] px-2 py-0.5 rounded-md font-medium backdrop-blur-sm flex items-center gap-1',
+              'bg-black/40 text-white'
+            )}>
               {item.source === 'freestyle' ? (
                 <><Sparkles className="w-3 h-3" /> Freestyle</>
               ) : (
                 <><Camera className="w-3 h-3" /> {item.label}</>
               )}
-            </Badge>
+            </span>
           </div>
 
           {/* Bottom: info + actions */}
@@ -101,30 +112,51 @@ export function LibraryImageCard({ item }: LibraryImageCardProps) {
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-white/60">{item.date}</span>
               <div className="flex gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 text-white hover:bg-white/20"
+                {isAdmin && (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSceneModalUrl(item.imageUrl); }}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                      title="Add as Scene"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setModelModalUrl(item.imageUrl); }}
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                      title="Add as Model"
+                    >
+                      <User className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
+                <button
                   onClick={handleDownload}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
                 >
                   <Download className="w-3.5 h-3.5" />
-                </Button>
+                </button>
                 {item.source === 'freestyle' && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 text-white hover:bg-destructive/80"
+                  <button
                     onClick={handleDelete}
                     disabled={deleting}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-destructive/80 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
+                  </button>
                 )}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {sceneModalUrl && (
+        <AddSceneModal open={!!sceneModalUrl} onClose={() => setSceneModalUrl(null)} imageUrl={sceneModalUrl} />
+      )}
+      {modelModalUrl && (
+        <AddModelModal open={!!modelModalUrl} onClose={() => setModelModalUrl(null)} imageUrl={modelModalUrl} />
+      )}
+    </>
   );
 }
