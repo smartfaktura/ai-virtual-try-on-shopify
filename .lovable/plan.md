@@ -1,50 +1,88 @@
 
 
-## Fix Freestyle Gallery: Masonry Layout and Clickable Images
+## Fix Freestyle Generation Display Issues
 
-### Problem 1: White Spacing / Non-Masonry Layout
+### Problems Identified
 
-The current Freestyle gallery uses two layouts:
-- **3 or fewer images**: A horizontal flex row with natural sizing
-- **4+ images**: A `grid grid-cols-3 gap-1` fixed grid
+1. **Generating cards disappear on re-render/navigation**: The `isLoading` and `progress` state live in `useGenerateFreestyle` hook (local React state). If the component re-mounts (navigation, hard refresh), the generating state is lost -- the cards vanish, then images pop in abruptly when saved.
 
-The fixed grid forces all cells to the same height, creating white space when images have different aspect ratios. We need to switch to a true masonry layout using flex columns (the same approach used in Library and Discover).
+2. **Images appear one-by-one with a "glitch"**: After generation completes, `handleGenerate` loops through `result.images` and calls `saveImage` sequentially. Each `saveImage` uploads to storage, inserts into DB, then prepends to `images` state -- causing images to pop in one at a time with layout shifts.
 
-### Problem 2: Click to Preview
+3. **Multi-image generation looks broken**: When generating multiple images, multiple `GeneratingCard` placeholders appear, then they all vanish at once (when `isLoading` flips to false), followed by images appearing one-by-one as each upload finishes.
 
-Currently, users must click the small Expand icon to open the lightbox. The entire image should be clickable to open the preview, with action buttons (delete, copy, download) still working independently via `stopPropagation`.
+### Solution
+
+**A. Batch image saving to prevent staggered appearance:**
+
+In `Freestyle.tsx`, change the post-generation flow from sequential `saveImage` calls to a batch approach:
+- Upload and save all images in parallel using `Promise.all`
+- Only update the images state once with all new images at the same time
+- Add a new `saveImages` (plural) method to `useFreestyleImages` that handles batch inserts
+
+**B. Smooth transition from generating to generated:**
+
+In `FreestyleGallery.tsx`, add a brief fade-in transition when generating cards are replaced by real images so the swap feels smooth rather than abrupt.
+
+**C. Keep generating state stable during the save phase:**
+
+In `Freestyle.tsx`, don't immediately hide the generating cards when the API responds. Instead, keep them visible until all images are saved to DB, then swap them out. This prevents the "flash" where generating cards vanish but images haven't appeared yet.
 
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/app/freestyle/FreestyleGallery.tsx` | Replace grid layout with flex-column masonry; make entire image card clickable for lightbox; keep action buttons independent |
+| `src/hooks/useFreestyleImages.ts` | Add `saveImages` (batch) method that uploads all images in parallel and updates state once |
+| `src/pages/Freestyle.tsx` | Use batch save; keep `isLoading`-like state active until images are fully saved |
+| `src/hooks/useGenerateFreestyle.ts` | Minor: don't flip `isLoading` to false in `finally` -- let caller control it |
+| `src/components/app/freestyle/FreestyleGallery.tsx` | Add fade-in animation class on new image cards |
 
 ### Technical Details
 
-**Masonry layout (replacing the grid for 4+ images):**
+**useFreestyleImages.ts -- add batch save:**
 
 ```tsx
-// Distribute items into 3 columns by index
-const columns = [[], [], []];
-allCards.forEach((card, i) => columns[i % 3].push(card));
-
-return (
-  <div className="flex gap-1 pt-3 px-1 pb-4">
-    {columns.map((col, i) => (
-      <div key={i} className="flex-1 flex flex-col gap-1">
-        {col}
-      </div>
-    ))}
-  </div>
-);
+const saveImages = useCallback(async (
+  base64DataUrls: string[],
+  meta: SaveImageMeta,
+): Promise<FreestyleImage[]> => {
+  if (!user) return [];
+  
+  const results = await Promise.all(
+    base64DataUrls.map(async (base64DataUrl) => {
+      // upload to storage + insert DB row (same logic as saveImage)
+      // ... returns FreestyleImage or null
+    })
+  );
+  
+  const saved = results.filter(Boolean) as FreestyleImage[];
+  // Update state ONCE with all images
+  setImages(prev => [...saved, ...prev]);
+  return saved;
+}, [user]);
 ```
 
-**Make image clickable:**
+**Freestyle.tsx -- keep generating visible until save completes:**
 
-Wrap the image area with an `onClick={() => onExpand(idx)}` on the card container itself. Action buttons already use individual click handlers -- we add `e.stopPropagation()` to each to prevent triggering the lightbox. The dedicated Expand button can be removed since the whole card now serves that purpose, keeping the overlay cleaner.
+```tsx
+const [isSaving, setIsSaving] = useState(false);
 
-**Small images layout (3 or fewer):**
+// In handleGenerate, after API returns:
+if (result?.images.length > 0) {
+  setIsSaving(true);       // keep generating cards visible
+  deductCredits(creditCost);
+  await saveImages(result.images, { ... });
+  setIsSaving(false);      // now hide generating cards
+}
 
-Keep the current horizontal centered layout but also make images clickable for preview.
+// Pass to gallery:
+generatingCount={(isLoading || isSaving) ? imageCount : 0}
+```
+
+**useGenerateFreestyle.ts -- expose a way to keep loading active:**
+
+Instead of auto-clearing `isLoading` in `finally`, return the result and let `Freestyle.tsx` manage the full lifecycle. The hook will still clear on error, but on success the caller decides when to end the loading state.
+
+**FreestyleGallery.tsx -- smooth fade-in for new images:**
+
+Add `animate-in fade-in duration-500` to image cards so they smoothly appear when the generating cards are swapped out, rather than popping in abruptly.
 
