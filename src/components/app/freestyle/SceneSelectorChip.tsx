@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import type { TryOnPose, PoseCategory } from '@/types';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
 
 interface SceneSelectorChipProps {
   selectedScene: TryOnPose | null;
