@@ -1633,7 +1633,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_013',
     name: 'Studio Crossed Arms',
     category: 'studio',
-    description: 'Confident pose with crossed arms, direct eye contact',
+    description: 'Model standing with arms confidently crossed over chest, direct eye contact with camera, strong upright posture, clean studio background',
     previewUrl: poseStudioArms,
     previewUrlMale: poseStudioArmsMale,
   },
