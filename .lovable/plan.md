@@ -1,100 +1,87 @@
 
 
-## Redesign Discover Page: Premium UI + Fixed Modal Layout
+## Remove "Scenes" Category, Elevate Modal Design, Improve "More Like This"
 
-### Overview
+### 1. Remove "Scenes" as a Separate Category
 
-Two main improvements: (1) elevate the Discover page header, search, and category filters to a spacious Apple-style design, and (2) reorganize the detail modal so the most important actions are prominent and well-structured.
-
----
-
-### 1. Discover Page -- Premium Header and Filters
-
-**Current issues visible in screenshot:**
-- Search bar looks generic with basic Input styling
-- Category pills are small, cramped, horizontally scrollable (carousel-like)
-- Overall feels like a standard dashboard, not a luxury creative tool
+Scenes are just a special type of content (usable as a scene in Freestyle), not a category. They should appear in ALL category views mixed with presets.
 
 **Changes to `src/pages/Discover.tsx`:**
+- Remove `{ id: 'scenes', label: 'Scenes' }` from the CATEGORIES array
+- Update the filter logic: instead of hiding scenes when a category is selected (`if (item.type === 'scene') return false`), map scene categories to the filter categories. Scene categories are `studio`, `lifestyle`, `editorial`, `streetwear` -- map them so e.g. `lifestyle` scenes appear when the "Lifestyle" filter is active, `editorial` scenes show under "Cinematic" or a relevant match
+- Scenes still keep their "Scene" badge on cards so users know they can be used as scenes in Freestyle
 
-- Remove `PageHeader` wrapper -- build a custom header directly for more control over spacing
-- Large, elegant title with refined tracking (`text-3xl font-semibold tracking-tight`)
-- Subtitle in lighter weight, more breathing room below
-- Search bar: wider (max-w-lg), taller, with rounded-2xl, subtle border, and larger placeholder text -- feels like a luxury search field
-- Category filters: wrap naturally (flex-wrap instead of overflow-x-auto), no horizontal scroll. Larger pill sizing (`px-5 py-2.5`), rounded-full, text-sm. Generous gap between pills (`gap-2`). Active state uses a subtle fill instead of heavy primary color -- e.g. `bg-foreground text-background` for contrast
-- More vertical spacing between sections (`space-y-6` or `space-y-8`)
-- Remove icons from category pills -- text-only for cleaner look
+**Category mapping for scenes:**
+- `studio` scenes -> show in "Commercial", "Photography" filters
+- `lifestyle` scenes -> show in "Lifestyle" filter
+- `editorial` scenes -> show in "Cinematic", "Photography" filters
+- `streetwear` scenes -> show in "Styling", "Lifestyle" filters
+- All scenes always visible under "All"
 
----
+### 2. Elevate the Detail Modal to Premium Design
 
-### 2. Detail Modal -- Reorganized Layout
+The current modal is flat and boring. Redesign it with depth, glass effects, and better visual hierarchy.
 
-**Current issues from screenshots:**
-- Generate Prompt button and result are in the right column, disconnected from actions
-- "Use Scene" / "Use Prompt" button is buried below description
-- Save and Similar buttons are small and easy to miss
-- The two-column layout creates awkward empty space when there's no generated prompt
+**Changes to `src/components/app/DiscoverDetailModal.tsx`:**
 
-**New modal layout for `src/components/app/DiscoverDetailModal.tsx`:**
+- Image area: add subtle inner shadow overlay at bottom for depth, slightly larger max-height
+- Title section: larger text (`text-2xl`), letter-spacing, with the category as a subtle uppercase label ABOVE the title (not a badge below)
+- Generate Prompt button: glass/frosted style with `backdrop-blur` and subtle gradient border, icon with shimmer effect
+- Generated prompt display: darker card with subtle glow border when present
+- Primary CTA: gradient background or subtle shadow lift, larger size
+- Secondary actions (Save, Similar, Copy): icon-prominent with frosted glass pill style, arranged as a tight row of icon buttons with labels
+- Description text: lighter weight, more refined typography
+- Tags: smaller, more subtle, inline with description
+- "More like this" section: larger thumbnails (grid-cols-3 instead of 4), rounded-xl with hover scale, subtle shadow
 
-The modal becomes a single clean flow:
-
+**New visual flow:**
 ```text
-+------------------------------------------+
-|  [Image - large, rounded]                |
-|                                          |
-|  [Generate Prompt button - full width]   |
-|  [Generated prompt text if available]    |
-|  [Copy + Use in Freestyle row]           |
-|                                          |
-|  [Category badge] [tags if preset]       |
-|  [Description / Prompt text block]       |
-|                                          |
-|  [====== Primary action row ======]      |
-|  [ Use Scene / Use Prompt  ->  ]  (big)  |
-|  [ Save ]  [ Similar ]   (side by side)  |
-|                                          |
-|  --- More like this ---                  |
-|  [thumb] [thumb] [thumb] [thumb]         |
-+------------------------------------------+
++--------------------------------------------+
+|  [Image -- large, subtle bottom shadow]    |
++--------------------------------------------+
+|  LIFESTYLE  (tiny uppercase label)         |
+|  Garden Natural  (large elegant title)     |
+|  Scene badge if applicable                 |
+|                                            |
+|  [--- Generate Prompt --- frosted glass]   |
+|  [generated prompt card if available]      |
+|  [Copy]  [Use in Freestyle]               |
+|                                            |
+|  Description text (refined, no box)        |
+|  #tags inline                              |
+|                                            |
+|  [========= Use Scene =========]  (big)   |
+|                                            |
+|  [heart Save] [search Similar] [copy Copy] |
+|                                            |
+|  --- More like this ---                    |
+|  [  thumb  ] [  thumb  ] [  thumb  ]       |
++--------------------------------------------+
 ```
 
-Key changes:
-- Switch from 2-column grid to single column stacked layout -- image on top, content flows below
-- Image takes full width with max-height constraint, natural aspect ratio (object-contain or cover with reasonable max)
-- Primary CTA ("Use Scene" / "Use Prompt") is a large, full-width button right after the description
-- Generate Prompt section sits directly below the image -- most prominent secondary action
-- Copy/Use in Freestyle buttons appear conditionally only when a prompt is generated
-- Save and Similar are secondary row below the primary CTA
-- Related items section stays at bottom
-- Remove the `DialogDescription` subtitle ("Scene details" / "Inspiration preset details") -- unnecessary
-- Wider modal max-width stays at `max-w-3xl` but content is single-column so it reads better
+### 3. Improve "More Like This" Similarity
 
----
+Currently it only matches by exact category, which gives poor results (e.g., all lifestyle items look "related" even if they're completely different visually).
+
+**Better matching algorithm in `src/pages/Discover.tsx`:**
+
+Instead of just category matching, implement a scoring system:
+
+- **Same category**: +2 points
+- **Shared tags** (preset-to-preset): +1 point per shared tag
+- **Same type** (both scenes or both presets): +1 point
+- **Scene category overlap** (scene `lifestyle` matches preset category `lifestyle`): +2 points
+- Sort by score descending, take top 6 (increase from 4)
+- Exclude exact same item
+
+This means a "Garden Natural" lifestyle scene will show other lifestyle scenes AND lifestyle presets, ranked by how many attributes overlap. Much better than random same-category items.
 
 ### Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/pages/Discover.tsx` | Replace PageHeader with custom header, redesign search and filter styling, remove icons from pills, flex-wrap instead of scroll |
-| `src/components/app/DiscoverDetailModal.tsx` | Single-column layout, reorder sections, prioritize primary CTA |
+| File | Change |
+|------|--------|
+| `src/pages/Discover.tsx` | Remove "Scenes" category, update filter logic for scene category mapping, improve relatedItems scoring algorithm, increase related count to 6 |
+| `src/components/app/DiscoverDetailModal.tsx` | Premium glass-effect redesign with better visual hierarchy, reordered sections, larger related thumbnails |
 
-No new files needed. No database changes.
-
-### Technical Details
-
-**Discover.tsx changes:**
-- Remove `PageHeader` import, build header inline with custom spacing
-- Search input: `className="pl-11 h-12 rounded-2xl border-border/50 bg-muted/30 text-sm"` with larger search icon
-- Category pills: `flex flex-wrap gap-2` (no overflow-x-auto, no scrollbar), remove icon components, text-only pills with `rounded-full px-5 py-2.5 text-sm font-medium`
-- Active pill: `bg-foreground text-background` for high-end contrast
-- Inactive pill: `bg-muted/40 text-muted-foreground hover:bg-muted/70`
-
-**DiscoverDetailModal.tsx changes:**
-- Replace `grid grid-cols-1 md:grid-cols-2` with single `flex flex-col gap-5`
-- Image: `w-full max-h-[50vh] object-contain rounded-xl bg-muted` (respects natural ratio)
-- Generate Prompt button directly below image
-- Primary CTA ("Use Scene"/"Use Prompt") is full-width default size button (not sm)
-- Save + Similar are outline buttons in a row below
-- Description/prompt text block between image section and actions
+No new files. No database changes.
 
