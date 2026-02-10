@@ -10,6 +10,7 @@ import Dashboard from '@/pages/Dashboard';
 import Generate from '@/pages/Generate';
 import BulkGenerate from '@/pages/BulkGenerate';
 import Templates from '@/pages/Templates';
+import Discover from '@/pages/Discover';
 import Jobs from '@/pages/Jobs';
 import Settings from '@/pages/Settings';
 import Landing from '@/pages/Landing';
@@ -87,7 +88,8 @@ const App = () => (
                       <Route path="/generate/bulk" element={<BulkGenerate />} />
                       <Route path="/library" element={<Jobs />} />
                       <Route path="/library/:id" element={<Jobs />} />
-                      <Route path="/templates" element={<Templates />} />
+                      <Route path="/discover" element={<Discover />} />
+                      <Route path="/templates" element={<Discover />} />
                       <Route path="/templates/:id" element={<Templates />} />
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/jobs/:id" element={<Jobs />} />

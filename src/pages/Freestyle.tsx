@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
@@ -44,9 +45,26 @@ export default function Freestyle() {
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { generate, isLoading, progress } = useGenerateFreestyle();
   const { balance, deductCredits, openBuyModal } = useCredits();
   const { user } = useAuth();
+
+  // Pre-fill from Discover page URL params
+  useEffect(() => {
+    const p = searchParams.get('prompt');
+    const r = searchParams.get('ratio');
+    const q = searchParams.get('quality');
+    if (p) setPrompt(p);
+    if (r && ['1:1', '3:4', '4:5', '9:16', '16:9'].includes(r)) {
+      setAspectRatio(r as FreestyleAspectRatio);
+    }
+    if (q === 'high') setQuality('high');
+    // Clean URL params after reading
+    if (p || r || q) {
+      setSearchParams({}, { replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const { images: savedImages, isLoading: isLoadingImages, saveImage, deleteImage } = useFreestyleImages();
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
