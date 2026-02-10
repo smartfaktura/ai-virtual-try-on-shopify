@@ -13,7 +13,7 @@ import imgShowcase4 from '@/assets/showcase/home-candle-evening.jpg';
 import imgShowcase5 from '@/assets/showcase/fashion-activewear-studio.jpg';
 import imgShowcase6 from '@/assets/showcase/skincare-cream-botanical.jpg';
 
-const PLACEHOLDER_IMAGES = [imgShowcase1, imgShowcase2, imgShowcase3, imgShowcase4, imgShowcase5, imgShowcase6];
+const PLACEHOLDER_IMAGES = [imgShowcase1, imgShowcase2, imgShowcase3, imgShowcase4, imgShowcase5];
 
 interface CreationItem {
   id: string;
@@ -37,7 +37,7 @@ export function RecentCreationsGallery() {
         .select('id, results, created_at, workflows(name), user_products(title, image_url)')
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
-        .limit(12);
+        .limit(5);
       if (jobsError) throw jobsError;
 
       for (const job of jobs ?? []) {
@@ -69,7 +69,7 @@ export function RecentCreationsGallery() {
         .from('freestyle_generations')
         .select('id, image_url, prompt, created_at')
         .order('created_at', { ascending: false })
-        .limit(8);
+        .limit(3);
       if (freestyleError) throw freestyleError;
 
       for (const f of freestyle ?? []) {
@@ -83,7 +83,7 @@ export function RecentCreationsGallery() {
 
       // Sort by date descending and take first 10
       items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      return items.slice(0, 10);
+      return items.slice(0, 5);
     },
     enabled: !!user,
   });
@@ -107,7 +107,7 @@ export function RecentCreationsGallery() {
     : PLACEHOLDER_IMAGES.map((img, i) => ({
         id: `placeholder-${i}`,
         imageUrl: img,
-        label: ['Product Shot', 'Lifestyle', 'Ad Creative', 'Editorial', 'On-Model', 'Campaign'][i],
+        label: ['Product Shot', 'Lifestyle', 'Ad Creative', 'Editorial', 'On-Model'][i],
         date: 'Sample',
       }));
 
