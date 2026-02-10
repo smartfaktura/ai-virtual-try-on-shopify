@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Compass, Camera, ShoppingBag, Palette, Scissors, Megaphone, Sun, Clapperboard, Sparkles, Loader2 } from 'lucide-react';
+import { Search, Compass, Camera, ShoppingBag, Palette, Scissors, Megaphone, Sun, Clapperboard, Sparkles, Loader2, LayoutGrid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/app/PageHeader';
 import { DiscoverCard } from '@/components/app/DiscoverCard';
@@ -9,7 +9,7 @@ import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPres
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
-  { id: 'all', label: 'All', icon: Sparkles },
+  { id: 'all', label: 'All', icon: LayoutGrid },
   { id: 'cinematic', label: 'Cinematic', icon: Clapperboard },
   { id: 'commercial', label: 'Commercial', icon: ShoppingBag },
   { id: 'photography', label: 'Photography', icon: Camera },
@@ -24,6 +24,10 @@ export default function Discover() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPreset, setSelectedPreset] = useState<DiscoverPreset | null>(null);
+
+  const featured = useMemo(() => {
+    return presets.filter((p) => p.is_featured);
+  }, [presets]);
 
   const filtered = useMemo(() => {
     return presets.filter((p) => {
@@ -89,6 +93,27 @@ export default function Discover() {
           ))}
         </div>
 
+        {/* Featured hero section */}
+        {selectedCategory === 'all' && !searchQuery && featured.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <p className="text-sm font-semibold">Featured</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {featured.map((preset) => (
+                <DiscoverCard
+                  key={preset.id}
+                  preset={preset}
+                  onClick={() => setSelectedPreset(preset)}
+                  onUsePrompt={() => handleUsePrompt(preset)}
+                  featured
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Gallery grid */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -97,7 +122,16 @@ export default function Discover() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">No presets found</p>
+            <p className="text-sm font-medium text-muted-foreground mb-1">No presets found</p>
+            <p className="text-xs text-muted-foreground/70 max-w-xs">
+              Try different keywords or{' '}
+              <button
+                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
+                className="text-primary hover:underline"
+              >
+                browse all categories
+              </button>
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
