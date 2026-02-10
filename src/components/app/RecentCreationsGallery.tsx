@@ -26,7 +26,7 @@ export function RecentCreationsGallery() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const { data: creations = [] } = useQuery({
+  const { data: creations = [], isLoading } = useQuery({
     queryKey: ['recent-creations', user?.id],
     queryFn: async () => {
       const items: CreationItem[] = [];
