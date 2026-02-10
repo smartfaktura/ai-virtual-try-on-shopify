@@ -168,6 +168,54 @@ export type Database = {
           },
         ]
       }
+      discover_presets: {
+        Row: {
+          aspect_ratio: string
+          category: string
+          created_at: string
+          id: string
+          image_url: string
+          is_featured: boolean
+          model_name: string | null
+          prompt: string
+          quality: string
+          scene_name: string | null
+          sort_order: number
+          tags: string[] | null
+          title: string
+        }
+        Insert: {
+          aspect_ratio?: string
+          category?: string
+          created_at?: string
+          id?: string
+          image_url: string
+          is_featured?: boolean
+          model_name?: string | null
+          prompt: string
+          quality?: string
+          scene_name?: string | null
+          sort_order?: number
+          tags?: string[] | null
+          title: string
+        }
+        Update: {
+          aspect_ratio?: string
+          category?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_featured?: boolean
+          model_name?: string | null
+          prompt?: string
+          quality?: string
+          scene_name?: string | null
+          sort_order?: number
+          tags?: string[] | null
+          title?: string
+        }
+        Relationships: []
+      }
       freestyle_generations: {
         Row: {
           aspect_ratio: string
