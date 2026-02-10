@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Image, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LibraryImageCard } from '@/components/app/LibraryImageCard';
+import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
+import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 
 const SORTS: { id: LibrarySortBy; label: string }[] = [
