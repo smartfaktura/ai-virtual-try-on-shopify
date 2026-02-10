@@ -86,6 +86,40 @@ export default function Jobs() {
     setSelectedIds(new Set());
   };
 
+  const handleDeleteItem = async (item: LibraryItem) => {
+    if (!window.confirm('Delete this image?')) return;
+    try {
+      if (item.source === 'freestyle') {
+        await supabase.from('freestyle_generations').delete().eq('id', item.id);
+      } else {
+        // item.id is "jobId-index" format
+        const dashIndex = item.id.lastIndexOf('-');
+        const jobId = item.id.substring(0, dashIndex);
+        const imageIndex = parseInt(item.id.substring(dashIndex + 1), 10);
+
+        const { data: job } = await supabase
+          .from('generation_jobs')
+          .select('results')
+          .eq('id', jobId)
+          .single();
+
+        if (job) {
+          const results = job.results as any[];
+          if (results.length <= 1) {
+            await supabase.from('generation_jobs').delete().eq('id', jobId);
+          } else {
+            const updated = results.filter((_, i) => i !== imageIndex);
+            await supabase.from('generation_jobs').update({ results: updated }).eq('id', jobId);
+          }
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      toast.success('Image deleted');
+    } catch {
+      toast.error('Failed to delete image');
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <div className="px-4 sm:px-6 py-8 space-y-6">
