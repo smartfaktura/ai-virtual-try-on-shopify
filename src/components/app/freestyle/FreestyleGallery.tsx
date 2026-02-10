@@ -172,6 +172,7 @@ function ImageCard({
   onCopyPrompt,
   onAddAsScene,
   onAddAsModel,
+  onShareToDiscover,
   className,
   natural,
 }: {
