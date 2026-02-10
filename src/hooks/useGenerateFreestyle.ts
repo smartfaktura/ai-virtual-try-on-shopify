@@ -136,8 +136,6 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
 
       if (result.partialSuccess) {
         toast.warning(`Generated ${result.generatedCount} of ${result.requestedCount} images.`);
-      } else {
-        toast.success(`Generated ${result.generatedCount} image${result.generatedCount > 1 ? 's' : ''}!`);
       }
 
       return result;
