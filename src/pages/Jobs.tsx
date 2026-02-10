@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Image, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LibraryImageCard } from '@/components/app/LibraryImageCard';
+import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
+import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 
 const SORTS: { id: LibrarySortBy; label: string }[] = [
@@ -29,6 +30,7 @@ function useColumnCount() {
 export default function Jobs() {
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
 
   const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
   const columnCount = useColumnCount();
@@ -105,13 +107,19 @@ export default function Jobs() {
             {columns.map((col, i) => (
               <div key={i} className="flex-1 flex flex-col gap-1">
                 {col.map(item => (
-                  <LibraryImageCard key={item.id} item={item} />
+                  <LibraryImageCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
                 ))}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <LibraryDetailModal
+        item={selectedItem}
+        open={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+      />
     </div>
   );
 }
