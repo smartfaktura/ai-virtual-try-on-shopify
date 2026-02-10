@@ -94,6 +94,10 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
       });
 
       return items;
+      } catch (err) {
+        console.error('[Library] Query failed:', err);
+        throw err;
+      }
     },
     enabled: !!user,
     refetchInterval: 10000,
