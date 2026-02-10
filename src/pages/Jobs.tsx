@@ -104,7 +104,6 @@ export default function Jobs() {
   const confirmDelete = async () => {
     const item = deleteTarget;
     if (!item) return;
-    setDeleteTarget(null);
     try {
       if (item.source === 'freestyle') {
         const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
@@ -136,6 +135,8 @@ export default function Jobs() {
       toast.success('Image deleted');
     } catch {
       toast.error('Failed to delete image');
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
