@@ -54,6 +54,11 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
         throw new Error('Supabase URL not configured');
       }
 
+      // Get user session token for authenticated storage uploads
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token || SUPABASE_ANON_KEY;
+
       // Convert both product and model images to base64 so AI model can access them
       console.log('[useGenerateTryOn] Converting images to base64...');
       const [base64ProductImage, base64ModelImage] = await Promise.all([
@@ -66,7 +71,7 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(SUPABASE_ANON_KEY && { Authorization: `Bearer ${SUPABASE_ANON_KEY}` }),
+          ...(authToken && { Authorization: `Bearer ${authToken}` }),
         },
         body: JSON.stringify({
           product: {
