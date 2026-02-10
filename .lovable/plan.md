@@ -1,122 +1,111 @@
 
 
-## Make info@tsimkus.lt Admin + "View as Admin / View as Visitor" Toggle
+## Library Redesign + Admin "Add as Model/Scene" from Library
 
-### Current State
-
-`info@tsimkus.lt` (user_id `fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc`) is **already an admin** in the `user_roles` table -- no database change needed.
-
-The `useIsAdmin` hook is used in `Discover.tsx` and `FreestyleGallery.tsx` to conditionally show admin actions (featured toggles, Add as Scene/Model buttons).
+Three things to implement:
 
 ---
 
-### Plan: Admin View Toggle
+### 1. Admin "Add as Model" and "Add as Scene" buttons on Library image cards
 
-Add a small floating toggle in the sidebar user menu (only visible to admins) that lets you switch between "Admin view" and "Visitor view" for testing purposes. When set to "Visitor view", `useIsAdmin` returns `false` even though you are an admin, hiding all admin-only UI.
+The Library page (`Jobs.tsx`) shows all user-generated images. Currently, admin actions (Add as Scene, Add as Model) only exist in the Freestyle Studio gallery. We need to add these same actions to Library image cards so an admin can promote any generated image.
 
-#### Implementation
-
-**1. Create an AdminViewContext (`src/contexts/AdminViewContext.tsx`)**
-
-- Provides `isAdminView` (boolean) and `toggleAdminView` function
-- Defaults to `true` (admin view on)
-- Persists choice in `localStorage` key `admin-view-mode`
-- Only consumed by admin users -- non-admins always see the regular view
-
-**2. Update `useIsAdmin` hook (`src/hooks/useIsAdmin.ts`)**
-
-- Import `useAdminView` from the new context
-- The hook still queries `user_roles` to check real admin status
-- But the returned `isAdmin` value becomes: `realIsAdmin && isAdminView`
-- This means toggling to "Visitor view" makes `isAdmin` return `false` everywhere, instantly hiding all admin UI (featured stars, Add as Scene/Model buttons, etc.)
-
-**3. Add toggle to the sidebar user menu (`src/components/app/AppShell.tsx`)**
-
-- Import `useIsAdmin` (to check real admin status) and `useAdminView`
-- In the user dropdown menu (the popover that appears when clicking the user avatar), add a new item between "Account settings" and "Sign out":
-  - An `Eye` / `EyeOff` icon with label "View as admin" / "View as visitor"
-  - Clicking it calls `toggleAdminView()`
-  - Only rendered when the user is a real admin (query `user_roles` directly, not through the modified `useIsAdmin`)
-- Style it as a subtle toggle row with a switch or icon swap
-
-**4. Wrap the app with AdminViewProvider (`src/App.tsx`)**
-
-- Add `<AdminViewProvider>` inside `<AuthProvider>` so the context is available throughout the app
+**Changes to `LibraryImageCard.tsx`:**
+- Import `useIsAdmin` hook
+- Import `AddSceneModal` and `AddModelModal` components
+- Add state for `sceneModalUrl` and `modelModalUrl`
+- In the hover overlay action buttons area, when `isAdmin` is true, show Camera icon (Add as Scene) and User icon (Add as Model) buttons
+- Render the modals at the bottom of the component
 
 ---
 
-### Files to Create
+### 2. Custom scenes usable in Freestyle/Virtual Try-On
 
-| File | Purpose |
-|------|---------|
-| `src/contexts/AdminViewContext.tsx` | Context providing `isAdminView` state and `toggleAdminView` |
+Custom scenes added via "Add as Scene" are already stored in `custom_scenes` table and already merged into the scene selector (`SceneSelectorChip.tsx` line 38: `const allPoses = [...mockTryOnPoses, ...customPoses]`). This is already working -- custom scenes appear in the Scene selector for all users. No changes needed here.
+
+---
+
+### 3. Library page UI redesign to match Discover
+
+Replace the current old-school Library layout (PageHeader wrapper, separate tabs bar, grid/list toggle, select dropdown) with a modern Discover-like design:
+
+**Changes to `Jobs.tsx`:**
+- Remove `PageHeader` wrapper -- use inline heading like Discover (`text-3xl font-semibold tracking-tight`)
+- Remove grid/list toggle (keep only masonry grid like Discover)
+- Replace `Tabs` component with Discover-style pill buttons (rounded-full, `bg-foreground text-background` when active)
+- Replace `Select` dropdown for sorting with inline pill buttons ("Newest" / "Oldest")
+- Replace `Input` search with Discover-style search bar (taller, rounded-2xl, `bg-muted/30`)
+- Use same masonry column layout as Discover: `columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-1`
+- Update skeleton loading to match Discover (centered `Loader2` spinner)
+- Update empty state to match Discover style (centered with `Compass`-like icon)
+
+**Changes to `LibraryImageCard.tsx`:**
+- Match `DiscoverCard` visual style: remove `mb-4` spacing (use `mb-1` like Discover), remove explicit border, use `rounded-lg` instead of `rounded-2xl`
+- Add image shimmer/loading state like DiscoverCard
+- Keep hover overlay with gradient, badge, prompt preview, date, and action buttons
+- Add admin buttons (Scene/Model) to the hover overlay
+- Render AddSceneModal / AddModelModal portals
+
+**Result:** The Library page will look and feel identical to Discover, but scoped to the user's own generations, with admin promotion actions available on hover.
+
+---
 
 ### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/hooks/useIsAdmin.ts` | Export both `isAdmin` (respects toggle) and `isRealAdmin` (ignores toggle) |
-| `src/components/app/AppShell.tsx` | Add admin view toggle in user dropdown, only visible to real admins |
-| `src/App.tsx` | Wrap with `AdminViewProvider` |
+| `src/pages/Jobs.tsx` | Full UI redesign: remove PageHeader, Tabs, Select, grid/list toggle. Use Discover-style pills, search, masonry grid |
+| `src/components/app/LibraryImageCard.tsx` | Restyle to match DiscoverCard. Add admin "Add as Scene" and "Add as Model" buttons with modal triggers |
 
 ### Technical Details
 
-**AdminViewContext:**
-```typescript
-// Stores preference in localStorage
-const [isAdminView, setIsAdminView] = useState(() => {
-  try { return localStorage.getItem('admin-view-mode') !== 'visitor'; } 
-  catch { return true; }
-});
-
-const toggleAdminView = () => {
-  setIsAdminView(prev => {
-    const next = !prev;
-    localStorage.setItem('admin-view-mode', next ? 'admin' : 'visitor');
-    return next;
-  });
-};
-```
-
-**Updated useIsAdmin:**
-```typescript
-export function useIsAdmin() {
-  const { user } = useAuth();
-  const { isAdminView } = useAdminView();
-
-  const { data: isRealAdmin = false, isLoading } = useQuery({
-    queryKey: ['is-admin', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user!.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-      return !!data;
-    },
-    enabled: !!user?.id,
-  });
-
-  return { 
-    isAdmin: isRealAdmin && isAdminView,  // respects toggle
-    isRealAdmin,                           // always true for admins
-    isLoading 
-  };
-}
-```
-
-**Sidebar toggle (in user dropdown):**
+**Library card with admin actions:**
 ```tsx
-{isRealAdmin && (
-  <button
-    onClick={() => { toggleAdminView(); }}
-    className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2"
-  >
-    {isAdminView ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-    {isAdminView ? 'View as visitor' : 'View as admin'}
-  </button>
+// In LibraryImageCard hover overlay actions
+{isAdmin && (
+  <>
+    <button onClick={() => setSceneModalUrl(item.imageUrl)} title="Add as Scene">
+      <Camera className="w-3.5 h-3.5" />
+    </button>
+    <button onClick={() => setModelModalUrl(item.imageUrl)} title="Add as Model">
+      <User className="w-3.5 h-3.5" />
+    </button>
+  </>
 )}
 ```
 
-This approach means every place that uses `useIsAdmin().isAdmin` will automatically respect the toggle -- no changes needed in Discover, FreestyleGallery, or any other consumer.
+**Discover-style filter pills (replacing Tabs):**
+```tsx
+const TABS = [
+  { id: 'all', label: 'All', icon: Image },
+  { id: 'generations', label: 'Generations', icon: Camera },
+  { id: 'freestyle', label: 'Freestyle', icon: Sparkles },
+];
+
+// Rendered as:
+<div className="flex flex-wrap gap-2">
+  {TABS.map(t => (
+    <button
+      key={t.id}
+      onClick={() => setTab(t.id)}
+      className={cn(
+        'px-5 py-2.5 rounded-full text-sm font-medium transition-all',
+        tab === t.id
+          ? 'bg-foreground text-background shadow-sm'
+          : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+      )}
+    >
+      <t.icon className="w-3.5 h-3.5 inline mr-1.5" /> {t.label}
+    </button>
+  ))}
+</div>
+```
+
+**Masonry grid (matching Discover):**
+```tsx
+<div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-1">
+  {displayItems.map(item => (
+    <LibraryImageCard key={item.id} item={item} />
+  ))}
+</div>
+```
