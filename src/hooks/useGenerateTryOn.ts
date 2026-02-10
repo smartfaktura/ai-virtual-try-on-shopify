@@ -71,7 +71,7 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(SUPABASE_ANON_KEY && { Authorization: `Bearer ${SUPABASE_ANON_KEY}` }),
+          ...(authToken && { Authorization: `Bearer ${authToken}` }),
         },
         body: JSON.stringify({
           product: {
