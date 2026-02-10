@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, Image, Loader2 } from 'lucide-react';
+import { Search, Image, Loader2, Download, CheckSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
+import { Button } from '@/components/ui/button';
+import JSZip from 'jszip';
 
 const SORTS: { id: LibrarySortBy; label: string }[] = [
   { id: 'newest', label: 'Newest' },
@@ -31,6 +33,9 @@ export default function Jobs() {
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isZipping, setIsZipping] = useState(false);
 
   const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
   const columnCount = useColumnCount();
@@ -39,6 +44,42 @@ export default function Jobs() {
   items.forEach((item, i) => {
     columns[i % columnCount].push(item);
   });
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDownload = async () => {
+    setIsZipping(true);
+    try {
+      const zip = new JSZip();
+      const selected = items.filter(i => selectedIds.has(i.id));
+      for (const item of selected) {
+        const res = await fetch(item.imageUrl);
+        const blob = await res.blob();
+        zip.file(`${item.label}-${item.id.slice(0, 8)}.png`, blob);
+      }
+      const content = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'library-images.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsZipping(false);
+    }
+  };
+
+  const cancelSelect = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
 
   return (
     <div className="min-h-screen">
@@ -49,7 +90,7 @@ export default function Jobs() {
           <p className="text-muted-foreground mt-1">Your generated images and freestyle creations</p>
         </div>
 
-        {/* Search + Sort */}
+        {/* Search + Sort + Select */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative max-w-md flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -77,6 +118,19 @@ export default function Jobs() {
                 {s.label}
               </button>
             ))}
+
+            <button
+              onClick={() => selectMode ? cancelSelect() : setSelectMode(true)}
+              className={cn(
+                'px-4 py-2 rounded-full text-xs font-medium transition-all flex items-center gap-1.5',
+                selectMode
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+              )}
+            >
+              <CheckSquare className="w-3.5 h-3.5" />
+              Select
+            </button>
           </div>
         </div>
 
@@ -107,13 +161,44 @@ export default function Jobs() {
             {columns.map((col, i) => (
               <div key={i} className="flex-1 flex flex-col gap-1">
                 {col.map(item => (
-                  <LibraryImageCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
+                  <LibraryImageCard
+                    key={item.id}
+                    item={item}
+                    selectMode={selectMode}
+                    selected={selectedIds.has(item.id)}
+                    onClick={() => {
+                      if (selectMode) {
+                        toggleSelect(item.id);
+                      } else {
+                        setSelectedItem(item);
+                      }
+                    }}
+                  />
                 ))}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Floating action bar */}
+      {selectMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-foreground text-background shadow-2xl">
+          <span className="text-sm font-medium">{selectedIds.size} selected</span>
+          <Button
+            size="sm"
+            onClick={handleBulkDownload}
+            disabled={isZipping}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {isZipping ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />}
+            Download ZIP
+          </Button>
+          <button onClick={cancelSelect} className="ml-1 hover:opacity-70 transition-opacity">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <LibraryDetailModal
         item={selectedItem}
