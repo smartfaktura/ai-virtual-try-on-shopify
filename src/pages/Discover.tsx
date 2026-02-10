@@ -344,15 +344,21 @@ export default function Discover() {
         </div>
       ) : (
         <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-1">
-          {filtered.map((item) => (
-            <DiscoverCard
-              key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
-              item={item}
-              onClick={() => handleItemClick(item)}
-              isSaved={isSaved(item.type, getItemId(item))}
-              onToggleSave={() => handleToggleSave(item)}
-            />
-          ))}
+          {sorted.map((item) => {
+            const itemId = getItemId(item);
+            return (
+              <DiscoverCard
+                key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
+                item={item}
+                onClick={() => handleItemClick(item)}
+                isSaved={isSaved(item.type, itemId)}
+                onToggleSave={() => handleToggleSave(item)}
+                isFeatured={isFeatured(item.type, itemId)}
+                isAdmin={isAdmin}
+                onToggleFeatured={() => handleToggleFeatured(item)}
+              />
+            );
+          })}
         </div>
       )}
 
