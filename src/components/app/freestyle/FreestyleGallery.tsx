@@ -26,6 +26,14 @@ const STATUS_MESSAGES = [
   'Adding finishing touches…',
 ];
 
+const RATIO_MAP: Record<string, string> = {
+  '1:1': '1/1',
+  '3:4': '3/4',
+  '4:5': '4/5',
+  '9:16': '9/16',
+  '16:9': '16/9',
+};
+
 export interface BlockedEntry {
   id: string;
   prompt: string;
@@ -47,14 +55,16 @@ interface FreestyleGalleryProps {
   onCopyPrompt?: (prompt: string) => void;
   generatingCount?: number;
   generatingProgress?: number;
+  generatingAspectRatio?: string;
   blockedEntries?: BlockedEntry[];
   onDismissBlocked?: (id: string) => void;
   onEditBlockedPrompt?: (prompt: string) => void;
 }
 
-function GeneratingCard({ progress = 0, className }: { progress?: number; className?: string }) {
+function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: number; aspectRatio?: string; className?: string }) {
   const [crew] = useState(() => STUDIO_CREW[Math.floor(Math.random() * STUDIO_CREW.length)]);
   const [msgIdx, setMsgIdx] = useState(0);
+  const cssRatio = RATIO_MAP[aspectRatio || '1:1'] || '1/1';
 
   useEffect(() => {
     const id = setInterval(() => setMsgIdx(i => (i + 1) % STATUS_MESSAGES.length), 3000);
@@ -65,10 +75,11 @@ function GeneratingCard({ progress = 0, className }: { progress?: number; classN
     <div
       className={cn(
         'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-5 px-8',
-        'border border-border/30 min-h-[300px] w-full h-full',
+        'border border-border/30 w-full',
         'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
         className,
       )}
+      style={{ aspectRatio: cssRatio }}
     >
       {/* Avatar with glow ring */}
       <div className="relative">
@@ -230,9 +241,19 @@ function ImageCard({
     </div>
   );
 
+  const imgAspectStyle = img.aspectRatio ? { aspectRatio: RATIO_MAP[img.aspectRatio] || undefined } : undefined;
+
   if (natural) {
     return (
-      <div className={cn('group relative inline-block cursor-pointer animate-fade-in', className)} onClick={() => onExpand(idx)}>
+      <div
+        className={cn(
+          'group relative inline-block cursor-pointer animate-fade-in',
+          !loaded && 'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer rounded-xl',
+          className,
+        )}
+        style={imgAspectStyle}
+        onClick={() => onExpand(idx)}
+      >
         <img
           src={img.url}
           alt={`Generated ${idx + 1}`}
@@ -240,7 +261,8 @@ function ImageCard({
             'w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
             loaded ? 'opacity-100' : 'opacity-0',
           )}
-          loading="lazy"
+          loading="eager"
+          decoding="async"
           onLoad={() => setLoaded(true)}
         />
         <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -253,18 +275,21 @@ function ImageCard({
     <div
       className={cn(
         'group relative overflow-hidden rounded-xl shadow-md shadow-black/20 cursor-pointer animate-fade-in',
+        !loaded && 'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
         className,
       )}
+      style={imgAspectStyle}
       onClick={() => onExpand(idx)}
     >
       <img
         src={img.url}
         alt={`Generated ${idx + 1}`}
         className={cn(
-          'w-full h-auto object-cover transition-opacity duration-700 ease-out',
+          'w-full h-full object-cover transition-opacity duration-700 ease-out',
           loaded ? 'opacity-100' : 'opacity-0',
         )}
-        loading="lazy"
+        loading="eager"
+        decoding="async"
         onLoad={() => setLoaded(true)}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -273,7 +298,7 @@ function ImageCard({
   );
 }
 
-export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt }: FreestyleGalleryProps) {
+export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt }: FreestyleGalleryProps) {
   const { isAdmin } = useIsAdmin();
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
@@ -301,7 +326,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   const generatingCards = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
-        <GeneratingCard key={`generating-${i}`} progress={generatingProgress} />
+        <GeneratingCard key={`generating-${i}`} progress={generatingProgress} aspectRatio={generatingAspectRatio} />
       ))
     : [];
 

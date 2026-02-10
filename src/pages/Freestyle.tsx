@@ -358,6 +358,7 @@ export default function Freestyle() {
             onCopyPrompt={setPrompt}
             generatingCount={(isLoading || isSaving) ? imageCount : 0}
             generatingProgress={isSaving ? 100 : progress}
+            generatingAspectRatio={aspectRatio}
             blockedEntries={blockedEntries}
             onDismissBlocked={handleDismissBlocked}
             onEditBlockedPrompt={handleEditBlockedPrompt}
