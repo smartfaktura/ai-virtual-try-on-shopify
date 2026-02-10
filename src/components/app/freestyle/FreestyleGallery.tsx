@@ -232,7 +232,7 @@ function ImageCard({
 
   if (natural) {
     return (
-      <div className={cn('group relative inline-block cursor-pointer', className)} onClick={() => onExpand(idx)}>
+      <div className={cn('group relative inline-block cursor-pointer animate-fade-in', className)} onClick={() => onExpand(idx)}>
         <img
           src={img.url}
           alt={`Generated ${idx + 1}`}
