@@ -69,7 +69,7 @@ export function RecentCreationsGallery() {
         .from('freestyle_generations')
         .select('id, image_url, prompt, created_at')
         .order('created_at', { ascending: false })
-        .limit(8);
+        .limit(3);
       if (freestyleError) throw freestyleError;
 
       for (const f of freestyle ?? []) {
