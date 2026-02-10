@@ -195,6 +195,24 @@ function ImageCard({
             <Copy className="w-4 h-4" />
           </button>
         )}
+        {onAddAsScene && (
+          <button
+            onClick={() => onAddAsScene(img.url)}
+            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            title="Add as Scene"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
+        )}
+        {onAddAsModel && (
+          <button
+            onClick={() => onAddAsModel(img.url)}
+            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+            title="Add as Model"
+          >
+            <User className="w-4 h-4" />
+          </button>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <button

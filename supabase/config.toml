@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.describe-image]
 verify_jwt = false
+
+[functions.create-scene-from-image]
+verify_jwt = false
+
+[functions.create-model-from-image]
+verify_jwt = false
