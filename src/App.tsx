@@ -88,7 +88,8 @@ const App = () => (
                       <Route path="/generate/bulk" element={<BulkGenerate />} />
                       <Route path="/library" element={<Jobs />} />
                       <Route path="/library/:id" element={<Jobs />} />
-                      <Route path="/templates" element={<Templates />} />
+                      <Route path="/discover" element={<Discover />} />
+                      <Route path="/templates" element={<Discover />} />
                       <Route path="/templates/:id" element={<Templates />} />
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/jobs/:id" element={<Jobs />} />

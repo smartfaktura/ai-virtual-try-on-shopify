@@ -19,7 +19,7 @@ const navItems = [
   { label: 'Products', icon: Package, path: '/app/products' },
   { label: 'Workflows', icon: Layers, path: '/app/workflows' },
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
-  { label: 'Templates', icon: LayoutTemplate, path: '/app/templates' },
+  { label: 'Discover', icon: Compass, path: '/app/discover' },
   { label: 'Video', icon: Film, path: '/app/video' },
   { label: 'Freestyle', icon: Wand2, path: '/app/freestyle' },
   { label: 'Library', icon: Image, path: '/app/library' },
