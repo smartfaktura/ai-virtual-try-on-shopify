@@ -57,8 +57,10 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sour
           }
         }
       }
+      } // end generation filter
 
       // Fetch freestyle generations
+      if (sourceFilter !== 'generation') {
       const { data: freestyle, error: freestyleError } = await supabase
         .from('freestyle_generations')
         .select('id, image_url, prompt, aspect_ratio, quality, created_at')
