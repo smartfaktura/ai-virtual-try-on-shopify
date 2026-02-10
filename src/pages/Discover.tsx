@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Compass, Loader2, X } from 'lucide-react';
@@ -106,6 +106,29 @@ function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
   return score;
 }
 
+function useColumnCount() {
+  const [count, setCount] = useState(() => {
+    if (typeof window === 'undefined') return 4;
+    const w = window.innerWidth;
+    if (w < 640) return 2;
+    if (w < 1024) return 3;
+    if (w < 1280) return 4;
+    return 5;
+  });
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w < 640) setCount(2);
+      else if (w < 1024) setCount(3);
+      else if (w < 1280) setCount(4);
+      else setCount(5);
+    };
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return count;
+}
+
 export default function Discover() {
   const navigate = useNavigate();
   const { data: presets = [], isLoading } = useDiscoverPresets();
@@ -114,6 +137,7 @@ export default function Discover() {
   const { isFeatured, featuredMap } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
   const { asPoses: customScenePoses } = useCustomScenes();
+  const columnCount = useColumnCount();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
@@ -343,23 +367,35 @@ export default function Discover() {
           </p>
         </div>
       ) : (
-        <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-1">
-          {sorted.map((item) => {
-            const itemId = getItemId(item);
-            return (
-              <DiscoverCard
-                key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
-                item={item}
-                onClick={() => handleItemClick(item)}
-                isSaved={isSaved(item.type, itemId)}
-                onToggleSave={() => handleToggleSave(item)}
-                isFeatured={isFeatured(item.type, itemId)}
-                isAdmin={isAdmin}
-                onToggleFeatured={() => handleToggleFeatured(item)}
-              />
-            );
-          })}
-        </div>
+        (() => {
+          const columns: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
+          sorted.forEach((item, i) => {
+            columns[i % columnCount].push(item);
+          });
+          return (
+            <div className="flex gap-1">
+              {columns.map((col, colIdx) => (
+                <div key={colIdx} className="flex-1 flex flex-col gap-1">
+                  {col.map((item) => {
+                    const itemId = getItemId(item);
+                    return (
+                      <DiscoverCard
+                        key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
+                        item={item}
+                        onClick={() => handleItemClick(item)}
+                        isSaved={isSaved(item.type, itemId)}
+                        onToggleSave={() => handleToggleSave(item)}
+                        isFeatured={isFeatured(item.type, itemId)}
+                        isAdmin={isAdmin}
+                        onToggleFeatured={() => handleToggleFeatured(item)}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          );
+        })()
       )}
 
       {/* Detail modal */}
