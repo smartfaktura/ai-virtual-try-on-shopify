@@ -231,7 +231,7 @@ export default function Freestyle() {
         setIsSaving(true);
         try {
           await saveImages(result.images, {
-            prompt: finalPrompt,
+            prompt: prompt,
             aspectRatio,
             quality,
             modelId: selectedModel?.modelId ?? null,
