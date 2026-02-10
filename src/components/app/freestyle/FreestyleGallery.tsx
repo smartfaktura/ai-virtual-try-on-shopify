@@ -234,6 +234,15 @@ function ImageCard({
         )}
       </div>
       <div className="flex items-center gap-2">
+        {onShareToDiscover && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onShareToDiscover(img); }}
+            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary/40 transition-colors"
+            title="Share to Discover"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={(e) => { e.stopPropagation(); onDownload(img.url, idx); }}
           className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
