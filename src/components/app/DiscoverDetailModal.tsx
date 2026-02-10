@@ -29,6 +29,7 @@ export function DiscoverDetailModal({
   onSelectRelated,
   isSaved,
   onToggleSave,
+  viewCount,
 }: DiscoverDetailModalProps) {
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
