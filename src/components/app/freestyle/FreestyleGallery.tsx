@@ -366,6 +366,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       onCopyPrompt={onCopyPrompt}
       onAddAsScene={adminSceneHandler}
       onAddAsModel={adminModelHandler}
+      onShareToDiscover={shareHandler}
       natural={natural}
     />
   ));
