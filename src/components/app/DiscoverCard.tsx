@@ -1,4 +1,4 @@
-import { Copy, ArrowRight, Camera } from 'lucide-react';
+import { Copy, ArrowRight, Camera, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
@@ -11,9 +11,11 @@ export type DiscoverItem =
 interface DiscoverCardProps {
   item: DiscoverItem;
   onClick: () => void;
+  isSaved?: boolean;
+  onToggleSave?: (e: React.MouseEvent) => void;
 }
 
-export function DiscoverCard({ item, onClick }: DiscoverCardProps) {
+export function DiscoverCard({ item, onClick, isSaved, onToggleSave }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
 
@@ -29,41 +31,31 @@ export function DiscoverCard({ item, onClick }: DiscoverCardProps) {
         loading="lazy"
       />
 
+      {/* Save button overlay */}
+      {onToggleSave && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleSave(e); }}
+          className={cn(
+            'absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10',
+            isSaved
+              ? 'bg-red-500 text-white'
+              : 'bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100'
+          )}
+        >
+          <Heart className={cn('w-4 h-4', isSaved && 'fill-current')} />
+        </button>
+      )}
+
       {/* Hover overlay (desktop) */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-end p-3 hidden [@media(hover:hover)]:flex">
         {isScene ? (
           <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); onClick(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors"
-            >
-              <Camera className="w-3 h-3" /> Use Scene
-            </button>
+            <span className="text-white/80 text-xs flex-1">{item.data.name}</span>
           </div>
         ) : (
-          <>
-            <p className="text-white/80 text-xs line-clamp-2 mb-2 leading-relaxed">
-              {item.data.prompt}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.clipboard.writeText(item.data.prompt);
-                  toast.success('Prompt copied to clipboard');
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm text-white text-xs font-medium hover:bg-white/25 transition-colors"
-              >
-                <Copy className="w-3 h-3" /> Copy
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); onClick(); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-white/90 transition-colors"
-              >
-                Use Prompt <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-          </>
+          <p className="text-white/80 text-xs line-clamp-2 leading-relaxed">
+            {item.data.prompt}
+          </p>
         )}
       </div>
 
