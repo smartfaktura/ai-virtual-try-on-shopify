@@ -379,6 +379,16 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       {modelModalUrl && (
         <AddModelModal open={!!modelModalUrl} onClose={() => setModelModalUrl(null)} imageUrl={modelModalUrl} />
       )}
+      {shareImg && (
+        <SubmitToDiscoverModal
+          open={!!shareImg}
+          onClose={() => setShareImg(null)}
+          imageUrl={shareImg.url}
+          prompt={shareImg.prompt}
+          aspectRatio={shareImg.aspectRatio}
+          sourceGenerationId={shareImg.id}
+        />
+      )}
     </>
   );
 
