@@ -181,5 +181,84 @@ export function useFreestyleImages() {
     toast.success('Image deleted');
   }, [user, images]);
 
-  return { images, isLoading, saveImage, deleteImage };
+  // Batch save: upload all images in parallel, update state once
+  const saveImages = useCallback(async (
+    base64DataUrls: string[],
+    meta: SaveImageMeta,
+  ): Promise<FreestyleImage[]> => {
+    if (!user) return [];
+
+    const uploadOne = async (base64DataUrl: string): Promise<FreestyleImage | null> => {
+      try {
+        const response = await fetch(base64DataUrl);
+        const blob = await response.blob();
+        const fileId = crypto.randomUUID();
+        const filePath = `${user.id}/${fileId}.png`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('freestyle-images')
+          .upload(filePath, blob, { contentType: 'image/png', upsert: false });
+
+        if (uploadError) {
+          console.error('Upload failed:', uploadError);
+          return null;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('freestyle-images')
+          .getPublicUrl(filePath);
+
+        const imageUrl = urlData.publicUrl;
+
+        const { data: row, error: dbError } = await supabase
+          .from('freestyle_generations')
+          .insert({
+            user_id: user.id,
+            image_url: imageUrl,
+            prompt: meta.prompt,
+            aspect_ratio: meta.aspectRatio,
+            quality: meta.quality,
+            model_id: meta.modelId ?? null,
+            scene_id: meta.sceneId ?? null,
+            product_id: meta.productId ?? null,
+          })
+          .select()
+          .single();
+
+        if (dbError) {
+          console.error('DB insert failed:', dbError);
+          return null;
+        }
+
+        return {
+          id: row.id,
+          url: imageUrl,
+          prompt: meta.prompt,
+          aspectRatio: meta.aspectRatio,
+          quality: meta.quality,
+          createdAt: new Date(row.created_at).getTime(),
+          modelId: (row as any).model_id ?? null,
+          sceneId: (row as any).scene_id ?? null,
+          productId: (row as any).product_id ?? null,
+        };
+      } catch (err) {
+        console.error('Save image error:', err);
+        return null;
+      }
+    };
+
+    const results = await Promise.all(base64DataUrls.map(uploadOne));
+    const saved = results.filter(Boolean) as FreestyleImage[];
+
+    if (saved.length > 0) {
+      setImages(prev => [...saved, ...prev]);
+    }
+    if (saved.length < base64DataUrls.length) {
+      toast.error(`Failed to save ${base64DataUrls.length - saved.length} image(s)`);
+    }
+
+    return saved;
+  }, [user]);
+
+  return { images, isLoading, saveImage, saveImages, deleteImage };
 }

@@ -77,7 +77,8 @@ export default function Freestyle() {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const { images: savedImages, isLoading: isLoadingImages, saveImage, deleteImage } = useFreestyleImages();
+  const { images: savedImages, isLoading: isLoadingImages, saveImages, deleteImage } = useFreestyleImages();
+  const [isSaving, setIsSaving] = useState(false);
 
   // Auto-dismiss scene hint
   useEffect(() => {
@@ -220,7 +221,6 @@ export default function Freestyle() {
 
     if (result) {
       if (result.contentBlocked) {
-        // Add a blocked entry to show in gallery
         setBlockedEntries(prev => [{
           id: crypto.randomUUID(),
           prompt: prompt,
@@ -228,8 +228,9 @@ export default function Freestyle() {
         }, ...prev]);
       } else if (result.images.length > 0) {
         deductCredits(creditCost);
-        for (const imageUrl of result.images) {
-          await saveImage(imageUrl, {
+        setIsSaving(true);
+        try {
+          await saveImages(result.images, {
             prompt: finalPrompt,
             aspectRatio,
             quality,
@@ -237,10 +238,12 @@ export default function Freestyle() {
             sceneId: selectedScene?.poseId ?? null,
             productId: selectedProduct?.id ?? null,
           });
+        } finally {
+          setIsSaving(false);
         }
       }
     }
-  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImage, stylePresets]);
+  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImages, stylePresets]);
 
   const handleDownload = useCallback(async (imageUrl: string, index: number) => {
     try {
@@ -353,8 +356,8 @@ export default function Freestyle() {
             onExpand={openLightbox}
             onDelete={handleDelete}
             onCopyPrompt={setPrompt}
-            generatingCount={isLoading ? imageCount : 0}
-            generatingProgress={progress}
+            generatingCount={(isLoading || isSaving) ? imageCount : 0}
+            generatingProgress={isSaving ? 100 : progress}
             blockedEntries={blockedEntries}
             onDismissBlocked={handleDismissBlocked}
             onEditBlockedPrompt={handleEditBlockedPrompt}

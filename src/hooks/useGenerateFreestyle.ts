@@ -150,6 +150,7 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
       return null;
     } finally {
       setIsLoading(false);
+      setProgress(0);
     }
   }, []);
 
