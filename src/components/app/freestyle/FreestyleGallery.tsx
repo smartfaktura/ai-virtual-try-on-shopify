@@ -184,6 +184,7 @@ function ImageCard({
   onCopyPrompt?: (prompt: string) => void;
   onAddAsScene?: (imageUrl: string) => void;
   onAddAsModel?: (imageUrl: string) => void;
+  onShareToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
   className?: string;
   natural?: boolean;
 }) {
