@@ -8,6 +8,7 @@ interface AspectRatioPreviewProps {
 const ratioConfig: Record<AspectRatio, { width: number; height: number; label: string; useCase: string }> = {
   '1:1': { width: 1, height: 1, label: 'Square', useCase: 'Instagram & Listings' },
   '4:5': { width: 4, height: 5, label: 'Portrait', useCase: 'Stories & Pinterest' },
+  '9:16': { width: 9, height: 16, label: 'Story', useCase: 'Reels & TikTok' },
   '16:9': { width: 16, height: 9, label: 'Wide', useCase: 'Banners & Facebook' },
 };
 
@@ -40,7 +41,7 @@ interface AspectRatioSelectorProps {
 }
 
 export function AspectRatioSelector({ value, onChange }: AspectRatioSelectorProps) {
-  const ratios: AspectRatio[] = ['1:1', '4:5', '16:9'];
+  const ratios: AspectRatio[] = ['1:1', '4:5', '9:16', '16:9'];
   return (
     <div className="space-y-3">
       <div>

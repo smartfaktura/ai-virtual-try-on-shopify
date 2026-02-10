@@ -26,7 +26,7 @@ interface TryOnRequest {
     description: string;
     category: string;
   };
-  aspectRatio: "1:1" | "4:5" | "16:9";
+  aspectRatio: "1:1" | "4:5" | "9:16" | "16:9";
   imageCount: number;
 }
 

@@ -54,7 +54,7 @@ export interface TemplateDefaults {
   negativePrompt: string;
 }
 
-export type AspectRatio = '1:1' | '4:5' | '16:9';
+export type AspectRatio = '1:1' | '4:5' | '9:16' | '16:9';
 export type ImageQuality = 'standard' | 'high';
 
 export interface GenerationJob {
