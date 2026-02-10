@@ -59,7 +59,7 @@ export function DiscoverDetailModal({
               <Badge variant="secondary">{preset.category}</Badge>
               <Badge variant="outline">{preset.aspect_ratio}</Badge>
               {preset.quality === 'high' && (
-                <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/20">HD</Badge>
+                <Badge variant="secondary">HD</Badge>
               )}
             </div>
 
