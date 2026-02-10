@@ -1575,7 +1575,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_008',
     name: 'Garden Natural',
     category: 'lifestyle',
-    description: 'Relaxed outdoor pose in beautiful botanical garden setting',
+    description: 'Model standing relaxed among lush greenery in a botanical garden, one hand gently touching a leaf, soft natural light filtering through foliage',
     previewUrl: poseLifestyleGarden,
     previewUrlMale: poseLifestyleGardenMale,
   },
