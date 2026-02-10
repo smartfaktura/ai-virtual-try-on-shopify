@@ -8,6 +8,7 @@ import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { useSavedItems } from '@/hooks/useSavedItems';
 import { mockTryOnPoses } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
