@@ -264,6 +264,11 @@ export default function Discover() {
     toggleSave.mutate({ itemType: item.type, itemId: getItemId(item) });
   };
 
+  const handleToggleFeatured = (item: DiscoverItem) => {
+    const itemId = getItemId(item);
+    toggleFeatured.mutate({ itemType: item.type, itemId, currentlyFeatured: isFeatured(item.type, itemId) });
+  };
+
   return (
     <div className="space-y-8 py-8 px-1">
       {/* Header */}
