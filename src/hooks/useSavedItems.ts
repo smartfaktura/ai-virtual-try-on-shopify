@@ -27,7 +27,7 @@ export function useSavedItems() {
         .select('*')
         .eq('user_id', userId);
       if (error) throw error;
-      return (data ?? []) as SavedItem[];
+      return (data ?? []) as unknown as SavedItem[];
     },
     enabled: !!userId,
   });

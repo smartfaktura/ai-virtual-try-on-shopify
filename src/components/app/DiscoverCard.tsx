@@ -38,7 +38,7 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave }: DiscoverC
           className={cn(
             'absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10',
             isSaved
-              ? 'bg-red-500 text-white'
+              ? 'bg-destructive text-destructive-foreground'
               : 'bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100'
           )}
         >

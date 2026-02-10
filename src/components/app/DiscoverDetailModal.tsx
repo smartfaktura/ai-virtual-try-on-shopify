@@ -133,7 +133,7 @@ export function DiscoverDetailModal({
                     variant="outline"
                     size="sm"
                     onClick={onToggleSave}
-                    className={cn('flex-1', isSaved && 'text-red-500 border-red-500/30')}
+                    className={cn('flex-1', isSaved && 'text-destructive border-destructive/30')}
                   >
                     <Heart className={cn('w-3.5 h-3.5 mr-1.5', isSaved && 'fill-current')} />
                     {isSaved ? 'Saved' : 'Save'}
