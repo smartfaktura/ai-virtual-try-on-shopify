@@ -1,101 +1,51 @@
 
 
-## Fix Generating Card UX Issues
+## Fix Prompt Display and Enrich Scene Descriptions
 
-### Three Problems
+### Problem 1: Internal instructions visible to users
 
-1. **Generating card ignores selected aspect ratio**: `GeneratingCard` always renders with `min-h-[300px]` regardless of the user's chosen ratio (1:1, 3:4, etc.). When user picks 1:1, the placeholder appears as a tall rectangle instead of a square.
+When a scene is selected, the code builds a `finalPrompt` that includes internal AI instructions like "MANDATORY SCENE: Place the subject in this environment..." This augmented prompt is passed to `saveImages()` and stored in the database. When users view their images in the Library, they see these raw system instructions instead of just their original prompt.
 
-2. **White flash between generating and final image**: When generation completes, the generating card disappears. The new `ImageCard` renders with `opacity-0` and only fades in after `onLoad` fires on the `<img>`. During that gap (could be seconds for large images), the user sees an empty white card -- the "laggy white screen."
+**Fix**: Save the original user `prompt` to the database, not `finalPrompt`. The `finalPrompt` is only needed for the AI generation call.
 
-3. **Layout shift on swap**: The generating card and the final image card may have different dimensions, causing a jarring layout jump.
+**File**: `src/pages/Freestyle.tsx` (line 234)
 
-### Solution
+Change:
+```tsx
+prompt: finalPrompt,
+```
+To:
+```tsx
+prompt: prompt,
+```
 
-**A. Pass aspect ratio to GeneratingCard and use it for sizing**
+### Problem 2: Scene descriptions lack pose/action context
 
-Pass `aspectRatio` from `Freestyle.tsx` through `FreestyleGallery` to `GeneratingCard`. Use CSS `aspect-ratio` on the card instead of `min-h-[300px]` so the placeholder matches the expected output dimensions.
+Current descriptions are short environment-only lines like "Fall foliage with warm golden tones and soft light." They don't tell the AI what the person should be *doing* in that scene, which leads to generic standing poses regardless of context.
 
-**B. Eliminate white flash with eager loading + background color**
+**Fix**: Enrich each scene description to include the subject's pose, body language, and interaction with the environment. This gives the AI stronger guidance for natural-looking results.
 
-- Change `ImageCard` image loading from `lazy` to `eager` for newly generated images
-- Add a `bg-muted` background to the image card container so it shows a neutral shimmer instead of white while the image loads
-- Keep the opacity transition but ensure the container itself has a visible background
+**File**: `src/data/mockData.ts` -- update `description` for all on-model scenes (pose_001 through pose_030). Examples:
 
-**C. Smooth aspect-ratio-aware transition**
+| Scene | Current | Updated |
+|-------|---------|---------|
+| Studio Front | "Classic lookbook pose, full body front view with clean white background" | "Model standing facing camera in a classic lookbook pose, full body front view, relaxed shoulders, clean white studio background" |
+| Urban Walking | "Candid street style, walking in city with golden hour light" | "Model walking confidently down a city street, mid-stride with natural arm swing, candid street style, golden hour warm light" |
+| Relaxed Seated | "Casual seated pose in modern interior with natural light" | "Model sitting casually in a modern chair, one leg crossed, leaning back relaxed, natural window light in contemporary interior" |
+| Coffee Shop Casual | "Relaxed pose at cafe table with natural morning light" | "Model sitting at a cafe table holding a coffee cup, relaxed posture, soft smile, natural morning light through large cafe windows" |
+| Beach Sunset | "Coastal lifestyle scene with golden sunset backdrop" | "Model walking barefoot along the shore at golden hour, wind gently blowing hair, relaxed coastal lifestyle mood" |
+| Autumn Park | "Fall foliage with warm golden tones and soft light" | "Model walking along a tree-lined park path surrounded by fall foliage, hands in pockets, warm golden tones and soft dappled light" |
+| Park Bench | "Casual outdoor pose on wooden park bench with greenery" | "Model sitting casually on a wooden park bench, one arm resting on the backrest, lush greenery and dappled sunlight" |
+| Rooftop City | "Urban rooftop with city skyline in background at dusk" | "Model standing at a rooftop railing gazing over the city skyline, relaxed lean, twilight sky with city lights below" |
+| Gym & Fitness | "Athletic setting with gym equipment and natural light" | "Model in active stance near gym equipment, confident athletic pose, natural light streaming into modern fitness space" |
+| Resort Poolside | "Luxury resort pool area with warm golden light" | "Model lounging on a poolside daybed at a luxury resort, relaxed summer pose, warm golden afternoon light reflecting off water" |
 
-Apply `aspect-ratio` CSS to image cards as well (based on their stored `aspectRatio` metadata), so the container is properly sized before the image loads.
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/components/app/freestyle/FreestyleGallery.tsx` | Add `aspectRatio` prop to `GeneratingCard`; use CSS `aspect-ratio` instead of `min-h-[300px]`; add `bg-muted` and shimmer to `ImageCard` container; use `loading="eager"` |
-| `src/pages/Freestyle.tsx` | Pass `aspectRatio` to the gallery as `generatingAspectRatio` |
+Similar enrichments will be applied to all 30 on-model scenes (Studio, Lifestyle, Editorial, Streetwear categories) -- each will describe the subject's pose, body language, and interaction with the environment.
 
 ### Technical Details
 
-**Aspect ratio mapping utility:**
+The changes are minimal:
+1. One line change in `Freestyle.tsx` to save `prompt` instead of `finalPrompt`
+2. Update all 30 scene `description` strings in `mockData.ts` to include pose/action context
 
-```tsx
-const RATIO_MAP: Record<string, string> = {
-  '1:1': '1/1',
-  '3:4': '3/4',
-  '4:5': '4/5',
-  '9:16': '9/16',
-  '16:9': '16/9',
-};
-```
-
-**GeneratingCard changes:**
-
-```tsx
-function GeneratingCard({ progress, aspectRatio, className }) {
-  const cssRatio = RATIO_MAP[aspectRatio || '1:1'] || '1/1';
-  return (
-    <div
-      className={cn('rounded-xl overflow-hidden ...', className)}
-      style={{ aspectRatio: cssRatio }}
-    >
-      {/* avatar, status, progress bar */}
-    </div>
-  );
-}
-```
-
-**ImageCard container -- prevent white flash:**
-
-```tsx
-<div
-  className={cn(
-    'group relative overflow-hidden rounded-xl shadow-md cursor-pointer',
-    'bg-muted animate-shimmer bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%]',
-    className,
-  )}
-  style={{ aspectRatio: RATIO_MAP[img.aspectRatio || '1:1'] || '1/1' }}
->
-  <img
-    className={cn(
-      'w-full h-full object-cover transition-opacity duration-700',
-      loaded ? 'opacity-100' : 'opacity-0',
-    )}
-    loading="eager"
-    onLoad={() => setLoaded(true)}
-  />
-</div>
-```
-
-This means:
-- Before the image loads, the card shows a shimmer at the correct size
-- The image fades in smoothly over 700ms
-- No white gap, no layout shift, correct dimensions throughout
-
-**Freestyle.tsx -- pass aspect ratio:**
-
-```tsx
-<FreestyleGallery
-  ...
-  generatingAspectRatio={aspectRatio}
-/>
-```
-
+No edge function changes needed -- the scene description is already injected into the AI prompt via `finalPrompt` construction and the ENVIRONMENT polish layer.
