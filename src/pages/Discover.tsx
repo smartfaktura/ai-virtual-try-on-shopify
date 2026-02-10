@@ -374,6 +374,9 @@ export default function Discover() {
         isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
         onToggleSave={selectedItem ? () => handleToggleSave(selectedItem) : undefined}
         viewCount={viewCount ?? undefined}
+        isAdmin={isAdmin}
+        isFeatured={selectedItem ? isFeatured(selectedItem.type, getItemId(selectedItem)) : false}
+        onToggleFeatured={selectedItem ? () => handleToggleFeatured(selectedItem) : undefined}
       />
     </div>
   );
