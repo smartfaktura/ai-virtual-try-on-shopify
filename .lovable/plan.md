@@ -1,64 +1,37 @@
 
 
-## Fix Library: Image Aspect Ratios, Better Select UI, and Source Filters
+## Library Cleanup: Remove Filters, Fix Loading, Ensure True Masonry
 
-### Problem 1: Images Not Showing Actual Format
+### 1. Remove Source Filters (All / Generations / Freestyle)
 
-The shimmer placeholder in `LibraryImageCard` always uses `aspect-[3/4]`, and images load with `h-auto`. This works for masonry but the placeholder doesn't match the actual image ratio. Since we have the `aspectRatio` field (e.g., "1:1", "3:4", "9:16"), we can use it to set the correct placeholder aspect ratio so there's no layout shift.
+Remove the source filter pills from the Library header. This simplifies the UI -- all images show together. Keep only Search, Newest/Oldest sort, and Select.
 
-### Problem 2: Select UI Hard to See
+**File: `src/pages/Jobs.tsx`**
+- Remove the `SOURCE_FILTERS` constant and `sourceFilter` state
+- Remove the filter pill buttons and the divider from the toolbar
+- Pass `'all'` directly to `useLibraryItems`
 
-The current select checkbox is a small 24px circle with `border-white/70` and `bg-black/30` -- too subtle. We will:
-- Make the checkbox always visible when `selectMode` is on (not just on hover)
-- Add a subtle highlight border/ring around the entire card when selected
-- Increase checkbox size slightly and improve contrast
+**File: `src/hooks/useLibraryItems.ts`**
+- Clean up: remove the `sourceFilter` parameter, always fetch both sources
+- Remove the `LibrarySourceFilter` type export
 
-### Problem 3: No Filtering by Source Type
+### 2. Fix Loading Lag During Generation
 
-Add filter pills for "All", "Generations", "Freestyle" so users can filter by source. Since model/scene associations don't have data yet, source filtering is the most useful filter to add now.
+Currently the Library query only runs once and doesn't auto-refresh. When the user generates images and switches to Library, they see stale data until a manual refresh. We will:
+
+**File: `src/hooks/useLibraryItems.ts`**
+- Add `refetchInterval: 10000` (10 seconds) to the query options so new images appear automatically
+- Add `refetchOnWindowFocus: true` so switching tabs triggers a refresh
+
+### 3. Ensure True Masonry Layout
+
+The masonry layout is already implemented with flex columns and `gap-1`, which is the same approach used on the Discover page. Images render at their natural aspect ratio (`w-full h-auto`). The shimmer placeholder currently uses `getAspectClass` to approximate the aspect ratio during loading -- this is correct and prevents layout shift.
+
+No changes needed for the masonry layout itself -- it is already working. The images in the screenshot appear uniform because those particular generations happen to share similar aspect ratios.
 
 ### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/app/LibraryImageCard.tsx` | Use `item.aspectRatio` for placeholder sizing; improve select checkbox contrast and add selected card highlight ring |
-| `src/pages/Jobs.tsx` | Add source filter pills ("All" / "Generations" / "Freestyle"); pass filter to hook |
-| `src/hooks/useLibraryItems.ts` | Accept optional `sourceFilter` parameter and filter results accordingly |
-
-### Technical Details
-
-**Aspect ratio mapping for placeholder (LibraryImageCard.tsx):**
-
-```tsx
-function getAspectClass(ratio?: string) {
-  switch (ratio) {
-    case '1:1': return 'aspect-square';
-    case '3:4': return 'aspect-[3/4]';
-    case '4:5': return 'aspect-[4/5]';
-    case '9:16': return 'aspect-[9/16]';
-    case '16:9': return 'aspect-video';
-    default: return 'aspect-[3/4]';
-  }
-}
-```
-
-**Improved select checkbox:**
-- Increase to `w-7 h-7` with a stronger border (`border-white`)
-- When selected: solid primary background with white check
-- Add a `ring-2 ring-primary` to the entire card when selected
-
-**Source filter pills (Jobs.tsx):**
-```tsx
-const SOURCE_FILTERS = [
-  { id: 'all', label: 'All' },
-  { id: 'generation', label: 'Generations' },
-  { id: 'freestyle', label: 'Freestyle' },
-];
-```
-
-Added as a row of pills below the search bar, following the same styling as sort pills.
-
-**Hook update (useLibraryItems.ts):**
-- Add `sourceFilter: 'all' | 'generation' | 'freestyle'` parameter
-- When not 'all', skip fetching the other source entirely (saves a query)
-
+| `src/pages/Jobs.tsx` | Remove source filter pills and state; remove divider |
+| `src/hooks/useLibraryItems.ts` | Remove `sourceFilter` param and type; add `refetchInterval` and `refetchOnWindowFocus` |
