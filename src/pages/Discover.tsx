@@ -211,6 +211,20 @@ export default function Discover() {
     });
   }, [allItems, selectedCategory, searchQuery, similarTo, isSaved, savedItems]);
 
+  // Sort: featured items first (by created_at desc), then rest
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const aKey = `${a.type}:${getItemId(a)}`;
+      const bKey = `${b.type}:${getItemId(b)}`;
+      const aFeat = featuredMap.get(aKey);
+      const bFeat = featuredMap.get(bKey);
+      if (aFeat && !bFeat) return -1;
+      if (!aFeat && bFeat) return 1;
+      if (aFeat && bFeat) return new Date(bFeat.created_at).getTime() - new Date(aFeat.created_at).getTime();
+      return 0;
+    });
+  }, [filtered, featuredMap]);
+
   // Improved "More Like This" with scoring + keywords
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
