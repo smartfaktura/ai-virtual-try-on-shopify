@@ -43,7 +43,7 @@ export function RecentCreationsGallery() {
       for (const job of jobs ?? []) {
         const results = job.results as any;
         if (Array.isArray(results) && results.length > 0) {
-          for (const r of results.slice(0, 2)) {
+          for (const r of results) {
             const url = typeof r === 'string' ? r : r?.url || r?.image_url;
             if (url) {
               items.push({
