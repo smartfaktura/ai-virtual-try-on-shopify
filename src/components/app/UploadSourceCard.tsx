@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import type { ScratchUpload } from '@/types';
 
 interface UploadSourceCardProps {
@@ -24,11 +25,21 @@ const productTypeOptions = [
   'Joggers', 'Shorts', 'Dress', 'Sweater', 'Other',
 ];
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function UploadSourceCard({
   scratchUpload, onUpload, onRemove, onUpdateProductInfo, isUploading = false,
 }: UploadSourceCardProps) {
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const validateFile = (file: File): string | null => {
     if (!ACCEPTED_TYPES.includes(file.type)) return 'Please upload a JPG, PNG, or WEBP image.';
@@ -36,16 +47,41 @@ export function UploadSourceCard({
     return null;
   };
 
+  const analyzeProduct = useCallback(async (file: File, currentInfo: ScratchUpload['productInfo']) => {
+    setIsAnalyzing(true);
+    try {
+      const base64 = await fileToBase64(file);
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-product-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ imageUrl: base64 }),
+      });
+      if (!resp.ok) throw new Error('Analysis failed');
+      const data = await resp.json();
+      onUpdateProductInfo({
+        title: data.title || currentInfo.title,
+        productType: productTypeOptions.includes(data.productType) ? data.productType : currentInfo.productType,
+        description: data.description || currentInfo.description,
+      });
+    } catch {
+      toast.error('AI analysis failed — fill in details manually');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [onUpdateProductInfo]);
+
   const handleFile = useCallback((file: File) => {
     const validationError = validateFile(file);
     if (validationError) { setError(validationError); return; }
     setError(null);
     const previewUrl = URL.createObjectURL(file);
-    onUpload({
-      file, previewUrl,
-      productInfo: { title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '), productType: '', description: '' },
-    });
-  }, [onUpload]);
+    const productInfo = { title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '), productType: '', description: '' };
+    onUpload({ file, previewUrl, productInfo });
+    analyzeProduct(file, productInfo);
+  }, [onUpload, analyzeProduct]);
 
   const handleDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleFile(file); }, [handleFile]);
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file) handleFile(file); }, [handleFile]);
@@ -64,24 +100,34 @@ export function UploadSourceCard({
 
         <div className="space-y-3">
           <h4 className="font-semibold">Product Details</h4>
-          <p className="text-sm text-muted-foreground">Add details to help the AI generate better images.</p>
-          <div className="space-y-1.5">
-            <Label htmlFor="product-title">Product Title</Label>
-            <Input id="product-title" value={scratchUpload.productInfo.title} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, title: e.target.value })} placeholder="e.g., High-Waist Yoga Leggings" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Product Type</Label>
-            <Select value={scratchUpload.productInfo.productType} onValueChange={(val) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: val })}>
-              <SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger>
-              <SelectContent>
-                {productTypeOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="product-desc">Description (optional)</Label>
-            <Textarea id="product-desc" value={scratchUpload.productInfo.description} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, description: e.target.value })} placeholder="e.g., Black seamless leggings with high waistband" rows={3} />
-          </div>
+          {isAnalyzing ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <Sparkles className="w-4 h-4 text-primary/60" />
+              AI analyzing product…
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">Add details to help the AI generate better images.</p>
+              <div className="space-y-1.5">
+                <Label htmlFor="product-title">Product Title</Label>
+                <Input id="product-title" value={scratchUpload.productInfo.title} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, title: e.target.value })} placeholder="e.g., High-Waist Yoga Leggings" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Product Type</Label>
+                <Select value={scratchUpload.productInfo.productType} onValueChange={(val) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: val })}>
+                  <SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger>
+                  <SelectContent>
+                    {productTypeOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="product-desc">Description (optional)</Label>
+                <Textarea id="product-desc" value={scratchUpload.productInfo.description} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, description: e.target.value })} placeholder="e.g., Black seamless leggings with high waistband" rows={3} />
+              </div>
+            </>
+          )}
         </div>
 
         {isUploading && (
