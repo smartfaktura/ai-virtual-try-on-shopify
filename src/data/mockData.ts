@@ -1708,7 +1708,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_022',
     name: 'Basketball Court',
     category: 'streetwear',
-    description: 'Urban playground with chain-link fence backdrop',
+    description: 'Model standing on a basketball court, one foot on a ball or leaning against chain-link fence, athletic casual stance, urban playground vibe',
     previewUrl: poseStreetwearBasketball,
     previewUrlMale: poseStreetwearBasketballMale,
   },
