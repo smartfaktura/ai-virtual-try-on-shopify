@@ -232,7 +232,7 @@ function ImageCard({
 
   if (natural) {
     return (
-      <div className={cn('group relative inline-block', className)}>
+      <div className={cn('group relative inline-block cursor-pointer', className)} onClick={() => onExpand(idx)}>
         <img
           src={img.url}
           alt={`Generated ${idx + 1}`}
@@ -252,9 +252,10 @@ function ImageCard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl shadow-md shadow-black/20',
+        'group relative overflow-hidden rounded-xl shadow-md shadow-black/20 cursor-pointer',
         className,
       )}
+      onClick={() => onExpand(idx)}
     >
       <img
         src={img.url}
