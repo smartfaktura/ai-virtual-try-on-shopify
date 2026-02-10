@@ -29,6 +29,7 @@ export interface LibraryItem {
 interface LibraryImageCardProps {
   item: LibraryItem;
   onClick?: () => void;
+  onDelete?: () => void;
   selectMode?: boolean;
   selected?: boolean;
 }
