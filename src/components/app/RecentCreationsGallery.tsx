@@ -43,7 +43,7 @@ export function RecentCreationsGallery() {
       for (const job of jobs ?? []) {
         const results = job.results as any;
         if (Array.isArray(results) && results.length > 0) {
-          for (const r of results.slice(0, 2)) {
+          for (const r of results) {
             const url = typeof r === 'string' ? r : r?.url || r?.image_url;
             if (url) {
               items.push({
@@ -83,7 +83,7 @@ export function RecentCreationsGallery() {
 
       // Sort by date descending and take first 10
       items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      return items.slice(0, 5);
+      return items.slice(0, 10);
     },
     enabled: !!user,
   });
