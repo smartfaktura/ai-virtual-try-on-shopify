@@ -74,12 +74,6 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured,
         </button>
       )}
 
-      {/* Featured badge (non-admin) */}
-      {isFeatured && !isAdmin && (
-        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-medium z-10">
-          Featured
-        </div>
-      )}
 
       {/* Hover overlay (desktop) */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-end p-3 hidden [@media(hover:hover)]:flex">
