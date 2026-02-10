@@ -38,6 +38,9 @@ export function DiscoverDetailModal({
   isSaved,
   onToggleSave,
 }: DiscoverDetailModalProps) {
+  const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
   if (!item) return null;
 
   const isPreset = item.type === 'preset';
@@ -50,6 +53,46 @@ export function DiscoverDetailModal({
     if (isPreset) {
       navigator.clipboard.writeText(item.data.prompt);
       toast.success('Prompt copied to clipboard');
+    }
+  };
+
+  const handleGeneratePrompt = async () => {
+    setIsGenerating(true);
+    setGeneratedPrompt(null);
+    try {
+      const resolvedUrl = await convertImageToBase64(imageUrl);
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/describe-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ imageUrl: resolvedUrl }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to generate prompt');
+      }
+      const data = await resp.json();
+      setGeneratedPrompt(data.prompt);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to generate prompt');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleCopyGenerated = () => {
+    if (generatedPrompt) {
+      navigator.clipboard.writeText(generatedPrompt);
+      toast.success('Generated prompt copied');
+    }
+  };
+
+  const handleUseGenerated = () => {
+    if (generatedPrompt) {
+      onUseItem({ ...item, _generatedPrompt: generatedPrompt } as any);
+      onClose();
     }
   };
 
