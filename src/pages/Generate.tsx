@@ -182,7 +182,7 @@ export default function Generate() {
       // Set aspect ratio from workflow config or recommendations
       if (workflowConfig?.fixed_settings?.aspect_ratios?.length) {
         const firstRatio = workflowConfig.fixed_settings.aspect_ratios[0] as AspectRatio;
-        if (['1:1', '4:5', '16:9'].includes(firstRatio)) {
+        if (['1:1', '4:5', '9:16', '16:9'].includes(firstRatio)) {
           setAspectRatio(firstRatio);
         }
       } else if (activeWorkflow.recommended_ratios?.length > 0) {
