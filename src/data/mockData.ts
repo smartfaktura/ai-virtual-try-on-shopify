@@ -1583,7 +1583,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_005',
     name: 'Editorial Dramatic',
     category: 'editorial',
-    description: 'High-fashion pose with dramatic lighting and dark backdrop',
+    description: 'Model in a powerful high-fashion stance, sharp angular pose with one hand on hip, dramatic side lighting against a dark moody backdrop',
     previewUrl: poseEditorialDramatic,
     previewUrlMale: poseEditorialDramaticMale,
   },
