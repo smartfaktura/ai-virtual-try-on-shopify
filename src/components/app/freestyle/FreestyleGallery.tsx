@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2 } from 'lucide-react';
+import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
+import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 
 import avatarSophia from '@/assets/team/avatar-sophia.jpg';
 import avatarLuna from '@/assets/team/avatar-luna.jpg';
