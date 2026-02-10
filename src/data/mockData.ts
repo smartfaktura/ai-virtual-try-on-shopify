@@ -1675,7 +1675,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_018',
     name: 'Editorial Window',
     category: 'editorial',
-    description: 'Silhouette against floor-to-ceiling window with natural light',
+    description: 'Model standing in silhouette against a floor-to-ceiling window, one hand on the glass, contemplative pose bathed in natural backlight',
     previewUrl: poseEditorialWindow,
     previewUrlMale: poseEditorialWindowMale,
   },
