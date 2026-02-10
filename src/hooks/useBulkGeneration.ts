@@ -222,7 +222,7 @@ export function useBulkGeneration({ models, poses, templates }: UseBulkGeneratio
           },
           pose: {
             name: pose.name,
-            description: pose.description,
+            description: pose.promptHint || pose.description,
             category: pose.category,
           },
           aspectRatio: config.aspectRatio,

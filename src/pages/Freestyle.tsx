@@ -180,7 +180,7 @@ export default function Freestyle() {
 
     let finalPrompt = prompt;
     if (selectedScene) {
-      finalPrompt = `${prompt}. MANDATORY SCENE: Place the subject in this environment — ${selectedScene.description}. The background and setting must match the scene reference image exactly.`;
+      finalPrompt = `${prompt}. MANDATORY SCENE: Place the subject in this environment — ${selectedScene.promptHint || selectedScene.description}. The background and setting must match the scene reference image exactly.`;
     }
 
     // Build model text context

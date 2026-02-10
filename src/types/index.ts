@@ -154,6 +154,7 @@ export interface TryOnPose {
   name: string;
   category: PoseCategory;
   description: string;
+  promptHint: string;
   previewUrl: string;
   previewUrlMale?: string;
 }

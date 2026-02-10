@@ -20,6 +20,7 @@ function toTryOnPose(scene: CustomScene): TryOnPose {
     name: scene.name,
     category: scene.category as PoseCategory,
     description: scene.description,
+    promptHint: scene.description,
     previewUrl: scene.image_url,
   };
 }

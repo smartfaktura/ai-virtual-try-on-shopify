@@ -85,7 +85,7 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
           },
           pose: {
             name: params.pose.name,
-            description: params.pose.description,
+            description: params.pose.promptHint || params.pose.description,
             category: params.pose.category,
           },
           aspectRatio: params.aspectRatio,
