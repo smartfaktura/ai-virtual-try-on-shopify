@@ -1617,7 +1617,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_011',
     name: 'Studio Back View',
     category: 'studio',
-    description: 'Elegant back pose showing garment rear details, shoulders angled',
+    description: 'Model with back to camera, looking over one shoulder, shoulders slightly angled to show garment rear details, clean studio backdrop',
     previewUrl: poseStudioBack,
     previewUrlMale: poseStudioBackMale,
   },
