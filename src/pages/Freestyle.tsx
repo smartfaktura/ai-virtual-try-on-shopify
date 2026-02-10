@@ -12,6 +12,7 @@ import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
+import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import type { ModelProfile, TryOnPose } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
@@ -55,13 +56,18 @@ export default function Freestyle() {
     const p = searchParams.get('prompt');
     const r = searchParams.get('ratio');
     const q = searchParams.get('quality');
+    const sceneParam = searchParams.get('scene');
     if (p) setPrompt(p);
     if (r && ['1:1', '3:4', '4:5', '9:16', '16:9'].includes(r)) {
       setAspectRatio(r as FreestyleAspectRatio);
     }
     if (q === 'high') setQuality('high');
+    if (sceneParam) {
+      const matchedScene = mockTryOnPoses.find((s) => s.poseId === sceneParam);
+      if (matchedScene) setSelectedScene(matchedScene);
+    }
     // Clean URL params after reading
-    if (p || r || q) {
+    if (p || r || q || sceneParam) {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
