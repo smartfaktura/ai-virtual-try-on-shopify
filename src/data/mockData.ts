@@ -1691,7 +1691,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_020',
     name: 'Editorial Artistic',
     category: 'editorial',
-    description: 'High-fashion pose with abstract geometric backdrop',
+    description: 'Model in an expressive high-fashion pose, body twisted artistically, one arm extended, abstract geometric shapes and bold colors in backdrop',
     previewUrl: poseEditorialArtistic,
     previewUrlMale: poseEditorialArtisticMale,
   },
