@@ -33,7 +33,9 @@ const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
 
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
+  const { asPoses: customPoses } = useCustomScenes();
 
+  const allPoses = [...mockTryOnPoses, ...customPoses];
   const allCategories = Object.keys(poseCategoryLabels) as PoseCategory[];
   const visibleCategories = activeFilter === 'all'
     ? allCategories
