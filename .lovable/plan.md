@@ -1,87 +1,110 @@
 
 
-## Remove "Scenes" Category, Elevate Modal Design, Improve "More Like This"
+## Fix Discover Performance, Full-Screen Modal, Better Similarity, Saved Count
 
-### 1. Remove "Scenes" as a Separate Category
+### 1. Fix Gallery Lag / Glitching on Load
 
-Scenes are just a special type of content (usable as a scene in Freestyle), not a category. They should appear in ALL category views mixed with presets.
+**Problem**: All images render at once, causing layout shift and jank as they load at different speeds in the masonry grid.
 
-**Changes to `src/pages/Discover.tsx`:**
-- Remove `{ id: 'scenes', label: 'Scenes' }` from the CATEGORIES array
-- Update the filter logic: instead of hiding scenes when a category is selected (`if (item.type === 'scene') return false`), map scene categories to the filter categories. Scene categories are `studio`, `lifestyle`, `editorial`, `streetwear` -- map them so e.g. `lifestyle` scenes appear when the "Lifestyle" filter is active, `editorial` scenes show under "Cinematic" or a relevant match
-- Scenes still keep their "Scene" badge on cards so users know they can be used as scenes in Freestyle
+**Solution in `src/pages/Discover.tsx` and `src/components/app/DiscoverCard.tsx`:**
+- Add progressive loading: show a placeholder shimmer while images load, then fade them in with a CSS transition
+- In `DiscoverCard.tsx`, add an `onLoad` state that starts as `false`, set to `true` on `<img onLoad>`. Image starts with `opacity-0` and transitions to `opacity-100` once loaded
+- Add a shimmer placeholder `div` behind the image that shows until loaded
+- This prevents layout jumps and creates a smooth "develop" effect as images load in
 
-**Category mapping for scenes:**
-- `studio` scenes -> show in "Commercial", "Photography" filters
-- `lifestyle` scenes -> show in "Lifestyle" filter
-- `editorial` scenes -> show in "Cinematic", "Photography" filters
-- `streetwear` scenes -> show in "Styling", "Lifestyle" filters
-- All scenes always visible under "All"
+### 2. Full-Screen Split-Layout Detail Modal
 
-### 2. Elevate the Detail Modal to Premium Design
+**Problem**: Current modal is a small centered dialog with cramped vertical scrolling. Image is small, buttons are buried.
 
-The current modal is flat and boring. Redesign it with depth, glass effects, and better visual hierarchy.
+**Solution -- replace Dialog with a full-screen overlay in `src/components/app/DiscoverDetailModal.tsx`:**
 
-**Changes to `src/components/app/DiscoverDetailModal.tsx`:**
+Instead of the Radix Dialog centered card, render a full-screen overlay with a split layout:
 
-- Image area: add subtle inner shadow overlay at bottom for depth, slightly larger max-height
-- Title section: larger text (`text-2xl`), letter-spacing, with the category as a subtle uppercase label ABOVE the title (not a badge below)
-- Generate Prompt button: glass/frosted style with `backdrop-blur` and subtle gradient border, icon with shimmer effect
-- Generated prompt display: darker card with subtle glow border when present
-- Primary CTA: gradient background or subtle shadow lift, larger size
-- Secondary actions (Save, Similar, Copy): icon-prominent with frosted glass pill style, arranged as a tight row of icon buttons with labels
-- Description text: lighter weight, more refined typography
-- Tags: smaller, more subtle, inline with description
-- "More like this" section: larger thumbnails (grid-cols-3 instead of 4), rounded-xl with hover scale, subtle shadow
-
-**New visual flow:**
 ```text
-+--------------------------------------------+
-|  [Image -- large, subtle bottom shadow]    |
-+--------------------------------------------+
-|  LIFESTYLE  (tiny uppercase label)         |
-|  Garden Natural  (large elegant title)     |
-|  Scene badge if applicable                 |
-|                                            |
-|  [--- Generate Prompt --- frosted glass]   |
-|  [generated prompt card if available]      |
-|  [Copy]  [Use in Freestyle]               |
-|                                            |
-|  Description text (refined, no box)        |
-|  #tags inline                              |
-|                                            |
-|  [========= Use Scene =========]  (big)   |
-|                                            |
-|  [heart Save] [search Similar] [copy Copy] |
-|                                            |
-|  --- More like this ---                    |
-|  [  thumb  ] [  thumb  ] [  thumb  ]       |
-+--------------------------------------------+
++--------------------------------------------------+
+|  [X close]                                        |
+|                                                   |
+|   +---------------------+  +-------------------+  |
+|   |                     |  |  LIFESTYLE - Scene |  |
+|   |                     |  |  Garden Natural    |  |
+|   |     BIG IMAGE       |  |                   |  |
+|   |     (fills left)    |  |  [Generate Prompt] |  |
+|   |                     |  |  [prompt result]   |  |
+|   |                     |  |  [Copy] [Use FF]   |  |
+|   |                     |  |                   |  |
+|   |                     |  |  Description...    |  |
+|   |                     |  |  #tags             |  |
+|   |                     |  |                   |  |
+|   |                     |  |  [== Use Scene ==] |  |
+|   |                     |  |  [Save] [Similar]  |  |
+|   |                     |  |                   |  |
+|   |                     |  |  More like this    |  |
+|   |                     |  |  [t] [t] [t]       |  |
+|   +---------------------+  +-------------------+  |
++--------------------------------------------------+
 ```
+
+- Full viewport overlay (`fixed inset-0 z-50 bg-black/90`)
+- Two-column layout: left is the image (60% width, centered, `object-contain`, fills the height), right is a scrollable panel (40% width) with all controls
+- Right panel has frosted glass background (`bg-background/95 backdrop-blur-xl`)
+- Close button (X) in top-right corner of the overlay
+- Image gets maximum showcase space
+- On mobile (<768px), stack vertically: image on top, controls below, full-screen scroll
+- Animate in with `animate-in fade-in` for smooth open
 
 ### 3. Improve "More Like This" Similarity
 
-Currently it only matches by exact category, which gives poor results (e.g., all lifestyle items look "related" even if they're completely different visually).
+**Current issue**: Scoring only uses category and tags. Scenes have no tags, so they only match by category -- weak matches.
 
-**Better matching algorithm in `src/pages/Discover.tsx`:**
+**Improvements in `src/pages/Discover.tsx`:**
+- Add description keyword matching: extract significant words from item descriptions and score overlaps (+1 per shared keyword)
+- For scenes matching scenes: boost score by +3 (scenes are rare, showing other scenes is valuable)
+- Increase result count from 6 to 9 (3x3 grid in the right panel)
+- Filter out items with score 0 (truly unrelated)
 
-Instead of just category matching, implement a scoring system:
+### 4. Show Saved Count on "Saved" Category Pill
 
-- **Same category**: +2 points
-- **Shared tags** (preset-to-preset): +1 point per shared tag
-- **Same type** (both scenes or both presets): +1 point
-- **Scene category overlap** (scene `lifestyle` matches preset category `lifestyle`): +2 points
-- Sort by score descending, take top 6 (increase from 4)
-- Exclude exact same item
+**Change in `src/pages/Discover.tsx`:**
+- The "Saved" category pill already exists. Add a count badge next to it showing `savedItems.length`
+- Display as: `Saved (3)` or with a small numeric badge
+- Only show the count when `savedItems.length > 0`
+- Style the count as a subtle inline number: `Saved` becomes `Saved · 3` with the number in a slightly different opacity
 
-This means a "Garden Natural" lifestyle scene will show other lifestyle scenes AND lifestyle presets, ranked by how many attributes overlap. Much better than random same-category items.
+---
 
 ### Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/pages/Discover.tsx` | Remove "Scenes" category, update filter logic for scene category mapping, improve relatedItems scoring algorithm, increase related count to 6 |
-| `src/components/app/DiscoverDetailModal.tsx` | Premium glass-effect redesign with better visual hierarchy, reordered sections, larger related thumbnails |
+| File | Changes |
+|------|---------|
+| `src/components/app/DiscoverCard.tsx` | Add shimmer placeholder + fade-in on image load |
+| `src/components/app/DiscoverDetailModal.tsx` | Full rewrite: full-screen overlay with split layout (image left, controls right), mobile responsive stacking |
+| `src/pages/Discover.tsx` | Add saved count to "Saved" pill, improve similarity scoring with description keywords, increase related to 9 |
 
 No new files. No database changes.
 
+### Technical Details
+
+**DiscoverCard.tsx -- Progressive Loading:**
+- Add `const [loaded, setLoaded] = useState(false)` state
+- Image gets `className={cn("... transition-opacity duration-500", loaded ? "opacity-100" : "opacity-0")}` and `onLoad={() => setLoaded(true)}`
+- Behind the image, add a `div` with `animate-pulse bg-muted` that shows when `!loaded`
+
+**DiscoverDetailModal.tsx -- Full-Screen Split:**
+- Remove `Dialog`/`DialogContent` wrapper entirely
+- Replace with a custom `fixed inset-0 z-50` overlay
+- Use conditional rendering based on `open` prop
+- Left panel: `w-full md:w-[60%] h-full flex items-center justify-center bg-black/95`
+- Right panel: `w-full md:w-[40%] h-full overflow-y-auto bg-background/95 backdrop-blur-xl p-8`
+- Close button: `absolute top-6 right-6 z-10` with frosted glass background
+- Mobile: `flex-col` instead of `flex-row`, image gets `max-h-[45vh]`
+- Add `useEffect` to lock body scroll when open, restore on close
+
+**Similarity Scoring Enhancement:**
+- Add a helper that extracts keywords from descriptions (split by space, filter out common words like "and", "the", "with", "in", words under 3 chars)
+- Score +0.5 per shared keyword between items
+- Scene-to-scene bonus: +3
+- This makes "Garden Natural" match other outdoor/garden-themed items even across types
+
+**Saved Count Badge:**
+- In the CATEGORIES map render, for `cat.id === 'saved'`, append ` · ${savedItems.length}` when count > 0
+- Subtle styling: the number uses `text-muted-foreground/60` when not active
