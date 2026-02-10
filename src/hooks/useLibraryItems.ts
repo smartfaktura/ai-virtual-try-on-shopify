@@ -4,9 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 export type LibrarySortBy = 'newest' | 'oldest';
-export type LibrarySourceFilter = 'all' | 'generation' | 'freestyle';
 
-export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sourceFilter: LibrarySourceFilter = 'all') {
+export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
   const { user } = useAuth();
 
   return useQuery({
