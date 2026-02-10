@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Copy, ArrowRight, X, Heart, Search, Sparkles, Loader2 } from 'lucide-react';
+import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +10,6 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
-import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { cn } from '@/lib/utils';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 
@@ -98,61 +96,70 @@ export function DiscoverDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-border/40 shadow-2xl backdrop-blur-sm bg-background/95">
         <DialogHeader className="sr-only">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>Details</DialogDescription>
         </DialogHeader>
 
-        {/* Image */}
-        <div className="w-full bg-muted rounded-t-lg overflow-hidden">
+        {/* Image with depth overlay */}
+        <div className="relative w-full bg-muted rounded-t-lg overflow-hidden">
           <img
             src={imageUrl}
             alt={title}
-            className="w-full max-h-[50vh] object-contain"
+            className="w-full max-h-[55vh] object-contain"
           />
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
         </div>
 
-        <div className="flex flex-col gap-5 px-6 pb-6">
-          {/* Title + badges */}
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">{title}</h2>
-            <div className="flex flex-wrap gap-1.5">
-              <Badge variant="secondary" className="text-xs">{category}</Badge>
-              {isPreset && (
-                <>
-                  <Badge variant="outline" className="text-xs">{item.data.aspect_ratio}</Badge>
-                  {item.data.quality === 'high' && <Badge variant="secondary" className="text-xs">HD</Badge>}
-                </>
-              )}
-            </div>
+        <div className="flex flex-col gap-6 px-6 pb-6">
+          {/* Category label + title */}
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+              {category}
+              {!isPreset && <span className="ml-2 text-primary/70">· Scene</span>}
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
+            {isPreset && (
+              <div className="flex items-center gap-2 pt-0.5">
+                <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">{item.data.aspect_ratio}</span>
+                {item.data.quality === 'high' && (
+                  <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">· HD</span>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Generate Prompt section */}
+          {/* Generate Prompt — frosted glass style */}
           <div className="space-y-3">
-            <Button
-              variant="outline"
+            <button
               onClick={handleGeneratePrompt}
               disabled={isGenerating}
-              className="w-full h-11 rounded-xl"
+              className={cn(
+                'w-full h-12 rounded-xl text-sm font-medium transition-all duration-300',
+                'bg-muted/40 backdrop-blur-md border border-border/50',
+                'hover:bg-muted/60 hover:border-border/80 hover:shadow-md',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'flex items-center justify-center gap-2'
+              )}
             >
               {isGenerating ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analyzing image…</>
+                <><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> <span className="text-muted-foreground">Analyzing image…</span></>
               ) : (
-                <><Sparkles className="w-4 h-4 mr-2" /> Generate Prompt</>
+                <><Sparkles className="w-4 h-4 text-primary/80" /> <span>Generate Prompt</span></>
               )}
-            </Button>
+            </button>
 
             {generatedPrompt && (
-              <div className="space-y-2.5">
-                <div className="bg-muted/50 rounded-xl p-4 text-sm leading-relaxed border border-border/50 max-h-36 overflow-y-auto">
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="bg-muted/30 backdrop-blur-sm rounded-xl p-4 text-sm leading-relaxed border border-primary/10 max-h-36 overflow-y-auto shadow-inner">
                   {generatedPrompt}
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCopyGenerated} className="flex-1 rounded-lg">
+                  <Button variant="outline" size="sm" onClick={handleCopyGenerated} className="flex-1 rounded-xl h-10 border-border/40 hover:bg-muted/50">
                     <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy
                   </Button>
-                  <Button size="sm" onClick={handleUseGenerated} className="flex-1 rounded-lg">
+                  <Button size="sm" onClick={handleUseGenerated} className="flex-1 rounded-xl h-10">
                     Use in Freestyle <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                   </Button>
                 </div>
@@ -160,21 +167,21 @@ export function DiscoverDetailModal({
             )}
           </div>
 
-          {/* Description / Prompt */}
+          {/* Description */}
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
               {isPreset ? 'Prompt' : 'Description'}
             </p>
-            <div className="bg-muted/30 rounded-xl p-4 text-sm leading-relaxed border border-border/30">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               {description}
-            </div>
+            </p>
           </div>
 
           {/* Tags */}
           {isPreset && item.data.tags && item.data.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {item.data.tags.map((tag) => (
-                <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-muted/60 text-muted-foreground">
+                <span key={tag} className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted/40 text-muted-foreground/70 font-medium">
                   #{tag}
                 </span>
               ))}
@@ -182,46 +189,51 @@ export function DiscoverDetailModal({
           )}
 
           {/* Primary CTA */}
-          <Button onClick={() => onUseItem(item)} className="w-full h-12 rounded-xl text-sm font-medium">
+          <Button
+            onClick={() => onUseItem(item)}
+            className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+          >
             {isPreset ? 'Use Prompt' : 'Use Scene'}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
 
-          {/* Secondary actions */}
+          {/* Secondary actions — icon-pill style */}
           <div className="flex gap-2">
             {isPreset && (
-              <Button variant="outline" size="sm" onClick={handleCopy} className="flex-1 rounded-lg">
-                <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy Prompt
-              </Button>
+              <button
+                onClick={handleCopy}
+                className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
+              >
+                <Copy className="w-3.5 h-3.5" /> Copy
+              </button>
             )}
             {onToggleSave && (
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={onToggleSave}
-                className={cn('flex-1 rounded-lg', isSaved && 'text-destructive border-destructive/30')}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 transition-all',
+                  isSaved ? 'text-destructive border-destructive/20' : 'text-muted-foreground hover:text-foreground'
+                )}
               >
-                <Heart className={cn('w-3.5 h-3.5 mr-1.5', isSaved && 'fill-current')} />
+                <Heart className={cn('w-3.5 h-3.5', isSaved && 'fill-current')} />
                 {isSaved ? 'Saved' : 'Save'}
-              </Button>
+              </button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => { onSearchSimilar(item); onClose(); }}
-              className="flex-1 rounded-lg"
+              className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
             >
-              <Search className="w-3.5 h-3.5 mr-1.5" /> Similar
-            </Button>
+              <Search className="w-3.5 h-3.5" /> Similar
+            </button>
           </div>
 
-          {/* Related */}
+          {/* Related — larger thumbnails */}
           {relatedItems.length > 0 && (
-            <div className="pt-4 border-t border-border/50">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
+            <div className="pt-5 border-t border-border/30">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">
                 More like this
               </p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {relatedItems.map((ri) => {
                   const riImage = ri.type === 'preset' ? ri.data.image_url : ri.data.previewUrl;
                   const riTitle = ri.type === 'preset' ? ri.data.title : ri.data.name;
@@ -230,7 +242,7 @@ export function DiscoverDetailModal({
                     <button
                       key={riKey}
                       onClick={() => onSelectRelated(ri)}
-                      className="aspect-[3/4] rounded-lg overflow-hidden bg-muted hover:ring-2 ring-primary transition-all"
+                      className="aspect-[3/4] rounded-xl overflow-hidden bg-muted hover:ring-2 ring-primary/50 transition-all duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md"
                     >
                       <img src={riImage} alt={riTitle} className="w-full h-full object-cover" />
                     </button>
