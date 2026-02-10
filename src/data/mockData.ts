@@ -1724,7 +1724,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_024',
     name: 'Night Neon',
     category: 'streetwear',
-    description: 'Night scene with neon signs and urban glow',
+    description: 'Model standing under neon signs at night, colorful glow reflecting on skin and clothing, relaxed urban pose with hands in jacket pockets',
     previewUrl: poseStreetwearNeon,
     previewUrlMale: poseStreetwearNeonMale,
   },
