@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminView } from '@/contexts/AdminViewContext';
 
 export function useIsAdmin() {
   const { user } = useAuth();
+  const { isAdminView } = useAdminView();
 
-  const { data: isAdmin = false, isLoading } = useQuery({
+  const { data: isRealAdmin = false, isLoading } = useQuery({
     queryKey: ['is-admin', user?.id],
     queryFn: async () => {
       const { data } = await supabase
@@ -20,5 +22,5 @@ export function useIsAdmin() {
     staleTime: 5 * 60 * 1000,
   });
 
-  return { isAdmin, isLoading };
+  return { isAdmin: isRealAdmin && isAdminView, isRealAdmin, isLoading };
 }

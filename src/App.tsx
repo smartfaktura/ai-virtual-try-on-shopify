@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CreditProvider } from '@/contexts/CreditContext';
+import { AdminViewProvider } from '@/contexts/AdminViewContext';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ProtectedRoute } from '@/components/app/ProtectedRoute';
 import { AppShell } from '@/components/app/AppShell';
@@ -43,6 +44,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <Toaster position="top-right" richColors closeButton />
     <AuthProvider>
+      <AdminViewProvider>
       <CreditProvider>
         <BrowserRouter>
           <Routes>
@@ -108,6 +110,7 @@ const App = () => (
           <BuyCreditsModal />
         </BrowserRouter>
       </CreditProvider>
+      </AdminViewProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

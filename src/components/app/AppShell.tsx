@@ -3,8 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
-  Sparkles, Wand2, ChevronUp, ArrowUpRight,
+  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff,
 } from 'lucide-react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useAdminView } from '@/contexts/AdminViewContext';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +38,8 @@ export function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { isRealAdmin } = useIsAdmin();
+  const { isAdminView, toggleAdminView } = useAdminView();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch { return false; }
@@ -207,6 +211,15 @@ export function AppShell({ children }: AppShellProps) {
                   <Settings className="w-4 h-4" />
                   Account settings
                 </button>
+                {isRealAdmin && (
+                  <button
+                    onClick={() => { toggleAdminView(); }}
+                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                  >
+                    {isAdminView ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    {isAdminView ? 'View as visitor' : 'View as admin'}
+                  </button>
+                )}
                 <button
                   onClick={() => { handleSignOut(); setUserMenuOpen(false); }}
                   className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
