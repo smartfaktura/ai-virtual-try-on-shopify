@@ -20,7 +20,6 @@ const CATEGORIES = [
   { id: 'lifestyle', label: 'Lifestyle' },
 ] as const;
 
-// Map scene categories to filter categories so scenes appear in relevant filters
 const SCENE_CATEGORY_MAP: Record<string, string[]> = {
   studio: ['commercial', 'photography'],
   lifestyle: ['lifestyle'],
@@ -28,12 +27,20 @@ const SCENE_CATEGORY_MAP: Record<string, string[]> = {
   streetwear: ['styling', 'lifestyle'],
 };
 
+// Stop words for keyword extraction
+const STOP_WORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+  'of', 'with', 'by', 'from', 'is', 'it', 'as', 'be', 'are', 'was',
+  'were', 'this', 'that', 'has', 'have', 'had', 'not', 'no', 'can',
+  'will', 'do', 'does', 'did', 'its', 'your', 'our', 'their',
+]);
+
 function getItemId(item: DiscoverItem): string {
   return item.type === 'preset' ? item.data.id : item.data.poseId;
 }
 
 function getItemCategory(item: DiscoverItem): string {
-  return item.type === 'preset' ? item.data.category : item.data.category;
+  return item.data.category;
 }
 
 function getItemName(item: DiscoverItem): string {
@@ -42,8 +49,19 @@ function getItemName(item: DiscoverItem): string {
 
 function getItemTags(item: DiscoverItem): string[] {
   if (item.type === 'preset') return item.data.tags ?? [];
-  // Scenes don't have tags, use category as a pseudo-tag
   return [item.data.category];
+}
+
+function getItemDescription(item: DiscoverItem): string {
+  return item.type === 'preset' ? item.data.prompt : item.data.description;
+}
+
+function extractKeywords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .split(/\s+/)
+    .filter((w) => w.length > 3 && !STOP_WORDS.has(w));
 }
 
 function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
@@ -52,11 +70,17 @@ function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
   const bCat = getItemCategory(b);
   if (aCat === bCat) score += 2;
   if (a.type === b.type) score += 1;
+
+  // Scene-to-scene bonus
+  if (a.type === 'scene' && b.type === 'scene') score += 3;
+
+  // Tag overlap
   const aTags = getItemTags(a);
   const bTags = getItemTags(b);
   for (const t of aTags) {
     if (bTags.includes(t)) score += 1;
   }
+
   // Cross-type category overlap via scene mapping
   if (a.type !== b.type) {
     const sceneCat = a.type === 'scene' ? aCat : bCat;
@@ -64,6 +88,16 @@ function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
     const mapped = SCENE_CATEGORY_MAP[sceneCat] ?? [];
     if (mapped.includes(presetCat)) score += 2;
   }
+
+  // Description keyword overlap
+  const aWords = extractKeywords(getItemDescription(a));
+  const bWords = new Set(extractKeywords(getItemDescription(b)));
+  let kwOverlap = 0;
+  for (const w of aWords) {
+    if (bWords.has(w)) kwOverlap++;
+  }
+  score += Math.min(kwOverlap * 0.5, 4); // cap at 4 to prevent domination
+
   return score;
 }
 
@@ -75,6 +109,8 @@ export default function Discover() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [similarTo, setSimilarTo] = useState<DiscoverItem | null>(null);
+
+  const savedCount = savedItems.length;
 
   // Build unified feed
   const allItems = useMemo<DiscoverItem[]>(() => {
@@ -109,7 +145,7 @@ export default function Discover() {
         return isSaved(itemType, itemId);
       }
 
-      // Category filter — scenes map to multiple filter categories
+      // Category filter
       if (selectedCategory !== 'all') {
         if (item.type === 'scene') {
           const sceneCat = item.data.category;
@@ -141,7 +177,7 @@ export default function Discover() {
     });
   }, [allItems, selectedCategory, searchQuery, similarTo, isSaved, savedItems]);
 
-  // Improved "More Like This" with scoring
+  // Improved "More Like This" with scoring + keywords
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
     return allItems
@@ -149,7 +185,7 @@ export default function Discover() {
       .map((i) => ({ item: i, score: scoreSimilarity(selectedItem, i) }))
       .filter((x) => x.score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 6)
+      .slice(0, 9)
       .map((x) => x.item);
   }, [allItems, selectedItem]);
 
@@ -226,6 +262,9 @@ export default function Discover() {
               )}
             >
               {cat.label}
+              {cat.id === 'saved' && savedCount > 0 && (
+                <span className="ml-1.5 text-xs opacity-70">· {savedCount}</span>
+              )}
             </button>
           ))}
         </div>

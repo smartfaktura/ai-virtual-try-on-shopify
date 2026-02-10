@@ -1,13 +1,6 @@
-import { useState } from 'react';
-import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { cn } from '@/lib/utils';
@@ -39,7 +32,28 @@ export function DiscoverDetailModal({
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  if (!item) return null;
+  // Lock body scroll when open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      setGeneratedPrompt(null);
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+
+  if (!open || !item) return null;
 
   const isPreset = item.type === 'preset';
   const imageUrl = isPreset ? item.data.image_url : item.data.previewUrl;
@@ -95,164 +109,183 @@ export function DiscoverDetailModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-border/40 shadow-2xl backdrop-blur-sm bg-background/95">
-        <DialogHeader className="sr-only">
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>Details</DialogDescription>
-        </DialogHeader>
+    <div
+      className="fixed inset-0 z-50 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/90" />
 
-        {/* Image with depth overlay */}
-        <div className="relative w-full bg-muted rounded-t-lg overflow-hidden">
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-5 right-5 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/20 transition-all"
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      {/* Split layout */}
+      <div
+        className="relative z-10 flex flex-col md:flex-row w-full h-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Left — Image showcase */}
+        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center bg-black/50 p-4 md:p-10">
           <img
             src={imageUrl}
             alt={title}
-            className="w-full max-h-[55vh] object-contain"
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
           />
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
         </div>
 
-        <div className="flex flex-col gap-6 px-6 pb-6">
-          {/* Category label + title */}
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-              {category}
-              {!isPreset && <span className="ml-2 text-primary/70">· Scene</span>}
-            </p>
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
-            {isPreset && (
-              <div className="flex items-center gap-2 pt-0.5">
-                <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">{item.data.aspect_ratio}</span>
-                {item.data.quality === 'high' && (
-                  <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">· HD</span>
+        {/* Right — Controls panel */}
+        <div className="w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
+          <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10">
+            {/* Category label + title */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+                  {category}
+                </p>
+                {!isPreset && (
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">· Scene</span>
                 )}
               </div>
-            )}
-          </div>
-
-          {/* Generate Prompt — frosted glass style */}
-          <div className="space-y-3">
-            <button
-              onClick={handleGeneratePrompt}
-              disabled={isGenerating}
-              className={cn(
-                'w-full h-12 rounded-xl text-sm font-medium transition-all duration-300',
-                'bg-muted/40 backdrop-blur-md border border-border/50',
-                'hover:bg-muted/60 hover:border-border/80 hover:shadow-md',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                'flex items-center justify-center gap-2'
-              )}
-            >
-              {isGenerating ? (
-                <><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> <span className="text-muted-foreground">Analyzing image…</span></>
-              ) : (
-                <><Sparkles className="w-4 h-4 text-primary/80" /> <span>Generate Prompt</span></>
-              )}
-            </button>
-
-            {generatedPrompt && (
-              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="bg-muted/30 backdrop-blur-sm rounded-xl p-4 text-sm leading-relaxed border border-primary/10 max-h-36 overflow-y-auto shadow-inner">
-                  {generatedPrompt}
+              <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
+              {isPreset && (
+                <div className="flex items-center gap-2 pt-0.5">
+                  <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">{item.data.aspect_ratio}</span>
+                  {item.data.quality === 'high' && (
+                    <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">· HD</span>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCopyGenerated} className="flex-1 rounded-xl h-10 border-border/40 hover:bg-muted/50">
-                    <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy
-                  </Button>
-                  <Button size="sm" onClick={handleUseGenerated} className="flex-1 rounded-xl h-10">
-                    Use in Freestyle <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                  </Button>
+              )}
+            </div>
+
+            {/* Generate Prompt */}
+            <div className="space-y-3">
+              <button
+                onClick={handleGeneratePrompt}
+                disabled={isGenerating}
+                className={cn(
+                  'w-full h-12 rounded-xl text-sm font-medium transition-all duration-300',
+                  'bg-muted/40 backdrop-blur-md border border-border/50',
+                  'hover:bg-muted/60 hover:border-border/80 hover:shadow-md',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
+                  'flex items-center justify-center gap-2'
+                )}
+              >
+                {isGenerating ? (
+                  <><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> <span className="text-muted-foreground">Analyzing image…</span></>
+                ) : (
+                  <><Sparkles className="w-4 h-4 text-primary/80" /> <span>Generate Prompt from Image</span></>
+                )}
+              </button>
+
+              {generatedPrompt && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="bg-muted/30 backdrop-blur-sm rounded-xl p-4 text-sm leading-relaxed border border-primary/10 max-h-36 overflow-y-auto shadow-inner">
+                    {generatedPrompt}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handleCopyGenerated} className="flex-1 rounded-xl h-10 border-border/40 hover:bg-muted/50">
+                      <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy
+                    </Button>
+                    <Button size="sm" onClick={handleUseGenerated} className="flex-1 rounded-xl h-10">
+                      Use in Freestyle <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                    </Button>
+                  </div>
                 </div>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                {isPreset ? 'Prompt' : 'Description'}
+              </p>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {description}
+              </p>
+            </div>
+
+            {/* Tags */}
+            {isPreset && item.data.tags && item.data.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {item.data.tags.map((tag) => (
+                  <span key={tag} className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted/40 text-muted-foreground/70 font-medium">
+                    #{tag}
+                  </span>
+                ))}
               </div>
             )}
-          </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-              {isPreset ? 'Prompt' : 'Description'}
-            </p>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {description}
-            </p>
-          </div>
+            {/* Primary CTA */}
+            <Button
+              onClick={() => { onUseItem(item); onClose(); }}
+              className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
+            >
+              {isPreset ? 'Use Prompt' : 'Use Scene'}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
 
-          {/* Tags */}
-          {isPreset && item.data.tags && item.data.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {item.data.tags.map((tag) => (
-                <span key={tag} className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted/40 text-muted-foreground/70 font-medium">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Primary CTA */}
-          <Button
-            onClick={() => onUseItem(item)}
-            className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
-          >
-            {isPreset ? 'Use Prompt' : 'Use Scene'}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-
-          {/* Secondary actions — icon-pill style */}
-          <div className="flex gap-2">
-            {isPreset && (
+            {/* Secondary actions */}
+            <div className="flex gap-2">
+              {isPreset && (
+                <button
+                  onClick={handleCopy}
+                  className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
+                >
+                  <Copy className="w-3.5 h-3.5" /> Copy
+                </button>
+              )}
+              {onToggleSave && (
+                <button
+                  onClick={onToggleSave}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 transition-all',
+                    isSaved ? 'text-destructive border-destructive/20' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Heart className={cn('w-3.5 h-3.5', isSaved && 'fill-current')} />
+                  {isSaved ? 'Saved' : 'Save'}
+                </button>
+              )}
               <button
-                onClick={handleCopy}
+                onClick={() => { onSearchSimilar(item); onClose(); }}
                 className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
               >
-                <Copy className="w-3.5 h-3.5" /> Copy
+                <Search className="w-3.5 h-3.5" /> Similar
               </button>
-            )}
-            {onToggleSave && (
-              <button
-                onClick={onToggleSave}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 transition-all',
-                  isSaved ? 'text-destructive border-destructive/20' : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <Heart className={cn('w-3.5 h-3.5', isSaved && 'fill-current')} />
-                {isSaved ? 'Saved' : 'Save'}
-              </button>
-            )}
-            <button
-              onClick={() => { onSearchSimilar(item); onClose(); }}
-              className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
-            >
-              <Search className="w-3.5 h-3.5" /> Similar
-            </button>
-          </div>
-
-          {/* Related — larger thumbnails */}
-          {relatedItems.length > 0 && (
-            <div className="pt-5 border-t border-border/30">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">
-                More like this
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {relatedItems.map((ri) => {
-                  const riImage = ri.type === 'preset' ? ri.data.image_url : ri.data.previewUrl;
-                  const riTitle = ri.type === 'preset' ? ri.data.title : ri.data.name;
-                  const riKey = ri.type === 'preset' ? `p-${ri.data.id}` : `s-${ri.data.poseId}`;
-                  return (
-                    <button
-                      key={riKey}
-                      onClick={() => onSelectRelated(ri)}
-                      className="aspect-[3/4] rounded-xl overflow-hidden bg-muted hover:ring-2 ring-primary/50 transition-all duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md"
-                    >
-                      <img src={riImage} alt={riTitle} className="w-full h-full object-cover" />
-                    </button>
-                  );
-                })}
-              </div>
             </div>
-          )}
+
+            {/* More like this */}
+            {relatedItems.length > 0 && (
+              <div className="pt-5 border-t border-border/30">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50 mb-3">
+                  More like this
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {relatedItems.map((ri) => {
+                    const riImage = ri.type === 'preset' ? ri.data.image_url : ri.data.previewUrl;
+                    const riTitle = ri.type === 'preset' ? ri.data.title : ri.data.name;
+                    const riKey = ri.type === 'preset' ? `p-${ri.data.id}` : `s-${ri.data.poseId}`;
+                    return (
+                      <button
+                        key={riKey}
+                        onClick={() => onSelectRelated(ri)}
+                        className="aspect-[3/4] rounded-xl overflow-hidden bg-muted hover:ring-2 ring-primary/50 transition-all duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md"
+                      >
+                        <img src={riImage} alt={riTitle} className="w-full h-full object-cover" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
