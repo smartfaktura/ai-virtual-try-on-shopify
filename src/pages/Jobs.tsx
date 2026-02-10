@@ -3,7 +3,7 @@ import { Search, Image, Loader2, Download, CheckSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
-import { useLibraryItems, type LibrarySortBy, type LibrarySourceFilter } from '@/hooks/useLibraryItems';
+import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 import { Button } from '@/components/ui/button';
 import JSZip from 'jszip';
 
@@ -12,11 +12,6 @@ const SORTS: { id: LibrarySortBy; label: string }[] = [
   { id: 'oldest', label: 'Oldest' },
 ];
 
-const SOURCE_FILTERS: { id: LibrarySourceFilter; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'generation', label: 'Generations' },
-  { id: 'freestyle', label: 'Freestyle' },
-];
 
 function useColumnCount() {
   const [count, setCount] = useState(4);
@@ -37,14 +32,13 @@ function useColumnCount() {
 
 export default function Jobs() {
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
-  const [sourceFilter, setSourceFilter] = useState<LibrarySourceFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isZipping, setIsZipping] = useState(false);
 
-  const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery, sourceFilter);
+  const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
   const columnCount = useColumnCount();
 
   const columns: typeof items[] = Array.from({ length: columnCount }, () => []);
@@ -111,23 +105,6 @@ export default function Jobs() {
           </div>
 
           <div className="flex items-center gap-2">
-            {SOURCE_FILTERS.map(f => (
-              <button
-                key={f.id}
-                onClick={() => setSourceFilter(f.id)}
-                className={cn(
-                  'px-4 py-2 rounded-full text-xs font-medium transition-all',
-                  sourceFilter === f.id
-                    ? 'bg-foreground text-background shadow-sm'
-                    : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-
-            <div className="w-px h-5 bg-border mx-1" />
-
             {SORTS.map(s => (
               <button
                 key={s.id}
