@@ -9,7 +9,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['library', sortBy, searchQuery, sourceFilter, user?.id],
+    queryKey: ['library', sortBy, searchQuery, user?.id],
     queryFn: async (): Promise<LibraryItem[]> => {
       const items: LibraryItem[] = [];
       const q = searchQuery.toLowerCase();
