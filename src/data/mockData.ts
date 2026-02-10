@@ -1699,7 +1699,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_021',
     name: 'Editorial Movement',
     category: 'editorial',
-    description: 'Dynamic motion blur effect with flowing hair/fabric',
+    description: 'Model in dynamic spinning or turning motion, hair and fabric flowing with movement, subtle motion blur emphasizing energy and grace',
     previewUrl: poseEditorialMotion,
     previewUrlMale: poseEditorialMotionMale,
   },
