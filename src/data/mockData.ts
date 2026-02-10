@@ -1551,7 +1551,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_007',
     name: 'Studio Movement',
     category: 'studio',
-    description: 'Dynamic walking motion with flowing fabric, clean background',
+    description: 'Model mid-stride walking naturally, arms in motion, fabric flowing with movement, clean white studio background',
     previewUrl: poseStudioMovement,
     previewUrlMale: poseStudioMovementMale,
   },
