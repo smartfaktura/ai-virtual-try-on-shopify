@@ -1,27 +1,33 @@
 
-## Optimize Recent Creations Gallery: Load Only 5 Items
 
-### Problem
-The gallery currently fetches up to 12 generation jobs + 8 freestyle generations (20 DB rows total), processes them, then slices to 10. This is slow and wasteful since the dashboard only shows ~5 visible cards in the horizontal scroll.
+## Fix: Library Image Deletion Not Working
 
-### Solution
-Reduce query limits to fetch only what's needed -- 5 items total -- making the dashboard load noticeably faster.
+### Root Cause
 
-### File: `src/components/app/RecentCreationsGallery.tsx`
+The `confirmDelete` function in `src/pages/Jobs.tsx` does not check the `{ error }` response from Supabase delete/update calls. The Supabase JS client **does not throw** on failure -- it returns an `{ error }` object. Since the code never inspects this, deletions silently fail while still showing "Image deleted" success toast.
 
-1. **Reduce `generation_jobs` query limit** from 12 to 5
-2. **Reduce `freestyle_generations` query limit** from 8 to 3
-3. **Change final slice** from `.slice(0, 10)` to `.slice(0, 5)` -- only keep 5 items
-4. **Reduce placeholder images** from 6 to 5 to match
-5. **Update skeleton count** from 5 to 5 (already correct)
+### The Fix
 
-### Technical Details
+**File: `src/pages/Jobs.tsx` (lines 104-137)**
+
+Update the `confirmDelete` function to destructure and check `{ error }` from every Supabase call:
+
+1. For freestyle deletions (line 110): check error from `.delete()`
+2. For generation job deletions (lines 124-128): check error from `.delete()` and `.update()`
+3. Throw on any error so it falls into the catch block and shows the failure toast
+
+### Technical Detail
 
 ```text
-Line 40:  .limit(12)  -->  .limit(5)
-Line 72:  .limit(8)   -->  .limit(3)
-Line 86:  .slice(0, 10)  -->  .slice(0, 5)
-Line 16:  PLACEHOLDER_IMAGES array trimmed to 5 items
+// BEFORE (broken -- errors silently ignored):
+await supabase.from('freestyle_generations').delete().eq('id', item.id);
+
+// AFTER (fixed -- errors caught):
+const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
+if (error) throw error;
 ```
 
-Single file change. Fewer rows fetched = faster query = faster render.
+Same pattern applied to the generation_jobs `.delete()` and `.update()` calls.
+
+### Single file change, ~6 lines modified.
+
