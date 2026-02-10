@@ -1733,7 +1733,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_025',
     name: 'Gym & Fitness',
     category: 'lifestyle',
-    description: 'Athletic setting with gym equipment and natural light',
+    description: 'Model in active stance near gym equipment, confident athletic pose with hands on hips or gripping a weight, natural light streaming into modern fitness space',
     previewUrl: poseLifestyleRooftop,
     previewUrlMale: poseLifestyleGymMale,
   },
