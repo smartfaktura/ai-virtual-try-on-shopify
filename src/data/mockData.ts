@@ -1741,7 +1741,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_026',
     name: 'Shopping District',
     category: 'streetwear',
-    description: 'Busy shopping area with storefronts and street energy',
+    description: 'Model walking through a busy shopping district carrying bags, mid-stride with a confident smile, storefronts and street energy in background',
     previewUrl: poseStreetwearStairs,
     previewUrlMale: poseStreetwearShoppingMale,
   },
