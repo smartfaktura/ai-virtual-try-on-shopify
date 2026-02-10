@@ -59,6 +59,28 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured,
         </button>
       )}
 
+      {/* Admin featured toggle */}
+      {isAdmin && onToggleFeatured && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFeatured(e); }}
+          className={cn(
+            'absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10',
+            isFeatured
+              ? 'bg-amber-500 text-white'
+              : 'bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100'
+          )}
+        >
+          <Star className={cn('w-4 h-4', isFeatured && 'fill-current')} />
+        </button>
+      )}
+
+      {/* Featured badge (non-admin) */}
+      {isFeatured && !isAdmin && (
+        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-medium z-10">
+          Featured
+        </div>
+      )}
+
       {/* Hover overlay (desktop) */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-end p-3 hidden [@media(hover:hover)]:flex">
         {isScene ? (
