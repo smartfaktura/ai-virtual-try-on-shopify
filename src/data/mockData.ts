@@ -1599,7 +1599,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_006',
     name: 'Street Lean',
     category: 'streetwear',
-    description: 'Urban street style against graffiti wall, hip-hop inspired',
+    description: 'Model leaning casually against a graffiti-covered wall, one foot propped up, arms crossed or thumbs in pockets, hip-hop inspired urban attitude',
     previewUrl: poseStreetwearUrban,
     previewUrlMale: poseStreetwearUrbanMale,
   },
