@@ -84,7 +84,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
           quality: f.quality,
         });
       }
-      } // end freestyle filter
+      } // end freestyle block
 
       // Sort merged results
       items.sort((a, b) => {
