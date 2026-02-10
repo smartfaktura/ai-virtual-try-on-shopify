@@ -1,74 +1,54 @@
 
 
-## Fix Discover Performance, Full-Screen Modal, Better Similarity, Saved Count
+## View Counts, Full-Screen Fix, Clean X Button, Scene Applied Tooltip
 
-### 1. Fix Gallery Lag / Glitching on Load
+### 1. Add View Counts for Items
 
-**Problem**: All images render at once, causing layout shift and jank as they load at different speeds in the masonry grid.
+Since there's no view tracking table yet, we need to create one.
 
-**Solution in `src/pages/Discover.tsx` and `src/components/app/DiscoverCard.tsx`:**
-- Add progressive loading: show a placeholder shimmer while images load, then fade them in with a CSS transition
-- In `DiscoverCard.tsx`, add an `onLoad` state that starts as `false`, set to `true` on `<img onLoad>`. Image starts with `opacity-0` and transitions to `opacity-100` once loaded
-- Add a shimmer placeholder `div` behind the image that shows until loaded
-- This prevents layout jumps and creates a smooth "develop" effect as images load in
+**Database migration:**
+- Create `discover_item_views` table with columns: `id` (uuid), `item_type` (text), `item_id` (text), `user_id` (uuid, nullable), `created_at` (timestamptz)
+- Create a database function `get_discover_view_counts(item_ids text[])` that returns aggregated counts per item_id
+- RLS: allow anonymous inserts (tracking views), allow select for all
 
-### 2. Full-Screen Split-Layout Detail Modal
+**Frontend changes:**
+- In `src/pages/Discover.tsx`: when `selectedItem` changes (modal opens), insert a view record via Supabase
+- Create a simple hook or inline query to fetch view counts for items shown in the modal
+- In `src/components/app/DiscoverDetailModal.tsx`: display view count as a subtle metadata line near the category/title area (e.g., "142 views" in small muted text next to the category label)
 
-**Problem**: Current modal is a small centered dialog with cramped vertical scrolling. Image is small, buttons are buried.
+### 2. Fix Modal Not Being Full Screen
 
-**Solution -- replace Dialog with a full-screen overlay in `src/components/app/DiscoverDetailModal.tsx`:**
+From the screenshot, there's a visible gap at the top where the app header/navigation shows through. The modal overlay needs to truly cover the entire viewport.
 
-Instead of the Radix Dialog centered card, render a full-screen overlay with a split layout:
+**Changes to `src/components/app/DiscoverDetailModal.tsx`:**
+- Ensure the overlay uses `fixed inset-0 z-[100]` (higher z-index to sit above the sidebar/header which is likely z-50)
+- Remove any padding or margin from the outer container that could cause the gap at top
+- The split layout container should also be `h-screen` / `h-dvh` to ensure full viewport coverage on mobile
 
-```text
-+--------------------------------------------------+
-|  [X close]                                        |
-|                                                   |
-|   +---------------------+  +-------------------+  |
-|   |                     |  |  LIFESTYLE - Scene |  |
-|   |                     |  |  Garden Natural    |  |
-|   |     BIG IMAGE       |  |                   |  |
-|   |     (fills left)    |  |  [Generate Prompt] |  |
-|   |                     |  |  [prompt result]   |  |
-|   |                     |  |  [Copy] [Use FF]   |  |
-|   |                     |  |                   |  |
-|   |                     |  |  Description...    |  |
-|   |                     |  |  #tags             |  |
-|   |                     |  |                   |  |
-|   |                     |  |  [== Use Scene ==] |  |
-|   |                     |  |  [Save] [Similar]  |  |
-|   |                     |  |                   |  |
-|   |                     |  |  More like this    |  |
-|   |                     |  |  [t] [t] [t]       |  |
-|   +---------------------+  +-------------------+  |
-+--------------------------------------------------+
-```
+### 3. Replace Circle X with Plain X Button
 
-- Full viewport overlay (`fixed inset-0 z-50 bg-black/90`)
-- Two-column layout: left is the image (60% width, centered, `object-contain`, fills the height), right is a scrollable panel (40% width) with all controls
-- Right panel has frosted glass background (`bg-background/95 backdrop-blur-xl`)
-- Close button (X) in top-right corner of the overlay
-- Image gets maximum showcase space
-- On mobile (<768px), stack vertically: image on top, controls below, full-screen scroll
-- Animate in with `animate-in fade-in` for smooth open
+Remove the rounded-full circle background from the close button. Make it a simple, high-contrast X.
 
-### 3. Improve "More Like This" Similarity
+**Changes to `src/components/app/DiscoverDetailModal.tsx`:**
+- Change close button from `rounded-full bg-black/70 w-11 h-11` to a simple `w-8 h-8` button with no background circle
+- Keep `text-white` and large stroke weight for visibility against the dark backdrop
+- Add `hover:opacity-70` for subtle interaction feedback
+- No background, no circle -- just a clean X icon
 
-**Current issue**: Scoring only uses category and tags. Scenes have no tags, so they only match by category -- weak matches.
+### 4. Scene Applied Animation in Freestyle
 
-**Improvements in `src/pages/Discover.tsx`:**
-- Add description keyword matching: extract significant words from item descriptions and score overlaps (+1 per shared keyword)
-- For scenes matching scenes: boost score by +3 (scenes are rare, showing other scenes is valuable)
-- Increase result count from 6 to 9 (3x3 grid in the right panel)
-- Filter out items with score 0 (truly unrelated)
+When a user clicks "Use Scene" and navigates to Freestyle, show a brief tooltip/animation near the scene selector chip to confirm the scene was applied.
 
-### 4. Show Saved Count on "Saved" Category Pill
+**Changes to `src/pages/Freestyle.tsx`:**
+- Add a `showSceneAppliedHint` state that activates when a scene is loaded from URL params
+- Check `localStorage` for a `hideSceneAppliedHint` flag -- if set, skip the animation
+- When active, render a small animated tooltip/badge near the SceneSelectorChip that says "Scene applied!" with a subtle fade-in + slide animation
+- Include a small "Don't show again" link/button that sets the localStorage flag and dismisses
+- Auto-dismiss after 4 seconds
 
-**Change in `src/pages/Discover.tsx`:**
-- The "Saved" category pill already exists. Add a count badge next to it showing `savedItems.length`
-- Display as: `Saved (3)` or with a small numeric badge
-- Only show the count when `savedItems.length > 0`
-- Style the count as a subtle inline number: `Saved` becomes `Saved · 3` with the number in a slightly different opacity
+**Changes to `src/components/app/freestyle/FreestyleSettingsChips.tsx`:**
+- Accept a `showSceneHint` prop to position the tooltip near the scene chip
+- Or handle it directly in Freestyle.tsx with absolute positioning relative to the scene chip area
 
 ---
 
@@ -76,35 +56,37 @@ Instead of the Radix Dialog centered card, render a full-screen overlay with a s
 
 | File | Changes |
 |------|---------|
-| `src/components/app/DiscoverCard.tsx` | Add shimmer placeholder + fade-in on image load |
-| `src/components/app/DiscoverDetailModal.tsx` | Full rewrite: full-screen overlay with split layout (image left, controls right), mobile responsive stacking |
-| `src/pages/Discover.tsx` | Add saved count to "Saved" pill, improve similarity scoring with description keywords, increase related to 9 |
-
-No new files. No database changes.
+| Database | New `discover_item_views` table + RLS policies |
+| `src/pages/Discover.tsx` | Insert view record when modal opens, fetch/pass view count to modal |
+| `src/components/app/DiscoverDetailModal.tsx` | Show view count, fix z-index to z-[100], remove circle from X button, ensure full-screen coverage |
+| `src/pages/Freestyle.tsx` | Add scene-applied hint state with localStorage persistence, auto-dismiss tooltip |
 
 ### Technical Details
 
-**DiscoverCard.tsx -- Progressive Loading:**
-- Add `const [loaded, setLoaded] = useState(false)` state
-- Image gets `className={cn("... transition-opacity duration-500", loaded ? "opacity-100" : "opacity-0")}` and `onLoad={() => setLoaded(true)}`
-- Behind the image, add a `div` with `animate-pulse bg-muted` that shows when `!loaded`
+**View count insert (Discover.tsx):**
+```typescript
+useEffect(() => {
+  if (selectedItem) {
+    supabase.from('discover_item_views').insert({
+      item_type: selectedItem.type,
+      item_id: getItemId(selectedItem),
+    });
+  }
+}, [selectedItem]);
+```
 
-**DiscoverDetailModal.tsx -- Full-Screen Split:**
-- Remove `Dialog`/`DialogContent` wrapper entirely
-- Replace with a custom `fixed inset-0 z-50` overlay
-- Use conditional rendering based on `open` prop
-- Left panel: `w-full md:w-[60%] h-full flex items-center justify-center bg-black/95`
-- Right panel: `w-full md:w-[40%] h-full overflow-y-auto bg-background/95 backdrop-blur-xl p-8`
-- Close button: `absolute top-6 right-6 z-10` with frosted glass background
-- Mobile: `flex-col` instead of `flex-row`, image gets `max-h-[45vh]`
-- Add `useEffect` to lock body scroll when open, restore on close
+**View count display (modal):** Pass `viewCount` as a prop. Show as `{viewCount} views` in `text-[11px] text-muted-foreground/50` next to the category label.
 
-**Similarity Scoring Enhancement:**
-- Add a helper that extracts keywords from descriptions (split by space, filter out common words like "and", "the", "with", "in", words under 3 chars)
-- Score +0.5 per shared keyword between items
-- Scene-to-scene bonus: +3
-- This makes "Garden Natural" match other outdoor/garden-themed items even across types
+**Close button (no circle):**
+```tsx
+<button onClick={onClose} className="absolute top-5 right-5 z-20 text-white/80 hover:text-white transition-opacity">
+  <X className="w-7 h-7" strokeWidth={2} />
+</button>
+```
 
-**Saved Count Badge:**
-- In the CATEGORIES map render, for `cat.id === 'saved'`, append ` · ${savedItems.length}` when count > 0
-- Subtle styling: the number uses `text-muted-foreground/60` when not active
+**Scene applied tooltip (Freestyle.tsx):**
+- State: `const [showSceneHint, setShowSceneHint] = useState(false)`
+- In the URL params effect, after setting the scene: `if (!localStorage.getItem('hideSceneHint')) setShowSceneHint(true)`
+- Auto-dismiss: `useEffect` with `setTimeout(() => setShowSceneHint(false), 4000)`
+- Render a small floating div near the scene area with "Scene applied!" text, fade-in animation, and a "Don't show again" button that calls `localStorage.setItem('hideSceneHint', 'true')`
+
