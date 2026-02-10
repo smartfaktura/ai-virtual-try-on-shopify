@@ -139,6 +139,7 @@ export default function Discover() {
   const { isFeatured, featuredMap } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
   const { asPoses: customScenePoses } = useCustomScenes();
+  const { pendingCount: adminPendingCount } = useAdminSubmissions();
   const columnCount = useColumnCount();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
