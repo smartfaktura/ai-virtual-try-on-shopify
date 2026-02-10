@@ -112,19 +112,11 @@ export function DiscoverDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] animate-in fade-in duration-200"
+      className="fixed inset-0 z-[200] animate-in fade-in duration-200"
       onClick={onClose}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/90" />
-
-      {/* Close button — plain X, no circle */}
-      <button
-        onClick={onClose}
-        className="absolute top-5 right-5 z-20 text-white/80 hover:text-white transition-opacity"
-      >
-        <X className="w-7 h-7" strokeWidth={2} />
-      </button>
 
       {/* Split layout */}
       <div
@@ -132,17 +124,25 @@ export function DiscoverDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left — Image showcase */}
-        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-4 md:p-10">
+        <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
           <img
             src={imageUrl}
             alt={title}
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
           />
         </div>
 
         {/* Right — Controls panel */}
-        <div className="w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
-          <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10">
+        <div className="relative w-full md:w-[40%] h-[55vh] md:h-full overflow-y-auto bg-background/95 backdrop-blur-xl border-l border-border/20">
+          {/* Close button — black, inside right panel */}
+          <button
+            onClick={onClose}
+            className="absolute top-5 right-5 z-20 text-foreground/70 hover:text-foreground transition-colors"
+          >
+            <X className="w-7 h-7" strokeWidth={2} />
+          </button>
+
+          <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10 pt-8 md:pt-10">
             {/* Category label + title */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -152,13 +152,14 @@ export function DiscoverDetailModal({
                 {!isPreset && (
                   <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">· Scene</span>
                 )}
-                {typeof viewCount === 'number' && (
-                  <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground/50 ml-auto">
-                    <Eye className="w-3 h-3" /> {viewCount}
-                  </span>
-                )}
               </div>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
+              {typeof viewCount === 'number' && (
+                <div className="flex items-center gap-1.5 text-muted-foreground/60 mt-1">
+                  <Eye className="w-4 h-4" />
+                  <span className="text-xs font-medium">{viewCount} views</span>
+                </div>
+              )}
               {isPreset && (
                 <div className="flex items-center gap-2 pt-0.5">
                   <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">{item.data.aspect_ratio}</span>
