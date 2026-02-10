@@ -1,61 +1,85 @@
 
 
-## Redesign Discover into a Pinterest-Style Masonry Grid + Integrate Scenes
+## Fix Discover Clicks + Add Save and Search Similar
 
-### What changes
+### Problem 1: Click Not Opening Detail View
 
-**1. Remove card metadata clutter**
-Strip the bottom info section (title, category badge, aspect ratio badge) from `DiscoverCard`. The grid becomes image-only with hover overlay -- just like the Pinterest/Kive reference. No titles, no badges, no spacing between cards.
+The current code works like this:
+- Clicking a **preset** (non-scene) card sets `selectedPreset` state which opens the detail modal -- this should work
+- Clicking a **scene** card navigates directly to Freestyle -- no detail view shown
 
-**2. Pinterest-style masonry layout (no gaps, mixed aspect ratios)**
-Replace the fixed-aspect-ratio grid with a CSS columns-based masonry layout where images flow naturally at their native aspect ratios. Minimal gap (4-8px) between items. Cards have no bottom padding -- image fills the entire card.
+The likely issue is that **scene cards don't open any detail view** -- they just navigate away. Since most visible cards in the screenshot are scenes (marked with "Scene" badge), clicking them redirects to Freestyle instead of showing information.
 
-**3. Integrate Scenes into Discover**
-Add a new source type to the Discover feed: platform Scenes (from `mockTryOnPoses`). These appear in the grid alongside presets but behave differently on click:
-- **Platform presets** (from `discover_presets` table): Click opens detail modal with "Use Prompt" -> navigates to Freestyle with prompt pre-filled
-- **Scene cards** (from scene library): Click selects that scene and opens Freestyle with the scene pre-selected via URL param (e.g. `?scene=pose_001`)
+**Fix**: Make ALL cards open a unified detail view first. For scenes, show the scene image, name, description, and a "Use Scene" button. For presets, show the existing prompt/copy/use flow. This gives every card a consistent click behavior.
 
-Both types look identical in the grid -- just images. The difference is only in the click behavior.
+### Problem 2: Add "Save" Feature
 
-**4. Simplified category filters**
-Keep the horizontal filter bar but remove verbose labels. Categories become: All, Scenes, Cinematic, Commercial, Photography, Styling, Ads, Lifestyle.
+Create a `saved_discover_items` database table so users can bookmark presets and scenes they like (similar to the Pinterest "Save" button in the reference screenshot).
 
-### Files to modify
+### Problem 3: Add "Search Similar" Feature
 
-| File | Change |
-|------|--------|
-| `src/pages/Discover.tsx` | Merge scenes into feed, masonry layout, simplified filters |
-| `src/components/app/DiscoverCard.tsx` | Remove bottom info section, image-only card, keep hover overlay |
-| `src/components/app/DiscoverDetailModal.tsx` | Minor: handle scene-type presets differently |
-| `src/pages/Freestyle.tsx` | Read `?scene=poseId` URL param to pre-select scene |
-| `src/hooks/useDiscoverPresets.ts` | No change (DB presets stay the same) |
+Implement a tag-and-category-based similarity system. When a user clicks "Search Similar" on any item, filter the Discover feed to show items that share the same category and overlapping tags. This is a practical first version that doesn't require ML/computer vision.
 
-### Technical approach
+---
 
-**Unified feed item type:**
+### Changes
+
+#### 1. Database: New `saved_discover_items` table
+
 ```text
-type DiscoverItem = 
-  | { type: 'preset'; data: DiscoverPreset }
-  | { type: 'scene'; data: TryOnPose }
+saved_discover_items
+- id (uuid, PK)
+- user_id (uuid, NOT NULL) -- references auth user
+- item_type (text) -- 'preset' or 'scene'  
+- item_id (text) -- preset UUID or scene poseId
+- created_at (timestamptz)
+- UNIQUE(user_id, item_type, item_id)
 ```
 
-Both render as image cards. Scenes use their `previewUrl` as the image. On click:
-- Preset: opens detail modal (existing behavior)
-- Scene: navigates directly to `/app/freestyle?scene={poseId}`
+RLS: Users can only read/insert/delete their own saved items.
 
-**Masonry layout** using CSS `columns` property:
-- Mobile: 2 columns
-- Tablet: 3 columns  
-- Desktop: 4-5 columns
-- Gap: 4px (tight, like the reference)
-- Each card uses `break-inside: avoid` with natural image aspect ratios
+#### 2. Unified Detail Modal for Both Presets and Scenes
 
-**Card simplification:**
-- Remove `<div className="p-3 space-y-2">` bottom section entirely
-- Image fills 100% of card with small border-radius
-- Hover overlay stays (Copy + Use Prompt for presets, "Use Scene" for scenes)
-- Mobile button becomes a small icon overlay instead of full-width button
+Refactor `DiscoverDetailModal` to accept a `DiscoverItem` (preset or scene) instead of only a preset. For scenes, show:
+- Large scene preview image
+- Scene name and description
+- Category badge
+- "Use Scene" button (navigates to Freestyle with scene param)
+- "Save" / "Search Similar" buttons
 
-### Freestyle scene param integration
-When arriving at Freestyle with `?scene=pose_001`, find the matching scene from `mockTryOnPoses` and set it as `selectedScene` on mount, same pattern as the existing prompt/ratio/quality params.
+For presets, keep existing behavior plus add Save and Search Similar.
+
+#### 3. Save Button on Cards and Modal
+
+- Add a heart/bookmark icon overlay on every card (bottom-right corner)
+- Clicking it saves/unsaves the item
+- Add a "Saved" category filter tab to show only saved items
+- Save state managed via a `useSavedItems` hook
+
+#### 4. Search Similar Feature
+
+When clicking "Search Similar" on any item:
+- For presets: filter by same category + matching tags
+- For scenes: filter by same scene category (studio, lifestyle, editorial, streetwear)
+- Apply the filter as a search state, showing a "Similar to: [name]" chip that can be cleared
+
+This is tag/category-based matching -- simple but effective. No ML needed.
+
+### Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| Database migration | Create `saved_discover_items` table with RLS |
+| `src/hooks/useSavedItems.ts` | New -- save/unsave/check saved status |
+| `src/components/app/DiscoverCard.tsx` | Add save button overlay, update click to always open detail |
+| `src/components/app/DiscoverDetailModal.tsx` | Support both presets and scenes, add Save + Search Similar buttons |
+| `src/pages/Discover.tsx` | Add "Saved" filter tab, handle "similar" filtering state, pass unified item to modal |
+
+### Technical Details
+
+- The detail modal receives a `DiscoverItem` union type instead of just `DiscoverPreset`
+- Save uses optimistic UI updates via React Query mutation + cache invalidation
+- "Search Similar" sets a `similarTo` state in Discover.tsx that filters by category match + tag overlap, with a dismissible chip showing the source item name
+- Scene detail view shows the scene's `description`, `category`, and preview image from `mockTryOnPoses`
+- The "Saved" tab queries `saved_discover_items` for the current user and cross-references with presets and scenes
 
