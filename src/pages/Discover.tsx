@@ -106,6 +106,29 @@ function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
   return score;
 }
 
+function useColumnCount() {
+  const [count, setCount] = useState(() => {
+    if (typeof window === 'undefined') return 4;
+    const w = window.innerWidth;
+    if (w < 640) return 2;
+    if (w < 1024) return 3;
+    if (w < 1280) return 4;
+    return 5;
+  });
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w < 640) setCount(2);
+      else if (w < 1024) setCount(3);
+      else if (w < 1280) setCount(4);
+      else setCount(5);
+    };
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return count;
+}
+
 export default function Discover() {
   const navigate = useNavigate();
   const { data: presets = [], isLoading } = useDiscoverPresets();
@@ -114,6 +137,7 @@ export default function Discover() {
   const { isFeatured, featuredMap } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
   const { asPoses: customScenePoses } = useCustomScenes();
+  const columnCount = useColumnCount();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
