@@ -1757,7 +1757,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_028',
     name: 'Art Gallery',
     category: 'editorial',
-    description: 'White gallery space with art installations and clean lines',
+    description: 'Model standing contemplatively in a white gallery space, looking at an art installation, one hand resting on chin, clean architectural lines',
     previewUrl: poseEditorialMinimal,
     previewUrlMale: poseEditorialGalleryMale,
   },
