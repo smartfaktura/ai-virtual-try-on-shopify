@@ -328,7 +328,7 @@ function buildContentArray(
   if (sceneImage) {
     content.push({
       type: "text",
-      text: "SCENE/ENVIRONMENT REFERENCE IMAGE — match this setting, lighting direction, and color temperature:",
+      text: "SCENE/ENVIRONMENT REFERENCE IMAGE — You MUST place the subject IN this exact environment/location. Reproduce the same setting, background elements, lighting direction, color temperature, and atmosphere. Do NOT use a different environment:",
     });
     content.push({ type: "image_url", image_url: { url: sceneImage } });
   }
