@@ -1,83 +1,81 @@
-import { useState } from 'react';
-import { Search, Image, Sparkles, Camera, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Image, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard } from '@/components/app/LibraryImageCard';
-import { useLibraryItems, type LibraryTab, type LibrarySortBy } from '@/hooks/useLibraryItems';
-
-const TABS = [
-  { id: 'all' as LibraryTab, label: 'All', icon: Image },
-  { id: 'generations' as LibraryTab, label: 'Generations', icon: Camera },
-  { id: 'freestyle' as LibraryTab, label: 'Freestyle', icon: Sparkles },
-];
+import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 
 const SORTS: { id: LibrarySortBy; label: string }[] = [
   { id: 'newest', label: 'Newest' },
   { id: 'oldest', label: 'Oldest' },
 ];
 
+function useColumnCount() {
+  const [count, setCount] = useState(4);
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w < 640) setCount(2);
+      else if (w < 1024) setCount(3);
+      else if (w < 1280) setCount(4);
+      else setCount(5);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return count;
+}
+
 export default function Jobs() {
-  const [tab, setTab] = useState<LibraryTab>('all');
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: items = [], isLoading } = useLibraryItems(tab, sortBy, searchQuery);
+  const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
+  const columnCount = useColumnCount();
 
-  const displayItems = tab === 'all' ? items : items.filter(i => i.source === tab);
+  const columns: typeof items[] = Array.from({ length: columnCount }, () => []);
+  items.forEach((item, i) => {
+    columns[i % columnCount].push(item);
+  });
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="px-4 sm:px-6 py-8 space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Library</h1>
           <p className="text-muted-foreground mt-1">Your generated images and freestyle creations</p>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search prompts, workflows..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-muted/30 border-0 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-          />
-        </div>
+        {/* Search + Sort */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search by product, model, scene..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-muted/30 border-0 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            />
+          </div>
 
-        {/* Filter pills */}
-        <div className="flex flex-wrap items-center gap-2">
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={cn(
-                'px-5 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5',
-                tab === t.id
-                  ? 'bg-foreground text-background shadow-sm'
-                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
-              )}
-            >
-              <t.icon className="w-3.5 h-3.5" /> {t.label}
-            </button>
-          ))}
-
-          <div className="w-px h-6 bg-border mx-1" />
-
-          {SORTS.map(s => (
-            <button
-              key={s.id}
-              onClick={() => setSortBy(s.id)}
-              className={cn(
-                'px-4 py-2 rounded-full text-xs font-medium transition-all',
-                sortBy === s.id
-                  ? 'bg-foreground text-background shadow-sm'
-                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
-              )}
-            >
-              {s.label}
-            </button>
-          ))}
+          <div className="flex items-center gap-2">
+            {SORTS.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setSortBy(s.id)}
+                className={cn(
+                  'px-4 py-2 rounded-full text-xs font-medium transition-all',
+                  sortBy === s.id
+                    ? 'bg-foreground text-background shadow-sm'
+                    : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Content */}
@@ -85,7 +83,7 @@ export default function Jobs() {
           <div className="flex items-center justify-center py-24">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
-        ) : displayItems.length === 0 ? (
+        ) : items.length === 0 ? (
           <div className="text-center py-24 space-y-3">
             <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
               <Image className="w-7 h-7 text-muted-foreground" />
@@ -103,9 +101,13 @@ export default function Jobs() {
             )}
           </div>
         ) : (
-          <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-1">
-            {displayItems.map(item => (
-              <LibraryImageCard key={item.id} item={item} />
+          <div className="flex gap-1">
+            {columns.map((col, i) => (
+              <div key={i} className="flex-1 flex flex-col gap-1">
+                {col.map(item => (
+                  <LibraryImageCard key={item.id} item={item} />
+                ))}
+              </div>
             ))}
           </div>
         )}
