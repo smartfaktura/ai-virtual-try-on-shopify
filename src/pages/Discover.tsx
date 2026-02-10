@@ -341,6 +341,7 @@ export default function Discover() {
         onSelectRelated={setSelectedItem}
         isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
         onToggleSave={selectedItem ? () => handleToggleSave(selectedItem) : undefined}
+        viewCount={viewCount ?? undefined}
       />
     </div>
   );
