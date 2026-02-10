@@ -37,13 +37,14 @@ function useColumnCount() {
 
 export default function Jobs() {
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
+  const [sourceFilter, setSourceFilter] = useState<LibrarySourceFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isZipping, setIsZipping] = useState(false);
 
-  const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
+  const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery, sourceFilter);
   const columnCount = useColumnCount();
 
   const columns: typeof items[] = Array.from({ length: columnCount }, () => []);
