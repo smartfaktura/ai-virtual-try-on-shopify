@@ -1,10 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, Image, Loader2, Download, CheckSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -40,6 +50,7 @@ export default function Jobs() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isZipping, setIsZipping] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<LibraryItem | null>(null);
   const queryClient = useQueryClient();
 
   const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
@@ -86,13 +97,18 @@ export default function Jobs() {
     setSelectedIds(new Set());
   };
 
-  const handleDeleteItem = async (item: LibraryItem) => {
-    if (!window.confirm('Delete this image?')) return;
+  const handleDeleteItem = useCallback((item: LibraryItem) => {
+    setDeleteTarget(item);
+  }, []);
+
+  const confirmDelete = async () => {
+    const item = deleteTarget;
+    if (!item) return;
+    setDeleteTarget(null);
     try {
       if (item.source === 'freestyle') {
         await supabase.from('freestyle_generations').delete().eq('id', item.id);
       } else {
-        // item.id is "jobId-index" format
         const dashIndex = item.id.lastIndexOf('-');
         const jobId = item.id.substring(0, dashIndex);
         const imageIndex = parseInt(item.id.substring(dashIndex + 1), 10);
@@ -245,6 +261,23 @@ export default function Jobs() {
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
       />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this image?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The image will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
