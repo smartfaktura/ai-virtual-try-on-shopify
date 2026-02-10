@@ -187,7 +187,7 @@ export default function Generate() {
         }
       } else if (activeWorkflow.recommended_ratios?.length > 0) {
         const firstRatio = activeWorkflow.recommended_ratios[0] as AspectRatio;
-        if (['1:1', '4:5', '16:9'].includes(firstRatio)) {
+        if (['1:1', '4:5', '9:16', '16:9'].includes(firstRatio)) {
           setAspectRatio(firstRatio);
         }
       }
