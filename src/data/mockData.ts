@@ -1591,7 +1591,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_009',
     name: 'Editorial Minimal',
     category: 'editorial',
-    description: 'Elegant minimal pose with geometric window shadows',
+    description: 'Model standing still in an elegant minimal pose, hands loosely at sides, geometric window shadows casting patterns across body and backdrop',
     previewUrl: poseEditorialMinimal,
     previewUrlMale: poseEditorialMinimalMale,
   },
