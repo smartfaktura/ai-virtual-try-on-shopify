@@ -252,7 +252,7 @@ function ImageCard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl shadow-md shadow-black/20 cursor-pointer',
+        'group relative overflow-hidden rounded-xl shadow-md shadow-black/20 cursor-pointer animate-fade-in',
         className,
       )}
       onClick={() => onExpand(idx)}
