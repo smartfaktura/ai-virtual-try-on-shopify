@@ -1,51 +1,63 @@
 
+## Separate User-Facing and AI-Internal Scene Descriptions
 
-## Fix Prompt Display and Enrich Scene Descriptions
+### Problem
 
-### Problem 1: Internal instructions visible to users
+The scene `description` field is shown to users on the scene cards (in the Generate workflow page via `PoseSelectorCard`). After the recent enrichment, these descriptions now contain detailed AI prompt instructions like "Model standing facing camera in a classic lookbook pose, full body front view, relaxed shoulders..." which are internal engineering details that should not be visible to end users.
 
-When a scene is selected, the code builds a `finalPrompt` that includes internal AI instructions like "MANDATORY SCENE: Place the subject in this environment..." This augmented prompt is passed to `saveImages()` and stored in the database. When users view their images in the Library, they see these raw system instructions instead of just their original prompt.
+### Solution
 
-**Fix**: Save the original user `prompt` to the database, not `finalPrompt`. The `finalPrompt` is only needed for the AI generation call.
+Add a new `promptHint` field to the `TryOnPose` type for AI-only instructions. Revert `description` to short, user-friendly text. Use `promptHint` in all generation code paths instead of `description`.
 
-**File**: `src/pages/Freestyle.tsx` (line 234)
+### Files to Modify
 
-Change:
-```tsx
-prompt: finalPrompt,
-```
-To:
-```tsx
-prompt: prompt,
-```
-
-### Problem 2: Scene descriptions lack pose/action context
-
-Current descriptions are short environment-only lines like "Fall foliage with warm golden tones and soft light." They don't tell the AI what the person should be *doing* in that scene, which leads to generic standing poses regardless of context.
-
-**Fix**: Enrich each scene description to include the subject's pose, body language, and interaction with the environment. This gives the AI stronger guidance for natural-looking results.
-
-**File**: `src/data/mockData.ts` -- update `description` for all on-model scenes (pose_001 through pose_030). Examples:
-
-| Scene | Current | Updated |
-|-------|---------|---------|
-| Studio Front | "Classic lookbook pose, full body front view with clean white background" | "Model standing facing camera in a classic lookbook pose, full body front view, relaxed shoulders, clean white studio background" |
-| Urban Walking | "Candid street style, walking in city with golden hour light" | "Model walking confidently down a city street, mid-stride with natural arm swing, candid street style, golden hour warm light" |
-| Relaxed Seated | "Casual seated pose in modern interior with natural light" | "Model sitting casually in a modern chair, one leg crossed, leaning back relaxed, natural window light in contemporary interior" |
-| Coffee Shop Casual | "Relaxed pose at cafe table with natural morning light" | "Model sitting at a cafe table holding a coffee cup, relaxed posture, soft smile, natural morning light through large cafe windows" |
-| Beach Sunset | "Coastal lifestyle scene with golden sunset backdrop" | "Model walking barefoot along the shore at golden hour, wind gently blowing hair, relaxed coastal lifestyle mood" |
-| Autumn Park | "Fall foliage with warm golden tones and soft light" | "Model walking along a tree-lined park path surrounded by fall foliage, hands in pockets, warm golden tones and soft dappled light" |
-| Park Bench | "Casual outdoor pose on wooden park bench with greenery" | "Model sitting casually on a wooden park bench, one arm resting on the backrest, lush greenery and dappled sunlight" |
-| Rooftop City | "Urban rooftop with city skyline in background at dusk" | "Model standing at a rooftop railing gazing over the city skyline, relaxed lean, twilight sky with city lights below" |
-| Gym & Fitness | "Athletic setting with gym equipment and natural light" | "Model in active stance near gym equipment, confident athletic pose, natural light streaming into modern fitness space" |
-| Resort Poolside | "Luxury resort pool area with warm golden light" | "Model lounging on a poolside daybed at a luxury resort, relaxed summer pose, warm golden afternoon light reflecting off water" |
-
-Similar enrichments will be applied to all 30 on-model scenes (Studio, Lifestyle, Editorial, Streetwear categories) -- each will describe the subject's pose, body language, and interaction with the environment.
+| File | Change |
+|------|--------|
+| `src/types/index.ts` | Add `promptHint` field to `TryOnPose` interface |
+| `src/data/mockData.ts` | Move enriched text to `promptHint`, revert `description` to short user-friendly labels |
+| `src/pages/Freestyle.tsx` | Use `selectedScene.promptHint` instead of `selectedScene.description` in `finalPrompt` |
+| `supabase/functions/generate-tryon/index.ts` | Use `req.pose.promptHint` instead of `req.pose.description` in prompt construction |
+| `src/hooks/useGenerateTryOn.ts` | Pass `promptHint` alongside `description` to the edge function |
+| `src/hooks/useBulkGeneration.ts` | Pass `promptHint` alongside `description` to the edge function |
+| `src/hooks/useCustomScenes.ts` | Map custom scenes with a `promptHint` (fallback to `description`) |
 
 ### Technical Details
 
-The changes are minimal:
-1. One line change in `Freestyle.tsx` to save `prompt` instead of `finalPrompt`
-2. Update all 30 scene `description` strings in `mockData.ts` to include pose/action context
+**Type change (`src/types/index.ts`):**
 
-No edge function changes needed -- the scene description is already injected into the AI prompt via `finalPrompt` construction and the ENVIRONMENT polish layer.
+```typescript
+export interface TryOnPose {
+  poseId: string;
+  name: string;
+  category: PoseCategory;
+  description: string;       // Short, user-facing (e.g., "Classic front view on white background")
+  promptHint: string;         // Detailed AI instructions (e.g., "Model standing facing camera...")
+  previewUrl: string;
+  previewUrlMale?: string;
+}
+```
+
+**Data change (`src/data/mockData.ts`):**
+
+Each scene entry gets the enriched text moved to `promptHint` and `description` reverted to a short label. For example:
+
+```typescript
+{
+  poseId: 'pose_001',
+  name: 'Studio Front',
+  category: 'studio',
+  description: 'Classic lookbook pose, full body front view with clean white background',
+  promptHint: 'Model standing facing camera in a classic lookbook pose, full body front view, relaxed shoulders, arms naturally at sides, clean white studio background',
+  previewUrl: '...',
+}
+```
+
+**Generation code paths** -- all places that currently read `.description` for AI prompt construction will switch to `.promptHint`:
+
+- `Freestyle.tsx`: `selectedScene.promptHint` in the MANDATORY SCENE text
+- `generate-tryon/index.ts`: `req.pose.promptHint` in the photography style section
+- `useGenerateTryOn.ts` and `useBulkGeneration.ts`: include `promptHint` in the pose payload sent to the edge function
+
+**Display stays unchanged** -- `PoseSelectorCard.tsx` continues to render `pose.description` (which is now the short user-friendly text).
+
+**Custom scenes** -- `useCustomScenes.ts` will set `promptHint` to the same value as `description` (since custom scenes from the database only have one description field; this can be enhanced later).
