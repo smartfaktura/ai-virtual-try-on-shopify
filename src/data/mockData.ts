@@ -1625,7 +1625,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_012',
     name: 'Studio Close-Up',
     category: 'studio',
-    description: 'Torso-focused crop highlighting fabric texture and fit',
+    description: 'Close-up torso shot of model, hands adjusting collar or hem, highlighting fabric texture and garment fit details, tight studio crop',
     previewUrl: poseStudioCloseup,
     previewUrlMale: poseStudioCloseupMale,
   },
