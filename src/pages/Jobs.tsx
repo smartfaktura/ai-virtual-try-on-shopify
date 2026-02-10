@@ -114,6 +114,12 @@ export default function Jobs() {
           </div>
         )}
       </div>
+
+      <LibraryDetailModal
+        item={selectedItem}
+        open={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+      />
     </div>
   );
 }
