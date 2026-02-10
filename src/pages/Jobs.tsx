@@ -205,6 +205,7 @@ export default function Jobs() {
                     item={item}
                     selectMode={selectMode}
                     selected={selectedIds.has(item.id)}
+                    onDelete={() => handleDeleteItem(item)}
                     onClick={() => {
                       if (selectMode) {
                         toggleSelect(item.id);
