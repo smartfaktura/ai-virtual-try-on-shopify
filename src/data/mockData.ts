@@ -1773,7 +1773,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_030',
     name: 'Warehouse Loft',
     category: 'editorial',
-    description: 'Raw industrial loft with large windows and exposed brick',
+    description: 'Model leaning against exposed brick in a raw industrial loft, arms folded, large windows casting directional light across the space',
     previewUrl: poseEditorialWindow,
     previewUrlMale: poseEditorialWarehouseMale,
   },
