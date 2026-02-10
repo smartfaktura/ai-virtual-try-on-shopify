@@ -1,4 +1,5 @@
-import { Copy, ArrowRight, X, Heart, Search } from 'lucide-react';
+import { useState } from 'react';
+import { Copy, ArrowRight, X, Heart, Search, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -12,6 +13,7 @@ import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { cn } from '@/lib/utils';
+import { convertImageToBase64 } from '@/lib/imageUtils';
 
 interface DiscoverDetailModalProps {
   item: DiscoverItem | null;
