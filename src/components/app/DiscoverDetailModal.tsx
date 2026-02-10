@@ -33,6 +33,9 @@ export function DiscoverDetailModal({
   isSaved,
   onToggleSave,
   viewCount,
+  isAdmin,
+  isFeatured,
+  onToggleFeatured,
 }: DiscoverDetailModalProps) {
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
