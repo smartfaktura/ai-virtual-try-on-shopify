@@ -1,108 +1,64 @@
 
 
-## Library: Hover Download Button + Bulk Select & Download as ZIP
+## Fix Library: Image Aspect Ratios, Better Select UI, and Source Filters
 
-### 1. Add Download Icon on Hover
+### Problem 1: Images Not Showing Actual Format
 
-On each `LibraryImageCard`, show a small download button in the bottom-right corner on hover. Clicking it downloads that single image directly (without opening the detail modal).
+The shimmer placeholder in `LibraryImageCard` always uses `aspect-[3/4]`, and images load with `h-auto`. This works for masonry but the placeholder doesn't match the actual image ratio. Since we have the `aspectRatio` field (e.g., "1:1", "3:4", "9:16"), we can use it to set the correct placeholder aspect ratio so there's no layout shift.
 
-**Changes to `LibraryImageCard.tsx`:**
-- Import `Download` from lucide-react
-- Add a download button inside the hover overlay (bottom-right)
-- The button calls `e.stopPropagation()` to prevent opening the modal, then fetches the image and triggers a browser download
+### Problem 2: Select UI Hard to See
 
-### 2. Bulk Select Mode with ZIP Download
+The current select checkbox is a small 24px circle with `border-white/70` and `bg-black/30` -- too subtle. We will:
+- Make the checkbox always visible when `selectMode` is on (not just on hover)
+- Add a subtle highlight border/ring around the entire card when selected
+- Increase checkbox size slightly and improve contrast
 
-Add a "Select" toggle button in the Library header. When active:
-- Each card shows a checkbox overlay (top-left corner)
-- Clicking a card toggles selection instead of opening the modal
-- A floating action bar appears at the bottom showing selected count + "Download as ZIP" button
-- Clicking "Download as ZIP" fetches all selected images and bundles them using JSZip, then downloads the .zip file
+### Problem 3: No Filtering by Source Type
 
-**Changes to `Jobs.tsx`:**
-- Add `selectMode` boolean state and `selectedIds` Set state
-- Add "Select" toggle button next to the sort pills
-- When `selectMode` is on, card clicks toggle selection instead of opening modal
-- Show a floating bottom bar when items are selected: `"X selected" + [Download ZIP] + [Cancel]`
-- Implement `handleBulkDownload` that uses JSZip to create a zip from all selected image URLs
-
-**Changes to `LibraryImageCard.tsx`:**
-- Add `selected` and `selectMode` props
-- When `selectMode` is true, show a checkbox circle overlay (top-left) -- filled when selected, empty when not
-- Adjust hover behavior so the card shows selection state
-
-**New dependency:**
-- `jszip` -- lightweight library for creating ZIP files in-browser
+Add filter pills for "All", "Generations", "Freestyle" so users can filter by source. Since model/scene associations don't have data yet, source filtering is the most useful filter to add now.
 
 ### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/app/LibraryImageCard.tsx` | Add download button on hover (bottom-right), add `selected`/`selectMode` props with checkbox overlay |
-| `src/pages/Jobs.tsx` | Add select mode toggle, selected items state, floating action bar with ZIP download |
+| `src/components/app/LibraryImageCard.tsx` | Use `item.aspectRatio` for placeholder sizing; improve select checkbox contrast and add selected card highlight ring |
+| `src/pages/Jobs.tsx` | Add source filter pills ("All" / "Generations" / "Freestyle"); pass filter to hook |
+| `src/hooks/useLibraryItems.ts` | Accept optional `sourceFilter` parameter and filter results accordingly |
 
 ### Technical Details
 
-**Hover download button (LibraryImageCard):**
-```tsx
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    // fetch + download logic
-  }}
-  className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
->
-  <Download className="w-4 h-4" />
-</button>
-```
+**Aspect ratio mapping for placeholder (LibraryImageCard.tsx):**
 
-**Select mode checkbox overlay:**
 ```tsx
-{selectMode && (
-  <div className="absolute top-3 left-3 z-10">
-    <div className={cn(
-      "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-      selected ? "bg-primary border-primary text-white" : "border-white/70 bg-black/30"
-    )}>
-      {selected && <Check className="w-3.5 h-3.5" />}
-    </div>
-  </div>
-)}
-```
-
-**Floating action bar (Jobs.tsx):**
-```tsx
-{selectedIds.size > 0 && (
-  <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-foreground text-background shadow-2xl">
-    <span className="text-sm font-medium">{selectedIds.size} selected</span>
-    <Button onClick={handleBulkDownload}>
-      <Download className="w-4 h-4 mr-2" /> Download ZIP
-    </Button>
-    <button onClick={() => { setSelectedIds(new Set()); setSelectMode(false); }}>
-      Cancel
-    </button>
-  </div>
-)}
-```
-
-**Bulk download with JSZip:**
-```tsx
-import JSZip from 'jszip';
-
-const handleBulkDownload = async () => {
-  const zip = new JSZip();
-  const selected = items.filter(i => selectedIds.has(i.id));
-  for (const item of selected) {
-    const res = await fetch(item.imageUrl);
-    const blob = await res.blob();
-    zip.file(`${item.label}-${item.id.slice(0,8)}.png`, blob);
+function getAspectClass(ratio?: string) {
+  switch (ratio) {
+    case '1:1': return 'aspect-square';
+    case '3:4': return 'aspect-[3/4]';
+    case '4:5': return 'aspect-[4/5]';
+    case '9:16': return 'aspect-[9/16]';
+    case '16:9': return 'aspect-video';
+    default: return 'aspect-[3/4]';
   }
-  const content = await zip.generateAsync({ type: 'blob' });
-  const url = URL.createObjectURL(content);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'library-images.zip';
-  a.click();
-  URL.revokeObjectURL(url);
-};
+}
 ```
+
+**Improved select checkbox:**
+- Increase to `w-7 h-7` with a stronger border (`border-white`)
+- When selected: solid primary background with white check
+- Add a `ring-2 ring-primary` to the entire card when selected
+
+**Source filter pills (Jobs.tsx):**
+```tsx
+const SOURCE_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'generation', label: 'Generations' },
+  { id: 'freestyle', label: 'Freestyle' },
+];
+```
+
+Added as a row of pills below the search bar, following the same styling as sort pills.
+
+**Hook update (useLibraryItems.ts):**
+- Add `sourceFilter: 'all' | 'generation' | 'freestyle'` parameter
+- When not 'all', skip fetching the other source entirely (saves a query)
+
