@@ -79,6 +79,13 @@ export default function Freestyle() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const { images: savedImages, isLoading: isLoadingImages, saveImage, deleteImage } = useFreestyleImages();
 
+  // Auto-dismiss scene hint
+  useEffect(() => {
+    if (!showSceneHint) return;
+    const timer = setTimeout(() => setShowSceneHint(false), 4000);
+    return () => clearTimeout(timer);
+  }, [showSceneHint]);
+
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ['user-products', user?.id],
     queryFn: async () => {
