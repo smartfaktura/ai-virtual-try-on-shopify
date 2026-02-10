@@ -110,23 +110,6 @@ export default function Jobs() {
           </div>
 
           <div className="flex items-center gap-2">
-            {SOURCE_FILTERS.map(f => (
-              <button
-                key={f.id}
-                onClick={() => setSourceFilter(f.id)}
-                className={cn(
-                  'px-4 py-2 rounded-full text-xs font-medium transition-all',
-                  sourceFilter === f.id
-                    ? 'bg-foreground text-background shadow-sm'
-                    : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-
-            <div className="w-px h-5 bg-border mx-1" />
-
             {SORTS.map(s => (
               <button
                 key={s.id}

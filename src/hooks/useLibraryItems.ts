@@ -95,5 +95,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
       return items;
     },
     enabled: !!user,
+    refetchInterval: 10000,
+    refetchOnWindowFocus: true,
   });
 }
