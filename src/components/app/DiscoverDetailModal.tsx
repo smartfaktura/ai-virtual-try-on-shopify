@@ -128,7 +128,7 @@ export function DiscoverDetailModal({
 
       {/* Split layout */}
       <div
-        className="relative z-10 flex flex-col md:flex-row w-full h-full"
+        className="relative z-10 flex flex-col md:flex-row w-full h-dvh"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left — Image showcase */}
