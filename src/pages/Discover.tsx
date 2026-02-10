@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'saved', label: 'Saved' },
-  { id: 'scenes', label: 'Scenes' },
   { id: 'cinematic', label: 'Cinematic' },
   { id: 'commercial', label: 'Commercial' },
   { id: 'photography', label: 'Photography' },
@@ -20,6 +19,14 @@ const CATEGORIES = [
   { id: 'ads', label: 'Ads' },
   { id: 'lifestyle', label: 'Lifestyle' },
 ] as const;
+
+// Map scene categories to filter categories so scenes appear in relevant filters
+const SCENE_CATEGORY_MAP: Record<string, string[]> = {
+  studio: ['commercial', 'photography'],
+  lifestyle: ['lifestyle'],
+  editorial: ['cinematic', 'photography'],
+  streetwear: ['styling', 'lifestyle'],
+};
 
 function getItemId(item: DiscoverItem): string {
   return item.type === 'preset' ? item.data.id : item.data.poseId;
@@ -31,6 +38,33 @@ function getItemCategory(item: DiscoverItem): string {
 
 function getItemName(item: DiscoverItem): string {
   return item.type === 'preset' ? item.data.title : item.data.name;
+}
+
+function getItemTags(item: DiscoverItem): string[] {
+  if (item.type === 'preset') return item.data.tags ?? [];
+  // Scenes don't have tags, use category as a pseudo-tag
+  return [item.data.category];
+}
+
+function scoreSimilarity(a: DiscoverItem, b: DiscoverItem): number {
+  let score = 0;
+  const aCat = getItemCategory(a);
+  const bCat = getItemCategory(b);
+  if (aCat === bCat) score += 2;
+  if (a.type === b.type) score += 1;
+  const aTags = getItemTags(a);
+  const bTags = getItemTags(b);
+  for (const t of aTags) {
+    if (bTags.includes(t)) score += 1;
+  }
+  // Cross-type category overlap via scene mapping
+  if (a.type !== b.type) {
+    const sceneCat = a.type === 'scene' ? aCat : bCat;
+    const presetCat = a.type === 'preset' ? aCat : bCat;
+    const mapped = SCENE_CATEGORY_MAP[sceneCat] ?? [];
+    if (mapped.includes(presetCat)) score += 2;
+  }
+  return score;
 }
 
 export default function Discover() {
@@ -56,7 +90,6 @@ export default function Discover() {
         const simCat = getItemCategory(similarTo);
         const itemCat = getItemCategory(item);
         if (itemCat !== simCat) return false;
-        // For presets, also check tag overlap
         if (similarTo.type === 'preset' && item.type === 'preset') {
           const simTags = similarTo.data.tags ?? [];
           const itemTags = item.data.tags ?? [];
@@ -65,7 +98,6 @@ export default function Discover() {
             if (!overlap) return false;
           }
         }
-        // Exclude the source item
         if (item.type === similarTo.type && getItemId(item) === getItemId(similarTo)) return false;
         return true;
       }
@@ -77,11 +109,15 @@ export default function Discover() {
         return isSaved(itemType, itemId);
       }
 
-      // Category filter
-      if (selectedCategory === 'scenes') return item.type === 'scene';
+      // Category filter — scenes map to multiple filter categories
       if (selectedCategory !== 'all') {
-        if (item.type === 'scene') return false;
-        if (item.data.category !== selectedCategory) return false;
+        if (item.type === 'scene') {
+          const sceneCat = item.data.category;
+          const mappedCategories = SCENE_CATEGORY_MAP[sceneCat] ?? [];
+          if (!mappedCategories.includes(selectedCategory)) return false;
+        } else {
+          if (item.data.category !== selectedCategory) return false;
+        }
       }
 
       // Search filter
@@ -105,12 +141,16 @@ export default function Discover() {
     });
   }, [allItems, selectedCategory, searchQuery, similarTo, isSaved, savedItems]);
 
+  // Improved "More Like This" with scoring
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
-    const cat = getItemCategory(selectedItem);
     return allItems
-      .filter((i) => getItemCategory(i) === cat && !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
-      .slice(0, 4);
+      .filter((i) => !(i.type === selectedItem.type && getItemId(i) === getItemId(selectedItem)))
+      .map((i) => ({ item: i, score: scoreSimilarity(selectedItem, i) }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
+      .map((x) => x.item);
   }, [allItems, selectedItem]);
 
   const handleItemClick = (item: DiscoverItem) => {
