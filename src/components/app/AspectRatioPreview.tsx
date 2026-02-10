@@ -41,7 +41,7 @@ interface AspectRatioSelectorProps {
 }
 
 export function AspectRatioSelector({ value, onChange }: AspectRatioSelectorProps) {
-  const ratios: AspectRatio[] = ['1:1', '4:5', '16:9'];
+  const ratios: AspectRatio[] = ['1:1', '4:5', '9:16', '16:9'];
   return (
     <div className="space-y-3">
       <div>
