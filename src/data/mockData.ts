@@ -1749,7 +1749,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_027',
     name: 'Resort Poolside',
     category: 'lifestyle',
-    description: 'Luxury resort pool area with warm golden light',
+    description: 'Model lounging on a poolside daybed at a luxury resort, relaxed summer pose with sunglasses, warm golden afternoon light reflecting off turquoise water',
     previewUrl: poseLifestyleBeach,
     previewUrlMale: poseLifestyleResortMale,
   },
