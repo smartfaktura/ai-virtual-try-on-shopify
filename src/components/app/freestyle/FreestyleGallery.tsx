@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Expand, Trash2, Wand2, Copy, ShieldAlert, X, Pencil, Camera, User } from 'lucide-react';
+import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
@@ -181,7 +181,7 @@ function ImageCard({
       <div className="flex items-center gap-2">
         {onDelete && (
           <button
-            onClick={() => onDelete(img.id)}
+            onClick={(e) => { e.stopPropagation(); onDelete(img.id); }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500/40 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
@@ -189,7 +189,8 @@ function ImageCard({
         )}
         {onCopyPrompt && (
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               onCopyPrompt(img.prompt);
               toast.success('Prompt copied to editor');
             }}
@@ -201,7 +202,7 @@ function ImageCard({
         )}
         {onAddAsScene && (
           <button
-            onClick={() => onAddAsScene(img.url)}
+            onClick={(e) => { e.stopPropagation(); onAddAsScene(img.url); }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
             title="Add as Scene"
           >
@@ -210,7 +211,7 @@ function ImageCard({
         )}
         {onAddAsModel && (
           <button
-            onClick={() => onAddAsModel(img.url)}
+            onClick={(e) => { e.stopPropagation(); onAddAsModel(img.url); }}
             className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
             title="Add as Model"
           >
@@ -220,16 +221,10 @@ function ImageCard({
       </div>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => onDownload(img.url, idx)}
+          onClick={(e) => { e.stopPropagation(); onDownload(img.url, idx); }}
           className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
         >
           <Download className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => onExpand(idx)}
-          className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/25 transition-colors"
-        >
-          <Expand className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -237,7 +232,7 @@ function ImageCard({
 
   if (natural) {
     return (
-      <div className={cn('group relative inline-block', className)}>
+      <div className={cn('group relative inline-block cursor-pointer', className)} onClick={() => onExpand(idx)}>
         <img
           src={img.url}
           alt={`Generated ${idx + 1}`}
@@ -257,9 +252,10 @@ function ImageCard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl shadow-md shadow-black/20',
+        'group relative overflow-hidden rounded-xl shadow-md shadow-black/20 cursor-pointer',
         className,
       )}
+      onClick={() => onExpand(idx)}
     >
       <img
         src={img.url}
@@ -363,12 +359,23 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     );
   }
 
+  // Masonry layout: distribute all cards into 3 columns
+  const allCards: React.ReactNode[] = [
+    ...generatingCards,
+    ...blockedCards,
+    ...imageCards(),
+  ];
+  const columns: React.ReactNode[][] = [[], [], []];
+  allCards.forEach((card, i) => columns[i % 3].push(card));
+
   return (
     <>
-      <div className="grid grid-cols-3 gap-1 pt-3 px-1 pb-4">
-        {generatingCards}
-        {blockedCards}
-        {imageCards()}
+      <div className="flex gap-1 pt-3 px-1 pb-4">
+        {columns.map((col, i) => (
+          <div key={i} className="flex-1 flex flex-col gap-1">
+            {col}
+          </div>
+        ))}
       </div>
       {modals}
     </>
