@@ -1535,7 +1535,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_001',
     name: 'Studio Front',
     category: 'studio',
-    description: 'Classic lookbook pose, full body front view with clean white background',
+    description: 'Model standing facing camera in a classic lookbook pose, full body front view, relaxed shoulders, arms naturally at sides, clean white studio background',
     previewUrl: poseStudioFront,
     previewUrlMale: poseStudioFrontMale,
   },
