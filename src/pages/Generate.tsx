@@ -1555,16 +1555,6 @@ export default function Generate() {
                 ))}
               </div>
 
-              {selectedForPublish.size === 0 && (
-                <Alert><AlertDescription>👆 Click on images above to select them for publishing.</AlertDescription></Alert>
-              )}
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Selected: {selectedForPublish.size} of {generatedImages.length}</p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setSelectedForPublish(new Set(generatedImages.map((_, i) => i)))}>Select All</Button>
-                  <Button variant="outline" size="sm" onClick={() => setSelectedForPublish(new Set())}>Clear</Button>
-                </div>
-              </div>
             </CardContent></Card>
 
 
