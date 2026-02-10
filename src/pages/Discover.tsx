@@ -408,6 +408,13 @@ export default function Discover() {
         })()
       )}
 
+      {/* Admin submissions panel */}
+      {isAdmin && (
+        <div className="pt-8 border-t border-border/30">
+          <AdminSubmissionsPanel />
+        </div>
+      )}
+
       {/* Detail modal */}
       <DiscoverDetailModal
         item={selectedItem}
