@@ -5,6 +5,9 @@ import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImag
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import JSZip from 'jszip';
 
 const SORTS: { id: LibrarySortBy; label: string }[] = [
@@ -37,6 +40,7 @@ export default function Jobs() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isZipping, setIsZipping] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
   const columnCount = useColumnCount();
@@ -80,6 +84,40 @@ export default function Jobs() {
   const cancelSelect = () => {
     setSelectMode(false);
     setSelectedIds(new Set());
+  };
+
+  const handleDeleteItem = async (item: LibraryItem) => {
+    if (!window.confirm('Delete this image?')) return;
+    try {
+      if (item.source === 'freestyle') {
+        await supabase.from('freestyle_generations').delete().eq('id', item.id);
+      } else {
+        // item.id is "jobId-index" format
+        const dashIndex = item.id.lastIndexOf('-');
+        const jobId = item.id.substring(0, dashIndex);
+        const imageIndex = parseInt(item.id.substring(dashIndex + 1), 10);
+
+        const { data: job } = await supabase
+          .from('generation_jobs')
+          .select('results')
+          .eq('id', jobId)
+          .single();
+
+        if (job) {
+          const results = job.results as any[];
+          if (results.length <= 1) {
+            await supabase.from('generation_jobs').delete().eq('id', jobId);
+          } else {
+            const updated = results.filter((_, i) => i !== imageIndex);
+            await supabase.from('generation_jobs').update({ results: updated }).eq('id', jobId);
+          }
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      toast.success('Image deleted');
+    } catch {
+      toast.error('Failed to delete image');
+    }
   };
 
   return (
@@ -167,6 +205,7 @@ export default function Jobs() {
                     item={item}
                     selectMode={selectMode}
                     selected={selectedIds.has(item.id)}
+                    onDelete={() => handleDeleteItem(item)}
                     onClick={() => {
                       if (selectMode) {
                         toggleSelect(item.id);
