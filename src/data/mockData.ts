@@ -1607,7 +1607,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_010',
     name: 'Urban Stairs',
     category: 'streetwear',
-    description: 'Cool casual pose sitting on concrete stairs, industrial vibe',
+    description: 'Model sitting on concrete stairs, elbows resting on knees, relaxed forward lean with a cool confident expression, industrial urban vibe',
     previewUrl: poseStreetwearStairs,
     previewUrlMale: poseStreetwearStairsMale,
   },
