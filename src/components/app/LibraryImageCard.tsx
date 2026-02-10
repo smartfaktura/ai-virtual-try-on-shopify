@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Camera, Download, Check } from 'lucide-react';
+import { Sparkles, Camera, Download, Check, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function getAspectClass(ratio?: string) {
