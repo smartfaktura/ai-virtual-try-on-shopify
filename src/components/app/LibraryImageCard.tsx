@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Camera } from 'lucide-react';
+import { Sparkles, Camera, Download, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface LibraryItem {
@@ -18,9 +18,22 @@ export interface LibraryItem {
 interface LibraryImageCardProps {
   item: LibraryItem;
   onClick?: () => void;
+  selectMode?: boolean;
+  selected?: boolean;
 }
 
-export function LibraryImageCard({ item, onClick }: LibraryImageCardProps) {
+async function downloadImage(url: string, filename: string) {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(blobUrl);
+}
+
+export function LibraryImageCard({ item, onClick, selectMode, selected }: LibraryImageCardProps) {
   const [loaded, setLoaded] = useState(false);
 
   return (
@@ -28,6 +41,18 @@ export function LibraryImageCard({ item, onClick }: LibraryImageCardProps) {
       className="group relative rounded-lg overflow-hidden cursor-pointer bg-muted"
       onClick={onClick}
     >
+      {/* Select mode checkbox */}
+      {selectMode && (
+        <div className="absolute top-3 left-3 z-10">
+          <div className={cn(
+            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+            selected ? "bg-primary border-primary text-primary-foreground" : "border-white/70 bg-black/30"
+          )}>
+            {selected && <Check className="w-3.5 h-3.5" />}
+          </div>
+        </div>
+      )}
+
       {/* Shimmer placeholder */}
       {!loaded && (
         <div className="w-full aspect-[3/4] animate-pulse bg-muted" />
@@ -57,9 +82,20 @@ export function LibraryImageCard({ item, onClick }: LibraryImageCardProps) {
           </span>
         </div>
 
-        {/* Bottom: date */}
-        <div>
+        {/* Bottom: date + download */}
+        <div className="flex justify-between items-end">
           <span className="text-[10px] text-white/60">{item.date}</span>
+          {!selectMode && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadImage(item.imageUrl, `${item.label}-${item.id.slice(0, 8)}.png`);
+              }}
+              className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>
