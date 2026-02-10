@@ -158,6 +158,8 @@ function ImageCard({
   onExpand,
   onDelete,
   onCopyPrompt,
+  onAddAsScene,
+  onAddAsModel,
   className,
   natural,
 }: {
@@ -167,6 +169,8 @@ function ImageCard({
   onExpand: (index: number) => void;
   onDelete?: (imageId: string) => void;
   onCopyPrompt?: (prompt: string) => void;
+  onAddAsScene?: (imageUrl: string) => void;
+  onAddAsModel?: (imageUrl: string) => void;
   className?: string;
   natural?: boolean;
 }) {
