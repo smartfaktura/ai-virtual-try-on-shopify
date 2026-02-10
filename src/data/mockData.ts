@@ -1543,7 +1543,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_002',
     name: 'Studio Profile',
     category: 'studio',
-    description: 'Elegant three-quarter turn, professional studio lighting',
+    description: 'Model in elegant three-quarter turn, one shoulder slightly forward, chin tilted, professional studio lighting with soft shadows',
     previewUrl: poseStudioProfile,
     previewUrlMale: poseStudioProfileMale,
   },
