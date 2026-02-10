@@ -359,12 +359,23 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     );
   }
 
+  // Masonry layout: distribute all cards into 3 columns
+  const allCards: React.ReactNode[] = [
+    ...generatingCards,
+    ...blockedCards,
+    ...imageCards(),
+  ];
+  const columns: React.ReactNode[][] = [[], [], []];
+  allCards.forEach((card, i) => columns[i % 3].push(card));
+
   return (
     <>
-      <div className="grid grid-cols-3 gap-1 pt-3 px-1 pb-4">
-        {generatingCards}
-        {blockedCards}
-        {imageCards()}
+      <div className="flex gap-1 pt-3 px-1 pb-4">
+        {columns.map((col, i) => (
+          <div key={i} className="flex-1 flex flex-col gap-1">
+            {col}
+          </div>
+        ))}
       </div>
       {modals}
     </>
