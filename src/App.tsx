@@ -110,6 +110,7 @@ const App = () => (
           <BuyCreditsModal />
         </BrowserRouter>
       </CreditProvider>
+      </AdminViewProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

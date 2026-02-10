@@ -211,6 +211,15 @@ export function AppShell({ children }: AppShellProps) {
                   <Settings className="w-4 h-4" />
                   Account settings
                 </button>
+                {isRealAdmin && (
+                  <button
+                    onClick={() => { toggleAdminView(); }}
+                    className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-muted-foreground"
+                  >
+                    {isAdminView ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    {isAdminView ? 'View as visitor' : 'View as admin'}
+                  </button>
+                )}
                 <button
                   onClick={() => { handleSignOut(); setUserMenuOpen(false); }}
                   className="w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
