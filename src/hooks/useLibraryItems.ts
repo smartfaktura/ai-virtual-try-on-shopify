@@ -4,17 +4,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 export type LibrarySortBy = 'newest' | 'oldest';
+export type LibrarySourceFilter = 'all' | 'generation' | 'freestyle';
 
-export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
+export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string, sourceFilter: LibrarySourceFilter = 'all') {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['library', sortBy, searchQuery, user?.id],
+    queryKey: ['library', sortBy, searchQuery, sourceFilter, user?.id],
     queryFn: async (): Promise<LibraryItem[]> => {
       const items: LibraryItem[] = [];
       const q = searchQuery.toLowerCase();
 
       // Fetch generation jobs
+      if (sourceFilter !== 'freestyle') {
       const { data: jobs, error: jobsError } = await supabase
         .from('generation_jobs')
         .select('id, results, created_at, status, ratio, quality, prompt_final, workflows(name), user_products(title)')
@@ -55,8 +57,10 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
           }
         }
       }
+      } // end generation filter
 
       // Fetch freestyle generations
+      if (sourceFilter !== 'generation') {
       const { data: freestyle, error: freestyleError } = await supabase
         .from('freestyle_generations')
         .select('id, image_url, prompt, aspect_ratio, quality, created_at')
@@ -81,6 +85,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
           quality: f.quality,
         });
       }
+      } // end freestyle filter
 
       // Sort merged results
       items.sort((a, b) => {

@@ -2,6 +2,17 @@ import { useState } from 'react';
 import { Sparkles, Camera, Download, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+function getAspectClass(ratio?: string) {
+  switch (ratio) {
+    case '1:1': return 'aspect-square';
+    case '3:4': return 'aspect-[3/4]';
+    case '4:5': return 'aspect-[4/5]';
+    case '9:16': return 'aspect-[9/16]';
+    case '16:9': return 'aspect-video';
+    default: return 'aspect-[3/4]';
+  }
+}
+
 export interface LibraryItem {
   id: string;
   imageUrl: string;
@@ -38,24 +49,27 @@ export function LibraryImageCard({ item, onClick, selectMode, selected }: Librar
 
   return (
     <div
-      className="group relative rounded-lg overflow-hidden cursor-pointer bg-muted"
+      className={cn(
+        "group relative rounded-lg overflow-hidden cursor-pointer bg-muted transition-all",
+        selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+      )}
       onClick={onClick}
     >
       {/* Select mode checkbox */}
       {selectMode && (
         <div className="absolute top-3 left-3 z-10">
           <div className={cn(
-            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-            selected ? "bg-primary border-primary text-primary-foreground" : "border-white/70 bg-black/30"
+            "w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all shadow-md",
+            selected ? "bg-primary border-primary text-primary-foreground" : "border-white bg-black/40"
           )}>
-            {selected && <Check className="w-3.5 h-3.5" />}
+            {selected && <Check className="w-4 h-4" />}
           </div>
         </div>
       )}
 
       {/* Shimmer placeholder */}
       {!loaded && (
-        <div className="w-full aspect-[3/4] animate-pulse bg-muted" />
+        <div className={cn("w-full animate-pulse bg-muted", getAspectClass(item.aspectRatio))} />
       )}
 
       <img
