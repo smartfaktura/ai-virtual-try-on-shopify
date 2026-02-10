@@ -97,9 +97,22 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
           </span>
         </div>
 
-        {/* Bottom: date + download */}
+        {/* Bottom: delete + date on left, download on right */}
         <div className="flex justify-between items-end">
-          <span className="text-[10px] text-white/60">{item.date}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-white/60">{item.date}</span>
+            {!selectMode && onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-red-500/70 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
           {!selectMode && (
             <button
               onClick={(e) => {
