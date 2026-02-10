@@ -26,6 +26,14 @@ const STATUS_MESSAGES = [
   'Adding finishing touches…',
 ];
 
+const RATIO_MAP: Record<string, string> = {
+  '1:1': '1/1',
+  '3:4': '3/4',
+  '4:5': '4/5',
+  '9:16': '9/16',
+  '16:9': '16/9',
+};
+
 export interface BlockedEntry {
   id: string;
   prompt: string;
