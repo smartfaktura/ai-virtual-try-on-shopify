@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Camera, X as XIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
@@ -44,6 +44,7 @@ export default function Freestyle() {
   const [negatives, setNegatives] = useState<string[]>([]);
   const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
+  const [showSceneHint, setShowSceneHint] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -64,7 +65,12 @@ export default function Freestyle() {
     if (q === 'high') setQuality('high');
     if (sceneParam) {
       const matchedScene = mockTryOnPoses.find((s) => s.poseId === sceneParam);
-      if (matchedScene) setSelectedScene(matchedScene);
+      if (matchedScene) {
+        setSelectedScene(matchedScene);
+        if (!localStorage.getItem('hideSceneAppliedHint')) {
+          setShowSceneHint(true);
+        }
+      }
     }
     // Clean URL params after reading
     if (p || r || q || sceneParam) {
@@ -72,6 +78,13 @@ export default function Freestyle() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const { images: savedImages, isLoading: isLoadingImages, saveImage, deleteImage } = useFreestyleImages();
+
+  // Auto-dismiss scene hint
+  useEffect(() => {
+    if (!showSceneHint) return;
+    const timer = setTimeout(() => setShowSceneHint(false), 4000);
+    return () => clearTimeout(timer);
+  }, [showSceneHint]);
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ['user-products', user?.id],
@@ -366,7 +379,28 @@ export default function Freestyle() {
 
       {/* Always-pinned Prompt Bar */}
       <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none z-10">
-        <div className="max-w-3xl mx-auto pointer-events-auto">
+        <div className="max-w-3xl mx-auto pointer-events-auto relative">
+          {/* Scene applied hint */}
+          {showSceneHint && selectedScene && (
+            <div className="absolute -top-14 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg">
+                <Camera className="w-3.5 h-3.5" />
+                Scene applied: {selectedScene.name}
+                <button
+                  onClick={() => {
+                    localStorage.setItem('hideSceneAppliedHint', 'true');
+                    setShowSceneHint(false);
+                  }}
+                  className="ml-1 opacity-70 hover:opacity-100 text-[10px] underline underline-offset-2"
+                >
+                  Don't show again
+                </button>
+                <button onClick={() => setShowSceneHint(false)} className="ml-0.5 opacity-70 hover:opacity-100">
+                  <XIcon className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          )}
           <FreestylePromptPanel {...panelProps} />
         </div>
       </div>

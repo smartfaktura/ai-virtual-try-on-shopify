@@ -168,6 +168,30 @@ export type Database = {
           },
         ]
       }
+      discover_item_views: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       discover_presets: {
         Row: {
           aspect_ratio: string
@@ -638,7 +662,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_discover_view_count: {
+        Args: { p_item_id: string; p_item_type: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

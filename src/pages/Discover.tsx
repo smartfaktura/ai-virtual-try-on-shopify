@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Search, Compass, Loader2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
@@ -7,6 +8,7 @@ import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { useSavedItems } from '@/hooks/useSavedItems';
 import { mockTryOnPoses } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
@@ -109,6 +111,31 @@ export default function Discover() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [similarTo, setSimilarTo] = useState<DiscoverItem | null>(null);
+
+  // Track views when modal opens
+  useEffect(() => {
+    if (selectedItem) {
+      supabase.from('discover_item_views').insert({
+        item_type: selectedItem.type,
+        item_id: getItemId(selectedItem),
+      }).then();
+    }
+  }, [selectedItem]);
+
+  // Fetch view count for selected item
+  const { data: viewCount } = useQuery({
+    queryKey: ['discover-view-count', selectedItem?.type, selectedItem ? getItemId(selectedItem) : null],
+    queryFn: async () => {
+      if (!selectedItem) return 0;
+      const { count } = await supabase
+        .from('discover_item_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('item_type', selectedItem.type)
+        .eq('item_id', getItemId(selectedItem));
+      return count ?? 0;
+    },
+    enabled: !!selectedItem,
+  });
 
   const savedCount = savedItems.length;
 
@@ -314,6 +341,7 @@ export default function Discover() {
         onSelectRelated={setSelectedItem}
         isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
         onToggleSave={selectedItem ? () => handleToggleSave(selectedItem) : undefined}
+        viewCount={viewCount ?? undefined}
       />
     </div>
   );

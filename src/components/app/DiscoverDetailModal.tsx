@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X } from 'lucide-react';
+import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
@@ -16,6 +16,7 @@ interface DiscoverDetailModalProps {
   onSelectRelated: (item: DiscoverItem) => void;
   isSaved?: boolean;
   onToggleSave?: () => void;
+  viewCount?: number;
 }
 
 export function DiscoverDetailModal({
@@ -28,6 +29,7 @@ export function DiscoverDetailModal({
   onSelectRelated,
   isSaved,
   onToggleSave,
+  viewCount,
 }: DiscoverDetailModalProps) {
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -110,23 +112,23 @@ export function DiscoverDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] animate-in fade-in duration-200"
       onClick={onClose}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/90" />
 
-      {/* Close button */}
+      {/* Close button — plain X, no circle */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-20 w-11 h-11 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all shadow-lg"
+        className="absolute top-5 right-5 z-20 text-white/80 hover:text-white transition-opacity"
       >
-        <X className="w-6 h-6" strokeWidth={2.5} />
+        <X className="w-7 h-7" strokeWidth={2} />
       </button>
 
       {/* Split layout */}
       <div
-        className="relative z-10 flex flex-col md:flex-row w-full h-full"
+        className="relative z-10 flex flex-col md:flex-row w-full h-dvh"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left — Image showcase */}
@@ -149,6 +151,11 @@ export function DiscoverDetailModal({
                 </p>
                 {!isPreset && (
                   <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">· Scene</span>
+                )}
+                {typeof viewCount === 'number' && (
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground/50 ml-auto">
+                    <Eye className="w-3 h-3" /> {viewCount}
+                  </span>
                 )}
               </div>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
