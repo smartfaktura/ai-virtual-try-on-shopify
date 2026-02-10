@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X } from 'lucide-react';
+import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
@@ -16,6 +16,7 @@ interface DiscoverDetailModalProps {
   onSelectRelated: (item: DiscoverItem) => void;
   isSaved?: boolean;
   onToggleSave?: () => void;
+  viewCount?: number;
 }
 
 export function DiscoverDetailModal({
