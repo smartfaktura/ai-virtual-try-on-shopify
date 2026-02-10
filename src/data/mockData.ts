@@ -1765,7 +1765,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_029',
     name: 'Autumn Park',
     category: 'lifestyle',
-    description: 'Fall foliage with warm golden tones and soft light',
+    description: 'Model walking along a tree-lined park path surrounded by fall foliage, hands in pockets, warm golden tones and soft dappled light filtering through autumn leaves',
     previewUrl: poseLifestylePark,
     previewUrlMale: poseLifestyleAutumnMale,
   },
