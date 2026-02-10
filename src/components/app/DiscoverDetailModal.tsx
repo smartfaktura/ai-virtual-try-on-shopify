@@ -112,18 +112,18 @@ export function DiscoverDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] animate-in fade-in duration-200"
       onClick={onClose}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/90" />
 
-      {/* Close button */}
+      {/* Close button — plain X, no circle */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-20 w-11 h-11 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all shadow-lg"
+        className="absolute top-5 right-5 z-20 text-white/80 hover:text-white transition-opacity"
       >
-        <X className="w-6 h-6" strokeWidth={2.5} />
+        <X className="w-7 h-7" strokeWidth={2} />
       </button>
 
       {/* Split layout */}
