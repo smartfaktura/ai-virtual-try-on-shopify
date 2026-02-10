@@ -107,7 +107,7 @@ export default function Jobs() {
             {columns.map((col, i) => (
               <div key={i} className="flex-1 flex flex-col gap-1">
                 {col.map(item => (
-                  <LibraryImageCard key={item.id} item={item} />
+                  <LibraryImageCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
                 ))}
               </div>
             ))}
