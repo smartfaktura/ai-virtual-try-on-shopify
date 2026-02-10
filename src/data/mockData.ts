@@ -1559,7 +1559,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_003',
     name: 'Urban Walking',
     category: 'lifestyle',
-    description: 'Candid street style, walking in city with golden hour light',
+    description: 'Model walking confidently down a city street, mid-stride with natural arm swing, candid street style, golden hour warm light casting long shadows',
     previewUrl: poseLifestyleWalking,
     previewUrlMale: poseLifestyleWalkingMale,
   },
