@@ -44,6 +44,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <Toaster position="top-right" richColors closeButton />
     <AuthProvider>
+      <AdminViewProvider>
       <CreditProvider>
         <BrowserRouter>
           <Routes>
