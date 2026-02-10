@@ -1716,7 +1716,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_023',
     name: 'Industrial Underpass',
     category: 'streetwear',
-    description: 'Industrial tunnel with dramatic overhead lighting',
+    description: 'Model walking through an industrial underpass tunnel, hands in pockets, dramatic overhead lighting creating strong shadows on concrete walls',
     previewUrl: poseStreetwearUnderpass,
     previewUrlMale: poseStreetwearUnderpassMale,
   },
