@@ -10,6 +10,7 @@ import Dashboard from '@/pages/Dashboard';
 import Generate from '@/pages/Generate';
 import BulkGenerate from '@/pages/BulkGenerate';
 import Templates from '@/pages/Templates';
+import Discover from '@/pages/Discover';
 import Jobs from '@/pages/Jobs';
 import Settings from '@/pages/Settings';
 import Landing from '@/pages/Landing';
