@@ -112,6 +112,31 @@ export default function Discover() {
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
   const [similarTo, setSimilarTo] = useState<DiscoverItem | null>(null);
 
+  // Track views when modal opens
+  useEffect(() => {
+    if (selectedItem) {
+      supabase.from('discover_item_views').insert({
+        item_type: selectedItem.type,
+        item_id: getItemId(selectedItem),
+      }).then();
+    }
+  }, [selectedItem]);
+
+  // Fetch view count for selected item
+  const { data: viewCount } = useQuery({
+    queryKey: ['discover-view-count', selectedItem?.type, selectedItem ? getItemId(selectedItem) : null],
+    queryFn: async () => {
+      if (!selectedItem) return 0;
+      const { count } = await supabase
+        .from('discover_item_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('item_type', selectedItem.type)
+        .eq('item_id', getItemId(selectedItem));
+      return count ?? 0;
+    },
+    enabled: !!selectedItem,
+  });
+
   const savedCount = savedItems.length;
 
   // Build unified feed
