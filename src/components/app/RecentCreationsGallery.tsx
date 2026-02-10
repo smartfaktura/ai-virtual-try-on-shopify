@@ -88,6 +88,19 @@ export function RecentCreationsGallery() {
     enabled: !!user,
   });
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-7 w-48" />
+        <div className="flex gap-4 overflow-hidden">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="flex-shrink-0 w-[180px] aspect-[4/5] rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   // Use placeholder images when no real creations exist
   const displayItems: CreationItem[] = creations.length > 0
     ? creations
