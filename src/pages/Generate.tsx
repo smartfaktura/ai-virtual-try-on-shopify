@@ -734,7 +734,7 @@ export default function Generate() {
                   </p>
                 </div>
                 <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
-                  onUpdateProductInfo={info => { if (scratchUpload) setScratchUpload({ ...scratchUpload, productInfo: info }); }}
+                  onUpdateProductInfo={info => { setScratchUpload(prev => prev ? { ...prev, productInfo: info } : prev); }}
                   isUploading={isUploading}
                 />
               </div>
