@@ -3,7 +3,7 @@ import { Search, Image, Loader2, Download, CheckSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
-import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
+import { useLibraryItems, type LibrarySortBy, type LibrarySourceFilter } from '@/hooks/useLibraryItems';
 import { Button } from '@/components/ui/button';
 import JSZip from 'jszip';
 
