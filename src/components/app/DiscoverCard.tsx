@@ -18,7 +18,7 @@ interface DiscoverCardProps {
   onToggleFeatured?: (e: React.MouseEvent) => void;
 }
 
-export function DiscoverCard({ item, onClick, isSaved, onToggleSave }: DiscoverCardProps) {
+export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
   const [loaded, setLoaded] = useState(false);
