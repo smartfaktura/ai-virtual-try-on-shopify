@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Trash2, Sparkles, Camera, User } from 'lucide-react';
+import { Download, Trash2, Sparkles, Camera, User, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export interface LibraryItem {
   id: string;
@@ -33,8 +34,8 @@ export function LibraryImageCard({ item }: LibraryImageCardProps) {
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
-  const handleDownload = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDownload = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     try {
       const response = await fetch(item.imageUrl);
       const blob = await response.blob();
@@ -52,8 +53,8 @@ export function LibraryImageCard({ item }: LibraryImageCardProps) {
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDelete = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (item.source !== 'freestyle') return;
     setDeleting(true);
     const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
@@ -69,7 +70,7 @@ export function LibraryImageCard({ item }: LibraryImageCardProps) {
 
   return (
     <>
-      <div className="group relative rounded-lg overflow-hidden cursor-pointer break-inside-avoid mb-1 bg-muted">
+      <div className="group relative rounded-lg overflow-hidden cursor-pointer bg-muted">
         {/* Shimmer placeholder */}
         {!loaded && (
           <div className="w-full aspect-[3/4] animate-pulse bg-muted" />
@@ -112,38 +113,64 @@ export function LibraryImageCard({ item }: LibraryImageCardProps) {
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-white/60">{item.date}</span>
               <div className="flex gap-1">
-                {isAdmin && (
+                {isAdmin ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-44 p-1" side="top" align="end">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSceneModalUrl(item.imageUrl); }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-xs rounded-md hover:bg-muted transition-colors"
+                      >
+                        <Camera className="w-3.5 h-3.5" /> Add as Scene
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setModelModalUrl(item.imageUrl); }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-xs rounded-md hover:bg-muted transition-colors"
+                      >
+                        <User className="w-3.5 h-3.5" /> Add as Model
+                      </button>
+                      <button
+                        onClick={() => handleDownload()}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-xs rounded-md hover:bg-muted transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Download
+                      </button>
+                      {item.source === 'freestyle' && (
+                        <button
+                          onClick={() => handleDelete()}
+                          disabled={deleting}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-xs rounded-md hover:bg-destructive/10 text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                ) : (
                   <>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setSceneModalUrl(item.imageUrl); }}
+                      onClick={(e) => handleDownload(e)}
                       className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-                      title="Add as Scene"
                     >
-                      <Camera className="w-3.5 h-3.5" />
+                      <Download className="w-3.5 h-3.5" />
                     </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setModelModalUrl(item.imageUrl); }}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-                      title="Add as Model"
-                    >
-                      <User className="w-3.5 h-3.5" />
-                    </button>
+                    {item.source === 'freestyle' && (
+                      <button
+                        onClick={(e) => handleDelete(e)}
+                        disabled={deleting}
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-destructive/80 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </>
-                )}
-                <button
-                  onClick={handleDownload}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                </button>
-                {item.source === 'freestyle' && (
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-destructive/80 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 )}
               </div>
             </div>
