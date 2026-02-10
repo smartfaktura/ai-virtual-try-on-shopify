@@ -65,7 +65,12 @@ export default function Freestyle() {
     if (q === 'high') setQuality('high');
     if (sceneParam) {
       const matchedScene = mockTryOnPoses.find((s) => s.poseId === sceneParam);
-      if (matchedScene) setSelectedScene(matchedScene);
+      if (matchedScene) {
+        setSelectedScene(matchedScene);
+        if (!localStorage.getItem('hideSceneAppliedHint')) {
+          setShowSceneHint(true);
+        }
+      }
     }
     // Clean URL params after reading
     if (p || r || q || sceneParam) {
