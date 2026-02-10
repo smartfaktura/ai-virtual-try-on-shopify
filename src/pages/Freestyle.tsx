@@ -379,7 +379,28 @@ export default function Freestyle() {
 
       {/* Always-pinned Prompt Bar */}
       <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none z-10">
-        <div className="max-w-3xl mx-auto pointer-events-auto">
+        <div className="max-w-3xl mx-auto pointer-events-auto relative">
+          {/* Scene applied hint */}
+          {showSceneHint && selectedScene && (
+            <div className="absolute -top-14 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg">
+                <Camera className="w-3.5 h-3.5" />
+                Scene applied: {selectedScene.name}
+                <button
+                  onClick={() => {
+                    localStorage.setItem('hideSceneAppliedHint', 'true');
+                    setShowSceneHint(false);
+                  }}
+                  className="ml-1 opacity-70 hover:opacity-100 text-[10px] underline underline-offset-2"
+                >
+                  Don't show again
+                </button>
+                <button onClick={() => setShowSceneHint(false)} className="ml-0.5 opacity-70 hover:opacity-100">
+                  <XIcon className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          )}
           <FreestylePromptPanel {...panelProps} />
         </div>
       </div>
