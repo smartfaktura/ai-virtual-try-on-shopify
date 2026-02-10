@@ -278,6 +278,10 @@ function ImageCard({
 }
 
 export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt }: FreestyleGalleryProps) {
+  const { isAdmin } = useIsAdmin();
+  const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
+  const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
+
   const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0;
 
   if (!hasContent) {
@@ -296,6 +300,9 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     );
   }
 
+  const adminSceneHandler = isAdmin ? (url: string) => setSceneModalUrl(url) : undefined;
+  const adminModelHandler = isAdmin ? (url: string) => setModelModalUrl(url) : undefined;
+
   const generatingCards = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
         <GeneratingCard key={`generating-${i}`} progress={generatingProgress} />
@@ -313,46 +320,57 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
 
   const count = images.length + generatingCount + blockedEntries.length;
 
+  const imageCards = (natural?: boolean) => images.map((img, idx) => (
+    <ImageCard
+      key={img.id}
+      img={img}
+      idx={idx}
+      onDownload={onDownload}
+      onExpand={onExpand}
+      onDelete={onDelete}
+      onCopyPrompt={onCopyPrompt}
+      onAddAsScene={adminSceneHandler}
+      onAddAsModel={adminModelHandler}
+      natural={natural}
+    />
+  ));
+
+  const modals = (
+    <>
+      {sceneModalUrl && (
+        <AddSceneModal open={!!sceneModalUrl} onClose={() => setSceneModalUrl(null)} imageUrl={sceneModalUrl} />
+      )}
+      {modelModalUrl && (
+        <AddModelModal open={!!modelModalUrl} onClose={() => setModelModalUrl(null)} imageUrl={modelModalUrl} />
+      )}
+    </>
+  );
+
   if (count <= 3) {
     return (
-      <div className="flex items-stretch justify-center gap-3 px-6 pt-6">
-        {generatingCards.map((card, i) => (
-          <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)] min-w-[280px]">{card}</div>
-        ))}
-        {blockedCards.map((card, i) => (
-          <div key={`block-wrap-${i}`} className="max-h-[calc(100vh-400px)] min-w-[280px]">{card}</div>
-        ))}
-        {images.map((img, idx) => (
-          <ImageCard
-            key={img.id}
-            img={img}
-            idx={idx}
-            onDownload={onDownload}
-            onExpand={onExpand}
-            onDelete={onDelete}
-            onCopyPrompt={onCopyPrompt}
-            natural
-          />
-        ))}
-      </div>
+      <>
+        <div className="flex items-stretch justify-center gap-3 px-6 pt-6">
+          {generatingCards.map((card, i) => (
+            <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)] min-w-[280px]">{card}</div>
+          ))}
+          {blockedCards.map((card, i) => (
+            <div key={`block-wrap-${i}`} className="max-h-[calc(100vh-400px)] min-w-[280px]">{card}</div>
+          ))}
+          {imageCards(true)}
+        </div>
+        {modals}
+      </>
     );
   }
 
   return (
-    <div className="grid grid-cols-3 gap-1 pt-3 px-1 pb-4">
-      {generatingCards}
-      {blockedCards}
-      {images.map((img, idx) => (
-        <ImageCard
-          key={img.id}
-          img={img}
-          idx={idx}
-          onDownload={onDownload}
-          onExpand={onExpand}
-          onDelete={onDelete}
-          onCopyPrompt={onCopyPrompt}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-3 gap-1 pt-3 px-1 pb-4">
+        {generatingCards}
+        {blockedCards}
+        {imageCards()}
+      </div>
+      {modals}
+    </>
   );
 }
