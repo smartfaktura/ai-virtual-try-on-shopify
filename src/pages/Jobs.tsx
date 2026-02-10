@@ -50,6 +50,7 @@ export default function Jobs() {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isZipping, setIsZipping] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<LibraryItem | null>(null);
   const queryClient = useQueryClient();
 
   const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
