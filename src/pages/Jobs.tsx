@@ -104,7 +104,6 @@ export default function Jobs() {
   const confirmDelete = async () => {
     const item = deleteTarget;
     if (!item) return;
-    setDeleteTarget(null);
     try {
       if (item.source === 'freestyle') {
         const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
@@ -136,6 +135,8 @@ export default function Jobs() {
       toast.success('Image deleted');
     } catch {
       toast.error('Failed to delete image');
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -265,7 +266,7 @@ export default function Jobs() {
         onClose={() => setSelectedItem(null)}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this image?</AlertDialogTitle>
@@ -275,7 +276,13 @@ export default function Jobs() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
