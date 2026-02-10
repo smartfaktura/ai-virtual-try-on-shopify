@@ -12,6 +12,7 @@ import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
+import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import type { ModelProfile, TryOnPose } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
