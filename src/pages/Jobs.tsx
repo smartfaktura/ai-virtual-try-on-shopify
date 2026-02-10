@@ -43,7 +43,7 @@ export default function Jobs() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isZipping, setIsZipping] = useState(false);
 
-  const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery, sourceFilter);
+  const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
   const columnCount = useColumnCount();
 
   const columns: typeof items[] = Array.from({ length: columnCount }, () => []);
