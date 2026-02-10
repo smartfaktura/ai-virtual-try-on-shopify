@@ -55,6 +55,7 @@ interface FreestyleGalleryProps {
   onCopyPrompt?: (prompt: string) => void;
   generatingCount?: number;
   generatingProgress?: number;
+  generatingAspectRatio?: string;
   blockedEntries?: BlockedEntry[];
   onDismissBlocked?: (id: string) => void;
   onEditBlockedPrompt?: (prompt: string) => void;
