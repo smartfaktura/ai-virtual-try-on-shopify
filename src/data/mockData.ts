@@ -1683,7 +1683,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_019',
     name: 'Editorial Moody',
     category: 'editorial',
-    description: 'Low-key studio lighting with single dramatic side light',
+    description: 'Model with face half-lit by a single dramatic side light, chin slightly lowered, intense gaze, low-key moody studio atmosphere',
     previewUrl: poseEditorialMoody,
     previewUrlMale: poseEditorialMoodyMale,
   },
