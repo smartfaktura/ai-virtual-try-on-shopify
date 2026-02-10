@@ -11,6 +11,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
   return useQuery({
     queryKey: ['library', sortBy, searchQuery, user?.id],
     queryFn: async (): Promise<LibraryItem[]> => {
+      try {
       const items: LibraryItem[] = [];
       const q = searchQuery.toLowerCase();
 
@@ -93,6 +94,10 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
       });
 
       return items;
+      } catch (err) {
+        console.error('[Library] Query failed:', err);
+        throw err;
+      }
     },
     enabled: !!user,
     refetchInterval: 10000,

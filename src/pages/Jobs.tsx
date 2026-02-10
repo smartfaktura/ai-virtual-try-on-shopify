@@ -6,15 +6,13 @@ import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 import { Button } from '@/components/ui/button';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -104,6 +102,7 @@ export default function Jobs() {
   const confirmDelete = async () => {
     const item = deleteTarget;
     if (!item) return;
+    console.log('[Library] Deleting item:', item.id, item.source);
     try {
       if (item.source === 'freestyle') {
         const { error } = await supabase.from('freestyle_generations').delete().eq('id', item.id);
@@ -117,7 +116,7 @@ export default function Jobs() {
           .from('generation_jobs')
           .select('results')
           .eq('id', jobId)
-          .single();
+          .maybeSingle();
 
         if (job) {
           const results = job.results as any[];
@@ -133,7 +132,8 @@ export default function Jobs() {
       }
       queryClient.invalidateQueries({ queryKey: ['library'] });
       toast.success('Image deleted');
-    } catch {
+    } catch (err) {
+      console.error('[Library] Delete failed:', err);
       toast.error('Failed to delete image');
     } finally {
       setDeleteTarget(null);
@@ -266,25 +266,20 @@ export default function Jobs() {
         onClose={() => setSelectedItem(null)}
       />
 
-      <AlertDialog open={!!deleteTarget}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this image?</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this image?</DialogTitle>
+            <DialogDescription>
               This action cannot be undone. The image will be permanently removed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteTarget(null)}>Cancel</AlertDialogCancel>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-            >
-              Delete
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
