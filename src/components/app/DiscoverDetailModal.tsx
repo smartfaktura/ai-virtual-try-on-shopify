@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye } from 'lucide-react';
+import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
@@ -17,6 +17,9 @@ interface DiscoverDetailModalProps {
   isSaved?: boolean;
   onToggleSave?: () => void;
   viewCount?: number;
+  isAdmin?: boolean;
+  isFeatured?: boolean;
+  onToggleFeatured?: () => void;
 }
 
 export function DiscoverDetailModal({
