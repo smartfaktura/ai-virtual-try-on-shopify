@@ -1,77 +1,57 @@
 
 
-## Fix Library: Deletion and Image Loading
+## Fix: Virtual Try-On Images Not Persisting in Library
 
-### Problem Analysis
+### Root Cause
 
-After multiple failed fix attempts, I've identified **two root causes**:
+The `generate-tryon` edge function returns **base64 data URLs** from the AI gateway. These base64 strings (often 1-5 MB each) are stored directly into the `generation_jobs.results` JSONB column. This causes:
 
-**1. Delete not working:** The Radix `AlertDialog` component has known issues with controlled `open` state when no `onOpenChange` handler is provided. The internal Radix state conflicts with our React state (`deleteTarget`), causing the dialog to silently block interactions. Previous fixes addressed parts of this but the fundamental Radix state conflict remains.
-
-**2. Images not loading:** The `useLibraryItems` query silently fails when an error occurs (React Query retries but never shows the error). With no error boundary or catch logging, the spinner just spins forever.
+1. **Silent insert failures** -- the base64 payloads are too large for the database row, so the `.insert()` call fails silently (the `.then()` handler only logs on success, not on error in some code paths).
+2. **"Non-existing images"** -- even if a base64 string is saved, it may get truncated or fail to render on reload.
+3. **generation_jobs table is currently empty** (0 rows), confirming that saves have been failing. The Library only shows freestyle generations (which use proper storage URLs).
 
 ### Solution
 
-**Approach: Replace the problematic Radix AlertDialog with a simple Dialog-based confirmation, and add error logging to the library query.**
+Upload generated images to storage in the edge function, then return persistent public URLs instead of raw base64.
 
-### File Changes
+### Changes
 
-#### 1. `src/pages/Jobs.tsx` - Replace AlertDialog with Dialog
+#### 1. Create storage bucket: `tryon-images` (public)
 
-Replace the `AlertDialog` import and component with a standard Radix `Dialog`. This avoids all the AlertDialog auto-close and state-fighting behavior that has caused 4 rounds of bugs.
+A new storage bucket for try-on generated images, similar to the existing `freestyle-images` bucket.
 
-- Remove `AlertDialog*` imports
-- Import `Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter` instead
-- Replace the AlertDialog JSX at the bottom with a Dialog that uses `open={!!deleteTarget}` and `onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}`
-- Keep the Delete button as a regular `<Button variant="destructive" onClick={confirmDelete}>`
-- Add `console.log` statements in `confirmDelete` to track execution flow and catch silent failures
+#### 2. Update `supabase/functions/generate-tryon/index.ts`
 
-#### 2. `src/hooks/useLibraryItems.ts` - Add error logging
+After generating each base64 image:
+- Decode the base64 string to binary
+- Upload to the `tryon-images` bucket under `{user_id}/{uuid}.png`
+- Return the public URL instead of the base64 data
 
-- Wrap the query function in a try/catch that logs errors to console before re-throwing
-- This ensures that if the query fails, we can see why in the console
+This requires extracting the user ID from the Authorization header (JWT).
+
+#### 3. Update `src/pages/Generate.tsx` (try-on save block, ~line 515)
+
+- Add `.then(({ error })` error logging to match other insert blocks (some paths already have this, ensure consistency)
+- No major changes needed here since the edge function will now return proper URLs
 
 ### Technical Details
 
-**Dialog replacement (Jobs.tsx):**
+**Edge function change (generate-tryon/index.ts):**
 ```text
-// Remove AlertDialog imports, add Dialog imports
-// Replace AlertDialog JSX with:
-<Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Delete this image?</DialogTitle>
-      <DialogDescription>This action cannot be undone.</DialogDescription>
-    </DialogHeader>
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-      <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+// After getting base64 from AI gateway:
+1. Extract user_id from JWT in Authorization header
+2. Convert base64 to Uint8Array
+3. Upload to storage: tryon-images/{user_id}/{crypto.randomUUID()}.png
+4. Get public URL from storage
+5. Return public URL in response instead of base64
 ```
 
-**Error logging (confirmDelete):**
+**Storage bucket:**
 ```text
-// Add at start of confirmDelete:
-console.log('[Library] Deleting item:', item.id, item.source);
-
-// Add in catch block:
-catch (err) {
-  console.error('[Library] Delete failed:', err);
-  toast.error('Failed to delete image');
-}
+- Name: tryon-images
+- Public: yes (for direct URL access, same as freestyle-images)
+- RLS: users can only write to their own folder ({user_id}/ prefix)
 ```
 
-**Query error logging (useLibraryItems.ts):**
-```text
-// Wrap queryFn body in try/catch:
-try {
-  // ... existing fetch logic ...
-} catch (err) {
-  console.error('[Library] Query failed:', err);
-  throw err;
-}
-```
+This is the same pattern used by `freestyle-images` bucket, ensuring consistency across the app.
 
-Two files modified. The Dialog component avoids all the AlertDialog state management issues that caused 4 rounds of bugs.
