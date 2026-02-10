@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import type { ModelProfile } from '@/types';
+import { useCustomModels } from '@/hooks/useCustomModels';
 
 interface ModelSelectorChipProps {
   selectedModel: ModelProfile | null;
@@ -32,8 +33,11 @@ const BODY_FILTERS: { value: BodyFilter; label: string }[] = [
 export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect }: ModelSelectorChipProps) {
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [bodyFilter, setBodyFilter] = useState<BodyFilter>('all');
+  const { asProfiles: customModels } = useCustomModels();
 
-  const filtered = mockModels.filter(m => {
+  const allModels = [...mockModels, ...customModels];
+
+  const filtered = allModels.filter(m => {
     if (genderFilter !== 'all' && m.gender !== genderFilter) return false;
     if (bodyFilter !== 'all' && m.bodyType !== bodyFilter) return false;
     return true;

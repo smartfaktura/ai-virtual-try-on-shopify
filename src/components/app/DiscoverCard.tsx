@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import type { TryOnPose } from '@/types';
@@ -13,9 +13,12 @@ interface DiscoverCardProps {
   onClick: () => void;
   isSaved?: boolean;
   onToggleSave?: (e: React.MouseEvent) => void;
+  isFeatured?: boolean;
+  isAdmin?: boolean;
+  onToggleFeatured?: (e: React.MouseEvent) => void;
 }
 
-export function DiscoverCard({ item, onClick, isSaved, onToggleSave }: DiscoverCardProps) {
+export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
   const [loaded, setLoaded] = useState(false);
@@ -54,6 +57,28 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave }: DiscoverC
         >
           <Heart className={cn('w-4 h-4', isSaved && 'fill-current')} />
         </button>
+      )}
+
+      {/* Admin featured toggle */}
+      {isAdmin && onToggleFeatured && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFeatured(e); }}
+          className={cn(
+            'absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10',
+            isFeatured
+              ? 'bg-amber-500 text-white'
+              : 'bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100'
+          )}
+        >
+          <Star className={cn('w-4 h-4', isFeatured && 'fill-current')} />
+        </button>
+      )}
+
+      {/* Featured badge (non-admin) */}
+      {isFeatured && !isAdmin && (
+        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-medium z-10">
+          Featured
+        </div>
       )}
 
       {/* Hover overlay (desktop) */}

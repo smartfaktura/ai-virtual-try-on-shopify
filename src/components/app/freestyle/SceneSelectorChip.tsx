@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import type { TryOnPose, PoseCategory } from '@/types';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
 
 interface SceneSelectorChipProps {
   selectedScene: TryOnPose | null;
@@ -32,7 +33,9 @@ const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
 
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
+  const { asPoses: customPoses } = useCustomScenes();
 
+  const allPoses = [...mockTryOnPoses, ...customPoses];
   const allCategories = Object.keys(poseCategoryLabels) as PoseCategory[];
   const visibleCategories = activeFilter === 'all'
     ? allCategories
@@ -98,7 +101,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect 
 
         <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
           {visibleCategories.map(cat => {
-            const poses = mockTryOnPoses.filter(p => p.category === cat);
+            const poses = allPoses.filter(p => p.category === cat);
             if (poses.length === 0) return null;
             return (
               <div key={cat}>

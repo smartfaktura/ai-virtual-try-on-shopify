@@ -7,6 +7,9 @@ import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import { useSavedItems } from '@/hooks/useSavedItems';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useFeaturedItems, useToggleFeatured } from '@/hooks/useFeaturedItems';
+import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -107,6 +110,10 @@ export default function Discover() {
   const navigate = useNavigate();
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const { isSaved, toggleSave, savedItems } = useSavedItems();
+  const { isAdmin } = useIsAdmin();
+  const { isFeatured, featuredMap } = useFeaturedItems();
+  const toggleFeatured = useToggleFeatured();
+  const { asPoses: customScenePoses } = useCustomScenes();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
@@ -142,9 +149,9 @@ export default function Discover() {
   // Build unified feed
   const allItems = useMemo<DiscoverItem[]>(() => {
     const presetItems: DiscoverItem[] = presets.map((p) => ({ type: 'preset', data: p }));
-    const sceneItems: DiscoverItem[] = mockTryOnPoses.map((s) => ({ type: 'scene', data: s }));
+    const sceneItems: DiscoverItem[] = [...mockTryOnPoses, ...customScenePoses].map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
-  }, [presets]);
+  }, [presets, customScenePoses]);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
@@ -204,6 +211,20 @@ export default function Discover() {
     });
   }, [allItems, selectedCategory, searchQuery, similarTo, isSaved, savedItems]);
 
+  // Sort: featured items first (by created_at desc), then rest
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const aKey = `${a.type}:${getItemId(a)}`;
+      const bKey = `${b.type}:${getItemId(b)}`;
+      const aFeat = featuredMap.get(aKey);
+      const bFeat = featuredMap.get(bKey);
+      if (aFeat && !bFeat) return -1;
+      if (!aFeat && bFeat) return 1;
+      if (aFeat && bFeat) return new Date(bFeat.created_at).getTime() - new Date(aFeat.created_at).getTime();
+      return 0;
+    });
+  }, [filtered, featuredMap]);
+
   // Improved "More Like This" with scoring + keywords
   const relatedItems = useMemo(() => {
     if (!selectedItem) return [];
@@ -241,6 +262,11 @@ export default function Discover() {
 
   const handleToggleSave = (item: DiscoverItem) => {
     toggleSave.mutate({ itemType: item.type, itemId: getItemId(item) });
+  };
+
+  const handleToggleFeatured = (item: DiscoverItem) => {
+    const itemId = getItemId(item);
+    toggleFeatured.mutate({ itemType: item.type, itemId, currentlyFeatured: isFeatured(item.type, itemId) });
   };
 
   return (
@@ -318,15 +344,21 @@ export default function Discover() {
         </div>
       ) : (
         <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-1">
-          {filtered.map((item) => (
-            <DiscoverCard
-              key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
-              item={item}
-              onClick={() => handleItemClick(item)}
-              isSaved={isSaved(item.type, getItemId(item))}
-              onToggleSave={() => handleToggleSave(item)}
-            />
-          ))}
+          {sorted.map((item) => {
+            const itemId = getItemId(item);
+            return (
+              <DiscoverCard
+                key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
+                item={item}
+                onClick={() => handleItemClick(item)}
+                isSaved={isSaved(item.type, itemId)}
+                onToggleSave={() => handleToggleSave(item)}
+                isFeatured={isFeatured(item.type, itemId)}
+                isAdmin={isAdmin}
+                onToggleFeatured={() => handleToggleFeatured(item)}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -342,6 +374,9 @@ export default function Discover() {
         isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
         onToggleSave={selectedItem ? () => handleToggleSave(selectedItem) : undefined}
         viewCount={viewCount ?? undefined}
+        isAdmin={isAdmin}
+        isFeatured={selectedItem ? isFeatured(selectedItem.type, getItemId(selectedItem)) : false}
+        onToggleFeatured={selectedItem ? () => handleToggleFeatured(selectedItem) : undefined}
       />
     </div>
   );

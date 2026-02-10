@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye } from 'lucide-react';
+import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
@@ -17,6 +17,9 @@ interface DiscoverDetailModalProps {
   isSaved?: boolean;
   onToggleSave?: () => void;
   viewCount?: number;
+  isAdmin?: boolean;
+  isFeatured?: boolean;
+  onToggleFeatured?: () => void;
 }
 
 export function DiscoverDetailModal({
@@ -30,6 +33,9 @@ export function DiscoverDetailModal({
   isSaved,
   onToggleSave,
   viewCount,
+  isAdmin,
+  isFeatured,
+  onToggleFeatured,
 }: DiscoverDetailModalProps) {
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -265,6 +271,18 @@ export function DiscoverDetailModal({
               >
                 <Search className="w-3.5 h-3.5" /> Similar
               </button>
+              {isAdmin && onToggleFeatured && (
+                <button
+                  onClick={onToggleFeatured}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 transition-all',
+                    isFeatured ? 'text-amber-500 border-amber-500/20' : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Star className={cn('w-3.5 h-3.5', isFeatured && 'fill-current')} />
+                  {isFeatured ? 'Unfeature' : 'Feature'}
+                </button>
+              )}
             </div>
 
             {/* More like this */}
