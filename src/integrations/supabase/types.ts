@@ -312,6 +312,62 @@ export type Database = {
         }
         Relationships: []
       }
+      discover_submissions: {
+        Row: {
+          admin_note: string | null
+          aspect_ratio: string
+          category: string
+          created_at: string
+          id: string
+          image_url: string
+          prompt: string
+          quality: string
+          source_generation_id: string | null
+          status: string
+          tags: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          aspect_ratio?: string
+          category?: string
+          created_at?: string
+          id?: string
+          image_url: string
+          prompt?: string
+          quality?: string
+          source_generation_id?: string | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          aspect_ratio?: string
+          category?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          prompt?: string
+          quality?: string
+          source_generation_id?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discover_submissions_source_generation_id_fkey"
+            columns: ["source_generation_id"]
+            isOneToOne: false
+            referencedRelation: "freestyle_generations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       featured_items: {
         Row: {
           created_at: string
