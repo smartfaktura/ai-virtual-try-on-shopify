@@ -37,7 +37,7 @@ export function RecentCreationsGallery() {
         .select('id, results, created_at, workflows(name), user_products(title, image_url)')
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
-        .limit(12);
+        .limit(5);
       if (jobsError) throw jobsError;
 
       for (const job of jobs ?? []) {
