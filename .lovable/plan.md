@@ -1,138 +1,84 @@
 
 
-## Transform Templates into Discover -- Inspiration Gallery
+## Fix Discover Page and Next Phase Steps
 
-### Overview
-Replace the current `/app/templates` table view with a visual "Discover" page -- a curated gallery of AI-generated images users can browse for inspiration, copy prompts, and open directly in Freestyle with presets pre-filled.
+### Current Issues Found
 
-### Phase 1: Curated Platform Presets (this plan)
+1. **Placeholder images**: All 12 presets use generic Unsplash stock photos instead of actual AI-generated product photography. The gallery looks like a stock photo site, not an AI generation showcase.
 
-#### 1. Database: New `discover_presets` table
+2. **Featured presets not highlighted**: The `is_featured` flag exists in the database but the UI treats all cards identically -- no hero section or visual distinction.
 
-Create a table to store curated inspiration cards:
+3. **No mobile-friendly interactions**: Hover-only overlay for "Copy" and "Use Prompt" buttons means mobile users can't access these actions without opening the detail modal.
 
-```text
-discover_presets
-- id (uuid, PK)
-- title (text) -- e.g. "Tennis Court Editorial"
-- prompt (text) -- the full prompt used
-- image_url (text) -- the generated result image
-- category (text) -- Cinematic, Commercial, Photography, Styling, Ads, Editorial, Lifestyle, Product
-- model_name (text, nullable) -- which AI model was referenced
-- scene_name (text, nullable) -- which scene was used
-- aspect_ratio (text) -- e.g. "3:4"
-- quality (text) -- "standard" or "high"
-- tags (text[], nullable) -- searchable tags
-- sort_order (int, default 0) -- for manual curation ordering
-- is_featured (boolean, default false)
-- created_at (timestamptz)
-```
+4. **Missing toast feedback on copy**: The card's inline "Copy" button copies silently; only the modal copy shows a toast.
 
-RLS: Public read for all authenticated users. No insert/update/delete for regular users (admin-only via SQL).
+5. **Minor console warning**: Badge component ref warning in the detail modal (cosmetic but noisy).
 
-#### 2. Seed with 12-15 curated presets
+6. **Category "all" icon mismatch**: The "All" filter uses a Sparkles icon which could be confused with a "Featured" filter.
 
-Generate example images using the AI and insert them as seed data. Categories:
-- **Cinematic** (moody editorial shots)
-- **Commercial** (clean product photography)
-- **Photography** (studio portraits)
-- **Styling** (fashion editorial)
-- **Ads** (social media ready)
-- **Lifestyle** (contextual scenes)
+### Fixes to Implement Now
 
-Each preset includes: a hero image, the exact prompt, model/scene references, and tags.
+#### Fix 1: Add Featured Hero Section
+Show `is_featured` presets in a larger hero row at the top of the gallery, before the regular grid. This gives the page visual hierarchy and a clear starting point.
 
-#### 3. Rename nav + route
+#### Fix 2: Add Toast on Card Copy
+When clicking "Copy" on a card's hover overlay, show a success toast (matching the modal behavior).
 
-- Sidebar: "Templates" becomes "Discover"
-- Icon: `LayoutTemplate` becomes `Compass` (from lucide)
-- Route stays `/app/templates` internally (or rename to `/app/discover` with redirect)
-- Page title: "Discover"
+#### Fix 3: Mobile-Friendly Card Actions
+Add a small action button visible on mobile (not just hover) -- a subtle "..." menu or always-visible "Use" button at the bottom of each card.
 
-#### 4. New Discover page UI
+#### Fix 4: Better Empty State
+When no presets match a search/filter, show a more helpful message suggesting the user try different keywords or browse all categories.
 
-Replace the table with a visual gallery:
+#### Fix 5: Fix Badge Ref Warning
+The Badge component in the detail modal triggers a ref warning. Wrap it properly or remove the ref-passing issue.
 
-```text
-+--------------------------------------------------+
-|  Discover                                         |
-|                                                   |
-|  [Search...]                                      |
-|                                                   |
-|  Cinematic  Commercial  Photography  Styling ...  |
-|  (icon tabs as horizontal filter bar)             |
-|                                                   |
-|  +--------+ +--------+ +--------+ +--------+     |
-|  |        | |        | |        | |        |      |
-|  | image  | | image  | | image  | | image  |      |
-|  |        | |        | |        | |        |      |
-|  |  title | |  title | |  title | |  title |      |
-|  +--------+ +--------+ +--------+ +--------+     |
-|  +--------+ +--------+ +--------+ +--------+     |
-|  |        | |        | |        | |        |      |
-|  ...masonry grid continues...                     |
-+--------------------------------------------------+
-```
+### Files to Modify
 
-- Responsive masonry grid: 2 cols mobile, 3 cols tablet, 4-5 cols desktop
-- On hover: show prompt preview + "Use Prompt" button
-- Category filter bar with icons (similar to Kive.ai reference)
-- Search by prompt text or tags
-
-#### 5. Detail modal (on click)
-
-```text
-+------------------------------------------+
-|  [X]                                      |
-|                                           |
-|  +------------------+  Title              |
-|  |                  |  "25 year old..."   |
-|  |   Large image    |                     |
-|  |                  |  Scene: Tennis Court |
-|  |                  |  3:4  |  PNG        |
-|  +------------------+                     |
-|                        [Use Prompt]       |
-|                        [Use Style]        |
-|                                           |
-|  --- More like this ---                   |
-|  [thumb] [thumb] [thumb] [thumb]          |
-+------------------------------------------+
-```
-
-- Shows full prompt text (copyable)
-- Model + Scene badges
-- "Use Prompt" button: navigates to `/app/freestyle` with `?prompt=...&aspect_ratio=...&quality=...` pre-filled
-- "More like this": shows other presets in same category
-
-#### 6. Freestyle integration
-
-Update Freestyle page to read URL query params (`prompt`, `aspect_ratio`, `quality`) and pre-fill the prompt bar + settings when arriving from Discover.
-
-### Files to Create/Modify
-
-| File | Action |
+| File | Change |
 |------|--------|
-| `discover_presets` table | Create via migration |
-| `src/pages/Discover.tsx` | New file -- replaces Templates.tsx |
-| `src/components/app/DiscoverCard.tsx` | New -- image card with hover actions |
-| `src/components/app/DiscoverDetailModal.tsx` | New -- detail view modal |
-| `src/hooks/useDiscoverPresets.ts` | New -- fetch presets from DB |
-| `src/components/app/AppShell.tsx` | Update nav label + icon |
-| `src/App.tsx` | Update route import |
-| `src/pages/Freestyle.tsx` | Read URL params for pre-fill |
+| `src/pages/Discover.tsx` | Add featured hero row, improve empty state |
+| `src/components/app/DiscoverCard.tsx` | Add toast on copy, mobile-friendly actions |
+| `src/components/app/DiscoverDetailModal.tsx` | Fix Badge ref warning |
+
+### Next Phase Steps (Roadmap)
+
+These are the logical next features to build after the fixes above:
+
+**Phase 2A: Real Content**
+- Replace all 12 Unsplash placeholder URLs with actual AI-generated images from your platform
+- Add more presets (target 30-50) across all categories
+- Fill in `model_name` and `scene_name` fields so users see which model/scene was used
+
+**Phase 2B: User-Generated Discover Feed**
+- Let users "Share to Discover" from their Freestyle generation results
+- Add a `shared_by_user_id` column to `discover_presets`
+- Show user attribution on shared presets
+- Moderation: shared presets start as "pending" until approved
+
+**Phase 2C: Save and Like**
+- Add a `saved_presets` table (user_id, preset_id)
+- Heart/bookmark icon on cards
+- "Saved" tab in the filter bar
+- Personal collection page
+
+**Phase 2D: Smart Recommendations**
+- "Try this with your product" button that takes the preset prompt + user's selected product and opens Freestyle
+- "Similar to your recent generations" section based on matching tags/categories
+- "Trending" sort option based on copy/use counts (add a `use_count` column)
+
+**Phase 2E: Enhanced Discovery**
+- Infinite scroll or pagination for larger preset libraries
+- "New this week" badge on recently added presets
+- Tag cloud or trending tags section
+- Full-text search with tag highlighting
 
 ### Technical Details
 
-- The `discover_presets` table uses public read RLS so any logged-in user can browse
-- Seed data is inserted via migration SQL with placeholder image URLs (to be replaced with real generated images)
-- The old `mockTemplates` data and Templates.tsx can be kept temporarily but hidden from nav
-- Category icons use lucide-react (Camera, ShoppingBag, Palette, Scissors, Megaphone, Sun, etc.)
-- Image cards use `aspect-[3/4]` for consistent portrait-oriented thumbnails
-- "Use Prompt" navigates with URL params: `/app/freestyle?prompt=...&ratio=3:4&quality=high`
-
-### Phase 2 (future, not in this plan)
-- Users can "Share" their own generations to the Discover feed
-- Like/save presets to personal collection
-- "Trending" and "New" sort options
-- User attribution on shared presets
+- Featured hero section uses the existing `is_featured` boolean flag already in the database
+- Mobile actions use a persistent bottom bar on each card (visible without hover) using CSS `@media (hover: none)`
+- Toast import from `sonner` is already available in the card component file
+- Badge ref fix: use `<span>` wrapper or update Badge to forward refs
+- No database changes needed for the immediate fixes
+- Phase 2B-2E will each require new tables and migrations
 
