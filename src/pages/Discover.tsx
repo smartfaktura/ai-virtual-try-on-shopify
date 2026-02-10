@@ -300,7 +300,14 @@ export default function Discover() {
     <div className="space-y-8 py-8 px-1">
       {/* Header */}
       <div className="space-y-1.5">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Discover</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Discover</h1>
+          {isAdmin && adminPendingCount > 0 && (
+            <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+              {adminPendingCount} pending
+            </span>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">Browse curated prompts and styles for inspiration</p>
       </div>
 
