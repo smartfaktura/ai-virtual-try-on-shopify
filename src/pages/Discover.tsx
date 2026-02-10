@@ -10,6 +10,8 @@ import { useSavedItems } from '@/hooks/useSavedItems';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useFeaturedItems, useToggleFeatured } from '@/hooks/useFeaturedItems';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useAdminSubmissions } from '@/hooks/useDiscoverSubmissions';
+import { AdminSubmissionsPanel } from '@/components/app/AdminSubmissionsPanel';
 import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
