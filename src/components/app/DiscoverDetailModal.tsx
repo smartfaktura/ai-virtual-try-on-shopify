@@ -152,6 +152,11 @@ export function DiscoverDetailModal({
                 {!isPreset && (
                   <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">· Scene</span>
                 )}
+                {typeof viewCount === 'number' && (
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground/50 ml-auto">
+                    <Eye className="w-3 h-3" /> {viewCount}
+                  </span>
+                )}
               </div>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
               {isPreset && (
