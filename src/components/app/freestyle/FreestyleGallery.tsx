@@ -314,6 +314,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const { isAdmin } = useIsAdmin();
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
+  const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
 
   const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0;
 
