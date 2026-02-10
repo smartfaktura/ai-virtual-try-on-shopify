@@ -356,8 +356,8 @@ export default function Freestyle() {
             onExpand={openLightbox}
             onDelete={handleDelete}
             onCopyPrompt={setPrompt}
-            generatingCount={isLoading ? imageCount : 0}
-            generatingProgress={progress}
+            generatingCount={(isLoading || isSaving) ? imageCount : 0}
+            generatingProgress={isSaving ? 100 : progress}
             blockedEntries={blockedEntries}
             onDismissBlocked={handleDismissBlocked}
             onEditBlockedPrompt={handleEditBlockedPrompt}
