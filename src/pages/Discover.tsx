@@ -149,9 +149,9 @@ export default function Discover() {
   // Build unified feed
   const allItems = useMemo<DiscoverItem[]>(() => {
     const presetItems: DiscoverItem[] = presets.map((p) => ({ type: 'preset', data: p }));
-    const sceneItems: DiscoverItem[] = mockTryOnPoses.map((s) => ({ type: 'scene', data: s }));
+    const sceneItems: DiscoverItem[] = [...mockTryOnPoses, ...customScenePoses].map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
-  }, [presets]);
+  }, [presets, customScenePoses]);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
