@@ -367,23 +367,35 @@ export default function Discover() {
           </p>
         </div>
       ) : (
-        <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-1">
-          {sorted.map((item) => {
-            const itemId = getItemId(item);
-            return (
-              <DiscoverCard
-                key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
-                item={item}
-                onClick={() => handleItemClick(item)}
-                isSaved={isSaved(item.type, itemId)}
-                onToggleSave={() => handleToggleSave(item)}
-                isFeatured={isFeatured(item.type, itemId)}
-                isAdmin={isAdmin}
-                onToggleFeatured={() => handleToggleFeatured(item)}
-              />
-            );
-          })}
-        </div>
+        (() => {
+          const columns: DiscoverItem[][] = Array.from({ length: columnCount }, () => []);
+          sorted.forEach((item, i) => {
+            columns[i % columnCount].push(item);
+          });
+          return (
+            <div className="flex gap-1">
+              {columns.map((col, colIdx) => (
+                <div key={colIdx} className="flex-1 flex flex-col gap-1">
+                  {col.map((item) => {
+                    const itemId = getItemId(item);
+                    return (
+                      <DiscoverCard
+                        key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
+                        item={item}
+                        onClick={() => handleItemClick(item)}
+                        isSaved={isSaved(item.type, itemId)}
+                        onToggleSave={() => handleToggleSave(item)}
+                        isFeatured={isFeatured(item.type, itemId)}
+                        isAdmin={isAdmin}
+                        onToggleFeatured={() => handleToggleFeatured(item)}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          );
+        })()
       )}
 
       {/* Detail modal */}
