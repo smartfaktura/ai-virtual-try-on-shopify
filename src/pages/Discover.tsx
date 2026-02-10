@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Compass, Camera, ShoppingBag, Scissors, Megaphone, Sun, Clapperboard, Loader2, LayoutGrid, Image, Heart, X } from 'lucide-react';
+import { Search, Compass, Loader2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { PageHeader } from '@/components/app/PageHeader';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { useDiscoverPresets, type DiscoverPreset } from '@/hooks/useDiscoverPresets';
@@ -11,15 +10,15 @@ import { mockTryOnPoses } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
-  { id: 'all', label: 'All', icon: LayoutGrid },
-  { id: 'saved', label: 'Saved', icon: Heart },
-  { id: 'scenes', label: 'Scenes', icon: Image },
-  { id: 'cinematic', label: 'Cinematic', icon: Clapperboard },
-  { id: 'commercial', label: 'Commercial', icon: ShoppingBag },
-  { id: 'photography', label: 'Photography', icon: Camera },
-  { id: 'styling', label: 'Styling', icon: Scissors },
-  { id: 'ads', label: 'Ads', icon: Megaphone },
-  { id: 'lifestyle', label: 'Lifestyle', icon: Sun },
+  { id: 'all', label: 'All' },
+  { id: 'saved', label: 'Saved' },
+  { id: 'scenes', label: 'Scenes' },
+  { id: 'cinematic', label: 'Cinematic' },
+  { id: 'commercial', label: 'Commercial' },
+  { id: 'photography', label: 'Photography' },
+  { id: 'styling', label: 'Styling' },
+  { id: 'ads', label: 'Ads' },
+  { id: 'lifestyle', label: 'Lifestyle' },
 ] as const;
 
 function getItemId(item: DiscoverItem): string {
