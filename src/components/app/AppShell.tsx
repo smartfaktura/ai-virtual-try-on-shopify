@@ -3,8 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
-  Sparkles, Wand2, ChevronUp, ArrowUpRight,
+  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff,
 } from 'lucide-react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useAdminView } from '@/contexts/AdminViewContext';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
 import { useAuth } from '@/contexts/AuthContext';
