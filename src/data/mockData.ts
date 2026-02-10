@@ -1658,7 +1658,7 @@ export const mockTryOnPoses: TryOnPose[] = [
     poseId: 'pose_016',
     name: 'Park Bench',
     category: 'lifestyle',
-    description: 'Casual outdoor pose on wooden park bench with greenery',
+    description: 'Model sitting casually on a wooden park bench, one arm draped over the backrest, legs relaxed, lush greenery and dappled sunlight',
     previewUrl: poseLifestylePark,
     previewUrlMale: poseLifestyleParkMale,
   },
