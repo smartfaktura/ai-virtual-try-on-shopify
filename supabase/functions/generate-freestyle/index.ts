@@ -167,7 +167,7 @@ function polishUserPrompt(
   // Scene / environment layer
   if (context.hasScene) {
     layers.push(
-      "ENVIRONMENT: Match the lighting direction and color temperature of the SCENE REFERENCE IMAGE. Integrate the subject naturally into the environment with consistent shadows and reflections."
+      "ENVIRONMENT: The subject MUST be placed in the EXACT environment shown in the SCENE REFERENCE IMAGE. Reproduce the same location, background elements, props, foliage, architecture, and atmosphere. Match the lighting direction, color temperature, and time of day. The final image should look like it was photographed in that exact location. Do NOT substitute a different environment or background."
     );
   }
 
@@ -328,7 +328,7 @@ function buildContentArray(
   if (sceneImage) {
     content.push({
       type: "text",
-      text: "SCENE/ENVIRONMENT REFERENCE IMAGE — match this setting, lighting direction, and color temperature:",
+      text: "SCENE/ENVIRONMENT REFERENCE IMAGE — You MUST place the subject IN this exact environment/location. Reproduce the same setting, background elements, lighting direction, color temperature, and atmosphere. Do NOT use a different environment:",
     });
     content.push({ type: "image_url", image_url: { url: sceneImage } });
   }
