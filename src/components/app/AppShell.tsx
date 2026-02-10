@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Home, Package, Palette, Layers, Calendar, Image, Film,
+  Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
   Sparkles, Wand2, ChevronUp, ArrowUpRight,
 } from 'lucide-react';
