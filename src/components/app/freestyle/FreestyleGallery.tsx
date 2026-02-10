@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Expand, Trash2, Wand2, Copy, ShieldAlert, X, Pencil, Camera, User } from 'lucide-react';
+import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
