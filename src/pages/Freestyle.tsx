@@ -44,6 +44,7 @@ export default function Freestyle() {
   const [negatives, setNegatives] = useState<string[]>([]);
   const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
+  const [showSceneHint, setShowSceneHint] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
