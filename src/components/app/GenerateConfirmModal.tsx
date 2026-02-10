@@ -47,6 +47,7 @@ export function GenerateConfirmModal({
   const aspectRatioLabels: Record<AspectRatio, string> = {
     '1:1': 'Square (1:1)',
     '4:5': 'Portrait (4:5)',
+    '9:16': 'Story (9:16)',
     '16:9': 'Wide (16:9)',
   };
 
