@@ -7,13 +7,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Rate limits per plan (per hour)
-const RATE_LIMITS: Record<string, { perHour: number; maxConcurrent: number }> = {
-  enterprise: { perHour: 9999, maxConcurrent: 6 },
-  pro: { perHour: 999, maxConcurrent: 4 },
-  growth: { perHour: 100, maxConcurrent: 3 },
-  starter: { perHour: 50, maxConcurrent: 2 },
-  free: { perHour: 10, maxConcurrent: 1 },
+// Hourly rate limits per plan
+const HOURLY_LIMITS: Record<string, number> = {
+  enterprise: 9999,
+  pro: 999,
+  growth: 100,
+  starter: 50,
+  free: 10,
 };
 
 // Credit cost calculation
@@ -86,21 +86,22 @@ serve(async (req) => {
       .single();
 
     const userPlan = profile?.plan || "free";
-    const limits = RATE_LIMITS[userPlan] || RATE_LIMITS.free;
+    const hourlyLimit = HOURLY_LIMITS[userPlan] || HOURLY_LIMITS.free;
 
-    // Count jobs in last hour
+    // Count non-cancelled jobs in last hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count: recentJobCount } = await supabase
       .from("generation_queue")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
-      .gte("created_at", oneHourAgo);
+      .gte("created_at", oneHourAgo)
+      .in("status", ["queued", "processing", "completed", "failed"]);
 
-    if ((recentJobCount || 0) >= limits.perHour) {
+    if ((recentJobCount || 0) >= hourlyLimit) {
       return new Response(
         JSON.stringify({
           error: "Rate limit exceeded",
-          message: `You've reached the maximum of ${limits.perHour} generations per hour on your ${userPlan} plan.`,
+          message: `You've reached the maximum of ${hourlyLimit} generations per hour on your ${userPlan} plan.`,
         }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
