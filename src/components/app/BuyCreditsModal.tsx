@@ -31,6 +31,20 @@ export function BuyCreditsModal() {
     }
   };
 
+  const isDowngrade = (targetPlanId: string) => {
+    const currentIdx = PLAN_ORDER.indexOf(plan);
+    const targetIdx = PLAN_ORDER.indexOf(targetPlanId);
+    return targetIdx < currentIdx;
+  };
+
+  const handlePlanClick = (targetPlanId: string) => {
+    if (isDowngrade(targetPlanId)) {
+      setDowngradeTarget(targetPlanId);
+      return;
+    }
+    handleUpgrade(targetPlanId);
+  };
+
   const handleUpgrade = async (targetPlanId: string) => {
     if (!user || upgrading) return;
     const targetConfig = PLAN_CONFIG[targetPlanId];
