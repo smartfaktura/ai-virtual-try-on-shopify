@@ -99,10 +99,10 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
         completed_at: row.completed_at,
       };
 
-      // Calculate position if still queued
+      // Calculate position if still queued (count jobs ahead: lower priority_score, or same score but earlier created_at)
       if (job.status === 'queued') {
         const posRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/generation_queue?status=eq.queued&priority_score=lt.${job.priority}&select=id`,
+          `${SUPABASE_URL}/rest/v1/generation_queue?status=eq.queued&priority_score=lte.${job.priority}&id=neq.${job.id}&select=id`,
           {
             headers: {
               apikey: SUPABASE_KEY,
