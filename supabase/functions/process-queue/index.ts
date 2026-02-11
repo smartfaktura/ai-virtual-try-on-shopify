@@ -13,7 +13,6 @@ const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
   tryon: "generate-tryon",
   freestyle: "generate-freestyle",
   workflow: "generate-workflow",
-  video: "generate-video",
 };
 
 serve(async (req) => {
@@ -85,6 +84,9 @@ serve(async (req) => {
 
         const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
 
+        // Inject user_id into payload so downstream functions can identify the user
+        const enrichedPayload = { ...payload, user_id: userId };
+
         const response = await fetch(functionUrl, {
           method: "POST",
           headers: {
@@ -92,7 +94,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
             "x-queue-internal": "true", // Signal to skip credit deduction
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(enrichedPayload),
         });
 
         if (!response.ok) {

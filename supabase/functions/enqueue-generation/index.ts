@@ -62,7 +62,7 @@ serve(async (req) => {
       );
     }
 
-    const validJobTypes = ["product", "tryon", "freestyle", "workflow", "video"];
+    const validJobTypes = ["product", "tryon", "freestyle", "workflow"];
     if (!validJobTypes.includes(jobType)) {
       return new Response(
         JSON.stringify({ error: `Invalid job type: ${jobType}` }),

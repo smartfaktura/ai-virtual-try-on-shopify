@@ -224,16 +224,23 @@ serve(async (req) => {
       );
     }
 
-    // Extract user ID from auth header
-    const userId = getUserIdFromJwt(req.headers.get("authorization"));
+    // Extract user ID — support queue-internal calls with user_id in payload
+    const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+    const body: TryOnRequest & { user_id?: string } = await req.json();
+
+    let userId: string | null;
+    if (isQueueInternal && body.user_id) {
+      userId = body.user_id;
+    } else {
+      userId = getUserIdFromJwt(req.headers.get("authorization"));
+    }
+
     if (!userId) {
       return new Response(
         JSON.stringify({ error: "Authentication required" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const body: TryOnRequest = await req.json();
 
     if (!body.product || !body.model || !body.pose) {
       return new Response(
