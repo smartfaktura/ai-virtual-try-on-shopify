@@ -55,6 +55,39 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
     };
   }, []);
 
+  // Recover in-flight jobs after page refresh
+  useEffect(() => {
+    if (!user || activeJob) return;
+
+    const recover = async () => {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token || SUPABASE_KEY;
+
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1`,
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (rows.length === 0) return;
+
+      const row = rows[0];
+      jobIdRef.current = row.id;
+      pollJobStatus(row.id);
+    };
+
+    recover();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
