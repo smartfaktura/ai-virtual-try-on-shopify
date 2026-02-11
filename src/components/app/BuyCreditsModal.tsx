@@ -160,7 +160,7 @@ export function BuyCreditsModal() {
                         <Button
                           variant={isRecommended ? 'default' : 'outline'}
                           className="w-full h-11 rounded-xl text-sm font-medium"
-                          onClick={() => handleUpgrade(p.planId)}
+                          onClick={() => handlePlanClick(p.planId)}
                           disabled={upgrading}
                         >
                           {upgrading ? 'Upgrading…' : isRecommended ? 'Upgrade' : 'Select'}
