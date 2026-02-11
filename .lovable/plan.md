@@ -1,87 +1,108 @@
 
 
-## Phase 3 Audit: Process-Queue Worker
+## Phase 3 Audit: Process-Queue Worker -- Generation Function Compatibility
 
-### Status: Mostly Solid -- 3 Issues Found
-
----
-
-### Issue 1: Missing `generate-tryon` in config.toml (Critical)
-
-The `process-queue` worker maps `tryon` jobs to the `generate-tryon` function (line 13), and the function directory exists at `supabase/functions/generate-tryon/`. However, `generate-tryon` is **not registered** in `supabase/config.toml`, which means it may fail to deploy or reject requests.
-
-**Fix**: Add the following to `supabase/config.toml`:
-```toml
-[functions.generate-tryon]
-verify_jwt = false
-```
-
-**File**: `supabase/config.toml`
+### Summary: 2 Critical Issues, 1 Architectural Concern
 
 ---
 
-### Issue 2: No Authentication on process-queue Endpoint (Medium)
+### Issue 1: `generate-tryon` Will Reject Queue Calls (Critical)
 
-The `process-queue` function is publicly callable (`verify_jwt = false` in config.toml) and has no internal authentication check. Anyone who knows the URL can trigger queue processing. While it only processes existing jobs (no data mutation risk beyond normal flow), it could be abused for:
-- Denial of service (repeatedly triggering expensive generation calls)
-- Race conditions from concurrent process-queue invocations
+The `generate-tryon` function (line 228-234) extracts the user ID from the JWT via `getUserIdFromJwt()`. When `process-queue` calls it, the `Authorization` header carries the **service role key**, which is a JWT without a `sub` claim. This means:
 
-**Fix**: Add a check for the `x-queue-internal` header or validate the `Authorization` header matches the service role key:
+- `getUserIdFromJwt()` returns `null`
+- The function returns HTTP 401 "Authentication required"
+- The job fails and credits are refunded, but no images are generated
+
+**Fix**: Add a check for the `x-queue-internal` header. When present, skip auth and accept `user_id` from the payload instead:
 
 ```typescript
-// At the top of the handler, after OPTIONS check:
-const internalToken = req.headers.get("x-queue-internal");
-const authHeader = req.headers.get("authorization");
-const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+let userId: string | null;
 
-if (internalToken !== "true" || authHeader !== `Bearer ${serviceRoleKey}`) {
-  return new Response(JSON.stringify({ error: "Unauthorized" }), {
-    status: 401,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+if (isQueueInternal) {
+  // Called from process-queue worker -- user_id is in the payload
+  const body = await req.json();
+  userId = body.user_id || null;
+} else {
+  userId = getUserIdFromJwt(req.headers.get("authorization"));
 }
 ```
 
-**File**: `supabase/functions/process-queue/index.ts`
+This also means `process-queue` must include `user_id` in the payload it sends to `generate-tryon`. Currently the payload is passed through as-is from the queue row — so the `enqueue-generation` endpoint must ensure `user_id` is embedded in the payload, OR `process-queue` must inject it before calling the downstream function.
 
----
-
-### Issue 3: generation_jobs Insert Missing `creative_drop_id` (Minor)
-
-When process-queue saves results to `generation_jobs` (lines 107-120), it maps `product_id`, `workflow_id`, and `brand_profile_id` from the payload but omits `creative_drop_id`, which is a column in the `generation_jobs` table. If the payload contains a `creative_drop_id`, it will be silently dropped.
-
-**Fix**: Add `creative_drop_id` to the insert:
+**Recommended approach**: Have `process-queue` inject `user_id` into the payload before calling any downstream function:
 
 ```typescript
-creative_drop_id: (payload as Record<string, unknown>).creative_drop_id || null,
+const enrichedPayload = { ...payload, user_id: userId };
+body: JSON.stringify(enrichedPayload),
 ```
 
-**File**: `supabase/functions/process-queue/index.ts` (line 120, inside the insert object)
+**Files**: `supabase/functions/generate-tryon/index.ts`, `supabase/functions/process-queue/index.ts`
 
 ---
 
-### Everything Else Looks Good
+### Issue 2: `generate-video` Is Incompatible with Queue Model (Critical)
 
-- **Job claiming** (`claim_next_job`): Uses `FOR UPDATE SKIP LOCKED` -- correct for concurrent workers.
-- **Stale job cleanup** (`cleanup_stale_jobs`): Properly refunds credits and marks timed-out jobs as failed.
-- **Partial success refunds**: Math is correct (`perImageCost * missed`), uses `Math.floor` to avoid over-refunding.
-- **Failure handling**: Credits are fully refunded, error messages are persisted.
-- **Time budget loop**: 45s cap is safe under the 60s edge function limit.
-- **No double credit deduction**: Downstream functions (`generate-freestyle`, `generate-product`, etc.) do not call `deduct_credits` -- credits are only deducted by `enqueue_generation`.
+The `generate-video` function has two fundamental incompatibilities:
+
+**2a. Auth breaks**: It uses `supabase.auth.getUser(token)` (line 46-59) to validate the user. The service role key is NOT a user token, so `getUser()` will fail, throwing "Unauthorized".
+
+**2b. Response format mismatch**: Video generation is asynchronous (create task, then poll for status). It returns `{ task_id, status }`, NOT `{ images, generatedCount }`. The `process-queue` worker expects `result.images` and `result.generatedCount` (lines 116-133), so:
+- `generatedCount` will be `0` (no `images` array, no `generatedCount`)
+- No `generation_jobs` record will be created
+- No partial refund logic will apply correctly
+
+**Fix options**:
+
+- **Option A (Recommended)**: Remove `video` from the queue system entirely. Video is async by nature (Kling API polling) and doesn't fit the synchronous process-queue model. Remove `video: "generate-video"` from `JOB_TYPE_TO_FUNCTION` and remove `"video"` from the `validJobTypes` list in `enqueue-generation`. Keep video as a direct call.
+
+- **Option B**: Build a separate async video queue handler that creates the Kling task and then polls, but this is significant complexity for a different phase.
+
+**Files**: `supabase/functions/process-queue/index.ts`, `supabase/functions/enqueue-generation/index.ts`
 
 ---
 
-### Summary
+### Issue 3: Frontend Hooks Bypass the Queue Entirely (Architectural)
 
-| Priority | Issue | File |
-|----------|-------|------|
-| Critical | `generate-tryon` missing from config.toml | `supabase/config.toml` |
-| Medium | No auth check on process-queue endpoint | `supabase/functions/process-queue/index.ts` |
-| Minor | `creative_drop_id` not passed to generation_jobs | `supabase/functions/process-queue/index.ts` |
+All 5 generation hooks call edge functions **directly**, never through `enqueue-generation`:
 
-### Implementation Order
+| Hook | Calls directly |
+|------|---------------|
+| `useGenerateProduct.ts` | `generate-product` |
+| `useGenerateFreestyle.ts` | `generate-freestyle` |
+| `useGenerateWorkflow.ts` | `generate-workflow` |
+| `useGenerateTryOn.ts` | `generate-tryon` |
+| `useGenerateVideo.ts` | `generate-video` |
+| `useBulkGeneration.ts` | `generate-tryon` |
 
-1. Add `generate-tryon` to config.toml
-2. Add auth guard to process-queue
-3. Add `creative_drop_id` to the generation_jobs insert
+Only `useGenerationQueue.ts` calls `enqueue-generation`, but nothing in the UI currently uses it. This means the queue, rate limiting, credit deduction, and concurrency controls are all bypassed in practice.
+
+**Note**: This is likely a Phase 4/5 task (wiring the frontend), not a Phase 3 bug. But it's important to flag: until the frontend hooks are updated to go through `enqueue-generation`, the queue system is unused.
+
+---
+
+### Functions That Work Correctly via Queue
+
+| Function | Auth | Response format | Status |
+|----------|------|----------------|--------|
+| `generate-product` | None | `{ images, generatedCount }` | Works |
+| `generate-freestyle` | None | `{ images, generatedCount }` | Works |
+| `generate-workflow` | None | `{ images, generatedCount }` | Works |
+| `generate-tryon` | JWT auth (blocks queue) | `{ images, generatedCount }` | **Broken** |
+| `generate-video` | `getUser()` auth (blocks queue) + async model | `{ task_id, status }` | **Broken** |
+
+---
+
+### Recommended Implementation Order
+
+1. **Fix `generate-tryon`**: Add `x-queue-internal` bypass + inject `user_id` from `process-queue`
+2. **Remove `video` from queue**: Delete from `JOB_TYPE_TO_FUNCTION` and `validJobTypes` in enqueue
+3. **Inject `user_id` in process-queue**: Enrich payload with `user_id` before calling any downstream function (future-proofs other functions that may add auth)
+
+| Priority | Issue | Files |
+|----------|-------|-------|
+| Critical | `generate-tryon` auth blocks queue calls | `generate-tryon/index.ts`, `process-queue/index.ts` |
+| Critical | `generate-video` incompatible with queue | `process-queue/index.ts`, `enqueue-generation/index.ts` |
+| Info | Frontend bypasses queue entirely | All `useGenerate*.ts` hooks (Phase 4+) |
 
