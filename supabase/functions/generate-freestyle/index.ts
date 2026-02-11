@@ -260,6 +260,8 @@ async function generateImage(
   const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90_000);
     try {
       const response = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -275,8 +277,10 @@ async function generateImage(
             modalities: ["image", "text"],
             ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
+          signal: controller.signal,
         }
       );
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         if (response.status === 429) {
