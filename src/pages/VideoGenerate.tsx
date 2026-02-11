@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw, History, Trash2, Repeat, Info } from 'lucide-react';
+import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw, History, Trash2, Repeat, Info, Coins } from 'lucide-react';
+import { useCredits } from '@/contexts/CreditContext';
+import { InsufficientCreditsWarning } from '@/components/app/InsufficientCreditsWarning';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
