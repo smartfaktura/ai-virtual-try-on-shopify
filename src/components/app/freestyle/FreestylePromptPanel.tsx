@@ -86,6 +86,7 @@ export function FreestylePromptPanel({
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
   onFileDrop,
+  insufficientCredits, onBuyCredits, currentBalance,
 }: FreestylePromptPanelProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
