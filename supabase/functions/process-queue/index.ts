@@ -114,9 +114,9 @@ serve(async (req) => {
           })
           .eq("id", jobId);
 
-        // Also save to generation_jobs for library
+        // Save to generation_jobs for library (skip freestyle — it saves to freestyle_generations separately)
         const generatedCount = result.generatedCount || result.images?.length || 0;
-        if (generatedCount > 0) {
+        if (jobType !== 'freestyle' && generatedCount > 0) {
           await supabase.from("generation_jobs").insert({
             user_id: userId,
             results: result.images || [],

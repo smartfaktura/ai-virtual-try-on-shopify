@@ -15,17 +15,25 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
       const items: LibraryItem[] = [];
       const q = searchQuery.toLowerCase();
 
-      // Fetch generation jobs
-      {
-      const { data: jobs, error: jobsError } = await supabase
-        .from('generation_jobs')
-        .select('id, results, created_at, status, ratio, quality, prompt_final, workflows(name), user_products(title)')
-        .order('created_at', { ascending: sortBy === 'oldest' })
-        .limit(100);
+      // Fetch both tables in parallel for speed
+      const [jobsResult, freestyleResult] = await Promise.all([
+        supabase
+          .from('generation_jobs')
+          .select('id, results, created_at, status, ratio, quality, prompt_final, workflows(name), user_products(title)')
+          .order('created_at', { ascending: sortBy === 'oldest' })
+          .limit(100),
+        supabase
+          .from('freestyle_generations')
+          .select('id, image_url, prompt, aspect_ratio, quality, created_at')
+          .order('created_at', { ascending: sortBy === 'oldest' })
+          .limit(100),
+      ]);
 
-      if (jobsError) throw jobsError;
+      if (jobsResult.error) throw jobsResult.error;
+      if (freestyleResult.error) throw freestyleResult.error;
 
-      for (const job of jobs ?? []) {
+      // Process generation jobs
+      for (const job of jobsResult.data ?? []) {
         const results = job.results as any;
         if (Array.isArray(results)) {
           for (let i = 0; i < results.length; i++) {
@@ -57,19 +65,9 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
           }
         }
       }
-      } // end generation block
 
-      // Fetch freestyle generations
-      {
-      const { data: freestyle, error: freestyleError } = await supabase
-        .from('freestyle_generations')
-        .select('id, image_url, prompt, aspect_ratio, quality, created_at')
-        .order('created_at', { ascending: sortBy === 'oldest' })
-        .limit(100);
-
-      if (freestyleError) throw freestyleError;
-
-      for (const f of freestyle ?? []) {
+      // Process freestyle generations
+      for (const f of freestyleResult.data ?? []) {
         if (q && !f.prompt.toLowerCase().includes(q)) continue;
 
         items.push({
@@ -85,7 +83,6 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
           quality: f.quality,
         });
       }
-      } // end freestyle block
 
       // Sort merged results
       items.sort((a, b) => {
@@ -100,7 +97,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
       }
     },
     enabled: !!user,
-    refetchInterval: 10000,
+    refetchInterval: 15000,
     refetchOnWindowFocus: true,
   });
 }
