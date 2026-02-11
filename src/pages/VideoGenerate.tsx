@@ -436,10 +436,26 @@ export default function VideoGenerate() {
           </div>
           </div>
 
+          {/* Credit cost info */}
+          <div className="p-3 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Coins className="w-4 h-4 text-primary" />
+              <div>
+                <p className="text-sm font-semibold">Cost: {videoCost} credits</p>
+                <p className="text-xs text-muted-foreground">1 video × 30 credits</p>
+              </div>
+            </div>
+            <p className="text-sm">{balance} credits available</p>
+          </div>
+
+          {!hasEnoughCredits && !isGenerating && (
+            <InsufficientCreditsWarning cost={videoCost} balance={balance} />
+          )}
+
           {/* Generate Button */}
           <Button
             onClick={handleGenerate}
-            disabled={isGenerating || isUploading || (!imageUrl && imageSource === 'upload')}
+            disabled={isGenerating || isUploading || (!imageUrl && imageSource === 'upload') || !hasEnoughCredits}
             className="w-full h-12 text-base font-semibold gap-2"
             size="lg"
           >
@@ -451,7 +467,7 @@ export default function VideoGenerate() {
             ) : (
               <>
                 <Film className="w-5 h-5" />
-                Generate Video
+                Generate Video · {videoCost} credits
               </>
             )}
           </Button>

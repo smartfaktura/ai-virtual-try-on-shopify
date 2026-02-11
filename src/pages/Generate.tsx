@@ -1615,7 +1615,7 @@ export default function Generate() {
       <ImageLightbox images={generatedImages} currentIndex={lightboxIndex} open={lightboxOpen} onClose={() => setLightboxOpen(false)}
         onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate} selectedIndices={selectedForPublish} productName={selectedProduct?.title || scratchUpload?.productInfo.title} />
-      <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} />
+      {/* NoCreditsModal removed — inline warnings + disabled buttons used instead */}
     </PageHeader>
   );
 }
