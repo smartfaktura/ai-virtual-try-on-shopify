@@ -106,7 +106,7 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
       const token = session?.session?.access_token || SUPABASE_KEY;
 
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=id,status,result,error_message,created_at,started_at,completed_at,priority_score`,
+        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=id,status,error_message,created_at,started_at,completed_at,priority_score`,
         {
           headers: {
             apikey: SUPABASE_KEY,
