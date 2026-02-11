@@ -1,55 +1,60 @@
 
 
-## Smart Downgrade Flow with Retention Offer
+## Fix Copy Prompt + Improve Generation Performance
 
-### Problem
+### Problem 1: "Copy prompt to editor" copies nothing
 
-Currently, `change_user_plan` overwrites `credits_balance` with the new plan's quota. If a user on Pro (6,000 credits) with 4,500 remaining downgrades to Starter (1,000), they lose 3,500 credits. Also, there's no confirmation step -- downgrades happen instantly with a single click.
+When the user leaves the prompt field empty, the system auto-builds a prompt from selected assets (product, model, scene). However, the auto-built prompt is constructed inside `handleGenerate` as a local variable (`finalPrompt`) and never stored. When `saveImages` runs, it saves `prompt` (the raw state = empty string). 
 
-### Solution: 3 Changes
+Every image in the gallery then has `prompt: ""`, so clicking "Copy prompt to editor" copies an empty string. The toast fires ("Prompt copied to editor") but nothing visible changes.
 
-#### 1. Database: Preserve credits on downgrade
+**Fix**: Track the effective prompt (the one actually sent to the AI) and save that to the database.
 
-Update the `change_user_plan` SQL function so that on downgrade (when `p_new_credits < current balance`), it keeps the existing balance instead of overwriting it. On upgrade, it still sets credits to the new plan's quota (as before).
+- Store the final effective prompt in a ref (`lastEffectivePromptRef`) during `handleGenerate`
+- Use that ref value in the `saveImages` call instead of the raw `prompt` state
+- This way images saved to the DB will always have the real prompt that was used
 
-```
--- Logic:
--- If new plan credits >= current balance -> set to new plan credits (upgrade)
--- If new plan credits < current balance -> keep current balance (downgrade)
-credits_balance = GREATEST(credits_balance, p_new_credits)
-```
+**File**: `src/pages/Freestyle.tsx`
 
-#### 2. Frontend: Two-step downgrade confirmation
+---
 
-Add a state machine in `BuyCreditsModal.tsx` for downgrade flow:
+### Problem 2: Generation is very slow (138 seconds for 1 image)
 
-- **Step 1 -- "Are you sure?"**: An AlertDialog appears when clicking a lower-tier plan. Shows what they'll lose feature-wise (e.g., "You'll lose Video generation, Virtual Try-On"). Reassures them their credits are safe: "Your remaining X credits will stay in your account." Buttons: "Keep Current Plan" (dismiss) / "Yes, Downgrade" (proceed to step 2).
+Edge function logs show:
+- A network retry error (`error reading a body from connection`) caused a failed attempt + 2-second backoff before retrying
+- Total processing time: 138 seconds for a single standard-quality image
+- For multi-image requests, images are generated **sequentially** with 500ms delays between each
 
-- **Step 2 -- Retention offer (10% off)**: A second dialog appears: "Before you go -- how about 10% off your current plan?" Shows the discounted price (e.g., "$161.10/mo instead of $179/mo for Pro"). Buttons: "Claim 10% Off" (closes dialog, shows success toast -- dummy, no actual billing change) / "No thanks, downgrade" (executes the downgrade).
+**Fixes**:
 
-#### 3. Determine upgrade vs. downgrade
+#### A. Parallelize multi-image generation (edge function)
 
-Use the plan tier order (free < starter < growth < pro < enterprise) to determine direction. Compare the target plan's position against the current plan's position in a simple ordered array.
+Currently the loop at line 488 of `generate-freestyle/index.ts` runs `generateImage` calls one at a time. Switch to `Promise.allSettled` for concurrent generation. This cuts 4-image generation time from ~4x to ~1x.
 
-### Technical Details
+**File**: `supabase/functions/generate-freestyle/index.ts`
+
+#### B. Reduce retry delays
+
+The current retry logic waits `1000 * (attempt + 1)` ms (1s, then 2s). Reduce to 500ms flat for faster recovery from transient errors.
+
+**File**: `supabase/functions/generate-freestyle/index.ts`
+
+#### C. Add connection timeout
+
+There is no fetch timeout configured. A hanging connection wastes the full edge function runtime. Add an `AbortController` with a 90-second timeout per image request.
+
+**File**: `supabase/functions/generate-freestyle/index.ts`
+
+---
+
+### Technical Summary
 
 | File | Change |
 |------|--------|
-| `supabase/migrations/` (new) | Update `change_user_plan` to use `GREATEST(credits_balance, p_new_credits)` so downgrades preserve credits |
-| `src/components/app/BuyCreditsModal.tsx` | Add downgrade detection, two-step AlertDialog flow (confirmation then retention offer), keep existing upgrade flow unchanged |
+| `src/pages/Freestyle.tsx` | Add `lastEffectivePromptRef` to track the actual prompt sent to AI; use it in `saveImages` call instead of raw `prompt` state |
+| `supabase/functions/generate-freestyle/index.ts` | Parallelize multi-image generation with `Promise.allSettled`; reduce retry backoff to 500ms; add 90s per-request timeout via `AbortController` |
 
-### Downgrade Flow Diagram
+### Expected Results
 
-User clicks lower plan -> Is it a downgrade?
-- No -> Upgrade immediately (existing flow)
-- Yes -> Step 1: "Are you sure?" dialog
-  - "Keep Current Plan" -> Close
-  - "Yes, Downgrade" -> Step 2: "10% off current plan" offer
-    - "Claim 10% Off" -> Toast success, close (dummy)
-    - "No thanks, downgrade" -> Execute `change_user_plan` RPC, refresh, close
-
-### What stays the same
-- Upgrade flow (clicking a higher plan) works exactly as before -- instant upgrade with new credits
-- Top Up tab unchanged
-- All other credit logic unchanged
-
+- **Copy prompt**: Will now copy the actual prompt used for generation (including auto-built parts from assets)
+- **Performance**: Multi-image generation will run in parallel instead of sequentially, cutting wall-clock time by up to 75% for 4-image batches. Single-image generation benefits from faster retries and connection timeouts preventing indefinite hangs.
