@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Plus, X, Sparkles, Loader2, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
 import type { ModelProfile, TryOnPose } from '@/types';
 import type { Tables } from '@/integrations/supabase/types';
@@ -158,8 +157,8 @@ export function FreestylePromptPanel({
       )}
 
       {isLoading && (
-        <div className="absolute top-0 left-0 right-0 z-10">
-          <Progress value={progress} className="h-[2px] rounded-none bg-muted" />
+        <div className="absolute top-0 left-0 right-0 z-10 h-[2px] bg-muted overflow-hidden rounded-none">
+          <div className="h-full w-1/3 bg-primary animate-pulse-slide" />
         </div>
       )}
 

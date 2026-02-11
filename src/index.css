@@ -295,4 +295,17 @@
       transform: translateX(0);
     }
   }
+
+  @keyframes pulse-slide {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(400%);
+    }
+  }
+
+  .animate-pulse-slide {
+    animation: pulse-slide 1.5s ease-in-out infinite;
+  }
 }

@@ -8,7 +8,6 @@ import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import type { BlockedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
 import { STYLE_PRESETS } from '@/components/app/freestyle/StylePresetChips';
-import { useGenerateFreestyle } from '@/hooks/useGenerateFreestyle';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useCredits } from '@/contexts/CreditContext';
@@ -50,9 +49,9 @@ export default function Freestyle() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { generate, isLoading, progress } = useGenerateFreestyle();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
-  const { enqueue, activeJob, isProcessing, reset: resetQueue } = useGenerationQueue();
+  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue();
+  const isLoading = isEnqueuing || isProcessing;
   const { user } = useAuth();
 
   // Pre-fill from Discover page URL params
@@ -330,7 +329,7 @@ export default function Freestyle() {
     onGenerate: handleGenerate,
     canGenerate,
     isLoading,
-    progress,
+    progress: isLoading ? 0 : 100,
     creditCost,
     selectedModel,
     onModelSelect: setSelectedModel,
@@ -393,7 +392,7 @@ export default function Freestyle() {
               onDelete={handleDelete}
               onCopyPrompt={setPrompt}
               generatingCount={(isLoading || isSaving || isProcessing) ? imageCount : 0}
-              generatingProgress={isSaving ? 100 : progress}
+              generatingProgress={isSaving ? 100 : 0}
               generatingAspectRatio={aspectRatio}
               blockedEntries={blockedEntries}
               onDismissBlocked={handleDismissBlocked}
