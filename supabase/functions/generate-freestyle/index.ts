@@ -260,6 +260,8 @@ async function generateImage(
   const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90_000);
     try {
       const response = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -275,8 +277,10 @@ async function generateImage(
             modalities: ["image", "text"],
             ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
+          signal: controller.signal,
         }
       );
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         if (response.status === 429) {
@@ -286,9 +290,9 @@ async function generateImage(
           throw { status: 402, message: "Credits exhausted. Please add more credits." };
         }
         const errorText = await response.text();
-        console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
+      console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+          await new Promise((r) => setTimeout(r, 500));
           continue;
         }
         throw new Error(`AI Gateway error: ${response.status}`);
@@ -314,12 +318,13 @@ async function generateImage(
 
       return imageUrl;
     } catch (error: unknown) {
+      clearTimeout(timeoutId);
       if (typeof error === "object" && error !== null && "status" in error) {
         throw error;
       }
       console.error(`Generation attempt ${attempt + 1} failed:`, error);
       if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        await new Promise((r) => setTimeout(r, 500));
         continue;
       }
       throw error;
@@ -485,38 +490,32 @@ serve(async (req) => {
       ? "\n\nBATCH CONSISTENCY: Maintain the same color palette, lighting direction, overall mood, and visual style. Only vary composition, angle, and framing."
       : "";
 
-    for (let i = 0; i < imageCount; i++) {
-      try {
-        const variationSuffix =
-          i === 0
-            ? batchConsistency
-            : `${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
+    // Generate all images in parallel for faster results
+    const generatePromises = Array.from({ length: imageCount }, (_, i) => {
+      const variationSuffix =
+        i === 0
+          ? batchConsistency
+          : `${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
 
-        const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
+      const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
 
-        // Build structured content array with labeled images
-        const contentArray = buildContentArray(
-          promptWithVariation,
-          body.sourceImage,
-          body.modelImage,
-          body.sceneImage,
-          body.modelContext
-        );
+      const contentArray = buildContentArray(
+        promptWithVariation,
+        body.sourceImage,
+        body.modelImage,
+        body.sceneImage,
+        body.modelContext
+      );
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio);
+      return generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio)
+        .then(result => ({ index: i, result, error: null as unknown }))
+        .catch(error => ({ index: i, result: null as GenerateResult, error }));
+    });
 
-        if (result && typeof result === "object" && "blocked" in result) {
-          contentBlocked = true;
-          blockReason = result.reason;
-          console.warn(`Image ${i + 1} blocked by content safety filter`);
-          break;
-        } else if (typeof result === "string") {
-          images.push(result);
-          console.log(`Generated freestyle image ${i + 1}/${imageCount}`);
-        } else {
-          errors.push(`Image ${i + 1} failed to generate`);
-        }
-      } catch (error: unknown) {
+    const settled = await Promise.all(generatePromises);
+
+    for (const { index, result, error } of settled) {
+      if (error) {
         if (typeof error === "object" && error !== null && "status" in error) {
           const statusError = error as { status: number; message: string };
           return new Response(
@@ -524,11 +523,16 @@ serve(async (req) => {
             { status: statusError.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
-        errors.push(`Image ${i + 1}: ${error instanceof Error ? error.message : "Unknown error"}`);
-      }
-
-      if (i < imageCount - 1) {
-        await new Promise((r) => setTimeout(r, 500));
+        errors.push(`Image ${index + 1}: ${error instanceof Error ? error.message : "Unknown error"}`);
+      } else if (result && typeof result === "object" && "blocked" in result) {
+        contentBlocked = true;
+        blockReason = result.reason;
+        console.warn(`Image ${index + 1} blocked by content safety filter`);
+      } else if (typeof result === "string") {
+        images.push(result);
+        console.log(`Generated freestyle image ${index + 1}/${imageCount}`);
+      } else {
+        errors.push(`Image ${index + 1} failed to generate`);
       }
     }
 
