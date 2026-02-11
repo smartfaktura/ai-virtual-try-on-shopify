@@ -224,18 +224,19 @@ export function FreestylePromptPanel({
       {/* Row 3 — Action Bar */}
       <div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
         {insufficientCredits && !isLoading ? (
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <span className="text-xs text-muted-foreground hidden sm:inline">
-              You have {currentBalance ?? 0} — need {creditCost}
-            </span>
-            <Button
-              onClick={onBuyCredits}
-              size="lg"
-              className="h-11 px-8 gap-2.5 rounded-xl shadow-lg text-sm font-semibold w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white border-0"
-            >
-              <AlertCircle className="w-4 h-4" />
-              Not Enough Credits
-            </Button>
+          <div className="flex items-center gap-3 w-full">
+            <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 flex-1">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>You need <strong>{creditCost - (currentBalance ?? 0)} more credits</strong> to generate</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={onBuyCredits} className="rounded-lg">
+                Upgrade Plan
+              </Button>
+              <Button size="sm" onClick={onBuyCredits} className="rounded-lg bg-amber-500 hover:bg-amber-600 text-white border-0">
+                Buy Credits
+              </Button>
+            </div>
           </div>
         ) : (
           <Button
