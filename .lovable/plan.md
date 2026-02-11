@@ -1,69 +1,51 @@
 
 
-## Redesign Credits Modal: Horizontal Plans, Working Upgrade, Tab-Aware Opening
+## Fix Credit Checks Across All Generation Flows
+
+### Problem
+
+Three issues found:
+
+1. **Video Generator** (`VideoGenerate.tsx`) has zero credit checking -- users can generate videos (30 credits each) with no balance validation at all
+2. **Workflows / Try-On Generator** (`Generate.tsx`) checks credits on click but the Generate button stays enabled, letting users click and then see a popup -- bad UX. Also uses the old `NoCreditsModal` which only does local credit adds (not persisted to DB)
+3. **NoCreditsModal** still calls the local-only `addCredits()` instead of the `add_purchased_credits` RPC
 
 ### Changes
 
-#### 1. CreditContext -- Add tab-aware modal opening
+#### 1. VideoGenerate.tsx -- Add full credit awareness
 
-Currently `openBuyModal()` always opens the modal with no way to specify which tab to show. We need to support opening to a specific tab:
+- Import `useCredits` context
+- Calculate video cost: `count x 30 credits` (1 video per generation = 30 credits)
+- Show credit cost and balance info near the generate button
+- When insufficient credits: disable generate button, show the same amber warning pattern with "buy credits" link and "Upgrade Plan" button (matching Freestyle style)
+- When sufficient: show cost badge on the generate button
 
-- Add `openBuyModal(tab?: 'upgrade' | 'topup')` parameter
-- Store the requested tab in state so the modal opens to the correct tab
-- "Buy credits" link opens to `topup` tab, "Upgrade Plan" button opens to `upgrade` tab
+#### 2. Generate.tsx -- Disable button when insufficient + use BuyCreditsModal
 
-**File**: `src/contexts/CreditContext.tsx`
+- Replace `NoCreditsModal` with `openBuyModal()` from CreditContext (uses the redesigned modal)
+- Disable the Generate button when `balance < cost` instead of letting users click then showing a modal
+- Add amber warning text next to disabled button showing shortfall and upgrade/buy links
+- Apply to all three generate button locations: standard, workflow, and try-on settings steps
 
-#### 2. BuyCreditsModal -- Horizontal plan columns + working upgrade
+#### 3. NoCreditsModal.tsx -- Wire to RPC (or remove)
 
-**Upgrade Tab redesign**:
-- Switch from vertical stacked cards to a **horizontal grid** (`grid-cols-4`) so all standard plans appear side by side for easy comparison
-- Each column shows: plan name, price prominently, monthly credits, feature list vertically, and action button at bottom
-- Current plan dimmed, recommended plan highlighted with badge
-- Enterprise stays as a slim banner below the grid
-- Wider modal: `max-w-4xl` to fit 4 columns
-
-**Working upgrade function**:
-- Replace `handleUpgrade` (which just navigates to settings) with actual RPC call to `change_user_plan`
-- After successful plan change, call `refreshBalance()` to update the context
-- Show success toast with new plan name and credits
-- Close modal after successful upgrade
-- Credits from the new plan quota are set via the RPC (it sets `credits_balance` to `p_new_credits`)
-
-**File**: `src/components/app/BuyCreditsModal.tsx`
-
-#### 3. FreestylePromptPanel -- Different actions for each button
-
-- "buy credits" text link: calls `openBuyModal('topup')`
-- "Upgrade Plan" button: calls `openBuyModal('upgrade')`
-
-Currently both call the same `onBuyCredits` prop. We need two separate callbacks or pass the tab preference through.
-
-**File**: `src/components/app/freestyle/FreestylePromptPanel.tsx`
-
-#### 4. Freestyle.tsx -- Pass tab-aware callbacks
-
-Wire up the two different modal open calls from the prompt panel.
-
-**File**: `src/pages/Freestyle.tsx`
+- Since Generate.tsx will now use `openBuyModal()` instead, the `NoCreditsModal` component may no longer be needed
+- If still referenced elsewhere, update it to call `add_purchased_credits` RPC instead of local `addCredits`
 
 ### Technical Details
 
 | File | Change |
 |------|--------|
-| `src/contexts/CreditContext.tsx` | `openBuyModal` accepts optional `tab` param, stores `defaultTab` in state |
-| `src/components/app/BuyCreditsModal.tsx` | Horizontal 4-column plan grid, working `change_user_plan` RPC call with credit allocation, uses `defaultTab` from context |
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Add `onUpgradePlan` prop separate from `onBuyCredits`, wire to respective buttons |
-| `src/pages/Freestyle.tsx` | Pass `openBuyModal('topup')` and `openBuyModal('upgrade')` as separate callbacks |
+| `src/pages/VideoGenerate.tsx` | Import `useCredits`, add credit cost display, disable generate button when insufficient, show upgrade/buy CTA |
+| `src/pages/Generate.tsx` | Remove `NoCreditsModal`, use `openBuyModal()` from context, disable generate buttons when `balance < cost`, add inline insufficient credits warning near each generate button |
+| `src/components/app/NoCreditsModal.tsx` | Remove or update to use RPC -- likely remove since both consumers will now use `BuyCreditsModal` |
 
-### Plan Upgrade Flow
+### UX Result
 
-1. User clicks "Upgrade" on a plan card
-2. Frontend calls `change_user_plan(user_id, 'growth', 2500)` RPC
-3. DB atomically sets `plan = 'growth'` and `credits_balance = 2500`
-4. Frontend calls `refreshBalance()` to fetch updated values
-5. Toast: "Upgraded to Growth! 2,500 credits added."
-6. Modal closes
-7. Sidebar credit indicator updates automatically
+Across all generation surfaces (Freestyle, Workflows, Try-On, Video), users will see:
+- Credit cost clearly displayed before generating
+- Generate button disabled when insufficient credits
+- Inline amber warning with shortfall amount
+- "buy credits" text link (opens Top Up tab) and "Upgrade Plan" button (opens Upgrade tab)
+- Consistent experience everywhere
 
-No payment gateway involved yet -- this is a dummy flow that directly activates the plan. When Stripe is added later, the webhook will call the same RPC.
