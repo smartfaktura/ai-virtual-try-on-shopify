@@ -318,6 +318,7 @@ async function generateImage(
 
       return imageUrl;
     } catch (error: unknown) {
+      clearTimeout(timeoutId);
       if (typeof error === "object" && error !== null && "status" in error) {
         throw error;
       }
