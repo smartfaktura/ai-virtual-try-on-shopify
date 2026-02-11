@@ -69,13 +69,7 @@ function detectSelfieIntent(prompt: string): boolean {
 
 // ── Photography DNA (Pro camera style) ────────────────────────────────────
 function buildPhotographyDNA(): string {
-  return `PHOTOGRAPHY DNA:
-- LENS: shot on a 50 mm lens at f 2.8, ISO 400, 1/125 s. Shallow depth of field — subject's eyes and face tack-sharp while background recedes into gentle creamy softness.
-- LIGHTING ARCHITECTURE: Large soft key from camera-left, minimal warm fill, negative fill to sculpt cheek and jaw shadows, faint warm rim from behind for shoulder separation. Controlled specular highlights on skin and fabric without clipping.
-- MICRO-TEXTURE REALISM: Render premium micro-texture — natural skin pores and peach-fuzz without harshness, individual hair strands with natural flyaways, fabric weave and nap, smooth specular sheen on satin/glass/metal surfaces. Crisp lashes, glossy lips, realistic material properties throughout.
-- TONAL CONTROL: Rich blacks retaining full shadow detail. Protect highlights — no blown areas. Warm amber midtones, deep neutral shadows. Cinematic tonal depth with natural skin tones preserved. Avoid any digital harshness.
-- COMPOSITION: Clean silhouette, generous negative space, minimal clutter, no added props or distracting elements. Strong diagonals or rule-of-thirds placement. Intentional, editorial-grade framing.
-- FINISHING: Luxury editorial grade — refined contrast, subtle film-like grain, immaculate retouching with natural realism preserved. Deep neutral shadows, elegant highlight roll-off, delicate color separation.`;
+  return `Shot on 85mm f/1.4 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Natural skin texture, ultra high resolution. Subtle film grain, elegant highlight roll-off.`;
 }
 
 // ── Negative prompt (always appended when polish is on) ───────────────────
@@ -109,43 +103,40 @@ function polishUserPrompt(
   // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
   const refCount = [context.hasSource, context.hasModel, context.hasScene].filter(Boolean).length;
   if (refCount >= 2 && !isSelfie) {
-    const hasBothProductAndModel = context.hasSource && context.hasModel;
     const parts: string[] = [
       `Professional photography: ${rawPrompt}`,
       "",
-      hasBothProductAndModel
-        ? "Create a photorealistic image featuring the EXACT PERSON from [MODEL IMAGE] with the EXACT PRODUCT from [PRODUCT IMAGE]."
-        : "Create a photorealistic image where the product naturally exists within the scene environment.",
-      "",
       "REQUIREMENTS:",
     ];
+
     if (context.hasSource) {
-      parts.push(`1. PRODUCT: Reference [PRODUCT IMAGE] for the product's design, shape, color, and material. Re-render it naturally within the scene — matching the environment's lighting, perspective, shadows, and reflections. The product must look like it physically exists in the scene, NOT composited or pasted in.${hasBothProductAndModel ? " Use ONLY the product/garment from this image. IGNORE any person, model, or mannequin shown in the product photo." : ""}`);
+      parts.push(`1. PRODUCT: The item must match [PRODUCT IMAGE] in design, color, and material. Show it naturally in the scene with correct lighting and shadows.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}`);
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
-      parts.push(`${context.hasSource ? "2" : "1"}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body proportions${identityDetails}.${hasBothProductAndModel ? " This person is the ONLY human that should appear. Their face, hair, skin, and body MUST come from [MODEL IMAGE], NOT from any other reference image." : ""}`);
+      const num = context.hasSource ? 2 : 1;
+      parts.push(`${num}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body${identityDetails}. Ignore any person in the product image.`);
     }
     if (context.hasScene) {
       const num = [context.hasSource, context.hasModel].filter(Boolean).length + 1;
-      parts.push(`${num}. SCENE: Use [SCENE IMAGE] as the environment reference. Render the entire image as one unified photograph — consistent lighting, color temperature, and perspective across all elements. Everything must appear to exist in the same physical space.`);
+      parts.push(`${num}. SCENE: Use [SCENE IMAGE] as the environment. Consistent lighting and perspective throughout.`);
     }
-    parts.push("");
-    parts.push("Quality: shot on 50mm at f 2.8. Shallow DOF, subject sharp, background soft. Sculpted lighting with negative fill. Premium micro-texture: skin pores, fabric weave, hair strands. Rich blacks with detail, no clipping. Subtle film grain, editorial finishing.");
 
-    // Brand style (condensed to 1-2 lines)
+    parts.push("");
+    parts.push("Quality: Photorealistic, natural skin texture, no AI artifacts, ultra high resolution.");
+
+    // Brand style (condensed)
     if (brandProfile?.tone) {
       const toneDesc = TONE_DESCRIPTIONS[brandProfile.tone] || brandProfile.tone;
       const colorDesc = brandProfile.colorFeel ? (COLOR_FEEL_DESCRIPTIONS[brandProfile.colorFeel] || brandProfile.colorFeel) : "";
       parts.push(`Brand: ${toneDesc}${colorDesc ? `. Color: ${colorDesc}` : ""}`);
     }
 
-    // Camera style
     if (cameraStyle === "natural") {
       parts.push("Shot on iPhone — deep depth of field, true-to-life colors, no retouching.");
     }
 
-    // Negatives (single line)
+    // Negatives
     const allNeg: string[] = [];
     if (brandProfile?.doNotRules?.length) allNeg.push(...brandProfile.doNotRules);
     if (userNegatives?.length) allNeg.push(...userNegatives);
@@ -212,7 +203,7 @@ function polishUserPrompt(
   // Product / source image layer
   if (context.hasSource) {
     layers.push(
-      "PRODUCT ACCURACY: The product in the PRODUCT REFERENCE IMAGE must be reproduced with 100% fidelity — identical shape, color, texture, branding, and proportions. Do not modify, stylize, or reinterpret the product in any way."
+      "PRODUCT ACCURACY: The product must match the reference image in design, color, and material. Show it naturally with correct lighting and shadows — it should look photographed, not composited."
     );
     if (isSelfie) {
       layers.push(
@@ -395,7 +386,7 @@ async function generateImage(
             modalities: ["image", "text"],
             ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
-          signal: AbortSignal.timeout(50_000), // 50s timeout per AI call
+          signal: AbortSignal.timeout(90_000), // 90s timeout per AI call (pro model is slower)
         }
       );
 
@@ -591,11 +582,14 @@ serve(async (req) => {
     const refCount = [body.sourceImage, body.modelImage, body.sceneImage].filter(Boolean).length;
     // Queue-internal: always use fast model (must finish within 50s timeout)
     // Direct calls: allow pro model only for high quality with 0-1 refs
-    const aiModel = isQueueInternal
-      ? "google/gemini-2.5-flash-image"
-      : (body.quality === "high" && refCount < 2)
-        ? "google/gemini-3-pro-image-preview"
-        : "google/gemini-2.5-flash-image";
+    const hasModelImage = !!body.modelImage;
+    const aiModel = hasModelImage
+      ? "google/gemini-3-pro-image-preview"
+      : isQueueInternal
+        ? "google/gemini-2.5-flash-image"
+        : (body.quality === "high" && refCount < 2)
+          ? "google/gemini-3-pro-image-preview"
+          : "google/gemini-2.5-flash-image";
 
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
