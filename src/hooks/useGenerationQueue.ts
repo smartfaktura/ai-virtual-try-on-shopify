@@ -47,6 +47,7 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
   const [isEnqueuing, setIsEnqueuing] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdRef = useRef<string | null>(null);
+  const retriggeredRef = useRef(false);
 
   // Cleanup polling on unmount
   useEffect(() => {
