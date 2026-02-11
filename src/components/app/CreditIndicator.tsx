@@ -49,7 +49,7 @@ export function CreditIndicator() {
           </p>
         </div>
         <button
-          onClick={openBuyModal}
+          onClick={() => openBuyModal()}
           className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors text-sidebar-foreground/40 hover:text-sidebar-foreground/70"
           title="Buy credits"
         >
