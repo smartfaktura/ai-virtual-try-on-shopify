@@ -1,118 +1,104 @@
 
 
-## Make Prompt Optional + Smart Auto-Prompt Engineering
+## Fix: Recent Creations Gallery Not Showing Images
 
-### Overview
-When the user skips typing a prompt but has selected assets (product, model, scene, brand profile, style presets), the system will auto-build a detailed, high-quality prompt that feeds into the existing `polishUserPrompt` pipeline — ensuring the same professional output quality.
+### Root Cause
 
-### What Changes
+The `generation_jobs.results` column contains **base64-encoded images** (~9MB each). The gallery query fetches 5 rows including this column, attempting to download ~45MB of text data. This causes the query to fail/timeout, the entire `queryFn` throws, and the gallery falls back to empty placeholders.
 
-#### 1. Frontend — `src/pages/Freestyle.tsx`
+### Solution
 
-**Relax `canGenerate`:**
+Restructure the gallery to avoid fetching the massive `results` column entirely, and run both queries in parallel so one failure doesn't block the other.
+
+### Changes to `src/components/app/RecentCreationsGallery.tsx`
+
+**1. Remove `results` from the generation_jobs select** -- instead, only show generation_jobs that have a linked product image (via `user_products.image_url`). This keeps the query lightweight.
+
+**2. Run both queries in parallel** with `Promise.all` and handle errors individually (so freestyle items still show even if generation_jobs fails).
+
+**3. Fix date sorting** -- store raw ISO `created_at` for accurate sorting instead of converting to `toLocaleDateString()` and parsing back.
+
+**4. Add auto-refresh** -- `refetchInterval: 15_000` so the gallery stays current without page refresh.
+
+### Technical Details
+
+Updated `CreationItem` interface:
 ```
-const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
-const canGenerate = (prompt.trim().length > 0 || hasAssets) && !isLoading && balance >= creditCost;
+interface CreationItem {
+  id: string;
+  imageUrl: string;
+  label: string;
+  date: string;       // display string
+  rawDate: string;     // ISO string for sorting
+}
 ```
 
-**Auto-build a rich base prompt in `handleGenerate` when prompt is empty:**
+Updated query function:
+```typescript
+const [jobsResult, freestyleResult] = await Promise.all([
+  supabase
+    .from('generation_jobs')
+    .select('id, created_at, workflows(name), user_products(title, image_url)')
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(5),
+  supabase
+    .from('freestyle_generations')
+    .select('id, image_url, prompt, created_at')
+    .order('created_at', { ascending: false })
+    .limit(5),
+]);
 
-Instead of a simple "Product photo of X", build a detailed contextual prompt:
-
-```
-let basePrompt = prompt.trim();
-if (!basePrompt) {
-  const parts: string[] = [];
-
-  // Product context
-  if (selectedProduct) {
-    parts.push(`High-end product photography of "${selectedProduct.title}"`);
-    if (selectedProduct.category) parts.push(`(${selectedProduct.category})`);
-  } else if (sourceImage) {
-    parts.push("Professional photo based on the provided reference image");
-  }
-
-  // Model context
-  if (selectedModel) {
-    const modelDesc = [selectedModel.gender, selectedModel.bodyType, selectedModel.ethnicity]
-      .filter(Boolean).join(', ');
-    if (selectedProduct) {
-      parts.push(`worn/held by a ${modelDesc} model`);
-    } else {
-      parts.push(`Portrait of a ${modelDesc} model`);
+// Process generation_jobs -- only add items that have a product image
+// (skip results column entirely to avoid fetching massive base64 data)
+if (!jobsResult.error) {
+  for (const job of jobsResult.data ?? []) {
+    const productImg = (job.user_products as any)?.image_url;
+    if (productImg) {
+      items.push({
+        id: job.id,
+        imageUrl: productImg,
+        label: (job.workflows as any)?.name || 'Generated',
+        date: new Date(job.created_at).toLocaleDateString(),
+        rawDate: job.created_at,
+      });
     }
   }
-
-  // Scene context
-  if (selectedScene) {
-    parts.push(`set in a ${selectedScene.name} environment`);
-    if (selectedScene.promptHint) parts.push(`— ${selectedScene.promptHint}`);
-  }
-
-  // Brand tone hint
-  if (selectedBrandProfile?.tone) {
-    parts.push(`with a ${selectedBrandProfile.tone} visual tone`);
-  }
-
-  // Fallback
-  if (parts.length === 0) {
-    parts.push("Professional commercial photography");
-  }
-
-  basePrompt = parts.join(' ');
 }
-```
 
-This auto-generated prompt then flows through the same `polishUserPrompt` function on the backend, which adds all the detailed layers (product fidelity, model identity, scene matching, camera style, brand profile, negatives).
-
-#### 2. Backend — `supabase/functions/generate-freestyle/index.ts`
-
-Relax the empty-prompt validation (lines 393-398):
-
-```typescript
-// Allow empty prompt if at least one image reference is provided
-if (!body.prompt?.trim() && !body.sourceImage && !body.modelImage && !body.sceneImage) {
-  return new Response(
-    JSON.stringify({ error: "Please provide a prompt or select at least one reference (product, model, or scene)" }),
-    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-  );
+// Process freestyle -- these always have proper URLs
+if (!freestyleResult.error) {
+  for (const f of freestyleResult.data ?? []) {
+    items.push({
+      id: f.id,
+      imageUrl: f.image_url,
+      label: 'Freestyle',
+      date: new Date(f.created_at).toLocaleDateString(),
+      rawDate: f.created_at,
+    });
+  }
 }
+
+// Sort by raw ISO date for accuracy
+items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
+return items.slice(0, 10);
 ```
 
-If prompt arrives empty but images are present, use a sensible default:
+Add query options:
 ```typescript
-let enrichedPrompt = body.prompt?.trim() || "Professional commercial photography of the provided subject";
+enabled: !!user,
+refetchInterval: 15_000,
+staleTime: 10_000,
 ```
 
-This ensures the `polishUserPrompt` pipeline still receives a valid base string to layer all its context on top of.
-
-#### 3. Dynamic Placeholder — `src/components/app/freestyle/FreestylePromptPanel.tsx`
-
-Update the textarea placeholder based on selected assets:
-- **No assets selected:** "Describe what you want to create..."
-- **Assets selected:** "Optional — describe extra details, or leave empty to auto-generate"
-
-This signals to users that prompt is no longer required.
-
-### Why Output Quality Stays High
-
-The auto-generated prompt feeds into the existing `polishUserPrompt` function which already adds:
-- Product fidelity instructions (shape, color, texture, branding)
-- Model identity matching (exact face, skin tone, hair)
-- Scene environment replication
-- Camera rendering style (Pro/Natural layers)
-- Brand profile integration (tone, color feel, keywords, palette)
-- Style preset keywords
-- Comprehensive negative prompts
-- Selfie/UGC detection and rules
-
-So even a simple auto-prompt like `High-end product photography of "Summer Dress" worn by a female model set in Beach Sunset environment` gets expanded into a multi-paragraph, layered professional prompt by the polish pipeline.
-
-### Files Changed
+### Result
+- No more fetching ~45MB of base64 data
+- Freestyle images show immediately (they have proper URLs)
+- Parallel queries so one failure doesn't block the other
+- Auto-refresh every 15 seconds
+- Accurate time-based sorting
 
 | File | Change |
 |------|--------|
-| `src/pages/Freestyle.tsx` | Relax `canGenerate`; build smart auto-prompt from selected assets |
-| `supabase/functions/generate-freestyle/index.ts` | Allow empty prompt when images are present; add fallback base text |
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Dynamic placeholder text when assets are selected |
+| `src/components/app/RecentCreationsGallery.tsx` | Remove `results` from select, parallel queries, error isolation, fix sorting, add auto-refresh |
 
