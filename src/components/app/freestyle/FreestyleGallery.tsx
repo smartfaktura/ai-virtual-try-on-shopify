@@ -417,8 +417,9 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     ...blockedCards,
     ...imageCards(),
   ];
-  const columns: React.ReactNode[][] = [[], [], []];
-  allCards.forEach((card, i) => columns[i % 3].push(card));
+  const columnCount = isMobile ? 2 : 3;
+  const columns: React.ReactNode[][] = Array.from({ length: columnCount }, () => []);
+  allCards.forEach((card, i) => columns[i % columnCount].push(card));
 
   return (
     <>
