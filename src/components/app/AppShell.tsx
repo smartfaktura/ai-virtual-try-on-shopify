@@ -272,6 +272,9 @@ export function AppShell({ children }: AppShellProps) {
         </main>
       </div>
 
+      {/* Mobile Tab Bar */}
+      <MobileTabBar onOpenSidebar={() => setSidebarOpen(true)} />
+
       {/* Studio Team Chat */}
       <StudioChat />
     </div>
