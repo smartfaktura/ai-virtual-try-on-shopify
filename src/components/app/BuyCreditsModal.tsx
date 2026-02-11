@@ -229,6 +229,16 @@ export function BuyCreditsModal() {
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      <DowngradeConfirmation
+        open={!!downgradeTarget}
+        targetPlanId={downgradeTarget || ''}
+        onClose={() => setDowngradeTarget(null)}
+        onDowngradeComplete={() => {
+          setDowngradeTarget(null);
+          closeBuyModal();
+        }}
+      />
     </Dialog>
   );
 }
