@@ -231,6 +231,9 @@ export default function Freestyle() {
       finalPrompt = `${basePrompt}. MANDATORY SCENE: Place the subject in this environment — ${selectedScene.promptHint || selectedScene.description}. The background and setting must match the scene reference image exactly.`;
     }
 
+    // Track the effective prompt so saved images have the real prompt
+    lastEffectivePromptRef.current = finalPrompt;
+
     // Build model text context
     let modelContext: string | undefined;
     if (selectedModel) {
