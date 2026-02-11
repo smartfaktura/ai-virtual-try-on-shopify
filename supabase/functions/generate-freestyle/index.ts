@@ -114,7 +114,7 @@ function polishUserPrompt(
       "",
       hasBothProductAndModel
         ? "Create a photorealistic image featuring the EXACT PERSON from [MODEL IMAGE] with the EXACT PRODUCT from [PRODUCT IMAGE]."
-        : "Create a photorealistic image combining the provided references.",
+        : "Create a photorealistic image where the product naturally exists within the scene environment.",
       "",
       "REQUIREMENTS:",
     ];
