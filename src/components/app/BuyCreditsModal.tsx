@@ -15,6 +15,7 @@ export function BuyCreditsModal() {
   const { plan, planConfig, buyModalOpen, buyModalDefaultTab, closeBuyModal, refreshBalance } = useCredits();
   const { user } = useAuth();
   const [upgrading, setUpgrading] = useState(false);
+  const [downgradeTarget, setDowngradeTarget] = useState<string | null>(null);
 
   const handlePurchase = async (credits: number) => {
     if (!user) return;
