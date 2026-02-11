@@ -1246,9 +1246,12 @@ export default function Generate() {
                   <p className="text-sm">{balance} credits available</p>
                 </div>
 
+                {balance < creditCost && (
+                  <InsufficientCreditsWarning cost={creditCost} balance={balance} />
+                )}
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setCurrentStep('template')}>Back</Button>
-                  <Button onClick={handleGenerateClick}>Generate {imageCount} Images</Button>
+                  <Button onClick={handleGenerateClick} disabled={balance < creditCost}>Generate {imageCount} Images · {creditCost} credits</Button>
                 </div>
               </div>
             )}
