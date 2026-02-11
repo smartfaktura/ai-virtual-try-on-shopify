@@ -114,9 +114,57 @@ serve(async (req) => {
           })
           .eq("id", jobId);
 
-        // Save to generation_jobs for library (skip freestyle — it saves to freestyle_generations separately)
         const generatedCount = result.generatedCount || result.images?.length || 0;
-        if (jobType !== 'freestyle' && generatedCount > 0) {
+
+        // Freestyle: save images to storage + DB server-side
+        if (jobType === 'freestyle' && generatedCount > 0) {
+          for (const base64Image of (result.images || [])) {
+            try {
+              // Strip data URL prefix if present
+              const base64Clean = (base64Image as string).replace(/^data:image\/\w+;base64,/, '');
+              const binaryData = Uint8Array.from(atob(base64Clean), c => c.charCodeAt(0));
+
+              const fileId = crypto.randomUUID();
+              const filePath = `${userId}/${fileId}.png`;
+
+              const { error: uploadError } = await supabase.storage
+                .from('freestyle-images')
+                .upload(filePath, binaryData, { contentType: 'image/png', upsert: false });
+
+              if (uploadError) {
+                console.error(`[process-queue] Freestyle upload failed:`, uploadError);
+                continue;
+              }
+
+              const { data: urlData } = supabase.storage
+                .from('freestyle-images')
+                .getPublicUrl(filePath);
+
+              await supabase.from('freestyle_generations').insert({
+                user_id: userId,
+                image_url: urlData.publicUrl,
+                prompt: (payload as Record<string, unknown>).prompt as string || '',
+                aspect_ratio: (payload as Record<string, unknown>).aspectRatio as string || '1:1',
+                quality: (payload as Record<string, unknown>).quality as string || 'standard',
+                model_id: (payload as Record<string, unknown>).modelId || null,
+                scene_id: (payload as Record<string, unknown>).sceneId || null,
+                product_id: (payload as Record<string, unknown>).productId || null,
+              });
+
+              console.log(`[process-queue] Freestyle image saved: ${filePath}`);
+            } catch (imgErr) {
+              console.error(`[process-queue] Freestyle image save error:`, imgErr);
+            }
+          }
+
+          // Strip base64 from result to save space in queue table
+          result.images = result.images?.map(() => 'saved_to_storage');
+          await supabase
+            .from('generation_queue')
+            .update({ result })
+            .eq('id', jobId);
+        } else if (jobType !== 'freestyle' && generatedCount > 0) {
+          // Save to generation_jobs for library (non-freestyle)
           await supabase.from("generation_jobs").insert({
             user_id: userId,
             results: result.images || [],
