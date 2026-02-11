@@ -61,6 +61,10 @@ interface FreestylePromptPanelProps {
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
   // Drag and drop
   onFileDrop?: (file: File) => void;
+  // Insufficient credits
+  insufficientCredits?: boolean;
+  onBuyCredits?: () => void;
+  currentBalance?: number;
 }
 
 export function FreestylePromptPanel({
