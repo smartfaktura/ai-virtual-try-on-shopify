@@ -393,44 +393,20 @@ function buildContentArray(
   // Main prompt text first
   content.push({ type: "text", text: prompt });
 
-  // Product/source image with explicit label
+  // Images with concise labels (Try-On style — instructions are in the prompt)
   if (sourceImage) {
-    content.push({
-      type: "text",
-      text: "PRODUCT/SOURCE REFERENCE IMAGE — reproduce this exact product with 100% fidelity (shape, color, texture, branding, proportions):",
-    });
+    content.push({ type: "text", text: "[PRODUCT IMAGE]" });
     content.push({ type: "image_url", image_url: { url: sourceImage } });
   }
 
-  // Model image with strong identity label
   if (modelImage) {
-    const modelDesc = modelContext ? ` (${modelContext})` : "";
-    content.push({
-      type: "text",
-      text: `MODEL REFERENCE IMAGE — use this EXACT person's face, hair, skin tone, and body${modelDesc}. Do NOT generate a different person:`,
-    });
+    content.push({ type: "text", text: "[MODEL IMAGE]" });
     content.push({ type: "image_url", image_url: { url: modelImage } });
   }
 
-  // Scene image with label
   if (sceneImage) {
-    content.push({
-      type: "text",
-      text: "SCENE/ENVIRONMENT REFERENCE IMAGE — You MUST place the subject IN this exact environment/location. Reproduce the same setting, background elements, lighting direction, color temperature, and atmosphere. Do NOT use a different environment:",
-    });
+    content.push({ type: "text", text: "[SCENE IMAGE]" });
     content.push({ type: "image_url", image_url: { url: sceneImage } });
-  }
-
-  // Task summary when multiple references are present
-  const refCount = [sourceImage, modelImage, sceneImage].filter(Boolean).length;
-  if (refCount >= 2) {
-    const taskParts: string[] = ["TASK SUMMARY — Generate ONE cohesive image that:"];
-    let step = 1;
-    if (sourceImage) { taskParts.push(`${step}. Features the EXACT product from the product reference (highest priority — shape, color, texture, branding must be identical)`); step++; }
-    if (modelImage) { taskParts.push(`${step}. Uses the EXACT person from the model reference (same face, hair, skin tone)`); step++; }
-    if (sceneImage) { taskParts.push(`${step}. Places everything in the EXACT environment from the scene reference`); step++; }
-    taskParts.push("Merge all references into a single photorealistic image. Product fidelity is the #1 priority.");
-    content.push({ type: "text", text: taskParts.join("\n") });
   }
 
   return content;
