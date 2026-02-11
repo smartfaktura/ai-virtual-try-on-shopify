@@ -36,7 +36,7 @@ interface FreestylePromptPanelProps {
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
   quality: 'standard' | 'high';
-  onQualityToggle: () => void;
+  onQualityChange: (q: 'standard' | 'high') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
   imageCount: number;
@@ -57,7 +57,7 @@ interface FreestylePromptPanelProps {
   onNegativesPopoverChange: (open: boolean) => void;
   // Camera style
   cameraStyle: 'pro' | 'natural';
-  onCameraStyleToggle: () => void;
+  onCameraStyleChange: (s: 'pro' | 'natural') => void;
   // Drag and drop
   onFileDrop?: (file: File) => void;
 }
@@ -71,14 +71,14 @@ export function FreestylePromptPanel({
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
-  quality, onQualityToggle,
+  quality, onQualityChange,
   polishPrompt, onPolishChange,
   imageCount, onImageCountChange,
   stylePresets, onStylePresetsChange,
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
-  cameraStyle, onCameraStyleToggle,
+  cameraStyle, onCameraStyleChange,
   onFileDrop,
 }: FreestylePromptPanelProps) {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -198,7 +198,7 @@ export function FreestylePromptPanel({
           selectedScene={selectedScene} onSceneSelect={onSceneSelect}
           scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
           aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
-          quality={quality} onQualityToggle={onQualityToggle}
+          quality={quality} onQualityChange={onQualityChange}
           polishPrompt={polishPrompt} onPolishChange={onPolishChange}
           imageCount={imageCount} onImageCountChange={onImageCountChange}
           stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
@@ -207,7 +207,7 @@ export function FreestylePromptPanel({
           brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
           negatives={negatives} onNegativesChange={onNegativesChange}
           negativesPopoverOpen={negativesPopoverOpen} onNegativesPopoverChange={onNegativesPopoverChange}
-          cameraStyle={cameraStyle} onCameraStyleToggle={onCameraStyleToggle}
+          cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
         />
       </div>
 

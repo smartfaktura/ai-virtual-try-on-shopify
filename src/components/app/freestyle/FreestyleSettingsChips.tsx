@@ -63,7 +63,7 @@ interface FreestyleSettingsChipsProps {
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
   quality: 'standard' | 'high';
-  onQualityToggle: () => void;
+  onQualityChange: (q: 'standard' | 'high') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
   imageCount: number;
@@ -84,7 +84,7 @@ interface FreestyleSettingsChipsProps {
   onNegativesPopoverChange: (open: boolean) => void;
   // Camera style
   cameraStyle: 'pro' | 'natural';
-  onCameraStyleToggle: () => void;
+  onCameraStyleChange: (s: 'pro' | 'natural') => void;
 }
 
 export function FreestyleSettingsChips({
@@ -94,16 +94,18 @@ export function FreestyleSettingsChips({
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
-  quality, onQualityToggle,
+  quality, onQualityChange,
   polishPrompt, onPolishChange,
   imageCount, onImageCountChange,
   stylePresets, onStylePresetsChange,
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
-  cameraStyle, onCameraStyleToggle,
+  cameraStyle, onCameraStyleChange,
 }: FreestyleSettingsChipsProps) {
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
+  const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
+  const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -182,50 +184,79 @@ export function FreestyleSettingsChips({
             </PopoverContent>
           </Popover>
 
-          {/* Quality Toggle with Tooltip */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={onQualityToggle}
-                className={cn(
-                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-                  quality === 'high'
-                    ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-                )}
-              >
+          {/* Quality Dropdown */}
+          <Popover open={qualityPopoverOpen} onOpenChange={setQualityPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button className={cn(
+                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                quality === 'high'
+                  ? 'border-primary/30 bg-primary/10 text-primary'
+                  : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+              )}>
                 {quality === 'high' ? '✦ High' : 'Standard'}
+                <ChevronDown className="w-3 h-3 opacity-40" />
               </button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[220px] text-center">
-              {quality === 'standard'
-                ? 'Fast generation at standard resolution. 4 credits per image.'
-                : 'Higher detail and resolution output. 10 credits per image.'}
-            </TooltipContent>
-          </Tooltip>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-1.5" align="start">
+              {([
+                { value: 'standard' as const, label: 'Standard', desc: 'Fast generation at standard resolution. 4 credits per image.' },
+                { value: 'high' as const, label: '✦ High', desc: 'Higher detail and resolution output. 10 credits per image.' },
+              ]).map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { onQualityChange(opt.value); setQualityPopoverOpen(false); }}
+                  className={cn(
+                    'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
+                    quality === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                  )}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[13px]">{opt.label}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
+                  </div>
+                  {quality === opt.value && <span className="text-primary mt-0.5">✓</span>}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
 
-          {/* Camera Style Toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={onCameraStyleToggle}
-                className={cn(
-                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-                  cameraStyle === 'natural'
-                    ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-                )}
-              >
+          {/* Camera Style Dropdown */}
+          <Popover open={cameraPopoverOpen} onOpenChange={setCameraPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button className={cn(
+                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                cameraStyle === 'natural'
+                  ? 'border-primary/30 bg-primary/10 text-primary'
+                  : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+              )}>
                 {cameraStyle === 'natural' ? <Smartphone className="w-3.5 h-3.5" /> : <Camera className="w-3.5 h-3.5" />}
                 {cameraStyle === 'natural' ? 'Natural' : 'Pro'}
+                <ChevronDown className="w-3 h-3 opacity-40" />
               </button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[240px] text-center">
-              {cameraStyle === 'pro'
-                ? 'Studio-grade commercial look with polished lighting and color grading.'
-                : 'Raw iPhone-style photo — sharp details, true-to-life colors, no heavy editing.'}
-            </TooltipContent>
-          </Tooltip>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-1.5" align="start">
+              {([
+                { value: 'pro' as const, icon: Camera, label: 'Pro', desc: 'Studio-grade commercial look with polished lighting and color grading.' },
+                { value: 'natural' as const, icon: Smartphone, label: 'Natural', desc: 'Raw iPhone-style photo. Sharp details, true-to-life colors, no heavy editing.' },
+              ]).map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { onCameraStyleChange(opt.value); setCameraPopoverOpen(false); }}
+                  className={cn(
+                    'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
+                    cameraStyle === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                  )}
+                >
+                  <opt.icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[13px]">{opt.label}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
+                  </div>
+                  {cameraStyle === opt.value && <span className="text-primary mt-0.5">✓</span>}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
 
           {/* Prompt Polish Toggle with HoverCard */}
           <HoverCard openDelay={200} closeDelay={100}>
