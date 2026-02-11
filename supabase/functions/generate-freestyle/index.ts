@@ -138,26 +138,15 @@ function polishUserPrompt(
   if (context.hasModel) {
     const identityDetails = modelContext ? ` (${modelContext})` : "";
     layers.push(
-      `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo.`
+      `MODEL IDENTITY: Generate the EXACT person from the MODEL REFERENCE IMAGE${identityDetails} — same face, features, skin tone, hair, and body. Not a similar person — the same individual.`
     );
     if (isSelfie) {
-      if (cameraStyle === 'natural') {
-        layers.push(
-          "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections. Even, ambient lighting on the face — no dramatic light shaping, no artificial warmth or glow. True-to-life skin tones with zero color grading. As captured by a smartphone front camera in auto mode."
-        );
-      } else {
-        layers.push(
-          "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections — NOT studio-retouched or airbrushed. Soft, flattering natural light on the face. Relaxed, genuine expression as if casually taking a selfie. Slight warmth and glow from ambient or window light."
-        );
-      }
+      const skinStyle = cameraStyle === 'natural'
+        ? 'Natural skin texture, ambient lighting, true-to-life tones, no color grading.'
+        : 'Natural skin texture, soft flattering light, slight warmth.';
+      layers.push(`PORTRAIT (SELFIE): ${skinStyle}`);
     } else {
-      layers.push(
-        "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
-      );
-      // Framing for standard portrait/model shots
-      layers.push(
-        "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head — do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
-      );
+      layers.push("PORTRAIT: Natural skin texture, accurate proportions, natural pose. Full head/hair visible with headroom, rule of thirds.");
     }
   }
 
