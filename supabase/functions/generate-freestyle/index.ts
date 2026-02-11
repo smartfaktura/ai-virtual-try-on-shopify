@@ -234,6 +234,7 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
   layers.push(negativeBlock);
 
   return layers.join("\n\n");
+}
 
 // Content-block detection helpers
 function isContentBlocked(data: Record<string, unknown>): boolean {
