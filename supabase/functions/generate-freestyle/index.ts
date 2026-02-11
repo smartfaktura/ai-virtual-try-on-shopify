@@ -209,8 +209,6 @@ async function generateImage(
   model: string,
   aspectRatio?: string
 ): Promise<GenerateResult> {
-  const maxRetries = 2;
-
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch(
@@ -236,6 +234,9 @@ async function generateImage(
         }
         if (response.status === 402) {
           throw { status: 402, message: "Credits exhausted. Please add more credits." };
+        }
+        if (response.status === 504) {
+          throw { status: 504, message: "Generation timed out. Try fewer reference images or a simpler prompt." };
         }
         const errorText = await response.text();
         console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
