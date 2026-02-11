@@ -44,12 +44,15 @@ export function CreditIndicator() {
           <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
             <Sparkles className="w-3.5 h-3.5 text-sidebar-foreground/70" />
           </div>
-          <p className="text-sm font-bold text-sidebar-foreground leading-tight">
-            {balance} <span className="text-sidebar-foreground/40 font-normal">/ {monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()}</span>
-          </p>
+          <div>
+            <p className="text-sm font-bold text-sidebar-foreground leading-tight">{balance}</p>
+            <p className="text-[10px] text-sidebar-foreground/40">
+              / {monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()}
+            </p>
+          </div>
         </div>
         <button
-          onClick={() => openBuyModal()}
+          onClick={openBuyModal}
           className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors text-sidebar-foreground/40 hover:text-sidebar-foreground/70"
           title="Buy credits"
         >

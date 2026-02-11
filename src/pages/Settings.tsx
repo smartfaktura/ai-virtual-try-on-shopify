@@ -68,7 +68,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 export default function Settings() {
   const { user } = useAuth();
-  const { balance, plan, planConfig, refreshBalance } = useCredits();
+  const { balance, plan, planConfig, addCredits } = useCredits();
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
@@ -120,46 +120,16 @@ export default function Settings() {
     setIsSaving(false);
   };
 
-  const handlePlanSelect = async (planId: string) => {
-    if (planId === 'enterprise') {
-      toast.info('Our team will reach out to discuss your needs!');
-      return;
-    }
-    if (planId === currentPlanId) return;
-    if (!user) return;
-
-    const selectedPlan = pricingPlans.find(p => p.planId === planId);
-    if (!selectedPlan || typeof selectedPlan.credits !== 'number') return;
-
-    const { error } = await supabase.rpc('change_user_plan', {
-      p_user_id: user.id,
-      p_new_plan: planId,
-      p_new_credits: selectedPlan.credits,
-    });
-
-    if (error) {
-      toast.error('Failed to change plan: ' + error.message);
-    } else {
-      await refreshBalance();
-      toast.success(`Switched to ${selectedPlan.name} plan!`);
-    }
+  const handlePlanSelect = (planId: string) => {
+    if (planId === 'enterprise') toast.info('Our team will reach out to discuss your needs!');
+    else toast.success(`Switched to ${planId} plan!`);
   };
 
-  const handleCreditPurchase = async (packId: string) => {
-    if (!user) return;
+  const handleCreditPurchase = (packId: string) => {
     const pack = creditPacks.find(p => p.packId === packId);
-    if (!pack) return;
-
-    const { error } = await supabase.rpc('add_purchased_credits', {
-      p_user_id: user.id,
-      p_amount: pack.credits,
-    });
-
-    if (error) {
-      toast.error('Failed to add credits: ' + error.message);
-    } else {
-      await refreshBalance();
-      toast.success(`${pack.credits} credits added to your account!`);
+    if (pack) {
+      addCredits(pack.credits);
+      toast.success(`Purchased ${pack.credits} credits for $${pack.price}!`);
     }
   };
 

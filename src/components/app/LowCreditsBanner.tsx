@@ -36,7 +36,7 @@ export function LowCreditsBanner() {
       </AlertTitle>
       <AlertDescription className="flex items-center gap-3 mt-1">
         <span>{message}</span>
-        <Button size="sm" onClick={() => openBuyModal()}>Buy Credits</Button>
+        <Button size="sm" onClick={openBuyModal}>Buy Credits</Button>
       </AlertDescription>
     </Alert>
   );

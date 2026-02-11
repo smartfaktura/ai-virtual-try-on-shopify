@@ -2,243 +2,241 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowUpRight, Check, Sparkles } from 'lucide-react';
+import { Wallet, ArrowUpRight, Check, Zap, Sparkles, Video, Wand2, Layers } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
-import { useCredits, PLAN_CONFIG } from '@/contexts/CreditContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useCredits } from '@/contexts/CreditContext';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useState } from 'react';
-import { DowngradeConfirmation, PLAN_ORDER } from './DowngradeConfirmation';
 
 export function BuyCreditsModal() {
-  const { plan, planConfig, buyModalOpen, buyModalDefaultTab, closeBuyModal, refreshBalance } = useCredits();
-  const { user } = useAuth();
-  const [upgrading, setUpgrading] = useState(false);
-  const [downgradeTarget, setDowngradeTarget] = useState<string | null>(null);
+  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, addCredits } = useCredits();
+  const navigate = useNavigate();
 
-  const handlePurchase = async (credits: number) => {
-    if (!user) return;
-    const { error } = await supabase.rpc('add_purchased_credits', {
-      p_user_id: user.id,
-      p_amount: credits,
-    });
-    if (error) {
-      toast.error('Failed to add credits: ' + error.message);
-    } else {
-      await refreshBalance();
-      toast.success(`${credits} credits added to your account!`);
-    }
-  };
-
-  const isDowngrade = (targetPlanId: string) => {
-    const currentIdx = PLAN_ORDER.indexOf(plan);
-    const targetIdx = PLAN_ORDER.indexOf(targetPlanId);
-    return targetIdx < currentIdx;
-  };
-
-  const handlePlanClick = (targetPlanId: string) => {
-    if (isDowngrade(targetPlanId)) {
-      setDowngradeTarget(targetPlanId);
-      return;
-    }
-    handleUpgrade(targetPlanId);
-  };
-
-  const handleUpgrade = async (targetPlanId: string) => {
-    if (!user || upgrading) return;
-    const targetConfig = PLAN_CONFIG[targetPlanId];
-    const targetPlan = pricingPlans.find(p => p.planId === targetPlanId);
-    if (!targetConfig || !targetPlan) return;
-
-    setUpgrading(true);
-    const credits = typeof targetPlan.credits === 'number' ? targetPlan.credits : 99999;
-
-    const { error } = await supabase.rpc('change_user_plan', {
-      p_user_id: user.id,
-      p_new_plan: targetPlanId,
-      p_new_credits: credits,
-    });
-
-    if (error) {
-      toast.error('Upgrade failed: ' + error.message);
-    } else {
-      await refreshBalance();
-      toast.success(`Upgraded to ${targetConfig.name}! ${credits.toLocaleString()} credits added.`);
-      closeBuyModal();
-    }
-    setUpgrading(false);
-  };
-
-  // Plans excluding enterprise & free
-  const comparePlans = pricingPlans.filter(p => p.planId !== 'enterprise' && p.planId !== 'free');
-  const enterprise = pricingPlans.find(p => p.planId === 'enterprise');
+  const monthlyCredits = planConfig.monthlyCredits;
+  const hasBonus = balance > monthlyCredits && monthlyCredits !== Infinity;
+  const usagePercent = monthlyCredits === Infinity
+    ? 100
+    : hasBonus
+      ? 100
+      : Math.min(100, Math.max(3, (balance / monthlyCredits) * 100));
 
   const isFree = plan === 'free';
 
+  // Determine recommended next plan
+  const nextPlanId = planConfig.nextPlanId;
+  const nextPlan = nextPlanId ? pricingPlans.find(p => p.planId === nextPlanId) : null;
+
+  // For free users, recommend Growth (most popular) as primary, Starter as alternative
+  const recommendedPlan = isFree
+    ? pricingPlans.find(p => p.planId === 'growth')!
+    : nextPlan;
+  const altPlan = isFree
+    ? pricingPlans.find(p => p.planId === 'starter')!
+    : null;
+
+  const handlePurchase = (credits: number) => {
+    addCredits(credits);
+    toast.success(`Added ${credits} credits to your account!`);
+    closeBuyModal();
+  };
+
+  const handleUpgrade = () => {
+    closeBuyModal();
+    navigate('/app/settings');
+  };
+
+  // Feature unlock highlights for CRO
+  const featureUnlocks = [
+    { icon: Wand2, label: 'Virtual Try-On', desc: 'Dress AI models in your garments' },
+    { icon: Video, label: 'Video Generation', desc: 'Animate product photos' },
+    { icon: Layers, label: 'Bulk Generation', desc: 'Generate hundreds at once' },
+    { icon: Sparkles, label: 'Creative Drops', desc: 'Auto-generated campaigns' },
+  ];
+
   return (
     <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden gap-0 p-0">
-        <DialogHeader className="px-8 pt-8 pb-4">
-          <DialogTitle className="text-xl font-semibold tracking-tight">Credits & Plan</DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">Choose how you want to power your creative workflow</p>
+      <DialogContent className="max-w-xl max-h-[90vh] flex flex-col overflow-hidden gap-4">
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle className="text-lg tracking-tight">Credits & Plan</DialogTitle>
+          <p className="text-sm text-muted-foreground">Manage your credits and subscription</p>
         </DialogHeader>
 
-        <Tabs defaultValue={buyModalDefaultTab} key={buyModalDefaultTab} className="w-full flex-1 flex flex-col min-h-0">
-          <div className="px-8">
-            <TabsList className="w-full h-11 p-1 bg-muted/60">
-              <TabsTrigger value="upgrade" className="flex-1 text-sm font-medium h-9">Upgrade Plan</TabsTrigger>
-              <TabsTrigger value="topup" className="flex-1 text-sm font-medium h-9">Top Up Credits</TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* Upgrade Plan Tab — Horizontal Columns */}
-          <TabsContent value="upgrade" className="flex-1 overflow-y-auto px-8 pt-6 pb-8 mt-0">
-            <div className="grid grid-cols-3 gap-4">
-              {comparePlans.map((p) => {
-                const isCurrent = p.planId === plan;
-                const isRecommended = (isFree && p.planId === 'growth') ||
-                  (!isFree && p.planId === planConfig.nextPlanId);
-                const credits = typeof p.credits === 'number' ? p.credits : 0;
-
-                return (
-                  <div
-                    key={p.planId}
-                    className={`relative flex flex-col rounded-2xl border-2 p-6 transition-all ${
-                      isCurrent
-                        ? 'border-border bg-muted/30 opacity-60'
-                        : isRecommended
-                          ? 'border-primary bg-primary/[0.03] shadow-md'
-                          : 'border-border hover:border-primary/40'
-                    }`}
-                  >
-                    {isRecommended && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <Badge className="bg-primary text-primary-foreground text-xs px-3 py-0.5 font-medium">
-                          Recommended
-                        </Badge>
-                      </div>
-                    )}
-
-                    {/* Plan Name */}
-                    <h3 className="text-lg font-semibold">{p.name}</h3>
-
-                    {/* Price */}
-                    <div className="mt-3 flex items-baseline gap-1">
-                      <span className="text-3xl font-bold">${p.monthlyPrice}</span>
-                      <span className="text-sm text-muted-foreground">/mo</span>
-                    </div>
-
-                    {/* Credits */}
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {credits.toLocaleString()} credits/month
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      ≈ {Math.round(credits / 4).toLocaleString()} images
-                    </p>
-
-                    {/* Divider */}
-                    <div className="border-t border-border/40 my-4" />
-
-                    {/* Features */}
-                    <ul className="space-y-2.5 flex-1">
-                      {p.features.slice(1, 6).map((feature) => (
-                        <li key={feature} className="flex items-start gap-2 text-sm text-foreground/80">
-                          <Check className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    {/* CTA */}
-                    <div className="mt-5">
-                      {isCurrent ? (
-                        <Button variant="outline" disabled className="w-full h-11 rounded-xl text-sm">
-                          Current Plan
-                        </Button>
-                      ) : (
-                        <Button
-                          variant={isRecommended ? 'default' : 'outline'}
-                          className="w-full h-11 rounded-xl text-sm font-medium"
-                          onClick={() => handlePlanClick(p.planId)}
-                          disabled={upgrading}
-                        >
-                          {upgrading ? 'Processing…' : isDowngrade(p.planId) ? 'Downgrade' : isRecommended ? 'Upgrade' : 'Select'}
-                          {!upgrading && <ArrowUpRight className="w-3.5 h-3.5 ml-1.5" />}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+        {/* Balance bar — compact inline */}
+        <div className="flex-shrink-0 px-4 py-3 rounded-xl bg-muted/50 border border-border">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-muted-foreground" />
+              <span className="text-2xl font-bold">{balance}</span>
+              <span className="text-sm text-muted-foreground">credits</span>
             </div>
-
-            {/* Enterprise banner */}
-            {enterprise && (
-              <div className="flex items-center justify-between px-6 py-4 rounded-2xl border border-border bg-muted/20 mt-4">
-                <div>
-                  <span className="text-sm font-medium">{enterprise.name}</span>
-                  <span className="text-sm text-muted-foreground ml-3">Custom pricing · Unlimited everything</span>
-                </div>
-                <Button variant="ghost" size="sm" className="text-sm h-9 px-4">
-                  Contact Sales
-                  <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              </div>
+            <Badge variant="secondary" className="text-xs">{planConfig.name}</Badge>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                hasBonus ? 'bg-accent-foreground/60' : 'bg-primary'
+              }`}
+              style={{ width: `${usagePercent}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between mt-1">
+            <span className="text-xs text-muted-foreground">
+              {hasBonus
+                ? `${balance} available (includes bonus)`
+                : `${balance} / ${monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()}`
+              }
+            </span>
+            {hasBonus && (
+              <span className="text-xs text-primary font-medium">Bonus credits ✓</span>
             )}
-          </TabsContent>
+          </div>
+        </div>
+
+        <Tabs defaultValue={isFree ? 'upgrade' : 'topup'} className="w-full flex-1 flex flex-col min-h-0">
+          <TabsList className="w-full flex-shrink-0">
+            <TabsTrigger value="topup" className="flex-1 text-sm">Top Up</TabsTrigger>
+            <TabsTrigger value="upgrade" className="flex-1 text-sm">Upgrade Plan</TabsTrigger>
+          </TabsList>
 
           {/* Top Up Tab */}
-          <TabsContent value="topup" className="flex-1 overflow-y-auto px-8 pt-6 pb-8 mt-0">
-            <p className="text-sm text-muted-foreground mb-6">One-time credit packs · Never expire · Use across all modes</p>
+          <TabsContent value="topup" className="flex-1 overflow-y-auto space-y-3 mt-3">
+            <p className="text-sm text-muted-foreground">One-time credit packs · Never expire · Use across all modes</p>
 
-            <div className="grid grid-cols-3 gap-5">
+            <div className="grid grid-cols-3 gap-3">
               {creditPacks.map((pack) => (
                 <div
                   key={pack.packId}
-                  className={`relative p-7 rounded-2xl border-2 text-center transition-all hover:shadow-md ${
+                  className={`relative p-4 rounded-xl border-2 text-center transition-all hover:shadow-sm ${
                     pack.popular
-                      ? 'border-primary bg-primary/[0.03]'
-                      : 'border-border hover:border-primary/40'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
                   }`}
                 >
                   {pack.popular && (
-                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground text-xs px-2.5 py-0.5">Best Value</Badge>
+                    <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5 py-0">Best Value</Badge>
                     </div>
                   )}
-                  <div className="space-y-2 pt-1">
-                    <p className="text-4xl font-bold">{pack.credits.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">credits</p>
-                    <p className="text-xs text-muted-foreground">≈ {Math.round(pack.credits / 4).toLocaleString()} images</p>
-                    <div className="pt-3">
-                      <p className="text-2xl font-semibold">${pack.price}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{(pack.pricePerCredit * 100).toFixed(1)}¢ per credit</p>
-                    </div>
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold leading-tight">{pack.credits}</p>
+                    <p className="text-xs text-muted-foreground">≈ {Math.round(pack.credits / 4)} images</p>
+                    <p className="text-lg font-semibold">${pack.price}</p>
+                    <p className="text-xs text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢/cr</p>
                     <Button
                       variant={pack.popular ? 'default' : 'outline'}
-                      className="w-full mt-4 h-11 rounded-xl text-sm font-medium"
+                      className="w-full mt-1.5"
+                      size="sm"
                       onClick={() => handlePurchase(pack.credits)}
                     >
-                      Buy Credits
+                      Buy
                     </Button>
                   </div>
                 </div>
               ))}
             </div>
+
+            <button
+              onClick={handleUpgrade}
+              className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 pt-1"
+            >
+              Or upgrade your plan for monthly credits →
+            </button>
+          </TabsContent>
+
+          {/* Upgrade Plan Tab */}
+          <TabsContent value="upgrade" className="flex-1 overflow-y-auto space-y-3 mt-3">
+            {recommendedPlan ? (
+              <>
+                {/* Recommended plan card */}
+                <div className="p-4 rounded-xl border-2 border-primary bg-primary/5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-primary" />
+                      <span className="font-semibold text-base">{recommendedPlan.name}</span>
+                    </div>
+                    <Badge className="bg-primary text-primary-foreground text-[9px]">
+                      {isFree ? 'Most Popular' : 'Recommended'}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold">${recommendedPlan.monthlyPrice}</span>
+                    <span className="text-xs text-muted-foreground">/mo</span>
+                    <span className="text-xs text-muted-foreground ml-1">•</span>
+                    <span className="text-xs text-muted-foreground ml-1">
+                      {typeof recommendedPlan.credits === 'number'
+                        ? `${recommendedPlan.credits.toLocaleString()} credits/mo`
+                        : 'Unlimited'}
+                    </span>
+                  </div>
+
+                  {/* Feature unlock grid */}
+                  {isFree && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {featureUnlocks.map(({ icon: Icon, label, desc }) => (
+                        <div key={label} className="flex items-start gap-2 p-2 rounded-md bg-background/60">
+                          <Icon className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-medium leading-tight">{label}</p>
+                            <p className="text-[10px] text-muted-foreground leading-tight">{desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Non-free users: show key features list */}
+                  {!isFree && (
+                    <ul className="space-y-1">
+                      {recommendedPlan.features.slice(0, 4).map((feature) => (
+                        <li key={feature} className="flex items-center gap-1.5 text-xs">
+                          <Check className="w-3 h-3 text-primary flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <Button className="w-full" size="sm" onClick={handleUpgrade}>
+                    Upgrade to {recommendedPlan.name}
+                    <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
+                  </Button>
+                </div>
+
+                {/* All other plans */}
+                {pricingPlans
+                  .filter(p => p.planId !== recommendedPlan.planId && p.planId !== plan)
+                  .map((p) => (
+                    <div key={p.planId} className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-border bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium">{p.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ${p.monthlyPrice}/mo • {typeof p.credits === 'number' ? `${p.credits.toLocaleString()} cr` : '∞'}
+                        </span>
+                      </div>
+                      <Button variant="ghost" size="sm" className="text-xs h-7 px-2.5" onClick={handleUpgrade}>
+                        View
+                        <ArrowUpRight className="w-3 h-3 ml-0.5" />
+                      </Button>
+                    </div>
+                  ))
+                }
+              </>
+            ) : (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                You're on our highest plan! Contact sales for custom options.
+              </div>
+            )}
+
+            <button
+              onClick={handleUpgrade}
+              className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+            >
+              Compare all plans in Settings
+            </button>
           </TabsContent>
         </Tabs>
       </DialogContent>
-
-      <DowngradeConfirmation
-        open={!!downgradeTarget}
-        targetPlanId={downgradeTarget || ''}
-        onClose={() => setDowngradeTarget(null)}
-        onDowngradeComplete={() => {
-          setDowngradeTarget(null);
-          closeBuyModal();
-        }}
-      />
     </Dialog>
   );
 }

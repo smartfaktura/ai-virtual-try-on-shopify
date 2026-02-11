@@ -1,60 +1,104 @@
 
 
-## Fix Copy Prompt + Improve Generation Performance
+## Fix: Recent Creations Gallery Not Showing Images
 
-### Problem 1: "Copy prompt to editor" copies nothing
+### Root Cause
 
-When the user leaves the prompt field empty, the system auto-builds a prompt from selected assets (product, model, scene). However, the auto-built prompt is constructed inside `handleGenerate` as a local variable (`finalPrompt`) and never stored. When `saveImages` runs, it saves `prompt` (the raw state = empty string). 
+The `generation_jobs.results` column contains **base64-encoded images** (~9MB each). The gallery query fetches 5 rows including this column, attempting to download ~45MB of text data. This causes the query to fail/timeout, the entire `queryFn` throws, and the gallery falls back to empty placeholders.
 
-Every image in the gallery then has `prompt: ""`, so clicking "Copy prompt to editor" copies an empty string. The toast fires ("Prompt copied to editor") but nothing visible changes.
+### Solution
 
-**Fix**: Track the effective prompt (the one actually sent to the AI) and save that to the database.
+Restructure the gallery to avoid fetching the massive `results` column entirely, and run both queries in parallel so one failure doesn't block the other.
 
-- Store the final effective prompt in a ref (`lastEffectivePromptRef`) during `handleGenerate`
-- Use that ref value in the `saveImages` call instead of the raw `prompt` state
-- This way images saved to the DB will always have the real prompt that was used
+### Changes to `src/components/app/RecentCreationsGallery.tsx`
 
-**File**: `src/pages/Freestyle.tsx`
+**1. Remove `results` from the generation_jobs select** -- instead, only show generation_jobs that have a linked product image (via `user_products.image_url`). This keeps the query lightweight.
 
----
+**2. Run both queries in parallel** with `Promise.all` and handle errors individually (so freestyle items still show even if generation_jobs fails).
 
-### Problem 2: Generation is very slow (138 seconds for 1 image)
+**3. Fix date sorting** -- store raw ISO `created_at` for accurate sorting instead of converting to `toLocaleDateString()` and parsing back.
 
-Edge function logs show:
-- A network retry error (`error reading a body from connection`) caused a failed attempt + 2-second backoff before retrying
-- Total processing time: 138 seconds for a single standard-quality image
-- For multi-image requests, images are generated **sequentially** with 500ms delays between each
+**4. Add auto-refresh** -- `refetchInterval: 15_000` so the gallery stays current without page refresh.
 
-**Fixes**:
+### Technical Details
 
-#### A. Parallelize multi-image generation (edge function)
+Updated `CreationItem` interface:
+```
+interface CreationItem {
+  id: string;
+  imageUrl: string;
+  label: string;
+  date: string;       // display string
+  rawDate: string;     // ISO string for sorting
+}
+```
 
-Currently the loop at line 488 of `generate-freestyle/index.ts` runs `generateImage` calls one at a time. Switch to `Promise.allSettled` for concurrent generation. This cuts 4-image generation time from ~4x to ~1x.
+Updated query function:
+```typescript
+const [jobsResult, freestyleResult] = await Promise.all([
+  supabase
+    .from('generation_jobs')
+    .select('id, created_at, workflows(name), user_products(title, image_url)')
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(5),
+  supabase
+    .from('freestyle_generations')
+    .select('id, image_url, prompt, created_at')
+    .order('created_at', { ascending: false })
+    .limit(5),
+]);
 
-**File**: `supabase/functions/generate-freestyle/index.ts`
+// Process generation_jobs -- only add items that have a product image
+// (skip results column entirely to avoid fetching massive base64 data)
+if (!jobsResult.error) {
+  for (const job of jobsResult.data ?? []) {
+    const productImg = (job.user_products as any)?.image_url;
+    if (productImg) {
+      items.push({
+        id: job.id,
+        imageUrl: productImg,
+        label: (job.workflows as any)?.name || 'Generated',
+        date: new Date(job.created_at).toLocaleDateString(),
+        rawDate: job.created_at,
+      });
+    }
+  }
+}
 
-#### B. Reduce retry delays
+// Process freestyle -- these always have proper URLs
+if (!freestyleResult.error) {
+  for (const f of freestyleResult.data ?? []) {
+    items.push({
+      id: f.id,
+      imageUrl: f.image_url,
+      label: 'Freestyle',
+      date: new Date(f.created_at).toLocaleDateString(),
+      rawDate: f.created_at,
+    });
+  }
+}
 
-The current retry logic waits `1000 * (attempt + 1)` ms (1s, then 2s). Reduce to 500ms flat for faster recovery from transient errors.
+// Sort by raw ISO date for accuracy
+items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
+return items.slice(0, 10);
+```
 
-**File**: `supabase/functions/generate-freestyle/index.ts`
+Add query options:
+```typescript
+enabled: !!user,
+refetchInterval: 15_000,
+staleTime: 10_000,
+```
 
-#### C. Add connection timeout
-
-There is no fetch timeout configured. A hanging connection wastes the full edge function runtime. Add an `AbortController` with a 90-second timeout per image request.
-
-**File**: `supabase/functions/generate-freestyle/index.ts`
-
----
-
-### Technical Summary
+### Result
+- No more fetching ~45MB of base64 data
+- Freestyle images show immediately (they have proper URLs)
+- Parallel queries so one failure doesn't block the other
+- Auto-refresh every 15 seconds
+- Accurate time-based sorting
 
 | File | Change |
 |------|--------|
-| `src/pages/Freestyle.tsx` | Add `lastEffectivePromptRef` to track the actual prompt sent to AI; use it in `saveImages` call instead of raw `prompt` state |
-| `supabase/functions/generate-freestyle/index.ts` | Parallelize multi-image generation with `Promise.allSettled`; reduce retry backoff to 500ms; add 90s per-request timeout via `AbortController` |
+| `src/components/app/RecentCreationsGallery.tsx` | Remove `results` from select, parallel queries, error isolation, fix sorting, add auto-refresh |
 
-### Expected Results
-
-- **Copy prompt**: Will now copy the actual prompt used for generation (including auto-built parts from assets)
-- **Performance**: Multi-image generation will run in parallel instead of sequentially, cutting wall-clock time by up to 75% for 4-image batches. Single-image generation benefits from faster retries and connection timeouts preventing indefinite hangs.

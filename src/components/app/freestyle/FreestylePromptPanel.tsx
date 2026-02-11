@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Plus, X, Sparkles, Loader2, ImagePlus, AlertCircle } from 'lucide-react';
+import { Plus, X, Sparkles, Loader2, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
 import type { ModelProfile, TryOnPose } from '@/types';
@@ -61,11 +61,6 @@ interface FreestylePromptPanelProps {
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
   // Drag and drop
   onFileDrop?: (file: File) => void;
-  // Insufficient credits
-  insufficientCredits?: boolean;
-  onBuyCredits?: () => void;
-  onUpgradePlan?: () => void;
-  currentBalance?: number;
 }
 
 export function FreestylePromptPanel({
@@ -87,7 +82,6 @@ export function FreestylePromptPanel({
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
   onFileDrop,
-  insufficientCredits, onBuyCredits, onUpgradePlan, currentBalance,
 }: FreestylePromptPanelProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
@@ -223,32 +217,17 @@ export function FreestylePromptPanel({
       <div className="border-t border-border/40 mx-4 sm:mx-5" />
 
       {/* Row 3 — Action Bar */}
-      <div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
-        {insufficientCredits && !isLoading ? (
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 flex-1 min-w-0">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span className="truncate">
-                Need <strong>{creditCost - (currentBalance ?? 0)} more</strong> ·{' '}
-                <button onClick={onBuyCredits} className="underline underline-offset-2 hover:text-amber-500 transition-colors">buy credits</button>
-              </span>
-            </div>
-            <Button size="lg" onClick={onUpgradePlan} className="h-11 px-6 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold shrink-0">
-              Upgrade Plan
-            </Button>
-          </div>
-        ) : (
-          <Button
-            onClick={onGenerate}
-            disabled={!canGenerate}
-            size="lg"
-            className="h-11 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold w-full sm:w-auto"
-          >
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            Generate
-            <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
-          </Button>
-        )}
+      <div className="px-4 sm:px-5 py-3 flex items-center justify-end">
+        <Button
+          onClick={onGenerate}
+          disabled={!canGenerate}
+          size="lg"
+          className="h-11 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold w-full sm:w-auto"
+        >
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          Generate
+          <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
+        </Button>
       </div>
     </div>
   );

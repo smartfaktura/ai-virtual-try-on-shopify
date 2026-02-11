@@ -892,14 +892,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_purchased_credits: {
-        Args: { p_amount: number; p_user_id: string }
-        Returns: number
-      }
-      change_user_plan: {
-        Args: { p_new_credits: number; p_new_plan: string; p_user_id: string }
-        Returns: Json
-      }
       claim_next_job: { Args: never; Returns: Json }
       cleanup_stale_jobs: { Args: never; Returns: Json }
       deduct_credits: {

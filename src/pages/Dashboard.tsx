@@ -156,7 +156,7 @@ export default function Dashboard() {
               <Sparkles className="w-4 h-4 text-primary" />
               <span><strong className="text-foreground">{balance}</strong> credits available</span>
             </div>
-            <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={() => openBuyModal()}>
+            <Button variant="outline" size="sm" className="rounded-full font-semibold gap-1" onClick={openBuyModal}>
               Buy Credits
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
@@ -240,7 +240,7 @@ export default function Dashboard() {
           value={balance}
           suffix="available"
           icon={Wallet}
-          onClick={() => openBuyModal()}
+          onClick={openBuyModal}
           progress={Math.max(0, Math.round((balance / 300) * 100))}
           progressColor={balance < 10 ? 'bg-destructive' : balance < 30 ? 'bg-amber-500' : 'bg-primary'}
         />

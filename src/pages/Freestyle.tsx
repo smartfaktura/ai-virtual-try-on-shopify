@@ -49,7 +49,6 @@ export default function Freestyle() {
   const [showSceneHint, setShowSceneHint] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const lastEffectivePromptRef = useRef<string>('');
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
   const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue();
@@ -231,9 +230,6 @@ export default function Freestyle() {
       finalPrompt = `${basePrompt}. MANDATORY SCENE: Place the subject in this environment — ${selectedScene.promptHint || selectedScene.description}. The background and setting must match the scene reference image exactly.`;
     }
 
-    // Track the effective prompt so saved images have the real prompt
-    lastEffectivePromptRef.current = finalPrompt;
-
     // Build model text context
     let modelContext: string | undefined;
     if (selectedModel) {
@@ -304,7 +300,7 @@ export default function Freestyle() {
       } else if (result.images && result.images.length > 0) {
         setIsSaving(true);
         saveImages(result.images, {
-          prompt: lastEffectivePromptRef.current || prompt,
+          prompt: prompt,
           aspectRatio,
           quality,
           modelId: selectedModel?.modelId ?? null,
@@ -419,10 +415,6 @@ export default function Freestyle() {
     onNegativesPopoverChange: setNegativesPopoverOpen,
     cameraStyle,
     onCameraStyleChange: setCameraStyle,
-    insufficientCredits: balance < creditCost && !isLoading,
-    onBuyCredits: () => openBuyModal('topup'),
-    onUpgradePlan: () => openBuyModal('upgrade'),
-    currentBalance: balance,
   };
 
   return (
