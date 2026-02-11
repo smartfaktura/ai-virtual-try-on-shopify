@@ -12,6 +12,7 @@ interface FreestylePromptPanelProps {
   prompt: string;
   onPromptChange: (value: string) => void;
   sourceImagePreview: string | null;
+  hasAssets?: boolean;
   onUploadClick: () => void;
   onRemoveImage: () => void;
   onGenerate: () => void;
@@ -64,6 +65,7 @@ interface FreestylePromptPanelProps {
 
 export function FreestylePromptPanel({
   prompt, onPromptChange,
+  hasAssets,
   sourceImagePreview, onUploadClick, onRemoveImage,
   onGenerate, canGenerate, isLoading, progress, creditCost,
   selectedModel, onModelSelect, modelPopoverOpen, onModelPopoverChange,
@@ -171,7 +173,7 @@ export function FreestylePromptPanel({
         <textarea
           value={prompt}
           onChange={e => onPromptChange(e.target.value)}
-          placeholder="Describe what you want to create..."
+          placeholder={hasAssets ? "Optional — describe extra details, or leave empty to auto-generate" : "Describe what you want to create..."}
           rows={3}
           className="w-full bg-transparent border-none text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0 min-h-[72px]"
           onKeyDown={e => {
