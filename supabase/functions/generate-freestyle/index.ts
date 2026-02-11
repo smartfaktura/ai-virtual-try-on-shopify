@@ -582,11 +582,14 @@ serve(async (req) => {
     const refCount = [body.sourceImage, body.modelImage, body.sceneImage].filter(Boolean).length;
     // Queue-internal: always use fast model (must finish within 50s timeout)
     // Direct calls: allow pro model only for high quality with 0-1 refs
-    const aiModel = isQueueInternal
-      ? "google/gemini-2.5-flash-image"
-      : (body.quality === "high" && refCount < 2)
-        ? "google/gemini-3-pro-image-preview"
-        : "google/gemini-2.5-flash-image";
+    const hasModelImage = !!body.modelImage;
+    const aiModel = hasModelImage
+      ? "google/gemini-3-pro-image-preview"
+      : isQueueInternal
+        ? "google/gemini-2.5-flash-image"
+        : (body.quality === "high" && refCount < 2)
+          ? "google/gemini-3-pro-image-preview"
+          : "google/gemini-2.5-flash-image";
 
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
