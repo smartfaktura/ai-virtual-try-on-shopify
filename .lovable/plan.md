@@ -1,104 +1,98 @@
 
 
-## Fix: Recent Creations Gallery Not Showing Images
+## Fix: Freestyle Quality with Product + Model + Scene Combined
 
-### Root Cause
+### Problem
+When selecting a product, model, AND scene together, the generated images aren't faithful to the references because:
+1. **Duplicate scene instructions** -- the frontend injects "MANDATORY SCENE:..." into the prompt, and the backend's `polishUserPrompt` adds its own "ENVIRONMENT:..." layer. Two competing scene blocks confuse the AI model.
+2. **No priority hierarchy** -- with 3 reference images and many instruction layers, the AI doesn't know what matters most.
+3. **Generic product phrasing** -- "worn/held by" assumes wearable products; doesn't adapt for items like electronics, bottles, food, etc.
+4. **No final task summary** -- after a wall of instructions and 3 images, the AI needs a concise recap.
 
-The `generation_jobs.results` column contains **base64-encoded images** (~9MB each). The gallery query fetches 5 rows including this column, attempting to download ~45MB of text data. This causes the query to fail/timeout, the entire `queryFn` throws, and the gallery falls back to empty placeholders.
+### Changes
 
-### Solution
+#### 1. Frontend -- `src/pages/Freestyle.tsx`
 
-Restructure the gallery to avoid fetching the massive `results` column entirely, and run both queries in parallel so one failure doesn't block the other.
+**Remove the frontend scene mandate** to avoid duplication with the backend polish:
 
-### Changes to `src/components/app/RecentCreationsGallery.tsx`
-
-**1. Remove `results` from the generation_jobs select** -- instead, only show generation_jobs that have a linked product image (via `user_products.image_url`). This keeps the query lightweight.
-
-**2. Run both queries in parallel** with `Promise.all` and handle errors individually (so freestyle items still show even if generation_jobs fails).
-
-**3. Fix date sorting** -- store raw ISO `created_at` for accurate sorting instead of converting to `toLocaleDateString()` and parsing back.
-
-**4. Add auto-refresh** -- `refetchInterval: 15_000` so the gallery stays current without page refresh.
-
-### Technical Details
-
-Updated `CreationItem` interface:
 ```
-interface CreationItem {
-  id: string;
-  imageUrl: string;
-  label: string;
-  date: string;       // display string
-  rawDate: string;     // ISO string for sorting
+// Before:
+let finalPrompt = basePrompt;
+if (selectedScene) {
+  finalPrompt = `${basePrompt}. MANDATORY SCENE: Place the subject in this environment — ...`;
+}
+
+// After:
+let finalPrompt = basePrompt;
+// Scene instructions are handled by polishUserPrompt in the backend
+// No need to duplicate them here
+```
+
+**Improve auto-prompt product-model phrasing** -- use product type to determine interaction:
+
+```
+// Before:
+parts.push(`worn/held by a ${modelDesc} model`);
+
+// After: context-aware interaction
+const interaction = getProductModelInteraction(selectedProduct.product_type);
+parts.push(`${interaction} a ${modelDesc} model`);
+
+function getProductModelInteraction(productType: string): string {
+  const type = productType.toLowerCase();
+  if (['dress','shirt','jacket','pants','skirt','top','hoodie','sweater','coat','jeans','clothing','apparel'].some(t => type.includes(t)))
+    return 'worn by';
+  if (['bag','handbag','purse','backpack','tote'].some(t => type.includes(t)))
+    return 'carried by';
+  if (['shoes','sneakers','boots','heels','sandals','footwear'].some(t => type.includes(t)))
+    return 'worn by';
+  if (['jewelry','necklace','ring','bracelet','earrings','watch'].some(t => type.includes(t)))
+    return 'worn by';
+  if (['hat','cap','beanie','headwear'].some(t => type.includes(t)))
+    return 'worn by';
+  return 'showcased/held by';
 }
 ```
 
-Updated query function:
+#### 2. Backend -- `supabase/functions/generate-freestyle/index.ts`
+
+**Add a TASK SUMMARY at the end of `buildContentArray`** when multiple references are present:
+
 ```typescript
-const [jobsResult, freestyleResult] = await Promise.all([
-  supabase
-    .from('generation_jobs')
-    .select('id, created_at, workflows(name), user_products(title, image_url)')
-    .eq('status', 'completed')
-    .order('created_at', { ascending: false })
-    .limit(5),
-  supabase
-    .from('freestyle_generations')
-    .select('id, image_url, prompt, created_at')
-    .order('created_at', { ascending: false })
-    .limit(5),
-]);
-
-// Process generation_jobs -- only add items that have a product image
-// (skip results column entirely to avoid fetching massive base64 data)
-if (!jobsResult.error) {
-  for (const job of jobsResult.data ?? []) {
-    const productImg = (job.user_products as any)?.image_url;
-    if (productImg) {
-      items.push({
-        id: job.id,
-        imageUrl: productImg,
-        label: (job.workflows as any)?.name || 'Generated',
-        date: new Date(job.created_at).toLocaleDateString(),
-        rawDate: job.created_at,
-      });
-    }
-  }
+// After all images are added, append a clear task summary
+const refCount = [sourceImage, modelImage, sceneImage].filter(Boolean).length;
+if (refCount >= 2) {
+  const taskParts: string[] = ["TASK SUMMARY — Generate ONE cohesive image that:"];
+  if (sourceImage) taskParts.push("1. Features the EXACT product from the product reference (highest priority — shape, color, texture, branding must be identical)");
+  if (modelImage) taskParts.push(`${sourceImage ? '2' : '1'}. Uses the EXACT person from the model reference (same face, hair, skin tone)`);
+  if (sceneImage) taskParts.push(`${refCount}. Places everything in the EXACT environment from the scene reference`);
+  taskParts.push("Merge all references into a single photorealistic image. Product fidelity is the #1 priority.");
+  content.push({ type: "text", text: taskParts.join("\n") });
 }
-
-// Process freestyle -- these always have proper URLs
-if (!freestyleResult.error) {
-  for (const f of freestyleResult.data ?? []) {
-    items.push({
-      id: f.id,
-      imageUrl: f.image_url,
-      label: 'Freestyle',
-      date: new Date(f.created_at).toLocaleDateString(),
-      rawDate: f.created_at,
-    });
-  }
-}
-
-// Sort by raw ISO date for accuracy
-items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
-return items.slice(0, 10);
 ```
 
-Add query options:
+**Strengthen the priority hierarchy in `polishUserPrompt`** when all three contexts are present:
+
+Add a priority instruction when product + model + scene are all present:
+
 ```typescript
-enabled: !!user,
-refetchInterval: 15_000,
-staleTime: 10_000,
+// After all layers are built, before negatives
+if (context.hasSource && context.hasModel && context.hasScene) {
+  layers.push(
+    "PRIORITY ORDER: 1) Product must be reproduced with 100% accuracy (shape, color, branding). 2) Model must be the exact same person from the reference. 3) Scene/environment must match the reference. If any conflict arises between these, product accuracy takes precedence."
+  );
+}
 ```
 
-### Result
-- No more fetching ~45MB of base64 data
-- Freestyle images show immediately (they have proper URLs)
-- Parallel queries so one failure doesn't block the other
-- Auto-refresh every 15 seconds
-- Accurate time-based sorting
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/app/RecentCreationsGallery.tsx` | Remove `results` from select, parallel queries, error isolation, fix sorting, add auto-refresh |
+| `src/pages/Freestyle.tsx` | Remove duplicate scene mandate from frontend; improve product-model interaction phrasing |
+| `supabase/functions/generate-freestyle/index.ts` | Add task summary in `buildContentArray`; add priority hierarchy in `polishUserPrompt` |
 
+### Why This Fixes the Issue
+- Eliminates conflicting duplicate scene instructions
+- Gives the AI a clear priority order (product first, then model, then scene)
+- Adds a concise task summary after all reference images so the model knows exactly what to produce
+- Uses smarter product-type-aware phrasing instead of generic "worn/held by"
