@@ -32,6 +32,7 @@ import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
+import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGenerateTryOn } from '@/hooks/useGenerateTryOn';
 import { useGenerateProduct } from '@/hooks/useGenerateProduct';
@@ -52,6 +53,7 @@ import { ProductAssignmentModal } from '@/components/app/ProductAssignmentModal'
 import { ProductMultiSelect } from '@/components/app/ProductMultiSelect';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
+import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
 import { toast } from 'sonner';
@@ -70,7 +72,8 @@ export default function Generate() {
   const [searchParams] = useSearchParams();
   const workflowId = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
-  const { balance, isEmpty, openBuyModal, deductCredits, calculateCost } = useCredits();
+  const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance } = useCredits();
+  const { enqueue, activeJob, isProcessing: isQueueProcessing, reset: resetQueue } = useGenerationQueue();
 
   // Workflow & Brand Profile from DB
   const { data: activeWorkflow } = useQuery({
@@ -401,26 +404,26 @@ export default function Generate() {
     setConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
-    const result = await generateProduct({
-      product: selectedProduct, template: selectedTemplate,
-      brandSettings: { tone: brandTone, backgroundStyle },
-      aspectRatio, imageCount: parseInt(imageCount), sourceImageUrl,
+
+    const base64Image = await convertImageToBase64(sourceImageUrl);
+    const enqueueResult = await enqueue({
+      jobType: 'product',
+      payload: {
+        product: { title: selectedProduct.title, productType: selectedProduct.productType, description: selectedProduct.description, imageUrl: base64Image },
+        template: { name: selectedTemplate.name, promptBlueprint: selectedTemplate.promptBlueprint, negativePrompt: selectedTemplate.defaults.negativePrompt },
+        brandSettings: { tone: brandTone, backgroundStyle },
+        aspectRatio, imageCount: parseInt(imageCount),
+        product_id: selectedProduct?.id || null,
+        brand_profile_id: selectedBrandProfileId || null,
+      },
+      imageCount: parseInt(imageCount),
+      quality,
     });
-    if (result && result.images.length > 0) {
-      setGeneratedImages(result.images);
-      setGeneratingProgress(100);
-      setCurrentStep('results');
-      toast.success(`Generated ${result.generatedCount} images! Used ${result.generatedCount * 3} credits.`);
-      if (user) {
-        supabase.from('generation_jobs').insert({
-          user_id: user.id, results: result.images as any, status: 'completed',
-          completed_at: new Date().toISOString(), product_id: selectedProduct?.id || null,
-          brand_profile_id: selectedBrandProfileId || null, ratio: aspectRatio, quality,
-          requested_count: parseInt(imageCount), credits_used: result.generatedCount * (quality === 'high' ? 10 : 4),
-          template_id: selectedTemplate?.templateId || null,
-        }).then(({ error }) => { if (!error) toast.success('Saved to your library', { duration: 2000 }); });
-      }
-    } else setCurrentStep('settings');
+    if (enqueueResult) {
+      setBalanceFromServer(enqueueResult.newBalance);
+    } else {
+      setCurrentStep('settings');
+    }
   };
 
   const handleWorkflowGenerate = async () => {
@@ -439,42 +442,32 @@ export default function Generate() {
     if (!sourceImageUrl) { toast.error('No source image available'); return; }
     setCurrentStep('generating');
     setGeneratingProgress(0);
-    const result = await generateWorkflow({
-      workflowId: activeWorkflow!.id,
-      product: { ...productData, imageUrl: sourceImageUrl },
-      brandProfile: selectedBrandProfile ? {
-        tone: selectedBrandProfile.tone,
-        background_style: selectedBrandProfile.background_style,
-        lighting_style: selectedBrandProfile.lighting_style,
-        color_temperature: selectedBrandProfile.color_temperature,
-        brand_keywords: selectedBrandProfile.brand_keywords,
-        color_palette: selectedBrandProfile.color_palette,
-        target_audience: selectedBrandProfile.target_audience,
-        do_not_rules: selectedBrandProfile.do_not_rules,
-        composition_bias: selectedBrandProfile.composition_bias,
-        preferred_scenes: selectedBrandProfile.preferred_scenes,
-        photography_reference: selectedBrandProfile.photography_reference,
-      } : undefined,
-      selectedVariations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+
+    const base64Image = await convertImageToBase64(sourceImageUrl);
+    const enqueueResult = await enqueue({
+      jobType: 'workflow',
+      payload: {
+        workflow_id: activeWorkflow!.id,
+        product: { ...productData, imageUrl: base64Image },
+        brand_profile: selectedBrandProfile ? {
+          tone: selectedBrandProfile.tone, background_style: selectedBrandProfile.background_style,
+          lighting_style: selectedBrandProfile.lighting_style, color_temperature: selectedBrandProfile.color_temperature,
+          brand_keywords: selectedBrandProfile.brand_keywords, color_palette: selectedBrandProfile.color_palette,
+          target_audience: selectedBrandProfile.target_audience, do_not_rules: selectedBrandProfile.do_not_rules,
+          composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
+          photography_reference: selectedBrandProfile.photography_reference,
+        } : undefined,
+        selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+        quality,
+      },
+      imageCount: workflowImageCount,
       quality,
     });
-    if (result && result.images.length > 0) {
-      setGeneratedImages(result.images);
-      setWorkflowVariationLabels(result.variations?.map(v => v.label) || []);
-      setGeneratingProgress(100);
-      setCurrentStep('results');
-      const creditUsed = result.generatedCount * (quality === 'high' ? 2 : 1);
-      deductCredits(creditUsed);
-      toast.success(`Generated ${result.generatedCount} ${activeWorkflow?.name} images!`);
-      if (user) {
-        supabase.from('generation_jobs').insert({
-          user_id: user.id, results: result.images as any, status: 'completed',
-          completed_at: new Date().toISOString(), workflow_id: activeWorkflow?.id || null,
-          product_id: selectedProduct?.id || null, brand_profile_id: selectedBrandProfileId || null,
-          ratio: aspectRatio, quality, requested_count: workflowImageCount, credits_used: creditUsed,
-        }).then(({ error }) => { if (!error) toast.success('Saved to your library', { duration: 2000 }); });
-      }
-    } else setCurrentStep('settings');
+    if (enqueueResult) {
+      setBalanceFromServer(enqueueResult.newBalance);
+    } else {
+      setCurrentStep('settings');
+    }
   };
 
   const handleTryOnConfirmGenerate = async () => {
@@ -494,44 +487,55 @@ export default function Generate() {
     setTryOnConfirmModalOpen(false);
     setCurrentStep('generating');
     setGeneratingProgress(0);
-    const pseudoProduct: Product = selectedProduct || {
-      id: 'scratch-' + Date.now(), title: productData.title, vendor: 'Custom Upload',
-      productType: productData.productType, tags: [], description: productData.description,
-      images: [{ id: 'scratch-img', url: sourceImageUrl }], status: 'active',
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-    };
-    const result = await generateTryOn({
-      product: pseudoProduct, model: selectedModel, pose: selectedPose,
-      aspectRatio, imageCount: parseInt(imageCount), sourceImageUrl,
-      modelImageUrl: selectedModel.previewUrl,
+
+    const [base64ProductImage, base64ModelImage] = await Promise.all([
+      convertImageToBase64(sourceImageUrl),
+      convertImageToBase64(selectedModel.previewUrl),
+    ]);
+
+    const enqueueResult = await enqueue({
+      jobType: 'tryon',
+      payload: {
+        product: { title: productData.title, description: productData.description, productType: productData.productType, imageUrl: base64ProductImage },
+        model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
+        pose: { name: selectedPose.name, description: selectedPose.promptHint || selectedPose.description, category: selectedPose.category },
+        aspectRatio, imageCount: parseInt(imageCount),
+        workflow_id: activeWorkflow?.id || null,
+        product_id: selectedProduct?.id || null,
+        brand_profile_id: selectedBrandProfileId || null,
+      },
+      imageCount: parseInt(imageCount),
+      quality,
     });
-    if (result && result.images.length > 0) {
-      setGeneratedImages(result.images);
-      setGeneratingProgress(100);
-      setCurrentStep('results');
-      toast.success(`Generated ${result.generatedCount} images! Used ${result.generatedCount * 3} credits.`);
-      // Auto-save to library
-      if (user) {
-        supabase.from('generation_jobs').insert({
-          user_id: user.id,
-          results: result.images as any,
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          workflow_id: activeWorkflow?.id || null,
-          product_id: selectedProduct?.id || null,
-          brand_profile_id: selectedBrandProfileId || null,
-          ratio: aspectRatio,
-          quality,
-          requested_count: parseInt(imageCount),
-          credits_used: result.generatedCount * 8,
-          prompt_final: `Virtual Try-On: ${selectedModel?.name} in ${selectedPose?.name} pose`,
-        }).then(({ error }) => {
-          if (error) console.error('Failed to save to library:', error);
-          else toast.success('Saved to your library', { duration: 2000 });
-        });
-      }
-    } else setCurrentStep('settings');
+    if (enqueueResult) {
+      setBalanceFromServer(enqueueResult.newBalance);
+    } else {
+      setCurrentStep('settings');
+    }
   };
+
+  // Watch queue job completion to transition to results
+  useEffect(() => {
+    if (!activeJob) return;
+    if (activeJob.status === 'completed' && activeJob.result) {
+      const result = activeJob.result as { images?: string[]; variations?: Array<{ label: string }> };
+      if (result.images && result.images.length > 0) {
+        setGeneratedImages(result.images);
+        setWorkflowVariationLabels(result.variations?.map(v => v.label) || []);
+        setGeneratingProgress(100);
+        setCurrentStep('results');
+        toast.success(`Generated ${result.images.length} images!`);
+        refreshBalance();
+        resetQueue();
+      }
+    }
+    if (activeJob.status === 'failed') {
+      toast.error(activeJob.error_message || 'Generation failed. Credits refunded.');
+      setCurrentStep('settings');
+      refreshBalance();
+      resetQueue();
+    }
+  }, [activeJob, refreshBalance, resetQueue]);
 
   const handlePublishClick = () => {
     if (selectedForPublish.size === 0) { toast.error('Please select at least one image to download'); return; }

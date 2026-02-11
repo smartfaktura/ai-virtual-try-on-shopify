@@ -3,12 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import { Sparkles, Loader2, Camera, X as XIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import type { BlockedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
 import { STYLE_PRESETS } from '@/components/app/freestyle/StylePresetChips';
 import { useGenerateFreestyle } from '@/hooks/useGenerateFreestyle';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
+import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
@@ -49,7 +51,8 @@ export default function Freestyle() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const { generate, isLoading, progress } = useGenerateFreestyle();
-  const { balance, deductCredits, openBuyModal } = useCredits();
+  const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
+  const { enqueue, activeJob, isProcessing, reset: resetQueue } = useGenerationQueue();
   const { user } = useAuth();
 
   // Pre-fill from Discover page URL params
@@ -204,7 +207,8 @@ export default function Freestyle() {
       targetAudience: (selectedBrandProfile as any).target_audience || '',
     } : undefined;
 
-    const result = await generate({
+    // Build the payload for the queue
+    const queuePayload = {
       prompt: finalPrompt,
       sourceImage: sourceImage || undefined,
       modelImage: modelImageBase64,
@@ -217,33 +221,59 @@ export default function Freestyle() {
       stylePresets: activePresetKeywords.length > 0 ? activePresetKeywords : undefined,
       brandProfile: brandContext,
       negatives: negatives.length > 0 ? negatives : undefined,
+    };
+
+    // Enqueue via priority queue
+    const enqueueResult = await enqueue({
+      jobType: 'freestyle',
+      payload: queuePayload,
+      imageCount,
+      quality,
     });
 
-    if (result) {
+    if (enqueueResult) {
+      // Update balance from server response
+      setBalanceFromServer(enqueueResult.newBalance);
+    }
+  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets]);
+
+  // Watch for queue job completion to save images
+  const prevJobStatusRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!activeJob) return;
+    const prevStatus = prevJobStatusRef.current;
+    prevJobStatusRef.current = activeJob.status;
+
+    if (activeJob.status === 'completed' && prevStatus !== 'completed' && activeJob.result) {
+      const result = activeJob.result as { images?: string[]; contentBlocked?: boolean; blockReason?: string };
       if (result.contentBlocked) {
         setBlockedEntries(prev => [{
           id: crypto.randomUUID(),
           prompt: prompt,
           reason: result.blockReason || 'This prompt was flagged by our content safety system.',
         }, ...prev]);
-      } else if (result.images.length > 0) {
-        deductCredits(creditCost);
+      } else if (result.images && result.images.length > 0) {
         setIsSaving(true);
-        try {
-          await saveImages(result.images, {
-            prompt: prompt,
-            aspectRatio,
-            quality,
-            modelId: selectedModel?.modelId ?? null,
-            sceneId: selectedScene?.poseId ?? null,
-            productId: selectedProduct?.id ?? null,
-          });
-        } finally {
+        saveImages(result.images, {
+          prompt: prompt,
+          aspectRatio,
+          quality,
+          modelId: selectedModel?.modelId ?? null,
+          sceneId: selectedScene?.poseId ?? null,
+          productId: selectedProduct?.id ?? null,
+        }).finally(() => {
           setIsSaving(false);
-        }
+          refreshBalance();
+          resetQueue();
+        });
       }
     }
-  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, generate, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, deductCredits, saveImages, stylePresets]);
+
+    if (activeJob.status === 'failed' && prevStatus !== 'failed') {
+      refreshBalance(); // Credits were refunded server-side
+      resetQueue();
+    }
+  }, [activeJob, prompt, aspectRatio, quality, selectedModel, selectedScene, selectedProduct, saveImages, refreshBalance, resetQueue]);
 
   const handleDownload = useCallback(async (imageUrl: string, index: number) => {
     try {
@@ -349,20 +379,27 @@ export default function Freestyle() {
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
           </div>
-        ) : hasImages || isLoading || hasBlocked ? (
-          <FreestyleGallery
-            images={galleryImages}
-            onDownload={handleDownload}
-            onExpand={openLightbox}
-            onDelete={handleDelete}
-            onCopyPrompt={setPrompt}
-            generatingCount={(isLoading || isSaving) ? imageCount : 0}
-            generatingProgress={isSaving ? 100 : progress}
-            generatingAspectRatio={aspectRatio}
-            blockedEntries={blockedEntries}
-            onDismissBlocked={handleDismissBlocked}
-            onEditBlockedPrompt={handleEditBlockedPrompt}
-          />
+        ) : hasImages || isLoading || isProcessing || hasBlocked ? (
+          <>
+            {activeJob && isProcessing && (
+              <div className="px-4 sm:px-6 pt-4">
+                <QueuePositionIndicator job={activeJob} onCancel={() => resetQueue()} />
+              </div>
+            )}
+            <FreestyleGallery
+              images={galleryImages}
+              onDownload={handleDownload}
+              onExpand={openLightbox}
+              onDelete={handleDelete}
+              onCopyPrompt={setPrompt}
+              generatingCount={(isLoading || isSaving || isProcessing) ? imageCount : 0}
+              generatingProgress={isSaving ? 100 : progress}
+              generatingAspectRatio={aspectRatio}
+              blockedEntries={blockedEntries}
+              onDismissBlocked={handleDismissBlocked}
+              onEditBlockedPrompt={handleEditBlockedPrompt}
+            />
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center h-full px-4 sm:px-6">
             <div className="w-20 h-20 rounded-3xl bg-muted/50 border border-border/50 flex items-center justify-center mb-6">

@@ -29,6 +29,8 @@ interface CreditContextValue {
   
   deductCredits: (amount: number) => void;
   addCredits: (amount: number) => void;
+  refreshBalance: () => Promise<void>;
+  setBalanceFromServer: (newBalance: number) => void;
   
   buyModalOpen: boolean;
   openBuyModal: () => void;
@@ -47,6 +49,8 @@ const defaultValue: CreditContextValue = {
   planConfig: PLAN_CONFIG.free,
   deductCredits: () => {},
   addCredits: () => {},
+  refreshBalance: async () => {},
+  setBalanceFromServer: () => {},
   buyModalOpen: false,
   openBuyModal: () => {},
   closeBuyModal: () => {},
@@ -65,33 +69,32 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const [plan, setPlan] = useState('free');
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
-  
-  // Fetch real credits and plan from profiles table
-  useEffect(() => {
+
+  const fetchCredits = useCallback(async () => {
     if (!user) {
       setBalance(0);
       setPlan('free');
       setIsLoading(false);
       return;
     }
-
-    const fetchCredits = async () => {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('credits_balance, plan')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (!error && data) {
-        setBalance(data.credits_balance);
-        setPlan(data.plan || 'free');
-      }
-      setIsLoading(false);
-    };
-
-    fetchCredits();
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('credits_balance, plan')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (!error && data) {
+      setBalance(data.credits_balance);
+      setPlan(data.plan || 'free');
+    }
+    setIsLoading(false);
   }, [user]);
+  
+  // Fetch real credits and plan from profiles table
+  useEffect(() => {
+    fetchCredits();
+  }, [fetchCredits]);
   
   const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
   const lowThreshold = planConfig.monthlyCredits === Infinity ? 0 : Math.round(planConfig.monthlyCredits * 0.2);
@@ -123,6 +126,10 @@ export function CreditProvider({ children }: CreditProviderProps) {
         .eq('user_id', user.id);
     }
   }, [balance, user]);
+
+  const setBalanceFromServer = useCallback((newBalance: number) => {
+    setBalance(newBalance);
+  }, []);
   
   const openBuyModal = useCallback(() => setBuyModalOpen(true), []);
   const closeBuyModal = useCallback(() => setBuyModalOpen(false), []);
@@ -150,6 +157,8 @@ export function CreditProvider({ children }: CreditProviderProps) {
         planConfig,
         deductCredits,
         addCredits,
+        refreshBalance: fetchCredits,
+        setBalanceFromServer,
         buyModalOpen,
         openBuyModal,
         closeBuyModal,

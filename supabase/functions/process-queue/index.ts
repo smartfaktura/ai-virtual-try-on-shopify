@@ -1,0 +1,177 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+// Map job types to edge function names
+const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
+  product: "generate-product",
+  tryon: "generate-tryon",
+  freestyle: "generate-freestyle",
+  workflow: "generate-workflow",
+  video: "generate-video",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const startTime = Date.now();
+  const MAX_RUNTIME_MS = 45_000; // 45 seconds, stay under 60s limit
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    // Step 1: Cleanup stale/timed-out jobs first
+    const { data: cleanupResult } = await supabase.rpc("cleanup_stale_jobs");
+    if (cleanupResult && (cleanupResult as Record<string, number>).cleaned > 0) {
+      console.log(`[process-queue] Cleaned ${(cleanupResult as Record<string, number>).cleaned} stale jobs`);
+    }
+
+    let processedCount = 0;
+
+    // Step 2: Loop — claim and process jobs until time runs out
+    while (Date.now() - startTime < MAX_RUNTIME_MS) {
+      // Claim next job
+      const { data: claimResult, error: claimError } = await supabase.rpc("claim_next_job");
+
+      if (claimError) {
+        console.error("[process-queue] Claim error:", claimError);
+        break;
+      }
+
+      const claimed = claimResult as Record<string, unknown>;
+      if (!claimed.job || claimed.job === null) {
+        console.log(`[process-queue] No more jobs. Processed ${processedCount} jobs total.`);
+        break;
+      }
+
+      const job = claimed.job as Record<string, unknown>;
+      const jobId = job.id as string;
+      const jobType = job.job_type as string;
+      const payload = job.payload as Record<string, unknown>;
+      const userId = job.user_id as string;
+      const creditsReserved = job.credits_reserved as number;
+
+      console.log(`[process-queue] Processing job ${jobId}, type=${jobType}, user=${userId}`);
+
+      try {
+        // Route to the appropriate generation function
+        const functionName = JOB_TYPE_TO_FUNCTION[jobType];
+        if (!functionName) {
+          throw new Error(`Unknown job type: ${jobType}`);
+        }
+
+        const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+
+        const response = await fetch(functionUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${serviceRoleKey}`,
+            "Content-Type": "application/json",
+            "x-queue-internal": "true", // Signal to skip credit deduction
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+          throw new Error(errorData.error || `Generation function returned ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // Mark job as completed
+        await supabase
+          .from("generation_queue")
+          .update({
+            status: "completed",
+            result,
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", jobId);
+
+        // Also save to generation_jobs for library
+        const generatedCount = result.generatedCount || result.images?.length || 0;
+        if (generatedCount > 0) {
+          await supabase.from("generation_jobs").insert({
+            user_id: userId,
+            results: result.images || [],
+            status: "completed",
+            completed_at: new Date().toISOString(),
+            product_id: (payload as Record<string, unknown>).product_id || null,
+            workflow_id: (payload as Record<string, unknown>).workflow_id || null,
+            brand_profile_id: (payload as Record<string, unknown>).brand_profile_id || null,
+            ratio: (payload as Record<string, unknown>).aspectRatio || "1:1",
+            quality: (payload as Record<string, unknown>).quality || "standard",
+            requested_count: (payload as Record<string, unknown>).imageCount || 1,
+            credits_used: creditsReserved,
+            prompt_final: (payload as Record<string, unknown>).prompt || null,
+          });
+        }
+
+        // Handle partial success — refund unused credits
+        const requestedCount = (payload as Record<string, unknown>).imageCount as number || 1;
+        if (generatedCount < requestedCount && generatedCount > 0) {
+          const perImageCost = Math.floor(creditsReserved / requestedCount);
+          const refundAmount = perImageCost * (requestedCount - generatedCount);
+          if (refundAmount > 0) {
+            await supabase.rpc("refund_credits", {
+              p_user_id: userId,
+              p_amount: refundAmount,
+            });
+            console.log(`[process-queue] Partial success: refunded ${refundAmount} credits for job ${jobId}`);
+          }
+        }
+
+        processedCount++;
+        console.log(`[process-queue] ✓ Job ${jobId} completed (${generatedCount} images)`);
+
+      } catch (error) {
+        console.error(`[process-queue] ✗ Job ${jobId} failed:`, error);
+
+        // Mark as failed
+        await supabase
+          .from("generation_queue")
+          .update({
+            status: "failed",
+            error_message: error instanceof Error ? error.message : "Unknown error",
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", jobId);
+
+        // Refund credits
+        await supabase.rpc("refund_credits", {
+          p_user_id: userId,
+          p_amount: creditsReserved,
+        });
+
+        console.log(`[process-queue] Refunded ${creditsReserved} credits for failed job ${jobId}`);
+      }
+    }
+
+    const elapsed = Math.round((Date.now() - startTime) / 1000);
+    console.log(`[process-queue] Done. Processed ${processedCount} jobs in ${elapsed}s`);
+
+    return new Response(
+      JSON.stringify({ processed: processedCount, elapsed_seconds: elapsed }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("[process-queue] Fatal error:", error);
+    return new Response(
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

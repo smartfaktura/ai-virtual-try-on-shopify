@@ -579,6 +579,60 @@ export type Database = {
           },
         ]
       }
+      generation_queue: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          credits_reserved: number
+          error_message: string | null
+          id: string
+          is_first_generation: boolean
+          job_type: string
+          payload: Json
+          priority_score: number
+          result: Json | null
+          started_at: string | null
+          status: string
+          timeout_at: string | null
+          user_id: string
+          user_plan: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          credits_reserved?: number
+          error_message?: string | null
+          id?: string
+          is_first_generation?: boolean
+          job_type: string
+          payload: Json
+          priority_score?: number
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          timeout_at?: string | null
+          user_id: string
+          user_plan?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          credits_reserved?: number
+          error_message?: string | null
+          id?: string
+          is_first_generation?: boolean
+          job_type?: string
+          payload?: Json
+          priority_score?: number
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          timeout_at?: string | null
+          user_id?: string
+          user_plan?: string
+        }
+        Relationships: []
+      }
       mobile_upload_sessions: {
         Row: {
           created_at: string
@@ -838,6 +892,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_next_job: { Args: never; Returns: Json }
+      cleanup_stale_jobs: { Args: never; Returns: Json }
+      deduct_credits: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: number
+      }
+      enqueue_generation: {
+        Args: {
+          p_credits_cost: number
+          p_job_type: string
+          p_payload: Json
+          p_user_id: string
+        }
+        Returns: Json
+      }
       get_discover_view_count: {
         Args: { p_item_id: string; p_item_type: string }
         Returns: number
@@ -848,6 +917,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      refund_credits: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: number
       }
     }
     Enums: {
