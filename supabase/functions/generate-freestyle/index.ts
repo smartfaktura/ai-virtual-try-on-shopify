@@ -119,7 +119,7 @@ function polishUserPrompt(
       "REQUIREMENTS:",
     ];
     if (context.hasSource) {
-      parts.push(`1. PRODUCT: Reproduce the exact product from [PRODUCT IMAGE] — identical shape, color, texture, branding. This is the highest priority.${hasBothProductAndModel ? " Use ONLY the product/garment from this image. IGNORE any person, model, or mannequin shown in the product photo." : ""}`);
+      parts.push(`1. PRODUCT: Reference [PRODUCT IMAGE] for the product's design, shape, color, and material. Re-render it naturally within the scene — matching the environment's lighting, perspective, shadows, and reflections. The product must look like it physically exists in the scene, NOT composited or pasted in.${hasBothProductAndModel ? " Use ONLY the product/garment from this image. IGNORE any person, model, or mannequin shown in the product photo." : ""}`);
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
