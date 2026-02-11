@@ -103,29 +103,13 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const isCritical = balance > 0 && balance < criticalThreshold;
   const isEmpty = balance === 0;
   
-  const deductCredits = useCallback(async (amount: number) => {
-    const newBalance = Math.max(0, balance - amount);
-    setBalance(newBalance);
-
-    if (user) {
-      await supabase
-        .from('profiles')
-        .update({ credits_balance: newBalance })
-        .eq('user_id', user.id);
-    }
-  }, [balance, user]);
+  const deductCredits = useCallback((amount: number) => {
+    setBalance(prev => Math.max(0, prev - amount));
+  }, []);
   
-  const addCredits = useCallback(async (amount: number) => {
-    const newBalance = balance + amount;
-    setBalance(newBalance);
-
-    if (user) {
-      await supabase
-        .from('profiles')
-        .update({ credits_balance: newBalance })
-        .eq('user_id', user.id);
-    }
-  }, [balance, user]);
+  const addCredits = useCallback((amount: number) => {
+    setBalance(prev => prev + amount);
+  }, []);
 
   const setBalanceFromServer = useCallback((newBalance: number) => {
     setBalance(newBalance);
