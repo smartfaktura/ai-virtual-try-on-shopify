@@ -244,7 +244,7 @@ function polishUserPrompt(
       }
     } else {
       layers.push(
-        "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
+        "PORTRAIT QUALITY: Natural skin pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
       );
       // Framing for standard portrait/model shots
       layers.push(
