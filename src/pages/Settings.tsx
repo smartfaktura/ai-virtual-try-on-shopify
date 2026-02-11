@@ -122,15 +122,11 @@ export default function Settings() {
 
   const handlePlanSelect = (planId: string) => {
     if (planId === 'enterprise') toast.info('Our team will reach out to discuss your needs!');
-    else toast.success(`Switched to ${planId} plan!`);
+    else toast.info('Payment integration coming soon — plan changes will be available shortly.');
   };
 
   const handleCreditPurchase = (packId: string) => {
-    const pack = creditPacks.find(p => p.packId === packId);
-    if (pack) {
-      addCredits(pack.credits);
-      toast.success(`Purchased ${pack.credits} credits for $${pack.price}!`);
-    }
+    toast.info('Payment integration coming soon — credit purchases will be available shortly.');
   };
 
   return (

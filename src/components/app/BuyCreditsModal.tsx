@@ -35,9 +35,7 @@ export function BuyCreditsModal() {
     : null;
 
   const handlePurchase = (credits: number) => {
-    addCredits(credits);
-    toast.success(`Added ${credits} credits to your account!`);
-    closeBuyModal();
+    toast.info('Payment integration coming soon — credit purchases will be available shortly.');
   };
 
   const handleUpgrade = () => {
