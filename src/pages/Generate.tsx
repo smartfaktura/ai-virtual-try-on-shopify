@@ -1447,9 +1447,12 @@ export default function Generate() {
               </div>
             </AlertDescription></Alert>
 
+            {balance < creditCost && (
+              <InsufficientCreditsWarning cost={creditCost} balance={balance} />
+            )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setCurrentStep('pose')}>Back</Button>
-              <Button onClick={handleGenerateClick}>Generate {imageCount} Try-On Images</Button>
+              <Button onClick={handleGenerateClick} disabled={balance < creditCost}>Generate {imageCount} Try-On Images · {creditCost} credits</Button>
             </div>
           </div>
         )}
