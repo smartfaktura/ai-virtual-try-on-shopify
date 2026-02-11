@@ -295,31 +295,21 @@ function buildContentArray(
   // Main prompt text first
   content.push({ type: "text", text: prompt });
 
-  // Product/source image with explicit label
+  // Product/source image with simple label (details already in polished prompt)
   if (sourceImage) {
-    content.push({
-      type: "text",
-      text: "PRODUCT/SOURCE REFERENCE IMAGE — reproduce this exact product with 100% fidelity (shape, color, texture, branding, proportions):",
-    });
+    content.push({ type: "text", text: "PRODUCT REFERENCE IMAGE:" });
     content.push({ type: "image_url", image_url: { url: sourceImage } });
   }
 
-  // Model image with strong identity label
+  // Model image with simple label
   if (modelImage) {
-    const modelDesc = modelContext ? ` (${modelContext})` : "";
-    content.push({
-      type: "text",
-      text: `MODEL REFERENCE IMAGE — use this EXACT person's face, hair, skin tone, and body${modelDesc}. Do NOT generate a different person:`,
-    });
+    content.push({ type: "text", text: "MODEL REFERENCE IMAGE:" });
     content.push({ type: "image_url", image_url: { url: modelImage } });
   }
 
-  // Scene image with label
+  // Scene image with simple label
   if (sceneImage) {
-    content.push({
-      type: "text",
-      text: "SCENE/ENVIRONMENT REFERENCE IMAGE — You MUST place the subject IN this exact environment/location. Reproduce the same setting, background elements, lighting direction, color temperature, and atmosphere. Do NOT use a different environment:",
-    });
+    content.push({ type: "text", text: "SCENE REFERENCE IMAGE:" });
     content.push({ type: "image_url", image_url: { url: sceneImage } });
   }
 
