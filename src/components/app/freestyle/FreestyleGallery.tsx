@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -312,6 +313,7 @@ function ImageCard({
 
 export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt }: FreestyleGalleryProps) {
   const { isAdmin } = useIsAdmin();
+  const isMobile = useIsMobile();
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
@@ -415,8 +417,9 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     ...blockedCards,
     ...imageCards(),
   ];
-  const columns: React.ReactNode[][] = [[], [], []];
-  allCards.forEach((card, i) => columns[i % 3].push(card));
+  const columnCount = isMobile ? 2 : 3;
+  const columns: React.ReactNode[][] = Array.from({ length: columnCount }, () => []);
+  allCards.forEach((card, i) => columns[i % columnCount].push(card));
 
   return (
     <>
