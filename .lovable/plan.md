@@ -1,98 +1,113 @@
 
 
-## Fix: Freestyle Quality with Product + Model + Scene Combined
+## Fix: Rewrite Freestyle to Match Try-On's Proven Architecture
 
-### Problem
-When selecting a product, model, AND scene together, the generated images aren't faithful to the references because:
-1. **Duplicate scene instructions** -- the frontend injects "MANDATORY SCENE:..." into the prompt, and the backend's `polishUserPrompt` adds its own "ENVIRONMENT:..." layer. Two competing scene blocks confuse the AI model.
-2. **No priority hierarchy** -- with 3 reference images and many instruction layers, the AI doesn't know what matters most.
-3. **Generic product phrasing** -- "worn/held by" assumes wearable products; doesn't adapt for items like electronics, bottles, food, etc.
-4. **No final task summary** -- after a wall of instructions and 3 images, the AI needs a concise recap.
+### The Core Problem
 
-### Changes
+The Virtual Try-On works perfectly because it sends **one clean, structured prompt** (~400 words) with inline image references like `[PRODUCT IMAGE]` and `[MODEL IMAGE]`. The images are then simply appended to the content array without verbose labels.
 
-#### 1. Frontend -- `src/pages/Freestyle.tsx`
+The Freestyle function repeats the same instructions **3 separate times**:
 
-**Remove the frontend scene mandate** to avoid duplication with the backend polish:
+1. **`polishUserPrompt`** -- "PRODUCT ACCURACY: reproduce with 100% fidelity..." + "MODEL IDENTITY: must be the EXACT same person..." + "ENVIRONMENT: MUST be placed in the EXACT environment..." (~1500 words)
+2. **`buildContentArray` image labels** -- "PRODUCT/SOURCE REFERENCE IMAGE -- reproduce this exact product with 100% fidelity (shape, color, texture, branding, proportions):" (~50 words each, repeated for all 3 images)
+3. **TASK SUMMARY block** -- "Generate ONE cohesive image that: 1. Features the EXACT product... 2. Uses the EXACT person..." (~100 words)
 
-```
-// Before:
-let finalPrompt = basePrompt;
-if (selectedScene) {
-  finalPrompt = `${basePrompt}. MANDATORY SCENE: Place the subject in this environment — ...`;
-}
+Plus a **PRIORITY ORDER** block repeating the hierarchy again. Total: ~2000+ words of mostly redundant text. The AI model gets confused by all these competing directives.
 
-// After:
-let finalPrompt = basePrompt;
-// Scene instructions are handled by polishUserPrompt in the backend
-// No need to duplicate them here
-```
+### Solution
 
-**Improve auto-prompt product-model phrasing** -- use product type to determine interaction:
+Adopt the Try-On pattern: **one unified prompt with inline `[PRODUCT IMAGE]`, `[MODEL IMAGE]`, `[SCENE IMAGE]` references**, short image labels, and no redundant blocks.
 
-```
-// Before:
-parts.push(`worn/held by a ${modelDesc} model`);
+### What Changes (single file: `supabase/functions/generate-freestyle/index.ts`)
 
-// After: context-aware interaction
-const interaction = getProductModelInteraction(selectedProduct.product_type);
-parts.push(`${interaction} a ${modelDesc} model`);
+#### A. Rewrite `polishUserPrompt` for multi-reference cases
 
-function getProductModelInteraction(productType: string): string {
-  const type = productType.toLowerCase();
-  if (['dress','shirt','jacket','pants','skirt','top','hoodie','sweater','coat','jeans','clothing','apparel'].some(t => type.includes(t)))
-    return 'worn by';
-  if (['bag','handbag','purse','backpack','tote'].some(t => type.includes(t)))
-    return 'carried by';
-  if (['shoes','sneakers','boots','heels','sandals','footwear'].some(t => type.includes(t)))
-    return 'worn by';
-  if (['jewelry','necklace','ring','bracelet','earrings','watch'].some(t => type.includes(t)))
-    return 'worn by';
-  if (['hat','cap','beanie','headwear'].some(t => type.includes(t)))
-    return 'worn by';
-  return 'showcased/held by';
-}
+When 2+ references are present, use a **single structured prompt** modeled after Try-On's `buildPrompt`:
+
+```text
+Professional photography: [user's prompt]
+
+Create a photorealistic image combining the provided references.
+
+REQUIREMENTS:
+1. PRODUCT: Reproduce the exact product from [PRODUCT IMAGE] -- identical shape, color, 
+   texture, branding. This is the highest priority.
+2. MODEL: The person must be the exact individual from [MODEL IMAGE] -- same face, hair, 
+   skin tone, body proportions. (model context if any)
+3. SCENE: Place everything in the exact environment from [SCENE IMAGE] -- same background, 
+   lighting, atmosphere.
+
+Quality: Ultra high resolution, sharp focus, natural lighting, commercial-grade.
+[Brand style if applicable -- 1-2 lines max]
+[Camera style if natural -- 1 line]
+
+Negative prompt: [standard negatives in one line]
 ```
 
-#### 2. Backend -- `supabase/functions/generate-freestyle/index.ts`
+This replaces the verbose multi-section approach (~1500 words) with a focused ~300 word prompt that mirrors Try-On's structure.
 
-**Add a TASK SUMMARY at the end of `buildContentArray`** when multiple references are present:
+For **single-reference or no-reference** cases, the existing `polishUserPrompt` logic stays as-is (it works fine for those).
+
+#### B. Simplify image labels in `buildContentArray`
+
+Replace the verbose multi-sentence labels with short tags (like Try-On does):
+
+| Current (~50 words each) | New (~3 words each) |
+|---|---|
+| "PRODUCT/SOURCE REFERENCE IMAGE -- reproduce this exact product with 100% fidelity (shape, color, texture, branding, proportions):" | "[PRODUCT IMAGE]" |
+| "MODEL REFERENCE IMAGE -- use this EXACT person's face, hair, skin tone..." | "[MODEL IMAGE]" |
+| "SCENE/ENVIRONMENT REFERENCE IMAGE -- You MUST place the subject IN this exact environment..." | "[SCENE IMAGE]" |
+
+The detailed instructions are already in the prompt -- no need to repeat them on image labels.
+
+#### C. Remove the TASK SUMMARY block
+
+The task summary (lines 380-390) repeats what's already in the prompt. Remove it entirely.
+
+#### D. Remove the PRIORITY ORDER block from `polishUserPrompt`
+
+The priority order (lines 227-232) is now integrated into the unified prompt's numbered requirements. No separate block needed.
+
+#### E. Auto-upgrade model for 2+ references
 
 ```typescript
-// After all images are added, append a clear task summary
-const refCount = [sourceImage, modelImage, sceneImage].filter(Boolean).length;
-if (refCount >= 2) {
-  const taskParts: string[] = ["TASK SUMMARY — Generate ONE cohesive image that:"];
-  if (sourceImage) taskParts.push("1. Features the EXACT product from the product reference (highest priority — shape, color, texture, branding must be identical)");
-  if (modelImage) taskParts.push(`${sourceImage ? '2' : '1'}. Uses the EXACT person from the model reference (same face, hair, skin tone)`);
-  if (sceneImage) taskParts.push(`${refCount}. Places everything in the EXACT environment from the scene reference`);
-  taskParts.push("Merge all references into a single photorealistic image. Product fidelity is the #1 priority.");
-  content.push({ type: "text", text: taskParts.join("\n") });
-}
+const refCount = [body.sourceImage, body.modelImage, body.sceneImage].filter(Boolean).length;
+const aiModel = (body.quality === "high" || refCount >= 2)
+  ? "google/gemini-3-pro-image-preview"
+  : "google/gemini-2.5-flash-image";
 ```
 
-**Strengthen the priority hierarchy in `polishUserPrompt`** when all three contexts are present:
+The flash model handles single-reference fine but the pro model produces much better results when merging 3 images.
 
-Add a priority instruction when product + model + scene are all present:
+### Before vs After (Token Count)
 
-```typescript
-// After all layers are built, before negatives
-if (context.hasSource && context.hasModel && context.hasScene) {
-  layers.push(
-    "PRIORITY ORDER: 1) Product must be reproduced with 100% accuracy (shape, color, branding). 2) Model must be the exact same person from the reference. 3) Scene/environment must match the reference. If any conflict arises between these, product accuracy takes precedence."
-  );
-}
-```
+| Component | Before | After |
+|-----------|--------|-------|
+| Polished prompt | ~1500 words | ~300 words |
+| Image labels | ~150 words (3 x 50) | ~10 words (3 x 3) |
+| Task summary | ~100 words | Removed |
+| Priority order | ~50 words | Integrated |
+| **Total** | **~1800 words** | **~310 words** |
 
-### Files Changed
+### What Stays the Same
 
-| File | Change |
-|------|--------|
-| `src/pages/Freestyle.tsx` | Remove duplicate scene mandate from frontend; improve product-model interaction phrasing |
-| `supabase/functions/generate-freestyle/index.ts` | Add task summary in `buildContentArray`; add priority hierarchy in `polishUserPrompt` |
+- Single-reference and no-reference freestyle generations (text-only, product-only, model-only, scene-only) keep the current detailed polish -- it works well for those simpler cases
+- Selfie/UGC detection and handling unchanged
+- Brand profile integration (condensed to 1-2 lines in multi-ref mode)
+- Camera style (natural/pro) handling
+- Negative prompt system
+- Batch consistency for multi-image requests
+- All error handling, retries, content safety checks
+- The frontend (`Freestyle.tsx`) needs no changes
 
-### Why This Fixes the Issue
-- Eliminates conflicting duplicate scene instructions
-- Gives the AI a clear priority order (product first, then model, then scene)
-- Adds a concise task summary after all reference images so the model knows exactly what to produce
-- Uses smarter product-type-aware phrasing instead of generic "worn/held by"
+### Technical Details
+
+**File changed:** `supabase/functions/generate-freestyle/index.ts`
+
+**Changes:**
+1. Add early return in `polishUserPrompt` (around line 90) for multi-reference cases with a condensed Try-On-style prompt
+2. Simplify image labels in `buildContentArray` (lines 352-378) to short `[PRODUCT IMAGE]`, `[MODEL IMAGE]`, `[SCENE IMAGE]` tags  
+3. Remove TASK SUMMARY block (lines 380-390)
+4. Remove PRIORITY ORDER block (lines 227-232)
+5. Change model selection logic (lines 473-475) to auto-upgrade for 2+ references
+
