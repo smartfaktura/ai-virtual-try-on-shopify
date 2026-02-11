@@ -55,6 +55,7 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
     };
   }, []);
 
+
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
@@ -134,6 +135,49 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
     poll();
     pollingRef.current = setInterval(poll, 3000);
   }, [stopPolling]);
+
+  // Restore in-progress job on mount (e.g. after page refresh)
+  useEffect(() => {
+    if (!user) return;
+
+    const restoreActiveJob = async () => {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token || SUPABASE_KEY;
+
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1&select=id,status,priority_score,error_message,created_at,started_at,completed_at`,
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (!rows || rows.length === 0) return;
+
+      const row = rows[0];
+      setActiveJob({
+        id: row.id,
+        status: row.status,
+        position: 0,
+        priority: row.priority_score,
+        result: null,
+        error_message: row.error_message,
+        created_at: row.created_at,
+        started_at: row.started_at,
+        completed_at: row.completed_at,
+      });
+      jobIdRef.current = row.id;
+      pollJobStatus(row.id);
+    };
+
+    restoreActiveJob();
+  }, [user, pollJobStatus]);
 
   const enqueue = useCallback(async (params: EnqueueParams): Promise<EnqueueResult | null> => {
     if (!user) {
