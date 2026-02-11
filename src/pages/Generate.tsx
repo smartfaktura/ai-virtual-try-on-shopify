@@ -34,9 +34,7 @@ import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
-import { useGenerateTryOn } from '@/hooks/useGenerateTryOn';
-import { useGenerateProduct } from '@/hooks/useGenerateProduct';
-import { useGenerateWorkflow } from '@/hooks/useGenerateWorkflow';
+import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
 import { RecentProductsList } from '@/components/app/RecentProductsList';
 import { NegativesChipSelector } from '@/components/app/NegativesChipSelector';
@@ -73,7 +71,7 @@ export default function Generate() {
   const workflowId = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance } = useCredits();
-  const { enqueue, activeJob, isProcessing: isQueueProcessing, reset: resetQueue } = useGenerationQueue();
+  const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue();
 
   // Workflow & Brand Profile from DB
   const { data: activeWorkflow } = useQuery({
@@ -162,9 +160,6 @@ export default function Generate() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
 
-  const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
-  const { generate: generateProduct, isLoading: isProductGenerating, progress: productProgress } = useGenerateProduct();
-  const { generate: generateWorkflow, isLoading: isWorkflowGenerating, progress: workflowProgress } = useGenerateWorkflow();
 
   // Workflow generation config shortcuts
   const workflowConfig = activeWorkflow?.generation_config ?? null;
@@ -1471,10 +1466,11 @@ export default function Generate() {
               </p>
             </div>
             <div className="w-full max-w-md">
-              <Progress value={Math.min(
-                generationMode === 'virtual-try-on' ? tryOnProgress :
-                hasWorkflowConfig ? workflowProgress : productProgress, 100
-              )} className="h-2" />
+              {activeJob ? (
+                <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
+              ) : (
+                <Progress value={0} className="h-2 animate-pulse" />
+              )}
             </div>
             {/* Team member working message */}
             <div className="flex items-center gap-2.5">
@@ -1599,7 +1595,7 @@ export default function Generate() {
         imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} quality={quality} creditsRemaining={balance} onBuyCredits={openBuyModal} />
       <TryOnConfirmModal open={tryOnConfirmModalOpen} onClose={() => setTryOnConfirmModalOpen(false)} onConfirm={handleTryOnConfirmGenerate}
         product={selectedProduct} model={selectedModel} pose={selectedPose}
-        imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} creditsRemaining={balance} isLoading={isTryOnGenerating} onBuyCredits={openBuyModal}
+        imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} creditsRemaining={balance} isLoading={isEnqueuing} onBuyCredits={openBuyModal}
         sourceImageUrl={selectedProduct && selectedSourceImages.size > 0 ? selectedProduct.images.find(img => selectedSourceImages.has(img.id))?.url : undefined} />
       <PublishModal open={publishModalOpen} onClose={() => setPublishModalOpen(false)} onPublish={handlePublish}
         selectedImages={Array.from(selectedForPublish).map(i => generatedImages[i])} product={selectedProduct} existingImages={selectedProduct?.images || []} />
