@@ -319,7 +319,7 @@ async function generateImage(
       }
       console.error(`Generation attempt ${attempt + 1} failed:`, error);
       if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        await new Promise((r) => setTimeout(r, 500));
         continue;
       }
       throw error;
