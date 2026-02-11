@@ -158,7 +158,7 @@ export default function Generate() {
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
+  // noCreditsModalOpen removed — using inline warning + disabled button instead
 
 
   // Workflow generation config shortcuts
