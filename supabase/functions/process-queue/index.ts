@@ -21,6 +21,17 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Auth guard: only allow internal calls with service role key
+  const authHeader = req.headers.get("authorization");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  if (authHeader !== `Bearer ${serviceRoleKey}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const startTime = Date.now();
   const MAX_RUNTIME_MS = 45_000; // 45 seconds, stay under 60s limit
 
@@ -116,6 +127,7 @@ serve(async (req) => {
             quality: (payload as Record<string, unknown>).quality || "standard",
             requested_count: (payload as Record<string, unknown>).imageCount || 1,
             credits_used: creditsReserved,
+            creative_drop_id: (payload as Record<string, unknown>).creative_drop_id || null,
             prompt_final: (payload as Record<string, unknown>).prompt || null,
           });
         }
