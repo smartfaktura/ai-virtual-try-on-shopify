@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,6 +48,10 @@ interface FreestyleRequest {
   brandProfile?: BrandProfileContext;
   negatives?: string[];
   cameraStyle?: "pro" | "natural";
+  user_id?: string; // Injected by process-queue for queue-internal calls
+  modelId?: string;
+  sceneId?: string;
+  productId?: string;
 }
 
 // ── Selfie / UGC intent detection ─────────────────────────────────────────
@@ -273,8 +278,6 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
     negativeBlock += `\n- No ${dedupedNegatives.join("\n- No ")}`;
   }
 
-  // Priority hierarchy removed — now handled by condensed multi-ref path above
-
   layers.push(negativeBlock);
 
   return layers.join("\n\n");
@@ -301,15 +304,68 @@ function extractBlockReason(data: Record<string, unknown>): string {
 type ContentItem = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
 type GenerateResult = string | { blocked: true; reason: string } | null;
 
+// ── Helpers copied from generate-tryon ────────────────────────────────────
+
+function getUserIdFromJwt(authHeader: string | null): string | null {
+  if (!authHeader) return null;
+  try {
+    const token = authHeader.replace("Bearer ", "");
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.sub || null;
+  } catch {
+    return null;
+  }
+}
+
+async function uploadBase64ToStorage(
+  base64Url: string,
+  userId: string,
+  supabaseUrl: string,
+  serviceRoleKey: string
+): Promise<string> {
+  const base64Data = base64Url.includes(",")
+    ? base64Url.split(",")[1]
+    : base64Url;
+
+  const binaryStr = atob(base64Data);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+
+  const fileName = `${userId}/${crypto.randomUUID()}.png`;
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+
+  const { error } = await supabase.storage
+    .from("freestyle-images")
+    .upload(fileName, bytes, {
+      contentType: "image/png",
+      upsert: false,
+    });
+
+  if (error) {
+    console.error("Storage upload failed:", error);
+    throw new Error(`Storage upload failed: ${error.message}`);
+  }
+
+  const { data: urlData } = supabase.storage
+    .from("freestyle-images")
+    .getPublicUrl(fileName);
+
+  return urlData.publicUrl;
+}
+
 // ── AI image generation with structured content ───────────────────────────
 async function generateImage(
   content: ContentItem[],
   apiKey: string,
   model: string,
-  aspectRatio?: string
+  aspectRatio?: string,
+  maxRetries = 2
 ): Promise<GenerateResult> {
-  const maxRetries = 2;
-
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch(
@@ -326,6 +382,7 @@ async function generateImage(
             modalities: ["image", "text"],
             ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
+          signal: AbortSignal.timeout(50_000), // 50s timeout per AI call
         }
       );
 
@@ -339,7 +396,7 @@ async function generateImage(
         const errorText = await response.text();
         console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+          await new Promise((r) => setTimeout(r, 500));
           continue;
         }
         throw new Error(`AI Gateway error: ${response.status}`);
@@ -357,7 +414,7 @@ async function generateImage(
 
         console.error("No image in response:", JSON.stringify(data).slice(0, 500));
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 1000));
+          await new Promise((r) => setTimeout(r, 500));
           continue;
         }
         return null;
@@ -370,7 +427,7 @@ async function generateImage(
       }
       console.error(`Generation attempt ${attempt + 1} failed:`, error);
       if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        await new Promise((r) => setTimeout(r, 500));
         continue;
       }
       throw error;
@@ -426,7 +483,32 @@ serve(async (req) => {
       );
     }
 
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return new Response(
+        JSON.stringify({ error: "Storage not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Extract user ID — support queue-internal calls with user_id in payload
+    const isQueueInternal = req.headers.get("x-queue-internal") === "true";
     const body: FreestyleRequest = await req.json();
+
+    let userId: string | null;
+    if (isQueueInternal && body.user_id) {
+      userId = body.user_id;
+    } else {
+      userId = getUserIdFromJwt(req.headers.get("authorization"));
+    }
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Allow empty prompt if at least one image reference is provided
     if (!body.prompt?.trim() && !body.sourceImage && !body.modelImage && !body.sceneImage) {
@@ -435,6 +517,10 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Queue-mode optimizations: cap to 1 image, reduce retries
+    const maxRetries = isQueueInternal ? 1 : 2;
+    const effectiveImageCount = isQueueInternal ? 1 : Math.min(body.imageCount || 1, 4);
 
     // Append model text context if provided
     let enrichedPrompt = body.prompt?.trim() || "Professional commercial photography of the provided subject";
@@ -507,24 +593,24 @@ serve(async (req) => {
       negativesCount: body.negatives?.length || 0,
       cameraStyle: body.cameraStyle || 'pro',
       aspectRatio: body.aspectRatio,
-      imageCount: body.imageCount,
+      imageCount: effectiveImageCount,
       quality: body.quality,
       model: aiModel,
       polished: body.polishPrompt,
+      isQueueInternal,
     });
 
-    const imageCount = Math.min(body.imageCount || 1, 4);
     const images: string[] = [];
     const errors: string[] = [];
     let contentBlocked = false;
     let blockReason = "";
 
     // Batch consistency instruction for multi-image requests
-    const batchConsistency = imageCount > 1
+    const batchConsistency = effectiveImageCount > 1
       ? "\n\nBATCH CONSISTENCY: Maintain the same color palette, lighting direction, overall mood, and visual style. Only vary composition, angle, and framing."
       : "";
 
-    for (let i = 0; i < imageCount; i++) {
+    for (let i = 0; i < effectiveImageCount; i++) {
       try {
         const variationSuffix =
           i === 0
@@ -541,7 +627,7 @@ serve(async (req) => {
           body.sceneImage,
         );
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio);
+        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;
@@ -549,8 +635,32 @@ serve(async (req) => {
           console.warn(`Image ${i + 1} blocked by content safety filter`);
           break;
         } else if (typeof result === "string") {
-          images.push(result);
-          console.log(`Generated freestyle image ${i + 1}/${imageCount}`);
+          // Upload to storage and return public URL (matches try-on pattern)
+          const publicUrl = await uploadBase64ToStorage(result, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          images.push(publicUrl);
+          console.log(`Generated and uploaded freestyle image ${i + 1}/${effectiveImageCount}`);
+
+          // Save to freestyle_generations DB when called from queue
+          if (isQueueInternal) {
+            try {
+              const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+                auth: { persistSession: false },
+              });
+              await supabase.from('freestyle_generations').insert({
+                user_id: userId,
+                image_url: publicUrl,
+                prompt: body.prompt || '',
+                aspect_ratio: body.aspectRatio || '1:1',
+                quality: body.quality || 'standard',
+                model_id: body.modelId || null,
+                scene_id: body.sceneId || null,
+                product_id: body.productId || null,
+              });
+              console.log(`Saved freestyle_generations record for image ${i + 1}`);
+            } catch (dbErr) {
+              console.error(`Failed to save freestyle_generations record:`, dbErr);
+            }
+          }
         } else {
           errors.push(`Image ${i + 1} failed to generate`);
         }
@@ -565,7 +675,7 @@ serve(async (req) => {
         errors.push(`Image ${i + 1}: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
 
-      if (i < imageCount - 1) {
+      if (i < effectiveImageCount - 1) {
         await new Promise((r) => setTimeout(r, 500));
       }
     }
@@ -576,7 +686,7 @@ serve(async (req) => {
         JSON.stringify({
           images: [],
           generatedCount: 0,
-          requestedCount: imageCount,
+          requestedCount: effectiveImageCount,
           contentBlocked: true,
           blockReason,
         }),
@@ -595,8 +705,8 @@ serve(async (req) => {
       JSON.stringify({
         images,
         generatedCount: images.length,
-        requestedCount: imageCount,
-        partialSuccess: images.length < imageCount,
+        requestedCount: effectiveImageCount,
+        partialSuccess: images.length < effectiveImageCount,
         contentBlocked: contentBlocked || undefined,
         blockReason: contentBlocked ? blockReason : undefined,
         errors: errors.length > 0 ? errors : undefined,
