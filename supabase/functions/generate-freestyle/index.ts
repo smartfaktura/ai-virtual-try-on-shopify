@@ -90,7 +90,8 @@ CRITICAL — DO NOT include any of the following:
 - No distorted or extra fingers, hands, or limbs
 - ${blurRule}
 - No AI-looking skin smoothing or plastic textures
-- No collage layouts or split-screen compositions`;
+- No collage layouts or split-screen compositions
+- No compositing artifacts, no mismatched lighting between elements, no pasted-in look, no cut-out edges`;
 }
 
 // ── Context-aware prompt polish ───────────────────────────────────────────
