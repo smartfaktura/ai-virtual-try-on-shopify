@@ -489,8 +489,9 @@ serve(async (req) => {
     // Add aspect ratio instruction
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
 
-    // Select model based on quality
-    const aiModel = body.quality === "high"
+    // Select model: auto-upgrade to pro for 2+ references (flash can't handle complex merges)
+    const refCount = [body.sourceImage, body.modelImage, body.sceneImage].filter(Boolean).length;
+    const aiModel = (body.quality === "high" || refCount >= 2)
       ? "google/gemini-3-pro-image-preview"
       : "google/gemini-2.5-flash-image";
 
