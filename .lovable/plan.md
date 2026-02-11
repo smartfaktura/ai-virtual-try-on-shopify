@@ -1,104 +1,77 @@
 
 
-## Fix: Recent Creations Gallery Not Showing Images
+## Fix: Resume In-Flight Generations After Page Refresh
 
-### Root Cause
-
-The `generation_jobs.results` column contains **base64-encoded images** (~9MB each). The gallery query fetches 5 rows including this column, attempting to download ~45MB of text data. This causes the query to fail/timeout, the entire `queryFn` throws, and the gallery falls back to empty placeholders.
+### Problem
+The `useGenerationQueue` hook stores the active job ID in React state (`useState`). When the page is refreshed:
+1. State is cleared -- `activeJob` becomes `null`
+2. Polling stops -- no `setInterval` running
+3. The backend finishes the job, but nobody is listening
+4. The generated image is never shown to the user
 
 ### Solution
+On mount, check for any recent `queued` or `processing` jobs belonging to the current user, and automatically resume polling for them.
 
-Restructure the gallery to avoid fetching the massive `results` column entirely, and run both queries in parallel so one failure doesn't block the other.
+### Changes
 
-### Changes to `src/components/app/RecentCreationsGallery.tsx`
+#### `src/hooks/useGenerationQueue.ts`
 
-**1. Remove `results` from the generation_jobs select** -- instead, only show generation_jobs that have a linked product image (via `user_products.image_url`). This keeps the query lightweight.
+**Add a recovery effect** that runs once on mount (when `user` is available):
 
-**2. Run both queries in parallel** with `Promise.all` and handle errors individually (so freestyle items still show even if generation_jobs fails).
-
-**3. Fix date sorting** -- store raw ISO `created_at` for accurate sorting instead of converting to `toLocaleDateString()` and parsing back.
-
-**4. Add auto-refresh** -- `refetchInterval: 15_000` so the gallery stays current without page refresh.
-
-### Technical Details
-
-Updated `CreationItem` interface:
-```
-interface CreationItem {
-  id: string;
-  imageUrl: string;
-  label: string;
-  date: string;       // display string
-  rawDate: string;     // ISO string for sorting
-}
-```
-
-Updated query function:
 ```typescript
-const [jobsResult, freestyleResult] = await Promise.all([
-  supabase
-    .from('generation_jobs')
-    .select('id, created_at, workflows(name), user_products(title, image_url)')
-    .eq('status', 'completed')
-    .order('created_at', { ascending: false })
-    .limit(5),
-  supabase
-    .from('freestyle_generations')
-    .select('id, image_url, prompt, created_at')
-    .order('created_at', { ascending: false })
-    .limit(5),
-]);
+// Recover in-flight jobs after page refresh
+useEffect(() => {
+  if (!user || activeJob) return; // Don't recover if already tracking a job
 
-// Process generation_jobs -- only add items that have a product image
-// (skip results column entirely to avoid fetching massive base64 data)
-if (!jobsResult.error) {
-  for (const job of jobsResult.data ?? []) {
-    const productImg = (job.user_products as any)?.image_url;
-    if (productImg) {
-      items.push({
-        id: job.id,
-        imageUrl: productImg,
-        label: (job.workflows as any)?.name || 'Generated',
-        date: new Date(job.created_at).toLocaleDateString(),
-        rawDate: job.created_at,
-      });
-    }
-  }
-}
+  const recover = async () => {
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const { data: session } = await supabase.auth.getSession();
+    const token = session?.session?.access_token || SUPABASE_KEY;
 
-// Process freestyle -- these always have proper URLs
-if (!freestyleResult.error) {
-  for (const f of freestyleResult.data ?? []) {
-    items.push({
-      id: f.id,
-      imageUrl: f.image_url,
-      label: 'Freestyle',
-      date: new Date(f.created_at).toLocaleDateString(),
-      rawDate: f.created_at,
-    });
-  }
-}
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1`,
+      {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-// Sort by raw ISO date for accuracy
-items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
-return items.slice(0, 10);
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (rows.length === 0) return;
+
+    const row = rows[0];
+    jobIdRef.current = row.id;
+    pollJobStatus(row.id);
+  };
+
+  recover();
+}, [user]); // intentionally minimal deps -- run once per user login
 ```
 
-Add query options:
-```typescript
-enabled: !!user,
-refetchInterval: 15_000,
-staleTime: 10_000,
-```
+This will:
+- Query the `generation_queue` table for any active jobs on page load
+- If found, resume polling that job until it completes or fails
+- The existing completion handler in `Freestyle.tsx` picks up the result and saves images as normal
 
-### Result
-- No more fetching ~45MB of base64 data
-- Freestyle images show immediately (they have proper URLs)
-- Parallel queries so one failure doesn't block the other
-- Auto-refresh every 15 seconds
-- Accurate time-based sorting
+#### No other files need to change
+The `Freestyle.tsx` effect that watches `activeJob.status === 'completed'` already handles saving images and showing results. The recovery just reconnects the polling pipeline.
+
+### Edge Cases Handled
+
+| Scenario | Behavior |
+|----------|----------|
+| Refresh during generation | Recovers job, resumes polling, shows result |
+| Refresh after completion | No in-flight jobs found, no recovery needed |
+| Multiple tabs | Each tab recovers the same job, but `saveImages` is idempotent |
+| Job times out (5 min) | `cleanup_stale_jobs` marks it failed, polling picks up failure state |
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/app/RecentCreationsGallery.tsx` | Remove `results` from select, parallel queries, error isolation, fix sorting, add auto-refresh |
+| `src/hooks/useGenerationQueue.ts` | Add recovery effect to resume polling for in-flight jobs on mount |
 
