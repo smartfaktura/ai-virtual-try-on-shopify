@@ -28,7 +28,7 @@ async function callGenerationFunction(
       "x-queue-internal": "true",
     },
     body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(55_000), // 55s timeout for downstream calls
+    signal: AbortSignal.timeout(95_000), // 95s timeout for downstream calls (pro model)
   });
 
   if (!response.ok) {
