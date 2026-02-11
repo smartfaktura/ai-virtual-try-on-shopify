@@ -20,6 +20,7 @@ interface CreationItem {
   imageUrl: string;
   label: string;
   date: string;
+  rawDate: string;
 }
 
 export function RecentCreationsGallery() {
@@ -31,61 +32,53 @@ export function RecentCreationsGallery() {
     queryFn: async () => {
       const items: CreationItem[] = [];
 
-      // Fetch generation jobs
-      const { data: jobs, error: jobsError } = await supabase
-        .from('generation_jobs')
-        .select('id, results, created_at, workflows(name), user_products(title, image_url)')
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      if (jobsError) throw jobsError;
+      const [jobsResult, freestyleResult] = await Promise.all([
+        supabase
+          .from('generation_jobs')
+          .select('id, created_at, workflows(name), user_products(title, image_url)')
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('freestyle_generations')
+          .select('id, image_url, prompt, created_at')
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ]);
 
-      for (const job of jobs ?? []) {
-        const results = job.results as any;
-        if (Array.isArray(results) && results.length > 0) {
-          for (const r of results) {
-            const url = typeof r === 'string' ? r : r?.url || r?.image_url;
-            if (url) {
-              items.push({
-                id: job.id,
-                imageUrl: url,
-                label: (job.workflows as any)?.name || 'Generated',
-                date: new Date(job.created_at).toLocaleDateString(),
-              });
-            }
+      if (!jobsResult.error) {
+        for (const job of jobsResult.data ?? []) {
+          const productImg = (job.user_products as any)?.image_url;
+          if (productImg) {
+            items.push({
+              id: job.id,
+              imageUrl: productImg,
+              label: (job.workflows as any)?.name || 'Generated',
+              date: new Date(job.created_at).toLocaleDateString(),
+              rawDate: job.created_at,
+            });
           }
-        } else if ((job.user_products as any)?.image_url) {
+        }
+      }
+
+      if (!freestyleResult.error) {
+        for (const f of freestyleResult.data ?? []) {
           items.push({
-            id: job.id,
-            imageUrl: (job.user_products as any).image_url,
-            label: (job.workflows as any)?.name || 'Generated',
-            date: new Date(job.created_at).toLocaleDateString(),
+            id: f.id,
+            imageUrl: f.image_url,
+            label: 'Freestyle',
+            date: new Date(f.created_at).toLocaleDateString(),
+            rawDate: f.created_at,
           });
         }
       }
 
-      // Fetch freestyle generations
-      const { data: freestyle, error: freestyleError } = await supabase
-        .from('freestyle_generations')
-        .select('id, image_url, prompt, created_at')
-        .order('created_at', { ascending: false })
-        .limit(3);
-      if (freestyleError) throw freestyleError;
-
-      for (const f of freestyle ?? []) {
-        items.push({
-          id: f.id,
-          imageUrl: f.image_url,
-          label: 'Freestyle',
-          date: new Date(f.created_at).toLocaleDateString(),
-        });
-      }
-
-      // Sort by date descending and take first 10
-      items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
       return items.slice(0, 10);
     },
     enabled: !!user,
+    refetchInterval: 15_000,
+    staleTime: 10_000,
   });
 
   if (isLoading) {
@@ -109,6 +102,7 @@ export function RecentCreationsGallery() {
         imageUrl: img,
         label: ['Product Shot', 'Lifestyle', 'Ad Creative', 'Editorial', 'On-Model'][i],
         date: 'Sample',
+        rawDate: '',
       }));
 
   const isPlaceholder = creations.length === 0;
