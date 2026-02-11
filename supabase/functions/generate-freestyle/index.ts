@@ -286,9 +286,9 @@ async function generateImage(
           throw { status: 402, message: "Credits exhausted. Please add more credits." };
         }
         const errorText = await response.text();
-        console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
+      console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+          await new Promise((r) => setTimeout(r, 500));
           continue;
         }
         throw new Error(`AI Gateway error: ${response.status}`);
