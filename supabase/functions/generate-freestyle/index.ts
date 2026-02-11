@@ -203,7 +203,7 @@ function polishUserPrompt(
   // Product / source image layer
   if (context.hasSource) {
     layers.push(
-      "PRODUCT ACCURACY: The product in the PRODUCT REFERENCE IMAGE must be reproduced with 100% fidelity — identical shape, color, texture, branding, and proportions. Do not modify, stylize, or reinterpret the product in any way."
+      "PRODUCT ACCURACY: The product must match the reference image in design, color, and material. Show it naturally with correct lighting and shadows — it should look photographed, not composited."
     );
     if (isSelfie) {
       layers.push(
