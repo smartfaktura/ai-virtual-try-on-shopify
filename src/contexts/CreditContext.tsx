@@ -150,6 +150,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         refreshBalance: fetchCredits,
         setBalanceFromServer,
         buyModalOpen,
+        buyModalDefaultTab,
         openBuyModal,
         closeBuyModal,
         calculateCost,
