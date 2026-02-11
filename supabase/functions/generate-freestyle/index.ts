@@ -157,16 +157,7 @@ function polishUserPrompt(
 
   // Camera rendering style layer (injected before negatives)
   if (cameraStyle === "natural") {
-    layers.push(
-`CAMERA RENDERING STYLE — NATURAL (iPhone):
-Apply these rendering characteristics ONLY — do NOT change the subject, scene, environment, model, or composition in any way:
-- LENS: Slight wide-angle perspective typical of smartphone main camera (26mm equivalent). Deep depth of field — foreground AND background stay sharp and in focus. No artificial bokeh, no shallow depth of field, no blurred backgrounds unless the scene naturally has extreme distance.
-- COLOR SCIENCE: Apple iPhone-style computational photography color rendering. True-to-life, neutral color reproduction — no cinematic color grading, no orange-and-teal push, no lifted shadows, no crushed blacks. Colors should look exactly as the human eye would see them. Whites are pure neutral white, not warm-tinted.
-- LIGHTING: Use whatever lighting exists in the scene naturally. No added studio strobes, softboxes, or artificial rim lights. If indoors, the light comes from windows and room lights. If outdoors, from the sun and sky. Slight HDR-like dynamic range (shadows are not pitch black, highlights are not blown out) — similar to iPhone Smart HDR processing.
-- TEXTURE & DETAIL: Ultra-sharp across the entire frame. High pixel-level detail on skin, fabric, hair, and surfaces. No heavy skin smoothing or frequency separation retouching. Natural skin texture including pores and fine lines is visible. Detail level comparable to a 48MP smartphone sensor.
-- OVERALL FEEL: The image should look like it was taken by someone with a latest-generation iPhone and posted directly — no Lightroom, no Photoshop, no professional retouching. Clean, sharp, true-to-life. The hallmark is "impressive but clearly a phone photo."
-${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing camera mode (NOT Portrait Mode). The background MUST remain sharp and detailed — absolutely no depth-of-field blur, no bokeh effect whatsoever. Everything from foreground to background is in focus.` : ''}`
-    );
+    layers.push("CAMERA: iPhone-style rendering. Deep depth of field (everything sharp), true-to-life colors (no grading), natural ambient light only, ultra-sharp detail, authentic unprocessed look.");
   }
 
   // Build combined negatives list
