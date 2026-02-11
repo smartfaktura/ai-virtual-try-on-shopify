@@ -450,8 +450,7 @@ serve(async (req) => {
           promptWithVariation,
           body.sourceImage,
           body.modelImage,
-          body.sceneImage,
-          body.modelContext
+          body.sceneImage
         );
 
         const hasImages = !!(body.sourceImage || body.modelImage || body.sceneImage);
