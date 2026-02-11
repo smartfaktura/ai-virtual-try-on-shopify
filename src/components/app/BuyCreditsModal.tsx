@@ -163,7 +163,7 @@ export function BuyCreditsModal() {
                           onClick={() => handlePlanClick(p.planId)}
                           disabled={upgrading}
                         >
-                          {upgrading ? 'Upgrading…' : isRecommended ? 'Upgrade' : 'Select'}
+                          {upgrading ? 'Processing…' : isDowngrade(p.planId) ? 'Downgrade' : isRecommended ? 'Upgrade' : 'Select'}
                           {!upgrading && <ArrowUpRight className="w-3.5 h-3.5 ml-1.5" />}
                         </Button>
                       )}
