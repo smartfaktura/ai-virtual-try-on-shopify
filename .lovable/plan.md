@@ -1,100 +1,85 @@
 
 
-## Fix: Jobs Getting Stuck in Queue Forever
+## Fix: Align Freestyle Quality with Virtual Try-On
 
-### What Happened
+### Root Cause Analysis
 
-Your generation job was enqueued successfully, but the fire-and-forget call to `process-queue` silently failed. Since there's no retry or fallback, the job sat in "queued" status indefinitely. The comment even says "pg_cron will pick it up" but there's no pg_cron configured.
+The Virtual Try-On function produces great results because it uses a **short, clear, structured prompt** (~20 lines). The Freestyle function produces worse results because:
 
-### Solution: Two-Part Fix
+| Issue | Freestyle | Try-On |
+|-------|-----------|--------|
+| Prompt length | 50-80+ lines | ~20 lines |
+| Conflicting instructions | Multiple competing layers | Single clear structure |
+| Single-ref product text | Still says "100% fidelity -- identical" (copy-paste language) | N/A |
+| Photography DNA | 8-line technical block (ISO, f-stop, etc.) | 1-line "Shot on Canon EOS R5, 85mm f/1.4" |
+| Model selection | Always flash for queue | Flash (but simpler prompt works) |
 
-#### Part 1: Add a retry mechanism in `enqueue-generation`
+### Solution: Simplify and Focus the Freestyle Prompt
 
-Instead of a single fire-and-forget fetch, `await` the process-queue call with a short timeout and retry once on failure. This ensures the queue worker is actually triggered.
+Adopt the Try-On's philosophy: **short, structured, direct instructions** instead of layered essay-style prompts.
 
-**File:** `supabase/functions/enqueue-generation/index.ts`
+### Changes
 
-Replace the fire-and-forget block (lines 142-157) with:
+#### 1. `supabase/functions/generate-freestyle/index.ts` -- Simplify multi-ref prompt (lines 111-158)
 
-```typescript
-// Trigger process-queue with retry
-const triggerQueue = async () => {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const res = await fetch(`${supabaseUrl}/functions/v1/process-queue`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${serviceRoleKey}`,
-          "Content-Type": "application/json",
-          "x-queue-internal": "true",
-        },
-        body: JSON.stringify({ trigger: "enqueue" }),
-        signal: AbortSignal.timeout(5000), // 5s timeout
-      });
-      if (res.ok || res.status === 200) break;
-      console.warn(`[enqueue] process-queue attempt ${attempt + 1} returned ${res.status}`);
-    } catch (e) {
-      console.warn(`[enqueue] process-queue attempt ${attempt + 1} failed:`, e.message);
-    }
-  }
-};
-// Don't block the response, but do retry
-triggerQueue().catch(() => {});
+Replace the current condensed multi-ref builder with a Try-On-style structure:
+
+**Before:** Long paragraphs with "Re-render it naturally within the scene..." and separate quality blocks.
+
+**After:** Numbered requirements, concise language, matching Try-On's pattern:
+
+```text
+Professional photography: {user prompt}
+
+REQUIREMENTS:
+1. PRODUCT: The item must match [PRODUCT IMAGE] in design, color, and material. 
+   Show it naturally in the scene with correct lighting and shadows.
+2. MODEL: The person must be the exact individual from [MODEL IMAGE] -- same face, 
+   hair, skin tone, body. Ignore any person in the product image.
+3. SCENE: Use [SCENE IMAGE] as the environment. Consistent lighting and perspective 
+   throughout.
+
+Quality: Photorealistic, natural skin texture, no AI artifacts, ultra high resolution.
+
+Do NOT include: {negatives}
 ```
 
-#### Part 2: Add client-side stuck detection in `useGenerationQueue`
+Total: ~15 lines instead of 50+.
 
-If a job has been in "queued" status for more than 30 seconds without moving to "processing", the polling logic will re-trigger the process-queue via the enqueue endpoint or directly. This acts as a safety net.
+#### 2. Fix single-ref product text (line 215)
 
-**File:** `src/hooks/useGenerationQueue.ts`
+Replace the old "100% fidelity -- identical shape, color, texture" copy-paste language:
 
-In the `pollJobStatus` callback, after detecting the job is still `queued`, add a check:
+| Before | After |
+|--------|-------|
+| "reproduced with 100% fidelity -- identical shape, color, texture, branding, and proportions. Do not modify, stylize, or reinterpret the product in any way." | "The product must match the reference image in design, color, and material. Show it naturally with correct lighting and shadows -- it should look photographed, not composited." |
 
-```typescript
-// If stuck in queue for 30+ seconds, re-trigger process-queue
-if (job.status === 'queued') {
-  const queuedDuration = Date.now() - new Date(job.created_at).getTime();
-  if (queuedDuration > 30_000 && !retriggeredRef.current) {
-    retriggeredRef.current = true;
-    // Re-trigger via a lightweight call
-    fetch(`${SUPABASE_URL}/functions/v1/process-queue`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ trigger: 'stuck-retry' }),
-    }).catch(() => {});
-  }
-}
-```
+#### 3. Simplify Photography DNA (lines 71-79)
 
-Wait -- `process-queue` requires the service role key, so the client can't call it directly. Instead, we'll add a lightweight "retry-trigger" endpoint or modify `process-queue` to accept the anon key for a trigger-only call. Actually, the simplest approach:
+Replace the 8-line technical block with a concise 1-2 line quality instruction (like Try-On uses):
 
-#### Revised Part 2: Client re-triggers via enqueue-generation
+| Before | After |
+|--------|-------|
+| LENS: shot on 50mm at f 2.8, ISO 400... LIGHTING ARCHITECTURE: Large soft key... MICRO-TEXTURE REALISM: Render premium... TONAL CONTROL: Rich blacks... COMPOSITION: Clean silhouette... FINISHING: Luxury editorial... | "Shot on 85mm f/1.4 lens, fashion editorial quality. Professional studio lighting, natural skin texture, ultra high resolution." |
 
-Add a `/retry` path or simply have the client call a new small edge function `retry-queue` that just calls `process-queue` with the service role key internally.
+#### 4. Use Pro model when model image is present (lines 594-598)
 
-**New file:** `supabase/functions/retry-queue/index.ts`
+Update model selection so character identity is preserved:
 
-A minimal function that:
-1. Accepts any authenticated user call
-2. Checks if they have a queued job
-3. Triggers `process-queue` with the service role key
+| Before | After |
+|--------|-------|
+| Queue-internal: always flash | Queue-internal + model image: use pro. Otherwise: flash |
 
-This is the safety net -- if polling detects a stuck job, the client calls `retry-queue`.
+Also increase timeouts in both `generate-freestyle` (line 398: 50s to 90s) and `process-queue` (line 31: 55s to 95s, line 68: 45s to 100s) to accommodate the slower pro model.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/enqueue-generation/index.ts` | Replace fire-and-forget with retry-aware trigger (2 attempts, 5s timeout each) |
-| `supabase/functions/retry-queue/index.ts` | New minimal function: accepts auth user, triggers process-queue with service role key |
-| `src/hooks/useGenerationQueue.ts` | Add stuck detection: if queued > 30s, call retry-queue as safety net |
-| `supabase/config.toml` | Add retry-queue function config |
+| `supabase/functions/generate-freestyle/index.ts` | Simplify multi-ref prompt to Try-On style; fix single-ref product text; condense Photography DNA; use pro model when model image present; increase timeout |
+| `supabase/functions/process-queue/index.ts` | Increase downstream call timeout and max runtime for pro model |
 
-### Immediate Fix for Your Stuck Job
+### Expected Result
 
-As part of this change, the `retry-queue` function will also allow me to unstick your current job. Alternatively, we can mark it as failed and refund credits via a direct DB update.
+Freestyle prompts will be short and focused like Try-On's, eliminating the instruction overload that confuses the AI model. Combined with using the pro model for character references, results should match Try-On quality.
 
