@@ -1,55 +1,67 @@
 
 
-## Convert Camera Style & Quality Toggles to Dropdown Selectors
+## Fix: Duplicate Images & Slow Library Loading
 
-### Overview
-Replace the simple toggle buttons for **Camera Style** (Natural/Pro) and **Quality** (Standard/High) with dropdown popovers — matching the existing Aspect Ratio dropdown pattern. Each option will show a title, description, and credit cost so users can make an informed choice.
+### Problem 1: Duplicate Images
+Every freestyle generation is saved to **two** tables:
+- The `generate-freestyle` edge function saves to `freestyle_generations`
+- The `process-queue` edge function saves to `generation_jobs` for ALL job types (including freestyle)
 
-### What Changes
+The Library page fetches from both tables and merges them, so every freestyle image appears twice.
 
-**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
+### Problem 2: Slow Loading
+The Library makes 2 sequential database queries (generation_jobs + freestyle_generations), each fetching up to 100 rows with joins. Combined with a 10-second auto-refresh interval, this creates unnecessary load.
 
-1. **Camera Style** (currently a toggle button, lines 207-228) becomes a Popover dropdown with two options:
-   - **Pro** — Camera icon — "Studio-grade commercial look with polished lighting and color grading."
-   - **Natural** — Smartphone icon — "Raw iPhone-style photo. Sharp details, true-to-life colors, no heavy editing."
-   - Chip shows current selection with icon + label + chevron down arrow
-
-2. **Quality** (currently a toggle button, lines 185-205) becomes a Popover dropdown with two options:
-   - **Standard** — "Fast generation at standard resolution. 4 credits per image."
-   - **High** — "Higher detail and resolution. 10 credits per image." with a sparkle indicator
-   - Chip shows current selection with chevron down arrow
-
-3. Both dropdowns follow the same visual pattern as the existing Aspect Ratio popover but with wider content (w-56) to fit the description text.
-
-4. Remove `onQualityToggle` and `onCameraStyleToggle` props — replace with `onQualityChange(quality)` and `onCameraStyleChange(style)` setter-style props. This also requires updating the parent components that pass these props.
-
-### Props Update
-
-**File: `src/pages/Freestyle.tsx`** and **`src/components/app/freestyle/FreestylePromptPanel.tsx`**
-- Change `onQualityToggle` to `onQualityChange: (q: 'standard' | 'high') => void`
-- Change `onCameraStyleToggle` to `onCameraStyleChange: (s: 'pro' | 'natural') => void`
-
-### UI Preview
-
-Each dropdown option will look like:
-
-```text
-+------------------------------------------+
-|  [icon]  Pro                        [check if selected]
-|          Studio-grade commercial look
-|          with polished lighting.
-+------------------------------------------+
-|  [icon]  Natural
-|          Raw iPhone-style photo. Sharp
-|          details, true-to-life colors.
-+------------------------------------------+
-```
-
-### Files Changed
+### Solution
 
 | File | Change |
 |------|--------|
-| `src/components/app/freestyle/FreestyleSettingsChips.tsx` | Replace Quality toggle and Camera Style toggle with Popover dropdowns showing descriptions |
-| `src/pages/Freestyle.tsx` | Update toggle handlers to setter-style (`onQualityChange`, `onCameraStyleChange`) |
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Thread updated prop signatures |
+| `supabase/functions/process-queue/index.ts` | Skip the `generation_jobs` insert when `job_type === 'freestyle'` (since freestyle already saves to its own table) |
+| `src/hooks/useLibraryItems.ts` | Run both queries in parallel using `Promise.all` instead of sequentially; increase `refetchInterval` to 15s |
 
+### Technical Details
+
+**1. Fix duplicates in `process-queue/index.ts` (line 117-135)**
+
+Wrap the `generation_jobs` insert in a condition:
+
+```typescript
+// Only save to generation_jobs for non-freestyle jobs
+// (freestyle saves to freestyle_generations separately)
+if (jobType !== 'freestyle' && generatedCount > 0) {
+  await supabase.from("generation_jobs").insert({ ... });
+}
+```
+
+**2. Speed up Library queries in `useLibraryItems.ts`**
+
+Change the two sequential fetches into parallel ones:
+
+```typescript
+const [jobsResult, freestyleResult] = await Promise.all([
+  supabase.from('generation_jobs').select(...).order(...).limit(100),
+  supabase.from('freestyle_generations').select(...).order(...).limit(100),
+]);
+```
+
+**3. Clean up existing duplicates**
+
+Run a one-time SQL to delete the duplicate rows in `generation_jobs` that were created by `process-queue` for freestyle jobs (identified by having no `workflow_id` and no `product_id`, with timestamps matching `freestyle_generations`).
+
+```sql
+DELETE FROM generation_jobs
+WHERE workflow_id IS NULL
+  AND product_id IS NULL
+  AND prompt_final IS NOT NULL
+  AND id IN (
+    SELECT g.id FROM generation_jobs g
+    JOIN freestyle_generations f
+      ON g.user_id = f.user_id
+      AND abs(extract(epoch from g.created_at - f.created_at)) < 15
+  );
+```
+
+### Result
+- No more duplicate images in the Library
+- Faster loading (parallel queries instead of sequential)
+- Future freestyle generations only saved once
