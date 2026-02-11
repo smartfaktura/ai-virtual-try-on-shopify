@@ -180,9 +180,7 @@ function polishUserPrompt(
     );
   } else {
     layers.push(`Professional photography: ${rawPrompt}`);
-    layers.push(
-      "Ultra high resolution, sharp focus, natural lighting, commercial-grade color accuracy."
-    );
+    layers.push(buildPhotographyDNA());
   }
 
   // Brand profile layer
