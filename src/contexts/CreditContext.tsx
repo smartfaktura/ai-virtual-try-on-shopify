@@ -33,7 +33,8 @@ interface CreditContextValue {
   setBalanceFromServer: (newBalance: number) => void;
   
   buyModalOpen: boolean;
-  openBuyModal: () => void;
+  buyModalDefaultTab: 'upgrade' | 'topup';
+  openBuyModal: (tab?: 'upgrade' | 'topup') => void;
   closeBuyModal: () => void;
   
   calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => number;
