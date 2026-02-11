@@ -157,9 +157,31 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
       if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
         stopPolling();
 
+        // Fetch result once on completion (not during polling to avoid large payloads)
+        if (job.status === 'completed') {
+          const resultRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=result`,
+            {
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          if (resultRes.ok) {
+            const resultRows = await resultRes.json();
+            if (resultRows?.[0]?.result) {
+              job.result = resultRows[0].result;
+            }
+          }
+        }
+
+        setActiveJob(job);
+
         if (job.status === 'failed') {
           toast.error(job.error_message || 'Generation failed. Credits have been refunded.');
         }
+        return; // Already set activeJob above with result
       }
     };
 
