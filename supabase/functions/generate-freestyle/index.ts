@@ -130,7 +130,7 @@ function polishUserPrompt(
       parts.push(`${num}. SCENE: Place everything in the exact environment from [SCENE IMAGE] — same background, lighting, atmosphere.`);
     }
     parts.push("");
-    parts.push("Quality: Ultra high resolution, sharp focus, natural lighting, commercial-grade.");
+    parts.push("Quality: shot on 50mm at f 2.8. Shallow DOF, subject sharp, background soft. Sculpted lighting with negative fill. Premium micro-texture: skin pores, fabric weave, hair strands. Rich blacks with detail, no clipping. Subtle film grain, editorial finishing.");
 
     // Brand style (condensed to 1-2 lines)
     if (brandProfile?.tone) {
