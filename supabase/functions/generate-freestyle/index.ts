@@ -539,7 +539,6 @@ serve(async (req) => {
           body.sourceImage,
           body.modelImage,
           body.sceneImage,
-          body.modelContext
         );
 
         const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio);
