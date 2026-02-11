@@ -1,77 +1,62 @@
 
+## Fix: Generation State Lost on Page Refresh + App Crash
 
-## Fix: Resume In-Flight Generations After Page Refresh
-
-### Problem
-The `useGenerationQueue` hook stores the active job ID in React state (`useState`). When the page is refreshed:
-1. State is cleared -- `activeJob` becomes `null`
-2. Polling stops -- no `setInterval` running
-3. The backend finishes the job, but nobody is listening
-4. The generated image is never shown to the user
+### Problem Summary
+Two linked issues:
+1. Refreshing the page during a generation wipes the loading state. The backend keeps working, but the UI shows nothing. Trying to generate again hits "max concurrent generations (1)".
+2. When polling picks up the completed job, the `result` column contains ~1.7MB of base64 image data. Parsing this crashes the app.
 
 ### Solution
-On mount, check for any recent `queued` or `processing` jobs belonging to the current user, and automatically resume polling for them.
 
-### Changes
+#### 1. Resume in-flight jobs on page load (`src/hooks/useGenerationQueue.ts`)
 
-#### `src/hooks/useGenerationQueue.ts`
+Add a recovery effect that runs when the user loads/refreshes the page:
+- Query `generation_queue` for any `queued` or `processing` jobs belonging to the current user
+- If found, resume polling for that job automatically
+- The existing completion handler in `Freestyle.tsx` then picks up the result normally
 
-**Add a recovery effect** that runs once on mount (when `user` is available):
-
-```typescript
-// Recover in-flight jobs after page refresh
-useEffect(() => {
-  if (!user || activeJob) return; // Don't recover if already tracking a job
-
-  const recover = async () => {
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const { data: session } = await supabase.auth.getSession();
-    const token = session?.session?.access_token || SUPABASE_KEY;
-
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (!res.ok) return;
-    const rows = await res.json();
-    if (rows.length === 0) return;
-
-    const row = rows[0];
-    jobIdRef.current = row.id;
-    pollJobStatus(row.id);
-  };
-
-  recover();
-}, [user]); // intentionally minimal deps -- run once per user login
+```
+On mount (when user is available):
+  -> Check: any queued/processing jobs for this user?
+  -> Yes: set jobIdRef, start polling
+  -> No: do nothing
 ```
 
-This will:
-- Query the `generation_queue` table for any active jobs on page load
-- If found, resume polling that job until it completes or fails
-- The existing completion handler in `Freestyle.tsx` picks up the result and saves images as normal
+#### 2. Avoid fetching massive base64 results during polling (`src/hooks/useGenerationQueue.ts`)
 
-#### No other files need to change
-The `Freestyle.tsx` effect that watches `activeJob.status === 'completed'` already handles saving images and showing results. The recovery just reconnects the polling pipeline.
+The current polling fetches the full `result` column (~1.7MB of base64). Instead:
+- During polling, only fetch `status`, `error_message`, `created_at`, `started_at`, `completed_at`, `priority_score` (exclude `result`)
+- Only fetch `result` once, when the status transitions to `completed`
+- This keeps polling lightweight and prevents the crash
 
-### Edge Cases Handled
+#### 3. Handle the "concurrent" error more gracefully (`src/hooks/useGenerationQueue.ts`)
 
-| Scenario | Behavior |
-|----------|----------|
-| Refresh during generation | Recovers job, resumes polling, shows result |
-| Refresh after completion | No in-flight jobs found, no recovery needed |
-| Multiple tabs | Each tab recovers the same job, but `saveImages` is idempotent |
-| Job times out (5 min) | `cleanup_stale_jobs` marks it failed, polling picks up failure state |
+When the enqueue returns a 429 "concurrent" error:
+- Attempt to find the active job and resume polling for it
+- This way the user sees the progress of the existing job instead of just an error message
+
+### Technical Details
+
+**File: `src/hooks/useGenerationQueue.ts`**
+
+Changes:
+1. Add `useEffect` recovery hook (runs once when `user` becomes available):
+   - Fetches `generation_queue?user_id=eq.{userId}&status=in.(queued,processing)&limit=1`
+   - If a row is found, sets `jobIdRef.current` and calls `pollJobStatus()`
+
+2. Modify `pollJobStatus` to exclude `result` from the polling select:
+   - Change select to: `id,status,error_message,created_at,started_at,completed_at,priority_score`
+   - When status becomes `completed`, make one additional fetch including `result`
+   - Then update `activeJob` with the full data
+
+3. In the `enqueue` function, when a 429 "concurrent" error is received:
+   - After showing the toast, attempt recovery by querying for the active job
+   - Resume polling so the user can see progress
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGenerationQueue.ts` | Add recovery effect to resume polling for in-flight jobs on mount |
+| `src/hooks/useGenerationQueue.ts` | Add recovery effect, split result fetching from polling, handle concurrent error with recovery |
 
+No other files need changes -- `Freestyle.tsx` already handles `activeJob.status === 'completed'` correctly.
