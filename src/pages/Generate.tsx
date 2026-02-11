@@ -30,7 +30,7 @@ import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
 import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
-import { NoCreditsModal } from '@/components/app/NoCreditsModal';
+import { InsufficientCreditsWarning } from '@/components/app/InsufficientCreditsWarning';
 import { useCredits } from '@/contexts/CreditContext';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
