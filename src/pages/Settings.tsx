@@ -68,7 +68,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 export default function Settings() {
   const { user } = useAuth();
-  const { balance, plan, planConfig, addCredits } = useCredits();
+  const { balance, plan, planConfig, refreshBalance } = useCredits();
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
