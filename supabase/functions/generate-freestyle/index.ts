@@ -125,19 +125,12 @@ function polishUserPrompt(
 
   // Product / source image layer
   if (context.hasSource) {
-    layers.push(
-      "PRODUCT ACCURACY: The product in the PRODUCT REFERENCE IMAGE must be reproduced with 100% fidelity — identical shape, color, texture, branding, and proportions. Do not modify, stylize, or reinterpret the product in any way."
-    );
+    layers.push("PRODUCT: Reproduce the PRODUCT REFERENCE IMAGE with 100% fidelity — identical shape, color, texture, branding. Do not modify or stylize.");
     if (isSelfie) {
-      layers.push(
-        "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
-      );
+      layers.push("PRODUCT INTERACTION: Hold/display product naturally near face or chest, casual grip. Not floating or catalog-posed.");
     }
-    // Product-only framing (no model involved)
     if (!context.hasModel) {
-      layers.push(
-        "FRAMING: Center the product with balanced negative space on all sides. The product should occupy 50-70% of the frame with no cropping of edges."
-      );
+      layers.push("FRAMING: Center product, 50-70% of frame, no cropping.");
     }
   }
 
