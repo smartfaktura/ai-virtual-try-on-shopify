@@ -90,7 +90,8 @@ CRITICAL — DO NOT include any of the following:
 - No distorted or extra fingers, hands, or limbs
 - ${blurRule}
 - No AI-looking skin smoothing or plastic textures
-- No collage layouts or split-screen compositions`;
+- No collage layouts or split-screen compositions
+- No compositing artifacts, no mismatched lighting between elements, no pasted-in look, no cut-out edges`;
 }
 
 // ── Context-aware prompt polish ───────────────────────────────────────────
@@ -114,12 +115,12 @@ function polishUserPrompt(
       "",
       hasBothProductAndModel
         ? "Create a photorealistic image featuring the EXACT PERSON from [MODEL IMAGE] with the EXACT PRODUCT from [PRODUCT IMAGE]."
-        : "Create a photorealistic image combining the provided references.",
+        : "Create a photorealistic image where the product naturally exists within the scene environment.",
       "",
       "REQUIREMENTS:",
     ];
     if (context.hasSource) {
-      parts.push(`1. PRODUCT: Reproduce the exact product from [PRODUCT IMAGE] — identical shape, color, texture, branding. This is the highest priority.${hasBothProductAndModel ? " Use ONLY the product/garment from this image. IGNORE any person, model, or mannequin shown in the product photo." : ""}`);
+      parts.push(`1. PRODUCT: Reference [PRODUCT IMAGE] for the product's design, shape, color, and material. Re-render it naturally within the scene — matching the environment's lighting, perspective, shadows, and reflections. The product must look like it physically exists in the scene, NOT composited or pasted in.${hasBothProductAndModel ? " Use ONLY the product/garment from this image. IGNORE any person, model, or mannequin shown in the product photo." : ""}`);
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
@@ -127,7 +128,7 @@ function polishUserPrompt(
     }
     if (context.hasScene) {
       const num = [context.hasSource, context.hasModel].filter(Boolean).length + 1;
-      parts.push(`${num}. SCENE: Place everything in the exact environment from [SCENE IMAGE] — same background, lighting, atmosphere.`);
+      parts.push(`${num}. SCENE: Use [SCENE IMAGE] as the environment reference. Render the entire image as one unified photograph — consistent lighting, color temperature, and perspective across all elements. Everything must appear to exist in the same physical space.`);
     }
     parts.push("");
     parts.push("Quality: shot on 50mm at f 2.8. Shallow DOF, subject sharp, background soft. Sculpted lighting with negative fill. Premium micro-texture: skin pores, fabric weave, hair strands. Rich blacks with detail, no clipping. Subtle film grain, editorial finishing.");
