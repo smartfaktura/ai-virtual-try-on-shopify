@@ -41,6 +41,17 @@ interface UseGenerationQueueReturn {
   reset: () => void;
 }
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+async function getAuthToken(): Promise<string> {
+  const { data: session } = await supabase.auth.getSession();
+  return session?.session?.access_token || SUPABASE_KEY;
+}
+
+// Lightweight polling select — excludes the heavy `result` column
+const POLL_SELECT = 'id,status,error_message,created_at,started_at,completed_at,priority_score';
+
 export function useGenerationQueue(): UseGenerationQueueReturn {
   const { user } = useAuth();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
@@ -66,14 +77,11 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
     stopPolling();
 
     const poll = async () => {
-      // Use raw fetch to query generation_queue since it's not in the generated types
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token || SUPABASE_KEY;
+      const token = await getAuthToken();
 
+      // Lightweight poll — no `result` column
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=id,status,result,error_message,created_at,started_at,completed_at,priority_score`,
+        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=${POLL_SELECT}`,
         {
           headers: {
             apikey: SUPABASE_KEY,
@@ -87,22 +95,54 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
       if (!rows || rows.length === 0) return;
 
       const row = rows[0];
-      const job: QueueJob = {
-        id: row.id,
-        status: row.status,
-        position: 0, // Will be calculated if queued
-        priority: row.priority_score,
-        result: row.result,
-        error_message: row.error_message,
-        created_at: row.created_at,
-        started_at: row.started_at,
-        completed_at: row.completed_at,
-      };
+      const status: QueueJobStatus = row.status;
 
-      // Calculate position if still queued (count jobs ahead: lower priority_score, or same score but earlier created_at)
-      if (job.status === 'queued') {
+      // On completion, fetch result in a separate request
+      if (status === 'completed' || status === 'failed' || status === 'cancelled') {
+        stopPolling();
+
+        let result: unknown = null;
+        if (status === 'completed') {
+          const resultRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=result`,
+            {
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          if (resultRes.ok) {
+            const resultRows = await resultRes.json();
+            if (resultRows?.[0]) {
+              result = resultRows[0].result;
+            }
+          }
+        }
+
+        setActiveJob({
+          id: row.id,
+          status,
+          position: 0,
+          priority: row.priority_score,
+          result,
+          error_message: row.error_message,
+          created_at: row.created_at,
+          started_at: row.started_at,
+          completed_at: row.completed_at,
+        });
+
+        if (status === 'failed') {
+          toast.error(row.error_message || 'Generation failed. Credits have been refunded.');
+        }
+        return;
+      }
+
+      // Still in progress — calculate position if queued
+      let position = 0;
+      if (status === 'queued') {
         const posRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/generation_queue?status=eq.queued&priority_score=lte.${job.priority}&id=neq.${job.id}&select=id`,
+          `${SUPABASE_URL}/rest/v1/generation_queue?status=eq.queued&priority_score=lte.${row.priority_score}&id=neq.${jobId}&select=id`,
           {
             headers: {
               apikey: SUPABASE_KEY,
@@ -114,26 +154,81 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
         const countHeader = posRes.headers.get('content-range');
         if (countHeader) {
           const match = countHeader.match(/\/(\d+)/);
-          job.position = match ? parseInt(match[1]) : 0;
+          position = match ? parseInt(match[1]) : 0;
         }
       }
 
-      setActiveJob(job);
-
-      // Stop polling on terminal states
-      if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
-        stopPolling();
-
-        if (job.status === 'failed') {
-          toast.error(job.error_message || 'Generation failed. Credits have been refunded.');
-        }
-      }
+      setActiveJob({
+        id: row.id,
+        status,
+        position,
+        priority: row.priority_score,
+        result: null,
+        error_message: row.error_message,
+        created_at: row.created_at,
+        started_at: row.started_at,
+        completed_at: row.completed_at,
+      });
     };
 
     // Poll immediately, then every 3 seconds
     poll();
     pollingRef.current = setInterval(poll, 3000);
   }, [stopPolling]);
+
+  // --- Recovery: resume polling for in-flight jobs after page refresh ---
+  useEffect(() => {
+    if (!user || activeJob || jobIdRef.current) return;
+
+    const recover = async () => {
+      const token = await getAuthToken();
+
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1&select=${POLL_SELECT}`,
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (!rows || rows.length === 0) return;
+
+      const row = rows[0];
+      jobIdRef.current = row.id;
+      pollJobStatus(row.id);
+    };
+
+    recover();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Helper to attempt recovery of an active job (used after concurrent error)
+  const attemptRecovery = useCallback(async () => {
+    if (!user) return;
+    const token = await getAuthToken();
+
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1&select=${POLL_SELECT}`,
+      {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows || rows.length === 0) return;
+
+    const row = rows[0];
+    jobIdRef.current = row.id;
+    pollJobStatus(row.id);
+  }, [user, pollJobStatus]);
 
   const enqueue = useCallback(async (params: EnqueueParams): Promise<EnqueueResult | null> => {
     if (!user) {
@@ -144,7 +239,6 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
     setIsEnqueuing(true);
 
     try {
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const { data: session } = await supabase.auth.getSession();
       const token = session?.session?.access_token;
 
@@ -174,6 +268,8 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
           const msg = String(errorData.error || '');
           if (msg.includes('concurrent')) {
             toast.error(`You've reached the maximum concurrent generations (${errorData.max_concurrent || '?'}). Please wait for a current job to finish.`);
+            // Attempt to recover and resume polling for the existing job
+            attemptRecovery();
           } else {
             toast.error(errorData.message || 'Rate limit exceeded. Please wait and try again.');
           }
@@ -221,15 +317,12 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
     } finally {
       setIsEnqueuing(false);
     }
-  }, [user, pollJobStatus]);
+  }, [user, pollJobStatus, attemptRecovery]);
 
   const cancel = useCallback(async () => {
     if (!jobIdRef.current || !activeJob || activeJob.status !== 'queued') return;
 
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const { data: session } = await supabase.auth.getSession();
-    const token = session?.session?.access_token || SUPABASE_KEY;
+    const token = await getAuthToken();
 
     // Cancel by updating status
     await fetch(
