@@ -49,6 +49,7 @@ export default function Freestyle() {
   const [showSceneHint, setShowSceneHint] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastEffectivePromptRef = useRef<string>('');
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
   const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue();
