@@ -1,42 +1,36 @@
 
 
-## Fix: True First-Person iPhone Selfie Perspective
+## Add "New Product" Link to Product Selector Popover
 
-### Problem
-The current selfie prompt produces images where the model appears to be photographed BY someone else, or is holding a phone as a prop in-frame. A real selfie means the viewer IS the phone camera — the subject looks directly at the lens, the perspective is from the phone's point of view, and no phone device should be visible in the image.
+### What
+When the product selector popover has existing products, there's no way to navigate to the products page to add a new one. Currently, only the empty state shows an "Add your first product" link.
 
-### Solution
-Rewrite the SELFIE COMPOSITION layer in `supabase/functions/generate-freestyle/index.ts` to enforce a true first-person camera perspective:
+### Change
+Add a subtle link at the bottom of the product grid in `ProductSelectorChip.tsx` that navigates to `/app/products`. This will appear after the product grid whenever products exist, giving users a quick path to manage or add products.
 
-**Key changes to the prompt instructions:**
-- The camera IS the phone. The viewer sees what the front-facing camera sees. No phone device should ever appear in the frame.
-- The subject looks directly into the camera lens (eye contact with the viewer).
-- Slight wide-angle lens distortion typical of smartphone front cameras.
-- One arm is extended toward the camera (holding the phone, which is the camera itself) — this arm may be partially visible at the very bottom/side edge of the frame, but the phone is never visible because it IS the viewpoint.
-- Explicitly forbid: no phone visible in frame, no "person holding a phone" composition, no third-person photography perspective.
+### Design
+- A small `+ Add new product` link below the product grid, styled consistently with the existing empty-state link (text-xs, text-primary, hover:underline)
+- Separated from the grid with a thin top border for visual clarity
+- Closes the popover on click
 
-### File Changed
+### Technical Details
 
-| File | Change |
-|------|--------|
-| `supabase/functions/generate-freestyle/index.ts` | Rewrite the SELFIE COMPOSITION layer (line 90-91) to enforce first-person iPhone camera perspective |
+**File**: `src/components/app/freestyle/ProductSelectorChip.tsx`
 
-### Updated Prompt (line 91)
+After the product grid `div` (line 130, after the closing `</div>` of the grid), add:
 
-Replace the current SELFIE COMPOSITION with:
-
-```
-SELFIE COMPOSITION: This image is shot FROM the smartphone's front-facing camera.
-The camera IS the phone — the viewer sees exactly what the iPhone front camera
-captures. The subject is looking DIRECTLY into the camera lens (direct eye contact
-with the viewer). Slight wide-angle distortion typical of a smartphone selfie lens.
-The subject's arm holding the phone may be partially visible at the bottom or side
-edge of the frame, but the phone itself is NEVER visible because it IS the camera.
-ABSOLUTELY NO phone, smartphone, or device should appear anywhere in the image.
-This is NOT a third-person photo of someone holding a phone — it is the phone's
-own POV. Soft natural smartphone-style bokeh in background. Authentic, candid
-expression — relaxed and genuine.
+```tsx
+<div className="border-t border-border mt-2 pt-2">
+  <Link
+    to="/app/products"
+    onClick={() => onOpenChange(false)}
+    className="flex items-center justify-center gap-1 text-xs text-primary hover:underline font-medium py-1"
+  >
+    + Add new product
+  </Link>
+</div>
 ```
 
-This ensures the AI understands: "you are the phone camera" rather than "generate a photo of someone with a phone."
+This goes inside the existing `<>...</>` fragment that wraps the search input and grid (lines 76-131), right before the closing `</>`.
 
+One file changed, ~6 lines added.
