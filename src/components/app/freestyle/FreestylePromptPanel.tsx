@@ -64,6 +64,7 @@ interface FreestylePromptPanelProps {
   // Insufficient credits
   insufficientCredits?: boolean;
   onBuyCredits?: () => void;
+  onUpgradePlan?: () => void;
   currentBalance?: number;
 }
 
