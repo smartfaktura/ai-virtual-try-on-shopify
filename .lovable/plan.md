@@ -1,45 +1,54 @@
 
 
-## Final Cleanup: Remove All Dead Code Leftovers
-
-Two changes to clean up the last remnants of the old direct-call pattern.
+## Three Quick Fixes: Toast, Selfie Pose, and Time Estimates
 
 ---
 
-### Change 1: Remove dead `video` priority boost from SQL function
+### Fix 1: Remove "Generation started!" toast
 
-**What**: The `enqueue_generation` database function still has `IF p_job_type = 'video' THEN v_priority := v_priority + 10; END IF;` -- video jobs are rejected before reaching this point.
+The blue toast notification in `src/hooks/useGenerationQueue.ts` (line 215) fires every time a generation is enqueued. It adds noise since the user already sees the loading state in the UI.
 
-**Fix**: Run a migration to recreate the function without that line.
+**Change**: Remove the `toast.info('Generation started!')` call. Keep the queue position toast (`Your generation is #X in queue`) since that provides useful info when there's a wait.
+
+**File**: `src/hooks/useGenerationQueue.ts`
 
 ---
 
-### Change 2: Clean up `useGenerateFreestyle` dead hook in Freestyle.tsx
+### Fix 2: Fix selfie prompt -- no "two hands" poses
 
-**What**: `Freestyle.tsx` line 53 still imports `useGenerateFreestyle` and destructures `generate`, `isLoading`, and `progress`. The `generate` function is never called (all generation goes through `enqueue()`), but `isLoading` and `progress` are still referenced in several places:
+The current selfie composition prompt (line 91 in `generate-freestyle/index.ts`) says "Arm-length or close-up distance" but doesn't explicitly tell the AI that one hand is holding the phone. This causes the AI to generate poses where the subject has both hands visible (e.g., holding a tennis racket with both hands), which breaks the selfie illusion.
 
-| Location | Variable | Current behavior | Fix |
-|----------|----------|-----------------|-----|
-| Line 120: `canGenerate` check | `isLoading` | Always `false` (harmless but misleading) | Replace with `isProcessing \|\| isEnqueuing` |
-| Line 332-333: `panelProps` | `isLoading`, `progress` | Always `false`/`0` -- progress bar in FreestylePromptPanel never shows | Replace with queue-derived state |
-| Line 382: gallery visibility | `isLoading` | Always `false` | Replace with `isEnqueuing` |
-| Line 395: `generatingCount` | `isLoading` | Always `false` | Replace with `isEnqueuing` |
-| Line 396: `generatingProgress` | `progress` | Always `0` | Remove or use indeterminate |
+**Change**: Add explicit instructions to the SELFIE COMPOSITION layer:
+- "One hand is holding the smartphone to take the photo -- this hand should NOT be visible or only partially visible at the frame edge"
+- "The other hand can be relaxed, touching hair, holding a product, or gesturing naturally"
+- "NEVER show both hands free or both hands holding objects -- one hand is always occupied with the phone"
 
-**Fix**: 
-- Remove the `useGenerateFreestyle` import and hook call entirely
-- Add `isEnqueuing` to the `useGenerationQueue` destructuring
-- Replace all `isLoading` references with `isEnqueuing || isProcessing`
-- Replace `progress` in panelProps with a queue-aware value (indeterminate pulse when processing)
-- Update `FreestylePromptPanel` progress bar: show an indeterminate/pulse `Progress` when `isLoading` is true (since progress will always be 0 from queue perspective)
+**File**: `supabase/functions/generate-freestyle/index.ts`
 
-### Technical details
+---
 
-**Files to change**:
+### Fix 3: Harmonize time estimates
+
+Two different components show conflicting estimates:
+- `QueuePositionIndicator.tsx` line 54: "This may take a minute"
+- `FreestyleGallery.tsx` line 108: "Usually 10-20s"
+
+**Change**: Update both to use consistent, optimistic language:
+- QueuePositionIndicator: "Usually takes a few seconds"
+- FreestyleGallery: "Wrapping up shortly"
+
+This keeps the meaning aligned (it'll be quick) without using identical words.
+
+**Files**: `src/components/app/QueuePositionIndicator.tsx`, `src/components/app/freestyle/FreestyleGallery.tsx`
+
+---
+
+### Technical Summary
 
 | File | Change |
 |------|--------|
-| Database migration | Remove `IF p_job_type = 'video'` line from `enqueue_generation` |
-| `src/pages/Freestyle.tsx` | Remove `useGenerateFreestyle` import and hook; add `isEnqueuing` to queue destructuring; replace all `isLoading`/`progress` references with queue state |
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Update progress bar to use indeterminate/pulse animation (since exact progress is unavailable from queue) |
+| `src/hooks/useGenerationQueue.ts` | Remove `toast.info('Generation started!')` on line 215 |
+| `supabase/functions/generate-freestyle/index.ts` | Add one-hand-on-phone constraint to SELFIE COMPOSITION layer |
+| `src/components/app/QueuePositionIndicator.tsx` | Change "This may take a minute" to "Usually takes a few seconds" |
+| `src/components/app/freestyle/FreestyleGallery.tsx` | Change "Usually 10-20s" to "Wrapping up shortly" |
 
