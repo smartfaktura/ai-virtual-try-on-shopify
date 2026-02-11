@@ -89,8 +89,11 @@ function polishUserPrompt(
       "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
     );
     // Selfie composition + framing layer
+    const selfieDepthInstruction = cameraStyle === 'natural'
+      ? "Deep depth of field — background is sharp and in focus, NOT blurred. This is a standard front-camera selfie WITHOUT Portrait Mode enabled. No bokeh, no background blur, no shallow depth of field whatsoever."
+      : "Soft natural smartphone-style bokeh in background.";
     layers.push(
-      "SELFIE COMPOSITION: This image is shot FROM the smartphone's front-facing camera. The camera IS the phone — the viewer sees exactly what the iPhone front camera captures. The subject is looking DIRECTLY into the camera lens (direct eye contact with the viewer). Slight wide-angle distortion typical of a smartphone selfie lens. The subject's arm holding the phone may be partially visible at the bottom or side edge of the frame, but the phone itself is NEVER visible because it IS the camera. ABSOLUTELY NO phone, smartphone, or device should appear anywhere in the image. This is NOT a third-person photo of someone holding a phone — it is the phone's own POV. Soft natural smartphone-style bokeh in background. Authentic, candid expression — relaxed and genuine. NEVER show both hands free — one hand is always occupied holding the phone (which is the camera)."
+      `SELFIE COMPOSITION: This image is shot FROM the smartphone's front-facing camera. The camera IS the phone — the viewer sees exactly what the iPhone front camera captures. The subject is looking DIRECTLY into the camera lens (direct eye contact with the viewer). Slight wide-angle distortion typical of a smartphone selfie lens. The subject's arm holding the phone may be partially visible at the bottom or side edge of the frame, but the phone itself is NEVER visible because it IS the camera. ABSOLUTELY NO phone, smartphone, or device should appear anywhere in the image. This is NOT a third-person photo of someone holding a phone — it is the phone's own POV. ${selfieDepthInstruction} Authentic, candid expression — relaxed and genuine. NEVER show both hands free — one hand is always occupied holding the phone (which is the camera).`
     );
     layers.push(
       "SELFIE FRAMING: Subject's full head and hair must be fully visible within the frame with natural headroom above. Frame from mid-chest or shoulders upward — do NOT crop below the chin or above the forehead. Center the face in the upper-third of the frame following the rule of thirds."
@@ -182,7 +185,8 @@ Apply these rendering characteristics ONLY — do NOT change the subject, scene,
 - COLOR SCIENCE: Apple iPhone-style computational photography color rendering. True-to-life, neutral color reproduction — no cinematic color grading, no orange-and-teal push, no lifted shadows, no crushed blacks. Colors should look exactly as the human eye would see them. Whites are pure neutral white, not warm-tinted.
 - LIGHTING: Use whatever lighting exists in the scene naturally. No added studio strobes, softboxes, or artificial rim lights. If indoors, the light comes from windows and room lights. If outdoors, from the sun and sky. Slight HDR-like dynamic range (shadows are not pitch black, highlights are not blown out) — similar to iPhone Smart HDR processing.
 - TEXTURE & DETAIL: Ultra-sharp across the entire frame. High pixel-level detail on skin, fabric, hair, and surfaces. No heavy skin smoothing or frequency separation retouching. Natural skin texture including pores and fine lines is visible. Detail level comparable to a 48MP smartphone sensor.
-- OVERALL FEEL: The image should look like it was taken by someone with a latest-generation iPhone and posted directly — no Lightroom, no Photoshop, no professional retouching. Clean, sharp, true-to-life. The hallmark is "impressive but clearly a phone photo."`
+- OVERALL FEEL: The image should look like it was taken by someone with a latest-generation iPhone and posted directly — no Lightroom, no Photoshop, no professional retouching. Clean, sharp, true-to-life. The hallmark is "impressive but clearly a phone photo."
+${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing camera mode (NOT Portrait Mode). The background MUST remain sharp and detailed — absolutely no depth-of-field blur, no bokeh effect whatsoever. Everything from foreground to background is in focus.` : ''}`
     );
   }
 
