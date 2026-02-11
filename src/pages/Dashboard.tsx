@@ -240,7 +240,7 @@ export default function Dashboard() {
           value={balance}
           suffix="available"
           icon={Wallet}
-          onClick={openBuyModal}
+          onClick={() => openBuyModal()}
           progress={Math.max(0, Math.round((balance / 300) * 100))}
           progressColor={balance < 10 ? 'bg-destructive' : balance < 30 ? 'bg-amber-500' : 'bg-primary'}
         />
