@@ -105,7 +105,7 @@ function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: n
       {/* Progress bar */}
       <div className="w-full max-w-[200px] space-y-2">
         <Progress value={progress} className="h-1" />
-        <p className="text-xs text-muted-foreground/40 text-center">Usually 10–20s</p>
+        <p className="text-xs text-muted-foreground/40 text-center">Wrapping up shortly</p>
       </div>
     </div>
   );
