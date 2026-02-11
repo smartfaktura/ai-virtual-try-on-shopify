@@ -64,6 +64,7 @@ interface FreestylePromptPanelProps {
   // Insufficient credits
   insufficientCredits?: boolean;
   onBuyCredits?: () => void;
+  onUpgradePlan?: () => void;
   currentBalance?: number;
 }
 
@@ -86,7 +87,7 @@ export function FreestylePromptPanel({
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
   onFileDrop,
-  insufficientCredits, onBuyCredits, currentBalance,
+  insufficientCredits, onBuyCredits, onUpgradePlan, currentBalance,
 }: FreestylePromptPanelProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
@@ -232,7 +233,7 @@ export function FreestylePromptPanel({
                 <button onClick={onBuyCredits} className="underline underline-offset-2 hover:text-amber-500 transition-colors">buy credits</button>
               </span>
             </div>
-            <Button size="lg" onClick={onBuyCredits} className="h-11 px-6 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold shrink-0">
+            <Button size="lg" onClick={onUpgradePlan} className="h-11 px-6 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold shrink-0">
               Upgrade Plan
             </Button>
           </div>

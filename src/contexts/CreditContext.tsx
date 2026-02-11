@@ -33,7 +33,8 @@ interface CreditContextValue {
   setBalanceFromServer: (newBalance: number) => void;
   
   buyModalOpen: boolean;
-  openBuyModal: () => void;
+  buyModalDefaultTab: 'upgrade' | 'topup';
+  openBuyModal: (tab?: 'upgrade' | 'topup') => void;
   closeBuyModal: () => void;
   
   calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => number;
@@ -52,6 +53,7 @@ const defaultValue: CreditContextValue = {
   refreshBalance: async () => {},
   setBalanceFromServer: () => {},
   buyModalOpen: false,
+  buyModalDefaultTab: 'upgrade',
   openBuyModal: () => {},
   closeBuyModal: () => {},
   calculateCost: () => 0,
@@ -115,7 +117,11 @@ export function CreditProvider({ children }: CreditProviderProps) {
     setBalance(newBalance);
   }, []);
   
-  const openBuyModal = useCallback(() => setBuyModalOpen(true), []);
+  const [buyModalDefaultTab, setBuyModalDefaultTab] = useState<'upgrade' | 'topup'>('upgrade');
+  const openBuyModal = useCallback((tab?: 'upgrade' | 'topup') => {
+    setBuyModalDefaultTab(tab || 'upgrade');
+    setBuyModalOpen(true);
+  }, []);
   const closeBuyModal = useCallback(() => setBuyModalOpen(false), []);
   
   const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => {
@@ -144,6 +150,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         refreshBalance: fetchCredits,
         setBalanceFromServer,
         buyModalOpen,
+        buyModalDefaultTab,
         openBuyModal,
         closeBuyModal,
         calculateCost,

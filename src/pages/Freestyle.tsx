@@ -416,7 +416,8 @@ export default function Freestyle() {
     cameraStyle,
     onCameraStyleChange: setCameraStyle,
     insufficientCredits: balance < creditCost && !isLoading,
-    onBuyCredits: openBuyModal,
+    onBuyCredits: () => openBuyModal('topup'),
+    onUpgradePlan: () => openBuyModal('upgrade'),
     currentBalance: balance,
   };
 
