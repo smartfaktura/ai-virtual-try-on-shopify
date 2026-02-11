@@ -9,6 +9,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
+import { MobileTabBar } from '@/components/app/MobileTabBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
