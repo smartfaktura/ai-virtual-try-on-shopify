@@ -386,7 +386,6 @@ function buildContentArray(
   sourceImage?: string,
   modelImage?: string,
   sceneImage?: string,
-  modelContext?: string
 ): ContentItem[] {
   const content: ContentItem[] = [];
 
