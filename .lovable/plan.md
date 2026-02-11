@@ -1,38 +1,73 @@
 
 
-## Phase 2 Remaining Issues
+## Phase 3 Audit: Process-Queue Worker
 
-### Issue 1: Client-Side Position Polling Is Wrong (Medium)
+### Status: Mostly Solid -- 3 Issues Found
 
-In `useGenerationQueue.ts` lines 104-105, the polling position query uses:
+---
+
+### Issue 1: Missing `generate-tryon` in config.toml (Critical)
+
+The `process-queue` worker maps `tryon` jobs to the `generate-tryon` function (line 13), and the function directory exists at `supabase/functions/generate-tryon/`. However, `generate-tryon` is **not registered** in `supabase/config.toml`, which means it may fail to deploy or reject requests.
+
+**Fix**: Add the following to `supabase/config.toml`:
+```toml
+[functions.generate-tryon]
+verify_jwt = false
 ```
-priority_score=lt.${job.priority}
+
+**File**: `supabase/config.toml`
+
+---
+
+### Issue 2: No Authentication on process-queue Endpoint (Medium)
+
+The `process-queue` function is publicly callable (`verify_jwt = false` in config.toml) and has no internal authentication check. Anyone who knows the URL can trigger queue processing. While it only processes existing jobs (no data mutation risk beyond normal flow), it could be abused for:
+- Denial of service (repeatedly triggering expensive generation calls)
+- Race conditions from concurrent process-queue invocations
+
+**Fix**: Add a check for the `x-queue-internal` header or validate the `Authorization` header matches the service role key:
+
+```typescript
+// At the top of the handler, after OPTIONS check:
+const internalToken = req.headers.get("x-queue-internal");
+const authHeader = req.headers.get("authorization");
+const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+if (internalToken !== "true" || authHeader !== `Bearer ${serviceRoleKey}`) {
+  return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 ```
-This only counts jobs with a **strictly lower** priority score, ignoring same-priority jobs that were enqueued earlier. The SQL function was fixed to use `priority_score < v_priority OR (priority_score = v_priority AND created_at < ...)`, but the client polling doesn't match.
 
-**Fix**: Update the polling position query to also count same-priority jobs with earlier `created_at`, or simplify by counting all queued jobs ahead (using a compound filter). The simplest accurate approach is to count all queued jobs where `(priority_score < this.priority) OR (priority_score = this.priority AND created_at < this.created_at)`. Since PostgREST doesn't support OR filters natively, the cleanest fix is to use an RPC or just count all queued jobs with `priority_score <= this.priority` excluding self (slightly overestimates but much better than current).
+**File**: `supabase/functions/process-queue/index.ts`
 
-**File**: `src/hooks/useGenerationQueue.ts` (lines 102-118)
+---
 
-### Issue 2: Rate Limit Counts All Job Statuses (Minor)
+### Issue 3: generation_jobs Insert Missing `creative_drop_id` (Minor)
 
-In `enqueue-generation/index.ts` lines 91-97, the hourly rate limit counts ALL jobs in the last hour regardless of status (completed, failed, cancelled). A user who had 9 failed jobs and 1 success would hit the free-tier limit of 10, even though most didn't produce results.
+When process-queue saves results to `generation_jobs` (lines 107-120), it maps `product_id`, `workflow_id`, and `brand_profile_id` from the payload but omits `creative_drop_id`, which is a column in the `generation_jobs` table. If the payload contains a `creative_drop_id`, it will be silently dropped.
 
-**Fix**: Add a status filter to exclude `cancelled` jobs at minimum:
+**Fix**: Add `creative_drop_id` to the insert:
+
+```typescript
+creative_drop_id: (payload as Record<string, unknown>).creative_drop_id || null,
 ```
-.in("status", ["queued", "processing", "completed", "failed"])
-```
-Or more generously, only count `queued`, `processing`, and `completed`.
 
-**File**: `supabase/functions/enqueue-generation/index.ts` (lines 93-97)
+**File**: `supabase/functions/process-queue/index.ts` (line 120, inside the insert object)
 
-### Issue 3: Dead `maxConcurrent` in RATE_LIMITS (Cleanup)
+---
 
-The `RATE_LIMITS` object (lines 11-17) defines `maxConcurrent` per plan, but this is never used -- concurrency is now enforced atomically in the SQL `enqueue_generation` function. This dead code could mislead future developers.
+### Everything Else Looks Good
 
-**Fix**: Remove `maxConcurrent` from `RATE_LIMITS` and rename it to something clearer like `HOURLY_LIMITS`.
-
-**File**: `supabase/functions/enqueue-generation/index.ts` (lines 10-17)
+- **Job claiming** (`claim_next_job`): Uses `FOR UPDATE SKIP LOCKED` -- correct for concurrent workers.
+- **Stale job cleanup** (`cleanup_stale_jobs`): Properly refunds credits and marks timed-out jobs as failed.
+- **Partial success refunds**: Math is correct (`perImageCost * missed`), uses `Math.floor` to avoid over-refunding.
+- **Failure handling**: Credits are fully refunded, error messages are persisted.
+- **Time budget loop**: 45s cap is safe under the 60s edge function limit.
+- **No double credit deduction**: Downstream functions (`generate-freestyle`, `generate-product`, etc.) do not call `deduct_credits` -- credits are only deducted by `enqueue_generation`.
 
 ---
 
@@ -40,7 +75,13 @@ The `RATE_LIMITS` object (lines 11-17) defines `maxConcurrent` per plan, but thi
 
 | Priority | Issue | File |
 |----------|-------|------|
-| Medium | Position polling doesn't match SQL logic | `useGenerationQueue.ts` |
-| Minor | Rate limit counts cancelled jobs | `enqueue-generation/index.ts` |
-| Cleanup | Dead `maxConcurrent` in RATE_LIMITS | `enqueue-generation/index.ts` |
+| Critical | `generate-tryon` missing from config.toml | `supabase/config.toml` |
+| Medium | No auth check on process-queue endpoint | `supabase/functions/process-queue/index.ts` |
+| Minor | `creative_drop_id` not passed to generation_jobs | `supabase/functions/process-queue/index.ts` |
+
+### Implementation Order
+
+1. Add `generate-tryon` to config.toml
+2. Add auth guard to process-queue
+3. Add `creative_drop_id` to the generation_jobs insert
 
