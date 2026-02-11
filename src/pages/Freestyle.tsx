@@ -22,6 +22,21 @@ import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
 
+function getProductModelInteraction(productType: string): string {
+  const type = productType.toLowerCase();
+  if (['dress','shirt','jacket','pants','skirt','top','hoodie','sweater','coat','jeans','clothing','apparel'].some(t => type.includes(t)))
+    return 'worn by';
+  if (['bag','handbag','purse','backpack','tote'].some(t => type.includes(t)))
+    return 'carried by';
+  if (['shoes','sneakers','boots','heels','sandals','footwear'].some(t => type.includes(t)))
+    return 'worn by';
+  if (['jewelry','necklace','ring','bracelet','earrings','watch'].some(t => type.includes(t)))
+    return 'worn by';
+  if (['hat','cap','beanie','headwear'].some(t => type.includes(t)))
+    return 'worn by';
+  return 'showcased/held by';
+}
+
 export default function Freestyle() {
   const [prompt, setPrompt] = useState('');
   const [sourceImage, setSourceImage] = useState<string | null>(null);
@@ -200,7 +215,8 @@ export default function Freestyle() {
         const modelDesc = [selectedModel.gender, selectedModel.bodyType, selectedModel.ethnicity]
           .filter(Boolean).join(', ');
         if (selectedProduct) {
-          parts.push(`worn/held by a ${modelDesc} model`);
+          const interaction = getProductModelInteraction(selectedProduct.product_type);
+          parts.push(`${interaction} a ${modelDesc} model`);
         } else {
           parts.push(`Portrait of a ${modelDesc} model`);
         }
@@ -225,10 +241,9 @@ export default function Freestyle() {
       basePrompt = parts.join(' ');
     }
 
-    let finalPrompt = basePrompt;
-    if (selectedScene) {
-      finalPrompt = `${basePrompt}. MANDATORY SCENE: Place the subject in this environment — ${selectedScene.promptHint || selectedScene.description}. The background and setting must match the scene reference image exactly.`;
-    }
+    // Scene instructions are handled by polishUserPrompt in the backend
+    // No need to duplicate them here — avoids conflicting scene directives
+    const finalPrompt = basePrompt;
 
     // Build model text context
     let modelContext: string | undefined;

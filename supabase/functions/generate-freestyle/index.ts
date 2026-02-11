@@ -224,6 +224,13 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
     negativeBlock += `\n- No ${dedupedNegatives.join("\n- No ")}`;
   }
 
+  // Priority hierarchy when all three contexts are present
+  if (context.hasSource && context.hasModel && context.hasScene) {
+    layers.push(
+      "PRIORITY ORDER: 1) Product must be reproduced with 100% accuracy (shape, color, branding). 2) Model must be the exact same person from the reference. 3) Scene/environment must match the reference. If any conflict arises between these, product accuracy takes precedence."
+    );
+  }
+
   layers.push(negativeBlock);
 
   return layers.join("\n\n");
@@ -368,6 +375,18 @@ function buildContentArray(
       text: "SCENE/ENVIRONMENT REFERENCE IMAGE — You MUST place the subject IN this exact environment/location. Reproduce the same setting, background elements, lighting direction, color temperature, and atmosphere. Do NOT use a different environment:",
     });
     content.push({ type: "image_url", image_url: { url: sceneImage } });
+  }
+
+  // Task summary when multiple references are present
+  const refCount = [sourceImage, modelImage, sceneImage].filter(Boolean).length;
+  if (refCount >= 2) {
+    const taskParts: string[] = ["TASK SUMMARY — Generate ONE cohesive image that:"];
+    let step = 1;
+    if (sourceImage) { taskParts.push(`${step}. Features the EXACT product from the product reference (highest priority — shape, color, texture, branding must be identical)`); step++; }
+    if (modelImage) { taskParts.push(`${step}. Uses the EXACT person from the model reference (same face, hair, skin tone)`); step++; }
+    if (sceneImage) { taskParts.push(`${step}. Places everything in the EXACT environment from the scene reference`); step++; }
+    taskParts.push("Merge all references into a single photorealistic image. Product fidelity is the #1 priority.");
+    content.push({ type: "text", text: taskParts.join("\n") });
   }
 
   return content;
