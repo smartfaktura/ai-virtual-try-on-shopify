@@ -9,11 +9,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { DowngradeConfirmation, PLAN_ORDER } from './DowngradeConfirmation';
 
 export function BuyCreditsModal() {
   const { plan, planConfig, buyModalOpen, buyModalDefaultTab, closeBuyModal, refreshBalance } = useCredits();
   const { user } = useAuth();
   const [upgrading, setUpgrading] = useState(false);
+  const [downgradeTarget, setDowngradeTarget] = useState<string | null>(null);
 
   const handlePurchase = async (credits: number) => {
     if (!user) return;
@@ -27,6 +29,20 @@ export function BuyCreditsModal() {
       await refreshBalance();
       toast.success(`${credits} credits added to your account!`);
     }
+  };
+
+  const isDowngrade = (targetPlanId: string) => {
+    const currentIdx = PLAN_ORDER.indexOf(plan);
+    const targetIdx = PLAN_ORDER.indexOf(targetPlanId);
+    return targetIdx < currentIdx;
+  };
+
+  const handlePlanClick = (targetPlanId: string) => {
+    if (isDowngrade(targetPlanId)) {
+      setDowngradeTarget(targetPlanId);
+      return;
+    }
+    handleUpgrade(targetPlanId);
   };
 
   const handleUpgrade = async (targetPlanId: string) => {
@@ -144,10 +160,10 @@ export function BuyCreditsModal() {
                         <Button
                           variant={isRecommended ? 'default' : 'outline'}
                           className="w-full h-11 rounded-xl text-sm font-medium"
-                          onClick={() => handleUpgrade(p.planId)}
+                          onClick={() => handlePlanClick(p.planId)}
                           disabled={upgrading}
                         >
-                          {upgrading ? 'Upgrading…' : isRecommended ? 'Upgrade' : 'Select'}
+                          {upgrading ? 'Processing…' : isDowngrade(p.planId) ? 'Downgrade' : isRecommended ? 'Upgrade' : 'Select'}
                           {!upgrading && <ArrowUpRight className="w-3.5 h-3.5 ml-1.5" />}
                         </Button>
                       )}
@@ -213,6 +229,16 @@ export function BuyCreditsModal() {
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      <DowngradeConfirmation
+        open={!!downgradeTarget}
+        targetPlanId={downgradeTarget || ''}
+        onClose={() => setDowngradeTarget(null)}
+        onDowngradeComplete={() => {
+          setDowngradeTarget(null);
+          closeBuyModal();
+        }}
+      />
     </Dialog>
   );
 }
