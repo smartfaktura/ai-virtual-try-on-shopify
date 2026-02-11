@@ -350,7 +350,7 @@ export default function Freestyle() {
     aspectRatio,
     onAspectRatioChange: setAspectRatio,
     quality,
-    onQualityToggle: () => setQuality(q => q === 'standard' ? 'high' : 'standard'),
+    onQualityChange: setQuality,
     polishPrompt,
     onPolishChange: setPolishPrompt,
     imageCount,
@@ -369,7 +369,7 @@ export default function Freestyle() {
     negativesPopoverOpen,
     onNegativesPopoverChange: setNegativesPopoverOpen,
     cameraStyle,
-    onCameraStyleToggle: () => setCameraStyle(s => s === 'pro' ? 'natural' : 'pro'),
+    onCameraStyleChange: setCameraStyle,
   };
 
   return (
