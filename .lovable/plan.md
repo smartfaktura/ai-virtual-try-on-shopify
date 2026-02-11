@@ -1,77 +1,45 @@
 
 
-## Phase 4 Audit: Frontend Queue Integration
+## Final Cleanup: Remove All Dead Code Leftovers
 
-### Status: Mostly Wired -- 2 Issues Found
-
----
-
-### What's Working
-
-Both primary pages (Generate.tsx and Freestyle.tsx) correctly route all generation through `useGenerationQueue.enqueue()`:
-
-| Page | Job Types | Status |
-|------|-----------|--------|
-| Generate.tsx | `product`, `workflow`, `tryon` | All use `enqueue()` |
-| Freestyle.tsx | `freestyle` | Uses `enqueue()` |
-
-Both pages handle queue job completion via `useEffect` watching `activeJob.status`, correctly transitioning to results or handling failures with credit refresh.
-
-The `QueuePositionIndicator` component correctly renders all states: queued, processing, completed, failed, cancelled.
+Two changes to clean up the last remnants of the old direct-call pattern.
 
 ---
 
-### Issue 1: Dead Hook Imports in Generate.tsx (Cleanup)
+### Change 1: Remove dead `video` priority boost from SQL function
 
-Generate.tsx still imports and destructures the old direct-call hooks on lines 165-167:
+**What**: The `enqueue_generation` database function still has `IF p_job_type = 'video' THEN v_priority := v_priority + 10; END IF;` -- video jobs are rejected before reaching this point.
 
-```typescript
-const { generate: generateTryOn, isLoading: isTryOnGenerating, progress: tryOnProgress } = useGenerateTryOn();
-const { generate: generateProduct, isLoading: isProductGenerating, progress: productProgress } = useGenerateProduct();
-const { generate: generateWorkflow, isLoading: isWorkflowGenerating, progress: workflowProgress } = useGenerateWorkflow();
-```
-
-**`generateTryOn`, `generateProduct`, `generateWorkflow` are never called** -- all three generation paths now use `enqueue()`. However, the destructured variables `isTryOnGenerating`, `tryOnProgress`, `isProductGenerating`, `productProgress`, `isWorkflowGenerating`, `workflowProgress` are still referenced:
-
-- **Progress bar** (line 1474-1477): Uses `tryOnProgress`, `workflowProgress`, `productProgress` -- but these will always be `0` since the hooks are never triggered. The progress bar on the "generating" step is effectively dead.
-- **TryOnConfirmModal** (line 1602): Uses `isTryOnGenerating` for `isLoading` prop -- but this will always be `false`.
-
-**Fix**: Remove the three hook imports entirely. Replace the progress bar with queue-based progress (use `isQueueProcessing` and a simple indeterminate/pulse state, or show the `QueuePositionIndicator` on the generating step). Replace `isTryOnGenerating` in TryOnConfirmModal with `isEnqueuing` from the queue hook (currently not destructured but available).
+**Fix**: Run a migration to recreate the function without that line.
 
 ---
 
-### Issue 2: Bulk Generation Bypasses Queue (Known Limitation)
+### Change 2: Clean up `useGenerateFreestyle` dead hook in Freestyle.tsx
 
-`useBulkGeneration.ts` (line 202) calls `generate-tryon` directly with the anon key, not through `enqueue-generation`. This means:
+**What**: `Freestyle.tsx` line 53 still imports `useGenerateFreestyle` and destructures `generate`, `isLoading`, and `progress`. The `generate` function is never called (all generation goes through `enqueue()`), but `isLoading` and `progress` are still referenced in several places:
 
-- No credit deduction via the queue system
-- No concurrency limits enforced
-- No queue priority
-- Auth will fail since it uses the anon key (no user JWT, and no `x-queue-internal` header)
+| Location | Variable | Current behavior | Fix |
+|----------|----------|-----------------|-----|
+| Line 120: `canGenerate` check | `isLoading` | Always `false` (harmless but misleading) | Replace with `isProcessing \|\| isEnqueuing` |
+| Line 332-333: `panelProps` | `isLoading`, `progress` | Always `false`/`0` -- progress bar in FreestylePromptPanel never shows | Replace with queue-derived state |
+| Line 382: gallery visibility | `isLoading` | Always `false` | Replace with `isEnqueuing` |
+| Line 395: `generatingCount` | `isLoading` | Always `false` | Replace with `isEnqueuing` |
+| Line 396: `generatingProgress` | `progress` | Always `0` | Remove or use indeterminate |
 
-This is a known architectural gap. Bulk generation has its own retry/pause/resume logic that doesn't fit the single-job queue model. However, the direct call to `generate-tryon` with `SUPABASE_ANON_KEY` will likely fail now that `generate-tryon` requires auth.
+**Fix**: 
+- Remove the `useGenerateFreestyle` import and hook call entirely
+- Add `isEnqueuing` to the `useGenerationQueue` destructuring
+- Replace all `isLoading` references with `isEnqueuing || isProcessing`
+- Replace `progress` in panelProps with a queue-aware value (indeterminate pulse when processing)
+- Update `FreestylePromptPanel` progress bar: show an indeterminate/pulse `Progress` when `isLoading` is true (since progress will always be 0 from queue perspective)
 
-**Recommendation**: This is a separate Phase 5+ task. For now, document it as a known limitation.
+### Technical details
 
----
-
-### Recommended Changes
-
-1. **Remove dead hook imports** from Generate.tsx (`useGenerateTryOn`, `useGenerateProduct`, `useGenerateWorkflow`) and all their destructured variables
-2. **Fix the generating step progress bar** to use queue state instead of the dead hook progress values (show `QueuePositionIndicator` or an indeterminate progress)
-3. **Fix TryOnConfirmModal loading prop** to use queue's `isEnqueuing` state
-4. **Add `isEnqueuing` to the destructured queue hook** in Generate.tsx (currently only `enqueue`, `activeJob`, `isProcessing`, `reset` are destructured)
-
-### Files to Change
+**Files to change**:
 
 | File | Change |
 |------|--------|
-| `src/pages/Generate.tsx` | Remove 3 dead hook imports; fix progress bar; fix modal loading prop; add `isEnqueuing` destructuring |
-
-### Not in Scope (Phase 5+)
-
-| Item | Reason |
-|------|--------|
-| `useBulkGeneration.ts` direct API calls | Different architecture (batch queue with pause/resume); needs its own queue integration design |
-| `useGenerateFreestyle.ts` unused import in Freestyle.tsx | The `generate` function and `isLoading`/`progress` from this hook are still referenced in `panelProps` (lines 53, 332-333), but `generate` is never called since `handleGenerate` uses `enqueue()`. These props flow to `FreestylePromptPanel` which may use them for UI state. Needs deeper trace before removing. |
+| Database migration | Remove `IF p_job_type = 'video'` line from `enqueue_generation` |
+| `src/pages/Freestyle.tsx` | Remove `useGenerateFreestyle` import and hook; add `isEnqueuing` to queue destructuring; replace all `isLoading`/`progress` references with queue state |
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Update progress bar to use indeterminate/pulse animation (since exact progress is unavailable from queue) |
 
