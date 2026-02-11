@@ -128,6 +128,16 @@ export function ProductSelectorChip({
                 </p>
               )}
             </div>
+
+            <div className="border-t border-border mt-2 pt-2">
+              <Link
+                to="/app/products"
+                onClick={() => onOpenChange(false)}
+                className="flex items-center justify-center gap-1 text-xs text-primary hover:underline font-medium py-1"
+              >
+                + Add new product
+              </Link>
+            </div>
           </>
         )}
       </PopoverContent>
