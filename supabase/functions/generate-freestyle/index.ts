@@ -447,8 +447,16 @@ serve(async (req) => {
       finalPrompt = unpolished;
     }
 
-    // Add aspect ratio instruction
-    const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
+    // Add strong aspect ratio enforcement with explicit dimensions
+    const aspectDimensions: Record<string, string> = {
+      "1:1": "1024x1024",
+      "3:4": "768x1024",
+      "4:5": "816x1020",
+      "9:16": "576x1024",
+      "16:9": "1024x576",
+    };
+    const dims = aspectDimensions[body.aspectRatio] || "1024x1024";
+    const aspectPrompt = `${finalPrompt}\n\nMANDATORY OUTPUT FORMAT: This image MUST be exactly ${body.aspectRatio} aspect ratio (${dims} pixels). Do NOT add borders, padding, letterboxing, or pillarboxing. The subject must fill the entire ${body.aspectRatio} frame with no empty or white margins.`;
 
     // Select model based on quality
     const aiModel = body.quality === "high"
