@@ -55,6 +55,9 @@ interface FreestylePromptPanelProps {
   onNegativesChange: (negatives: string[]) => void;
   negativesPopoverOpen: boolean;
   onNegativesPopoverChange: (open: boolean) => void;
+  // Camera style
+  cameraStyle: 'pro' | 'natural';
+  onCameraStyleToggle: () => void;
   // Drag and drop
   onFileDrop?: (file: File) => void;
 }
@@ -75,6 +78,7 @@ export function FreestylePromptPanel({
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
+  cameraStyle, onCameraStyleToggle,
   onFileDrop,
 }: FreestylePromptPanelProps) {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -203,6 +207,7 @@ export function FreestylePromptPanel({
           brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
           negatives={negatives} onNegativesChange={onNegativesChange}
           negativesPopoverOpen={negativesPopoverOpen} onNegativesPopoverChange={onNegativesPopoverChange}
+          cameraStyle={cameraStyle} onCameraStyleToggle={onCameraStyleToggle}
         />
       </div>
 

@@ -46,6 +46,7 @@ interface FreestyleRequest {
   stylePresets?: string[];
   brandProfile?: BrandProfileContext;
   negatives?: string[];
+  cameraStyle?: "pro" | "natural";
 }
 
 // ── Selfie / UGC intent detection ─────────────────────────────────────────
@@ -76,7 +77,8 @@ function polishUserPrompt(
   context: { hasSource: boolean; hasModel: boolean; hasScene: boolean },
   brandProfile?: BrandProfileContext,
   userNegatives?: string[],
-  modelContext?: string
+  modelContext?: string,
+  cameraStyle?: "pro" | "natural"
 ): string {
   const layers: string[] = [];
   const isSelfie = detectSelfieIntent(rawPrompt);
@@ -168,6 +170,19 @@ function polishUserPrompt(
   if (context.hasScene) {
     layers.push(
       "ENVIRONMENT: The subject MUST be placed in the EXACT environment shown in the SCENE REFERENCE IMAGE. Reproduce the same location, background elements, props, foliage, architecture, and atmosphere. Match the lighting direction, color temperature, and time of day. The final image should look like it was photographed in that exact location. Do NOT substitute a different environment or background."
+    );
+  }
+
+  // Camera rendering style layer (injected before negatives)
+  if (cameraStyle === "natural") {
+    layers.push(
+`CAMERA RENDERING STYLE — NATURAL (iPhone):
+Apply these rendering characteristics ONLY — do NOT change the subject, scene, environment, model, or composition in any way:
+- LENS: Slight wide-angle perspective typical of smartphone main camera (26mm equivalent). Deep depth of field — foreground AND background stay sharp and in focus. No artificial bokeh, no shallow depth of field, no blurred backgrounds unless the scene naturally has extreme distance.
+- COLOR SCIENCE: Apple iPhone-style computational photography color rendering. True-to-life, neutral color reproduction — no cinematic color grading, no orange-and-teal push, no lifted shadows, no crushed blacks. Colors should look exactly as the human eye would see them. Whites are pure neutral white, not warm-tinted.
+- LIGHTING: Use whatever lighting exists in the scene naturally. No added studio strobes, softboxes, or artificial rim lights. If indoors, the light comes from windows and room lights. If outdoors, from the sun and sky. Slight HDR-like dynamic range (shadows are not pitch black, highlights are not blown out) — similar to iPhone Smart HDR processing.
+- TEXTURE & DETAIL: Ultra-sharp across the entire frame. High pixel-level detail on skin, fabric, hair, and surfaces. No heavy skin smoothing or frequency separation retouching. Natural skin texture including pores and fine lines is visible. Detail level comparable to a 48MP smartphone sensor.
+- OVERALL FEEL: The image should look like it was taken by someone with a latest-generation iPhone and posted directly — no Lightroom, no Photoshop, no professional retouching. Clean, sharp, true-to-life. The hallmark is "impressive but clearly a phone photo."`
     );
   }
 
@@ -380,7 +395,7 @@ serve(async (req) => {
 
     let finalPrompt: string;
     if (body.polishPrompt) {
-      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext);
+      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle);
     } else {
       // Even without polish, apply brand context and negatives if provided
       let unpolished = enrichedPrompt;
@@ -401,6 +416,10 @@ serve(async (req) => {
       if (allNeg.length > 0) {
         const dedupedNeg = [...new Set(allNeg.map(n => n.toLowerCase()))];
         unpolished += `\n\nDo NOT include: ${dedupedNeg.join(", ")}`;
+      }
+      // Apply natural camera style even without polish
+      if (body.cameraStyle === "natural") {
+        unpolished += `\n\nCAMERA RENDERING STYLE — NATURAL (iPhone): Shot on a latest-generation iPhone. Ultra-sharp details across the entire frame with deep depth of field (everything in focus, minimal bokeh). True-to-life, unedited color reproduction — no color grading, no warm/cool push. Natural ambient lighting only. The image should feel authentic and unprocessed.`;
       }
       finalPrompt = unpolished;
     }
@@ -424,6 +443,7 @@ serve(async (req) => {
       brandTone: body.brandProfile?.tone,
       brandColorFeel: body.brandProfile?.colorFeel,
       negativesCount: body.negatives?.length || 0,
+      cameraStyle: body.cameraStyle || 'pro',
       aspectRatio: body.aspectRatio,
       imageCount: body.imageCount,
       quality: body.quality,
