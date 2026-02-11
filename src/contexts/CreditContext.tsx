@@ -53,6 +53,7 @@ const defaultValue: CreditContextValue = {
   refreshBalance: async () => {},
   setBalanceFromServer: () => {},
   buyModalOpen: false,
+  buyModalDefaultTab: 'upgrade',
   openBuyModal: () => {},
   closeBuyModal: () => {},
   calculateCost: () => 0,
