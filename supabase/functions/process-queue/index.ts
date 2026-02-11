@@ -15,6 +15,30 @@ const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
   workflow: "generate-workflow",
 };
 
+async function callGenerationFunction(
+  functionUrl: string,
+  serviceRoleKey: string,
+  payload: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const response = await fetch(functionUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${serviceRoleKey}`,
+      "Content-Type": "application/json",
+      "x-queue-internal": "true",
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(55_000), // 55s timeout for downstream calls
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+    throw new Error(errorData.error || `Generation function returned ${response.status}`);
+  }
+
+  return await response.json();
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -36,7 +60,6 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
@@ -87,22 +110,36 @@ serve(async (req) => {
         // Inject user_id into payload so downstream functions can identify the user
         const enrichedPayload = { ...payload, user_id: userId };
 
-        const response = await fetch(functionUrl, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${serviceRoleKey}`,
-            "Content-Type": "application/json",
-            "x-queue-internal": "true", // Signal to skip credit deduction
-          },
-          body: JSON.stringify(enrichedPayload),
-        });
+        let allImages: string[] = [];
+        let allErrors: string[] = [];
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-          throw new Error(errorData.error || `Generation function returned ${response.status}`);
+        // For freestyle with imageCount > 1: loop sequential 1-image calls
+        const requestedCount = (payload as Record<string, unknown>).imageCount as number || 1;
+        if (jobType === 'freestyle' && requestedCount > 1) {
+          for (let i = 0; i < requestedCount; i++) {
+            if (Date.now() - startTime >= MAX_RUNTIME_MS) {
+              console.log(`[process-queue] Time budget exceeded during freestyle loop at image ${i + 1}`);
+              break;
+            }
+            try {
+              const singleResult = await callGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
+              const imgs = (singleResult.images as string[]) || [];
+              allImages.push(...imgs);
+              console.log(`[process-queue] Freestyle image ${i + 1}/${requestedCount} done (${imgs.length} images)`);
+            } catch (loopErr) {
+              console.error(`[process-queue] Freestyle image ${i + 1} failed:`, loopErr);
+              allErrors.push(`Image ${i + 1}: ${loopErr instanceof Error ? loopErr.message : 'Unknown error'}`);
+            }
+          }
+        } else {
+          // Single call for all other types (and freestyle with imageCount=1)
+          const result = await callGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
+          allImages = (result.images as string[]) || [];
+          allErrors = (result.errors as string[]) || [];
         }
 
-        const result = await response.json();
+        const generatedCount = allImages.length;
+        const result = { images: allImages, generatedCount, requestedCount, errors: allErrors.length > 0 ? allErrors : undefined };
 
         // Mark job as completed
         await supabase
@@ -114,60 +151,12 @@ serve(async (req) => {
           })
           .eq("id", jobId);
 
-        const generatedCount = result.generatedCount || result.images?.length || 0;
-
-        // Freestyle: save images to storage + DB server-side
-        if (jobType === 'freestyle' && generatedCount > 0) {
-          for (const base64Image of (result.images || [])) {
-            try {
-              // Strip data URL prefix if present
-              const base64Clean = (base64Image as string).replace(/^data:image\/\w+;base64,/, '');
-              const binaryData = Uint8Array.from(atob(base64Clean), c => c.charCodeAt(0));
-
-              const fileId = crypto.randomUUID();
-              const filePath = `${userId}/${fileId}.png`;
-
-              const { error: uploadError } = await supabase.storage
-                .from('freestyle-images')
-                .upload(filePath, binaryData, { contentType: 'image/png', upsert: false });
-
-              if (uploadError) {
-                console.error(`[process-queue] Freestyle upload failed:`, uploadError);
-                continue;
-              }
-
-              const { data: urlData } = supabase.storage
-                .from('freestyle-images')
-                .getPublicUrl(filePath);
-
-              await supabase.from('freestyle_generations').insert({
-                user_id: userId,
-                image_url: urlData.publicUrl,
-                prompt: (payload as Record<string, unknown>).prompt as string || '',
-                aspect_ratio: (payload as Record<string, unknown>).aspectRatio as string || '1:1',
-                quality: (payload as Record<string, unknown>).quality as string || 'standard',
-                model_id: (payload as Record<string, unknown>).modelId || null,
-                scene_id: (payload as Record<string, unknown>).sceneId || null,
-                product_id: (payload as Record<string, unknown>).productId || null,
-              });
-
-              console.log(`[process-queue] Freestyle image saved: ${filePath}`);
-            } catch (imgErr) {
-              console.error(`[process-queue] Freestyle image save error:`, imgErr);
-            }
-          }
-
-          // Strip base64 from result to save space in queue table
-          result.images = result.images?.map(() => 'saved_to_storage');
-          await supabase
-            .from('generation_queue')
-            .update({ result })
-            .eq('id', jobId);
-        } else if (jobType !== 'freestyle' && generatedCount > 0) {
-          // Save to generation_jobs for library (non-freestyle)
+        // For non-freestyle types, save to generation_jobs for library
+        // (Freestyle saves its own records inside the function)
+        if (jobType !== 'freestyle' && generatedCount > 0) {
           await supabase.from("generation_jobs").insert({
             user_id: userId,
-            results: result.images || [],
+            results: allImages,
             status: "completed",
             completed_at: new Date().toISOString(),
             product_id: (payload as Record<string, unknown>).product_id || null,
@@ -175,7 +164,7 @@ serve(async (req) => {
             brand_profile_id: (payload as Record<string, unknown>).brand_profile_id || null,
             ratio: (payload as Record<string, unknown>).aspectRatio || "1:1",
             quality: (payload as Record<string, unknown>).quality || "standard",
-            requested_count: (payload as Record<string, unknown>).imageCount || 1,
+            requested_count: requestedCount,
             credits_used: creditsReserved,
             creative_drop_id: (payload as Record<string, unknown>).creative_drop_id || null,
             prompt_final: (payload as Record<string, unknown>).prompt || null,
@@ -183,7 +172,6 @@ serve(async (req) => {
         }
 
         // Handle partial success — refund unused credits
-        const requestedCount = (payload as Record<string, unknown>).imageCount as number || 1;
         if (generatedCount < requestedCount && generatedCount > 0) {
           const perImageCost = Math.floor(creditsReserved / requestedCount);
           const refundAmount = perImageCost * (requestedCount - generatedCount);
