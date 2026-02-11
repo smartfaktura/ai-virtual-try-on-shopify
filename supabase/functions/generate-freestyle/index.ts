@@ -97,19 +97,22 @@ function polishUserPrompt(
   // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
   const refCount = [context.hasSource, context.hasModel, context.hasScene].filter(Boolean).length;
   if (refCount >= 2 && !isSelfie) {
+    const hasBothProductAndModel = context.hasSource && context.hasModel;
     const parts: string[] = [
       `Professional photography: ${rawPrompt}`,
       "",
-      "Create a photorealistic image combining the provided references.",
+      hasBothProductAndModel
+        ? "Create a photorealistic image featuring the EXACT PERSON from [MODEL IMAGE] with the EXACT PRODUCT from [PRODUCT IMAGE]."
+        : "Create a photorealistic image combining the provided references.",
       "",
       "REQUIREMENTS:",
     ];
     if (context.hasSource) {
-      parts.push("1. PRODUCT: Reproduce the exact product from [PRODUCT IMAGE] — identical shape, color, texture, branding. This is the highest priority.");
+      parts.push(`1. PRODUCT: Reproduce the exact product from [PRODUCT IMAGE] — identical shape, color, texture, branding. This is the highest priority.${hasBothProductAndModel ? " Use ONLY the product/garment from this image. IGNORE any person, model, or mannequin shown in the product photo." : ""}`);
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
-      parts.push(`${context.hasSource ? "2" : "1"}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body proportions${identityDetails}.`);
+      parts.push(`${context.hasSource ? "2" : "1"}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body proportions${identityDetails}.${hasBothProductAndModel ? " This person is the ONLY human that should appear. Their face, hair, skin, and body MUST come from [MODEL IMAGE], NOT from any other reference image." : ""}`);
     }
     if (context.hasScene) {
       const num = [context.hasSource, context.hasModel].filter(Boolean).length + 1;
@@ -218,7 +221,7 @@ function polishUserPrompt(
   if (context.hasModel) {
     const identityDetails = modelContext ? ` (${modelContext})` : "";
     layers.push(
-      `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo.`
+      `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo. If a product reference image also contains a person, IGNORE that person entirely. The generated person must match ONLY the [MODEL IMAGE] reference.`
     );
     if (isSelfie) {
       if (cameraStyle === 'natural') {
