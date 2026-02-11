@@ -9,6 +9,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
+import { MobileTabBar } from '@/components/app/MobileTabBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -262,22 +263,17 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       )}
 
-      {/* Mobile Hamburger (floating) */}
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="fixed top-4 left-4 z-40 lg:hidden p-2.5 rounded-xl bg-background/80 backdrop-blur-lg border border-border shadow-lg"
-      >
-        <Menu className="w-5 h-5" />
-      </button>
-
       {/* Main Content — no header */}
       <div className="flex-1 flex flex-col min-w-0">
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Tab Bar */}
+      <MobileTabBar onOpenSidebar={() => setSidebarOpen(true)} />
 
       {/* Studio Team Chat */}
       <StudioChat />
