@@ -200,7 +200,8 @@ export default function Freestyle() {
         const modelDesc = [selectedModel.gender, selectedModel.bodyType, selectedModel.ethnicity]
           .filter(Boolean).join(', ');
         if (selectedProduct) {
-          parts.push(`worn/held by a ${modelDesc} model`);
+          const interaction = getProductModelInteraction(selectedProduct.product_type);
+          parts.push(`${interaction} a ${modelDesc} model`);
         } else {
           parts.push(`Portrait of a ${modelDesc} model`);
         }
