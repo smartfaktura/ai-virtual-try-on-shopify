@@ -1,62 +1,48 @@
 
-## Fix: Generation State Lost on Page Refresh + App Crash
 
-### Problem Summary
-Two linked issues:
-1. Refreshing the page during a generation wipes the loading state. The backend keeps working, but the UI shows nothing. Trying to generate again hits "max concurrent generations (1)".
-2. When polling picks up the completed job, the `result` column contains ~1.7MB of base64 image data. Parsing this crashes the app.
+## Better "Out of Credits" UX on Generate Button
 
-### Solution
+### What's Wrong
+When the user doesn't have enough credits, the Generate button silently greys out. There's no indication of why, making the experience confusing.
 
-#### 1. Resume in-flight jobs on page load (`src/hooks/useGenerationQueue.ts`)
+### Changes
 
-Add a recovery effect that runs when the user loads/refreshes the page:
-- Query `generation_queue` for any `queued` or `processing` jobs belonging to the current user
-- If found, resume polling for that job automatically
-- The existing completion handler in `Freestyle.tsx` then picks up the result normally
+#### 1. Show "Not Enough Credits" state on the Generate button (`FreestylePromptPanel.tsx`)
 
+When credits are insufficient, transform the Generate button to clearly communicate the issue:
+
+- **Visual change**: Instead of a greyed-out "Generate (4)", show an amber/warning-styled button with text like "Not Enough Credits" and a coin/alert icon
+- **Clickable**: The button remains clickable and opens the Buy Credits modal (this already works in `handleGenerate`, but users don't know to click)
+- **Credit info**: Show current balance vs. cost, e.g., "You have 2 — need 4"
+
+#### 2. Add `insufficientCredits` prop to `FreestylePromptPanel`
+
+Pass a new boolean prop from `Freestyle.tsx`:
 ```
-On mount (when user is available):
-  -> Check: any queued/processing jobs for this user?
-  -> Yes: set jobIdRef, start polling
-  -> No: do nothing
+insufficientCredits = balance < creditCost
 ```
 
-#### 2. Avoid fetching massive base64 results during polling (`src/hooks/useGenerationQueue.ts`)
+#### 3. Button states in `FreestylePromptPanel.tsx`
 
-The current polling fetches the full `result` column (~1.7MB of base64). Instead:
-- During polling, only fetch `status`, `error_message`, `created_at`, `started_at`, `completed_at`, `priority_score` (exclude `result`)
-- Only fetch `result` once, when the status transitions to `completed`
-- This keeps polling lightweight and prevents the crash
+The Generate button area will have three states:
 
-#### 3. Handle the "concurrent" error more gracefully (`src/hooks/useGenerationQueue.ts`)
+| State | Appearance |
+|-------|-----------|
+| **Ready** | Purple "Generate (4)" button (current) |
+| **Loading** | Spinner + "Generate (4)" (current) |
+| **Insufficient credits** | Amber/warning button: "Not Enough Credits" -- clicking opens buy modal. Small text below: "You have 2 credits, need 4" |
 
-When the enqueue returns a 429 "concurrent" error:
-- Attempt to find the active job and resume polling for it
-- This way the user sees the progress of the existing job instead of just an error message
+#### 4. Pass `openBuyModal` to prompt panel
+
+Add `onBuyCredits` prop to `FreestylePromptPanel` so the button can directly trigger the buy modal.
 
 ### Technical Details
 
-**File: `src/hooks/useGenerationQueue.ts`**
-
-Changes:
-1. Add `useEffect` recovery hook (runs once when `user` becomes available):
-   - Fetches `generation_queue?user_id=eq.{userId}&status=in.(queued,processing)&limit=1`
-   - If a row is found, sets `jobIdRef.current` and calls `pollJobStatus()`
-
-2. Modify `pollJobStatus` to exclude `result` from the polling select:
-   - Change select to: `id,status,error_message,created_at,started_at,completed_at,priority_score`
-   - When status becomes `completed`, make one additional fetch including `result`
-   - Then update `activeJob` with the full data
-
-3. In the `enqueue` function, when a 429 "concurrent" error is received:
-   - After showing the toast, attempt recovery by querying for the active job
-   - Resume polling so the user can see progress
-
-### Files Changed
+**Files changed:**
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGenerationQueue.ts` | Add recovery effect, split result fetching from polling, handle concurrent error with recovery |
+| `src/pages/Freestyle.tsx` | Pass `insufficientCredits` and `onBuyCredits` props to `FreestylePromptPanel` |
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Accept new props, conditionally render warning-styled button with "Not Enough Credits" text and balance info when credits are insufficient |
 
-No other files need changes -- `Freestyle.tsx` already handles `activeJob.status === 'completed'` correctly.
+No backend or database changes needed.
