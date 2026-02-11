@@ -18,7 +18,6 @@ const HOURLY_LIMITS: Record<string, number> = {
 
 // Credit cost calculation
 function calculateCreditCost(jobType: string, imageCount: number, quality: string): number {
-  if (jobType === "video") return imageCount * 30;
   if (jobType === "tryon") return imageCount * 8;
   return imageCount * (quality === "high" ? 10 : 4);
 }
