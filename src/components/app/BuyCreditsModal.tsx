@@ -37,8 +37,18 @@ export function BuyCreditsModal() {
     ? pricingPlans.find(p => p.planId === 'starter')!
     : null;
 
-  const handlePurchase = (credits: number) => {
-    toast.info('Payment integration coming soon — credit purchases will be available shortly.');
+  const handlePurchase = async (credits: number) => {
+    if (!user) return;
+    const { error } = await supabase.rpc('add_purchased_credits', {
+      p_user_id: user.id,
+      p_amount: credits,
+    });
+    if (error) {
+      toast.error('Failed to add credits: ' + error.message);
+    } else {
+      await refreshBalance();
+      toast.success(`${credits} credits added to your account!`);
+    }
   };
 
   const handleUpgrade = () => {
