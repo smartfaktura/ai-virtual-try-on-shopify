@@ -88,7 +88,7 @@ function polishUserPrompt(
     );
     // Selfie composition + framing layer
     layers.push(
-      "SELFIE COMPOSITION: Front-facing smartphone camera perspective. Slight high angle (camera held slightly above eye level). Arm-length or close-up distance from subject. Soft natural smartphone-style bokeh in background — NOT studio strobe bokeh. Authentic, candid facial expression — relaxed, genuine, not model-posed. Natural selfie framing with the subject centered or slightly off-center."
+      "SELFIE COMPOSITION: Front-facing smartphone camera perspective. Slight high angle (camera held slightly above eye level). Arm-length or close-up distance from subject. One hand is holding the smartphone to take the photo — this hand should NOT be visible or only partially visible at the frame edge. The other hand can be relaxed, touching hair, holding a product, or gesturing naturally. NEVER show both hands free or both hands holding objects — one hand is always occupied with the phone. Soft natural smartphone-style bokeh in background — NOT studio strobe bokeh. Authentic, candid facial expression — relaxed, genuine, not model-posed. Natural selfie framing with the subject centered or slightly off-center."
     );
     layers.push(
       "SELFIE FRAMING: Subject's full head and hair must be fully visible within the frame with natural headroom above. Frame from mid-chest or shoulders upward — do NOT crop below the chin or above the forehead. Center the face in the upper-third of the frame following the rule of thirds."

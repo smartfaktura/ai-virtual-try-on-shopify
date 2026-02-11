@@ -51,7 +51,7 @@ export function QueuePositionIndicator({ job, onCancel }: QueuePositionIndicator
         <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">Generating your images…</p>
-          <p className="text-xs text-muted-foreground">This may take a minute</p>
+          <p className="text-xs text-muted-foreground">Usually takes a few seconds</p>
           <Progress value={50} className="mt-2 h-1.5" />
         </div>
       </div>

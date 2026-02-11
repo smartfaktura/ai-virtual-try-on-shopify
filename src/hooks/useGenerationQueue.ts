@@ -211,8 +211,6 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
 
       if (result.position > 0) {
         toast.info(`Your generation is #${result.position + 1} in queue`);
-      } else {
-        toast.info('Generation started!');
       }
 
       return result;
