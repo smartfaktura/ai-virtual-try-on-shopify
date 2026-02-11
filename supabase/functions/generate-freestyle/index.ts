@@ -399,7 +399,7 @@ serve(async (req) => {
       "16:9": "1024x576",
     };
     const dims = aspectDimensions[body.aspectRatio] || "1024x1024";
-    const aspectPrompt = `${finalPrompt}\n\nMANDATORY OUTPUT FORMAT: This image MUST be exactly ${body.aspectRatio} aspect ratio (${dims} pixels). Do NOT add borders, padding, letterboxing, or pillarboxing. The subject must fill the entire ${body.aspectRatio} frame with no empty or white margins.`;
+    const aspectPrompt = `${finalPrompt}\n\nOUTPUT: Exactly ${body.aspectRatio} (${dims}). No borders/padding/margins. Fill entire frame.`;
 
     // Select model based on quality
     const aiModel = body.quality === "high"
