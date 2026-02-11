@@ -89,6 +89,55 @@ function polishUserPrompt(
   const layers: string[] = [];
   const isSelfie = detectSelfieIntent(rawPrompt);
 
+  // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
+  const refCount = [context.hasSource, context.hasModel, context.hasScene].filter(Boolean).length;
+  if (refCount >= 2 && !isSelfie) {
+    const parts: string[] = [
+      `Professional photography: ${rawPrompt}`,
+      "",
+      "Create a photorealistic image combining the provided references.",
+      "",
+      "REQUIREMENTS:",
+    ];
+    if (context.hasSource) {
+      parts.push("1. PRODUCT: Reproduce the exact product from [PRODUCT IMAGE] — identical shape, color, texture, branding. This is the highest priority.");
+    }
+    if (context.hasModel) {
+      const identityDetails = modelContext ? ` (${modelContext})` : "";
+      parts.push(`${context.hasSource ? "2" : "1"}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body proportions${identityDetails}.`);
+    }
+    if (context.hasScene) {
+      const num = [context.hasSource, context.hasModel].filter(Boolean).length + 1;
+      parts.push(`${num}. SCENE: Place everything in the exact environment from [SCENE IMAGE] — same background, lighting, atmosphere.`);
+    }
+    parts.push("");
+    parts.push("Quality: Ultra high resolution, sharp focus, natural lighting, commercial-grade.");
+
+    // Brand style (condensed to 1-2 lines)
+    if (brandProfile?.tone) {
+      const toneDesc = TONE_DESCRIPTIONS[brandProfile.tone] || brandProfile.tone;
+      const colorDesc = brandProfile.colorFeel ? (COLOR_FEEL_DESCRIPTIONS[brandProfile.colorFeel] || brandProfile.colorFeel) : "";
+      parts.push(`Brand: ${toneDesc}${colorDesc ? `. Color: ${colorDesc}` : ""}`);
+    }
+
+    // Camera style
+    if (cameraStyle === "natural") {
+      parts.push("Shot on iPhone — deep depth of field, true-to-life colors, no retouching.");
+    }
+
+    // Negatives (single line)
+    const allNeg: string[] = [];
+    if (brandProfile?.doNotRules?.length) allNeg.push(...brandProfile.doNotRules);
+    if (userNegatives?.length) allNeg.push(...userNegatives);
+    parts.push(buildNegativePrompt(cameraStyle));
+    if (allNeg.length > 0) {
+      const deduped = [...new Set(allNeg.map(n => n.toLowerCase()))];
+      parts.push(`Also avoid: ${deduped.join(", ")}`);
+    }
+
+    return parts.join("\n");
+  }
+
   if (isSelfie) {
     layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
     if (cameraStyle === 'natural') {
