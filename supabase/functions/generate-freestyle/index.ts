@@ -455,7 +455,9 @@ serve(async (req) => {
           body.modelContext
         );
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio);
+        const hasImages = !!(body.sourceImage || body.modelImage || body.sceneImage);
+        const retries = hasImages ? 1 : 2;
+        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, retries);
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;
