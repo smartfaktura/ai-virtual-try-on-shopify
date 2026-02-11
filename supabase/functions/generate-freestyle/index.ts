@@ -69,13 +69,7 @@ function detectSelfieIntent(prompt: string): boolean {
 
 // ── Photography DNA (Pro camera style) ────────────────────────────────────
 function buildPhotographyDNA(): string {
-  return `PHOTOGRAPHY DNA:
-- LENS: shot on a 50 mm lens at f 2.8, ISO 400, 1/125 s. Shallow depth of field — subject's eyes and face tack-sharp while background recedes into gentle creamy softness.
-- LIGHTING ARCHITECTURE: Large soft key from camera-left, minimal warm fill, negative fill to sculpt cheek and jaw shadows, faint warm rim from behind for shoulder separation. Controlled specular highlights on skin and fabric without clipping.
-- MICRO-TEXTURE REALISM: Render premium micro-texture — natural skin pores and peach-fuzz without harshness, individual hair strands with natural flyaways, fabric weave and nap, smooth specular sheen on satin/glass/metal surfaces. Crisp lashes, glossy lips, realistic material properties throughout.
-- TONAL CONTROL: Rich blacks retaining full shadow detail. Protect highlights — no blown areas. Warm amber midtones, deep neutral shadows. Cinematic tonal depth with natural skin tones preserved. Avoid any digital harshness.
-- COMPOSITION: Clean silhouette, generous negative space, minimal clutter, no added props or distracting elements. Strong diagonals or rule-of-thirds placement. Intentional, editorial-grade framing.
-- FINISHING: Luxury editorial grade — refined contrast, subtle film-like grain, immaculate retouching with natural realism preserved. Deep neutral shadows, elegant highlight roll-off, delicate color separation.`;
+  return `Shot on 85mm f/1.4 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Natural skin texture, ultra high resolution. Subtle film grain, elegant highlight roll-off.`;
 }
 
 // ── Negative prompt (always appended when polish is on) ───────────────────
