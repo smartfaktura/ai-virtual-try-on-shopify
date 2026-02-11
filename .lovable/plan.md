@@ -1,72 +1,53 @@
 
 
-## Refactor: Align Freestyle with Try-On Architecture
+## Fix: Use Fast AI Model for Freestyle (Match Try-On)
 
-Restructure `generate-freestyle` to match the proven `generate-tryon` pattern exactly, fixing the timeout issues.
+### Root Cause
 
-### Key Differences Causing Problems
+Freestyle auto-upgrades to `google/gemini-3-pro-image-preview` when there are 2+ reference images (line 579). This slow model with 3 images + a long prompt consistently exceeds the 50s timeout. Try-On always uses `google/gemini-2.5-flash-image` and works fine.
 
-| Aspect | Try-On (works) | Freestyle (broken) |
-|--------|----------------|-------------------|
-| AI Model | Always `gemini-2.5-flash-image` | Auto-upgrades to `gemini-3-pro-image-preview` (slow) |
-| Storage | Uploads inside function, returns URLs | Returns raw base64, process-queue uploads |
-| Timeout | None needed (fast model) | None present (slow model hangs) |
-| Supabase client | Creates client for storage upload | No client at all |
+### Solution
+
+Use `gemini-2.5-flash-image` as the default model for freestyle, matching try-on. Only use the pro model when the user explicitly selects "high" quality AND there are fewer than 2 reference images (to avoid the timeout).
+
+For queue-internal calls, always use the flash model regardless of quality setting — the 50s timeout budget is too tight for the pro model with multiple images.
 
 ### Changes
 
-#### 1. `supabase/functions/generate-freestyle/index.ts` -- Full Restructure
+#### `supabase/functions/generate-freestyle/index.ts`
 
-**Add Supabase client + storage upload (copy from try-on):**
-- Import `createClient` from supabase-js (line 1 area)
-- Add `uploadBase64ToStorage()` function identical to try-on's, but targeting the `freestyle-images` bucket
-- Add `getUserIdFromJwt()` helper (copy from try-on)
+**Line 578-581 — Change model selection logic:**
 
-**Add timeout to AI fetch (line 315):**
-- Add `signal: AbortSignal.timeout(50_000)` to the AI gateway fetch call
+```
+Before:
+  const aiModel = (body.quality === "high" || refCount >= 2)
+    ? "google/gemini-3-pro-image-preview"
+    : "google/gemini-2.5-flash-image";
 
-**Queue-mode optimizations:**
-- Detect `x-queue-internal` header (like try-on does at line 228)
-- When queue-internal: cap `imageCount` to 1, reduce `maxRetries` to 1
-- Extract `user_id` from payload when queue-internal (same as try-on)
+After:
+  // Queue-internal: always use fast model (must finish within 50s timeout)
+  // Direct calls: allow pro model only for high quality with 0-1 refs
+  const aiModel = isQueueInternal
+    ? "google/gemini-2.5-flash-image"
+    : (body.quality === "high" && refCount < 2)
+      ? "google/gemini-3-pro-image-preview"
+      : "google/gemini-2.5-flash-image";
+```
 
-**Upload images inside the function (lines 527-571):**
-- After each successful generation, call `uploadBase64ToStorage()` to upload to `freestyle-images` bucket
-- Push the public URL (not base64) into the `images` array
-- This matches try-on's pattern at lines 268-272
+This is the only change needed. The timeouts, storage uploads, and queue optimizations from the previous refactor are already in place and working correctly.
 
-**Reduce retry delays (lines 342, 360, 373):**
-- Change from `1000 * (attempt + 1)` to flat `500`ms
+### Why This Fixes It
 
-**Save to `freestyle_generations` DB inside the function:**
-- When queue-internal, save each image record to `freestyle_generations` table directly (moving this logic out of process-queue)
-
-#### 2. `supabase/functions/process-queue/index.ts` -- Simplify
-
-**Add timeout to downstream fetch (line ~90):**
-- Add `signal: AbortSignal.timeout(55_000)` to the fetch calling generation functions
-
-**Multi-image freestyle loop:**
-- For freestyle jobs with `imageCount > 1`: loop N sequential calls (1 image each), each with its own 55s timeout
-- Collect URLs from each call; if some fail, continue (partial success)
-
-**Remove duplicate freestyle logic (lines ~107-145):**
-- Remove the entire `if (jobType === 'freestyle')` block that handles base64 upload and DB saves
-- Since freestyle now uploads internally and saves DB records itself, process-queue just needs to collect the URLs from the response (same as it does for try-on)
-
-### Result
-
-After these changes, freestyle will follow the exact same flow as try-on:
-1. Edge function receives request
-2. Generates image with AI (with 50s timeout)
-3. Uploads to storage internally
-4. Returns public URL (not base64)
-5. Process-queue just collects URLs and marks job complete
+| Scenario | Before | After |
+|----------|--------|-------|
+| Queue + 3 images | Pro model, >50s, TIMEOUT | Flash model, ~15-25s |
+| Queue + 1 image | Pro model, ~30-40s, borderline | Flash model, ~10-15s |
+| Direct + high quality + 0-1 refs | Pro model (OK, no queue timeout) | Pro model (unchanged) |
+| Direct + standard quality | Flash model | Flash model (unchanged) |
 
 ### Files Changed
 
-| File | What Changes |
-|------|-------------|
-| `supabase/functions/generate-freestyle/index.ts` | Add supabase client, `uploadBase64ToStorage()`, `getUserIdFromJwt()`; add AbortSignal.timeout(50s); detect queue-internal header to cap imageCount=1, maxRetries=1, extract user_id; upload each image to storage and return URLs; save freestyle_generations record when queue-internal; reduce retry delays to 500ms |
-| `supabase/functions/process-queue/index.ts` | Add AbortSignal.timeout(55s) to downstream fetch; loop multi-image freestyle as sequential 1-image calls; remove duplicate freestyle upload/DB-save block |
+| File | Change |
+|------|--------|
+| `supabase/functions/generate-freestyle/index.ts` | Change model selection: always use flash model for queue-internal calls; only allow pro model for direct high-quality calls with 0-1 reference images |
 
