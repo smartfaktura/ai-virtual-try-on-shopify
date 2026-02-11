@@ -11,7 +11,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export function BuyCreditsModal() {
-  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, addCredits } = useCredits();
+  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, refreshBalance } = useCredits();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const monthlyCredits = planConfig.monthlyCredits;
