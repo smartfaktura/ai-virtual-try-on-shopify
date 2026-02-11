@@ -415,6 +415,9 @@ export default function Freestyle() {
     onNegativesPopoverChange: setNegativesPopoverOpen,
     cameraStyle,
     onCameraStyleChange: setCameraStyle,
+    insufficientCredits: balance < creditCost && !isLoading,
+    onBuyCredits: openBuyModal,
+    currentBalance: balance,
   };
 
   return (

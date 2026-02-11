@@ -222,17 +222,33 @@ export function FreestylePromptPanel({
       <div className="border-t border-border/40 mx-4 sm:mx-5" />
 
       {/* Row 3 — Action Bar */}
-      <div className="px-4 sm:px-5 py-3 flex items-center justify-end">
-        <Button
-          onClick={onGenerate}
-          disabled={!canGenerate}
-          size="lg"
-          className="h-11 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold w-full sm:w-auto"
-        >
-          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          Generate
-          <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
-        </Button>
+      <div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
+        {insufficientCredits && !isLoading ? (
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              You have {currentBalance ?? 0} — need {creditCost}
+            </span>
+            <Button
+              onClick={onBuyCredits}
+              size="lg"
+              className="h-11 px-8 gap-2.5 rounded-xl shadow-lg text-sm font-semibold w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white border-0"
+            >
+              <AlertCircle className="w-4 h-4" />
+              Not Enough Credits
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={onGenerate}
+            disabled={!canGenerate}
+            size="lg"
+            className="h-11 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold w-full sm:w-auto"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            Generate
+            <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
+          </Button>
+        )}
       </div>
     </div>
   );
