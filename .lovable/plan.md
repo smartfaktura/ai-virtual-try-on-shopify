@@ -1,73 +1,46 @@
 
 
-## Phase 2 Bug Fixes: Queue Table and Enqueue Endpoint
+## Phase 2 Remaining Issues
 
-### Bug 1: Concurrent Job Limit Not Enforced (Critical)
+### Issue 1: Client-Side Position Polling Is Wrong (Medium)
 
-The `enqueue_generation` SQL function calculates `v_concurrent` (current processing jobs) and `v_max_concurrent` (plan limit) but never actually blocks the enqueue when the limit is reached. This means any user can have unlimited concurrent jobs.
-
-**Fix**: Add a check after computing both values:
-
-```sql
-IF v_concurrent >= v_max_concurrent THEN
-  RETURN jsonb_build_object(
-    'error', 'Too many concurrent generations',
-    'max_concurrent', v_max_concurrent
-  );
-END IF;
+In `useGenerationQueue.ts` lines 104-105, the polling position query uses:
 ```
-
-This requires a SQL migration to replace the `enqueue_generation` function.
-
-Also need to handle this new error in `enqueue-generation/index.ts` -- return a 429 status when the error contains "concurrent".
-
----
-
-### Bug 2: Position Calculation Off-by-Many
-
-The position query in `enqueue_generation` uses `created_at < now()` for tie-breaking, but `now()` is the current transaction time, not the new job's `created_at`. Since all existing jobs were created before `now()`, every same-priority job gets counted, inflating position.
-
-**Fix**: Use the newly inserted job's ID to exclude it and compare `created_at` properly:
-
-```sql
-SELECT count(*) INTO v_position
-FROM generation_queue
-WHERE status = 'queued' AND id != v_job_id
-  AND (priority_score < v_priority
-    OR (priority_score = v_priority
-        AND created_at < (SELECT created_at FROM generation_queue WHERE id = v_job_id)));
+priority_score=lt.${job.priority}
 ```
+This only counts jobs with a **strictly lower** priority score, ignoring same-priority jobs that were enqueued earlier. The SQL function was fixed to use `priority_score < v_priority OR (priority_score = v_priority AND created_at < ...)`, but the client polling doesn't match.
 
-This is included in the same SQL migration.
+**Fix**: Update the polling position query to also count same-priority jobs with earlier `created_at`, or simplify by counting all queued jobs ahead (using a compound filter). The simplest accurate approach is to count all queued jobs where `(priority_score < this.priority) OR (priority_score = this.priority AND created_at < this.created_at)`. Since PostgREST doesn't support OR filters natively, the cleanest fix is to use an RPC or just count all queued jobs with `priority_score <= this.priority` excluding self (slightly overestimates but much better than current).
 
----
+**File**: `src/hooks/useGenerationQueue.ts` (lines 102-118)
 
-### Bug 3: Remove Dead Import
+### Issue 2: Rate Limit Counts All Job Statuses (Minor)
 
-Remove unused `addCredits` import from `useGenerationQueue.ts` (line 47).
+In `enqueue-generation/index.ts` lines 91-97, the hourly rate limit counts ALL jobs in the last hour regardless of status (completed, failed, cancelled). A user who had 9 failed jobs and 1 success would hit the free-tier limit of 10, even though most didn't produce results.
 
-**File**: `src/hooks/useGenerationQueue.ts`
-
-Change:
-```typescript
-const { addCredits } = useCredits();
+**Fix**: Add a status filter to exclude `cancelled` jobs at minimum:
 ```
-To remove this line entirely (and the `useCredits` import if no longer needed).
+.in("status", ["queued", "processing", "completed", "failed"])
+```
+Or more generously, only count `queued`, `processing`, and `completed`.
+
+**File**: `supabase/functions/enqueue-generation/index.ts` (lines 93-97)
+
+### Issue 3: Dead `maxConcurrent` in RATE_LIMITS (Cleanup)
+
+The `RATE_LIMITS` object (lines 11-17) defines `maxConcurrent` per plan, but this is never used -- concurrency is now enforced atomically in the SQL `enqueue_generation` function. This dead code could mislead future developers.
+
+**Fix**: Remove `maxConcurrent` from `RATE_LIMITS` and rename it to something clearer like `HOURLY_LIMITS`.
+
+**File**: `supabase/functions/enqueue-generation/index.ts` (lines 10-17)
 
 ---
 
 ### Summary
 
-| Change | File |
-|--------|------|
-| SQL migration: add concurrent limit check + fix position calculation | New migration file |
-| Handle "concurrent" error as 429 in edge function | `supabase/functions/enqueue-generation/index.ts` |
-| Remove dead `addCredits` import | `src/hooks/useGenerationQueue.ts` |
-| Handle 429 "concurrent" error in frontend | `src/hooks/useGenerationQueue.ts` |
-
-### Implementation Order
-
-1. SQL migration (concurrent check + position fix)
-2. Edge function error handling for concurrent limit
-3. Frontend cleanup and concurrent error handling
+| Priority | Issue | File |
+|----------|-------|------|
+| Medium | Position polling doesn't match SQL logic | `useGenerationQueue.ts` |
+| Minor | Rate limit counts cancelled jobs | `enqueue-generation/index.ts` |
+| Cleanup | Dead `maxConcurrent` in RATE_LIMITS | `enqueue-generation/index.ts` |
 
