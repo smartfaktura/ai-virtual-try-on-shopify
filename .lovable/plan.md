@@ -1,69 +1,157 @@
 
 
-## Fix: Loading State After Refresh + Recover Completed Jobs
+## Optimize: Trim Prompt for Speed and Reliability
 
-### Three Issues Found
+### Critical Analysis of Current Prompt
 
-**Issue 1: No loading silhouette after refresh**
-The recovery effect (line 59-89 in `useGenerationQueue.ts`) runs asynchronously -- it fetches the job from the database, but `activeJob` stays `null` until the first poll response returns. During this gap (could be 500ms-2s), the UI shows the empty state instead of the loading silhouette.
+The polished prompt with all layers active (selfie + model + scene + product + brand + camera style + negatives + aspect ratio + batch) can reach **~4000+ characters** of instruction text. This is excessive for an image generation model and causes:
 
-**Issue 2: Slower generation times**
-From the database logs, the speed depends entirely on how many images are attached:
-- No images: 10-17 seconds
-- With source + model + scene images (3 large base64 payloads): 60-140 seconds
+- Slower processing (more tokens to parse)
+- Higher timeout risk (504 errors)
+- Instruction conflicts (repeated/contradictory rules confuse the model)
+- Diminishing returns (models ignore instructions past a certain density)
 
-This is the AI model's processing time -- not something we can fix in code. The more reference images sent, the longer it takes. This is expected behavior.
+### What's Redundant (Critical Findings)
 
-**Issue 3: Completed job not visible after refresh**
-The recovery only queries for `status=in.(queued,processing)`. If a job completes during the brief refresh window, recovery finds nothing, and the result is never displayed. The images are saved to the database by the backend, but the UI never triggers the `saveImages` flow in `Freestyle.tsx`.
+**1. "Natural" camera style says the same thing 4 times**
 
----
+The no-bokeh/sharp-background rule appears in:
+- Line 96: `"NOT Portrait Mode. No depth-of-field blur applied."`
+- Line 105: `"Deep depth of field... NOT blurred... No bokeh, no background blur, no shallow depth of field whatsoever."`
+- Line 200-207: Camera Rendering Style block repeats it AGAIN in 6+ lines
+- Line 207: Selfie Override repeats it a FIFTH time
 
-### Solution
+**2. Product accuracy is stated 3 times**
 
-#### Change 1: Immediate placeholder during recovery (`useGenerationQueue.ts`)
+- Line 148: `"100% fidelity — identical shape, color, texture, branding, and proportions"`
+- Line 348-349: `buildContentArray` repeats the SAME instruction as an image label
+- Both say "100% fidelity" — the model gets it the first time
 
-Before calling `pollJobStatus`, immediately set a placeholder `activeJob` so the UI shows the loading silhouette right away:
+**3. Model identity is stated 3 times**
+
+- Line 166-168: 90-word MODEL IDENTITY block
+- Line 357-359: `buildContentArray` repeats it as an image label
+- Both say "EXACT same person" and "do NOT generate a different person"
+
+**4. Scene instruction is stated 2 times**
+
+- Line 192-194: ENVIRONMENT block (~60 words)
+- Line 366-369: `buildContentArray` repeats the same as an image label (~50 words)
+
+**5. Selfie composition block is 150+ words for one concept**
+
+Line 108: One massive paragraph that could be 3 sentences.
+
+**6. Camera Rendering Style "natural" block is ~200 words**
+
+Lines 200-208: An essay with bullet points. Most image models don't benefit from this level of prose.
+
+### Optimization Plan
+
+#### Principle: Say it once, say it short
+
+Each instruction should appear exactly once, either in the prompt text OR the image label — not both.
+
+#### Changes to `supabase/functions/generate-freestyle/index.ts`
+
+**A. Consolidate selfie instructions (lines 92-112)**
+
+Replace the 4 selfie layers with 2 concise ones:
+
+```
+Before (~400 chars across 4 blocks):
+  "Ultra high resolution, sharp focus on face, natural ambient lighting..."
+  "SELFIE COMPOSITION: This image is shot FROM the smartphone's front-facing camera..."
+  "SELFIE FRAMING: Subject's full head and hair..."
+
+After (~200 chars in 2 blocks):
+  Layer 1: "Authentic selfie taken with iPhone front camera: {prompt}. Ultra-sharp, natural lighting."
+  Layer 2: "SELFIE: Shot from the phone's POV — direct eye contact, slight wide-angle distortion, one hand holding the phone (not visible). Frame from mid-chest up, full head visible with headroom. {natural: 'No Portrait Mode, no bokeh — everything sharp.' | pro: 'Soft natural bokeh.'}"
+```
+
+**B. Consolidate camera rendering style (lines 198-209)**
+
+Replace the ~200-word essay with a concise directive:
+
+```
+Before: 5 bullet-point sections (LENS, COLOR SCIENCE, LIGHTING, TEXTURE, OVERALL FEEL, SELFIE OVERRIDE)
+
+After (~80 chars):
+  "CAMERA: iPhone-style rendering. Deep depth of field (everything sharp), true-to-life colors (no grading), natural ambient light only, ultra-sharp detail, authentic unprocessed look."
+```
+
+**C. Remove duplicate instructions from `buildContentArray` (lines 332-374)**
+
+The image labels currently repeat what the polished prompt already says. Shorten them to simple identifiers:
+
+```
+Before: "PRODUCT/SOURCE REFERENCE IMAGE — reproduce this exact product with 100% fidelity (shape, color, texture, branding, proportions):"
+After: "PRODUCT REFERENCE IMAGE:"
+
+Before: "MODEL REFERENCE IMAGE — use this EXACT person's face, hair, skin tone, and body. Do NOT generate a different person:"
+After: "MODEL REFERENCE IMAGE:"
+
+Before: "SCENE/ENVIRONMENT REFERENCE IMAGE — You MUST place the subject IN this exact environment/location. Reproduce the same setting, background elements, lighting direction, color temperature, and atmosphere. Do NOT use a different environment:"
+After: "SCENE REFERENCE IMAGE:"
+```
+
+The detailed instructions are already in the polished prompt — no need to say them twice.
+
+**D. Shorten model identity block (lines 164-168)**
+
+```
+Before (~90 words): "The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo."
+
+After (~30 words): "MODEL IDENTITY: Generate the EXACT person from the MODEL REFERENCE IMAGE — same face, features, skin tone, hair, and body. Not a similar person — the same individual."
+```
+
+**E. Shorten aspect ratio enforcement (line 459)**
+
+```
+Before: "MANDATORY OUTPUT FORMAT: This image MUST be exactly 1:1 aspect ratio (1024x1024 pixels). Do NOT add borders, padding, letterboxing, or pillarboxing. The subject must fill the entire 1:1 frame with no empty or white margins."
+
+After: "OUTPUT: Exactly {ratio} ({dims}). No borders/padding/margins. Fill entire frame."
+```
+
+**F. Shorten negative prompt (lines 66-78)**
+
+```
+Before:
+  "CRITICAL — DO NOT include any of the following:
+  - No text, watermarks, logos, labels, or signatures anywhere in the image
+  - No distorted or extra fingers, hands, or limbs
+  - No blurry or out-of-focus areas unless intentionally bokeh
+  - No AI-looking skin smoothing or plastic textures
+  - No collage layouts or split-screen compositions"
+
+After:
+  "AVOID: text/watermarks/logos, distorted hands/fingers, {blur rule}, plastic AI skin, collage layouts."
+```
+
+**G. Add 504 as non-retryable + reduce retries with images (lines 260-262, 281)**
 
 ```typescript
-// In recovery effect, after finding a row:
-const row = rows[0];
-jobIdRef.current = row.id;
+const hasImages = !!(sourceImage || modelImage || sceneImage);
+const maxRetries = hasImages ? 1 : 2;
 
-// Set immediate placeholder so UI shows loading state instantly
-setActiveJob({
-  id: row.id,
-  status: row.status,  // 'queued' or 'processing'
-  position: 0,
-  priority: row.priority_score || 0,
-  result: null,
-  error_message: null,
-  created_at: row.created_at,
-  started_at: row.started_at,
-  completed_at: null,
-});
-
-pollJobStatus(row.id);
+// Inside the response handler:
+if (response.status === 504) {
+  throw { status: 504, message: "Generation timed out. Try fewer reference images or a simpler prompt." };
+}
 ```
 
-#### Change 2: Also recover recently completed jobs (`useGenerationQueue.ts`)
+### Expected Impact
 
-Expand the recovery query to also look for jobs that completed in the last 2 minutes, so results aren't lost during a refresh:
-
-```
-status=in.(queued,processing,completed)&completed_at=is.null,completed_at=gte.{2_minutes_ago}
-```
-
-For completed jobs found during recovery, skip polling and directly fetch the result so the completion handler in `Freestyle.tsx` can save the images.
-
----
+| Metric | Before | After |
+|--------|--------|-------|
+| Prompt length (full selfie+model+scene+brand) | ~4000 chars | ~1800 chars |
+| Duplicate instructions | 10+ | 0 |
+| Timeout risk | High (504s observed) | Lower |
+| Retry waste on timeout | Up to 2 extra attempts | 0 (504 not retried) |
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGenerationQueue.ts` | Set immediate placeholder activeJob during recovery; expand recovery to include recently completed jobs |
+| `supabase/functions/generate-freestyle/index.ts` | Consolidate redundant instructions, shorten all text blocks, trim image labels, add 504 handling, reduce retries with images |
 
-### Regarding Slow Generation
-
-The generation speed (60-140s) is normal when attaching 3 reference images (product, model, scene). The AI model needs more time to process multiple image inputs. Standard text-only prompts still complete in 10-17 seconds. No code change needed for this -- it's the expected behavior of the underlying AI model.
