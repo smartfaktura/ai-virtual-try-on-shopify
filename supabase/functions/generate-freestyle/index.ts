@@ -489,38 +489,32 @@ serve(async (req) => {
       ? "\n\nBATCH CONSISTENCY: Maintain the same color palette, lighting direction, overall mood, and visual style. Only vary composition, angle, and framing."
       : "";
 
-    for (let i = 0; i < imageCount; i++) {
-      try {
-        const variationSuffix =
-          i === 0
-            ? batchConsistency
-            : `${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
+    // Generate all images in parallel for faster results
+    const generatePromises = Array.from({ length: imageCount }, (_, i) => {
+      const variationSuffix =
+        i === 0
+          ? batchConsistency
+          : `${batchConsistency}\n\nVariation ${i + 1}: Create a different composition and angle while keeping the same subject, style, and lighting.`;
 
-        const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
+      const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
 
-        // Build structured content array with labeled images
-        const contentArray = buildContentArray(
-          promptWithVariation,
-          body.sourceImage,
-          body.modelImage,
-          body.sceneImage,
-          body.modelContext
-        );
+      const contentArray = buildContentArray(
+        promptWithVariation,
+        body.sourceImage,
+        body.modelImage,
+        body.sceneImage,
+        body.modelContext
+      );
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio);
+      return generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio)
+        .then(result => ({ index: i, result, error: null as unknown }))
+        .catch(error => ({ index: i, result: null as GenerateResult, error }));
+    });
 
-        if (result && typeof result === "object" && "blocked" in result) {
-          contentBlocked = true;
-          blockReason = result.reason;
-          console.warn(`Image ${i + 1} blocked by content safety filter`);
-          break;
-        } else if (typeof result === "string") {
-          images.push(result);
-          console.log(`Generated freestyle image ${i + 1}/${imageCount}`);
-        } else {
-          errors.push(`Image ${i + 1} failed to generate`);
-        }
-      } catch (error: unknown) {
+    const settled = await Promise.all(generatePromises);
+
+    for (const { index, result, error } of settled) {
+      if (error) {
         if (typeof error === "object" && error !== null && "status" in error) {
           const statusError = error as { status: number; message: string };
           return new Response(
@@ -528,11 +522,16 @@ serve(async (req) => {
             { status: statusError.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
-        errors.push(`Image ${i + 1}: ${error instanceof Error ? error.message : "Unknown error"}`);
-      }
-
-      if (i < imageCount - 1) {
-        await new Promise((r) => setTimeout(r, 500));
+        errors.push(`Image ${index + 1}: ${error instanceof Error ? error.message : "Unknown error"}`);
+      } else if (result && typeof result === "object" && "blocked" in result) {
+        contentBlocked = true;
+        blockReason = result.reason;
+        console.warn(`Image ${index + 1} blocked by content safety filter`);
+      } else if (typeof result === "string") {
+        images.push(result);
+        console.log(`Generated freestyle image ${index + 1}/${imageCount}`);
+      } else {
+        errors.push(`Image ${index + 1} failed to generate`);
       }
     }
 

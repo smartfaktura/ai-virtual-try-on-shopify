@@ -304,7 +304,7 @@ export default function Freestyle() {
       } else if (result.images && result.images.length > 0) {
         setIsSaving(true);
         saveImages(result.images, {
-          prompt: prompt,
+          prompt: lastEffectivePromptRef.current || prompt,
           aspectRatio,
           quality,
           modelId: selectedModel?.modelId ?? null,
