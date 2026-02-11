@@ -1,70 +1,49 @@
 
 
-## Fix: Generation Stuck on "Generating" Due to Heavy Polling Payload
+## Fix: Enforce Aspect Ratio in Generated Images
 
-### Root Cause
+### Problem
+When a user selects 1:1 (or any specific aspect ratio), the generated image sometimes comes back in a different ratio (e.g., portrait with white borders). This happens because:
 
-The `pollJobStatus` function in `useGenerationQueue.ts` fetches the `result` column from `generation_queue` every 3 seconds. This column contains base64-encoded image data (1.8MB+ per image). On slower connections or with high-quality/multi-image jobs, these polling requests timeout or fail silently, so the UI never learns the job completed -- it stays stuck on "Generating your images..."
-
-This is the same root cause as the gallery issue: fetching massive base64 blobs over REST.
+1. The prompt text says `"Output aspect ratio: 1:1"` which is too weak -- the AI model often ignores it for fashion/model shots
+2. While `image_config: { aspect_ratio: "1:1" }` is sent to the API, Gemini image models don't always respect this parameter reliably
+3. There's no explicit pixel dimension or strong compositional instruction to enforce the ratio
 
 ### Solution
+Strengthen aspect ratio enforcement in the `generate-freestyle` edge function with two changes:
 
-Split polling into two phases:
-1. **Poll lightweight status only** (no `result` column) -- fast, reliable, every 3 seconds
-2. **Fetch `result` once** only when status transitions to `completed`
+### 1. Replace weak aspect ratio text with explicit dimension and composition instructions
 
-### Changes to `src/hooks/useGenerationQueue.ts`
-
-**1. Remove `result` from the polling select statement**
-
-Change line 109 from:
+In `supabase/functions/generate-freestyle/index.ts` (line 451), replace the simple text:
 ```
-select=id,status,result,error_message,created_at,started_at,completed_at,priority_score
+Output aspect ratio: ${body.aspectRatio}
 ```
-to:
+with a strong, explicit instruction that maps each ratio to pixel dimensions and composition rules:
+
 ```
-select=id,status,error_message,created_at,started_at,completed_at,priority_score
+MANDATORY OUTPUT FORMAT: This image MUST be exactly ${ratio} aspect ratio (${width}x${height} pixels).
+Do NOT add borders, padding, letterboxing, or pillarboxing.
+The subject must fill the entire ${ratio} frame with no empty/white margins.
 ```
 
-Set `result: null` in the constructed `QueueJob` object during polling.
+The mapping will be:
+- 1:1 -> 1024x1024
+- 3:4 -> 768x1024
+- 4:5 -> 816x1020
+- 9:16 -> 576x1024
+- 16:9 -> 1024x576
 
-**2. Add a one-time result fetch when job completes**
+### 2. Keep the existing `image_config` API parameter as a secondary enforcement
 
-When polling detects `status === 'completed'`, make a single fetch for the `result` column, then update `activeJob` with the full result. This happens once, not every 3 seconds.
+The `image_config: { aspect_ratio }` parameter already sent on line 276 will remain as a belt-and-suspenders approach.
 
-```typescript
-// Inside the poll function, after detecting terminal status:
-if (job.status === 'completed') {
-  // Fetch result only once
-  const resultRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=result`,
-    {
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  if (resultRes.ok) {
-    const resultRows = await resultRes.json();
-    if (resultRows?.[0]?.result) {
-      job.result = resultRows[0].result;
-    }
-  }
-}
-```
-
-**3. Stop polling before the result fetch** so there are no competing requests.
-
-### Result
-
-- Polling requests drop from ~1.8MB to ~200 bytes each
-- No more silent timeouts causing the UI to stay stuck
-- The result is fetched exactly once when the job completes
-- The existing completion handler in `Freestyle.tsx` works as before
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGenerationQueue.ts` | Remove `result` from poll select; fetch result once on completion |
+| `supabase/functions/generate-freestyle/index.ts` | Replace weak aspect ratio prompt text (line 451) with explicit dimension and anti-border instructions |
 
+### Why This Works
+- Explicit pixel dimensions give the model an unambiguous target
+- "No borders/padding/letterboxing" prevents the white-border workaround the model uses when it generates a portrait image inside a square canvas
+- "Fill the entire frame" prevents the model from composing a portrait shot centered in a wider frame
