@@ -63,13 +63,19 @@ function detectSelfieIntent(prompt: string): boolean {
 }
 
 // ── Negative prompt (always appended when polish is on) ───────────────────
-const NEGATIVE_PROMPT = `
+function buildNegativePrompt(cameraStyle?: 'pro' | 'natural'): string {
+  const blurRule = cameraStyle === 'natural'
+    ? 'No blurry or out-of-focus areas. No bokeh. No shallow depth of field. Everything must be sharp from foreground to background.'
+    : 'No blurry or out-of-focus areas unless intentionally bokeh';
+
+  return `
 CRITICAL — DO NOT include any of the following:
 - No text, watermarks, logos, labels, or signatures anywhere in the image
 - No distorted or extra fingers, hands, or limbs
-- No blurry or out-of-focus areas unless intentionally bokeh
+- ${blurRule}
 - No AI-looking skin smoothing or plastic textures
 - No collage layouts or split-screen compositions`;
+}
 
 // ── Context-aware prompt polish ───────────────────────────────────────────
 function polishUserPrompt(
@@ -85,9 +91,15 @@ function polishUserPrompt(
 
   if (isSelfie) {
     layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
-    layers.push(
-      "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
-    );
+    if (cameraStyle === 'natural') {
+      layers.push(
+        "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on iPhone front camera in standard photo mode (NOT Portrait Mode). No depth-of-field blur applied."
+      );
+    } else {
+      layers.push(
+        "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
+      );
+    }
     // Selfie composition + framing layer
     const selfieDepthInstruction = cameraStyle === 'natural'
       ? "Deep depth of field — background is sharp and in focus, NOT blurred. This is a standard front-camera selfie WITHOUT Portrait Mode enabled. No bokeh, no background blur, no shallow depth of field whatsoever."
@@ -155,9 +167,15 @@ function polishUserPrompt(
       `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo.`
     );
     if (isSelfie) {
-      layers.push(
-        "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections — NOT studio-retouched or airbrushed. Soft, flattering natural light on the face. Relaxed, genuine expression as if casually taking a selfie. Slight warmth and glow from ambient or window light."
-      );
+      if (cameraStyle === 'natural') {
+        layers.push(
+          "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections. Even, ambient lighting on the face — no dramatic light shaping, no artificial warmth or glow. True-to-life skin tones with zero color grading. As captured by a smartphone front camera in auto mode."
+        );
+      } else {
+        layers.push(
+          "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections — NOT studio-retouched or airbrushed. Soft, flattering natural light on the face. Relaxed, genuine expression as if casually taking a selfie. Slight warmth and glow from ambient or window light."
+        );
+      }
     } else {
       layers.push(
         "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
@@ -200,7 +218,7 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
   }
 
   // Build final negative prompt
-  let negativeBlock = NEGATIVE_PROMPT;
+  let negativeBlock = buildNegativePrompt(cameraStyle);
   if (allNegatives.length > 0) {
     const dedupedNegatives = [...new Set(allNegatives.map(n => n.toLowerCase()))];
     negativeBlock += `\n- No ${dedupedNegatives.join("\n- No ")}`;
