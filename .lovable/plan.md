@@ -1,23 +1,26 @@
 
 
-## Fix: Freestyle Gallery 2 Columns on Mobile
+## Fix: Freestyle Prompt Bar Not Fixed on Mobile
 
-Currently the masonry layout in `FreestyleGallery.tsx` is hardcoded to 3 columns regardless of screen size (line 418). On mobile, this makes images too small.
+### Root Cause
 
-### Change
+The prompt bar and gradient use `fixed` positioning (lines 474, 477 in `Freestyle.tsx`). On iOS Safari, `fixed` positioning breaks inside scrollable containers — the bar scrolls with content instead of staying pinned.
 
-**File:** `src/components/app/freestyle/FreestyleGallery.tsx`
+### Solution
 
-Use the existing `useIsMobile` hook to switch between 2 columns on mobile and 3 on desktop:
+Change `fixed` to `absolute` on both the gradient and prompt bar divs. This works because:
+- The parent container (line 428) already has `position: relative`, `height: 100dvh`, and `overflow-hidden`
+- The gallery scrolls inside a child div (`overflow-y-auto`)
+- `absolute` bottom-0 within the parent container achieves the same pinned effect without iOS bugs
 
-1. Import `useIsMobile` from `@/hooks/use-mobile`
-2. Call `const isMobile = useIsMobile()` in the component
-3. Change column count from hardcoded 3 to dynamic:
+### Changes
 
-```typescript
-const columnCount = isMobile ? 2 : 3;
-const columns: React.ReactNode[][] = Array.from({ length: columnCount }, () => []);
-allCards.forEach((card, i) => columns[i % columnCount].push(card));
-```
+**File:** `src/pages/Freestyle.tsx`
 
-No other files need to change. This follows the same responsive pattern used in the Library and Discover galleries.
+| Line | Before | After |
+|------|--------|-------|
+| 474 | `fixed bottom-0 left-0 right-0 h-40 bg-gradient-to-t...` | `absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t...` |
+| 477 | `fixed bottom-0 left-0 right-0 px-4 sm:px-6 pb-4...` | `absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4...` |
+
+No other files need to change.
+
