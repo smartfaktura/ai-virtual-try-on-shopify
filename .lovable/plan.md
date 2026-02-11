@@ -1,55 +1,52 @@
 
 
-## Improve "Not Enough Credits" UX
+## Fix Plans, Credits UX, Navigation Layout, and Button Styling
 
-### Problems
-1. "You have 2 — need 4" is cryptic and unclear
-2. The amber button doesn't look clickable -- it reads like a warning label, not a call-to-action
-3. No clear path forward for the user
+### Issues Found
 
-### Design
+1. **Navigation sidebar "2/20" layout** -- The balance number (2) and quota (/20) are in separate `<p>` tags, causing them to stack vertically. They should be on the same line for readability.
 
-Replace the current bottom bar with a cleaner, more actionable layout when credits are insufficient:
+2. **"Upgrade Plan" and "Buy Credits" buttons don't match Generate button style** -- The insufficient credits buttons use `size="sm"` with `rounded-lg`, while the Generate button uses `size="lg"` with `rounded-xl`, `shadow-lg`, and `h-11`. They look out of place.
 
-**New layout for the action bar:**
-- A subtle inline banner spanning the full width of the action bar area
-- Light amber/warm background with a clear message: **"You need 2 more credits to generate"**
-- Two clear action buttons side by side:
-  - **"Buy Credits"** -- primary amber button, opens the buy modal
-  - **"Upgrade Plan"** -- secondary/outline button, also opens buy modal (which has the upgrade tab)
-- Drop the raw "You have 2 — need 4" text entirely
+3. **Plan selection is mock/fake** -- `handlePlanSelect` in Settings.tsx just shows a toast ("Switched to X plan!") without actually updating the database. Same for `handleCreditPurchase` which calls `addCredits` (local state only, no DB write). These need to be honest about being placeholders until Stripe is connected.
+
+4. **BuyCreditsModal "Buy" buttons also use local-only `addCredits`** -- No actual payment flow, just fake local credit additions.
+
+### Changes
+
+#### 1. Fix CreditIndicator layout (`src/components/app/CreditIndicator.tsx`)
+
+Put balance and quota on the same line instead of stacked:
+
+- Change from two separate `<p>` elements to a single line: `2 / 20`
+- Keep the sparkle icon and overall compact layout
+
+#### 2. Match insufficient credits buttons to Generate button style (`src/components/app/freestyle/FreestylePromptPanel.tsx`)
+
+Update the "Upgrade Plan" and "Buy Credits" buttons to use the same styling as the Generate button:
+- `size="lg"`, `h-11`, `rounded-xl`, `shadow-lg`
+- Proper font weight and spacing
+- The "Buy Credits" button becomes the primary CTA with amber styling matching the Generate button's prominence
+- "Upgrade Plan" stays as outline but with matching size
+
+#### 3. Make plan/credit actions honest placeholders (`src/pages/Settings.tsx`)
+
+Since Stripe isn't connected yet:
+- `handlePlanSelect`: Show a toast like "Payment integration coming soon" instead of pretending the plan changed
+- `handleCreditPurchase`: Same -- show "Payment integration coming soon" instead of faking credit additions
+
+#### 4. Fix BuyCreditsModal fake purchases (`src/components/app/BuyCreditsModal.tsx`)
+
+- `handlePurchase`: Show "Payment coming soon" toast instead of silently adding fake credits
+- `handleUpgrade`: Already navigates to settings, which is fine
 
 ### Technical Details
 
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
-
-Replace the insufficient credits section (the current amber button + cryptic text) with:
-
-```
-When insufficientCredits && !isLoading:
-
-<div className="flex items-center gap-3 w-full">
-  <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 flex-1">
-    <AlertCircle className="w-4 h-4 shrink-0" />
-    <span>You need <strong>{creditCost - (currentBalance ?? 0)} more credits</strong> to generate</span>
-  </div>
-  <div className="flex items-center gap-2">
-    <Button variant="outline" size="sm" onClick={onBuyCredits}>
-      Upgrade Plan
-    </Button>
-    <Button size="sm" onClick={onBuyCredits} className="bg-amber-500 hover:bg-amber-600 text-white">
-      Buy Credits
-    </Button>
-  </div>
-</div>
-```
-
-This gives:
-- A human-readable message ("You need 2 more credits to generate")
-- Two clearly styled, obviously clickable buttons
-- Clean layout that doesn't look like a broken/disabled state
-
 | File | Change |
 |------|--------|
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Replace the insufficient credits action bar with inline message + two action buttons |
+| `src/components/app/CreditIndicator.tsx` | Merge balance + quota into single inline element (e.g., `2 / 20`) |
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Update insufficient credits buttons to match Generate button sizing (`size="lg"`, `h-11`, `rounded-xl`, `shadow-lg`) |
+| `src/pages/Settings.tsx` | Update `handlePlanSelect` and `handleCreditPurchase` to show "coming soon" toasts instead of fake success |
+| `src/components/app/BuyCreditsModal.tsx` | Update `handlePurchase` to show "coming soon" toast instead of fake credit addition |
 
+No database or backend changes needed.
