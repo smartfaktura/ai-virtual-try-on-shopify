@@ -84,25 +84,12 @@ function polishUserPrompt(
   const isSelfie = detectSelfieIntent(rawPrompt);
 
   if (isSelfie) {
-    layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
-    if (cameraStyle === 'natural') {
-      layers.push(
-        "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on iPhone front camera in standard photo mode (NOT Portrait Mode). No depth-of-field blur applied."
-      );
-    } else {
-      layers.push(
-        "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
-      );
-    }
-    // Selfie composition + framing layer
-    const selfieDepthInstruction = cameraStyle === 'natural'
-      ? "Deep depth of field — background is sharp and in focus, NOT blurred. This is a standard front-camera selfie WITHOUT Portrait Mode enabled. No bokeh, no background blur, no shallow depth of field whatsoever."
-      : "Soft natural smartphone-style bokeh in background.";
+    layers.push(`Authentic selfie taken with iPhone front camera: ${rawPrompt}. Ultra-sharp, natural lighting.`);
+    const depthRule = cameraStyle === 'natural'
+      ? 'No Portrait Mode, no bokeh — everything sharp.'
+      : 'Soft natural bokeh.';
     layers.push(
-      `SELFIE COMPOSITION: This image is shot FROM the smartphone's front-facing camera. The camera IS the phone — the viewer sees exactly what the iPhone front camera captures. The subject is looking DIRECTLY into the camera lens (direct eye contact with the viewer). Slight wide-angle distortion typical of a smartphone selfie lens. The subject's arm holding the phone may be partially visible at the bottom or side edge of the frame, but the phone itself is NEVER visible because it IS the camera. ABSOLUTELY NO phone, smartphone, or device should appear anywhere in the image. This is NOT a third-person photo of someone holding a phone — it is the phone's own POV. ${selfieDepthInstruction} Authentic, candid expression — relaxed and genuine. NEVER show both hands free — one hand is always occupied holding the phone (which is the camera).`
-    );
-    layers.push(
-      "SELFIE FRAMING: Subject's full head and hair must be fully visible within the frame with natural headroom above. Frame from mid-chest or shoulders upward — do NOT crop below the chin or above the forehead. Center the face in the upper-third of the frame following the rule of thirds."
+      `SELFIE: Shot from the phone's POV — direct eye contact, slight wide-angle distortion, one hand holding the phone (not visible). Frame from mid-chest up, full head visible with headroom. No phone/device in frame. Candid expression. ${depthRule}`
     );
   } else {
     layers.push(`Professional photography: ${rawPrompt}`);
