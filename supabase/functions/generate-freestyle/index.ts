@@ -65,10 +65,16 @@ function detectSelfieIntent(prompt: string): boolean {
 // ── Negative prompt (always appended when polish is on) ───────────────────
 function buildNegativePrompt(cameraStyle?: 'pro' | 'natural'): string {
   const blurRule = cameraStyle === 'natural'
-    ? 'no bokeh/shallow DOF (everything sharp foreground to background)'
-    : 'no blur unless intentional bokeh';
+    ? 'No blurry or out-of-focus areas. No bokeh. No shallow depth of field. Everything must be sharp from foreground to background.'
+    : 'No blurry or out-of-focus areas unless intentionally bokeh';
 
-  return `AVOID: text/watermarks/logos, distorted hands/fingers, ${blurRule}, plastic AI skin, collage layouts.`;
+  return `
+CRITICAL — DO NOT include any of the following:
+- No text, watermarks, logos, labels, or signatures anywhere in the image
+- No distorted or extra fingers, hands, or limbs
+- ${blurRule}
+- No AI-looking skin smoothing or plastic textures
+- No collage layouts or split-screen compositions`;
 }
 
 // ── Context-aware prompt polish ───────────────────────────────────────────
@@ -84,12 +90,25 @@ function polishUserPrompt(
   const isSelfie = detectSelfieIntent(rawPrompt);
 
   if (isSelfie) {
-    layers.push(`Authentic selfie taken with iPhone front camera: ${rawPrompt}. Ultra-sharp, natural lighting.`);
-    const depthRule = cameraStyle === 'natural'
-      ? 'No Portrait Mode, no bokeh — everything sharp.'
-      : 'Soft natural bokeh.';
+    layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
+    if (cameraStyle === 'natural') {
+      layers.push(
+        "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on iPhone front camera in standard photo mode (NOT Portrait Mode). No depth-of-field blur applied."
+      );
+    } else {
+      layers.push(
+        "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
+      );
+    }
+    // Selfie composition + framing layer
+    const selfieDepthInstruction = cameraStyle === 'natural'
+      ? "Deep depth of field — background is sharp and in focus, NOT blurred. This is a standard front-camera selfie WITHOUT Portrait Mode enabled. No bokeh, no background blur, no shallow depth of field whatsoever."
+      : "Soft natural smartphone-style bokeh in background.";
     layers.push(
-      `SELFIE: Shot from the phone's POV — direct eye contact, slight wide-angle distortion, one hand holding the phone (not visible). Frame from mid-chest up, full head visible with headroom. No phone/device in frame. Candid expression. ${depthRule}`
+      `SELFIE COMPOSITION: This image is shot FROM the smartphone's front-facing camera. The camera IS the phone — the viewer sees exactly what the iPhone front camera captures. The subject is looking DIRECTLY into the camera lens (direct eye contact with the viewer). Slight wide-angle distortion typical of a smartphone selfie lens. The subject's arm holding the phone may be partially visible at the bottom or side edge of the frame, but the phone itself is NEVER visible because it IS the camera. ABSOLUTELY NO phone, smartphone, or device should appear anywhere in the image. This is NOT a third-person photo of someone holding a phone — it is the phone's own POV. ${selfieDepthInstruction} Authentic, candid expression — relaxed and genuine. NEVER show both hands free — one hand is always occupied holding the phone (which is the camera).`
+    );
+    layers.push(
+      "SELFIE FRAMING: Subject's full head and hair must be fully visible within the frame with natural headroom above. Frame from mid-chest or shoulders upward — do NOT crop below the chin or above the forehead. Center the face in the upper-third of the frame following the rule of thirds."
     );
   } else {
     layers.push(`Professional photography: ${rawPrompt}`);
@@ -125,12 +144,19 @@ function polishUserPrompt(
 
   // Product / source image layer
   if (context.hasSource) {
-    layers.push("PRODUCT: Reproduce the PRODUCT REFERENCE IMAGE with 100% fidelity — identical shape, color, texture, branding. Do not modify or stylize.");
+    layers.push(
+      "PRODUCT ACCURACY: The product in the PRODUCT REFERENCE IMAGE must be reproduced with 100% fidelity — identical shape, color, texture, branding, and proportions. Do not modify, stylize, or reinterpret the product in any way."
+    );
     if (isSelfie) {
-      layers.push("PRODUCT INTERACTION: Hold/display product naturally near face or chest, casual grip. Not floating or catalog-posed.");
+      layers.push(
+        "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
+      );
     }
+    // Product-only framing (no model involved)
     if (!context.hasModel) {
-      layers.push("FRAMING: Center product, 50-70% of frame, no cropping.");
+      layers.push(
+        "FRAMING: Center the product with balanced negative space on all sides. The product should occupy 50-70% of the frame with no cropping of edges."
+      );
     }
   }
 
@@ -138,26 +164,48 @@ function polishUserPrompt(
   if (context.hasModel) {
     const identityDetails = modelContext ? ` (${modelContext})` : "";
     layers.push(
-      `MODEL IDENTITY: Generate the EXACT person from the MODEL REFERENCE IMAGE${identityDetails} — same face, features, skin tone, hair, and body. Not a similar person — the same individual.`
+      `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo.`
     );
     if (isSelfie) {
-      const skinStyle = cameraStyle === 'natural'
-        ? 'Natural skin texture, ambient lighting, true-to-life tones, no color grading.'
-        : 'Natural skin texture, soft flattering light, slight warmth.';
-      layers.push(`PORTRAIT (SELFIE): ${skinStyle}`);
+      if (cameraStyle === 'natural') {
+        layers.push(
+          "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections. Even, ambient lighting on the face — no dramatic light shaping, no artificial warmth or glow. True-to-life skin tones with zero color grading. As captured by a smartphone front camera in auto mode."
+        );
+      } else {
+        layers.push(
+          "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections — NOT studio-retouched or airbrushed. Soft, flattering natural light on the face. Relaxed, genuine expression as if casually taking a selfie. Slight warmth and glow from ambient or window light."
+        );
+      }
     } else {
-      layers.push("PORTRAIT: Natural skin texture, accurate proportions, natural pose. Full head/hair visible with headroom, rule of thirds.");
+      layers.push(
+        "PORTRAIT QUALITY: Natural and realistic skin texture, accurate body proportions, natural pose and expression. Studio-grade portrait retouching — no plastic or airbrushed look."
+      );
+      // Framing for standard portrait/model shots
+      layers.push(
+        "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head — do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
+      );
     }
   }
 
   // Scene / environment layer
   if (context.hasScene) {
-    layers.push("ENVIRONMENT: Place subject in the EXACT environment from the SCENE REFERENCE IMAGE — same location, background, lighting direction, color temperature, and atmosphere.");
+    layers.push(
+      "ENVIRONMENT: The subject MUST be placed in the EXACT environment shown in the SCENE REFERENCE IMAGE. Reproduce the same location, background elements, props, foliage, architecture, and atmosphere. Match the lighting direction, color temperature, and time of day. The final image should look like it was photographed in that exact location. Do NOT substitute a different environment or background."
+    );
   }
 
   // Camera rendering style layer (injected before negatives)
   if (cameraStyle === "natural") {
-    layers.push("CAMERA: iPhone-style rendering. Deep depth of field (everything sharp), true-to-life colors (no grading), natural ambient light only, ultra-sharp detail, authentic unprocessed look.");
+    layers.push(
+`CAMERA RENDERING STYLE — NATURAL (iPhone):
+Apply these rendering characteristics ONLY — do NOT change the subject, scene, environment, model, or composition in any way:
+- LENS: Slight wide-angle perspective typical of smartphone main camera (26mm equivalent). Deep depth of field — foreground AND background stay sharp and in focus. No artificial bokeh, no shallow depth of field, no blurred backgrounds unless the scene naturally has extreme distance.
+- COLOR SCIENCE: Apple iPhone-style computational photography color rendering. True-to-life, neutral color reproduction — no cinematic color grading, no orange-and-teal push, no lifted shadows, no crushed blacks. Colors should look exactly as the human eye would see them. Whites are pure neutral white, not warm-tinted.
+- LIGHTING: Use whatever lighting exists in the scene naturally. No added studio strobes, softboxes, or artificial rim lights. If indoors, the light comes from windows and room lights. If outdoors, from the sun and sky. Slight HDR-like dynamic range (shadows are not pitch black, highlights are not blown out) — similar to iPhone Smart HDR processing.
+- TEXTURE & DETAIL: Ultra-sharp across the entire frame. High pixel-level detail on skin, fabric, hair, and surfaces. No heavy skin smoothing or frequency separation retouching. Natural skin texture including pores and fine lines is visible. Detail level comparable to a 48MP smartphone sensor.
+- OVERALL FEEL: The image should look like it was taken by someone with a latest-generation iPhone and posted directly — no Lightroom, no Photoshop, no professional retouching. Clean, sharp, true-to-life. The hallmark is "impressive but clearly a phone photo."
+${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing camera mode (NOT Portrait Mode). The background MUST remain sharp and detailed — absolutely no depth-of-field blur, no bokeh effect whatsoever. Everything from foreground to background is in focus.` : ''}`
+    );
   }
 
   // Build combined negatives list
@@ -207,9 +255,10 @@ async function generateImage(
   content: ContentItem[],
   apiKey: string,
   model: string,
-  aspectRatio?: string,
-  maxRetries = 2
+  aspectRatio?: string
 ): Promise<GenerateResult> {
+  const maxRetries = 2;
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch(
@@ -235,9 +284,6 @@ async function generateImage(
         }
         if (response.status === 402) {
           throw { status: 402, message: "Credits exhausted. Please add more credits." };
-        }
-        if (response.status === 504) {
-          throw { status: 504, message: "Generation timed out. Try fewer reference images or a simpler prompt." };
         }
         const errorText = await response.text();
         console.error(`AI Gateway error (attempt ${attempt + 1}):`, response.status, errorText);
@@ -288,28 +334,39 @@ function buildContentArray(
   prompt: string,
   sourceImage?: string,
   modelImage?: string,
-  sceneImage?: string
+  sceneImage?: string,
+  modelContext?: string
 ): ContentItem[] {
   const content: ContentItem[] = [];
 
   // Main prompt text first
   content.push({ type: "text", text: prompt });
 
-  // Product/source image with simple label (details already in polished prompt)
+  // Product/source image with explicit label
   if (sourceImage) {
-    content.push({ type: "text", text: "PRODUCT REFERENCE IMAGE:" });
+    content.push({
+      type: "text",
+      text: "PRODUCT/SOURCE REFERENCE IMAGE — reproduce this exact product with 100% fidelity (shape, color, texture, branding, proportions):",
+    });
     content.push({ type: "image_url", image_url: { url: sourceImage } });
   }
 
-  // Model image with simple label
+  // Model image with strong identity label
   if (modelImage) {
-    content.push({ type: "text", text: "MODEL REFERENCE IMAGE:" });
+    const modelDesc = modelContext ? ` (${modelContext})` : "";
+    content.push({
+      type: "text",
+      text: `MODEL REFERENCE IMAGE — use this EXACT person's face, hair, skin tone, and body${modelDesc}. Do NOT generate a different person:`,
+    });
     content.push({ type: "image_url", image_url: { url: modelImage } });
   }
 
-  // Scene image with simple label
+  // Scene image with label
   if (sceneImage) {
-    content.push({ type: "text", text: "SCENE REFERENCE IMAGE:" });
+    content.push({
+      type: "text",
+      text: "SCENE/ENVIRONMENT REFERENCE IMAGE — You MUST place the subject IN this exact environment/location. Reproduce the same setting, background elements, lighting direction, color temperature, and atmosphere. Do NOT use a different environment:",
+    });
     content.push({ type: "image_url", image_url: { url: sceneImage } });
   }
 
@@ -390,16 +447,8 @@ serve(async (req) => {
       finalPrompt = unpolished;
     }
 
-    // Add strong aspect ratio enforcement with explicit dimensions
-    const aspectDimensions: Record<string, string> = {
-      "1:1": "1024x1024",
-      "3:4": "768x1024",
-      "4:5": "816x1020",
-      "9:16": "576x1024",
-      "16:9": "1024x576",
-    };
-    const dims = aspectDimensions[body.aspectRatio] || "1024x1024";
-    const aspectPrompt = `${finalPrompt}\n\nOUTPUT: Exactly ${body.aspectRatio} (${dims}). No borders/padding/margins. Fill entire frame.`;
+    // Add aspect ratio instruction
+    const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
 
     // Select model based on quality
     const aiModel = body.quality === "high"
@@ -450,12 +499,11 @@ serve(async (req) => {
           promptWithVariation,
           body.sourceImage,
           body.modelImage,
-          body.sceneImage
+          body.sceneImage,
+          body.modelContext
         );
 
-        const hasImages = !!(body.sourceImage || body.modelImage || body.sceneImage);
-        const retries = hasImages ? 1 : 2;
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, retries);
+        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio);
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;

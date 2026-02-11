@@ -1,157 +1,104 @@
 
 
-## Optimize: Trim Prompt for Speed and Reliability
+## Fix: Recent Creations Gallery Not Showing Images
 
-### Critical Analysis of Current Prompt
+### Root Cause
 
-The polished prompt with all layers active (selfie + model + scene + product + brand + camera style + negatives + aspect ratio + batch) can reach **~4000+ characters** of instruction text. This is excessive for an image generation model and causes:
+The `generation_jobs.results` column contains **base64-encoded images** (~9MB each). The gallery query fetches 5 rows including this column, attempting to download ~45MB of text data. This causes the query to fail/timeout, the entire `queryFn` throws, and the gallery falls back to empty placeholders.
 
-- Slower processing (more tokens to parse)
-- Higher timeout risk (504 errors)
-- Instruction conflicts (repeated/contradictory rules confuse the model)
-- Diminishing returns (models ignore instructions past a certain density)
+### Solution
 
-### What's Redundant (Critical Findings)
+Restructure the gallery to avoid fetching the massive `results` column entirely, and run both queries in parallel so one failure doesn't block the other.
 
-**1. "Natural" camera style says the same thing 4 times**
+### Changes to `src/components/app/RecentCreationsGallery.tsx`
 
-The no-bokeh/sharp-background rule appears in:
-- Line 96: `"NOT Portrait Mode. No depth-of-field blur applied."`
-- Line 105: `"Deep depth of field... NOT blurred... No bokeh, no background blur, no shallow depth of field whatsoever."`
-- Line 200-207: Camera Rendering Style block repeats it AGAIN in 6+ lines
-- Line 207: Selfie Override repeats it a FIFTH time
+**1. Remove `results` from the generation_jobs select** -- instead, only show generation_jobs that have a linked product image (via `user_products.image_url`). This keeps the query lightweight.
 
-**2. Product accuracy is stated 3 times**
+**2. Run both queries in parallel** with `Promise.all` and handle errors individually (so freestyle items still show even if generation_jobs fails).
 
-- Line 148: `"100% fidelity — identical shape, color, texture, branding, and proportions"`
-- Line 348-349: `buildContentArray` repeats the SAME instruction as an image label
-- Both say "100% fidelity" — the model gets it the first time
+**3. Fix date sorting** -- store raw ISO `created_at` for accurate sorting instead of converting to `toLocaleDateString()` and parsing back.
 
-**3. Model identity is stated 3 times**
+**4. Add auto-refresh** -- `refetchInterval: 15_000` so the gallery stays current without page refresh.
 
-- Line 166-168: 90-word MODEL IDENTITY block
-- Line 357-359: `buildContentArray` repeats it as an image label
-- Both say "EXACT same person" and "do NOT generate a different person"
+### Technical Details
 
-**4. Scene instruction is stated 2 times**
-
-- Line 192-194: ENVIRONMENT block (~60 words)
-- Line 366-369: `buildContentArray` repeats the same as an image label (~50 words)
-
-**5. Selfie composition block is 150+ words for one concept**
-
-Line 108: One massive paragraph that could be 3 sentences.
-
-**6. Camera Rendering Style "natural" block is ~200 words**
-
-Lines 200-208: An essay with bullet points. Most image models don't benefit from this level of prose.
-
-### Optimization Plan
-
-#### Principle: Say it once, say it short
-
-Each instruction should appear exactly once, either in the prompt text OR the image label — not both.
-
-#### Changes to `supabase/functions/generate-freestyle/index.ts`
-
-**A. Consolidate selfie instructions (lines 92-112)**
-
-Replace the 4 selfie layers with 2 concise ones:
-
+Updated `CreationItem` interface:
 ```
-Before (~400 chars across 4 blocks):
-  "Ultra high resolution, sharp focus on face, natural ambient lighting..."
-  "SELFIE COMPOSITION: This image is shot FROM the smartphone's front-facing camera..."
-  "SELFIE FRAMING: Subject's full head and hair..."
-
-After (~200 chars in 2 blocks):
-  Layer 1: "Authentic selfie taken with iPhone front camera: {prompt}. Ultra-sharp, natural lighting."
-  Layer 2: "SELFIE: Shot from the phone's POV — direct eye contact, slight wide-angle distortion, one hand holding the phone (not visible). Frame from mid-chest up, full head visible with headroom. {natural: 'No Portrait Mode, no bokeh — everything sharp.' | pro: 'Soft natural bokeh.'}"
-```
-
-**B. Consolidate camera rendering style (lines 198-209)**
-
-Replace the ~200-word essay with a concise directive:
-
-```
-Before: 5 bullet-point sections (LENS, COLOR SCIENCE, LIGHTING, TEXTURE, OVERALL FEEL, SELFIE OVERRIDE)
-
-After (~80 chars):
-  "CAMERA: iPhone-style rendering. Deep depth of field (everything sharp), true-to-life colors (no grading), natural ambient light only, ultra-sharp detail, authentic unprocessed look."
-```
-
-**C. Remove duplicate instructions from `buildContentArray` (lines 332-374)**
-
-The image labels currently repeat what the polished prompt already says. Shorten them to simple identifiers:
-
-```
-Before: "PRODUCT/SOURCE REFERENCE IMAGE — reproduce this exact product with 100% fidelity (shape, color, texture, branding, proportions):"
-After: "PRODUCT REFERENCE IMAGE:"
-
-Before: "MODEL REFERENCE IMAGE — use this EXACT person's face, hair, skin tone, and body. Do NOT generate a different person:"
-After: "MODEL REFERENCE IMAGE:"
-
-Before: "SCENE/ENVIRONMENT REFERENCE IMAGE — You MUST place the subject IN this exact environment/location. Reproduce the same setting, background elements, lighting direction, color temperature, and atmosphere. Do NOT use a different environment:"
-After: "SCENE REFERENCE IMAGE:"
-```
-
-The detailed instructions are already in the polished prompt — no need to say them twice.
-
-**D. Shorten model identity block (lines 164-168)**
-
-```
-Before (~90 words): "The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo."
-
-After (~30 words): "MODEL IDENTITY: Generate the EXACT person from the MODEL REFERENCE IMAGE — same face, features, skin tone, hair, and body. Not a similar person — the same individual."
-```
-
-**E. Shorten aspect ratio enforcement (line 459)**
-
-```
-Before: "MANDATORY OUTPUT FORMAT: This image MUST be exactly 1:1 aspect ratio (1024x1024 pixels). Do NOT add borders, padding, letterboxing, or pillarboxing. The subject must fill the entire 1:1 frame with no empty or white margins."
-
-After: "OUTPUT: Exactly {ratio} ({dims}). No borders/padding/margins. Fill entire frame."
-```
-
-**F. Shorten negative prompt (lines 66-78)**
-
-```
-Before:
-  "CRITICAL — DO NOT include any of the following:
-  - No text, watermarks, logos, labels, or signatures anywhere in the image
-  - No distorted or extra fingers, hands, or limbs
-  - No blurry or out-of-focus areas unless intentionally bokeh
-  - No AI-looking skin smoothing or plastic textures
-  - No collage layouts or split-screen compositions"
-
-After:
-  "AVOID: text/watermarks/logos, distorted hands/fingers, {blur rule}, plastic AI skin, collage layouts."
-```
-
-**G. Add 504 as non-retryable + reduce retries with images (lines 260-262, 281)**
-
-```typescript
-const hasImages = !!(sourceImage || modelImage || sceneImage);
-const maxRetries = hasImages ? 1 : 2;
-
-// Inside the response handler:
-if (response.status === 504) {
-  throw { status: 504, message: "Generation timed out. Try fewer reference images or a simpler prompt." };
+interface CreationItem {
+  id: string;
+  imageUrl: string;
+  label: string;
+  date: string;       // display string
+  rawDate: string;     // ISO string for sorting
 }
 ```
 
-### Expected Impact
+Updated query function:
+```typescript
+const [jobsResult, freestyleResult] = await Promise.all([
+  supabase
+    .from('generation_jobs')
+    .select('id, created_at, workflows(name), user_products(title, image_url)')
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(5),
+  supabase
+    .from('freestyle_generations')
+    .select('id, image_url, prompt, created_at')
+    .order('created_at', { ascending: false })
+    .limit(5),
+]);
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Prompt length (full selfie+model+scene+brand) | ~4000 chars | ~1800 chars |
-| Duplicate instructions | 10+ | 0 |
-| Timeout risk | High (504s observed) | Lower |
-| Retry waste on timeout | Up to 2 extra attempts | 0 (504 not retried) |
+// Process generation_jobs -- only add items that have a product image
+// (skip results column entirely to avoid fetching massive base64 data)
+if (!jobsResult.error) {
+  for (const job of jobsResult.data ?? []) {
+    const productImg = (job.user_products as any)?.image_url;
+    if (productImg) {
+      items.push({
+        id: job.id,
+        imageUrl: productImg,
+        label: (job.workflows as any)?.name || 'Generated',
+        date: new Date(job.created_at).toLocaleDateString(),
+        rawDate: job.created_at,
+      });
+    }
+  }
+}
 
-### Files Changed
+// Process freestyle -- these always have proper URLs
+if (!freestyleResult.error) {
+  for (const f of freestyleResult.data ?? []) {
+    items.push({
+      id: f.id,
+      imageUrl: f.image_url,
+      label: 'Freestyle',
+      date: new Date(f.created_at).toLocaleDateString(),
+      rawDate: f.created_at,
+    });
+  }
+}
+
+// Sort by raw ISO date for accuracy
+items.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
+return items.slice(0, 10);
+```
+
+Add query options:
+```typescript
+enabled: !!user,
+refetchInterval: 15_000,
+staleTime: 10_000,
+```
+
+### Result
+- No more fetching ~45MB of base64 data
+- Freestyle images show immediately (they have proper URLs)
+- Parallel queries so one failure doesn't block the other
+- Auto-refresh every 15 seconds
+- Accurate time-based sorting
 
 | File | Change |
 |------|--------|
-| `supabase/functions/generate-freestyle/index.ts` | Consolidate redundant instructions, shorten all text blocks, trim image labels, add 504 handling, reduce retries with images |
+| `src/components/app/RecentCreationsGallery.tsx` | Remove `results` from select, parallel queries, error isolation, fix sorting, add auto-refresh |
 

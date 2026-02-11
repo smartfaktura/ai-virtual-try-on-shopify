@@ -55,74 +55,6 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
     };
   }, []);
 
-  // Recover in-flight jobs after page refresh
-  useEffect(() => {
-    if (!user || activeJob) return;
-
-    const recover = async () => {
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token || SUPABASE_KEY;
-
-      // Also recover jobs completed in the last 2 minutes so results aren't lost on refresh
-      const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&or=(status.in.(queued,processing),and(status.eq.completed,completed_at.gte.${twoMinAgo}))&order=created_at.desc&limit=1`,
-        {
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!res.ok) return;
-      const rows = await res.json();
-      if (rows.length === 0) return;
-
-      const row = rows[0];
-      jobIdRef.current = row.id;
-
-      // Set immediate placeholder so UI shows loading state instantly
-      setActiveJob({
-        id: row.id,
-        status: row.status,
-        position: 0,
-        priority: row.priority_score || 0,
-        result: null,
-        error_message: null,
-        created_at: row.created_at,
-        started_at: row.started_at,
-        completed_at: row.completed_at,
-      });
-
-      // For completed jobs, fetch result directly instead of polling
-      if (row.status === 'completed') {
-        const resultRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${row.id}&select=result`,
-          {
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (resultRes.ok) {
-          const resultRows = await resultRes.json();
-          if (resultRows?.[0]?.result) {
-            setActiveJob(prev => prev ? { ...prev, result: resultRows[0].result, status: 'completed' } : null);
-          }
-        }
-      } else {
-        pollJobStatus(row.id);
-      }
-    };
-
-    recover();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
@@ -141,7 +73,7 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
       const token = session?.session?.access_token || SUPABASE_KEY;
 
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=id,status,error_message,created_at,started_at,completed_at,priority_score`,
+        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=id,status,result,error_message,created_at,started_at,completed_at,priority_score`,
         {
           headers: {
             apikey: SUPABASE_KEY,
@@ -192,31 +124,9 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
       if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
         stopPolling();
 
-        // Fetch result once on completion (not during polling to avoid large payloads)
-        if (job.status === 'completed') {
-          const resultRes = await fetch(
-            `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=result`,
-            {
-              headers: {
-                apikey: SUPABASE_KEY,
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          if (resultRes.ok) {
-            const resultRows = await resultRes.json();
-            if (resultRows?.[0]?.result) {
-              job.result = resultRows[0].result;
-            }
-          }
-        }
-
-        setActiveJob(job);
-
         if (job.status === 'failed') {
           toast.error(job.error_message || 'Generation failed. Credits have been refunded.');
         }
-        return; // Already set activeJob above with result
       }
     };
 
