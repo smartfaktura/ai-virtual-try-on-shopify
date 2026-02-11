@@ -1,77 +1,70 @@
 
 
-## Fix: Resume In-Flight Generations After Page Refresh
+## Fix: Generation Stuck on "Generating" Due to Heavy Polling Payload
 
-### Problem
-The `useGenerationQueue` hook stores the active job ID in React state (`useState`). When the page is refreshed:
-1. State is cleared -- `activeJob` becomes `null`
-2. Polling stops -- no `setInterval` running
-3. The backend finishes the job, but nobody is listening
-4. The generated image is never shown to the user
+### Root Cause
+
+The `pollJobStatus` function in `useGenerationQueue.ts` fetches the `result` column from `generation_queue` every 3 seconds. This column contains base64-encoded image data (1.8MB+ per image). On slower connections or with high-quality/multi-image jobs, these polling requests timeout or fail silently, so the UI never learns the job completed -- it stays stuck on "Generating your images..."
+
+This is the same root cause as the gallery issue: fetching massive base64 blobs over REST.
 
 ### Solution
-On mount, check for any recent `queued` or `processing` jobs belonging to the current user, and automatically resume polling for them.
 
-### Changes
+Split polling into two phases:
+1. **Poll lightweight status only** (no `result` column) -- fast, reliable, every 3 seconds
+2. **Fetch `result` once** only when status transitions to `completed`
 
-#### `src/hooks/useGenerationQueue.ts`
+### Changes to `src/hooks/useGenerationQueue.ts`
 
-**Add a recovery effect** that runs once on mount (when `user` is available):
+**1. Remove `result` from the polling select statement**
 
-```typescript
-// Recover in-flight jobs after page refresh
-useEffect(() => {
-  if (!user || activeJob) return; // Don't recover if already tracking a job
-
-  const recover = async () => {
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const { data: session } = await supabase.auth.getSession();
-    const token = session?.session?.access_token || SUPABASE_KEY;
-
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (!res.ok) return;
-    const rows = await res.json();
-    if (rows.length === 0) return;
-
-    const row = rows[0];
-    jobIdRef.current = row.id;
-    pollJobStatus(row.id);
-  };
-
-  recover();
-}, [user]); // intentionally minimal deps -- run once per user login
+Change line 109 from:
+```
+select=id,status,result,error_message,created_at,started_at,completed_at,priority_score
+```
+to:
+```
+select=id,status,error_message,created_at,started_at,completed_at,priority_score
 ```
 
-This will:
-- Query the `generation_queue` table for any active jobs on page load
-- If found, resume polling that job until it completes or fails
-- The existing completion handler in `Freestyle.tsx` picks up the result and saves images as normal
+Set `result: null` in the constructed `QueueJob` object during polling.
 
-#### No other files need to change
-The `Freestyle.tsx` effect that watches `activeJob.status === 'completed'` already handles saving images and showing results. The recovery just reconnects the polling pipeline.
+**2. Add a one-time result fetch when job completes**
 
-### Edge Cases Handled
+When polling detects `status === 'completed'`, make a single fetch for the `result` column, then update `activeJob` with the full result. This happens once, not every 3 seconds.
 
-| Scenario | Behavior |
-|----------|----------|
-| Refresh during generation | Recovers job, resumes polling, shows result |
-| Refresh after completion | No in-flight jobs found, no recovery needed |
-| Multiple tabs | Each tab recovers the same job, but `saveImages` is idempotent |
-| Job times out (5 min) | `cleanup_stale_jobs` marks it failed, polling picks up failure state |
+```typescript
+// Inside the poll function, after detecting terminal status:
+if (job.status === 'completed') {
+  // Fetch result only once
+  const resultRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=result`,
+    {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (resultRes.ok) {
+    const resultRows = await resultRes.json();
+    if (resultRows?.[0]?.result) {
+      job.result = resultRows[0].result;
+    }
+  }
+}
+```
 
-### Files Changed
+**3. Stop polling before the result fetch** so there are no competing requests.
+
+### Result
+
+- Polling requests drop from ~1.8MB to ~200 bytes each
+- No more silent timeouts causing the UI to stay stuck
+- The result is fetched exactly once when the job completes
+- The existing completion handler in `Freestyle.tsx` works as before
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGenerationQueue.ts` | Add recovery effect to resume polling for in-flight jobs on mount |
+| `src/hooks/useGenerationQueue.ts` | Remove `result` from poll select; fetch result once on completion |
 
