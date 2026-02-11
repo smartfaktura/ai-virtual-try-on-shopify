@@ -43,6 +43,7 @@ export default function Freestyle() {
   const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
   const [negatives, setNegatives] = useState<string[]>([]);
+  const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
   const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
   const [showSceneHint, setShowSceneHint] = useState(false);
@@ -220,6 +221,7 @@ export default function Freestyle() {
       stylePresets: activePresetKeywords.length > 0 ? activePresetKeywords : undefined,
       brandProfile: brandContext,
       negatives: negatives.length > 0 ? negatives : undefined,
+      cameraStyle,
     };
 
     // Enqueue via priority queue
@@ -366,6 +368,8 @@ export default function Freestyle() {
     onNegativesChange: setNegatives,
     negativesPopoverOpen,
     onNegativesPopoverChange: setNegativesPopoverOpen,
+    cameraStyle,
+    onCameraStyleToggle: () => setCameraStyle(s => s === 'pro' ? 'natural' : 'pro'),
   };
 
   return (

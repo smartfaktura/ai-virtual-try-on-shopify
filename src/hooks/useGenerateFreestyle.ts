@@ -24,6 +24,7 @@ interface FreestyleParams {
   stylePresets?: string[];
   brandProfile?: BrandProfileContext;
   negatives?: string[];
+  cameraStyle?: 'pro' | 'natural';
 }
 
 interface FreestyleResult {
@@ -100,6 +101,7 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
           stylePresets: params.stylePresets,
           brandProfile: params.brandProfile,
           negatives: params.negatives,
+          cameraStyle: params.cameraStyle,
         }),
       });
 

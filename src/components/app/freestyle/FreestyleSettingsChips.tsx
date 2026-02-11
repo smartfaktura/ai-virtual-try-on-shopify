@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Square, RectangleHorizontal, ChevronDown,
   Minus, Plus, Wand2, Image as ImageIcon,
+  Smartphone, Camera,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -81,6 +82,9 @@ interface FreestyleSettingsChipsProps {
   onNegativesChange: (negatives: string[]) => void;
   negativesPopoverOpen: boolean;
   onNegativesPopoverChange: (open: boolean) => void;
+  // Camera style
+  cameraStyle: 'pro' | 'natural';
+  onCameraStyleToggle: () => void;
 }
 
 export function FreestyleSettingsChips({
@@ -97,6 +101,7 @@ export function FreestyleSettingsChips({
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
+  cameraStyle, onCameraStyleToggle,
 }: FreestyleSettingsChipsProps) {
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
 
@@ -196,6 +201,29 @@ export function FreestyleSettingsChips({
               {quality === 'standard'
                 ? 'Fast generation at standard resolution. 4 credits per image.'
                 : 'Higher detail and resolution output. 10 credits per image.'}
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Camera Style Toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={onCameraStyleToggle}
+                className={cn(
+                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                  cameraStyle === 'natural'
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+                )}
+              >
+                {cameraStyle === 'natural' ? <Smartphone className="w-3.5 h-3.5" /> : <Camera className="w-3.5 h-3.5" />}
+                {cameraStyle === 'natural' ? 'Natural' : 'Pro'}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[240px] text-center">
+              {cameraStyle === 'pro'
+                ? 'Studio-grade commercial look with polished lighting and color grading.'
+                : 'Raw iPhone-style photo — sharp details, true-to-life colors, no heavy editing.'}
             </TooltipContent>
           </Tooltip>
 
