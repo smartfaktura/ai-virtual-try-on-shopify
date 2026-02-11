@@ -207,7 +207,8 @@ async function generateImage(
   content: ContentItem[],
   apiKey: string,
   model: string,
-  aspectRatio?: string
+  aspectRatio?: string,
+  maxRetries = 2
 ): Promise<GenerateResult> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
