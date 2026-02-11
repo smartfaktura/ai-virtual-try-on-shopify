@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.generate-product]
 verify_jwt = false
+
+[functions.retry-queue]
+verify_jwt = false

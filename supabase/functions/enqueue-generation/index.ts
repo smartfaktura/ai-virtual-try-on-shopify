@@ -139,22 +139,28 @@ serve(async (req) => {
       );
     }
 
-    // Fire-and-forget: trigger process-queue worker
-    try {
-      fetch(`${supabaseUrl}/functions/v1/process-queue`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${serviceRoleKey}`,
-          "Content-Type": "application/json",
-          "x-queue-internal": "true",
-        },
-        body: JSON.stringify({ trigger: "enqueue" }),
-      }).catch(() => {
-        // Silently ignore — pg_cron will pick it up
-      });
-    } catch {
-      // Silently ignore
-    }
+    // Trigger process-queue with retry (2 attempts, 5s timeout each)
+    const triggerQueue = async () => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const res = await fetch(`${supabaseUrl}/functions/v1/process-queue`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${serviceRoleKey}`,
+              "Content-Type": "application/json",
+              "x-queue-internal": "true",
+            },
+            body: JSON.stringify({ trigger: "enqueue" }),
+            signal: AbortSignal.timeout(5000),
+          });
+          if (res.ok) break;
+          console.warn(`[enqueue] process-queue attempt ${attempt + 1} returned ${res.status}`);
+        } catch (e) {
+          console.warn(`[enqueue] process-queue attempt ${attempt + 1} failed:`, (e as Error).message);
+        }
+      }
+    };
+    triggerQueue().catch(() => {});
 
     console.log(`[enqueue] Job ${result.job_id} enqueued for user ${userId}, type=${jobType}, cost=${creditsCost}, priority=${result.priority}`);
 

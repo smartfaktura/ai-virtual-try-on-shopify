@@ -47,6 +47,7 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
   const [isEnqueuing, setIsEnqueuing] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdRef = useRef<string | null>(null);
+  const retriggeredRef = useRef(false);
 
   // Cleanup polling on unmount
   useEffect(() => {
@@ -102,6 +103,21 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
 
       // Calculate position if still queued (count jobs ahead: lower priority_score, or same score but earlier created_at)
       if (job.status === 'queued') {
+        // Stuck detection: if queued > 30s, re-trigger process-queue via retry-queue
+        const queuedDuration = Date.now() - new Date(job.created_at).getTime();
+        if (queuedDuration > 30_000 && !retriggeredRef.current) {
+          retriggeredRef.current = true;
+          console.warn(`[queue] Job ${job.id} stuck for ${Math.round(queuedDuration / 1000)}s, re-triggering`);
+          fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ trigger: 'stuck-retry' }),
+          }).catch(() => {});
+        }
+
         const posRes = await fetch(
           `${SUPABASE_URL}/rest/v1/generation_queue?status=eq.queued&priority_score=lte.${job.priority}&id=neq.${job.id}&select=id`,
           {
@@ -249,7 +265,7 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
       });
 
       jobIdRef.current = result.jobId;
-
+      retriggeredRef.current = false;
       // Start polling
       pollJobStatus(result.jobId);
 
