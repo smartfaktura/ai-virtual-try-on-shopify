@@ -30,7 +30,7 @@ import { PublishModal } from '@/components/app/PublishModal';
 import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
 import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
-import { NoCreditsModal } from '@/components/app/NoCreditsModal';
+import { InsufficientCreditsWarning } from '@/components/app/InsufficientCreditsWarning';
 import { useCredits } from '@/contexts/CreditContext';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { useAuth } from '@/contexts/AuthContext';
@@ -158,7 +158,7 @@ export default function Generate() {
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
+  // noCreditsModalOpen removed — using inline warning + disabled button instead
 
 
   // Workflow generation config shortcuts
@@ -372,7 +372,7 @@ export default function Generate() {
       return;
     }
     const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode });
-    if (balance < cost) { setNoCreditsModalOpen(true); return; }
+    if (balance < cost) { openBuyModal('topup'); return; }
     if (generationMode === 'virtual-try-on') {
       if (!selectedModel || !selectedPose) { toast.error('Please select a model and scene first'); return; }
       handleTryOnConfirmGenerate(); return;
@@ -1246,9 +1246,12 @@ export default function Generate() {
                   <p className="text-sm">{balance} credits available</p>
                 </div>
 
+                {balance < creditCost && (
+                  <InsufficientCreditsWarning cost={creditCost} balance={balance} />
+                )}
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setCurrentStep('template')}>Back</Button>
-                  <Button onClick={handleGenerateClick}>Generate {imageCount} Images</Button>
+                  <Button onClick={handleGenerateClick} disabled={balance < creditCost}>Generate {imageCount} Images · {creditCost} credits</Button>
                 </div>
               </div>
             )}
@@ -1376,10 +1379,13 @@ export default function Generate() {
               <p className="text-sm">{balance} credits available</p>
             </div>
 
+            {balance < (selectedVariationIndices.size * (quality === 'high' ? 2 : 1)) && (
+              <InsufficientCreditsWarning cost={selectedVariationIndices.size * (quality === 'high' ? 2 : 1)} balance={balance} />
+            )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'))}>Back</Button>
-              <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0}>
-                Generate {selectedVariationIndices.size} {activeWorkflow?.name} Images
+              <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0 || balance < (selectedVariationIndices.size * (quality === 'high' ? 2 : 1))}>
+                Generate {selectedVariationIndices.size} {activeWorkflow?.name} Images · {selectedVariationIndices.size * (quality === 'high' ? 2 : 1)} credits
               </Button>
             </div>
           </div>
@@ -1441,9 +1447,12 @@ export default function Generate() {
               </div>
             </AlertDescription></Alert>
 
+            {balance < creditCost && (
+              <InsufficientCreditsWarning cost={creditCost} balance={balance} />
+            )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setCurrentStep('pose')}>Back</Button>
-              <Button onClick={handleGenerateClick}>Generate {imageCount} Try-On Images</Button>
+              <Button onClick={handleGenerateClick} disabled={balance < creditCost}>Generate {imageCount} Try-On Images · {creditCost} credits</Button>
             </div>
           </div>
         )}
@@ -1606,7 +1615,7 @@ export default function Generate() {
       <ImageLightbox images={generatedImages} currentIndex={lightboxIndex} open={lightboxOpen} onClose={() => setLightboxOpen(false)}
         onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate} selectedIndices={selectedForPublish} productName={selectedProduct?.title || scratchUpload?.productInfo.title} />
-      <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} />
+      {/* NoCreditsModal removed — inline warnings + disabled buttons used instead */}
     </PageHeader>
   );
 }
