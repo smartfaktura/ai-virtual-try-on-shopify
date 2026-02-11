@@ -95,7 +95,7 @@ export default function Freestyle() {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const { images: savedImages, isLoading: isLoadingImages, saveImages, deleteImage } = useFreestyleImages();
+  const { images: savedImages, isLoading: isLoadingImages, saveImages, deleteImage, refreshImages } = useFreestyleImages();
   const [isSaving, setIsSaving] = useState(false);
 
   // Auto-dismiss scene hint
