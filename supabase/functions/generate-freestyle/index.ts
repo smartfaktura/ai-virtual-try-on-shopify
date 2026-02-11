@@ -386,7 +386,7 @@ async function generateImage(
             modalities: ["image", "text"],
             ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
-          signal: AbortSignal.timeout(50_000), // 50s timeout per AI call
+          signal: AbortSignal.timeout(90_000), // 90s timeout per AI call (pro model is slower)
         }
       );
 

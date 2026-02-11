@@ -56,7 +56,7 @@ serve(async (req) => {
   }
 
   const startTime = Date.now();
-  const MAX_RUNTIME_MS = 45_000; // 45 seconds, stay under 60s limit
+  const MAX_RUNTIME_MS = 100_000; // 100 seconds, accommodate pro model
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
