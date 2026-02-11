@@ -1,58 +1,45 @@
 
+## Redesign Bottom Action Bar and Buy Credits Modal
 
-## Add Working Credit Purchase and Plan Change Functions
+### 1. Bottom Action Bar (FreestylePromptPanel.tsx)
 
-### Current State
+**Current**: Two equal buttons "Upgrade" and "Buy Credits" side by side.
+**New layout**:
+- **Right side**: "Upgrade Plan" as the primary, prominent button (matches Generate button style with primary color)
+- **Left side**: The amber warning message stays, but "Buy Credits" becomes a subtle text link that opens the modal to the Top Up tab
+- This makes the upgrade path the clear primary CTA, with top-up as a secondary option
 
-The database has `deduct_credits` and `refund_credits` SQL functions that work correctly for generation flows. However:
+### 2. Buy Credits Modal -- Complete Redesign (BuyCreditsModal.tsx)
 
-- **No `add_purchased_credits` function** -- There's no server-side function to atomically add credits after a purchase. The frontend `addCredits` only updates local React state.
-- **No `change_user_plan` function** -- There's no server-side function to change a user's plan. The Settings page just shows a toast.
-- When payment is eventually connected, there's no backend to call.
+Redesign for a spacious, Apple-inspired feel:
 
-### Plan
+**Overall changes:**
+- Increase modal width from `max-w-xl` to `max-w-2xl`
+- More generous padding and spacing throughout
+- Cleaner typography hierarchy
+- Remove the balance bar from the top (it clutters the modal -- users already see it in the sidebar)
 
-#### 1. Create two new database functions
+**Upgrade Plan tab (default for all users):**
+- Each plan gets its own clean card in a vertical stack
+- Each card shows:
+  - Plan name (large, bold) + price prominently (`$79/mo`)
+  - Monthly credits clearly stated
+  - Top 3-4 features as checkmark list with good spacing
+  - "Select Plan" or "Current Plan" button
+- Current plan card is subtly dimmed with "Current Plan" label
+- Recommended plan has a highlight border and "Recommended" badge
+- Enterprise stays as a minimal "Contact Sales" row at bottom
+- Generous `gap-4` between cards, `p-6` padding inside cards
 
-**`add_purchased_credits(p_user_id, p_amount)`**
-- Atomically adds credits to the user's balance (same pattern as `refund_credits` but semantically separate for audit clarity)
-- Returns the new balance
-- SECURITY DEFINER so it can only be called via RPC
-
-**`change_user_plan(p_user_id, p_new_plan, p_new_credits)`**
-- Updates the user's `plan` column
-- Sets `credits_balance` to the new plan's monthly allocation (or adds them, depending on business logic -- we'll set it to the new plan's quota for simplicity)
-- Validates the plan is one of the allowed values
-- Returns the updated row info
-
-#### 2. Wire up frontend to call these RPCs
-
-**Settings.tsx -- `handlePlanSelect`**
-- Call `change_user_plan` RPC with the selected plan ID and its monthly credits
-- Refresh the credit context after success
-- Still show "coming soon" for now but the function will be ready
-
-**Settings.tsx -- `handleCreditPurchase`**
-- Call `add_purchased_credits` RPC with the pack's credit amount
-- Refresh the credit context after success
-
-**BuyCreditsModal.tsx -- `handlePurchase`**
-- Same as above -- call `add_purchased_credits` RPC
-
-**CreditContext.tsx**
-- No changes needed; `refreshBalance` already re-fetches from DB
-
-#### 3. Make it testable now (without payment)
-
-Since there's no payment yet, we'll keep the toast saying "Payment integration coming soon" but the actual DB functions will exist and be tested. When Stripe is connected later, the webhook handler just needs to call these RPCs.
+**Top Up tab:**
+- Keep the 3-column credit pack grid
+- Make cards taller with more breathing room (`p-6` instead of `p-4`)
+- Larger credit numbers and price display
+- Cleaner "Buy" buttons with proper sizing
 
 ### Technical Details
 
-| Component | Change |
-|-----------|--------|
-| **New migration** | Create `add_purchased_credits` and `change_user_plan` SQL functions |
-| `src/pages/Settings.tsx` | Wire `handlePlanSelect` to call `change_user_plan` RPC, `handleCreditPurchase` to call `add_purchased_credits` RPC. For now, both still show "coming soon" toast but the functions are ready. |
-| `src/components/app/BuyCreditsModal.tsx` | Wire `handlePurchase` to call `add_purchased_credits` RPC with "coming soon" toast |
-
-**Note:** The actual purchase/plan-change calls will remain behind the "coming soon" toast until payment is connected. The DB functions will be created and deployable so Stripe webhooks can call them immediately when ready.
-
+| File | Change |
+|------|--------|
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Swap button priority: "Upgrade Plan" becomes primary right button, "Buy Credits" becomes text link |
+| `src/components/app/BuyCreditsModal.tsx` | Full redesign: wider modal, remove balance bar, spacious plan cards with clear pricing/features, Apple-clean styling |
