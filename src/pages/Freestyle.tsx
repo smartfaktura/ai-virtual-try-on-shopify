@@ -22,6 +22,21 @@ import type { Tables } from '@/integrations/supabase/types';
 type UserProduct = Tables<'user_products'>;
 type BrandProfile = Tables<'brand_profiles'>;
 
+function getProductModelInteraction(productType: string): string {
+  const type = productType.toLowerCase();
+  if (['dress','shirt','jacket','pants','skirt','top','hoodie','sweater','coat','jeans','clothing','apparel'].some(t => type.includes(t)))
+    return 'worn by';
+  if (['bag','handbag','purse','backpack','tote'].some(t => type.includes(t)))
+    return 'carried by';
+  if (['shoes','sneakers','boots','heels','sandals','footwear'].some(t => type.includes(t)))
+    return 'worn by';
+  if (['jewelry','necklace','ring','bracelet','earrings','watch'].some(t => type.includes(t)))
+    return 'worn by';
+  if (['hat','cap','beanie','headwear'].some(t => type.includes(t)))
+    return 'worn by';
+  return 'showcased/held by';
+}
+
 export default function Freestyle() {
   const [prompt, setPrompt] = useState('');
   const [sourceImage, setSourceImage] = useState<string | null>(null);

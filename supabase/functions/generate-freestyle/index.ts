@@ -224,10 +224,16 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
     negativeBlock += `\n- No ${dedupedNegatives.join("\n- No ")}`;
   }
 
+  // Priority hierarchy when all three contexts are present
+  if (context.hasSource && context.hasModel && context.hasScene) {
+    layers.push(
+      "PRIORITY ORDER: 1) Product must be reproduced with 100% accuracy (shape, color, branding). 2) Model must be the exact same person from the reference. 3) Scene/environment must match the reference. If any conflict arises between these, product accuracy takes precedence."
+    );
+  }
+
   layers.push(negativeBlock);
 
   return layers.join("\n\n");
-}
 
 // Content-block detection helpers
 function isContentBlocked(data: Record<string, unknown>): boolean {
