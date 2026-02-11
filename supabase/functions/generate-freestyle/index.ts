@@ -89,6 +89,55 @@ function polishUserPrompt(
   const layers: string[] = [];
   const isSelfie = detectSelfieIntent(rawPrompt);
 
+  // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
+  const refCount = [context.hasSource, context.hasModel, context.hasScene].filter(Boolean).length;
+  if (refCount >= 2 && !isSelfie) {
+    const parts: string[] = [
+      `Professional photography: ${rawPrompt}`,
+      "",
+      "Create a photorealistic image combining the provided references.",
+      "",
+      "REQUIREMENTS:",
+    ];
+    if (context.hasSource) {
+      parts.push("1. PRODUCT: Reproduce the exact product from [PRODUCT IMAGE] — identical shape, color, texture, branding. This is the highest priority.");
+    }
+    if (context.hasModel) {
+      const identityDetails = modelContext ? ` (${modelContext})` : "";
+      parts.push(`${context.hasSource ? "2" : "1"}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body proportions${identityDetails}.`);
+    }
+    if (context.hasScene) {
+      const num = [context.hasSource, context.hasModel].filter(Boolean).length + 1;
+      parts.push(`${num}. SCENE: Place everything in the exact environment from [SCENE IMAGE] — same background, lighting, atmosphere.`);
+    }
+    parts.push("");
+    parts.push("Quality: Ultra high resolution, sharp focus, natural lighting, commercial-grade.");
+
+    // Brand style (condensed to 1-2 lines)
+    if (brandProfile?.tone) {
+      const toneDesc = TONE_DESCRIPTIONS[brandProfile.tone] || brandProfile.tone;
+      const colorDesc = brandProfile.colorFeel ? (COLOR_FEEL_DESCRIPTIONS[brandProfile.colorFeel] || brandProfile.colorFeel) : "";
+      parts.push(`Brand: ${toneDesc}${colorDesc ? `. Color: ${colorDesc}` : ""}`);
+    }
+
+    // Camera style
+    if (cameraStyle === "natural") {
+      parts.push("Shot on iPhone — deep depth of field, true-to-life colors, no retouching.");
+    }
+
+    // Negatives (single line)
+    const allNeg: string[] = [];
+    if (brandProfile?.doNotRules?.length) allNeg.push(...brandProfile.doNotRules);
+    if (userNegatives?.length) allNeg.push(...userNegatives);
+    parts.push(buildNegativePrompt(cameraStyle));
+    if (allNeg.length > 0) {
+      const deduped = [...new Set(allNeg.map(n => n.toLowerCase()))];
+      parts.push(`Also avoid: ${deduped.join(", ")}`);
+    }
+
+    return parts.join("\n");
+  }
+
   if (isSelfie) {
     layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
     if (cameraStyle === 'natural') {
@@ -224,12 +273,7 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
     negativeBlock += `\n- No ${dedupedNegatives.join("\n- No ")}`;
   }
 
-  // Priority hierarchy when all three contexts are present
-  if (context.hasSource && context.hasModel && context.hasScene) {
-    layers.push(
-      "PRIORITY ORDER: 1) Product must be reproduced with 100% accuracy (shape, color, branding). 2) Model must be the exact same person from the reference. 3) Scene/environment must match the reference. If any conflict arises between these, product accuracy takes precedence."
-    );
-  }
+  // Priority hierarchy removed — now handled by condensed multi-ref path above
 
   layers.push(negativeBlock);
 
@@ -342,51 +386,26 @@ function buildContentArray(
   sourceImage?: string,
   modelImage?: string,
   sceneImage?: string,
-  modelContext?: string
 ): ContentItem[] {
   const content: ContentItem[] = [];
 
   // Main prompt text first
   content.push({ type: "text", text: prompt });
 
-  // Product/source image with explicit label
+  // Images with concise labels (Try-On style — instructions are in the prompt)
   if (sourceImage) {
-    content.push({
-      type: "text",
-      text: "PRODUCT/SOURCE REFERENCE IMAGE — reproduce this exact product with 100% fidelity (shape, color, texture, branding, proportions):",
-    });
+    content.push({ type: "text", text: "[PRODUCT IMAGE]" });
     content.push({ type: "image_url", image_url: { url: sourceImage } });
   }
 
-  // Model image with strong identity label
   if (modelImage) {
-    const modelDesc = modelContext ? ` (${modelContext})` : "";
-    content.push({
-      type: "text",
-      text: `MODEL REFERENCE IMAGE — use this EXACT person's face, hair, skin tone, and body${modelDesc}. Do NOT generate a different person:`,
-    });
+    content.push({ type: "text", text: "[MODEL IMAGE]" });
     content.push({ type: "image_url", image_url: { url: modelImage } });
   }
 
-  // Scene image with label
   if (sceneImage) {
-    content.push({
-      type: "text",
-      text: "SCENE/ENVIRONMENT REFERENCE IMAGE — You MUST place the subject IN this exact environment/location. Reproduce the same setting, background elements, lighting direction, color temperature, and atmosphere. Do NOT use a different environment:",
-    });
+    content.push({ type: "text", text: "[SCENE IMAGE]" });
     content.push({ type: "image_url", image_url: { url: sceneImage } });
-  }
-
-  // Task summary when multiple references are present
-  const refCount = [sourceImage, modelImage, sceneImage].filter(Boolean).length;
-  if (refCount >= 2) {
-    const taskParts: string[] = ["TASK SUMMARY — Generate ONE cohesive image that:"];
-    let step = 1;
-    if (sourceImage) { taskParts.push(`${step}. Features the EXACT product from the product reference (highest priority — shape, color, texture, branding must be identical)`); step++; }
-    if (modelImage) { taskParts.push(`${step}. Uses the EXACT person from the model reference (same face, hair, skin tone)`); step++; }
-    if (sceneImage) { taskParts.push(`${step}. Places everything in the EXACT environment from the scene reference`); step++; }
-    taskParts.push("Merge all references into a single photorealistic image. Product fidelity is the #1 priority.");
-    content.push({ type: "text", text: taskParts.join("\n") });
   }
 
   return content;
@@ -469,8 +488,9 @@ serve(async (req) => {
     // Add aspect ratio instruction
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
 
-    // Select model based on quality
-    const aiModel = body.quality === "high"
+    // Select model: auto-upgrade to pro for 2+ references (flash can't handle complex merges)
+    const refCount = [body.sourceImage, body.modelImage, body.sceneImage].filter(Boolean).length;
+    const aiModel = (body.quality === "high" || refCount >= 2)
       ? "google/gemini-3-pro-image-preview"
       : "google/gemini-2.5-flash-image";
 
@@ -519,7 +539,6 @@ serve(async (req) => {
           body.sourceImage,
           body.modelImage,
           body.sceneImage,
-          body.modelContext
         );
 
         const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio);
