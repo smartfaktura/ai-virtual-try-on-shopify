@@ -304,28 +304,20 @@ export default function Freestyle() {
     const prevStatus = prevJobStatusRef.current;
     prevJobStatusRef.current = activeJob.status;
 
-    if (activeJob.status === 'completed' && prevStatus !== 'completed' && activeJob.result) {
-      const result = activeJob.result as { images?: string[]; contentBlocked?: boolean; blockReason?: string };
-      if (result.contentBlocked) {
+    if (activeJob.status === 'completed' && prevStatus !== 'completed') {
+      const result = activeJob.result as { images?: string[]; contentBlocked?: boolean; blockReason?: string } | null;
+      if (result?.contentBlocked) {
         setBlockedEntries(prev => [{
           id: crypto.randomUUID(),
           prompt: prompt,
           reason: result.blockReason || 'This prompt was flagged by our content safety system.',
         }, ...prev]);
-      } else if (result.images && result.images.length > 0) {
-        setIsSaving(true);
-        saveImages(result.images, {
-          prompt: prompt,
-          aspectRatio,
-          quality,
-          modelId: selectedModel?.modelId ?? null,
-          sceneId: selectedScene?.poseId ?? null,
-          productId: selectedProduct?.id ?? null,
-        }).finally(() => {
-          setIsSaving(false);
-          refreshBalance();
-          resetQueue();
-        });
+        resetQueue();
+      } else {
+        // Images are saved server-side by process-queue, just refresh the list
+        refreshImages();
+        refreshBalance();
+        resetQueue();
       }
     }
 

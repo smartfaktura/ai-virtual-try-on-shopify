@@ -260,5 +260,33 @@ export function useFreestyleImages() {
     return saved;
   }, [user]);
 
-  return { images, isLoading, saveImage, saveImages, deleteImage };
+  // Refresh images from DB (e.g. after server-side save)
+  const refreshImages = useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('freestyle_generations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to refresh freestyle images:', error);
+      return;
+    }
+
+    const mapped: FreestyleImage[] = (data || []).map((row: any) => ({
+      id: row.id,
+      url: row.image_url,
+      prompt: row.prompt,
+      aspectRatio: row.aspect_ratio,
+      quality: row.quality,
+      createdAt: new Date(row.created_at).getTime(),
+      modelId: row.model_id ?? null,
+      sceneId: row.scene_id ?? null,
+      productId: row.product_id ?? null,
+    }));
+
+    setImages(mapped);
+  }, [user]);
+
+  return { images, isLoading, saveImage, saveImages, deleteImage, refreshImages };
 }
