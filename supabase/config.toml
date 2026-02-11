@@ -32,3 +32,12 @@ verify_jwt = false
 
 [functions.analyze-product-image]
 verify_jwt = false
+
+[functions.enqueue-generation]
+verify_jwt = false
+
+[functions.process-queue]
+verify_jwt = false
+
+[functions.generate-product]
+verify_jwt = false
