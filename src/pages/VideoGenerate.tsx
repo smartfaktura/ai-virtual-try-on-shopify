@@ -122,6 +122,9 @@ export default function VideoGenerate() {
   const { upload, isUploading } = useFileUpload();
   const { status, videoUrl, error, elapsedSeconds, startGeneration, reset, history, isLoadingHistory } = useGenerateVideo();
 
+  const { balance, openBuyModal } = useCredits();
+  const videoCost = 30;
+  const hasEnoughCredits = balance >= videoCost;
   const isGenerating = status === 'creating' || status === 'processing';
 
   const handleFileSelect = useCallback(async (file: File) => {
