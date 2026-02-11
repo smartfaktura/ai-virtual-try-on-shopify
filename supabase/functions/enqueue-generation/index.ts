@@ -131,9 +131,11 @@ serve(async (req) => {
     const result = enqueueResult as Record<string, unknown>;
 
     if (result.error) {
+      const errorStr = String(result.error);
+      const status = errorStr.includes("concurrent") ? 429 : 402;
       return new Response(
-        JSON.stringify({ error: result.error, balance: result.balance }),
-        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: result.error, balance: result.balance, max_concurrent: result.max_concurrent }),
+        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

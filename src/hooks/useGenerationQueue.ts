@@ -2,7 +2,6 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCredits } from '@/contexts/CreditContext';
 
 export type QueueJobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';
 
@@ -44,7 +43,6 @@ interface UseGenerationQueueReturn {
 
 export function useGenerationQueue(): UseGenerationQueueReturn {
   const { user } = useAuth();
-  const { addCredits } = useCredits();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -173,7 +171,12 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
         const errorData = await response.json().catch(() => ({}));
 
         if (response.status === 429) {
-          toast.error(errorData.message || 'Rate limit exceeded. Please wait and try again.');
+          const msg = String(errorData.error || '');
+          if (msg.includes('concurrent')) {
+            toast.error(`You've reached the maximum concurrent generations (${errorData.max_concurrent || '?'}). Please wait for a current job to finish.`);
+          } else {
+            toast.error(errorData.message || 'Rate limit exceeded. Please wait and try again.');
+          }
           return null;
         }
 
