@@ -65,16 +65,10 @@ function detectSelfieIntent(prompt: string): boolean {
 // ── Negative prompt (always appended when polish is on) ───────────────────
 function buildNegativePrompt(cameraStyle?: 'pro' | 'natural'): string {
   const blurRule = cameraStyle === 'natural'
-    ? 'No blurry or out-of-focus areas. No bokeh. No shallow depth of field. Everything must be sharp from foreground to background.'
-    : 'No blurry or out-of-focus areas unless intentionally bokeh';
+    ? 'no bokeh/shallow DOF (everything sharp foreground to background)'
+    : 'no blur unless intentional bokeh';
 
-  return `
-CRITICAL — DO NOT include any of the following:
-- No text, watermarks, logos, labels, or signatures anywhere in the image
-- No distorted or extra fingers, hands, or limbs
-- ${blurRule}
-- No AI-looking skin smoothing or plastic textures
-- No collage layouts or split-screen compositions`;
+  return `AVOID: text/watermarks/logos, distorted hands/fingers, ${blurRule}, plastic AI skin, collage layouts.`;
 }
 
 // ── Context-aware prompt polish ───────────────────────────────────────────
