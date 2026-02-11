@@ -372,7 +372,7 @@ export default function Generate() {
       return;
     }
     const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode });
-    if (balance < cost) { setNoCreditsModalOpen(true); return; }
+    if (balance < cost) { openBuyModal('topup'); return; }
     if (generationMode === 'virtual-try-on') {
       if (!selectedModel || !selectedPose) { toast.error('Please select a model and scene first'); return; }
       handleTryOnConfirmGenerate(); return;
