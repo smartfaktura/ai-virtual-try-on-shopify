@@ -1379,10 +1379,13 @@ export default function Generate() {
               <p className="text-sm">{balance} credits available</p>
             </div>
 
+            {balance < (selectedVariationIndices.size * (quality === 'high' ? 2 : 1)) && (
+              <InsufficientCreditsWarning cost={selectedVariationIndices.size * (quality === 'high' ? 2 : 1)} balance={balance} />
+            )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'))}>Back</Button>
-              <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0}>
-                Generate {selectedVariationIndices.size} {activeWorkflow?.name} Images
+              <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0 || balance < (selectedVariationIndices.size * (quality === 'high' ? 2 : 1))}>
+                Generate {selectedVariationIndices.size} {activeWorkflow?.name} Images · {selectedVariationIndices.size * (quality === 'high' ? 2 : 1)} credits
               </Button>
             </div>
           </div>
