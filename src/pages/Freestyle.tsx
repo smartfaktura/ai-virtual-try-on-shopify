@@ -226,10 +226,9 @@ export default function Freestyle() {
       basePrompt = parts.join(' ');
     }
 
-    let finalPrompt = basePrompt;
-    if (selectedScene) {
-      finalPrompt = `${basePrompt}. MANDATORY SCENE: Place the subject in this environment — ${selectedScene.promptHint || selectedScene.description}. The background and setting must match the scene reference image exactly.`;
-    }
+    // Scene instructions are handled by polishUserPrompt in the backend
+    // No need to duplicate them here — avoids conflicting scene directives
+    const finalPrompt = basePrompt;
 
     // Build model text context
     let modelContext: string | undefined;
