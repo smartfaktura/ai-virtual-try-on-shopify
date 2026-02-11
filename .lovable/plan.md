@@ -1,67 +1,118 @@
 
 
-## Fix: Duplicate Images & Slow Library Loading
+## Make Prompt Optional + Smart Auto-Prompt Engineering
 
-### Problem 1: Duplicate Images
-Every freestyle generation is saved to **two** tables:
-- The `generate-freestyle` edge function saves to `freestyle_generations`
-- The `process-queue` edge function saves to `generation_jobs` for ALL job types (including freestyle)
+### Overview
+When the user skips typing a prompt but has selected assets (product, model, scene, brand profile, style presets), the system will auto-build a detailed, high-quality prompt that feeds into the existing `polishUserPrompt` pipeline — ensuring the same professional output quality.
 
-The Library page fetches from both tables and merges them, so every freestyle image appears twice.
+### What Changes
 
-### Problem 2: Slow Loading
-The Library makes 2 sequential database queries (generation_jobs + freestyle_generations), each fetching up to 100 rows with joins. Combined with a 10-second auto-refresh interval, this creates unnecessary load.
+#### 1. Frontend — `src/pages/Freestyle.tsx`
 
-### Solution
+**Relax `canGenerate`:**
+```
+const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
+const canGenerate = (prompt.trim().length > 0 || hasAssets) && !isLoading && balance >= creditCost;
+```
 
-| File | Change |
-|------|--------|
-| `supabase/functions/process-queue/index.ts` | Skip the `generation_jobs` insert when `job_type === 'freestyle'` (since freestyle already saves to its own table) |
-| `src/hooks/useLibraryItems.ts` | Run both queries in parallel using `Promise.all` instead of sequentially; increase `refetchInterval` to 15s |
+**Auto-build a rich base prompt in `handleGenerate` when prompt is empty:**
 
-### Technical Details
+Instead of a simple "Product photo of X", build a detailed contextual prompt:
 
-**1. Fix duplicates in `process-queue/index.ts` (line 117-135)**
+```
+let basePrompt = prompt.trim();
+if (!basePrompt) {
+  const parts: string[] = [];
 
-Wrap the `generation_jobs` insert in a condition:
+  // Product context
+  if (selectedProduct) {
+    parts.push(`High-end product photography of "${selectedProduct.title}"`);
+    if (selectedProduct.category) parts.push(`(${selectedProduct.category})`);
+  } else if (sourceImage) {
+    parts.push("Professional photo based on the provided reference image");
+  }
 
-```typescript
-// Only save to generation_jobs for non-freestyle jobs
-// (freestyle saves to freestyle_generations separately)
-if (jobType !== 'freestyle' && generatedCount > 0) {
-  await supabase.from("generation_jobs").insert({ ... });
+  // Model context
+  if (selectedModel) {
+    const modelDesc = [selectedModel.gender, selectedModel.bodyType, selectedModel.ethnicity]
+      .filter(Boolean).join(', ');
+    if (selectedProduct) {
+      parts.push(`worn/held by a ${modelDesc} model`);
+    } else {
+      parts.push(`Portrait of a ${modelDesc} model`);
+    }
+  }
+
+  // Scene context
+  if (selectedScene) {
+    parts.push(`set in a ${selectedScene.name} environment`);
+    if (selectedScene.promptHint) parts.push(`— ${selectedScene.promptHint}`);
+  }
+
+  // Brand tone hint
+  if (selectedBrandProfile?.tone) {
+    parts.push(`with a ${selectedBrandProfile.tone} visual tone`);
+  }
+
+  // Fallback
+  if (parts.length === 0) {
+    parts.push("Professional commercial photography");
+  }
+
+  basePrompt = parts.join(' ');
 }
 ```
 
-**2. Speed up Library queries in `useLibraryItems.ts`**
+This auto-generated prompt then flows through the same `polishUserPrompt` function on the backend, which adds all the detailed layers (product fidelity, model identity, scene matching, camera style, brand profile, negatives).
 
-Change the two sequential fetches into parallel ones:
+#### 2. Backend — `supabase/functions/generate-freestyle/index.ts`
+
+Relax the empty-prompt validation (lines 393-398):
 
 ```typescript
-const [jobsResult, freestyleResult] = await Promise.all([
-  supabase.from('generation_jobs').select(...).order(...).limit(100),
-  supabase.from('freestyle_generations').select(...).order(...).limit(100),
-]);
-```
-
-**3. Clean up existing duplicates**
-
-Run a one-time SQL to delete the duplicate rows in `generation_jobs` that were created by `process-queue` for freestyle jobs (identified by having no `workflow_id` and no `product_id`, with timestamps matching `freestyle_generations`).
-
-```sql
-DELETE FROM generation_jobs
-WHERE workflow_id IS NULL
-  AND product_id IS NULL
-  AND prompt_final IS NOT NULL
-  AND id IN (
-    SELECT g.id FROM generation_jobs g
-    JOIN freestyle_generations f
-      ON g.user_id = f.user_id
-      AND abs(extract(epoch from g.created_at - f.created_at)) < 15
+// Allow empty prompt if at least one image reference is provided
+if (!body.prompt?.trim() && !body.sourceImage && !body.modelImage && !body.sceneImage) {
+  return new Response(
+    JSON.stringify({ error: "Please provide a prompt or select at least one reference (product, model, or scene)" }),
+    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
+}
 ```
 
-### Result
-- No more duplicate images in the Library
-- Faster loading (parallel queries instead of sequential)
-- Future freestyle generations only saved once
+If prompt arrives empty but images are present, use a sensible default:
+```typescript
+let enrichedPrompt = body.prompt?.trim() || "Professional commercial photography of the provided subject";
+```
+
+This ensures the `polishUserPrompt` pipeline still receives a valid base string to layer all its context on top of.
+
+#### 3. Dynamic Placeholder — `src/components/app/freestyle/FreestylePromptPanel.tsx`
+
+Update the textarea placeholder based on selected assets:
+- **No assets selected:** "Describe what you want to create..."
+- **Assets selected:** "Optional — describe extra details, or leave empty to auto-generate"
+
+This signals to users that prompt is no longer required.
+
+### Why Output Quality Stays High
+
+The auto-generated prompt feeds into the existing `polishUserPrompt` function which already adds:
+- Product fidelity instructions (shape, color, texture, branding)
+- Model identity matching (exact face, skin tone, hair)
+- Scene environment replication
+- Camera rendering style (Pro/Natural layers)
+- Brand profile integration (tone, color feel, keywords, palette)
+- Style preset keywords
+- Comprehensive negative prompts
+- Selfie/UGC detection and rules
+
+So even a simple auto-prompt like `High-end product photography of "Summer Dress" worn by a female model set in Beach Sunset environment` gets expanded into a multi-paragraph, layered professional prompt by the polish pipeline.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/pages/Freestyle.tsx` | Relax `canGenerate`; build smart auto-prompt from selected assets |
+| `supabase/functions/generate-freestyle/index.ts` | Allow empty prompt when images are present; add fallback base text |
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Dynamic placeholder text when assets are selected |
+
