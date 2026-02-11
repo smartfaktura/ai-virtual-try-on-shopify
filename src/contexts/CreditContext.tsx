@@ -117,7 +117,11 @@ export function CreditProvider({ children }: CreditProviderProps) {
     setBalance(newBalance);
   }, []);
   
-  const openBuyModal = useCallback(() => setBuyModalOpen(true), []);
+  const [buyModalDefaultTab, setBuyModalDefaultTab] = useState<'upgrade' | 'topup'>('upgrade');
+  const openBuyModal = useCallback((tab?: 'upgrade' | 'topup') => {
+    setBuyModalDefaultTab(tab || 'upgrade');
+    setBuyModalOpen(true);
+  }, []);
   const closeBuyModal = useCallback(() => setBuyModalOpen(false), []);
   
   const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => {
