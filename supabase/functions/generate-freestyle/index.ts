@@ -390,15 +390,16 @@ serve(async (req) => {
 
     const body: FreestyleRequest = await req.json();
 
-    if (!body.prompt || body.prompt.trim().length === 0) {
+    // Allow empty prompt if at least one image reference is provided
+    if (!body.prompt?.trim() && !body.sourceImage && !body.modelImage && !body.sceneImage) {
       return new Response(
-        JSON.stringify({ error: "Prompt is required" }),
+        JSON.stringify({ error: "Please provide a prompt or select at least one reference (product, model, or scene)" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // Append model text context if provided
-    let enrichedPrompt = body.prompt;
+    let enrichedPrompt = body.prompt?.trim() || "Professional commercial photography of the provided subject";
     if (body.modelContext) {
       enrichedPrompt = `${enrichedPrompt}\n\nModel reference: ${body.modelContext}`;
     }

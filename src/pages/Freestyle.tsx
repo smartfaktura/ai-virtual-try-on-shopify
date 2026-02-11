@@ -117,7 +117,8 @@ export default function Freestyle() {
   });
 
   const creditCost = imageCount * (quality === 'high' ? 10 : 4);
-  const canGenerate = prompt.trim().length > 0 && !isLoading && balance >= creditCost;
+  const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
+  const canGenerate = (prompt.trim().length > 0 || hasAssets) && !isLoading && balance >= creditCost;
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -181,9 +182,52 @@ export default function Freestyle() {
       sceneImageBase64 = await convertImageToBase64(selectedScene.previewUrl);
     }
 
-    let finalPrompt = prompt;
+    // Auto-build prompt from assets if user left it empty
+    let basePrompt = prompt.trim();
+    if (!basePrompt) {
+      const parts: string[] = [];
+
+      // Product context
+      if (selectedProduct) {
+        parts.push(`High-end product photography of "${selectedProduct.title}"`);
+        if (selectedProduct.product_type) parts.push(`(${selectedProduct.product_type})`);
+      } else if (sourceImage) {
+        parts.push("Professional photo based on the provided reference image");
+      }
+
+      // Model context
+      if (selectedModel) {
+        const modelDesc = [selectedModel.gender, selectedModel.bodyType, selectedModel.ethnicity]
+          .filter(Boolean).join(', ');
+        if (selectedProduct) {
+          parts.push(`worn/held by a ${modelDesc} model`);
+        } else {
+          parts.push(`Portrait of a ${modelDesc} model`);
+        }
+      }
+
+      // Scene context
+      if (selectedScene) {
+        parts.push(`set in a ${selectedScene.name} environment`);
+        if (selectedScene.promptHint) parts.push(`— ${selectedScene.promptHint}`);
+      }
+
+      // Brand tone hint
+      if (selectedBrandProfile?.tone) {
+        parts.push(`with a ${selectedBrandProfile.tone} visual tone`);
+      }
+
+      // Fallback
+      if (parts.length === 0) {
+        parts.push("Professional commercial photography");
+      }
+
+      basePrompt = parts.join(' ');
+    }
+
+    let finalPrompt = basePrompt;
     if (selectedScene) {
-      finalPrompt = `${prompt}. MANDATORY SCENE: Place the subject in this environment — ${selectedScene.promptHint || selectedScene.description}. The background and setting must match the scene reference image exactly.`;
+      finalPrompt = `${basePrompt}. MANDATORY SCENE: Place the subject in this environment — ${selectedScene.promptHint || selectedScene.description}. The background and setting must match the scene reference image exactly.`;
     }
 
     // Build model text context
@@ -325,6 +369,7 @@ export default function Freestyle() {
   const panelProps = {
     prompt,
     onPromptChange: setPrompt,
+    hasAssets,
     sourceImagePreview,
     onUploadClick: () => fileInputRef.current?.click(),
     onRemoveImage: removeSourceImage,
