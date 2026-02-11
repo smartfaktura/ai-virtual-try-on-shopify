@@ -97,19 +97,22 @@ function polishUserPrompt(
   // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
   const refCount = [context.hasSource, context.hasModel, context.hasScene].filter(Boolean).length;
   if (refCount >= 2 && !isSelfie) {
+    const hasBothProductAndModel = context.hasSource && context.hasModel;
     const parts: string[] = [
       `Professional photography: ${rawPrompt}`,
       "",
-      "Create a photorealistic image combining the provided references.",
+      hasBothProductAndModel
+        ? "Create a photorealistic image featuring the EXACT PERSON from [MODEL IMAGE] with the EXACT PRODUCT from [PRODUCT IMAGE]."
+        : "Create a photorealistic image combining the provided references.",
       "",
       "REQUIREMENTS:",
     ];
     if (context.hasSource) {
-      parts.push("1. PRODUCT: Reproduce the exact product from [PRODUCT IMAGE] — identical shape, color, texture, branding. This is the highest priority.");
+      parts.push(`1. PRODUCT: Reproduce the exact product from [PRODUCT IMAGE] — identical shape, color, texture, branding. This is the highest priority.${hasBothProductAndModel ? " Use ONLY the product/garment from this image. IGNORE any person, model, or mannequin shown in the product photo." : ""}`);
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
-      parts.push(`${context.hasSource ? "2" : "1"}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body proportions${identityDetails}.`);
+      parts.push(`${context.hasSource ? "2" : "1"}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body proportions${identityDetails}.${hasBothProductAndModel ? " This person is the ONLY human that should appear. Their face, hair, skin, and body MUST come from [MODEL IMAGE], NOT from any other reference image." : ""}`);
     }
     if (context.hasScene) {
       const num = [context.hasSource, context.hasModel].filter(Boolean).length + 1;
