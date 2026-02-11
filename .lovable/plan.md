@@ -1,35 +1,92 @@
 
 
-## Fix: Natural Camera Style Conflicting with Selfie Bokeh
+## Fix: Eliminate All Remaining Bokeh Sources in Natural Selfie Mode
 
-### Problem
-The selfie composition layer (line 93) explicitly instructs: **"Soft natural smartphone-style bokeh in background"**. This fires BEFORE the Natural camera style layer, so the AI prioritizes it and produces blurry backgrounds even when Natural mode is selected.
+### Root Cause
+Three separate prompt layers are still telling the AI to produce bokeh or soft/dreamy aesthetics, contradicting the Natural mode instructions:
 
-Real iPhone selfies (without Portrait Mode) have a **deep depth of field** — the background is mostly sharp, maybe slightly softer at extreme distance, but never the creamy bokeh you see in the generated images.
+1. **Global negative prompt (line 70)**: Says "No blurry areas **unless intentionally bokeh**" -- this gives the AI explicit permission to add bokeh whenever it thinks it's appropriate (like selfies)
+2. **Selfie base layer (line 89)**: "Shot on a high-end smartphone front-facing camera" -- AI models strongly associate front-camera selfies with Portrait Mode bokeh
+3. **Portrait Quality selfie layer (line 158-160)**: "Soft, flattering natural light" and "Slight warmth and glow" push toward a dreamy, processed look rather than raw iPhone output
 
 ### Solution
-Make the selfie composition layer conditional on `cameraStyle`:
 
-1. **When Natural**: Remove bokeh instruction, replace with "deep depth of field, background mostly sharp and in focus — like iPhone front camera WITHOUT Portrait Mode enabled"
-2. **When Pro** (default): Keep the existing "Soft natural smartphone-style bokeh" for the polished commercial look
+All changes in one file: `supabase/functions/generate-freestyle/index.ts`
 
-Also strengthen the Natural camera style layer itself to explicitly override any remaining bokeh tendencies when combined with selfie mode.
+**Change 1: Make the global negative prompt conditional (line 66-72)**
 
-### File Changed
+When `cameraStyle === 'natural'`, replace the bokeh-permissive line with a strict version:
+- Current: "No blurry or out-of-focus areas unless intentionally bokeh"
+- Natural: "No blurry or out-of-focus areas. No bokeh. No shallow depth of field. Everything must be sharp from foreground to background."
 
-| File | Change |
-|------|--------|
-| `supabase/functions/generate-freestyle/index.ts` | Make selfie composition bokeh conditional on cameraStyle; strengthen Natural layer for selfie context |
+This means the negative prompt becomes a function that takes `cameraStyle` instead of a static constant.
+
+**Change 2: Make the selfie base layer conditional (line 86-89)**
+
+When Natural:
+- Remove "Shot on a high-end smartphone front-facing camera" (too associated with Portrait Mode)
+- Replace with: "Shot on iPhone front camera in standard photo mode (NOT Portrait Mode). No depth-of-field effects."
+
+**Change 3: Make the Portrait Quality selfie layer conditional (line 157-160)**
+
+When Natural, replace the current soft/warm description with:
+- "Natural, authentic skin texture with realistic pores and subtle imperfections. Even, ambient lighting on the face — no dramatic light shaping, no artificial warmth or glow. True-to-life skin tones with zero color grading. As captured by a smartphone front camera in auto mode."
+
+When Pro, keep the existing text unchanged.
+
+### Why This Will Work
+Currently the AI receives ~5 separate signals encouraging bokeh/softness, and only 2 signals saying "no bokeh." The AI averages these out and still produces moderate bokeh. After this fix, in Natural mode, every single layer consistently says "sharp background, no bokeh, no Portrait Mode" -- there are zero contradicting signals left.
 
 ### Technical Details
 
-**1. Update selfie composition (line 86-97)** — pass `cameraStyle` into the selfie block:
+The `NEGATIVE_PROMPT` constant becomes a function:
 
-- When `cameraStyle === 'natural'`: selfie composition says "Deep depth of field — background is sharp and in focus, NOT blurred. This is a standard front-camera selfie WITHOUT Portrait Mode. No bokeh, no background blur."
-- When `cameraStyle === 'pro'` (default): keeps current "Soft natural smartphone-style bokeh in background"
+```typescript
+function buildNegativePrompt(cameraStyle?: 'pro' | 'natural'): string {
+  const blurRule = cameraStyle === 'natural'
+    ? 'No blurry or out-of-focus areas. No bokeh. No shallow depth of field. Everything must be sharp from foreground to background.'
+    : 'No blurry or out-of-focus areas unless intentionally bokeh';
+  
+  return `
+CRITICAL — DO NOT include any of the following:
+- No text, watermarks, logos, labels, or signatures anywhere in the image
+- No distorted or extra fingers, hands, or limbs
+- ${blurRule}
+- No AI-looking skin smoothing or plastic textures
+- No collage layouts or split-screen compositions`;
+}
+```
 
-**2. Update Natural camera style layer (line 177-187)** — add selfie-specific override:
+The selfie base layer (line 87-90) becomes conditional:
 
-Add to the Natural layer: "If this is a selfie, it is shot with the standard front-facing camera mode (NOT Portrait Mode). The background must remain sharp and detailed — no depth-of-field blur whatsoever."
+```typescript
+if (isSelfie) {
+  layers.push(`Authentic selfie-style photo: ${rawPrompt}`);
+  if (cameraStyle === 'natural') {
+    layers.push(
+      "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on iPhone front camera in standard photo mode (NOT Portrait Mode). No depth-of-field blur applied."
+    );
+  } else {
+    layers.push(
+      "Ultra high resolution, sharp focus on face, natural ambient lighting, true-to-life color accuracy. Shot on a high-end smartphone front-facing camera."
+    );
+  }
+```
 
-This two-pronged approach ensures both the selfie layer and the camera style layer agree on the same rendering, leaving no room for the AI to default to bokeh.
+The Portrait Quality selfie layer (line 157-160) becomes conditional:
+
+```typescript
+if (isSelfie) {
+  if (cameraStyle === 'natural') {
+    layers.push(
+      "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections. Even, ambient lighting on the face — no dramatic light shaping, no artificial warmth or glow. True-to-life skin tones with zero color grading. As captured by a smartphone front camera in auto mode."
+    );
+  } else {
+    layers.push(
+      "PORTRAIT QUALITY (SELFIE): Natural, authentic skin texture with realistic pores and subtle imperfections — NOT studio-retouched or airbrushed. Soft, flattering natural light on the face. Relaxed, genuine expression as if casually taking a selfie. Slight warmth and glow from ambient or window light."
+    );
+  }
+```
+
+All references to `NEGATIVE_PROMPT` constant will be replaced with `buildNegativePrompt(cameraStyle)` calls (need to pass `cameraStyle` through to wherever the negative prompt is assembled).
+
