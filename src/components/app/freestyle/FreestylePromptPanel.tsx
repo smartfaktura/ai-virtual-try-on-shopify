@@ -227,16 +227,14 @@ export function FreestylePromptPanel({
           <div className="flex items-center gap-3 w-full">
             <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 flex-1 min-w-0">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span className="truncate">You need <strong>{creditCost - (currentBalance ?? 0)} more credits</strong></span>
+              <span className="truncate">
+                Need <strong>{creditCost - (currentBalance ?? 0)} more</strong> ·{' '}
+                <button onClick={onBuyCredits} className="underline underline-offset-2 hover:text-amber-500 transition-colors">buy credits</button>
+              </span>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button variant="outline" size="lg" onClick={onBuyCredits} className="h-11 rounded-xl text-sm font-semibold">
-                Upgrade
-              </Button>
-              <Button size="lg" onClick={onBuyCredits} className="h-11 rounded-xl shadow-lg shadow-amber-500/25 text-sm font-semibold bg-amber-500 hover:bg-amber-600 text-white border-0">
-                Buy Credits
-              </Button>
-            </div>
+            <Button size="lg" onClick={onBuyCredits} className="h-11 px-6 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold shrink-0">
+              Upgrade Plan
+            </Button>
           </div>
         ) : (
           <Button
