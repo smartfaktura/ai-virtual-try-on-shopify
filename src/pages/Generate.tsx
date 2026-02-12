@@ -1733,13 +1733,13 @@ export default function Generate() {
 
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-primary" /> Saved to your library</p>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
-                <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => {
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                <Button variant="outline" className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
+                <Button variant="outline" className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={() => {
                   if (selectedForPublish.size === 0) { toast.error('Select images to download'); return; }
                   selectedForPublish.forEach(idx => handleDownloadImage(idx));
                 }}><Download className="w-4 h-4 mr-2" /> Download Selected ({selectedForPublish.size})</Button>
-                <Button size="sm" className="flex-1 sm:flex-none" onClick={() => navigate('/app/library')}>View in Library</Button>
+                <Button className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={() => navigate('/app/library')}>View in Library</Button>
               </div>
             </div>
           </div>
