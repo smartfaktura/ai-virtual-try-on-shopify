@@ -1,27 +1,23 @@
 
 
-## Make Landing Nav Floating on Desktop
+## Match Landing Nav to App Sidebar Colors
 
-Currently the nav is only floating (rounded, shadowed, with margin) on mobile. On desktop (`lg:` breakpoint), it stretches full-width with no rounding, no shadow, and no padding -- a standard flat top bar.
+The floating nav currently uses `bg-primary` (brand blue). The user wants it to match the dark navy sidebar from `/app`, which uses `--sidebar-background: 222 47% 11%`.
 
 ### What Changes
 
 **File: `src/components/landing/LandingNav.tsx`**
 
-Remove the `lg:` overrides that flatten the nav on desktop, so the floating pill-shaped style applies at all breakpoints:
+Switch the nav bar from primary colors to sidebar colors to match the `/app` navigation:
 
-1. **Header wrapper** (`<header>`): Change `p-3 lg:p-0` to `p-3` so the outer padding is consistent
-2. **Nav bar** (`<nav>`): Remove these desktop overrides:
-   - `lg:rounded-none` -- keep `rounded-2xl` at all sizes
-   - `lg:border-0` -- keep the subtle `border-white/[0.06]` border
-   - `lg:shadow-none` -- keep the `shadow-2xl shadow-black/20` elevation
-   - `lg:bg-background/80` / `lg:bg-transparent` -- use the `bg-sidebar` / frosted glass look consistently
-   - `lg:border-b lg:border-border lg:shadow-sm` on scroll -- replace with the existing mobile scroll style
-3. **Max width**: Keep `lg:max-w-7xl lg:mx-auto` so the floating bar is centered and doesn't stretch edge-to-edge on ultrawide monitors
-4. **Logo text color**: Change `lg:text-foreground` to use `text-sidebar-foreground` consistently
-
-The result: a centered, rounded, frosted-glass pill nav that floats over the hero content on all screen sizes -- matching the current mobile aesthetic but scaled up for desktop.
+1. **Nav background**: Change `bg-primary/95` and `bg-primary/90` to `bg-sidebar/95` and `bg-sidebar/90`
+2. **Border**: Change `border-primary/10` to `border-white/[0.06]` (matching the sidebar subtle border)
+3. **Logo box**: Change `bg-primary-foreground` to `bg-sidebar-accent` (the gray highlight seen on sidebar items) with `text-sidebar-foreground` text
+4. **Logo text**: Change `text-primary-foreground` to `text-sidebar-foreground`
+5. **Nav links**: Change `text-primary-foreground/80` to `text-sidebar-foreground/80` with hover `text-sidebar-foreground`
+6. **CTA button**: Change to `bg-primary text-primary-foreground` (the brand-colored button stands out against the dark nav)
+7. **Mobile toggle**: Change `text-primary-foreground` to `text-sidebar-foreground`
 
 ### Technical Details
 
-Only one file changes: `src/components/landing/LandingNav.tsx`. The modifications are purely CSS class adjustments on the `<header>` and `<nav>` elements (lines 33-39 and line 46). No logic, props, or structure changes needed.
+Single file change: `src/components/landing/LandingNav.tsx`. All modifications are CSS class swaps -- no logic changes. The mobile dropdown already uses `bg-sidebar/95` so it will remain consistent.
