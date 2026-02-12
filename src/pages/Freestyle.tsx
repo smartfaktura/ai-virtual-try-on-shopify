@@ -471,10 +471,10 @@ export default function Freestyle() {
       </div>
 
       {/* Gradient fade above prompt bar */}
-      <div className="absolute bottom-16 lg:bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
+      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
 
       {/* Always-pinned Prompt Bar */}
-      <div className="absolute bottom-16 lg:bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none z-20">
+      <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none z-20">
         <div className="max-w-3xl mx-auto pointer-events-auto relative">
           {/* Scene applied hint */}
           {showSceneHint && selectedScene && (
