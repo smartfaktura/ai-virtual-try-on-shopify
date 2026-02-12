@@ -70,7 +70,7 @@ export function WorkflowCard({ workflow, onSelect, reversed }: WorkflowRowProps)
       >
         {/* Thumbnail side */}
         <div className="relative w-full lg:w-[45%] shrink-0">
-          <div className="aspect-[4/3] lg:aspect-[3/4] overflow-hidden">
+          <div className="aspect-square lg:aspect-[3/4] overflow-hidden">
             {scene ? (
               <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
             ) : (
