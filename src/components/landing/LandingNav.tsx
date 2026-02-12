@@ -47,7 +47,7 @@ export function LandingNav() {
         </a>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
             <button
               key={link.href}
@@ -68,7 +68,7 @@ export function LandingNav() {
         </div>
 
         {/* Desktop CTA */}
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <Button size="sm" className="rounded-full px-6 font-semibold" onClick={() => navigate(user ? '/app' : '/auth')}>
             {user ? 'My Dashboard' : 'Start Free'}
           </Button>
@@ -76,7 +76,7 @@ export function LandingNav() {
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden p-2 text-foreground"
+          className="lg:hidden p-2 text-foreground"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
@@ -84,32 +84,35 @@ export function LandingNav() {
         </button>
       </nav>
 
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border">
-          <div className="px-4 py-4 flex flex-col gap-3">
+      {/* Mobile menu with smooth animation */}
+      <div
+        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          mobileOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="bg-background/95 backdrop-blur-xl border-b border-border">
+          <div className="px-4 py-3 flex flex-col divide-y divide-border/50">
             {navLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleNavClick(link.href)}
-                className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-3"
               >
                 {link.label}
               </button>
             ))}
-            <button
-              onClick={() => handleNavClick('#creative-drops')}
-              className="flex items-center gap-1.5 text-xs text-primary font-medium py-1 hover:text-primary/80 transition-colors"
-            >
-              <Sparkles className="w-3 h-3" />
-              Monthly Creative Drops
-            </button>
-            <Button size="sm" className="rounded-full mt-2 font-semibold" onClick={() => navigate(user ? '/app' : '/auth')}>
-              {user ? 'My Dashboard' : 'Start Free'}
-            </Button>
+            <div className="pt-3">
+              <Button
+                size="sm"
+                className="rounded-full w-full font-semibold"
+                onClick={() => navigate(user ? '/app' : '/auth')}
+              >
+                {user ? 'My Dashboard' : 'Start Free'}
+              </Button>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }
