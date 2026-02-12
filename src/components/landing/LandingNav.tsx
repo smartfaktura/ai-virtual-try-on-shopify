@@ -40,8 +40,8 @@ export function LandingNav() {
       >
         {/* Logo */}
         <a href="#" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-sidebar-accent flex items-center justify-center">
-            <span className="text-sidebar-foreground font-bold text-sm">V</span>
+          <div className="w-9 h-9 rounded-xl bg-sidebar-accent/80 flex items-center justify-center">
+            <span className="text-sidebar-foreground font-bold text-base">V</span>
           </div>
           <span className="font-bold text-lg text-sidebar-foreground tracking-tight">VOVV.AI</span>
         </a>
