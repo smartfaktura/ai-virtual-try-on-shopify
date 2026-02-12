@@ -7,7 +7,7 @@ import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Pale
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { width: 80, quality: 50 });
+const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { quality: 50 });
 const avatarSophia = teamAvatar('avatar-sophia.jpg');
 const avatarZara = teamAvatar('avatar-zara.jpg');
 const avatarKenji = teamAvatar('avatar-kenji.jpg');
@@ -642,7 +642,7 @@ export default function Generate() {
 
         {/* Workflow Info Banner */}
         {activeWorkflow && (
-          <Alert>
+          <Alert className="hidden sm:block">
             <AlertDescription>
               <div className="flex items-center justify-between">
                 <div>
@@ -658,10 +658,10 @@ export default function Generate() {
         {/* Progress Steps */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center justify-center gap-2 overflow-x-auto">
+            <div className="flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto">
               {getSteps().map((step, index) => (
-                <div key={step.name} className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
+                <div key={step.name} className="flex items-center gap-1 sm:gap-2">
+                  <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-medium flex-shrink-0 ${
                     getStepNumber() > index + 1 ? 'bg-primary text-primary-foreground'
                     : getStepNumber() === index + 1 ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground'
@@ -672,7 +672,7 @@ export default function Generate() {
                     {step.name}
                   </span>
                   {index < getSteps().length - 1 && (
-                    <div className={`w-8 md:w-12 h-0.5 flex-shrink-0 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
+                    <div className={`w-4 sm:w-8 md:w-12 h-0.5 flex-shrink-0 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
                   )}
                 </div>
               ))}
@@ -698,20 +698,20 @@ export default function Generate() {
                 <button
                   type="button"
                   onClick={() => { setSourceType('product'); setSelectedProduct(null); setScratchUpload(null); }}
-                  className={`p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
+                  className={`p-4 sm:p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
                     sourceType === 'product'
                       ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-border hover:border-primary/50 hover:bg-muted'
                   }`}
                 >
                   <div className="space-y-3">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center ${
                       sourceType === 'product' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                     }`}>
-                      <Shirt className="w-6 h-6" />
+                      <Shirt className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-lg font-semibold">From My Products</p>
+                      <p className="text-base sm:text-lg font-semibold">From My Products</p>
                       <p className="text-sm text-muted-foreground">Select a clothing item you've already added to your product library</p>
                     </div>
                     {sourceType === 'product' && (
@@ -725,20 +725,20 @@ export default function Generate() {
                 <button
                   type="button"
                   onClick={() => { setSourceType('scratch'); setSelectedProduct(null); setScratchUpload(null); }}
-                  className={`p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
+                  className={`p-4 sm:p-6 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
                     sourceType === 'scratch'
                       ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-border hover:border-primary/50 hover:bg-muted'
                   }`}
                 >
                   <div className="space-y-3">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center ${
                       sourceType === 'scratch' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                     }`}>
-                      <UploadIcon className="w-6 h-6" />
+                      <UploadIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-lg font-semibold">Upload New Photo</p>
+                      <p className="text-base sm:text-lg font-semibold">Upload New Photo</p>
                       <p className="text-sm text-muted-foreground">Upload a clothing photo — model shots, mannequin, or hanger photos work best</p>
                     </div>
                     {sourceType === 'scratch' && (
