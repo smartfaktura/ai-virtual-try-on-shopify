@@ -1,73 +1,129 @@
-import { useState } from 'react';
-import { Users, ArrowRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useRef, useEffect, useState } from 'react';
+import { Users, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import type { Workflow } from '@/types/workflow';
 
 import imgFallback from '@/assets/templates/universal-clean.jpg';
 
-interface WorkflowCardProps {
+interface WorkflowRowProps {
   workflow: Workflow;
   onSelect: () => void;
-  isGenerating?: boolean;
-  autoPlay?: boolean;
-  onHoverChange?: (hovered: boolean) => void;
+  reversed?: boolean;
 }
 
-export function WorkflowCard({ workflow, onSelect, isGenerating, autoPlay, onHoverChange }: WorkflowCardProps) {
-  const scene = workflowScenes[workflow.name];
-  const [isHovered, setIsHovered] = useState(false);
+const featureMap: Record<string, string[]> = {
+  'Virtual Try-On Set': [
+    'AI-powered virtual try-on on real models',
+    'Choose from curated model & scene libraries',
+    'Professional editorial-quality results',
+    'Portrait-optimized 3:4 output ratio',
+  ],
+  'Product Listing Set': [
+    'Clean studio-style product photography',
+    'Multiple angles and compositions',
+    'Optimized for e-commerce listings',
+    'Consistent lighting across the set',
+  ],
+  'Selfie / UGC Set': [
+    'Authentic user-generated content style',
+    'Natural, lifestyle-oriented compositions',
+    'Perfect for social proof & testimonials',
+    'Realistic selfie & candid angles',
+  ],
+  'Flat Lay Set': [
+    'Curated top-down product arrangements',
+    'Stylized with complementary props',
+    'Instagram-ready compositions',
+    'Multi-product showcase layouts',
+  ],
+};
 
-  const isActive = autoPlay ? (isHovered || autoPlay) : isHovered;
+export function WorkflowCard({ workflow, onSelect, reversed }: WorkflowRowProps) {
+  const scene = workflowScenes[workflow.name];
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.3 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const features = featureMap[workflow.name] ?? [];
 
   return (
-    <Card className="group hover:shadow-md transition-all hover:border-primary/30 overflow-hidden">
-      {/* Hero image — portrait */}
+    <Card
+      ref={ref}
+      className="group overflow-hidden border hover:shadow-lg transition-shadow duration-300"
+    >
       <div
-        className="aspect-[3/4] overflow-hidden relative"
-        onMouseEnter={() => { setIsHovered(true); onHoverChange?.(true); }}
-        onMouseLeave={() => { setIsHovered(false); onHoverChange?.(false); }}
+        className={`flex flex-col lg:flex-row ${reversed ? 'lg:flex-row-reverse' : ''}`}
       >
-        {isGenerating ? (
-          <Skeleton className="w-full h-full" />
-        ) : scene ? (
-          <WorkflowAnimatedThumbnail scene={scene} isActive={isActive} />
-        ) : (
-          <img
-            src={workflow.preview_image_url || imgFallback}
-            alt={workflow.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        )}
-      </div>
-
-      <CardContent className="p-4 space-y-2">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-1">
-          <h3 className="font-semibold text-xs leading-tight">{workflow.name}</h3>
-          {workflow.uses_tryon && (
-            <Badge variant="secondary" className="text-[10px] gap-0.5 shrink-0 px-1.5 py-0">
-              <Users className="w-2.5 h-2.5" />
-              Try-On
-            </Badge>
-          )}
+        {/* Thumbnail side */}
+        <div className="relative w-full lg:w-[45%] shrink-0">
+          <div className="aspect-[4/3] lg:aspect-[3/4] overflow-hidden">
+            {scene ? (
+              <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
+            ) : (
+              <img
+                src={workflow.preview_image_url || imgFallback}
+                alt={workflow.name}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
         </div>
 
-        {/* Description */}
-        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
-          {workflow.description}
-        </p>
+        {/* Content side */}
+        <div className="flex flex-col justify-center gap-4 p-6 lg:p-10 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-xl lg:text-2xl font-bold tracking-tight">
+              {workflow.name}
+            </h2>
+            {workflow.uses_tryon && (
+              <Badge variant="secondary" className="text-xs gap-1 px-2.5 py-0.5">
+                <Users className="w-3 h-3" />
+                Try-On
+              </Badge>
+            )}
+          </div>
 
-        {/* CTA */}
-        <Button size="sm" className="w-full rounded-full font-semibold gap-1 mt-1 text-xs h-8" onClick={onSelect}>
-          Create Set
-          <ArrowRight className="w-3 h-3" />
-        </Button>
-      </CardContent>
+          <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">
+            {workflow.description}
+          </p>
+
+          {features.length > 0 && (
+            <ul className="space-y-2">
+              {features.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="pt-2">
+            <Button
+              size="lg"
+              className="rounded-full font-semibold gap-2 h-11 px-8"
+              onClick={onSelect}
+            >
+              Create Set
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
     </Card>
   );
 }
