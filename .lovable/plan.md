@@ -1,23 +1,17 @@
 
+## Match Homepage Logo Icon to /app Sidebar
 
-## Match Landing Nav to App Sidebar Colors
-
-The floating nav currently uses `bg-primary` (brand blue). The user wants it to match the dark navy sidebar from `/app`, which uses `--sidebar-background: 222 47% 11%`.
+The `/app` sidebar logo uses a blue primary-colored icon box, while the homepage nav currently uses a gray accent background. This will make them identical.
 
 ### What Changes
 
-**File: `src/components/landing/LandingNav.tsx`**
+**File: `src/components/landing/LandingNav.tsx` (line 43-44)**
 
-Switch the nav bar from primary colors to sidebar colors to match the `/app` navigation:
+Update the logo icon container to match the `/app` sidebar exactly:
+- Background: `bg-sidebar-accent/80` to `bg-primary`
+- Text color: `text-sidebar-foreground` to `text-primary-foreground`
+- Size: `w-9 h-9` to `w-8 h-8`
+- Border radius: `rounded-xl` to `rounded-lg`
+- Font size: `text-base` to `text-sm`
 
-1. **Nav background**: Change `bg-primary/95` and `bg-primary/90` to `bg-sidebar/95` and `bg-sidebar/90`
-2. **Border**: Change `border-primary/10` to `border-white/[0.06]` (matching the sidebar subtle border)
-3. **Logo box**: Change `bg-primary-foreground` to `bg-sidebar-accent` (the gray highlight seen on sidebar items) with `text-sidebar-foreground` text
-4. **Logo text**: Change `text-primary-foreground` to `text-sidebar-foreground`
-5. **Nav links**: Change `text-primary-foreground/80` to `text-sidebar-foreground/80` with hover `text-sidebar-foreground`
-6. **CTA button**: Change to `bg-primary text-primary-foreground` (the brand-colored button stands out against the dark nav)
-7. **Mobile toggle**: Change `text-primary-foreground` to `text-sidebar-foreground`
-
-### Technical Details
-
-Single file change: `src/components/landing/LandingNav.tsx`. All modifications are CSS class swaps -- no logic changes. The mobile dropdown already uses `bg-sidebar/95` so it will remain consistent.
+This produces the same blue square with white "V" seen in the `/app` sidebar.
