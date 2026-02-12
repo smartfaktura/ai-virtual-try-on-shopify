@@ -49,27 +49,38 @@ export function RecentCreationsGallery() {
 
       if (!jobsResult.error) {
         for (const job of jobsResult.data ?? []) {
-          // Extract first non-base64 URL from results array
           const results = job.results as any;
-          let resultUrl = '';
+          const label = (job.workflows as any)?.name || 'Generated';
+          let pushed = false;
+
           if (Array.isArray(results)) {
-            for (const r of results) {
+            for (let i = 0; i < results.length; i++) {
+              const r = results[i];
               const url = typeof r === 'string' ? r : r?.url || r?.image_url;
               if (url && !url.startsWith('data:')) {
-                resultUrl = url;
-                break;
+                items.push({
+                  id: `${job.id}-${i}`,
+                  imageUrl: url,
+                  label,
+                  date: new Date(job.created_at).toLocaleDateString(),
+                  rawDate: job.created_at,
+                });
+                pushed = true;
               }
             }
           }
-          const imageUrl = resultUrl || (job.user_products as any)?.image_url;
-          if (imageUrl) {
-            items.push({
-              id: job.id,
-              imageUrl,
-              label: (job.workflows as any)?.name || 'Generated',
-              date: new Date(job.created_at).toLocaleDateString(),
-              rawDate: job.created_at,
-            });
+
+          if (!pushed) {
+            const fallback = (job.user_products as any)?.image_url;
+            if (fallback) {
+              items.push({
+                id: job.id,
+                imageUrl: fallback,
+                label,
+                date: new Date(job.created_at).toLocaleDateString(),
+                rawDate: job.created_at,
+              });
+            }
           }
         }
       }
