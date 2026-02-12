@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { HelpCircle, MessageSquare, Building2, Check } from 'lucide-react';
+import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,7 +69,11 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 export default function Settings() {
   const { user } = useAuth();
-  const { balance, plan, planConfig, addCredits } = useCredits();
+  const { balance, plan, planConfig, addCredits, subscriptionStatus } = useCredits();
+  
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
+  const [selectedPlan, setSelectedPlan] = useState<import('@/types').PricingPlan | null>(null);
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
@@ -120,9 +125,42 @@ export default function Settings() {
     setIsSaving(false);
   };
 
+  const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
+
   const handlePlanSelect = (planId: string) => {
-    if (planId === 'enterprise') toast.info('Our team will reach out to discuss your needs!');
-    else toast.success(`Switched to ${planId} plan!`);
+    if (planId === 'enterprise') {
+      toast.info('Our team will reach out to discuss your needs!');
+      return;
+    }
+    const target = pricingPlans.find(p => p.planId === planId);
+    if (!target) return;
+
+    const currentIdx = PLAN_ORDER.indexOf(plan);
+    const targetIdx = PLAN_ORDER.indexOf(planId);
+
+    if (planId === plan && subscriptionStatus === 'canceling') {
+      setDialogMode('reactivate');
+    } else if (targetIdx > currentIdx) {
+      setDialogMode('upgrade');
+    } else {
+      setDialogMode('downgrade');
+    }
+
+    setSelectedPlan(target);
+    setDialogOpen(true);
+  };
+
+  const handleDialogConfirm = () => {
+    if (dialogMode === 'upgrade' && selectedPlan) {
+      toast.success(`Upgraded to ${selectedPlan.name}!`);
+    } else if (dialogMode === 'downgrade' && selectedPlan) {
+      toast.success(`Plan will change to ${selectedPlan.name} at end of billing period.`);
+    } else if (dialogMode === 'reactivate') {
+      toast.success('Subscription reactivated!');
+    } else if (dialogMode === 'cancel') {
+      toast.success('Subscription will be cancelled at end of billing period.');
+    }
+    setDialogOpen(false);
   };
 
   const handleCreditPurchase = (packId: string) => {
@@ -134,6 +172,7 @@ export default function Settings() {
   };
 
   return (
+    <>
     <PageHeader title="Settings">
       <Tabs defaultValue="general" className="w-full">
         <TabsList className="w-full justify-start mb-6">
@@ -328,13 +367,15 @@ export default function Settings() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {mainPlans.map(p => (
               <PlanCard
                 key={p.planId}
                 plan={p}
                 isAnnual={billingPeriod === 'annual'}
                 isCurrentPlan={p.planId === currentPlanId}
+                currentPlanId={currentPlanId}
+                subscriptionStatus={subscriptionStatus}
                 onSelect={handlePlanSelect}
               />
             ))}
@@ -383,6 +424,39 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Cancel subscription link for paid users */}
+          {plan !== 'free' && subscriptionStatus !== 'canceling' && (
+            <div className="text-center">
+              <button
+                className="text-xs text-muted-foreground hover:text-destructive transition-colors underline underline-offset-2"
+                onClick={() => {
+                  setDialogMode('cancel');
+                  setSelectedPlan(null);
+                  setDialogOpen(true);
+                }}
+              >
+                Cancel subscription
+              </button>
+            </div>
+          )}
+          {plan !== 'free' && subscriptionStatus === 'canceling' && (
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">
+                Your subscription will end at the end of your billing period.{' '}
+                <button
+                  className="text-primary hover:underline underline-offset-2"
+                  onClick={() => {
+                    setDialogMode('reactivate');
+                    setSelectedPlan(null);
+                    setDialogOpen(true);
+                  }}
+                >
+                  Reactivate
+                </button>
+              </p>
+            </div>
+          )}
         </TabsContent>
 
         {/* ─── Account Tab ─── */}
@@ -498,5 +572,17 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
     </PageHeader>
+
+    <PlanChangeDialog
+      open={dialogOpen}
+      onClose={() => setDialogOpen(false)}
+      onConfirm={handleDialogConfirm}
+      mode={dialogMode}
+      targetPlan={selectedPlan || undefined}
+      currentPlanName={planConfig.name}
+      isAnnual={billingPeriod === 'annual'}
+      currentBalance={balance}
+    />
+    </>
   );
 }
