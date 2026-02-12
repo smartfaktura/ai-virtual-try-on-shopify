@@ -45,6 +45,14 @@ interface WorkflowRequest {
     description: string;
     imageUrl: string; // base64 or URL
   };
+  model?: {
+    name: string;
+    gender: string;
+    ethnicity: string;
+    bodyType: string;
+    ageRange: string;
+    imageUrl: string; // base64 or URL of the model reference image
+  };
   brand_profile?: {
     tone?: string;
     background_style?: string;
@@ -69,7 +77,8 @@ function buildVariationPrompt(
   product: WorkflowRequest["product"],
   brandProfile: WorkflowRequest["brand_profile"],
   variationIndex: number,
-  totalVariations: number
+  totalVariations: number,
+  model?: WorkflowRequest["model"]
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
@@ -105,13 +114,23 @@ function buildVariationPrompt(
   const compositionRules =
     config.fixed_settings.composition_rules || "";
 
+  // Identity-preservation block when a model reference is provided
+  const modelBlock = model
+    ? `\nMODEL IDENTITY (CRITICAL):
+The person in this image MUST be the EXACT same person shown in [MODEL IMAGE].
+- Preserve: face shape, skin tone, eye color, hair color/texture/length, facial features, distinguishing marks
+- Gender: ${model.gender}, Body type: ${model.bodyType}, Age range: ${model.ageRange}, Ethnicity: ${model.ethnicity}
+- The face must be unmistakably recognizable as the same individual
+- Do NOT alter, idealize, or change any facial features from the reference\n`
+    : "";
+
   const prompt = `${config.prompt_template}
 
 PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
 ${product.description ? `- Description: ${product.description}` : ""}
-
+${modelBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${variation.instruction}
 
@@ -124,6 +143,7 @@ CRITICAL REQUIREMENTS:
 2. All text on packaging must be perfectly legible.
 3. Ultra high resolution, professional quality, no AI artifacts.
 4. This specific variation must clearly match the "${variation.label}" direction described above.
+${model ? `5. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
 
 ${config.negative_prompt_additions ? `AVOID: ${config.negative_prompt_additions}` : ""}`;
 
@@ -151,11 +171,22 @@ function getModelForQuality(quality: string): string {
 
 async function generateImage(
   prompt: string,
-  productImageUrl: string,
-  model: string,
+  referenceImages: Array<{ url: string; label: string }>,
+  aiModel: string,
   apiKey: string
 ): Promise<string | null> {
   const maxRetries = 2;
+
+  // Build content array: text prompt + all reference images
+  const contentParts: Array<Record<string, unknown>> = [
+    { type: "text", text: prompt },
+  ];
+  for (const img of referenceImages) {
+    contentParts.push({
+      type: "image_url",
+      image_url: { url: img.url },
+    });
+  }
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -168,17 +199,11 @@ async function generateImage(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model,
+            model: aiModel,
             messages: [
               {
                 role: "user",
-                content: [
-                  { type: "text", text: prompt },
-                  {
-                    type: "image_url",
-                    image_url: { url: productImageUrl },
-                  },
-                ],
+                content: contentParts,
               },
             ],
             modalities: ["image", "text"],
@@ -358,16 +383,25 @@ serve(async (req) => {
           body.product,
           body.brand_profile,
           i,
-          variationsToGenerate.length
+          variationsToGenerate.length,
+          body.model
         );
 
         console.log(
-          `[generate-workflow] Variation ${i + 1}/${variationsToGenerate.length}: "${variation.label}" (${aspectRatio})`
+          `[generate-workflow] Variation ${i + 1}/${variationsToGenerate.length}: "${variation.label}" (${aspectRatio})${body.model ? ` [with model: ${body.model.name}]` : ""}`
         );
+
+        // Build reference images array: product first, then model if provided
+        const referenceImages: Array<{ url: string; label: string }> = [
+          { url: body.product.imageUrl, label: "product" },
+        ];
+        if (body.model?.imageUrl) {
+          referenceImages.push({ url: body.model.imageUrl, label: "model" });
+        }
 
         const imageUrl = await generateImage(
           prompt,
-          body.product.imageUrl,
+          referenceImages,
           model,
           LOVABLE_API_KEY
         );

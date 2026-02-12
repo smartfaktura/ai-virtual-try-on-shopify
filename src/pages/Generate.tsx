@@ -337,8 +337,8 @@ export default function Generate() {
     // Go to brand profile step if profiles exist
     if (brandProfiles.length > 0) {
       setCurrentStep('brand-profile');
-    } else if (activeWorkflow?.uses_tryon) {
-      // Skip mode step for try-on workflows
+    } else if (activeWorkflow?.uses_tryon || uiConfig?.show_model_picker) {
+      // Go to model step for try-on or selfie/UGC workflows
       setCurrentStep('model');
     } else if (isClothingProduct(product)) {
       setCurrentStep('mode');
@@ -351,7 +351,7 @@ export default function Generate() {
   };
 
   const handleBrandProfileContinue = () => {
-    if (activeWorkflow?.uses_tryon) {
+    if (activeWorkflow?.uses_tryon || uiConfig?.show_model_picker) {
       setCurrentStep('model');
     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
       setCurrentStep('settings');
@@ -461,23 +461,43 @@ export default function Generate() {
     setCurrentStep('generating');
     setGeneratingProgress(0);
 
-    const base64Image = await convertImageToBase64(sourceImageUrl);
+    // Convert product image; also convert model image if workflow uses model picker
+    const needsModel = uiConfig?.show_model_picker && selectedModel;
+    const [base64Image, base64ModelImage] = await Promise.all([
+      convertImageToBase64(sourceImageUrl),
+      needsModel ? convertImageToBase64(selectedModel!.previewUrl) : Promise.resolve(undefined),
+    ]);
+
+    const payload: Record<string, unknown> = {
+      workflow_id: activeWorkflow!.id,
+      product: { ...productData, imageUrl: base64Image },
+      brand_profile: selectedBrandProfile ? {
+        tone: selectedBrandProfile.tone, background_style: selectedBrandProfile.background_style,
+        lighting_style: selectedBrandProfile.lighting_style, color_temperature: selectedBrandProfile.color_temperature,
+        brand_keywords: selectedBrandProfile.brand_keywords, color_palette: selectedBrandProfile.color_palette,
+        target_audience: selectedBrandProfile.target_audience, do_not_rules: selectedBrandProfile.do_not_rules,
+        composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
+        photography_reference: selectedBrandProfile.photography_reference,
+      } : undefined,
+      selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+      quality,
+    };
+
+    // Attach model data for selfie/UGC workflows
+    if (needsModel && base64ModelImage) {
+      payload.model = {
+        name: selectedModel!.name,
+        gender: selectedModel!.gender,
+        ethnicity: selectedModel!.ethnicity,
+        bodyType: selectedModel!.bodyType,
+        ageRange: selectedModel!.ageRange,
+        imageUrl: base64ModelImage,
+      };
+    }
+
     const enqueueResult = await enqueue({
       jobType: 'workflow',
-      payload: {
-        workflow_id: activeWorkflow!.id,
-        product: { ...productData, imageUrl: base64Image },
-        brand_profile: selectedBrandProfile ? {
-          tone: selectedBrandProfile.tone, background_style: selectedBrandProfile.background_style,
-          lighting_style: selectedBrandProfile.lighting_style, color_temperature: selectedBrandProfile.color_temperature,
-          brand_keywords: selectedBrandProfile.brand_keywords, color_palette: selectedBrandProfile.color_palette,
-          target_audience: selectedBrandProfile.target_audience, do_not_rules: selectedBrandProfile.do_not_rules,
-          composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
-          photography_reference: selectedBrandProfile.photography_reference,
-        } : undefined,
-        selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
-        quality,
-      },
+      payload,
       imageCount: workflowImageCount,
       quality,
     });
@@ -1010,8 +1030,12 @@ export default function Generate() {
                 ))}
               </div>
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setCurrentStep(activeWorkflow?.uses_tryon ? 'brand-profile' : 'mode')}>Back</Button>
-                <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
+                <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product')}>Back</Button>
+                {uiConfig?.show_model_picker && !activeWorkflow?.uses_tryon ? (
+                  <Button disabled={!selectedModel} onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
+                ) : (
+                  <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
+                )}
               </div>
             </CardContent></Card>
           </div>
