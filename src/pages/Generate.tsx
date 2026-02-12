@@ -4,10 +4,14 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban } from 'lucide-react';
 
-import avatarSophia from '@/assets/team/avatar-sophia.jpg';
-import avatarZara from '@/assets/team/avatar-zara.jpg';
-import avatarKenji from '@/assets/team/avatar-kenji.jpg';
-import avatarLuna from '@/assets/team/avatar-luna.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { width: 80, quality: 50 });
+const avatarSophia = teamAvatar('avatar-sophia.jpg');
+const avatarZara = teamAvatar('avatar-zara.jpg');
+const avatarKenji = teamAvatar('avatar-kenji.jpg');
+const avatarLuna = teamAvatar('avatar-luna.jpg');
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

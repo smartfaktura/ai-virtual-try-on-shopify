@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { Lightbulb, X, Sparkles, Calendar, Palette } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-import avatarKenji from '@/assets/team/avatar-kenji.jpg';
-import avatarSienna from '@/assets/team/avatar-sienna.jpg';
-import avatarZara from '@/assets/team/avatar-zara.jpg';
-import avatarOmar from '@/assets/team/avatar-omar.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { width: 80, quality: 50 });
 
 interface Tip {
   icon: LucideIcon;
@@ -20,28 +20,28 @@ const TIPS: Tip[] = [
     icon: Calendar,
     text: 'Schedule monthly Creative Drops to automate fresh visuals for your store.',
     highlight: 'Automate your content',
-    avatar: avatarKenji,
+    avatar: teamAvatar('avatar-kenji.jpg'),
     memberName: 'Kenji',
   },
   {
     icon: Palette,
     text: 'Add a Brand Profile to keep all your product visuals consistent across campaigns.',
     highlight: 'Stay on brand',
-    avatar: avatarSienna,
+    avatar: teamAvatar('avatar-sienna.jpg'),
     memberName: 'Sienna',
   },
   {
     icon: Sparkles,
     text: 'Virtual Try-On now supports 40+ diverse AI models with unique poses and environments.',
     highlight: 'New feature',
-    avatar: avatarZara,
+    avatar: teamAvatar('avatar-zara.jpg'),
     memberName: 'Zara',
   },
   {
     icon: Lightbulb,
     text: 'Use Workflows to generate complete visual sets — ads, listings, and hero images — in one click.',
     highlight: 'Work smarter',
-    avatar: avatarOmar,
+    avatar: teamAvatar('avatar-omar.jpg'),
     memberName: 'Omar',
   },
 ];

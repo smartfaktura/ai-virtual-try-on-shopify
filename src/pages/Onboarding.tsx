@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { ArrowRight, Check } from 'lucide-react';
-import authHero from '@/assets/auth/auth-hero.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
 
 const REFERRAL_OPTIONS = [
   'Social media post',
