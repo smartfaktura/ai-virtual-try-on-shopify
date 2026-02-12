@@ -1,37 +1,27 @@
 
 
-## Fix Selfie / UGC Set Workflow Flow + Add Thumbnail
+## Make Landing Nav Floating on Desktop
 
-Two issues to fix:
+Currently the nav is only floating (rounded, shadowed, with margin) on mobile. On desktop (`lg:` breakpoint), it stretches full-width with no rounding, no shadow, and no padding -- a standard flat top bar.
 
-### Issue 1: Product selection skips the model step
+### What Changes
 
-The Selfie / UGC Set workflow has `show_model_picker: true` in its config, but the product selection "Continue" button (line 904-923 in Generate.tsx) does not check for this flag. When a user selects a product from the database list, the routing logic skips straight to `settings` (because `skip_template` is true) instead of going to the `model` step.
+**File: `src/components/landing/LandingNav.tsx`**
 
-The `handleSelectProduct` function (line 340) already handles this correctly for the "Recent Products" path, but the product step's inline Continue handler does not.
+Remove the `lg:` overrides that flatten the nav on desktop, so the floating pill-shaped style applies at all breakpoints:
 
-**Fix**: In the product step Continue handler (around line 915-923), add a check for `uiConfig?.show_model_picker` before the `skip_template` check, routing to the `model` step instead.
+1. **Header wrapper** (`<header>`): Change `p-3 lg:p-0` to `p-3` so the outer padding is consistent
+2. **Nav bar** (`<nav>`): Remove these desktop overrides:
+   - `lg:rounded-none` -- keep `rounded-2xl` at all sizes
+   - `lg:border-0` -- keep the subtle `border-white/[0.06]` border
+   - `lg:shadow-none` -- keep the `shadow-2xl shadow-black/20` elevation
+   - `lg:bg-background/80` / `lg:bg-transparent` -- use the `bg-sidebar` / frosted glass look consistently
+   - `lg:border-b lg:border-border lg:shadow-sm` on scroll -- replace with the existing mobile scroll style
+3. **Max width**: Keep `lg:max-w-7xl lg:mx-auto` so the floating bar is centered and doesn't stretch edge-to-edge on ultrawide monitors
+4. **Logo text color**: Change `lg:text-foreground` to use `text-sidebar-foreground` consistently
 
-The corrected routing order should be:
-1. brand-profile (if profiles exist)
-2. model (if `show_model_picker` is true) -- currently missing
-3. mode (if clothing)
-4. settings (if `skip_template`)
-5. template (fallback)
-
-### Issue 2: Set the workflow thumbnail image
-
-Update the `preview_image_url` column in the workflows table for the Selfie / UGC Set to use the uploaded image. The image will be copied into the project assets and referenced in the animation data as the background for the workflow card.
-
-Alternatively, since the WorkflowCard already uses `workflowAnimationData.tsx` for the Selfie / UGC Set background (the `ugcResult` import at `src/assets/workflows/workflow-selfie-ugc.jpg`), the simplest approach is to replace that asset file with the new uploaded image and also update the `preview_image_url` in the database for fallback display.
+The result: a centered, rounded, frosted-glass pill nav that floats over the hero content on all screen sizes -- matching the current mobile aesthetic but scaled up for desktop.
 
 ### Technical Details
 
-**Files to change:**
-
-| File | Change |
-|------|--------|
-| `src/pages/Generate.tsx` (lines ~915-923) | Add `show_model_picker` check in the product step Continue handler to route to `model` step |
-| `src/assets/workflows/workflow-selfie-ugc.jpg` | Replace with the uploaded selfie image |
-| Database migration | Update `preview_image_url` for Selfie / UGC Set workflow to point to the new image (or null if using local asset only) |
-
+Only one file changes: `src/components/landing/LandingNav.tsx`. The modifications are purely CSS class adjustments on the `<header>` and `<nav>` elements (lines 33-39 and line 46). No logic, props, or structure changes needed.
