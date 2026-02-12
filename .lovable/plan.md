@@ -1,78 +1,38 @@
 
-## Optimize Image Loading: Thumbnails + Caching
 
-### The Problem
+## Fix: Quality-Only Optimization (Keep Native Resolution)
 
-All galleries (Library, Discover, Freestyle) load full-resolution images for small grid thumbnails. A single AI-generated image can be 1-4MB. Loading 50+ of these in a gallery causes slow page loads, high bandwidth usage, and poor UX -- especially on mobile.
+### What's Wrong
 
-### The Solution
+The current `getOptimizedUrl` defaults to `width=400`, which downscales every image to 400px wide. This breaks the visual quality of previews, especially in the Freestyle "natural" layout where images display large. The aspect ratios look "crashed" because the images are being resized to a fixed width.
 
-Use Supabase Storage Image Transformations to serve smaller, lower-quality thumbnails in gallery views, and only load full-resolution images when users click to view details or download.
+### What Changes
 
-### How It Works
+**1. `src/lib/imageOptimization.ts`**
+- Remove the default `width=400` -- make `width` truly optional
+- When no `width` is provided, only append `quality=X` to the URL (keeps native resolution)
+- Default quality stays at `60` for grid previews
 
-Supabase Storage supports on-the-fly image resizing by changing `/object/` to `/render/image/` in the URL and adding `width` and `quality` query params. For example:
+**2. `src/components/app/freestyle/FreestyleGallery.tsx`**
+- Natural layout (1-3 large images): use `getOptimizedUrl(img.url, { quality: 75 })` -- lighter compression since images display large
+- Grid/masonry layout (4+ images): use `getOptimizedUrl(img.url, { quality: 60 })` -- heavier compression for small cards
 
-```text
-BEFORE (full res, ~2MB):
-https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/user/img.png
+**3. `src/components/app/LibraryImageCard.tsx`**
+- Change to `getOptimizedUrl(item.imageUrl, { quality: 60 })` -- remove width, quality-only
 
-AFTER (thumbnail, ~50KB):
-https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/freestyle-images/user/img.png?width=400&quality=60
-```
-
-The browser also caches these transformed images automatically via standard HTTP caching headers that Supabase sets on transformed images.
-
-### Changes
-
-**1. New utility: `src/lib/imageOptimization.ts`**
-
-Create a helper function that converts any Supabase Storage public URL into a thumbnail URL:
-
-- `getOptimizedUrl(url, { width, quality })` -- replaces `/object/` with `/render/image/` and appends width/quality params
-- Only transforms Supabase Storage URLs (passes through external URLs unchanged)
-- Default thumbnail preset: `width=400, quality=60` (good for grid cards)
-- Medium preset: `width=800, quality=75` (for detail modals)
-- Returns original URL unchanged for non-Supabase URLs
-
-**2. `src/components/app/LibraryImageCard.tsx`**
-
-- Use `getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })` for the `<img src>` in the grid card
-- The original `item.imageUrl` stays untouched for downloads and detail views
-
-**3. `src/components/app/DiscoverCard.tsx`**
-
-- Use `getOptimizedUrl(imageUrl, { width: 400, quality: 60 })` for the grid thumbnail `<img src>`
-
-**4. `src/components/app/freestyle/FreestyleGallery.tsx`**
-
-- For the masonry grid cards, use `getOptimizedUrl(img.url, { width: 400, quality: 60 })`
-- Keep original URLs for the lightbox/expanded view
+**4. `src/components/app/DiscoverCard.tsx`**
+- Change to `getOptimizedUrl(imageUrl, { quality: 60 })` -- remove width, quality-only
 
 **5. `src/components/app/RecentCreationsGallery.tsx`**
+- Change to `getOptimizedUrl(item.imageUrl, { quality: 60 })` -- remove width, quality-only
 
-- Apply same thumbnail optimization for the recent creations carousel
+**6. `src/components/app/ImageLightbox.tsx`**
+- Main image (line 105): keep using original URL -- full quality on click (already correct)
+- Thumbnail strip (line 161): add `getOptimizedUrl(img, { width: 100, quality: 50 })` -- these are tiny 56px thumbnails, width resize is fine here
 
-**6. Detail modals keep full quality**
+### Result
 
-- `LibraryDetailModal`, `DiscoverDetailModal`, and `ImageLightbox` continue using original URLs so users see full-resolution images when they click to view
-
-### What About Caching?
-
-Supabase Storage already sets `Cache-Control` headers on served images. Transformed images are cached both at the CDN level and in the browser. No additional caching setup is needed -- once a thumbnail is loaded, the browser will serve it from cache on subsequent visits.
-
-### Safety Considerations
-
-- No database changes required
-- No edge function changes
-- Only affects `<img src>` attributes in grid/card views
-- Downloads always use the original full-resolution URL
-- If the `/render/image/` endpoint is unavailable (e.g., plan limitations), the utility gracefully falls back to the original URL since the image still loads -- just at full size
-- Non-Supabase URLs (external images) are passed through unchanged
-
-### Expected Impact
-
-- Gallery thumbnails: ~50-100KB each instead of ~1-4MB (20-40x smaller)
-- Page load time for galleries with 50 images: ~2.5-5MB instead of ~50-200MB
-- First meaningful paint significantly faster
-- Mobile data usage drastically reduced
+- Grid previews: native resolution, 60% quality (smaller files, sharp images)
+- Large previews: native resolution, 75% quality (minimal visual loss)
+- Lightbox/detail view: full 100% quality original URL (loads on click)
+- Thumbnail strip: 100px wide, 50% quality (tiny thumbnails, fast load)
