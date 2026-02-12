@@ -637,7 +637,7 @@ export default function Generate() {
 
   return (
     <PageHeader title={pageTitle} backAction={{ content: activeWorkflow ? 'Workflows' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}>
-      <div className="space-y-6">
+      <div className="space-y-6 overflow-x-hidden">
         <LowCreditsBanner />
 
         {/* Workflow Info Banner */}
@@ -1731,15 +1731,15 @@ export default function Generate() {
               <p className="text-xs text-muted-foreground">Crafted by your studio team</p>
             </div>
 
-            <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="space-y-3">
               <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-primary" /> Saved to your library</p>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
-                <Button variant="outline" onClick={() => {
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
+                <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => {
                   if (selectedForPublish.size === 0) { toast.error('Select images to download'); return; }
                   selectedForPublish.forEach(idx => handleDownloadImage(idx));
                 }}><Download className="w-4 h-4 mr-2" /> Download Selected ({selectedForPublish.size})</Button>
-                <Button onClick={() => navigate('/app/library')}>View in Library</Button>
+                <Button size="sm" className="flex-1 sm:flex-none" onClick={() => navigate('/app/library')}>View in Library</Button>
               </div>
             </div>
           </div>
