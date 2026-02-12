@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -268,7 +269,7 @@ function ImageCard({
         onClick={() => onExpand(idx)}
       >
         <img
-          src={img.url}
+          src={getOptimizedUrl(img.url, { width: 400, quality: 60 })}
           alt={`Generated ${idx + 1}`}
           className={cn(
             'w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
@@ -295,7 +296,7 @@ function ImageCard({
       onClick={() => onExpand(idx)}
     >
       <img
-        src={img.url}
+        src={getOptimizedUrl(img.url, { width: 400, quality: 60 })}
         alt={`Generated ${idx + 1}`}
         className={cn(
           'w-full h-full object-cover transition-opacity duration-700 ease-out',
