@@ -13,7 +13,7 @@ const workflowPrompts: Record<string, string> = {
   "Social Media Pack":
     "Ultra high resolution vibrant social media lifestyle photography collage concept. A curated grid of lifestyle moments — coffee in hand, golden hour portrait, styled product flat lay, urban street snap. Bright saturated colors, 3:4 portrait orientation, aspirational and trendy commercial photography.",
   "Product Listing Set":
-    "Ultra high resolution clean e-commerce product photography. A luxury skincare bottle on a white marble surface with soft diffused studio lighting and minimal shadows. Crisp details, 3:4 portrait orientation, premium minimalist commercial product shot.",
+    "Ultra high resolution professional product photography collage concept. A luxury skincare bottle shown in multiple scenes: clean white studio, elegant marble surface, natural linen texture, and dramatic dark moody lighting. Each scene shows the same product with perfectly matched lighting and shadows. No people, no hands. 3:4 portrait orientation, premium commercial product photography.",
   "Lifestyle Set":
     "Ultra high resolution lifestyle product photography. An elegant candle and home decor items arranged in a cozy living room setting with warm ambient lighting, linen textures, and soft bokeh. 3:4 portrait orientation, editorial interior photography.",
   "Website Hero Set":
