@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { JobStatus } from '@/types';
 import type { Workflow } from '@/pages/Workflows';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -300,7 +301,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg overflow-hidden border border-border flex-shrink-0">
                             <img
-                              src={job.user_products?.image_url || '/placeholder.svg'}
+                              src={getOptimizedUrl(job.user_products?.image_url, { width: 80, quality: 50 }) || '/placeholder.svg'}
                               alt={job.user_products?.title || 'Product'}
                               className="w-full h-full object-cover"
                             />
