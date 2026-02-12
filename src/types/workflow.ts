@@ -4,6 +4,7 @@ export interface WorkflowVariationItem {
   label: string;
   instruction: string;
   aspect_ratio?: string;
+  preview_url?: string;
 }
 
 export interface WorkflowVariationStrategy {

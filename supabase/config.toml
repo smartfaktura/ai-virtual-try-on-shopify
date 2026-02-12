@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.retry-queue]
 verify_jwt = false
+
+[functions.generate-scene-previews]
+verify_jwt = false
