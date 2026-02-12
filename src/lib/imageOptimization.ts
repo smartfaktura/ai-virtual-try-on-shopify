@@ -26,10 +26,14 @@ export function getOptimizedUrl(
   // Already transformed
   if (url.includes(SUPABASE_RENDER_MARKER)) return url;
 
-  const { width = 400, quality = 60 } = options;
+  const { width, quality = 60 } = options;
 
   const transformed = url.replace(SUPABASE_STORAGE_MARKER, SUPABASE_RENDER_MARKER);
 
+  const params: string[] = [];
+  if (width) params.push(`width=${width}`);
+  params.push(`quality=${quality}`);
+
   const separator = transformed.includes('?') ? '&' : '?';
-  return `${transformed}${separator}width=${width}&quality=${quality}`;
+  return `${transformed}${separator}${params.join('&')}`;
 }

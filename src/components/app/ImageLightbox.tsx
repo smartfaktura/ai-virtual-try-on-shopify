@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface ImageLightboxProps {
   images: string[];
@@ -158,7 +159,7 @@ export function ImageLightbox({
                   : 'ring-transparent opacity-50 hover:opacity-80'
               )}
             >
-              <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+              <img src={getOptimizedUrl(img, { width: 100, quality: 50 })} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

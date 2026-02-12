@@ -142,7 +142,7 @@ export function RecentCreationsGallery() {
             >
               <div className="aspect-[4/5] rounded-xl overflow-hidden border border-border relative shadow-sm">
                 <img
-                  src={getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })}
+                  src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
                   alt={item.label}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"

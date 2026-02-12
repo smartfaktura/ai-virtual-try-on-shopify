@@ -269,10 +269,10 @@ function ImageCard({
         onClick={() => onExpand(idx)}
       >
         <img
-          src={getOptimizedUrl(img.url, { width: 400, quality: 60 })}
-          alt={`Generated ${idx + 1}`}
-          className={cn(
-            'w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
+        src={getOptimizedUrl(img.url, { quality: 75 })}
+        alt={`Generated ${idx + 1}`}
+        className={cn(
+          'w-auto h-auto max-h-[calc(100vh-400px)] rounded-xl shadow-md shadow-black/20 transition-opacity duration-700 ease-out',
             loaded ? 'opacity-100' : 'opacity-0',
           )}
           loading="eager"
@@ -296,7 +296,7 @@ function ImageCard({
       onClick={() => onExpand(idx)}
     >
       <img
-        src={getOptimizedUrl(img.url, { width: 400, quality: 60 })}
+        src={getOptimizedUrl(img.url, { quality: 60 })}
         alt={`Generated ${idx + 1}`}
         className={cn(
           'w-full h-full object-cover transition-opacity duration-700 ease-out',
