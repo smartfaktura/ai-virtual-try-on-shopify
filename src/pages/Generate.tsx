@@ -7,7 +7,7 @@ import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Pale
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
-const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { quality: 50 });
+const teamAvatar = (file: string) => getLandingAssetUrl(`team/${file}`);
 const avatarSophia = teamAvatar('avatar-sophia.jpg');
 const avatarZara = teamAvatar('avatar-zara.jpg');
 const avatarKenji = teamAvatar('avatar-kenji.jpg');
