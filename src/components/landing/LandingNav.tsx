@@ -30,20 +30,20 @@ export function LandingNav() {
   };
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-background/80 backdrop-blur-xl border-b border-border shadow-sm'
-          : 'bg-transparent'
-      }`}
-    >
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-50 p-3 lg:p-0">
+      <nav
+        className={`transition-all duration-300 rounded-2xl lg:rounded-none border border-white/[0.06] lg:border-0 shadow-2xl shadow-black/20 lg:shadow-none backdrop-blur-xl px-4 sm:px-6 lg:px-8 h-14 lg:h-16 flex items-center justify-between lg:max-w-7xl lg:mx-auto ${
+          scrolled
+            ? 'bg-sidebar lg:bg-background/80 lg:border-b lg:border-border lg:shadow-sm'
+            : 'bg-sidebar lg:bg-transparent'
+        }`}
+      >
         {/* Logo */}
         <a href="#" className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">V</span>
           </div>
-          <span className="font-bold text-lg text-foreground tracking-tight">VOVV.AI</span>
+          <span className="font-bold text-lg text-sidebar-foreground lg:text-foreground tracking-tight">VOVV.AI</span>
         </a>
 
         {/* Desktop links */}
@@ -76,7 +76,7 @@ export function LandingNav() {
 
         {/* Mobile toggle */}
         <button
-          className="lg:hidden p-2 text-foreground"
+          className="lg:hidden p-2 text-sidebar-foreground"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
@@ -86,17 +86,17 @@ export function LandingNav() {
 
       {/* Mobile menu with smooth animation */}
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          mobileOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'
+        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out mt-1 rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/20 ${
+          mobileOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0 border-transparent shadow-none'
         }`}
       >
-        <div className="bg-background/95 backdrop-blur-xl border-b border-border">
-          <div className="px-4 py-3 flex flex-col divide-y divide-border/50">
+        <div className="bg-sidebar/95 backdrop-blur-xl rounded-2xl">
+          <div className="px-4 py-3 flex flex-col divide-y divide-white/[0.06]">
             {navLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleNavClick(link.href)}
-                className="text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-3"
+                className="text-left text-sm font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors py-3"
               >
                 {link.label}
               </button>
