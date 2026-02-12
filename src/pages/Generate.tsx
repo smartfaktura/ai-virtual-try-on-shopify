@@ -914,6 +914,8 @@ export default function Generate() {
                     if (cat) setSelectedCategory(cat);
                     if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
+                    } else if (uiConfig?.show_model_picker) {
+                      setCurrentStep('model');
                     } else if (isClothingProduct(product)) {
                       setCurrentStep('mode');
                     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
