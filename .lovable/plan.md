@@ -1,70 +1,65 @@
 
 
-## Premium Credits Pop-up Redesign
+## Remove Unused Workflows
 
-Completely overhaul the BuyCreditsModal for a clean, spacious, luxurious feel with proper layouts on both desktop and mobile.
+Delete 6 workflows the user no longer needs, keeping only: **Virtual Try-On Set**, **Product Listing Set**, **Selfie / UGC Set**, and **Flat Lay Set**.
 
-### Problems in Current Design
-- 4 plan columns crammed into a max-w-2xl dialog -- too tight, text gets cut off
-- Credit pack cards feel dense with insufficient spacing
-- Balance bar is functional but bland
-- Tabs feel utilitarian, not premium
-- On mobile, the 4-column grid collapses poorly
+### Workflows to Remove
+1. Social Media Pack
+2. Lifestyle Set
+3. Website Hero Set
+4. Ad Refresh Set
+5. Seasonal Campaign Set
+6. Before & After Set
 
-### Design Changes
+### Changes
 
-**1. `BuyCreditsModal.tsx` -- Complete visual overhaul**
+**1. Database -- Delete 6 workflow rows**
+Run a migration to delete the rows from the `workflows` table and re-order the remaining 4:
+- Virtual Try-On Set (sort 1)
+- Product Listing Set (sort 2)
+- Selfie / UGC Set (sort 3)
+- Flat Lay Set (sort 4)
 
-**Modal sizing:**
-- Expand to `max-w-4xl` to give plan columns room to breathe
-- Add `p-0` to DialogContent for full-bleed internal layout
+**2. Delete dedicated thumbnail components**
+These components only serve the removed workflows:
+- `src/components/app/SocialMediaGridThumbnail.tsx` -- only used by Social Media Pack
+- `src/components/app/HeroBannerThumbnail.tsx` -- only used by Website Hero Set
 
-**Balance section (top):**
-- Full-width gradient header area with large balance number
-- Plan badge and bonus indicator inline
-- Thinner, more elegant progress bar with rounded ends
-- More whitespace above/below (py-6 px-8)
+**3. Clean up `workflowAnimationData.tsx`**
+- Remove imports and scene entries for: Social Media Pack (comment only), Lifestyle Set, Website Hero Set (comment only), Ad Refresh Set, Seasonal Campaign Set, Before & After Set
+- Remove now-unused asset imports (socialProduct, socialResult, lifestyleProduct, lifestyleScene, lifestyleResult, adProduct, adModel, adResult, seasonProduct, seasonResult, baProduct, baResult)
+- Remove unused icon imports that were only used by deleted scenes
 
-**Tab styling:**
-- Wider tab triggers with more padding
-- Subtle bottom-border active indicator instead of filled background
+**4. Clean up `WorkflowCard.tsx`**
+- Remove the conditional branches for `Social Media Pack` and `Website Hero Set` that reference the deleted thumbnail components
+- Remove the imports for `SocialMediaGridThumbnail` and `HeroBannerThumbnail`
 
-**Top Up tab redesign:**
-- Cards get `p-8` padding, more vertical breathing room
-- Larger credit number (text-4xl), clear visual hierarchy
-- Separator line between credits count and price
-- "Best Value" badge refined with a subtle glow/shadow
-- Grid: `grid-cols-1 sm:grid-cols-3` with `gap-6`
-- Each card: subtle hover scale transform (`hover:scale-[1.02]`)
+**5. Delete unused asset files**
+- `src/assets/workflows/workflow-social-media.jpg`
+- `src/assets/workflows/workflow-lifestyle.jpg`
+- `src/assets/workflows/workflow-website-hero.jpg`
+- `src/assets/workflows/workflow-ad-refresh.jpg`
+- `src/assets/workflows/workflow-seasonal.jpg`
+- `src/assets/workflows/workflow-before-after.jpg`
+- `src/assets/workflows/social-ring-hand.jpg`
+- `src/assets/workflows/social-ring-plate.jpg`
+- `src/assets/workflows/social-ring-portrait.jpg`
+- `src/assets/workflows/social-ring-studio.jpg`
 
-**Upgrade Plan tab redesign:**
-- Billing toggle: pill-style with smoother transitions, slightly larger
-- Plan grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` with `gap-5`
-- Each plan card:
-  - More generous internal spacing (`p-6 space-y-5`)
-  - Plan name with larger font weight
-  - Price with clear hierarchy: big number + small "/mo"
-  - Credits pill: refined with subtle background
-  - Features: better line-height, `space-y-2` instead of `space-y-1.5`
-  - CTA button: taller (`min-h-[44px]`), rounded-xl
-  - Current plan: subtle dashed border instead of solid
-  - Highlighted plan: subtle shadow + primary border
-- Enterprise banner: more padding, refined icon treatment
+**6. Minor reference cleanup**
+- Landing page text in `LandingFAQ.tsx` mentions "Ad Refresh" and "Website Hero" as examples -- update to reference kept workflows instead
+- `Changelog.tsx` mentions "Lifestyle, Studio, Flat Lay, Social Media" -- update text to reflect current workflows
 
-**2. `NoCreditsModal.tsx` -- Match new style**
-- Same card treatment as Top Up tab
-- Better spacing and typography hierarchy
-- Larger CTA for "View Plans"
+### What Stays Untouched
+- Virtual Try-On Set (all assets, animation data, tryon components)
+- Product Listing Set (assets, animation data)
+- Selfie / UGC Set (assets, animation data)
+- Flat Lay Set (assets, animation data)
+- All generation logic, edge functions, and Generate page code
+- The `Workflows.tsx` page itself (it reads from DB, so removing DB rows is enough)
 
-**3. `PlanChangeDialog.tsx` -- Visual polish**
-- Slightly larger max-width (`max-w-lg`)
-- More generous padding in the summary boxes
-- Refined icon backgrounds with subtle gradient
-
-### Files Changed
-- **Edit**: `src/components/app/BuyCreditsModal.tsx` -- complete visual redesign
-- **Edit**: `src/components/app/NoCreditsModal.tsx` -- match new card style
-- **Edit**: `src/components/app/PlanChangeDialog.tsx` -- visual polish
-
-### No Logic Changes
-All existing handlers, context usage, and PlanChangeDialog integration remain identical. This is purely visual spacing, typography, and layout improvements.
+### Files Summary
+- **Database**: Delete 6 rows, update sort_order on remaining 4
+- **Delete**: `SocialMediaGridThumbnail.tsx`, `HeroBannerThumbnail.tsx`, 10 asset images
+- **Edit**: `workflowAnimationData.tsx`, `WorkflowCard.tsx`, `LandingFAQ.tsx`, `Changelog.tsx`
