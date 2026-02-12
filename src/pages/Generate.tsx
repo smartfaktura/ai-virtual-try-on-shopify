@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2 } from 'lucide-react';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban } from 'lucide-react';
 
 import avatarSophia from '@/assets/team/avatar-sophia.jpg';
 import avatarZara from '@/assets/team/avatar-zara.jpg';
@@ -33,6 +33,8 @@ import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { AspectRatioSelector } from '@/components/app/AspectRatioPreview';
@@ -72,6 +74,27 @@ export default function Generate() {
   const initialTemplateId = searchParams.get('template');
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance } = useCredits();
   const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue();
+  const { isAdmin } = useIsAdmin();
+  const [isGeneratingPreviews, setIsGeneratingPreviews] = useState(false);
+
+  const handleGenerateScenePreviews = async () => {
+    if (!workflowId) return;
+    setIsGeneratingPreviews(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-scene-previews', {
+        body: { workflow_id: workflowId },
+      });
+      if (error) throw error;
+      toast.success('Scene previews generated! Refreshing...');
+      // Refetch workflow data
+      window.location.reload();
+    } catch (e) {
+      toast.error('Failed to generate scene previews');
+      console.error(e);
+    } finally {
+      setIsGeneratingPreviews(false);
+    }
+  };
 
   // Workflow & Brand Profile from DB
   const { data: activeWorkflow } = useQuery({
@@ -1289,49 +1312,142 @@ export default function Generate() {
 
             {/* Variation Strategy Preview */}
             <Card><CardContent className="p-5 space-y-4">
-              <div>
-                <h3 className="text-base font-semibold">What You'll Get</h3>
-                <p className="text-sm text-muted-foreground">
-                  {variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
-                   variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
-                   variationStrategy?.type === 'layout' ? 'Different layout compositions' :
-                   variationStrategy?.type === 'paired' ? 'Before and after comparison' :
-                   variationStrategy?.type === 'angle' ? 'Multiple angles and perspectives' :
-                   variationStrategy?.type === 'mood' ? 'Different mood and energy styles' :
-                   variationStrategy?.type === 'surface' ? 'Different surface and styling options' :
-                   variationStrategy?.type === 'scene' ? 'Different lifestyle scenes' :
-                   'Workflow-specific variations'}
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {variationStrategy?.variations.map((v, i) => (
-                  <div
-                    key={i}
-                    onClick={() => {
-                      setSelectedVariationIndices(prev => {
-                        const next = new Set(prev);
-                        if (next.has(i)) { if (next.size > 1) next.delete(i); }
-                        else next.add(i);
-                        return next;
-                      });
-                    }}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedVariationIndices.has(i)
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/30'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium">{v.label}</p>
-                      {v.aspect_ratio && <Badge variant="outline" className="text-[10px]">{v.aspect_ratio}</Badge>}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{v.instruction}</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold">What You'll Get</h3>
+                    {variationStrategy?.type === 'scene' && (
+                      <>
+                        <Badge variant="secondary" className="text-[10px]"><Ban className="w-3 h-3 mr-1" />No People</Badge>
+                        <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
+                      </>
+                    )}
                   </div>
-                ))}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
+                     variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
+                     variationStrategy?.type === 'layout' ? 'Different layout compositions' :
+                     variationStrategy?.type === 'paired' ? 'Before and after comparison' :
+                     variationStrategy?.type === 'angle' ? 'Multiple angles and perspectives' :
+                     variationStrategy?.type === 'mood' ? 'Different mood and energy styles' :
+                     variationStrategy?.type === 'surface' ? 'Different surface and styling options' :
+                     variationStrategy?.type === 'scene' ? 'Your product photographed in diverse professional scenes' :
+                     'Workflow-specific variations'}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (selectedVariationIndices.size === variationStrategy?.variations.length) {
+                      // Deselect all except first
+                      setSelectedVariationIndices(new Set([0]));
+                    } else {
+                      setSelectedVariationIndices(new Set(variationStrategy?.variations.map((_, i) => i)));
+                    }
+                  }}
+                >
+                  {selectedVariationIndices.size === variationStrategy?.variations.length ? 'Deselect All' : 'Select All'}
+                </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Click to toggle variations. {selectedVariationIndices.size} of {variationStrategy?.variations.length} selected.
-              </p>
+
+              {/* Visual scene cards grid */}
+              <TooltipProvider delayDuration={300}>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {variationStrategy?.variations.map((v, i) => {
+                    const isSelected = selectedVariationIndices.has(i);
+                    const hasPreview = !!v.preview_url;
+
+                    return (
+                      <Tooltip key={i}>
+                        <TooltipTrigger asChild>
+                          <div
+                            onClick={() => {
+                              setSelectedVariationIndices(prev => {
+                                const next = new Set(prev);
+                                if (next.has(i)) { if (next.size > 1) next.delete(i); }
+                                else next.add(i);
+                                return next;
+                              });
+                            }}
+                            className={cn(
+                              "relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group border-2",
+                              isSelected
+                                ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
+                                : "border-border opacity-70 hover:opacity-100 hover:border-primary/40 hover:scale-[1.02]"
+                            )}
+                          >
+                            {/* Image or gradient fallback */}
+                            <div className="aspect-square relative">
+                              {hasPreview ? (
+                                <img
+                                  src={v.preview_url}
+                                  alt={v.label}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className={cn(
+                                  "w-full h-full flex items-center justify-center",
+                                  i === 0 ? "bg-gradient-to-br from-gray-100 to-white" :
+                                  i === 1 ? "bg-gradient-to-br from-gray-200 to-gray-100" :
+                                  i === 2 ? "bg-gradient-to-br from-amber-100 to-orange-50" :
+                                  i === 3 ? "bg-gradient-to-br from-pink-50 to-purple-50" :
+                                  i === 4 ? "bg-gradient-to-br from-green-100 to-emerald-50" :
+                                  i === 5 ? "bg-gradient-to-br from-blue-100 to-sky-50" :
+                                  i === 6 ? "bg-gradient-to-br from-yellow-100 to-amber-50" :
+                                  "bg-gradient-to-br from-gray-700 to-gray-900"
+                                )}>
+                                  <Package className={cn("w-8 h-8", i === 7 ? "text-gray-400" : "text-muted-foreground/40")} />
+                                </div>
+                              )}
+
+                              {/* Dark overlay for label readability */}
+                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2 pt-6">
+                                <p className="text-[11px] font-semibold text-white leading-tight">{v.label}</p>
+                                {v.aspect_ratio && (
+                                  <span className="text-[9px] text-white/70 font-medium">{v.aspect_ratio}</span>
+                                )}
+                              </div>
+
+                              {/* Selection checkmark */}
+                              {isSelected && (
+                                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-md">
+                                  <Check className="w-3 h-3 text-primary-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+                          {v.instruction}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              </TooltipProvider>
+
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  {selectedVariationIndices.size} of {variationStrategy?.variations.length} scenes selected
+                </p>
+                {isAdmin && variationStrategy?.variations.some(v => !v.preview_url) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateScenePreviews}
+                    disabled={isGeneratingPreviews}
+                    className="text-xs"
+                  >
+                    {isGeneratingPreviews ? (
+                      <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Generating Previews...</>
+                    ) : (
+                      <><Sparkles className="w-3 h-3 mr-1" />Generate Scene Previews</>
+                    )}
+                  </Button>
+                )}
+              </div>
             </CardContent></Card>
 
             {/* Quality & Settings */}
