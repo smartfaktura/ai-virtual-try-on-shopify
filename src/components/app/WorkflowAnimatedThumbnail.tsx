@@ -139,7 +139,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
         alt=""
         loading="eager"
         decoding="async"
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover object-top"
         style={{
           transform: 'translateZ(0)',
           ...(isActive
