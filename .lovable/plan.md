@@ -1,24 +1,57 @@
 
 
-## Fix Homepage Logo Icon Background
+## Eliminate Generation Timeouts: Decouple Queue from Generation
 
 ### The Problem
 
-The homepage and the /app sidebar use different theme modes. The `/app` sidebar runs in **dark mode**, where `--primary` resolves to a lighter blue (`hsl(210, 17%, 70%)`). The homepage runs in **light mode**, where `--primary` resolves to a very dark navy (`hsl(217, 33%, 17%)`). That is why the "V" icon looks too dark on the homepage -- same class name, different resolved color.
+Currently, `process-queue` does two things in one call:
+1. Claims a job from the queue
+2. Calls the generation function (e.g., `generate-product`) and **waits** for it to finish
 
-### The Fix
+Since edge functions have a ~100s hard limit, and AI image generation can take 30-90s per image (especially with retries), the worker frequently times out before it can record the result. This leaves jobs stuck in "processing" status until the 5-minute cleanup catches them -- causing a bad user experience.
 
-**File: `src/components/landing/LandingNav.tsx` (line 42-43)**
+### The Fix: Fire-and-Forget Dispatch
 
-Instead of relying on theme variables that change between modes, hardcode the exact lighter color used in dark mode directly on the logo icon:
+Split the responsibility so each function does one thing:
 
-- Replace `bg-sidebar-accent` with a custom background matching the /app dark-mode primary: `bg-[hsl(210,17%,70%)]` (or a close lighter shade like `bg-[hsl(222,47%,25%)]` for a subtler dark-but-not-too-dark look matching the screenshot)
-- Keep `text-sidebar-foreground` (white text) so the "V" remains visible
+```text
+BEFORE (coupled):
+  process-queue: claim job --> call generate-product --> WAIT --> save result
+                              (times out here ^)
 
-Looking at the screenshot more carefully, the icon background is a medium-dark blue (lighter than the navbar but still dark). This matches roughly `hsl(222, 47%, 25%)` -- a lightened version of the sidebar accent.
+AFTER (decoupled):
+  process-queue: claim job --> fire HTTP call to generate-product --> move on
+  generate-product: do AI work --> update generation_queue directly when done
+```
 
-**Change:**
-- `bg-sidebar-accent` to `bg-[hsl(222,30%,25%)]`
+### Changes
 
-This gives a visibly lighter background than the navbar while keeping the dark aesthetic, matching what is shown in the /app sidebar.
+**1. `supabase/functions/process-queue/index.ts`**
+- Change from `await callGenerationFunction(...)` to a fire-and-forget `fetch()` (no await on the response body)
+- Remove all result-handling, credit-refund, and generation_jobs insert logic from this function
+- The function becomes a lightweight dispatcher that just claims jobs and kicks off generation functions
+- Pass `job_id` and `credits_reserved` in the payload so the generation function can update the queue
+
+**2. `supabase/functions/generate-product/index.ts`** (and similarly for `generate-tryon`, `generate-freestyle`, `generate-workflow`)
+- At the end of generation, write results directly to `generation_queue` (set status to "completed" or "failed")
+- On success: insert into `generation_jobs` for the library
+- On failure: refund credits via `refund_credits` RPC
+- On partial success: refund unused credits
+- Detect queue calls via the `x-queue-internal` header (already exists) and `job_id` in payload
+
+**3. Client-side (`src/hooks/useGenerationQueue.ts`)**
+- No changes needed -- it already polls `generation_queue` status, so it will pick up completions naturally
+
+### Why This Fixes Timeouts
+
+- `process-queue` finishes in under 5 seconds (just claim + dispatch)
+- Each generation function has its own full 100s budget to complete AI work
+- Even if a generation function times out, cleanup_stale_jobs handles it (already exists)
+- No cascading failures: one slow job does not block the worker from dispatching others
+
+### Edge Cases Handled
+
+- **Generation function crashes**: The 5-minute `timeout_at` + `cleanup_stale_jobs` catches it and refunds credits (already works)
+- **Partial success (freestyle multi-image)**: Generation function handles refund logic directly
+- **Concurrent jobs**: No change -- `claim_next_job` uses `FOR UPDATE SKIP LOCKED`
 
