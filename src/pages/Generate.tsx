@@ -129,7 +129,7 @@ export default function Generate() {
       if (error) throw error;
       return data as UserProduct[];
     },
-    enabled: !!user?.id && !!activeWorkflow?.uses_tryon,
+    enabled: !!user?.id,
   });
 
   const [currentStep, setCurrentStep] = useState<Step>('source');
@@ -811,13 +811,13 @@ export default function Generate() {
               <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
             </div>
 
-            {/* Try-on: show real DB products */}
-            {activeWorkflow?.uses_tryon ? (
-              isLoadingUserProducts ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : userProducts.length === 0 ? (
+            {/* Show real DB products for all workflows */}
+            {isLoadingUserProducts ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : userProducts.length === 0 ? (
+              activeWorkflow?.uses_tryon ? (
                 <div className="text-center py-10 space-y-3">
                   <Package className="w-12 h-12 mx-auto text-muted-foreground/30" />
                   <p className="text-sm text-muted-foreground">No products in your library yet.</p>
@@ -832,34 +832,42 @@ export default function Generate() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                  {userProducts.map(up => {
-                    const isSelected = selectedProductIds.has(up.id);
-                    return (
-                      <button
-                        key={up.id}
-                        type="button"
-                        onClick={() => setSelectedProductIds(new Set([up.id]))}
-                        className={`flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left ${
-                          isSelected
-                            ? 'border-primary ring-2 ring-primary/30'
-                            : 'border-transparent hover:border-border'
-                        }`}
-                      >
-                        <img src={up.image_url} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
-                        <div className="px-1.5 py-1.5 bg-card">
-                          <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
-                          {up.product_type && (
-                            <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
               )
+            ) : activeWorkflow?.uses_tryon ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                {userProducts.map(up => {
+                  const isSelected = selectedProductIds.has(up.id);
+                  return (
+                    <button
+                      key={up.id}
+                      type="button"
+                      onClick={() => setSelectedProductIds(new Set([up.id]))}
+                      className={`flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left ${
+                        isSelected
+                          ? 'border-primary ring-2 ring-primary/30'
+                          : 'border-transparent hover:border-border'
+                      }`}
+                    >
+                      <img src={up.image_url} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
+                      <div className="px-1.5 py-1.5 bg-card">
+                        <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
+                        {up.product_type && (
+                          <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             ) : (
-              <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+              <ProductMultiSelect
+                products={userProducts.map(up => mapUserProductToProduct(up))}
+                selectedIds={selectedProductIds}
+                onSelectionChange={setSelectedProductIds}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+              />
             )}
 
             <div className="flex justify-between">
@@ -874,7 +882,10 @@ export default function Generate() {
                     setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                   }
                 } else {
-                  const selected = mockProducts.filter(p => selectedProductIds.has(p.id));
+                  const mappedProducts = userProducts.length > 0
+                    ? userProducts.map(up => mapUserProductToProduct(up))
+                    : mockProducts;
+                  const selected = mappedProducts.filter(p => selectedProductIds.has(p.id));
                   if (selected.length === 1) {
                     const product = selected[0];
                     setSelectedProduct(product);

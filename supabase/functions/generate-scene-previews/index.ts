@@ -52,6 +52,10 @@ serve(async (req) => {
 
     for (let i = 0; i < variations.length; i++) {
       const v = variations[i];
+      if (v.preview_url) {
+        console.log(`Skipping ${v.label} (already has preview)`);
+        continue;
+      }
       const prompt = scenePreviewPrompts[v.label] || `Professional product photography background: ${v.instruction}, empty surface, no product, ultra high resolution, photorealistic`;
 
       console.log(`Generating preview ${i + 1}/${variations.length}: ${v.label}`);
@@ -112,7 +116,20 @@ serve(async (req) => {
         preview_url: publicUrl.publicUrl + "?t=" + Date.now(),
       };
 
-      console.log(`✓ Preview generated for ${v.label}`);
+      // Save progress after each image to avoid losing work on timeout
+      const progressConfig = {
+        ...config,
+        variation_strategy: {
+          ...config.variation_strategy,
+          variations: updatedVariations,
+        },
+      };
+      await supabase
+        .from("workflows")
+        .update({ generation_config: progressConfig })
+        .eq("id", workflow_id);
+
+      console.log(`✓ Preview generated and saved for ${v.label}`);
     }
 
     // Update the generation_config with preview URLs
