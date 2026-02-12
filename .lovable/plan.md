@@ -1,27 +1,34 @@
 
 
-## Fix Mobile Thumbnail Cropping for Virtual Try-On
+## Improve Credits Popup Fit
 
-### Problem
-On mobile, the thumbnail container uses `aspect-[4/3]` (landscape ratio). The Virtual Try-On result image is portrait-oriented (a model wearing a garment), so the landscape crop cuts off the model's face -- the most important part.
+The modal currently uses `max-w-4xl` width and has verbose spacing that forces scrolling. The fix focuses on making it compact enough to fit without scrolling.
 
-### Solution
+### Changes to `src/components/app/BuyCreditsModal.tsx`
 
-**`src/components/app/WorkflowCard.tsx`** -- Two changes:
+**1. Reduce overall size and spacing**
+- Reduce `max-w-4xl` to `max-w-3xl` for better screen fit
+- Shrink header padding: `px-8 pt-8 pb-6` to `px-6 pt-6 pb-4`
+- Reduce balance text from `text-4xl` to `text-3xl`
+- Tighten tab area padding
+- Reduce card internal padding from `p-7 sm:p-8` to `p-5 sm:p-6`
+- Reduce credit text in cards from `text-4xl` to `text-3xl`
+- Shrink price text from `text-2xl` to `text-xl`
+- Bottom padding from `pb-8` to `pb-6`
 
-1. **Change mobile aspect ratio from landscape to square**: Replace `aspect-[4/3]` with `aspect-square` on mobile. This gives the portrait result image more vertical room so the face stays visible, while still being compact enough on mobile.
+**2. Improve the max-height constraint**
+- Change `max-h-[60vh]` on tab content to `max-h-[55vh]` as a safety net, but the reduced spacing should eliminate the need to scroll in most cases
 
-2. **Add `object-top` to the background image in `WorkflowAnimatedThumbnail`**: When the image is cropped by `object-cover`, prioritize the top of the image (where the face is) instead of the center.
+**3. Upgrade Plan tab -- tighter plan cards**
+- Reduce plan card padding from `p-6` to `p-4`
+- Reduce plan card spacing from `space-y-5` to `space-y-3`
+- Show only 4 features instead of 5 to save vertical space
+- Reduce credits pill padding
 
-**`src/components/app/WorkflowAnimatedThumbnail.tsx`** -- One change:
-
-3. **Add `object-top` class to the background `<img>`**: Change `object-cover` to `object-cover object-top` on the background image element (line ~128) so face/head area is always prioritized during cropping.
-
-### Result
-- Mobile: square thumbnail shows the model's face clearly
-- Desktop: unchanged (`aspect-[3/4]` portrait already works well)
-- All other workflows benefit from the same top-anchored cropping
+**4. Mobile improvements**
+- On mobile, the Upgrade tab 4-column grid already collapses to `grid-cols-1` which is fine
+- Reduce gap from `gap-5` to `gap-3` on mobile for tighter stacking
 
 ### Files Changed
-- **Edit**: `src/components/app/WorkflowCard.tsx` -- line 73: `aspect-[4/3]` to `aspect-square`
-- **Edit**: `src/components/app/WorkflowAnimatedThumbnail.tsx` -- background img: add `object-top`
+- **Edit**: `src/components/app/BuyCreditsModal.tsx` -- spacing and sizing reductions throughout
+
