@@ -30,12 +30,12 @@ export function LandingNav() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 p-3 lg:p-0">
+    <header className="fixed top-0 left-0 right-0 z-50 p-3">
       <nav
-        className={`transition-all duration-300 rounded-2xl lg:rounded-none border border-white/[0.06] lg:border-0 shadow-2xl shadow-black/20 lg:shadow-none backdrop-blur-xl px-4 sm:px-6 lg:px-8 h-14 lg:h-16 flex items-center justify-between lg:max-w-7xl lg:mx-auto ${
+        className={`transition-all duration-300 rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/20 backdrop-blur-xl px-4 sm:px-6 lg:px-8 h-14 lg:h-16 flex items-center justify-between lg:max-w-7xl lg:mx-auto ${
           scrolled
-            ? 'bg-sidebar lg:bg-background/80 lg:border-b lg:border-border lg:shadow-sm'
-            : 'bg-sidebar lg:bg-transparent'
+            ? 'bg-sidebar'
+            : 'bg-sidebar/80'
         }`}
       >
         {/* Logo */}
@@ -43,7 +43,7 @@ export function LandingNav() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">V</span>
           </div>
-          <span className="font-bold text-lg text-sidebar-foreground lg:text-foreground tracking-tight">VOVV.AI</span>
+          <span className="font-bold text-lg text-sidebar-foreground tracking-tight">VOVV.AI</span>
         </a>
 
         {/* Desktop links */}
