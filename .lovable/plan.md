@@ -1,98 +1,59 @@
 
 
-## Phase 4: Update All Components to Use Storage URLs
+## Fix: Dashboard Recent Creations Not Showing Generated Results
 
-Now that all 268 images are uploaded to the `landing-assets` bucket, we need to replace static imports with storage URLs across ALL consumers — both landing page AND app components.
+### The Problem
 
-### Key Finding: App Components Also Use These Images
+The Recent Creations gallery on the dashboard has two bugs:
 
-The same static assets from `src/assets/` are imported in app-side files too. Updating them is safe because:
-- The images are already in storage (migration complete)
-- We're just changing where the browser loads them from (bundle to CDN)
-- The app will actually benefit from the same optimization (smaller bundle, lazy loading)
+1. **Missing images** -- Jobs without a linked product (7 out of 10 of your recent jobs) are completely skipped because the code requires `user_products.image_url` to exist
+2. **Wrong images** -- Even when jobs DO show, they display the original product photo, not the actual generated result
 
-### Files to Update
+### The Fix
 
-**Landing Page Components (already planned):**
+Update `RecentCreationsGallery.tsx` to include the `results` column in the query and use the first generated image URL as the thumbnail, with the product image as a fallback.
 
-| File | What changes |
-|------|-------------|
-| `ModelShowcaseSection.tsx` | 44 model imports to path strings |
-| `EnvironmentShowcaseSection.tsx` | ~18 scene imports to path strings |
-| `ProductCategoryShowcase.tsx` | 20 showcase imports to path strings |
-| `CreativeDropsSection.tsx` | ~33 drop/model imports to path strings |
-| `HowItWorks.tsx` | ~12 step image imports to path strings |
-| `HeroSection.tsx` | ~10 hero imports to path strings (eager, quality: 75) |
-| `FinalCTA.tsx` | 10 team avatar imports to path strings |
-| `StudioTeamSection.tsx` | 10 team avatar imports to path strings |
-| `BeforeAfterGallery.tsx` | ~12 images to path strings |
+### Technical Details
 
-**App Components (also need updating):**
+**File: `src/components/app/RecentCreationsGallery.tsx`**
 
-| File | What changes |
-|------|-------------|
-| `data/mockData.ts` | ~175 imports (models, poses, products, scenes, templates) to storage URLs |
-| `data/teamData.ts` | 10 team avatar imports to storage URLs |
-| `app/workflowAnimationData.tsx` | ~10 workflow/model/pose imports to storage URLs |
-| `app/TemplatePreviewCard.tsx` | 17 template imports to storage URLs |
-| `app/WorkflowCard.tsx` | 1 fallback image import |
-| `app/EmptyStateCard.tsx` | 3 showcase imports |
-| `app/OnboardingChecklist.tsx` | 3 imports |
-| `app/TryOnUploadGuide.tsx` | 6 product imports |
-| `app/BrandProfileWizard.tsx` | 4 team avatar imports |
-| `app/freestyle/FreestyleSettingsChips.tsx` | 1 avatar import |
-| `app/RecentCreationsGallery.tsx` | 6 showcase imports |
-| `app/StudioChat.tsx` | avatar imports |
-
-### Pattern for Each File
-
-**Before (static import):**
-```typescript
-import modelYuki from '@/assets/models/model-female-slim-asian.jpg';
-// used as: src={modelYuki}
+1. Add `results` to the generation_jobs select query:
+```text
+Before:  .select('id, created_at, workflows(name), user_products(title, image_url)')
+After:   .select('id, results, created_at, workflows(name), user_products(title, image_url)')
 ```
 
-**After (storage URL):**
+2. Extract the first valid URL from `results`, skipping any base64 data URIs (which can be megabytes and cause performance issues):
 ```typescript
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
-
-// For data arrays:
-{ name: 'Yuki', path: 'models/model-female-slim-asian.jpg' }
-
-// In render:
-src={getOptimizedUrl(getLandingAssetUrl(model.path), { quality: 60 })}
+// Extract first non-base64 URL from results array
+const results = job.results as any;
+let resultUrl = '';
+if (Array.isArray(results)) {
+  for (const r of results) {
+    const url = typeof r === 'string' ? r : r?.url || r?.image_url;
+    if (url && !url.startsWith('data:')) {
+      resultUrl = url;
+      break;
+    }
+  }
+}
 ```
 
-### Optimization Settings by Context
+3. Use the result image as primary, product image as fallback, and skip only if neither exists:
+```text
+Before:  const productImg = job.user_products?.image_url;
+         if (productImg) { ... imageUrl: productImg ... }
 
-- **Hero section**: quality: 75, loading="eager" (above the fold)
-- **Marquee/showcase images**: quality: 60, loading="lazy"
-- **Team avatars**: width: 80, quality: 50, loading="lazy"
-- **App thumbnails (mockData)**: quality: 60 (these are small preview images)
-- **Workflow previews**: quality: 60
+After:   const imageUrl = resultUrl || (job.user_products as any)?.image_url;
+         if (imageUrl) { ... imageUrl: imageUrl ... }
+```
 
-### Execution Order
+4. Keep the existing `getOptimizedUrl()` wrapper on the `<img>` tag so result images are also served compressed.
 
-1. Update `getLandingAssetUrl` helper (already exists, no changes needed)
-2. Update `data/mockData.ts` — the biggest file, ~175 imports to URL strings
-3. Update `data/teamData.ts` — 10 avatar imports
-4. Update all landing page components (9 files)
-5. Update all app components (8 files)
-6. Test both landing page and /app sections
-7. After confirmed working: delete migrated `src/assets/` folders
+### What This Fixes
 
-### What Will NOT Change
-
-- The actual image files in storage (already uploaded)
-- Any user-uploaded content (products, custom scenes) — those already use storage
-- The `getOptimizedUrl` utility (already works perfectly with storage URLs)
-- The `getLandingAssetUrl` utility (already created)
-
-### Risk: Zero
-
-- Images are already in storage and confirmed working
-- We're only changing import paths, not logic
-- If anything breaks, the fix is just reverting the import
-- App functionality (generation, try-on, freestyle) is unaffected — those use user-uploaded images from separate buckets, not these static preview images
+- All 10 recent completed jobs will now appear in the gallery (not just 3 with products)
+- Virtual Try-On results will show the actual generated image, not the input product
+- Base64 results (from older Gemini generations) are safely skipped to avoid performance issues
+- The `.limit(5)` on the query keeps payload reasonable even with `results` included
 
