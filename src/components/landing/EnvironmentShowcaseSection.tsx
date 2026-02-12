@@ -1,53 +1,36 @@
 import { useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
-
-// Environments — diverse scenes
-import envStudioFront from '@/assets/poses/pose-studio-front.jpg';
-import envBeach from '@/assets/poses/pose-lifestyle-beach.jpg';
-import envEditorialDramatic from '@/assets/poses/pose-editorial-dramatic.jpg';
-import envNeon from '@/assets/poses/pose-streetwear-neon.jpg';
-import envCoffee from '@/assets/poses/pose-lifestyle-coffee.jpg';
-import envProfile from '@/assets/poses/pose-studio-profile.jpg';
-import envGarden from '@/assets/poses/pose-lifestyle-garden.jpg';
-import envWindow from '@/assets/poses/pose-editorial-window.jpg';
-import envUrban from '@/assets/poses/pose-streetwear-urban.jpg';
-import envRooftop from '@/assets/poses/pose-lifestyle-rooftop.jpg';
-import envMinimal from '@/assets/poses/pose-editorial-minimal.jpg';
-import envStairs from '@/assets/poses/pose-streetwear-stairs.jpg';
-import envMovement from '@/assets/poses/pose-studio-movement.jpg';
-import envPark from '@/assets/poses/pose-lifestyle-park.jpg';
-import envMoody from '@/assets/poses/pose-editorial-moody.jpg';
-import envBasketball from '@/assets/poses/pose-streetwear-basketball.jpg';
-import envSeated from '@/assets/poses/pose-lifestyle-seated.jpg';
-import envUnderpass from '@/assets/poses/pose-streetwear-underpass.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 interface EnvironmentCard {
   name: string;
   image: string;
 }
 
+const e = (name: string, file: string): EnvironmentCard => ({ name, image: getLandingAssetUrl(`poses/${file}`) });
+
 const ROW_1: EnvironmentCard[] = [
-  { name: 'Studio Classic', image: envStudioFront },
-  { name: 'Beach', image: envBeach },
-  { name: 'Editorial Dark', image: envEditorialDramatic },
-  { name: 'Neon Night', image: envNeon },
-  { name: 'Coffee Shop', image: envCoffee },
-  { name: 'Studio Profile', image: envProfile },
-  { name: 'Garden', image: envGarden },
-  { name: 'Window Light', image: envWindow },
-  { name: 'Urban Street', image: envUrban },
+  e('Studio Classic', 'pose-studio-front.jpg'),
+  e('Beach', 'pose-lifestyle-beach.jpg'),
+  e('Editorial Dark', 'pose-editorial-dramatic.jpg'),
+  e('Neon Night', 'pose-streetwear-neon.jpg'),
+  e('Coffee Shop', 'pose-lifestyle-coffee.jpg'),
+  e('Studio Profile', 'pose-studio-profile.jpg'),
+  e('Garden', 'pose-lifestyle-garden.jpg'),
+  e('Window Light', 'pose-editorial-window.jpg'),
+  e('Urban Street', 'pose-streetwear-urban.jpg'),
 ];
 
 const ROW_2: EnvironmentCard[] = [
-  { name: 'Rooftop', image: envRooftop },
-  { name: 'Minimal White', image: envMinimal },
-  { name: 'Industrial', image: envStairs },
-  { name: 'Studio Motion', image: envMovement },
-  { name: 'Park', image: envPark },
-  { name: 'Moody Editorial', image: envMoody },
-  { name: 'Basketball Court', image: envBasketball },
-  { name: 'Café Seated', image: envSeated },
-  { name: 'Underpass', image: envUnderpass },
+  e('Rooftop', 'pose-lifestyle-rooftop.jpg'),
+  e('Minimal White', 'pose-editorial-minimal.jpg'),
+  e('Industrial', 'pose-streetwear-stairs.jpg'),
+  e('Studio Motion', 'pose-studio-movement.jpg'),
+  e('Park', 'pose-lifestyle-park.jpg'),
+  e('Moody Editorial', 'pose-editorial-moody.jpg'),
+  e('Basketball Court', 'pose-streetwear-basketball.jpg'),
+  e('Café Seated', 'pose-lifestyle-seated.jpg'),
+  e('Underpass', 'pose-streetwear-underpass.jpg'),
 ];
 
 function MarqueeRow({ items, direction = 'left' }: { items: EnvironmentCard[]; direction?: 'left' | 'right' }) {

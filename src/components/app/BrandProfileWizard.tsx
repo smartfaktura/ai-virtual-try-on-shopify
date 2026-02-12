@@ -15,11 +15,12 @@ import { cn } from '@/lib/utils';
 import { buildBrandPrompt, COLOR_FEEL_DESCRIPTIONS } from '@/lib/brandPromptBuilder';
 import type { BrandProfileData } from '@/lib/brandPromptBuilder';
 
-// Team avatar imports
-import avatarSienna from '@/assets/team/avatar-sienna.jpg';
-import avatarSophia from '@/assets/team/avatar-sophia.jpg';
-import avatarLuna from '@/assets/team/avatar-luna.jpg';
-import avatarKenji from '@/assets/team/avatar-kenji.jpg';
+// Team avatar URLs
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+const avatarSienna = getLandingAssetUrl('team/avatar-sienna.jpg');
+const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
+const avatarLuna = getLandingAssetUrl('team/avatar-luna.jpg');
+const avatarKenji = getLandingAssetUrl('team/avatar-kenji.jpg');
 
 // ── Team step tips ──────────────────────────────────────────────────────
 const STEP_TEAM_TIPS = [

@@ -1,10 +1,11 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PackageOpen } from 'lucide-react';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-import imgFashion from '@/assets/showcase/fashion-blazer-golden.jpg';
-import imgSkincare from '@/assets/showcase/skincare-serum-marble.jpg';
-import imgFood from '@/assets/showcase/food-coffee-artisan.jpg';
+const imgFashion = getLandingAssetUrl('showcase/fashion-blazer-golden.jpg');
+const imgSkincare = getLandingAssetUrl('showcase/skincare-serum-marble.jpg');
+const imgFood = getLandingAssetUrl('showcase/food-coffee-artisan.jpg');
 
 interface EmptyStateCardProps {
   heading: string;

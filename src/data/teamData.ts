@@ -1,13 +1,4 @@
-import avatarAmara from '@/assets/team/avatar-amara.jpg';
-import avatarKenji from '@/assets/team/avatar-kenji.jpg';
-import avatarLeo from '@/assets/team/avatar-leo.jpg';
-import avatarLuna from '@/assets/team/avatar-luna.jpg';
-import avatarMax from '@/assets/team/avatar-max.jpg';
-import avatarOmar from '@/assets/team/avatar-omar.jpg';
-import avatarSienna from '@/assets/team/avatar-sienna.jpg';
-import avatarSophia from '@/assets/team/avatar-sophia.jpg';
-import avatarYuki from '@/assets/team/avatar-yuki.jpg';
-import avatarZara from '@/assets/team/avatar-zara.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 export interface TeamMember {
   name: string;
@@ -20,6 +11,17 @@ export interface TeamMember {
 }
 
 const VIDEO_BASE = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc';
+
+const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
+const avatarAmara = getLandingAssetUrl('team/avatar-amara.jpg');
+const avatarLuna = getLandingAssetUrl('team/avatar-luna.jpg');
+const avatarKenji = getLandingAssetUrl('team/avatar-kenji.jpg');
+const avatarYuki = getLandingAssetUrl('team/avatar-yuki.jpg');
+const avatarOmar = getLandingAssetUrl('team/avatar-omar.jpg');
+const avatarSienna = getLandingAssetUrl('team/avatar-sienna.jpg');
+const avatarMax = getLandingAssetUrl('team/avatar-max.jpg');
+const avatarZara = getLandingAssetUrl('team/avatar-zara.jpg');
+const avatarLeo = getLandingAssetUrl('team/avatar-leo.jpg');
 
 export const TEAM_MEMBERS: TeamMember[] = [
   {

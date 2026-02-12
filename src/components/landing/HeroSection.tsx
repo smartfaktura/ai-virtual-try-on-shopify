@@ -2,36 +2,9 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CreditCard, Shield, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-import productTshirt from '@/assets/hero/hero-product-tshirt.jpg';
-import outputStudio from '@/assets/hero/hero-output-studio.jpg';
-import outputPark from '@/assets/hero/hero-output-park.jpg';
-import outputCoffee from '@/assets/hero/hero-output-coffee.jpg';
-import outputRooftop from '@/assets/hero/hero-output-rooftop.jpg';
-import outputYoga from '@/assets/hero/hero-output-yoga.jpg';
-import outputUrban from '@/assets/hero/hero-output-urban.jpg';
-import outputBeach from '@/assets/hero/hero-output-beach.jpg';
-import outputHome from '@/assets/hero/hero-output-home.jpg';
-
-import productSerum from '@/assets/hero/hero-product-serum.jpg';
-import serumStudio from '@/assets/hero/hero-serum-studio.jpg';
-import serumShadows from '@/assets/hero/hero-serum-shadows.jpg';
-import serumTable from '@/assets/hero/hero-serum-table.jpg';
-import serumBathroom from '@/assets/hero/hero-serum-bathroom.jpg';
-import serumShelf from '@/assets/hero/hero-serum-shelf.jpg';
-import serumFlatlay from '@/assets/hero/hero-serum-flatlay.jpg';
-import serumGarden from '@/assets/hero/hero-serum-garden.jpg';
-import serumMoody from '@/assets/hero/hero-serum-moody.jpg';
-
-import productRing from '@/assets/hero/hero-product-ring.jpg';
-import ringModel1 from '@/assets/hero/hero-ring-model1.jpg';
-import ringModel2 from '@/assets/hero/hero-ring-model2.jpg';
-import ringFlatlay from '@/assets/hero/hero-ring-flatlay.jpg';
-import ringMacro from '@/assets/hero/hero-ring-macro.jpg';
-import ringModel3 from '@/assets/hero/hero-ring-model3.jpg';
-import ringVelvet from '@/assets/hero/hero-ring-velvet.jpg';
-import ringWater from '@/assets/hero/hero-ring-water.jpg';
-import ringGolden from '@/assets/hero/hero-ring-golden.jpg';
+const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 
 const trustBadges = [
   { icon: CreditCard, text: 'No credit card required' },
@@ -47,44 +20,44 @@ interface ProductShowcase {
 
 const showcases: ProductShowcase[] = [
   {
-    product: { img: productTshirt, label: 'Cropped Tee', subtitle: '1 product photo' },
+    product: { img: h('hero-product-tshirt.jpg'), label: 'Cropped Tee', subtitle: '1 product photo' },
     outputs: [
-      { img: outputStudio, label: 'Studio Portrait' },
-      { img: outputPark, label: 'Park Lifestyle' },
-      { img: outputCoffee, label: 'Coffee Shop' },
-      { img: outputRooftop, label: 'Rooftop Editorial' },
-      { img: outputYoga, label: 'Yoga Studio' },
-      { img: outputUrban, label: 'Urban Street' },
-      { img: outputBeach, label: 'Beach Sunset' },
-      { img: outputHome, label: 'At Home' },
+      { img: h('hero-output-studio.jpg'), label: 'Studio Portrait' },
+      { img: h('hero-output-park.jpg'), label: 'Park Lifestyle' },
+      { img: h('hero-output-coffee.jpg'), label: 'Coffee Shop' },
+      { img: h('hero-output-rooftop.jpg'), label: 'Rooftop Editorial' },
+      { img: h('hero-output-yoga.jpg'), label: 'Yoga Studio' },
+      { img: h('hero-output-urban.jpg'), label: 'Urban Street' },
+      { img: h('hero-output-beach.jpg'), label: 'Beach Sunset' },
+      { img: h('hero-output-home.jpg'), label: 'At Home' },
     ],
     caption: 'Same tee — ∞ environments — 12 seconds',
   },
   {
-    product: { img: productSerum, label: 'Face Serum', subtitle: '1 product photo' },
+    product: { img: h('hero-product-serum.jpg'), label: 'Face Serum', subtitle: '1 product photo' },
     outputs: [
-      { img: serumStudio, label: 'Studio Lighting' },
-      { img: serumShadows, label: 'Window Shadows' },
-      { img: serumTable, label: 'On the Table' },
-      { img: serumBathroom, label: 'Bathroom Spa' },
-      { img: serumShelf, label: 'Shelf Display' },
-      { img: serumFlatlay, label: 'Flatlay' },
-      { img: serumGarden, label: 'Garden' },
-      { img: serumMoody, label: 'Moody Dark' },
+      { img: h('hero-serum-studio.jpg'), label: 'Studio Lighting' },
+      { img: h('hero-serum-shadows.jpg'), label: 'Window Shadows' },
+      { img: h('hero-serum-table.jpg'), label: 'On the Table' },
+      { img: h('hero-serum-bathroom.jpg'), label: 'Bathroom Spa' },
+      { img: h('hero-serum-shelf.jpg'), label: 'Shelf Display' },
+      { img: h('hero-serum-flatlay.jpg'), label: 'Flatlay' },
+      { img: h('hero-serum-garden.jpg'), label: 'Garden' },
+      { img: h('hero-serum-moody.jpg'), label: 'Moody Dark' },
     ],
     caption: 'Same serum — ∞ scenes — 12 seconds',
   },
   {
-    product: { img: productRing, label: 'Gold Ring', subtitle: '1 product photo' },
+    product: { img: h('hero-product-ring.jpg'), label: 'Gold Ring', subtitle: '1 product photo' },
     outputs: [
-      { img: ringModel1, label: 'Model Close-Up' },
-      { img: ringModel2, label: 'Golden Light' },
-      { img: ringFlatlay, label: 'Flatlay' },
-      { img: ringMacro, label: 'Macro Detail' },
-      { img: ringModel3, label: 'Editorial' },
-      { img: ringVelvet, label: 'Velvet Display' },
-      { img: ringWater, label: 'Water Reflection' },
-      { img: ringGolden, label: 'Golden Hour' },
+      { img: h('hero-ring-model1.jpg'), label: 'Model Close-Up' },
+      { img: h('hero-ring-model2.jpg'), label: 'Golden Light' },
+      { img: h('hero-ring-flatlay.jpg'), label: 'Flatlay' },
+      { img: h('hero-ring-macro.jpg'), label: 'Macro Detail' },
+      { img: h('hero-ring-model3.jpg'), label: 'Editorial' },
+      { img: h('hero-ring-velvet.jpg'), label: 'Velvet Display' },
+      { img: h('hero-ring-water.jpg'), label: 'Water Reflection' },
+      { img: h('hero-ring-golden.jpg'), label: 'Golden Hour' },
     ],
     caption: 'Same ring — ∞ shots — 12 seconds',
   },
@@ -121,7 +94,6 @@ function useTypewriter(phrases: string[], typingSpeed = 55, deletingSpeed = 30, 
           s.phase = 'pausing';
           timerId = setTimeout(tick, pauseDuration);
         } else {
-          // Add slight randomness for natural feel
           timerId = setTimeout(tick, typingSpeed + Math.random() * 40);
         }
       } else if (s.phase === 'pausing') {
@@ -169,7 +141,6 @@ export function HeroSection() {
     const el = scrollRef.current;
     if (el) {
       el.scrollTo({ left: 0 });
-      // Delay state update for scroll width recalculation
       requestAnimationFrame(updateScrollState);
     }
   }, [activeScene, updateScrollState]);

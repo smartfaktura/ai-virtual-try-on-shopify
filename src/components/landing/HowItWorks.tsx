@@ -2,24 +2,18 @@ import { useState } from 'react';
 import { Upload, Target, Images, ArrowRight, Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-// Product images
-import cropTopProduct from '@/assets/hero/hero-product-croptop.jpg';
-
-// Outcome images
-import outcomeImage from '@/assets/hero/hero-result-yoga-blonde.jpg';
-
-// Visual set scenes (reuse existing hero outputs)
-import sceneStudio from '@/assets/hero/hero-output-studio.jpg';
-import sceneCoffee from '@/assets/hero/hero-output-coffee.jpg';
-import sceneBeach from '@/assets/hero/hero-output-beach.jpg';
-import scenePark from '@/assets/hero/hero-output-park.jpg';
-import sceneRooftop from '@/assets/hero/hero-output-rooftop.jpg';
-import sceneUrban from '@/assets/hero/hero-output-urban.jpg';
-
-// Model + environment thumbs for step 2
-import modelThumb from '@/assets/hero/hero-model-blonde.jpg';
-import envThumb from '@/assets/hero/hero-scene-yoga.jpg';
+const cropTopProduct = getLandingAssetUrl('hero/hero-product-croptop.jpg');
+const outcomeImage = getLandingAssetUrl('hero/hero-result-yoga-blonde.jpg');
+const sceneStudio = getLandingAssetUrl('hero/hero-output-studio.jpg');
+const sceneCoffee = getLandingAssetUrl('hero/hero-output-coffee.jpg');
+const sceneBeach = getLandingAssetUrl('hero/hero-output-beach.jpg');
+const scenePark = getLandingAssetUrl('hero/hero-output-park.jpg');
+const sceneRooftop = getLandingAssetUrl('hero/hero-output-rooftop.jpg');
+const sceneUrban = getLandingAssetUrl('hero/hero-output-urban.jpg');
+const modelThumb = getLandingAssetUrl('hero/hero-model-blonde.jpg');
+const envThumb = getLandingAssetUrl('hero/hero-scene-yoga.jpg');
 
 function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt: string; label: string; isResult?: boolean }) {
   const [hovered, setHovered] = useState(false);
