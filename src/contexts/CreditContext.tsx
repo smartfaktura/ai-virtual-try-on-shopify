@@ -1,7 +1,10 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
+
+export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
 
 export interface PlanConfig {
@@ -26,11 +29,15 @@ interface CreditContextValue {
   isLoading: boolean;
   plan: string;
   planConfig: PlanConfig;
+  subscriptionStatus: SubscriptionStatus;
+  currentPeriodEnd: Date | null;
   
   deductCredits: (amount: number) => void;
   addCredits: (amount: number) => void;
   refreshBalance: () => Promise<void>;
   setBalanceFromServer: (newBalance: number) => void;
+  cancelSubscription: () => void;
+  reactivateSubscription: () => void;
   
   buyModalOpen: boolean;
   openBuyModal: () => void;
@@ -47,10 +54,14 @@ const defaultValue: CreditContextValue = {
   isLoading: true,
   plan: 'free',
   planConfig: PLAN_CONFIG.free,
+  subscriptionStatus: 'none',
+  currentPeriodEnd: null,
   deductCredits: () => {},
   addCredits: () => {},
   refreshBalance: async () => {},
   setBalanceFromServer: () => {},
+  cancelSubscription: () => {},
+  reactivateSubscription: () => {},
   buyModalOpen: false,
   openBuyModal: () => {},
   closeBuyModal: () => {},
@@ -117,6 +128,20 @@ export function CreditProvider({ children }: CreditProviderProps) {
   
   const openBuyModal = useCallback(() => setBuyModalOpen(true), []);
   const closeBuyModal = useCallback(() => setBuyModalOpen(false), []);
+
+  // Placeholder subscription state (will be fetched from DB in Phase 2)
+  const subscriptionStatus: SubscriptionStatus = 'none';
+  const currentPeriodEnd: Date | null = null;
+
+  const cancelSubscription = useCallback(() => {
+    // Placeholder — will call edge function in Phase 2
+    toast('Subscription cancelled (placeholder)');
+  }, []);
+
+  const reactivateSubscription = useCallback(() => {
+    // Placeholder — will call edge function in Phase 2
+    toast('Subscription reactivated (placeholder)');
+  }, []);
   
   const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => {
     const { count, quality, mode } = settings;
@@ -139,10 +164,14 @@ export function CreditProvider({ children }: CreditProviderProps) {
         isLoading,
         plan,
         planConfig,
+        subscriptionStatus,
+        currentPeriodEnd,
         deductCredits,
         addCredits,
         refreshBalance: fetchCredits,
         setBalanceFromServer,
+        cancelSubscription,
+        reactivateSubscription,
         buyModalOpen,
         openBuyModal,
         closeBuyModal,
