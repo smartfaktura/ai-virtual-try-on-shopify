@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: 'What is a Visual Set?',
-    a: 'A Visual Set is a collection of 6–20 brand-ready images generated from a single product photo. Each set is tied to a workflow — like Ad Refresh, Product Listing, or Website Hero — so you get images sized and styled for a specific purpose.',
+    a: 'A Visual Set is a collection of 6–20 brand-ready images generated from a single product photo. Each set is tied to a workflow — like Product Listing, Virtual Try-On, or Flat Lay — so you get images sized and styled for a specific purpose.',
   },
   {
     q: 'What are Creative Drops?',

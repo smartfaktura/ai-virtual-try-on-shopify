@@ -54,7 +54,7 @@ const releases = [
     title: 'Launch — VOVV.AI Visual Studio',
     changes: [
       { type: 'new' as const, text: 'Product upload with multi-image support and automatic categorization' },
-      { type: 'new' as const, text: '12 pre-built workflows: Lifestyle, Studio, Flat Lay, Social Media, and more' },
+      { type: 'new' as const, text: '4 specialized workflows: Virtual Try-On, Product Listing, Selfie / UGC, and Flat Lay' },
       { type: 'new' as const, text: 'Template library with 15+ professionally designed scene templates' },
       { type: 'new' as const, text: 'Jobs library with search, filtering, and batch download' },
       { type: 'new' as const, text: 'Settings with plan management and notification preferences' },
