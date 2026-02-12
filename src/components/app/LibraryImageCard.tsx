@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Sparkles, Camera, Download, Check, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 function getAspectClass(ratio?: string) {
   switch (ratio) {
@@ -74,7 +75,7 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
       )}
 
       <img
-        src={item.imageUrl}
+        src={getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })}
         alt={item.label}
         className={cn(
           'w-full h-auto block transition-all duration-500 group-hover:scale-[1.03]',

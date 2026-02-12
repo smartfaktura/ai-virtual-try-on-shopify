@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Heart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import type { TryOnPose } from '@/types';
 
@@ -34,7 +35,7 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured,
       )}
 
       <img
-        src={imageUrl}
+        src={getOptimizedUrl(imageUrl, { width: 400, quality: 60 })}
         alt={isScene ? item.data.name : item.data.title}
         className={cn(
           'w-full h-auto block transition-opacity duration-500 group-hover:scale-[1.03] transition-transform',

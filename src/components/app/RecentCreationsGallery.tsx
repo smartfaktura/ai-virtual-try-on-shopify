@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 import imgShowcase1 from '@/assets/showcase/fashion-blazer-golden.jpg';
 import imgShowcase2 from '@/assets/showcase/skincare-serum-marble.jpg';
@@ -141,7 +142,7 @@ export function RecentCreationsGallery() {
             >
               <div className="aspect-[4/5] rounded-xl overflow-hidden border border-border relative shadow-sm">
                 <img
-                  src={item.imageUrl}
+                  src={getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })}
                   alt={item.label}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
