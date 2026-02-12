@@ -114,16 +114,14 @@ function useColumnCount() {
     const w = window.innerWidth;
     if (w < 640) return 2;
     if (w < 1024) return 3;
-    if (w < 1280) return 4;
-    return 5;
+    return 4;
   });
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
       if (w < 640) setCount(2);
       else if (w < 1024) setCount(3);
-      else if (w < 1280) setCount(4);
-      else setCount(5);
+      else setCount(4);
     };
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
