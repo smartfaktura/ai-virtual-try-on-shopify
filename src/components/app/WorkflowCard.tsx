@@ -23,10 +23,10 @@ const featureMap: Record<string, string[]> = {
     'Portrait-optimized 3:4 output ratio',
   ],
   'Product Listing Set': [
-    'Clean studio-style product photography',
-    'Multiple angles and compositions',
-    'Optimized for e-commerce listings',
-    'Consistent lighting across the set',
+    '8 diverse scenes from white studio to lifestyle',
+    'Category-aware lighting and composition',
+    'No people — pure product focus',
+    'Optimized for Amazon, Shopify & social commerce',
   ],
   'Selfie / UGC Set': [
     'Authentic user-generated content style',

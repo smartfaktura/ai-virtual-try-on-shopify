@@ -61,12 +61,12 @@ export const workflowScenes: Record<string, WorkflowScene> = {
         position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
       {
-        type: 'badge', label: 'Studio', icon: <Layout className="w-3 h-3" />,
+        type: 'badge', label: '8 Scenes', icon: <MapPin className="w-3 h-3" />,
         position: { top: '38%', right: '8%' }, enterDelay: 1.0, animation: 'slide-right',
       },
       {
-        type: 'action', label: '', icon: <Camera className="w-4 h-4" />,
-        position: { bottom: '24%', left: '38%' }, enterDelay: 1.6, animation: 'pop',
+        type: 'badge', label: 'No People', icon: <Camera className="w-3 h-3" />,
+        position: { bottom: '24%', left: '6%' }, enterDelay: 1.6, animation: 'slide-up',
       },
     ],
   },
