@@ -1,51 +1,46 @@
 
+## Apply Floating Header Style to Landing Page Navigation
 
-## Fix /app Mobile Navigation
+Make the landing page (`/`) mobile header match the floating card style already used in the `/app` shell, creating a consistent design language across the entire site.
 
-### Problems Identified
-1. **Bottom tab bar overlaps** with the StudioChat floating button (both at the bottom)
-2. **No logo visible** on mobile -- there's no header bar at all
-3. **No active tab indicator** -- icons are too dark/invisible against the background  
-4. **No "floating" style** matching the desktop sidebar aesthetic
-
-### Solution
-
-Replace the bottom tab bar with a **floating top header bar** on mobile, matching the desktop floating sidebar style.
+### Current State
+- `/app` mobile header: floating card with `m-3 rounded-2xl border border-white/[0.06] bg-sidebar shadow-2xl` -- looks great
+- `/` landing page header: standard full-width sticky bar with no floating effect -- feels inconsistent
 
 ### Changes
 
-**1. Delete `src/components/app/MobileTabBar.tsx`**
-- Remove the bottom tab bar entirely
+**File: `src/components/landing/LandingNav.tsx`**
 
-**2. Update `src/components/app/AppShell.tsx`**
-- Remove `MobileTabBar` import and usage
-- Add a mobile-only floating top header (`lg:hidden`):
-  - Floating card style: `m-3 rounded-2xl border border-white/[0.06] bg-sidebar shadow-lg` (matches desktop sidebar)
-  - Logo "V" + "VOVV.AI" on the left
-  - Hamburger icon on the right to open sidebar overlay
-  - Compact height (~h-14)
-- Change main content padding from `pb-20 lg:pb-8` to just `p-4 sm:p-6 lg:p-8` (no extra bottom padding needed)
-- Add `pt-[76px] lg:pt-0` to main content on mobile to clear the floating header
+1. **Wrap the header in a floating container on mobile**:
+   - Add outer padding (`p-3`) on mobile so the nav bar floats away from edges
+   - Apply `rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/20` to the inner bar on mobile
+   - Keep the frosted glass `backdrop-blur-xl` effect
+   - On desktop (`lg:`), maintain the current full-width style unchanged
 
-**3. Update `src/pages/Freestyle.tsx`**
-- Revert prompt bar bottom positioning from `bottom-16 lg:bottom-0` back to `bottom-0` everywhere (no tab bar to dodge)
+2. **Update the mobile dropdown menu** to sit inside the floating container:
+   - The dropdown should appear below the floating bar, also with rounded corners
+   - Maintain the smooth `max-height` animation already in place
 
-**4. Move StudioChat FAB higher on mobile** (in `src/components/app/StudioChat.tsx`)
-- Keep it at `bottom-4 right-4` -- with no tab bar it won't overlap anymore
+3. **Structural approach**:
+   - The outer `<header>` becomes a fixed container with `p-3` padding on mobile
+   - The inner nav bar gets the floating card classes on mobile via responsive utilities
+   - On `lg:` screens, padding reverts to 0 and the bar spans full width as before
 
 ### Visual Result (Mobile)
 
 ```text
    +------------------------------+
-   |  [V] VOVV.AI          [=]   |  <-- floating header (rounded, matches desktop)
+   |  [V] VOVV.AI          [=]   |  <-- floating, rounded, matches /app
    +------------------------------+
    |                              |
-   |       Page Content           |
-   |       (scrollable)           |
+   |       Landing Content        |
    |                              |
-   |                       [chat] |  <-- StudioChat FAB, no overlap
-   +------------------------------+
 ```
 
-Tapping the hamburger opens the full sidebar overlay with all nav items, user profile, credits, and sign out.
+### Technical Details
 
+- Single file change: `src/components/landing/LandingNav.tsx`
+- Use responsive classes: `p-3 lg:p-0` on the outer wrapper, `rounded-2xl lg:rounded-none` on the inner bar
+- Add `border border-white/[0.06] lg:border-0` and `shadow-2xl shadow-black/20 lg:shadow-none` for the floating effect on mobile only
+- Background changes to `bg-sidebar lg:bg-transparent` when not scrolled, and `bg-sidebar lg:bg-background/80` when scrolled
+- Mobile dropdown gets matching rounded bottom corners within the floating container
