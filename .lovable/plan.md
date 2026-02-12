@@ -1,56 +1,27 @@
 
 
-## Workflow Page Redesign -- Full-Row Split Layout
+## Fix Mobile Thumbnail Cropping for Virtual Try-On
 
-Replace the current 4-column grid of tiny cards with a stacked, full-width split layout where each workflow gets its own prominent row.
+### Problem
+On mobile, the thumbnail container uses `aspect-[4/3]` (landscape ratio). The Virtual Try-On result image is portrait-oriented (a model wearing a garment), so the landscape crop cuts off the model's face -- the most important part.
 
-### Layout Concept
+### Solution
 
-**Desktop (lg+):**
-Each workflow is a full-width row split into two halves:
-- **Left side**: Large animated thumbnail (aspect-ratio 3:4, taking ~45% width)
-- **Right side**: Workflow name, description, feature highlights, badge, and CTA button -- all with generous spacing
-- Alternating rows flip the layout (even rows: image left / text right, odd rows: image right / text left) for visual rhythm
+**`src/components/app/WorkflowCard.tsx`** -- Two changes:
 
-**Tablet (md):**
-- Same split layout but 50/50 columns, slightly reduced padding
+1. **Change mobile aspect ratio from landscape to square**: Replace `aspect-[4/3]` with `aspect-square` on mobile. This gives the portrait result image more vertical room so the face stays visible, while still being compact enough on mobile.
 
-**Mobile:**
-- Stacked vertically: animation on top (full width, aspect-ratio 16:9 or 4:3 for more impact), text content below
-- Larger text and buttons for touch targets
-- Each workflow separated by generous spacing
+2. **Add `object-top` to the background image in `WorkflowAnimatedThumbnail`**: When the image is cropped by `object-cover`, prioritize the top of the image (where the face is) instead of the center.
 
-### Design Details
+**`src/components/app/WorkflowAnimatedThumbnail.tsx`** -- One change:
 
-- Each row gets a subtle card border with hover elevation
-- Workflow name: `text-2xl font-bold` on desktop, `text-xl` on mobile
-- Description: `text-base text-muted-foreground` with no line-clamp (full text shown)
-- Feature bullets: 3-4 key points per workflow (derived from `required_inputs` and `uses_tryon`)
-- Try-On badge: larger, more prominent positioning
-- CTA button: `h-11 text-sm` with rounded-full styling, not crammed
-- Animations auto-play when the row scrolls into view (using IntersectionObserver)
-- Skeleton loading: 4 full-width placeholder rows instead of 8 tiny cards
+3. **Add `object-top` class to the background `<img>`**: Change `object-cover` to `object-cover object-top` on the background image element (line ~128) so face/head area is always prioritized during cropping.
+
+### Result
+- Mobile: square thumbnail shows the model's face clearly
+- Desktop: unchanged (`aspect-[3/4]` portrait already works well)
+- All other workflows benefit from the same top-anchored cropping
 
 ### Files Changed
-
-**`src/pages/Workflows.tsx`** -- Major rewrite
-- Replace grid layout with vertical stack of `WorkflowRow` components
-- Each row uses a flex layout with `flex-col lg:flex-row` and alternating `lg:flex-row-reverse`
-- Add IntersectionObserver logic so animations play when visible
-- Update skeleton loading to show full-width placeholder rows
-
-**`src/components/app/WorkflowCard.tsx`** -- Repurpose as `WorkflowRow`
-- Rename component to `WorkflowRow`
-- Change from vertical card to horizontal split layout
-- Left: Large animated thumbnail container (no longer tiny 3:4 card)
-- Right: Spacious text area with name, full description, feature list, and CTA
-- Accept `reversed` prop to flip image/text sides
-- Accept `isVisible` prop to control animation playback (replaces hover-based autoPlay)
-- Mobile: stack vertically with full-width image and text below
-
-**`src/components/app/WorkflowAnimatedThumbnail.tsx`** -- Minor adjustment
-- No structural changes needed -- it already fills its container
-- The parent container just needs to be larger now
-
-### No Backend Changes
-This is purely a layout/presentation change. All data fetching and navigation logic stays identical.
+- **Edit**: `src/components/app/WorkflowCard.tsx` -- line 73: `aspect-[4/3]` to `aspect-square`
+- **Edit**: `src/components/app/WorkflowAnimatedThumbnail.tsx` -- background img: add `object-top`
