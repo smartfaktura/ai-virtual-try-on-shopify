@@ -12,14 +12,14 @@ export function PageHeader({ title, subtitle, backAction, children }: PageHeader
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
           {backAction && (
-            <Button variant="ghost" size="sm" onClick={backAction.onAction} className="gap-1.5">
+            <Button variant="ghost" size="sm" onClick={backAction.onAction} className="gap-1.5 self-start">
               <ArrowLeft className="w-4 h-4" />
               {backAction.content}
             </Button>
           )}
-          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h1>
         </div>
         {subtitle && (
           <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
