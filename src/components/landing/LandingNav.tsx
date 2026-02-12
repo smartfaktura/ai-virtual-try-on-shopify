@@ -32,18 +32,18 @@ export function LandingNav() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 p-3">
       <nav
-        className={`transition-all duration-300 rounded-2xl border border-primary/10 shadow-2xl shadow-black/20 backdrop-blur-xl px-4 sm:px-6 lg:px-8 h-14 lg:h-16 flex items-center justify-between lg:max-w-7xl lg:mx-auto ${
+        className={`transition-all duration-300 rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/20 backdrop-blur-xl px-4 sm:px-6 lg:px-8 h-14 lg:h-16 flex items-center justify-between lg:max-w-7xl lg:mx-auto ${
           scrolled
-            ? 'bg-primary/95'
-            : 'bg-primary/90'
+            ? 'bg-sidebar/95'
+            : 'bg-sidebar/90'
         }`}
       >
         {/* Logo */}
         <a href="#" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-primary-foreground flex items-center justify-center">
-            <span className="text-primary font-bold text-sm">V</span>
+          <div className="w-8 h-8 rounded-lg bg-sidebar-accent flex items-center justify-center">
+            <span className="text-sidebar-foreground font-bold text-sm">V</span>
           </div>
-          <span className="font-bold text-lg text-primary-foreground tracking-tight">VOVV.AI</span>
+          <span className="font-bold text-lg text-sidebar-foreground tracking-tight">VOVV.AI</span>
         </a>
 
         {/* Desktop links */}
@@ -52,7 +52,7 @@ export function LandingNav() {
             <button
               key={link.href}
               onClick={() => handleNavClick(link.href)}
-              className="text-sm font-medium text-primary-foreground/80 hover:text-primary-foreground transition-colors"
+              className="text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {link.label}
             </button>
@@ -61,14 +61,14 @@ export function LandingNav() {
 
         {/* Desktop CTA */}
         <div className="hidden lg:block">
-          <Button size="sm" className="rounded-full px-6 font-semibold bg-primary-foreground text-primary hover:bg-primary-foreground/90" onClick={() => navigate(user ? '/app' : '/auth')}>
+          <Button size="sm" className="rounded-full px-6 font-semibold bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate(user ? '/app' : '/auth')}>
             {user ? 'My Dashboard' : 'Start Free'}
           </Button>
         </div>
 
         {/* Mobile toggle */}
         <button
-          className="lg:hidden p-2 text-primary-foreground"
+          className="lg:hidden p-2 text-sidebar-foreground"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
