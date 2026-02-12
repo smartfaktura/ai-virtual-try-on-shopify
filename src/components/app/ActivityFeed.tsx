@@ -5,14 +5,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import type { LucideIcon } from 'lucide-react';
 
-import avatarSophia from '@/assets/team/avatar-sophia.jpg';
-import avatarMax from '@/assets/team/avatar-max.jpg';
-import avatarSienna from '@/assets/team/avatar-sienna.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
+
+const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { width: 80, quality: 50 });
 
 const getTeamAvatar = (activityId: string) => {
-  if (activityId.startsWith('job-')) return { src: avatarSophia, name: 'Sophia' };
-  if (activityId.startsWith('product-')) return { src: avatarMax, name: 'Max' };
-  if (activityId.startsWith('brand-')) return { src: avatarSienna, name: 'Sienna' };
+  if (activityId.startsWith('job-')) return { src: teamAvatar('avatar-sophia.jpg'), name: 'Sophia' };
+  if (activityId.startsWith('product-')) return { src: teamAvatar('avatar-max.jpg'), name: 'Max' };
+  if (activityId.startsWith('brand-')) return { src: teamAvatar('avatar-sienna.jpg'), name: 'Sienna' };
   return null;
 };
 

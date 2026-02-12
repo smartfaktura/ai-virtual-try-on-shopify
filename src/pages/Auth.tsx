@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Sparkles } from 'lucide-react';
-import authHero from '@/assets/auth/auth-hero.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
 
 export default function Auth() {
   const navigate = useNavigate();

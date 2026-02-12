@@ -10,14 +10,14 @@ import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 
-import avatarSophia from '@/assets/team/avatar-sophia.jpg';
-import avatarLuna from '@/assets/team/avatar-luna.jpg';
-import avatarKenji from '@/assets/team/avatar-kenji.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+
+const teamAvatar = (file: string) => getLandingAssetUrl(`team/${file}`);
 
 const STUDIO_CREW = [
-  { name: 'Sophia', avatar: avatarSophia },
-  { name: 'Luna', avatar: avatarLuna },
-  { name: 'Kenji', avatar: avatarKenji },
+  { name: 'Sophia', avatar: teamAvatar('avatar-sophia.jpg') },
+  { name: 'Luna', avatar: teamAvatar('avatar-luna.jpg') },
+  { name: 'Kenji', avatar: teamAvatar('avatar-kenji.jpg') },
 ] as const;
 
 const STATUS_MESSAGES = [
