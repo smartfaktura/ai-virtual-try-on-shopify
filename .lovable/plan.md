@@ -1,44 +1,42 @@
 
-## Replace Bottom Tab Bar with Top Header Bar on Mobile
 
-Remove the bottom tab bar and add a clean, minimal top header for mobile — Apple-style with a logo on the left and a hamburger icon on the right that opens the existing slide-out sidebar.
+## Improve Landing Page Mobile Menu
 
-### What Changes
+### Problems
+- Menu appears/disappears abruptly with no animation (feels laggy)
+- "Monthly Creative Drops" clutters the mobile menu unnecessarily
+- Breakpoint at `md:` (768px) causes cramped layout on tablets
+- Overall feel isn't polished or Apple-like
 
-**1. Remove `MobileTabBar` component**
-- Delete `src/components/app/MobileTabBar.tsx` (no longer needed)
+### Changes
 
-**2. Update `src/components/app/AppShell.tsx`**
-- Remove the `MobileTabBar` import and usage
-- Add a mobile-only top header bar (`lg:hidden`) with:
-  - Logo ("V" icon + "VOVV.AI" text) on the left — taps navigate to `/app`
-  - Hamburger menu icon on the right — taps open the existing sidebar overlay
-  - Frosted glass aesthetic: `backdrop-blur-xl bg-background/80 border-b border-white/[0.06]`
-  - Fixed height (`h-14`), sticky at top
-- Revert main content bottom padding from `pb-20 lg:pb-8` back to just `pb-8` (no bottom tab bar to account for)
-- Add top padding on mobile for the header: `pt-14 lg:pt-0` on the main content wrapper
+**File: `src/components/landing/LandingNav.tsx`**
 
-**3. Update `src/pages/Freestyle.tsx`**
-- Revert the prompt bar positioning from `bottom-16 lg:bottom-0` back to `bottom-0` on all breakpoints (no bottom tab bar to dodge)
+1. **Remove "Monthly Creative Drops" from mobile menu** -- it's only relevant on desktop as a marketing badge, not as navigation
 
-### Visual Result (Mobile)
+2. **Change all breakpoints from `md:` to `lg:`** -- keeps hamburger active on tablets where there isn't enough space
 
-```text
-+----------------------------------+
-| [V] VOVV.AI              [=]    |  <-- frosted glass header
-+----------------------------------+
-|                                  |
-|         Page Content             |
-|         (scrollable)             |
-|                                  |
-+----------------------------------+
-```
+3. **Add smooth slide-down animation** to the mobile menu using CSS transitions instead of conditional rendering:
+   - Use `max-height` + `opacity` transition for a smooth open/close
+   - Or use a wrapper with `overflow-hidden` and `transition-all` with dynamic height
+   - This eliminates the jarring pop-in/pop-out
 
-Tapping the hamburger opens the full sidebar overlay (already implemented) with access to all navigation items, settings, user profile, and sign out.
+4. **Improve mobile menu styling**:
+   - Slightly larger touch targets (py-3 instead of py-2)
+   - Subtle separator lines between items
+   - Refined spacing and typography
+   - Full-width CTA button with more presence
 
 ### Technical Details
 
-- The header uses `sticky top-0 z-30` so it stays visible while content scrolls underneath
-- `backdrop-blur-xl` + semi-transparent background gives the Apple frosted-glass effect
-- No new dependencies or components needed — just restructuring existing code
-- Desktop sidebar remains completely unchanged
+All changes are in one file: `src/components/landing/LandingNav.tsx`
+
+Key class changes:
+- `hidden md:flex` becomes `hidden lg:flex` (desktop links)
+- `hidden md:block` becomes `hidden lg:block` (desktop CTA)
+- `md:hidden` becomes `lg:hidden` (mobile toggle + menu)
+- Mobile menu gets `transition-all duration-300 ease-in-out` with `max-height` and `opacity` for smooth animation
+- Remove the "Monthly Creative Drops" button from the mobile menu section (lines 100-106)
+- Increase button padding from `py-2` to `py-3` for better touch targets
+- Add `divide-y divide-border/50` for subtle separators between links
+
