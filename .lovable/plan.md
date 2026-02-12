@@ -1,34 +1,31 @@
 
 
-## Improve Credits Popup Fit
+## Fix Credits Modal to Fit Without Scrolling
 
-The modal currently uses `max-w-4xl` width and has verbose spacing that forces scrolling. The fix focuses on making it compact enough to fit without scrolling.
+The root problem is that the modal's total height (header + tabs + content) exceeds viewport height. The Upgrade Plan tab is especially tall because each plan card has a large credits pill, features list, and generous spacing stacked vertically.
 
-### Changes to `src/components/app/BuyCreditsModal.tsx`
+### Strategy: Aggressive compaction of the Upgrade tab
 
-**1. Reduce overall size and spacing**
-- Reduce `max-w-4xl` to `max-w-3xl` for better screen fit
-- Shrink header padding: `px-8 pt-8 pb-6` to `px-6 pt-6 pb-4`
-- Reduce balance text from `text-4xl` to `text-3xl`
-- Tighten tab area padding
-- Reduce card internal padding from `p-7 sm:p-8` to `p-5 sm:p-6`
-- Reduce credit text in cards from `text-4xl` to `text-3xl`
-- Shrink price text from `text-2xl` to `text-xl`
-- Bottom padding from `pb-8` to `pb-6`
+**`src/components/app/BuyCreditsModal.tsx`**:
 
-**2. Improve the max-height constraint**
-- Change `max-h-[60vh]` on tab content to `max-h-[55vh]` as a safety net, but the reduced spacing should eliminate the need to scroll in most cases
+1. **Add `max-h-[90vh]` and `flex flex-col`** to the DialogContent so the entire modal is viewport-constrained, with the scrollable area only inside tab content
+2. **Compact the balance header**: Reduce `mb-5` to `mb-3`, reduce `mt-2.5` to `mt-1.5`, shrink balance text from `text-3xl` to `text-2xl`
+3. **Compact tab switcher**: Reduce padding from `pt-4` to `pt-2`, tab button padding from `py-3` to `py-2`
+4. **Compact Upgrade Plan tab cards**:
+   - Remove the credits pill box (the bordered rounded-xl container) and replace with a single inline line: "2,500 credits/mo" in bold -- saves ~40px per card
+   - Reduce features from 4 to 3 (`.slice(0, 3)`)
+   - Reduce `space-y-3` to `space-y-2` inside cards
+   - Reduce card padding from `p-4` to `p-3`
+   - Reduce price text from `text-3xl` to `text-2xl`
+   - Reduce CTA button height from `min-h-[44px]` to `min-h-[36px]`
+5. **Remove enterprise banner** from inside the scrollable area -- it takes significant space. Replace with a small inline link "Need more? Contact Sales" below the grid
+6. **Compact Top Up tab**: Reduce `space-y-6` to `space-y-4`, reduce card `space-y-4` to `space-y-3`
+7. **Tab content area**: Change padding from `pb-6 pt-5` to `pb-4 pt-3`
 
-**3. Upgrade Plan tab -- tighter plan cards**
-- Reduce plan card padding from `p-6` to `p-4`
-- Reduce plan card spacing from `space-y-5` to `space-y-3`
-- Show only 4 features instead of 5 to save vertical space
-- Reduce credits pill padding
-
-**4. Mobile improvements**
-- On mobile, the Upgrade tab 4-column grid already collapses to `grid-cols-1` which is fine
-- Reduce gap from `gap-5` to `gap-3` on mobile for tighter stacking
+### Result
+- The entire modal fits within 90vh without any scrolling on typical screens
+- Plan cards are compact but still readable with price, credits count, 3 features, and CTA
+- Enterprise option condensed to a single line link
 
 ### Files Changed
-- **Edit**: `src/components/app/BuyCreditsModal.tsx` -- spacing and sizing reductions throughout
-
+- **Edit**: `src/components/app/BuyCreditsModal.tsx` -- spacing/sizing reductions throughout
