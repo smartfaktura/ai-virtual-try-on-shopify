@@ -9,7 +9,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
-import { MobileTabBar } from '@/components/app/MobileTabBar';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -263,17 +263,32 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       )}
 
-      {/* Main Content — no header */}
+      {/* Mobile Floating Header */}
+      <div className="fixed top-0 left-0 right-0 z-40 lg:hidden p-3">
+        <div className="flex items-center justify-between h-14 px-4 rounded-2xl border border-white/[0.06] bg-sidebar shadow-2xl shadow-black/20">
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+              <span className="text-primary-foreground font-bold text-sm">V</span>
+            </div>
+            <span className="font-bold text-lg text-sidebar-foreground tracking-tight">VOVV.AI</span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-xl text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/[0.06] transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+          <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pt-[76px] lg:pt-8">
             {children}
           </div>
         </main>
       </div>
-
-      {/* Mobile Tab Bar */}
-      <MobileTabBar onOpenSidebar={() => setSidebarOpen(true)} />
 
       {/* Studio Team Chat */}
       <StudioChat />
