@@ -1,65 +1,56 @@
 
 
-## Remove Unused Workflows
+## Workflow Page Redesign -- Full-Row Split Layout
 
-Delete 6 workflows the user no longer needs, keeping only: **Virtual Try-On Set**, **Product Listing Set**, **Selfie / UGC Set**, and **Flat Lay Set**.
+Replace the current 4-column grid of tiny cards with a stacked, full-width split layout where each workflow gets its own prominent row.
 
-### Workflows to Remove
-1. Social Media Pack
-2. Lifestyle Set
-3. Website Hero Set
-4. Ad Refresh Set
-5. Seasonal Campaign Set
-6. Before & After Set
+### Layout Concept
 
-### Changes
+**Desktop (lg+):**
+Each workflow is a full-width row split into two halves:
+- **Left side**: Large animated thumbnail (aspect-ratio 3:4, taking ~45% width)
+- **Right side**: Workflow name, description, feature highlights, badge, and CTA button -- all with generous spacing
+- Alternating rows flip the layout (even rows: image left / text right, odd rows: image right / text left) for visual rhythm
 
-**1. Database -- Delete 6 workflow rows**
-Run a migration to delete the rows from the `workflows` table and re-order the remaining 4:
-- Virtual Try-On Set (sort 1)
-- Product Listing Set (sort 2)
-- Selfie / UGC Set (sort 3)
-- Flat Lay Set (sort 4)
+**Tablet (md):**
+- Same split layout but 50/50 columns, slightly reduced padding
 
-**2. Delete dedicated thumbnail components**
-These components only serve the removed workflows:
-- `src/components/app/SocialMediaGridThumbnail.tsx` -- only used by Social Media Pack
-- `src/components/app/HeroBannerThumbnail.tsx` -- only used by Website Hero Set
+**Mobile:**
+- Stacked vertically: animation on top (full width, aspect-ratio 16:9 or 4:3 for more impact), text content below
+- Larger text and buttons for touch targets
+- Each workflow separated by generous spacing
 
-**3. Clean up `workflowAnimationData.tsx`**
-- Remove imports and scene entries for: Social Media Pack (comment only), Lifestyle Set, Website Hero Set (comment only), Ad Refresh Set, Seasonal Campaign Set, Before & After Set
-- Remove now-unused asset imports (socialProduct, socialResult, lifestyleProduct, lifestyleScene, lifestyleResult, adProduct, adModel, adResult, seasonProduct, seasonResult, baProduct, baResult)
-- Remove unused icon imports that were only used by deleted scenes
+### Design Details
 
-**4. Clean up `WorkflowCard.tsx`**
-- Remove the conditional branches for `Social Media Pack` and `Website Hero Set` that reference the deleted thumbnail components
-- Remove the imports for `SocialMediaGridThumbnail` and `HeroBannerThumbnail`
+- Each row gets a subtle card border with hover elevation
+- Workflow name: `text-2xl font-bold` on desktop, `text-xl` on mobile
+- Description: `text-base text-muted-foreground` with no line-clamp (full text shown)
+- Feature bullets: 3-4 key points per workflow (derived from `required_inputs` and `uses_tryon`)
+- Try-On badge: larger, more prominent positioning
+- CTA button: `h-11 text-sm` with rounded-full styling, not crammed
+- Animations auto-play when the row scrolls into view (using IntersectionObserver)
+- Skeleton loading: 4 full-width placeholder rows instead of 8 tiny cards
 
-**5. Delete unused asset files**
-- `src/assets/workflows/workflow-social-media.jpg`
-- `src/assets/workflows/workflow-lifestyle.jpg`
-- `src/assets/workflows/workflow-website-hero.jpg`
-- `src/assets/workflows/workflow-ad-refresh.jpg`
-- `src/assets/workflows/workflow-seasonal.jpg`
-- `src/assets/workflows/workflow-before-after.jpg`
-- `src/assets/workflows/social-ring-hand.jpg`
-- `src/assets/workflows/social-ring-plate.jpg`
-- `src/assets/workflows/social-ring-portrait.jpg`
-- `src/assets/workflows/social-ring-studio.jpg`
+### Files Changed
 
-**6. Minor reference cleanup**
-- Landing page text in `LandingFAQ.tsx` mentions "Ad Refresh" and "Website Hero" as examples -- update to reference kept workflows instead
-- `Changelog.tsx` mentions "Lifestyle, Studio, Flat Lay, Social Media" -- update text to reflect current workflows
+**`src/pages/Workflows.tsx`** -- Major rewrite
+- Replace grid layout with vertical stack of `WorkflowRow` components
+- Each row uses a flex layout with `flex-col lg:flex-row` and alternating `lg:flex-row-reverse`
+- Add IntersectionObserver logic so animations play when visible
+- Update skeleton loading to show full-width placeholder rows
 
-### What Stays Untouched
-- Virtual Try-On Set (all assets, animation data, tryon components)
-- Product Listing Set (assets, animation data)
-- Selfie / UGC Set (assets, animation data)
-- Flat Lay Set (assets, animation data)
-- All generation logic, edge functions, and Generate page code
-- The `Workflows.tsx` page itself (it reads from DB, so removing DB rows is enough)
+**`src/components/app/WorkflowCard.tsx`** -- Repurpose as `WorkflowRow`
+- Rename component to `WorkflowRow`
+- Change from vertical card to horizontal split layout
+- Left: Large animated thumbnail container (no longer tiny 3:4 card)
+- Right: Spacious text area with name, full description, feature list, and CTA
+- Accept `reversed` prop to flip image/text sides
+- Accept `isVisible` prop to control animation playback (replaces hover-based autoPlay)
+- Mobile: stack vertically with full-width image and text below
 
-### Files Summary
-- **Database**: Delete 6 rows, update sort_order on remaining 4
-- **Delete**: `SocialMediaGridThumbnail.tsx`, `HeroBannerThumbnail.tsx`, 10 asset images
-- **Edit**: `workflowAnimationData.tsx`, `WorkflowCard.tsx`, `LandingFAQ.tsx`, `Changelog.tsx`
+**`src/components/app/WorkflowAnimatedThumbnail.tsx`** -- Minor adjustment
+- No structural changes needed -- it already fills its container
+- The parent container just needs to be larger now
+
+### No Backend Changes
+This is purely a layout/presentation change. All data fetching and navigation logic stays identical.
