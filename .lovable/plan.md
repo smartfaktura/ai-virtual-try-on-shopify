@@ -1,57 +1,78 @@
 
-
-## Eliminate Generation Timeouts: Decouple Queue from Generation
+## Optimize Image Loading: Thumbnails + Caching
 
 ### The Problem
 
-Currently, `process-queue` does two things in one call:
-1. Claims a job from the queue
-2. Calls the generation function (e.g., `generate-product`) and **waits** for it to finish
+All galleries (Library, Discover, Freestyle) load full-resolution images for small grid thumbnails. A single AI-generated image can be 1-4MB. Loading 50+ of these in a gallery causes slow page loads, high bandwidth usage, and poor UX -- especially on mobile.
 
-Since edge functions have a ~100s hard limit, and AI image generation can take 30-90s per image (especially with retries), the worker frequently times out before it can record the result. This leaves jobs stuck in "processing" status until the 5-minute cleanup catches them -- causing a bad user experience.
+### The Solution
 
-### The Fix: Fire-and-Forget Dispatch
+Use Supabase Storage Image Transformations to serve smaller, lower-quality thumbnails in gallery views, and only load full-resolution images when users click to view details or download.
 
-Split the responsibility so each function does one thing:
+### How It Works
+
+Supabase Storage supports on-the-fly image resizing by changing `/object/` to `/render/image/` in the URL and adding `width` and `quality` query params. For example:
 
 ```text
-BEFORE (coupled):
-  process-queue: claim job --> call generate-product --> WAIT --> save result
-                              (times out here ^)
+BEFORE (full res, ~2MB):
+https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/user/img.png
 
-AFTER (decoupled):
-  process-queue: claim job --> fire HTTP call to generate-product --> move on
-  generate-product: do AI work --> update generation_queue directly when done
+AFTER (thumbnail, ~50KB):
+https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/render/image/public/freestyle-images/user/img.png?width=400&quality=60
 ```
+
+The browser also caches these transformed images automatically via standard HTTP caching headers that Supabase sets on transformed images.
 
 ### Changes
 
-**1. `supabase/functions/process-queue/index.ts`**
-- Change from `await callGenerationFunction(...)` to a fire-and-forget `fetch()` (no await on the response body)
-- Remove all result-handling, credit-refund, and generation_jobs insert logic from this function
-- The function becomes a lightweight dispatcher that just claims jobs and kicks off generation functions
-- Pass `job_id` and `credits_reserved` in the payload so the generation function can update the queue
+**1. New utility: `src/lib/imageOptimization.ts`**
 
-**2. `supabase/functions/generate-product/index.ts`** (and similarly for `generate-tryon`, `generate-freestyle`, `generate-workflow`)
-- At the end of generation, write results directly to `generation_queue` (set status to "completed" or "failed")
-- On success: insert into `generation_jobs` for the library
-- On failure: refund credits via `refund_credits` RPC
-- On partial success: refund unused credits
-- Detect queue calls via the `x-queue-internal` header (already exists) and `job_id` in payload
+Create a helper function that converts any Supabase Storage public URL into a thumbnail URL:
 
-**3. Client-side (`src/hooks/useGenerationQueue.ts`)**
-- No changes needed -- it already polls `generation_queue` status, so it will pick up completions naturally
+- `getOptimizedUrl(url, { width, quality })` -- replaces `/object/` with `/render/image/` and appends width/quality params
+- Only transforms Supabase Storage URLs (passes through external URLs unchanged)
+- Default thumbnail preset: `width=400, quality=60` (good for grid cards)
+- Medium preset: `width=800, quality=75` (for detail modals)
+- Returns original URL unchanged for non-Supabase URLs
 
-### Why This Fixes Timeouts
+**2. `src/components/app/LibraryImageCard.tsx`**
 
-- `process-queue` finishes in under 5 seconds (just claim + dispatch)
-- Each generation function has its own full 100s budget to complete AI work
-- Even if a generation function times out, cleanup_stale_jobs handles it (already exists)
-- No cascading failures: one slow job does not block the worker from dispatching others
+- Use `getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })` for the `<img src>` in the grid card
+- The original `item.imageUrl` stays untouched for downloads and detail views
 
-### Edge Cases Handled
+**3. `src/components/app/DiscoverCard.tsx`**
 
-- **Generation function crashes**: The 5-minute `timeout_at` + `cleanup_stale_jobs` catches it and refunds credits (already works)
-- **Partial success (freestyle multi-image)**: Generation function handles refund logic directly
-- **Concurrent jobs**: No change -- `claim_next_job` uses `FOR UPDATE SKIP LOCKED`
+- Use `getOptimizedUrl(imageUrl, { width: 400, quality: 60 })` for the grid thumbnail `<img src>`
 
+**4. `src/components/app/freestyle/FreestyleGallery.tsx`**
+
+- For the masonry grid cards, use `getOptimizedUrl(img.url, { width: 400, quality: 60 })`
+- Keep original URLs for the lightbox/expanded view
+
+**5. `src/components/app/RecentCreationsGallery.tsx`**
+
+- Apply same thumbnail optimization for the recent creations carousel
+
+**6. Detail modals keep full quality**
+
+- `LibraryDetailModal`, `DiscoverDetailModal`, and `ImageLightbox` continue using original URLs so users see full-resolution images when they click to view
+
+### What About Caching?
+
+Supabase Storage already sets `Cache-Control` headers on served images. Transformed images are cached both at the CDN level and in the browser. No additional caching setup is needed -- once a thumbnail is loaded, the browser will serve it from cache on subsequent visits.
+
+### Safety Considerations
+
+- No database changes required
+- No edge function changes
+- Only affects `<img src>` attributes in grid/card views
+- Downloads always use the original full-resolution URL
+- If the `/render/image/` endpoint is unavailable (e.g., plan limitations), the utility gracefully falls back to the original URL since the image still loads -- just at full size
+- Non-Supabase URLs (external images) are passed through unchanged
+
+### Expected Impact
+
+- Gallery thumbnails: ~50-100KB each instead of ~1-4MB (20-40x smaller)
+- Page load time for galleries with 50 images: ~2.5-5MB instead of ~50-200MB
+- First meaningful paint significantly faster
+- Mobile data usage drastically reduced
