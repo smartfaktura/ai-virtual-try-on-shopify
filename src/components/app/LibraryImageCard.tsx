@@ -75,7 +75,7 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
       )}
 
       <img
-        src={getOptimizedUrl(item.imageUrl, { width: 400, quality: 60 })}
+        src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
         alt={item.label}
         className={cn(
           'w-full h-auto block transition-all duration-500 group-hover:scale-[1.03]',
