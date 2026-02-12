@@ -1,42 +1,51 @@
 
 
-## Improve Landing Page Mobile Menu
+## Fix /app Mobile Navigation
 
-### Problems
-- Menu appears/disappears abruptly with no animation (feels laggy)
-- "Monthly Creative Drops" clutters the mobile menu unnecessarily
-- Breakpoint at `md:` (768px) causes cramped layout on tablets
-- Overall feel isn't polished or Apple-like
+### Problems Identified
+1. **Bottom tab bar overlaps** with the StudioChat floating button (both at the bottom)
+2. **No logo visible** on mobile -- there's no header bar at all
+3. **No active tab indicator** -- icons are too dark/invisible against the background  
+4. **No "floating" style** matching the desktop sidebar aesthetic
+
+### Solution
+
+Replace the bottom tab bar with a **floating top header bar** on mobile, matching the desktop floating sidebar style.
 
 ### Changes
 
-**File: `src/components/landing/LandingNav.tsx`**
+**1. Delete `src/components/app/MobileTabBar.tsx`**
+- Remove the bottom tab bar entirely
 
-1. **Remove "Monthly Creative Drops" from mobile menu** -- it's only relevant on desktop as a marketing badge, not as navigation
+**2. Update `src/components/app/AppShell.tsx`**
+- Remove `MobileTabBar` import and usage
+- Add a mobile-only floating top header (`lg:hidden`):
+  - Floating card style: `m-3 rounded-2xl border border-white/[0.06] bg-sidebar shadow-lg` (matches desktop sidebar)
+  - Logo "V" + "VOVV.AI" on the left
+  - Hamburger icon on the right to open sidebar overlay
+  - Compact height (~h-14)
+- Change main content padding from `pb-20 lg:pb-8` to just `p-4 sm:p-6 lg:p-8` (no extra bottom padding needed)
+- Add `pt-[76px] lg:pt-0` to main content on mobile to clear the floating header
 
-2. **Change all breakpoints from `md:` to `lg:`** -- keeps hamburger active on tablets where there isn't enough space
+**3. Update `src/pages/Freestyle.tsx`**
+- Revert prompt bar bottom positioning from `bottom-16 lg:bottom-0` back to `bottom-0` everywhere (no tab bar to dodge)
 
-3. **Add smooth slide-down animation** to the mobile menu using CSS transitions instead of conditional rendering:
-   - Use `max-height` + `opacity` transition for a smooth open/close
-   - Or use a wrapper with `overflow-hidden` and `transition-all` with dynamic height
-   - This eliminates the jarring pop-in/pop-out
+**4. Move StudioChat FAB higher on mobile** (in `src/components/app/StudioChat.tsx`)
+- Keep it at `bottom-4 right-4` -- with no tab bar it won't overlap anymore
 
-4. **Improve mobile menu styling**:
-   - Slightly larger touch targets (py-3 instead of py-2)
-   - Subtle separator lines between items
-   - Refined spacing and typography
-   - Full-width CTA button with more presence
+### Visual Result (Mobile)
 
-### Technical Details
+```text
+   +------------------------------+
+   |  [V] VOVV.AI          [=]   |  <-- floating header (rounded, matches desktop)
+   +------------------------------+
+   |                              |
+   |       Page Content           |
+   |       (scrollable)           |
+   |                              |
+   |                       [chat] |  <-- StudioChat FAB, no overlap
+   +------------------------------+
+```
 
-All changes are in one file: `src/components/landing/LandingNav.tsx`
-
-Key class changes:
-- `hidden md:flex` becomes `hidden lg:flex` (desktop links)
-- `hidden md:block` becomes `hidden lg:block` (desktop CTA)
-- `md:hidden` becomes `lg:hidden` (mobile toggle + menu)
-- Mobile menu gets `transition-all duration-300 ease-in-out` with `max-height` and `opacity` for smooth animation
-- Remove the "Monthly Creative Drops" button from the mobile menu section (lines 100-106)
-- Increase button padding from `py-2` to `py-3` for better touch targets
-- Add `divide-y divide-border/50` for subtle separators between links
+Tapping the hamburger opens the full sidebar overlay with all nav items, user profile, credits, and sign out.
 
