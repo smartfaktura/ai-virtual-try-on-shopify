@@ -271,10 +271,75 @@ async function generateImage(
   return null;
 }
 
+/** Helper: update generation_queue and handle credits when called from the queue */
+async function completeQueueJob(
+  jobId: string,
+  userId: string,
+  creditsReserved: number,
+  images: string[],
+  requestedCount: number,
+  errors: string[],
+  payload: Record<string, unknown>,
+) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+
+  const generatedCount = images.length;
+
+  if (generatedCount === 0) {
+    await supabase.from("generation_queue").update({
+      status: "failed",
+      error_message: errors.join("; ") || "Failed to generate any images",
+      completed_at: new Date().toISOString(),
+    }).eq("id", jobId);
+    await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
+    console.log(`[generate-workflow] Refunded ${creditsReserved} credits for failed job ${jobId}`);
+    return;
+  }
+
+  const result = { images, generatedCount, requestedCount, errors: errors.length > 0 ? errors : undefined };
+
+  await supabase.from("generation_queue").update({
+    status: "completed",
+    result,
+    completed_at: new Date().toISOString(),
+  }).eq("id", jobId);
+
+  await supabase.from("generation_jobs").insert({
+    user_id: userId,
+    results: images,
+    status: "completed",
+    completed_at: new Date().toISOString(),
+    product_id: payload.product_id || null,
+    workflow_id: payload.workflow_id || null,
+    brand_profile_id: payload.brand_profile_id || null,
+    ratio: payload.aspectRatio || "1:1",
+    quality: payload.quality || "standard",
+    requested_count: requestedCount,
+    credits_used: creditsReserved,
+    creative_drop_id: payload.creative_drop_id || null,
+    prompt_final: payload.prompt || null,
+  });
+
+  if (generatedCount < requestedCount) {
+    const perImageCost = Math.floor(creditsReserved / requestedCount);
+    const refundAmount = perImageCost * (requestedCount - generatedCount);
+    if (refundAmount > 0) {
+      await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: refundAmount });
+      console.log(`[generate-workflow] Partial: refunded ${refundAmount} credits for job ${jobId}`);
+    }
+  }
+
+  console.log(`[generate-workflow] ✓ Queue job ${jobId} completed (${generatedCount} images)`);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const isQueueInternal = req.headers.get("x-queue-internal") === "true";
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -288,7 +353,7 @@ serve(async (req) => {
       );
     }
 
-    const body: WorkflowRequest = await req.json();
+    const body: WorkflowRequest & { user_id?: string; job_id?: string; credits_reserved?: number } = await req.json();
 
     if (!body.workflow_id || !body.product) {
       return new Response(
@@ -302,7 +367,6 @@ serve(async (req) => {
       );
     }
 
-    // Fetch workflow with generation_config from DB
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -341,7 +405,6 @@ serve(async (req) => {
       `[generate-workflow] Workflow: ${workflow.name}, Strategy: ${config.variation_strategy.type}`
     );
 
-    // Determine which variations to generate
     const allVariations = config.variation_strategy.variations;
     let variationsToGenerate: VariationItem[];
 
@@ -353,7 +416,6 @@ serve(async (req) => {
       variationsToGenerate = allVariations;
     }
 
-    // Cap at reasonable limit
     const maxImages = Math.min(variationsToGenerate.length, 8);
     variationsToGenerate = variationsToGenerate.slice(0, maxImages);
 
@@ -391,7 +453,6 @@ serve(async (req) => {
           `[generate-workflow] Variation ${i + 1}/${variationsToGenerate.length}: "${variation.label}" (${aspectRatio})${body.model ? ` [with model: ${body.model.name}]` : ""}`
         );
 
-        // Build reference images array: product first, then model if provided
         const referenceImages: Array<{ url: string; label: string }> = [
           { url: body.product.imageUrl, label: "product" },
         ];
@@ -425,6 +486,9 @@ serve(async (req) => {
           "status" in error
         ) {
           const statusError = error as { status: number; message: string };
+          if (isQueueInternal && body.job_id) {
+            await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], variationsToGenerate.length, [statusError.message], body as unknown as Record<string, unknown>);
+          }
           return new Response(
             JSON.stringify({ error: statusError.message }),
             {
@@ -441,10 +505,16 @@ serve(async (req) => {
         );
       }
 
-      // Small delay between generations
       if (i < variationsToGenerate.length - 1) {
         await new Promise((r) => setTimeout(r, 500));
       }
+    }
+
+    const imageUrls = images.map((img) => img.url);
+
+    // Queue self-completion
+    if (isQueueInternal && body.job_id) {
+      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, imageUrls, variationsToGenerate.length, errors, body as unknown as Record<string, unknown>);
     }
 
     if (images.length === 0) {
@@ -462,7 +532,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        images: images.map((img) => img.url),
+        images: imageUrls,
         variations: images.map((img) => ({
           label: img.label,
           aspect_ratio: img.aspect_ratio,
@@ -480,6 +550,12 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Edge function error:", error);
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      if (isQueueInternal && body.job_id) {
+        await completeQueueJob(body.job_id, body.user_id, body.credits_reserved, [], 1, [error instanceof Error ? error.message : "Unknown error"], body);
+      }
+    } catch { /* best effort */ }
     return new Response(
       JSON.stringify({
         error:

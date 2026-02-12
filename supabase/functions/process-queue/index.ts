@@ -15,12 +15,17 @@ const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
   workflow: "generate-workflow",
 };
 
-async function callGenerationFunction(
+/**
+ * Fire-and-forget: dispatch job to generation function without waiting.
+ * The generation function will update generation_queue directly when done.
+ */
+function dispatchGenerationFunction(
   functionUrl: string,
   serviceRoleKey: string,
   payload: Record<string, unknown>,
-): Promise<Record<string, unknown>> {
-  const response = await fetch(functionUrl, {
+): void {
+  // Fire the request — intentionally NOT awaiting the response
+  fetch(functionUrl, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${serviceRoleKey}`,
@@ -28,15 +33,12 @@ async function callGenerationFunction(
       "x-queue-internal": "true",
     },
     body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(95_000), // 95s timeout for downstream calls (pro model)
+  }).catch((err) => {
+    // Log but don't throw — the generation function handles its own
+    // queue status updates. If dispatch itself fails, cleanup_stale_jobs
+    // will catch the stuck job after 5 minutes.
+    console.error(`[process-queue] Dispatch fetch error:`, err);
   });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
-    throw new Error(errorData.error || `Generation function returned ${response.status}`);
-  }
-
-  return await response.json();
 }
 
 serve(async (req) => {
@@ -56,7 +58,7 @@ serve(async (req) => {
   }
 
   const startTime = Date.now();
-  const MAX_RUNTIME_MS = 100_000; // 100 seconds, accommodate pro model
+  const MAX_RUNTIME_MS = 25_000; // 25 seconds — dispatcher is lightweight now
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -71,9 +73,9 @@ serve(async (req) => {
       console.log(`[process-queue] Cleaned ${(cleanupResult as Record<string, number>).cleaned} stale jobs`);
     }
 
-    let processedCount = 0;
+    let dispatchedCount = 0;
 
-    // Step 2: Loop — claim and process jobs until time runs out
+    // Step 2: Loop — claim and dispatch jobs until time runs out
     while (Date.now() - startTime < MAX_RUNTIME_MS) {
       // Claim next job
       const { data: claimResult, error: claimError } = await supabase.rpc("claim_next_job");
@@ -85,7 +87,7 @@ serve(async (req) => {
 
       const claimed = claimResult as Record<string, unknown>;
       if (!claimed.job || claimed.job === null) {
-        console.log(`[process-queue] No more jobs. Processed ${processedCount} jobs total.`);
+        console.log(`[process-queue] No more jobs. Dispatched ${dispatchedCount} jobs total.`);
         break;
       }
 
@@ -96,125 +98,43 @@ serve(async (req) => {
       const userId = job.user_id as string;
       const creditsReserved = job.credits_reserved as number;
 
-      console.log(`[process-queue] Processing job ${jobId}, type=${jobType}, user=${userId}`);
-
-      try {
-        // Route to the appropriate generation function
-        const functionName = JOB_TYPE_TO_FUNCTION[jobType];
-        if (!functionName) {
-          throw new Error(`Unknown job type: ${jobType}`);
-        }
-
-        const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
-
-        // Inject user_id into payload so downstream functions can identify the user
-        const enrichedPayload = { ...payload, user_id: userId };
-
-        let allImages: string[] = [];
-        let allErrors: string[] = [];
-
-        // For freestyle with imageCount > 1: loop sequential 1-image calls
-        const requestedCount = (payload as Record<string, unknown>).imageCount as number || 1;
-        if (jobType === 'freestyle' && requestedCount > 1) {
-          for (let i = 0; i < requestedCount; i++) {
-            if (Date.now() - startTime >= MAX_RUNTIME_MS) {
-              console.log(`[process-queue] Time budget exceeded during freestyle loop at image ${i + 1}`);
-              break;
-            }
-            try {
-              const singleResult = await callGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
-              const imgs = (singleResult.images as string[]) || [];
-              allImages.push(...imgs);
-              console.log(`[process-queue] Freestyle image ${i + 1}/${requestedCount} done (${imgs.length} images)`);
-            } catch (loopErr) {
-              console.error(`[process-queue] Freestyle image ${i + 1} failed:`, loopErr);
-              allErrors.push(`Image ${i + 1}: ${loopErr instanceof Error ? loopErr.message : 'Unknown error'}`);
-            }
-          }
-        } else {
-          // Single call for all other types (and freestyle with imageCount=1)
-          const result = await callGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
-          allImages = (result.images as string[]) || [];
-          allErrors = (result.errors as string[]) || [];
-        }
-
-        const generatedCount = allImages.length;
-        const result = { images: allImages, generatedCount, requestedCount, errors: allErrors.length > 0 ? allErrors : undefined };
-
-        // Mark job as completed
-        await supabase
-          .from("generation_queue")
-          .update({
-            status: "completed",
-            result,
-            completed_at: new Date().toISOString(),
-          })
-          .eq("id", jobId);
-
-        // For non-freestyle types, save to generation_jobs for library
-        // (Freestyle saves its own records inside the function)
-        if (jobType !== 'freestyle' && generatedCount > 0) {
-          await supabase.from("generation_jobs").insert({
-            user_id: userId,
-            results: allImages,
-            status: "completed",
-            completed_at: new Date().toISOString(),
-            product_id: (payload as Record<string, unknown>).product_id || null,
-            workflow_id: (payload as Record<string, unknown>).workflow_id || null,
-            brand_profile_id: (payload as Record<string, unknown>).brand_profile_id || null,
-            ratio: (payload as Record<string, unknown>).aspectRatio || "1:1",
-            quality: (payload as Record<string, unknown>).quality || "standard",
-            requested_count: requestedCount,
-            credits_used: creditsReserved,
-            creative_drop_id: (payload as Record<string, unknown>).creative_drop_id || null,
-            prompt_final: (payload as Record<string, unknown>).prompt || null,
-          });
-        }
-
-        // Handle partial success — refund unused credits
-        if (generatedCount < requestedCount && generatedCount > 0) {
-          const perImageCost = Math.floor(creditsReserved / requestedCount);
-          const refundAmount = perImageCost * (requestedCount - generatedCount);
-          if (refundAmount > 0) {
-            await supabase.rpc("refund_credits", {
-              p_user_id: userId,
-              p_amount: refundAmount,
-            });
-            console.log(`[process-queue] Partial success: refunded ${refundAmount} credits for job ${jobId}`);
-          }
-        }
-
-        processedCount++;
-        console.log(`[process-queue] ✓ Job ${jobId} completed (${generatedCount} images)`);
-
-      } catch (error) {
-        console.error(`[process-queue] ✗ Job ${jobId} failed:`, error);
-
-        // Mark as failed
+      const functionName = JOB_TYPE_TO_FUNCTION[jobType];
+      if (!functionName) {
+        console.error(`[process-queue] Unknown job type: ${jobType}, failing job ${jobId}`);
         await supabase
           .from("generation_queue")
           .update({
             status: "failed",
-            error_message: error instanceof Error ? error.message : "Unknown error",
+            error_message: `Unknown job type: ${jobType}`,
             completed_at: new Date().toISOString(),
           })
           .eq("id", jobId);
-
-        // Refund credits
-        await supabase.rpc("refund_credits", {
-          p_user_id: userId,
-          p_amount: creditsReserved,
-        });
-
-        console.log(`[process-queue] Refunded ${creditsReserved} credits for failed job ${jobId}`);
+        await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
+        continue;
       }
+
+      const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+
+      // Enrich payload with queue metadata so generation function can update the queue
+      const enrichedPayload = {
+        ...payload,
+        user_id: userId,
+        job_id: jobId,
+        credits_reserved: creditsReserved,
+      };
+
+      // Fire-and-forget — don't wait for the generation to finish
+      dispatchGenerationFunction(functionUrl, serviceRoleKey, enrichedPayload);
+
+      dispatchedCount++;
+      console.log(`[process-queue] ⚡ Dispatched job ${jobId}, type=${jobType}, user=${userId}`);
     }
 
     const elapsed = Math.round((Date.now() - startTime) / 1000);
-    console.log(`[process-queue] Done. Processed ${processedCount} jobs in ${elapsed}s`);
+    console.log(`[process-queue] Done. Dispatched ${dispatchedCount} jobs in ${elapsed}s`);
 
     return new Response(
-      JSON.stringify({ processed: processedCount, elapsed_seconds: elapsed }),
+      JSON.stringify({ dispatched: dispatchedCount, elapsed_seconds: elapsed }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

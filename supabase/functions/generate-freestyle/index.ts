@@ -472,11 +472,64 @@ function buildContentArray(
   return content;
 }
 
+/** Helper: update generation_queue and handle credits when called from the queue */
+async function completeQueueJob(
+  jobId: string,
+  userId: string,
+  creditsReserved: number,
+  images: string[],
+  requestedCount: number,
+  errors: string[],
+  payload: Record<string, unknown>,
+) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+
+  const generatedCount = images.length;
+
+  if (generatedCount === 0) {
+    await supabase.from("generation_queue").update({
+      status: "failed",
+      error_message: errors.join("; ") || "Failed to generate any images",
+      completed_at: new Date().toISOString(),
+    }).eq("id", jobId);
+    await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
+    console.log(`[generate-freestyle] Refunded ${creditsReserved} credits for failed job ${jobId}`);
+    return;
+  }
+
+  const result = { images, generatedCount, requestedCount, errors: errors.length > 0 ? errors : undefined };
+
+  await supabase.from("generation_queue").update({
+    status: "completed",
+    result,
+    completed_at: new Date().toISOString(),
+  }).eq("id", jobId);
+
+  // Freestyle saves its own records in freestyle_generations (done inline),
+  // but we still need a generation_jobs record for credit tracking
+  // No generation_jobs insert for freestyle — it uses freestyle_generations table
+
+  if (generatedCount < requestedCount) {
+    const perImageCost = Math.floor(creditsReserved / requestedCount);
+    const refundAmount = perImageCost * (requestedCount - generatedCount);
+    if (refundAmount > 0) {
+      await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: refundAmount });
+      console.log(`[generate-freestyle] Partial: refunded ${refundAmount} credits for job ${jobId}`);
+    }
+  }
+
+  console.log(`[generate-freestyle] ✓ Queue job ${jobId} completed (${generatedCount} images)`);
+}
+
 // ── Request handler ───────────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const isQueueInternal = req.headers.get("x-queue-internal") === "true";
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -496,9 +549,7 @@ serve(async (req) => {
       );
     }
 
-    // Extract user ID — support queue-internal calls with user_id in payload
-    const isQueueInternal = req.headers.get("x-queue-internal") === "true";
-    const body: FreestyleRequest = await req.json();
+    const body: FreestyleRequest & { job_id?: string; credits_reserved?: number } = await req.json();
 
     let userId: string | null;
     if (isQueueInternal && body.user_id) {
@@ -514,7 +565,6 @@ serve(async (req) => {
       );
     }
 
-    // Allow empty prompt if at least one image reference is provided
     if (!body.prompt?.trim() && !body.sourceImage && !body.modelImage && !body.sceneImage) {
       return new Response(
         JSON.stringify({ error: "Please provide a prompt or select at least one reference (product, model, or scene)" }),
@@ -526,18 +576,15 @@ serve(async (req) => {
     const maxRetries = isQueueInternal ? 1 : 2;
     const effectiveImageCount = isQueueInternal ? 1 : Math.min(body.imageCount || 1, 4);
 
-    // Append model text context if provided
     let enrichedPrompt = body.prompt?.trim() || "Professional commercial photography of the provided subject";
     if (body.modelContext) {
       enrichedPrompt = `${enrichedPrompt}\n\nModel reference: ${body.modelContext}`;
     }
 
-    // Append style presets if provided
     if (body.stylePresets && body.stylePresets.length > 0) {
       enrichedPrompt = `${enrichedPrompt}\n\nStyle direction: ${body.stylePresets.join(", ")}`;
     }
 
-    // Apply polish if enabled
     const polishContext = {
       hasSource: !!body.sourceImage,
       hasModel: !!body.modelImage,
@@ -548,7 +595,6 @@ serve(async (req) => {
     if (body.polishPrompt) {
       finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle);
     } else {
-      // Even without polish, apply brand context and negatives if provided
       let unpolished = enrichedPrompt;
       if (body.brandProfile) {
         const bp = body.brandProfile;
@@ -568,20 +614,15 @@ serve(async (req) => {
         const dedupedNeg = [...new Set(allNeg.map(n => n.toLowerCase()))];
         unpolished += `\n\nDo NOT include: ${dedupedNeg.join(", ")}`;
       }
-      // Apply natural camera style even without polish
       if (body.cameraStyle === "natural") {
         unpolished += `\n\nCAMERA RENDERING STYLE — NATURAL (iPhone): Shot on a latest-generation iPhone. Ultra-sharp details across the entire frame with deep depth of field (everything in focus, minimal bokeh). True-to-life, unedited color reproduction — no color grading, no warm/cool push. Natural ambient lighting only. The image should feel authentic and unprocessed.`;
       }
       finalPrompt = unpolished;
     }
 
-    // Add aspect ratio instruction
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
 
-    // Select model: auto-upgrade to pro for 2+ references (flash can't handle complex merges)
     const refCount = [body.sourceImage, body.modelImage, body.sceneImage].filter(Boolean).length;
-    // Queue-internal: always use fast model (must finish within 50s timeout)
-    // Direct calls: allow pro model only for high quality with 0-1 refs
     const hasModelImage = !!body.modelImage;
     const aiModel = hasModelImage
       ? "google/gemini-3-pro-image-preview"
@@ -616,7 +657,6 @@ serve(async (req) => {
     let contentBlocked = false;
     let blockReason = "";
 
-    // Batch consistency instruction for multi-image requests
     const batchConsistency = effectiveImageCount > 1
       ? "\n\nBATCH CONSISTENCY: Maintain the same color palette, lighting direction, overall mood, and visual style. Only vary composition, angle, and framing."
       : "";
@@ -630,7 +670,6 @@ serve(async (req) => {
 
         const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
 
-        // Build structured content array with labeled images
         const contentArray = buildContentArray(
           promptWithVariation,
           body.sourceImage,
@@ -646,7 +685,6 @@ serve(async (req) => {
           console.warn(`Image ${i + 1} blocked by content safety filter`);
           break;
         } else if (typeof result === "string") {
-          // Upload to storage and return public URL (matches try-on pattern)
           const publicUrl = await uploadBase64ToStorage(result, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           images.push(publicUrl);
           console.log(`Generated and uploaded freestyle image ${i + 1}/${effectiveImageCount}`);
@@ -678,6 +716,9 @@ serve(async (req) => {
       } catch (error: unknown) {
         if (typeof error === "object" && error !== null && "status" in error) {
           const statusError = error as { status: number; message: string };
+          if (isQueueInternal && body.job_id) {
+            await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>);
+          }
           return new Response(
             JSON.stringify({ error: statusError.message }),
             { status: statusError.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -691,7 +732,11 @@ serve(async (req) => {
       }
     }
 
-    // If content was blocked and no images were generated
+    // Queue self-completion
+    if (isQueueInternal && body.job_id) {
+      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, effectiveImageCount, errors, body as unknown as Record<string, unknown>);
+    }
+
     if (contentBlocked && images.length === 0) {
       return new Response(
         JSON.stringify({
@@ -726,6 +771,12 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Freestyle edge function error:", error);
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      if (isQueueInternal && body.job_id) {
+        await completeQueueJob(body.job_id, body.user_id, body.credits_reserved, [], 1, [error instanceof Error ? error.message : "Unknown error"], body);
+      }
+    } catch { /* best effort */ }
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

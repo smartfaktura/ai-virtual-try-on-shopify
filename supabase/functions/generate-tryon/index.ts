@@ -201,10 +201,75 @@ async function generateImage(
   return null;
 }
 
+/** Helper: update generation_queue and handle credits when called from the queue */
+async function completeQueueJob(
+  jobId: string,
+  userId: string,
+  creditsReserved: number,
+  images: string[],
+  requestedCount: number,
+  errors: string[],
+  payload: Record<string, unknown>,
+) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+
+  const generatedCount = images.length;
+
+  if (generatedCount === 0) {
+    await supabase.from("generation_queue").update({
+      status: "failed",
+      error_message: errors.join("; ") || "Failed to generate any images",
+      completed_at: new Date().toISOString(),
+    }).eq("id", jobId);
+    await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
+    console.log(`[generate-tryon] Refunded ${creditsReserved} credits for failed job ${jobId}`);
+    return;
+  }
+
+  const result = { images, generatedCount, requestedCount, errors: errors.length > 0 ? errors : undefined };
+
+  await supabase.from("generation_queue").update({
+    status: "completed",
+    result,
+    completed_at: new Date().toISOString(),
+  }).eq("id", jobId);
+
+  await supabase.from("generation_jobs").insert({
+    user_id: userId,
+    results: images,
+    status: "completed",
+    completed_at: new Date().toISOString(),
+    product_id: payload.product_id || null,
+    workflow_id: payload.workflow_id || null,
+    brand_profile_id: payload.brand_profile_id || null,
+    ratio: payload.aspectRatio || "1:1",
+    quality: payload.quality || "standard",
+    requested_count: requestedCount,
+    credits_used: creditsReserved,
+    creative_drop_id: payload.creative_drop_id || null,
+    prompt_final: payload.prompt || null,
+  });
+
+  if (generatedCount < requestedCount) {
+    const perImageCost = Math.floor(creditsReserved / requestedCount);
+    const refundAmount = perImageCost * (requestedCount - generatedCount);
+    if (refundAmount > 0) {
+      await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: refundAmount });
+      console.log(`[generate-tryon] Partial: refunded ${refundAmount} credits for job ${jobId}`);
+    }
+  }
+
+  console.log(`[generate-tryon] ✓ Queue job ${jobId} completed (${generatedCount} images)`);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const isQueueInternal = req.headers.get("x-queue-internal") === "true";
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -224,9 +289,7 @@ serve(async (req) => {
       );
     }
 
-    // Extract user ID — support queue-internal calls with user_id in payload
-    const isQueueInternal = req.headers.get("x-queue-internal") === "true";
-    const body: TryOnRequest & { user_id?: string } = await req.json();
+    const body: TryOnRequest & { user_id?: string; job_id?: string; credits_reserved?: number } = await req.json();
 
     let userId: string | null;
     if (isQueueInternal && body.user_id) {
@@ -266,7 +329,6 @@ serve(async (req) => {
         const base64Url = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY);
 
         if (base64Url) {
-          // Upload to storage and get public URL
           const publicUrl = await uploadBase64ToStorage(base64Url, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           images.push(publicUrl);
           console.log(`Generated and uploaded image ${i + 1}/${imageCount}`);
@@ -276,6 +338,9 @@ serve(async (req) => {
       } catch (error: unknown) {
         if (typeof error === "object" && error !== null && "status" in error) {
           const statusError = error as { status: number; message: string };
+          if (isQueueInternal && body.job_id) {
+            await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], imageCount, [statusError.message], body as unknown as Record<string, unknown>);
+          }
           return new Response(
             JSON.stringify({ error: statusError.message }),
             { status: statusError.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -287,6 +352,11 @@ serve(async (req) => {
       if (i < imageCount - 1) {
         await new Promise((r) => setTimeout(r, 500));
       }
+    }
+
+    // Queue self-completion
+    if (isQueueInternal && body.job_id) {
+      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, imageCount, errors, body as unknown as Record<string, unknown>);
     }
 
     if (images.length === 0) {
@@ -308,6 +378,12 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Edge function error:", error);
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      if (isQueueInternal && body.job_id) {
+        await completeQueueJob(body.job_id, body.user_id, body.credits_reserved, [], 1, [error instanceof Error ? error.message : "Unknown error"], body);
+      }
+    } catch { /* best effort */ }
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
