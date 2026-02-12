@@ -1,38 +1,33 @@
 
+## Add Compression to Remaining Dashboard Images
 
-## Fix: Quality-Only Optimization (Keep Native Resolution)
+Two small spots on the dashboard are still loading full-resolution images for tiny 40x40px thumbnails.
 
-### What's Wrong
+### Changes
 
-The current `getOptimizedUrl` defaults to `width=400`, which downscales every image to 400px wide. This breaks the visual quality of previews, especially in the Freestyle "natural" layout where images display large. The aspect ratios look "crashed" because the images are being resized to a fixed width.
+**1. `src/pages/Dashboard.tsx` (line 303)**
+- The recent jobs table shows 40x40px product thumbnails at full quality
+- Apply `getOptimizedUrl(url, { width: 80, quality: 50 })` -- 80px is 2x the display size for retina screens, 50% quality is fine for this size
 
-### What Changes
+**2. `src/components/app/RecentProductsList.tsx` (line 22)**
+- Same situation: 40x40px product thumbnails loading full-res images
+- Apply `getOptimizedUrl(url, { width: 80, quality: 50 })`
 
-**1. `src/lib/imageOptimization.ts`**
-- Remove the default `width=400` -- make `width` truly optional
-- When no `width` is provided, only append `quality=X` to the URL (keeps native resolution)
-- Default quality stays at `60` for grid previews
+### Summary of Where Compression Now Applies
 
-**2. `src/components/app/freestyle/FreestyleGallery.tsx`**
-- Natural layout (1-3 large images): use `getOptimizedUrl(img.url, { quality: 75 })` -- lighter compression since images display large
-- Grid/masonry layout (4+ images): use `getOptimizedUrl(img.url, { quality: 60 })` -- heavier compression for small cards
+| Location | Size | Optimization |
+|---|---|---|
+| Dashboard - Recent Creations gallery | 180px cards | quality: 60 (already done) |
+| Dashboard - Recent Jobs table | 40px thumbnails | width: 80, quality: 50 (new) |
+| Recent Products List | 40px thumbnails | width: 80, quality: 50 (new) |
+| Library grid | cards | quality: 60 (already done) |
+| Discover grid | cards | quality: 60 (already done) |
+| Freestyle - natural layout | large | quality: 75 (already done) |
+| Freestyle - masonry grid | cards | quality: 60 (already done) |
+| Lightbox - main image | full screen | original URL, 100% quality (already done) |
+| Lightbox - thumbnail strip | 56px | width: 100, quality: 50 (already done) |
 
-**3. `src/components/app/LibraryImageCard.tsx`**
-- Change to `getOptimizedUrl(item.imageUrl, { quality: 60 })` -- remove width, quality-only
-
-**4. `src/components/app/DiscoverCard.tsx`**
-- Change to `getOptimizedUrl(imageUrl, { quality: 60 })` -- remove width, quality-only
-
-**5. `src/components/app/RecentCreationsGallery.tsx`**
-- Change to `getOptimizedUrl(item.imageUrl, { quality: 60 })` -- remove width, quality-only
-
-**6. `src/components/app/ImageLightbox.tsx`**
-- Main image (line 105): keep using original URL -- full quality on click (already correct)
-- Thumbnail strip (line 161): add `getOptimizedUrl(img, { width: 100, quality: 50 })` -- these are tiny 56px thumbnails, width resize is fine here
-
-### Result
-
-- Grid previews: native resolution, 60% quality (smaller files, sharp images)
-- Large previews: native resolution, 75% quality (minimal visual loss)
-- Lightbox/detail view: full 100% quality original URL (loads on click)
-- Thumbnail strip: 100px wide, 50% quality (tiny thumbnails, fast load)
+### Technical Details
+- Import `getOptimizedUrl` from `@/lib/imageOptimization` into both files
+- Wrap the `src` attribute with the helper function
+- No database or backend changes needed
