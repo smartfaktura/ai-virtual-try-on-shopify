@@ -36,7 +36,7 @@ export function RecentCreationsGallery() {
       const [jobsResult, freestyleResult] = await Promise.all([
         supabase
           .from('generation_jobs')
-          .select('id, created_at, workflows(name), user_products(title, image_url)')
+          .select('id, results, created_at, workflows(name), user_products(title, image_url)')
           .eq('status', 'completed')
           .order('created_at', { ascending: false })
           .limit(5),
@@ -49,11 +49,23 @@ export function RecentCreationsGallery() {
 
       if (!jobsResult.error) {
         for (const job of jobsResult.data ?? []) {
-          const productImg = (job.user_products as any)?.image_url;
-          if (productImg) {
+          // Extract first non-base64 URL from results array
+          const results = job.results as any;
+          let resultUrl = '';
+          if (Array.isArray(results)) {
+            for (const r of results) {
+              const url = typeof r === 'string' ? r : r?.url || r?.image_url;
+              if (url && !url.startsWith('data:')) {
+                resultUrl = url;
+                break;
+              }
+            }
+          }
+          const imageUrl = resultUrl || (job.user_products as any)?.image_url;
+          if (imageUrl) {
             items.push({
               id: job.id,
-              imageUrl: productImg,
+              imageUrl,
               label: (job.workflows as any)?.name || 'Generated',
               date: new Date(job.created_at).toLocaleDateString(),
               rawDate: job.created_at,
