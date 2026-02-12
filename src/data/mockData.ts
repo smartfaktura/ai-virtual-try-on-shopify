@@ -9,6 +9,8 @@ import type {
   CreditPack
 } from '@/types';
 
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+
 export const mockShop: Shop = {
   shopId: 'shop_123',
   shopDomain: 'mystore.myshopify.com',
@@ -492,44 +494,44 @@ export const mockTemplates: Template[] = [
   },
 ];
 
-// Import product images
-import leggingsBlack1 from '@/assets/products/leggings-black-1.jpg';
-import leggingsPink1 from '@/assets/products/leggings-pink-1.jpg';
-import hoodieGray1 from '@/assets/products/hoodie-gray-1.jpg';
-import sportsBraBlack1 from '@/assets/products/sports-bra-black-1.jpg';
-import joggersBeige1 from '@/assets/products/joggers-beige-1.jpg';
-import tankWhite1 from '@/assets/products/tank-white-1.jpg';
-import motoLeggings1 from '@/assets/products/moto-leggings-1.jpg';
-import croppedLongsleeve1 from '@/assets/products/cropped-longsleeve-1.jpg';
-import fauxFurJacket1 from '@/assets/products/faux-fur-jacket-1.jpg';
+// Product images via storage URLs
+const leggingsBlack1 = getLandingAssetUrl('products/leggings-black-1.jpg');
+const leggingsPink1 = getLandingAssetUrl('products/leggings-pink-1.jpg');
+const hoodieGray1 = getLandingAssetUrl('products/hoodie-gray-1.jpg');
+const sportsBraBlack1 = getLandingAssetUrl('products/sports-bra-black-1.jpg');
+const joggersBeige1 = getLandingAssetUrl('products/joggers-beige-1.jpg');
+const tankWhite1 = getLandingAssetUrl('products/tank-white-1.jpg');
+const motoLeggings1 = getLandingAssetUrl('products/moto-leggings-1.jpg');
+const croppedLongsleeve1 = getLandingAssetUrl('products/cropped-longsleeve-1.jpg');
+const fauxFurJacket1 = getLandingAssetUrl('products/faux-fur-jacket-1.jpg');
 
-// Cosmetics product images
-import serumVitaminC from '@/assets/products/serum-vitamin-c.jpg';
-import creamHyaluronic from '@/assets/products/cream-hyaluronic.jpg';
-import lipstickMatte from '@/assets/products/lipstick-matte.jpg';
-import retinolTreatment from '@/assets/products/retinol-treatment.jpg';
-import powderSetting from '@/assets/products/powder-setting.jpg';
+// Cosmetics
+const serumVitaminC = getLandingAssetUrl('products/serum-vitamin-c.jpg');
+const creamHyaluronic = getLandingAssetUrl('products/cream-hyaluronic.jpg');
+const lipstickMatte = getLandingAssetUrl('products/lipstick-matte.jpg');
+const retinolTreatment = getLandingAssetUrl('products/retinol-treatment.jpg');
+const powderSetting = getLandingAssetUrl('products/powder-setting.jpg');
 
-// Food & Beverage product images
-import granolaOrganic from '@/assets/products/granola-organic.jpg';
-import juiceGreen from '@/assets/products/juice-green.jpg';
-import chocolateArtisan from '@/assets/products/chocolate-artisan.jpg';
-import coffeeBeans from '@/assets/products/coffee-beans.jpg';
-import honeyOrganic from '@/assets/products/honey-organic.jpg';
+// Food
+const granolaOrganic = getLandingAssetUrl('products/granola-organic.jpg');
+const juiceGreen = getLandingAssetUrl('products/juice-green.jpg');
+const chocolateArtisan = getLandingAssetUrl('products/chocolate-artisan.jpg');
+const coffeeBeans = getLandingAssetUrl('products/coffee-beans.jpg');
+const honeyOrganic = getLandingAssetUrl('products/honey-organic.jpg');
 
-// Home & Interior product images
-import carafeCeramic from '@/assets/products/carafe-ceramic.jpg';
-import candleSoy from '@/assets/products/candle-soy.jpg';
-import pillowLinen from '@/assets/products/pillow-linen.jpg';
-import planterConcrete from '@/assets/products/planter-concrete.jpg';
-import lampBrass from '@/assets/products/lamp-brass.jpg';
+// Home
+const carafeCeramic = getLandingAssetUrl('products/carafe-ceramic.jpg');
+const candleSoy = getLandingAssetUrl('products/candle-soy.jpg');
+const pillowLinen = getLandingAssetUrl('products/pillow-linen.jpg');
+const planterConcrete = getLandingAssetUrl('products/planter-concrete.jpg');
+const lampBrass = getLandingAssetUrl('products/lamp-brass.jpg');
 
-// Supplements product images
-import vitaminsGummy from '@/assets/products/vitamins-gummy.jpg';
-import collagenPowder from '@/assets/products/collagen-powder.jpg';
-import magnesiumCapsules from '@/assets/products/magnesium-capsules.jpg';
-import greensSuperfood from '@/assets/products/greens-superfood.jpg';
-import omegaFishOil from '@/assets/products/omega-fish-oil.jpg';
+// Supplements
+const vitaminsGummy = getLandingAssetUrl('products/vitamins-gummy.jpg');
+const collagenPowder = getLandingAssetUrl('products/collagen-powder.jpg');
+const magnesiumCapsules = getLandingAssetUrl('products/magnesium-capsules.jpg');
+const greensSuperfood = getLandingAssetUrl('products/greens-superfood.jpg');
+const omegaFishOil = getLandingAssetUrl('products/omega-fish-oil.jpg');
 
 export const mockProducts: Product[] = [
   // Alo Yoga Style Athletic Fashion Products
@@ -1096,869 +1098,207 @@ export const categoryLabels: Record<string, string> = {
 // Virtual Try-On Mock Data
 import type { ModelProfile, TryOnPose } from '@/types';
 
-// Model preview images
-import modelFemaleSlimAsian from '@/assets/models/model-female-slim-asian.jpg';
-import modelFemaleAthleticBlack from '@/assets/models/model-female-athletic-black.jpg';
-import modelFemalePlussizeLatina from '@/assets/models/model-female-plussize-latina.jpg';
-import modelFemaleAverageEuropean from '@/assets/models/model-female-average-european.jpg';
-import modelMaleSlimMiddleeast from '@/assets/models/model-male-slim-middleeast.jpg';
-import modelMaleAthleticBlack from '@/assets/models/model-male-athletic-black.jpg';
-import modelMaleAverageAsian from '@/assets/models/model-male-average-asian.jpg';
-import modelMalePlussizeEuropean from '@/assets/models/model-male-plussize-european.jpg';
-// New diverse female models
-import modelFemaleMatureEuropean from '@/assets/models/model-female-mature-european.jpg';
-import modelFemaleAthleticIndian from '@/assets/models/model-female-athletic-indian.jpg';
-import modelFemaleSlimNordic from '@/assets/models/model-female-slim-nordic.jpg';
-import modelFemaleAverageMiddleeast from '@/assets/models/model-female-average-middleeast.jpg';
-import modelFemalePlussizeAfrican from '@/assets/models/model-female-plussize-african.jpg';
-import modelFemalePetiteKorean from '@/assets/models/model-female-petite-korean.jpg';
-// New expanded male models (10)
-import modelMaleAthleticEuropean from '@/assets/models/model-male-athletic-european.jpg';
-import modelMaleAthleticLatino from '@/assets/models/model-male-athletic-latino.jpg';
-import modelMaleAthleticJapanese from '@/assets/models/model-male-athletic-japanese.jpg';
-import modelMaleSlimNordic from '@/assets/models/model-male-slim-nordic.jpg';
-import modelMaleAverageLatino from '@/assets/models/model-male-average-latino.jpg';
-import modelMalePlussizeAfrican from '@/assets/models/model-male-plussize-african.jpg';
-import modelMaleSlimIndian from '@/assets/models/model-male-slim-indian.jpg';
-import modelMaleAverageChinese from '@/assets/models/model-male-average-chinese.jpg';
-import modelMaleAthleticMixed from '@/assets/models/model-male-athletic-mixed.jpg';
-import modelMalePlussizeLatino from '@/assets/models/model-male-plussize-latino.jpg';
-// New expanded female models (8)
-import modelFemaleAthleticEuropean from '@/assets/models/model-female-athletic-european.jpg';
-import modelFemaleAthleticLatina from '@/assets/models/model-female-athletic-latina.jpg';
-import modelFemaleAverageAfrican from '@/assets/models/model-female-average-african.jpg';
-import modelFemalePlussizeJapanese from '@/assets/models/model-female-plussize-japanese.jpg';
-import modelFemaleAverageNordic from '@/assets/models/model-female-average-nordic.jpg';
-import modelFemaleSlimChinese from '@/assets/models/model-female-slim-chinese.jpg';
-import modelFemaleAthleticMixed from '@/assets/models/model-female-athletic-mixed.jpg';
-import modelFemalePlussizeMiddleeast from '@/assets/models/model-female-plussize-middleeast.jpg';
-// Redhead models (2)
-import modelFemaleAverageIrish from '@/assets/models/model-female-average-irish.jpg';
-import modelMaleAthleticScottish from '@/assets/models/model-male-athletic-scottish.jpg';
+// Model preview images via storage
+const modelFemaleSlimAsian = getLandingAssetUrl('models/model-female-slim-asian.jpg');
+const modelFemaleAthleticBlack = getLandingAssetUrl('models/model-female-athletic-black.jpg');
+const modelFemalePlussizeLatina = getLandingAssetUrl('models/model-female-plussize-latina.jpg');
+const modelFemaleAverageEuropean = getLandingAssetUrl('models/model-female-average-european.jpg');
+const modelMaleSlimMiddleeast = getLandingAssetUrl('models/model-male-slim-middleeast.jpg');
+const modelMaleAthleticBlack = getLandingAssetUrl('models/model-male-athletic-black.jpg');
+const modelMaleAverageAsian = getLandingAssetUrl('models/model-male-average-asian.jpg');
+const modelMalePlussizeEuropean = getLandingAssetUrl('models/model-male-plussize-european.jpg');
+const modelFemaleMatureEuropean = getLandingAssetUrl('models/model-female-mature-european.jpg');
+const modelFemaleAthleticIndian = getLandingAssetUrl('models/model-female-athletic-indian.jpg');
+const modelFemaleSlimNordic = getLandingAssetUrl('models/model-female-slim-nordic.jpg');
+const modelFemaleAverageMiddleeast = getLandingAssetUrl('models/model-female-average-middleeast.jpg');
+const modelFemalePlussizeAfrican = getLandingAssetUrl('models/model-female-plussize-african.jpg');
+const modelFemalePetiteKorean = getLandingAssetUrl('models/model-female-petite-korean.jpg');
+const modelMaleAthleticEuropean = getLandingAssetUrl('models/model-male-athletic-european.jpg');
+const modelMaleAthleticLatino = getLandingAssetUrl('models/model-male-athletic-latino.jpg');
+const modelMaleAthleticJapanese = getLandingAssetUrl('models/model-male-athletic-japanese.jpg');
+const modelMaleSlimNordic = getLandingAssetUrl('models/model-male-slim-nordic.jpg');
+const modelMaleAverageLatino = getLandingAssetUrl('models/model-male-average-latino.jpg');
+const modelMalePlussizeAfrican = getLandingAssetUrl('models/model-male-plussize-african.jpg');
+const modelMaleSlimIndian = getLandingAssetUrl('models/model-male-slim-indian.jpg');
+const modelMaleAverageChinese = getLandingAssetUrl('models/model-male-average-chinese.jpg');
+const modelMaleAthleticMixed = getLandingAssetUrl('models/model-male-athletic-mixed.jpg');
+const modelMalePlussizeLatino = getLandingAssetUrl('models/model-male-plussize-latino.jpg');
+const modelFemaleAthleticEuropean = getLandingAssetUrl('models/model-female-athletic-european.jpg');
+const modelFemaleAthleticLatina = getLandingAssetUrl('models/model-female-athletic-latina.jpg');
+const modelFemaleAverageAfrican = getLandingAssetUrl('models/model-female-average-african.jpg');
+const modelFemalePlussizeJapanese = getLandingAssetUrl('models/model-female-plussize-japanese.jpg');
+const modelFemaleAverageNordic = getLandingAssetUrl('models/model-female-average-nordic.jpg');
+const modelFemaleSlimChinese = getLandingAssetUrl('models/model-female-slim-chinese.jpg');
+const modelFemaleAthleticMixed = getLandingAssetUrl('models/model-female-athletic-mixed.jpg');
+const modelFemalePlussizeMiddleeast = getLandingAssetUrl('models/model-female-plussize-middleeast.jpg');
+const modelFemaleAverageIrish = getLandingAssetUrl('models/model-female-average-irish.jpg');
+const modelMaleAthleticScottish = getLandingAssetUrl('models/model-male-athletic-scottish.jpg');
 
-// Pose preview images
-import poseStudioFront from '@/assets/poses/pose-studio-front.jpg';
-import poseLifestyleWalking from '@/assets/poses/pose-lifestyle-walking.jpg';
-import poseEditorialDramatic from '@/assets/poses/pose-editorial-dramatic.jpg';
-import poseStreetwearUrban from '@/assets/poses/pose-streetwear-urban.jpg';
-import poseLifestyleSeated from '@/assets/poses/pose-lifestyle-seated.jpg';
-import poseStudioProfile from '@/assets/poses/pose-studio-profile.jpg';
-// New pose images
-import poseStudioMovement from '@/assets/poses/pose-studio-movement.jpg';
-import poseLifestyleGarden from '@/assets/poses/pose-lifestyle-garden.jpg';
-import poseEditorialMinimal from '@/assets/poses/pose-editorial-minimal.jpg';
-import poseStreetwearStairs from '@/assets/poses/pose-streetwear-stairs.jpg';
-// Expanded pose library (14 new poses)
-import poseStudioBack from '@/assets/poses/pose-studio-back.jpg';
-import poseStudioCloseup from '@/assets/poses/pose-studio-closeup.jpg';
-import poseStudioArms from '@/assets/poses/pose-studio-arms.jpg';
-import poseLifestyleCoffee from '@/assets/poses/pose-lifestyle-coffee.jpg';
-import poseLifestyleBeach from '@/assets/poses/pose-lifestyle-beach.jpg';
-import poseLifestylePark from '@/assets/poses/pose-lifestyle-park.jpg';
-import poseLifestyleRooftop from '@/assets/poses/pose-lifestyle-rooftop.jpg';
-import poseEditorialWindow from '@/assets/poses/pose-editorial-window.jpg';
-import poseEditorialMoody from '@/assets/poses/pose-editorial-moody.jpg';
-import poseEditorialArtistic from '@/assets/poses/pose-editorial-artistic.jpg';
-import poseEditorialMotion from '@/assets/poses/pose-editorial-motion.jpg';
-import poseStreetwearBasketball from '@/assets/poses/pose-streetwear-basketball.jpg';
-import poseStreetwearUnderpass from '@/assets/poses/pose-streetwear-underpass.jpg';
-import poseStreetwearNeon from '@/assets/poses/pose-streetwear-neon.jpg';
+// Pose preview images via storage
+const poseStudioFront = getLandingAssetUrl('poses/pose-studio-front.jpg');
+const poseLifestyleWalking = getLandingAssetUrl('poses/pose-lifestyle-walking.jpg');
+const poseEditorialDramatic = getLandingAssetUrl('poses/pose-editorial-dramatic.jpg');
+const poseStreetwearUrban = getLandingAssetUrl('poses/pose-streetwear-urban.jpg');
+const poseLifestyleSeated = getLandingAssetUrl('poses/pose-lifestyle-seated.jpg');
+const poseStudioProfile = getLandingAssetUrl('poses/pose-studio-profile.jpg');
+const poseStudioMovement = getLandingAssetUrl('poses/pose-studio-movement.jpg');
+const poseLifestyleGarden = getLandingAssetUrl('poses/pose-lifestyle-garden.jpg');
+const poseEditorialMinimal = getLandingAssetUrl('poses/pose-editorial-minimal.jpg');
+const poseStreetwearStairs = getLandingAssetUrl('poses/pose-streetwear-stairs.jpg');
+const poseStudioBack = getLandingAssetUrl('poses/pose-studio-back.jpg');
+const poseStudioCloseup = getLandingAssetUrl('poses/pose-studio-closeup.jpg');
+const poseStudioArms = getLandingAssetUrl('poses/pose-studio-arms.jpg');
+const poseLifestyleCoffee = getLandingAssetUrl('poses/pose-lifestyle-coffee.jpg');
+const poseLifestyleBeach = getLandingAssetUrl('poses/pose-lifestyle-beach.jpg');
+const poseLifestylePark = getLandingAssetUrl('poses/pose-lifestyle-park.jpg');
+const poseLifestyleRooftop = getLandingAssetUrl('poses/pose-lifestyle-rooftop.jpg');
+const poseEditorialWindow = getLandingAssetUrl('poses/pose-editorial-window.jpg');
+const poseEditorialMoody = getLandingAssetUrl('poses/pose-editorial-moody.jpg');
+const poseEditorialArtistic = getLandingAssetUrl('poses/pose-editorial-artistic.jpg');
+const poseEditorialMotion = getLandingAssetUrl('poses/pose-editorial-motion.jpg');
+const poseStreetwearBasketball = getLandingAssetUrl('poses/pose-streetwear-basketball.jpg');
+const poseStreetwearUnderpass = getLandingAssetUrl('poses/pose-streetwear-underpass.jpg');
+const poseStreetwearNeon = getLandingAssetUrl('poses/pose-streetwear-neon.jpg');
 
-// Male pose preview images
-import poseStudioFrontMale from '@/assets/poses/pose-studio-front-male.jpg';
-import poseStudioProfileMale from '@/assets/poses/pose-studio-profile-male.jpg';
-import poseStudioMovementMale from '@/assets/poses/pose-studio-movement-male.jpg';
-import poseLifestyleWalkingMale from '@/assets/poses/pose-lifestyle-walking-male.jpg';
-import poseLifestyleSeatedMale from '@/assets/poses/pose-lifestyle-seated-male.jpg';
-import poseLifestyleGardenMale from '@/assets/poses/pose-lifestyle-garden-male.jpg';
-import poseEditorialDramaticMale from '@/assets/poses/pose-editorial-dramatic-male.jpg';
-import poseEditorialMinimalMale from '@/assets/poses/pose-editorial-minimal-male.jpg';
-import poseStreetwearUrbanMale from '@/assets/poses/pose-streetwear-urban-male.jpg';
-import poseStreetwearStairsMale from '@/assets/poses/pose-streetwear-stairs-male.jpg';
-import poseStudioBackMale from '@/assets/poses/pose-studio-back-male.jpg';
-import poseStudioCloseupMale from '@/assets/poses/pose-studio-closeup-male.jpg';
-import poseStudioArmsMale from '@/assets/poses/pose-studio-arms-male.jpg';
-import poseLifestyleCoffeeMale from '@/assets/poses/pose-lifestyle-coffee-male.jpg';
-import poseLifestyleBeachMale from '@/assets/poses/pose-lifestyle-beach-male.jpg';
-import poseLifestyleParkMale from '@/assets/poses/pose-lifestyle-park-male.jpg';
-import poseLifestyleRooftopMale from '@/assets/poses/pose-lifestyle-rooftop-male.jpg';
-import poseEditorialWindowMale from '@/assets/poses/pose-editorial-window-male.jpg';
-import poseEditorialMoodyMale from '@/assets/poses/pose-editorial-moody-male.jpg';
-import poseEditorialArtisticMale from '@/assets/poses/pose-editorial-artistic-male.jpg';
-import poseEditorialMotionMale from '@/assets/poses/pose-editorial-motion-male.jpg';
-import poseStreetwearBasketballMale from '@/assets/poses/pose-streetwear-basketball-male.jpg';
-import poseStreetwearUnderpassMale from '@/assets/poses/pose-streetwear-underpass-male.jpg';
-import poseStreetwearNeonMale from '@/assets/poses/pose-streetwear-neon-male.jpg';
-import poseLifestyleGymMale from '@/assets/poses/pose-lifestyle-gym-male.jpg';
-import poseStreetwearShoppingMale from '@/assets/poses/pose-streetwear-shopping-male.jpg';
-import poseLifestyleResortMale from '@/assets/poses/pose-lifestyle-resort-male.jpg';
-import poseEditorialGalleryMale from '@/assets/poses/pose-editorial-gallery-male.jpg';
-import poseLifestyleAutumnMale from '@/assets/poses/pose-lifestyle-autumn-male.jpg';
-import poseEditorialWarehouseMale from '@/assets/poses/pose-editorial-warehouse-male.jpg';
+// Male pose previews
+const poseStudioFrontMale = getLandingAssetUrl('poses/pose-studio-front-male.jpg');
+const poseStudioProfileMale = getLandingAssetUrl('poses/pose-studio-profile-male.jpg');
+const poseStudioMovementMale = getLandingAssetUrl('poses/pose-studio-movement-male.jpg');
+const poseLifestyleWalkingMale = getLandingAssetUrl('poses/pose-lifestyle-walking-male.jpg');
+const poseLifestyleSeatedMale = getLandingAssetUrl('poses/pose-lifestyle-seated-male.jpg');
+const poseLifestyleGardenMale = getLandingAssetUrl('poses/pose-lifestyle-garden-male.jpg');
+const poseEditorialDramaticMale = getLandingAssetUrl('poses/pose-editorial-dramatic-male.jpg');
+const poseEditorialMinimalMale = getLandingAssetUrl('poses/pose-editorial-minimal-male.jpg');
+const poseStreetwearUrbanMale = getLandingAssetUrl('poses/pose-streetwear-urban-male.jpg');
+const poseStreetwearStairsMale = getLandingAssetUrl('poses/pose-streetwear-stairs-male.jpg');
+const poseStudioBackMale = getLandingAssetUrl('poses/pose-studio-back-male.jpg');
+const poseStudioCloseupMale = getLandingAssetUrl('poses/pose-studio-closeup-male.jpg');
+const poseStudioArmsMale = getLandingAssetUrl('poses/pose-studio-arms-male.jpg');
+const poseLifestyleCoffeeMale = getLandingAssetUrl('poses/pose-lifestyle-coffee-male.jpg');
+const poseLifestyleBeachMale = getLandingAssetUrl('poses/pose-lifestyle-beach-male.jpg');
+const poseLifestyleParkMale = getLandingAssetUrl('poses/pose-lifestyle-park-male.jpg');
+const poseLifestyleRooftopMale = getLandingAssetUrl('poses/pose-lifestyle-rooftop-male.jpg');
+const poseEditorialWindowMale = getLandingAssetUrl('poses/pose-editorial-window-male.jpg');
+const poseEditorialMoodyMale = getLandingAssetUrl('poses/pose-editorial-moody-male.jpg');
+const poseEditorialArtisticMale = getLandingAssetUrl('poses/pose-editorial-artistic-male.jpg');
+const poseEditorialMotionMale = getLandingAssetUrl('poses/pose-editorial-motion-male.jpg');
+const poseStreetwearBasketballMale = getLandingAssetUrl('poses/pose-streetwear-basketball-male.jpg');
+const poseStreetwearUnderpassMale = getLandingAssetUrl('poses/pose-streetwear-underpass-male.jpg');
+const poseStreetwearNeonMale = getLandingAssetUrl('poses/pose-streetwear-neon-male.jpg');
+const poseLifestyleGymMale = getLandingAssetUrl('poses/pose-lifestyle-gym-male.jpg');
+const poseStreetwearShoppingMale = getLandingAssetUrl('poses/pose-streetwear-shopping-male.jpg');
+const poseLifestyleResortMale = getLandingAssetUrl('poses/pose-lifestyle-resort-male.jpg');
+const poseEditorialGalleryMale = getLandingAssetUrl('poses/pose-editorial-gallery-male.jpg');
+const poseLifestyleAutumnMale = getLandingAssetUrl('poses/pose-lifestyle-autumn-male.jpg');
+const poseEditorialWarehouseMale = getLandingAssetUrl('poses/pose-editorial-warehouse-male.jpg');
 
-// Scene environment images (product photography)
-import templateClothingStudio from '@/assets/templates/clothing-studio.jpg';
-import templateUniversalGradient from '@/assets/templates/universal-gradient.jpg';
-import templateUniversalClean from '@/assets/templates/universal-clean.jpg';
-import showcaseSkincareSerumMarble from '@/assets/showcase/skincare-serum-marble.jpg';
-import showcaseFoodPastaRustic from '@/assets/showcase/food-pasta-rustic.jpg';
-import showcaseHomeConcrete from '@/assets/templates/home-concrete.jpg';
-import templateClothingFlatlay from '@/assets/templates/clothing-flatlay.jpg';
-import templateCosmeticsPastel from '@/assets/templates/cosmetics-pastel.jpg';
-import showcaseFoodCoffeeArtisan from '@/assets/showcase/food-coffee-artisan.jpg';
-import showcaseFoodHoneyFarmhouse from '@/assets/showcase/food-honey-farmhouse.jpg';
-import showcaseFoodBreadBakery from '@/assets/showcase/food-bread-bakery.jpg';
-import showcaseHomeVasesJapandi from '@/assets/showcase/home-vases-japandi.jpg';
-import showcaseHomeCandleEvening from '@/assets/showcase/home-candle-evening.jpg';
-import showcaseHomeBedroomMorning from '@/assets/showcase/home-bedroom-morning.jpg';
-import showcaseSkincareOilBathroom from '@/assets/showcase/skincare-oil-bathroom.jpg';
-import showcaseSkincareCreamBotanical from '@/assets/showcase/skincare-cream-botanical.jpg';
-import showcaseFashionDressGarden from '@/assets/showcase/fashion-dress-garden.jpg';
-import showcaseFashionDressBotanical from '@/assets/showcase/fashion-dress-botanical.jpg';
+// Scene environment images
+const templateClothingStudio = getLandingAssetUrl('templates/clothing-studio.jpg');
+const templateUniversalGradient = getLandingAssetUrl('templates/universal-gradient.jpg');
+const templateUniversalClean = getLandingAssetUrl('templates/universal-clean.jpg');
+const showcaseSkincareSerumMarble = getLandingAssetUrl('showcase/skincare-serum-marble.jpg');
+const showcaseFoodPastaRustic = getLandingAssetUrl('showcase/food-pasta-rustic.jpg');
+const showcaseHomeConcrete = getLandingAssetUrl('templates/home-concrete.jpg');
+const templateClothingFlatlay = getLandingAssetUrl('templates/clothing-flatlay.jpg');
+const templateCosmeticsPastel = getLandingAssetUrl('templates/cosmetics-pastel.jpg');
+const showcaseFoodCoffeeArtisan = getLandingAssetUrl('showcase/food-coffee-artisan.jpg');
+const showcaseFoodHoneyFarmhouse = getLandingAssetUrl('showcase/food-honey-farmhouse.jpg');
+const showcaseFoodBreadBakery = getLandingAssetUrl('showcase/food-bread-bakery.jpg');
+const showcaseHomeVasesJapandi = getLandingAssetUrl('showcase/home-vases-japandi.jpg');
+const showcaseHomeCandleEvening = getLandingAssetUrl('showcase/home-candle-evening.jpg');
+const showcaseHomeBedroomMorning = getLandingAssetUrl('showcase/home-bedroom-morning.jpg');
+const showcaseSkincareOilBathroom = getLandingAssetUrl('showcase/skincare-oil-bathroom.jpg');
+const showcaseSkincareCreamBotanical = getLandingAssetUrl('showcase/skincare-cream-botanical.jpg');
+const showcaseFashionDressGarden = getLandingAssetUrl('showcase/fashion-dress-garden.jpg');
+const showcaseFashionDressBotanical = getLandingAssetUrl('showcase/fashion-dress-botanical.jpg');
 
 export const mockModels: ModelProfile[] = [
-  {
-    modelId: 'model_001',
-    name: 'Yuki',
-    gender: 'female',
-    bodyType: 'slim',
-    ethnicity: 'East Asian',
-    ageRange: 'young-adult',
-    previewUrl: modelFemaleSlimAsian,
-  },
-  {
-    modelId: 'model_002',
-    name: 'Amara',
-    gender: 'female',
-    bodyType: 'athletic',
-    ethnicity: 'Black African',
-    ageRange: 'adult',
-    previewUrl: modelFemaleAthleticBlack,
-  },
-  {
-    modelId: 'model_003',
-    name: 'Isabella',
-    gender: 'female',
-    bodyType: 'plus-size',
-    ethnicity: 'Latina',
-    ageRange: 'young-adult',
-    previewUrl: modelFemalePlussizeLatina,
-  },
-  {
-    modelId: 'model_004',
-    name: 'Charlotte',
-    gender: 'female',
-    bodyType: 'average',
-    ethnicity: 'European',
-    ageRange: 'adult',
-    previewUrl: modelFemaleAverageEuropean,
-  },
-  // New diverse female models
-  {
-    modelId: 'model_009',
-    name: 'Victoria',
-    gender: 'female',
-    bodyType: 'slim',
-    ethnicity: 'European',
-    ageRange: 'mature',
-    previewUrl: modelFemaleMatureEuropean,
-  },
-  {
-    modelId: 'model_010',
-    name: 'Priya',
-    gender: 'female',
-    bodyType: 'athletic',
-    ethnicity: 'South Asian',
-    ageRange: 'young-adult',
-    previewUrl: modelFemaleAthleticIndian,
-  },
-  {
-    modelId: 'model_011',
-    name: 'Ingrid',
-    gender: 'female',
-    bodyType: 'slim',
-    ethnicity: 'Nordic',
-    ageRange: 'young-adult',
-    previewUrl: modelFemaleSlimNordic,
-  },
-  {
-    modelId: 'model_012',
-    name: 'Layla',
-    gender: 'female',
-    bodyType: 'average',
-    ethnicity: 'Middle Eastern',
-    ageRange: 'adult',
-    previewUrl: modelFemaleAverageMiddleeast,
-  },
-  {
-    modelId: 'model_013',
-    name: 'Nia',
-    gender: 'female',
-    bodyType: 'plus-size',
-    ethnicity: 'Black African',
-    ageRange: 'young-adult',
-    previewUrl: modelFemalePlussizeAfrican,
-  },
-  {
-    modelId: 'model_014',
-    name: 'Soo-Min',
-    gender: 'female',
-    bodyType: 'slim',
-    ethnicity: 'Korean',
-    ageRange: 'young-adult',
-    previewUrl: modelFemalePetiteKorean,
-  },
-  // Male models
-  {
-    modelId: 'model_005',
-    name: 'Omar',
-    gender: 'male',
-    bodyType: 'slim',
-    ethnicity: 'Middle Eastern',
-    ageRange: 'young-adult',
-    previewUrl: modelMaleSlimMiddleeast,
-  },
-  {
-    modelId: 'model_006',
-    name: 'Marcus',
-    gender: 'male',
-    bodyType: 'athletic',
-    ethnicity: 'Black African',
-    ageRange: 'adult',
-    previewUrl: modelMaleAthleticBlack,
-  },
-  {
-    modelId: 'model_007',
-    name: 'Jin',
-    gender: 'male',
-    bodyType: 'average',
-    ethnicity: 'East Asian',
-    ageRange: 'young-adult',
-    previewUrl: modelMaleAverageAsian,
-  },
-  {
-    modelId: 'model_008',
-    name: 'Henrik',
-    gender: 'male',
-    bodyType: 'plus-size',
-    ethnicity: 'European',
-    ageRange: 'mature',
-    previewUrl: modelMalePlussizeEuropean,
-  },
-  // === NEW MALE MODELS (10) ===
-  {
-    modelId: 'model_015',
-    name: 'Liam',
-    gender: 'male',
-    bodyType: 'athletic',
-    ethnicity: 'European',
-    ageRange: 'adult',
-    previewUrl: modelMaleAthleticEuropean,
-  },
-  {
-    modelId: 'model_016',
-    name: 'Rafael',
-    gender: 'male',
-    bodyType: 'athletic',
-    ethnicity: 'Latino',
-    ageRange: 'young-adult',
-    previewUrl: modelMaleAthleticLatino,
-  },
-  {
-    modelId: 'model_017',
-    name: 'Kenji',
-    gender: 'male',
-    bodyType: 'athletic',
-    ethnicity: 'Japanese',
-    ageRange: 'adult',
-    previewUrl: modelMaleAthleticJapanese,
-  },
-  {
-    modelId: 'model_018',
-    name: 'Anders',
-    gender: 'male',
-    bodyType: 'slim',
-    ethnicity: 'Nordic',
-    ageRange: 'young-adult',
-    previewUrl: modelMaleSlimNordic,
-  },
-  {
-    modelId: 'model_019',
-    name: 'Diego',
-    gender: 'male',
-    bodyType: 'average',
-    ethnicity: 'Latino',
-    ageRange: 'adult',
-    previewUrl: modelMaleAverageLatino,
-  },
-  {
-    modelId: 'model_020',
-    name: 'Jamal',
-    gender: 'male',
-    bodyType: 'plus-size',
-    ethnicity: 'Black African',
-    ageRange: 'adult',
-    previewUrl: modelMalePlussizeAfrican,
-  },
-  {
-    modelId: 'model_021',
-    name: 'Ravi',
-    gender: 'male',
-    bodyType: 'slim',
-    ethnicity: 'South Asian',
-    ageRange: 'adult',
-    previewUrl: modelMaleSlimIndian,
-  },
-  {
-    modelId: 'model_022',
-    name: 'Chen Wei',
-    gender: 'male',
-    bodyType: 'average',
-    ethnicity: 'Chinese',
-    ageRange: 'mature',
-    previewUrl: modelMaleAverageChinese,
-  },
-  {
-    modelId: 'model_023',
-    name: 'Tyler',
-    gender: 'male',
-    bodyType: 'athletic',
-    ethnicity: 'Mixed',
-    ageRange: 'young-adult',
-    previewUrl: modelMaleAthleticMixed,
-  },
-  {
-    modelId: 'model_024',
-    name: 'Mateo',
-    gender: 'male',
-    bodyType: 'plus-size',
-    ethnicity: 'Latino',
-    ageRange: 'adult',
-    previewUrl: modelMalePlussizeLatino,
-  },
-  // === NEW FEMALE MODELS (8) ===
-  {
-    modelId: 'model_025',
-    name: 'Sofia',
-    gender: 'female',
-    bodyType: 'athletic',
-    ethnicity: 'European',
-    ageRange: 'adult',
-    previewUrl: modelFemaleAthleticEuropean,
-  },
-  {
-    modelId: 'model_026',
-    name: 'Elena',
-    gender: 'female',
-    bodyType: 'athletic',
-    ethnicity: 'Latina',
-    ageRange: 'young-adult',
-    previewUrl: modelFemaleAthleticLatina,
-  },
-  {
-    modelId: 'model_027',
-    name: 'Maya',
-    gender: 'female',
-    bodyType: 'average',
-    ethnicity: 'Black African',
-    ageRange: 'adult',
-    previewUrl: modelFemaleAverageAfrican,
-  },
-  {
-    modelId: 'model_028',
-    name: 'Akiko',
-    gender: 'female',
-    bodyType: 'plus-size',
-    ethnicity: 'Japanese',
-    ageRange: 'adult',
-    previewUrl: modelFemalePlussizeJapanese,
-  },
-  {
-    modelId: 'model_029',
-    name: 'Freya',
-    gender: 'female',
-    bodyType: 'average',
-    ethnicity: 'Nordic',
-    ageRange: 'young-adult',
-    previewUrl: modelFemaleAverageNordic,
-  },
-  {
-    modelId: 'model_030',
-    name: 'Mei',
-    gender: 'female',
-    bodyType: 'slim',
-    ethnicity: 'Chinese',
-    ageRange: 'mature',
-    previewUrl: modelFemaleSlimChinese,
-  },
-  {
-    modelId: 'model_031',
-    name: 'Zara',
-    gender: 'female',
-    bodyType: 'athletic',
-    ethnicity: 'Mixed',
-    ageRange: 'young-adult',
-    previewUrl: modelFemaleAthleticMixed,
-  },
-  {
-    modelId: 'model_032',
-    name: 'Fatima',
-    gender: 'female',
-    bodyType: 'plus-size',
-    ethnicity: 'Middle Eastern',
-    ageRange: 'adult',
-    previewUrl: modelFemalePlussizeMiddleeast,
-  },
-  // === REDHEAD MODELS (2) ===
-  {
-    modelId: 'model_033',
-    name: 'Sienna',
-    gender: 'female',
-    bodyType: 'average',
-    ethnicity: 'Irish',
-    ageRange: 'young-adult',
-    previewUrl: modelFemaleAverageIrish,
-  },
-  {
-    modelId: 'model_034',
-    name: 'Rowan',
-    gender: 'male',
-    bodyType: 'athletic',
-    ethnicity: 'Scottish',
-    ageRange: 'adult',
-    previewUrl: modelMaleAthleticScottish,
-  },
+  { modelId: 'model_001', name: 'Yuki', gender: 'female', bodyType: 'slim', ethnicity: 'East Asian', ageRange: 'young-adult', previewUrl: modelFemaleSlimAsian },
+  { modelId: 'model_002', name: 'Amara', gender: 'female', bodyType: 'athletic', ethnicity: 'Black African', ageRange: 'adult', previewUrl: modelFemaleAthleticBlack },
+  { modelId: 'model_003', name: 'Isabella', gender: 'female', bodyType: 'plus-size', ethnicity: 'Latina', ageRange: 'young-adult', previewUrl: modelFemalePlussizeLatina },
+  { modelId: 'model_004', name: 'Charlotte', gender: 'female', bodyType: 'average', ethnicity: 'European', ageRange: 'adult', previewUrl: modelFemaleAverageEuropean },
+  { modelId: 'model_009', name: 'Victoria', gender: 'female', bodyType: 'slim', ethnicity: 'European', ageRange: 'mature', previewUrl: modelFemaleMatureEuropean },
+  { modelId: 'model_010', name: 'Priya', gender: 'female', bodyType: 'athletic', ethnicity: 'South Asian', ageRange: 'young-adult', previewUrl: modelFemaleAthleticIndian },
+  { modelId: 'model_011', name: 'Ingrid', gender: 'female', bodyType: 'slim', ethnicity: 'Nordic', ageRange: 'young-adult', previewUrl: modelFemaleSlimNordic },
+  { modelId: 'model_012', name: 'Layla', gender: 'female', bodyType: 'average', ethnicity: 'Middle Eastern', ageRange: 'adult', previewUrl: modelFemaleAverageMiddleeast },
+  { modelId: 'model_013', name: 'Nia', gender: 'female', bodyType: 'plus-size', ethnicity: 'Black African', ageRange: 'young-adult', previewUrl: modelFemalePlussizeAfrican },
+  { modelId: 'model_014', name: 'Soo-Min', gender: 'female', bodyType: 'slim', ethnicity: 'Korean', ageRange: 'young-adult', previewUrl: modelFemalePetiteKorean },
+  { modelId: 'model_005', name: 'Omar', gender: 'male', bodyType: 'slim', ethnicity: 'Middle Eastern', ageRange: 'young-adult', previewUrl: modelMaleSlimMiddleeast },
+  { modelId: 'model_006', name: 'Marcus', gender: 'male', bodyType: 'athletic', ethnicity: 'Black African', ageRange: 'adult', previewUrl: modelMaleAthleticBlack },
+  { modelId: 'model_007', name: 'Jin', gender: 'male', bodyType: 'average', ethnicity: 'East Asian', ageRange: 'young-adult', previewUrl: modelMaleAverageAsian },
+  { modelId: 'model_008', name: 'Henrik', gender: 'male', bodyType: 'plus-size', ethnicity: 'European', ageRange: 'mature', previewUrl: modelMalePlussizeEuropean },
+  { modelId: 'model_015', name: 'Liam', gender: 'male', bodyType: 'athletic', ethnicity: 'European', ageRange: 'adult', previewUrl: modelMaleAthleticEuropean },
+  { modelId: 'model_016', name: 'Rafael', gender: 'male', bodyType: 'athletic', ethnicity: 'Latino', ageRange: 'young-adult', previewUrl: modelMaleAthleticLatino },
+  { modelId: 'model_017', name: 'Kenji', gender: 'male', bodyType: 'athletic', ethnicity: 'Japanese', ageRange: 'adult', previewUrl: modelMaleAthleticJapanese },
+  { modelId: 'model_018', name: 'Anders', gender: 'male', bodyType: 'slim', ethnicity: 'Nordic', ageRange: 'young-adult', previewUrl: modelMaleSlimNordic },
+  { modelId: 'model_019', name: 'Diego', gender: 'male', bodyType: 'average', ethnicity: 'Latino', ageRange: 'adult', previewUrl: modelMaleAverageLatino },
+  { modelId: 'model_020', name: 'Jamal', gender: 'male', bodyType: 'plus-size', ethnicity: 'Black African', ageRange: 'adult', previewUrl: modelMalePlussizeAfrican },
+  { modelId: 'model_021', name: 'Ravi', gender: 'male', bodyType: 'slim', ethnicity: 'South Asian', ageRange: 'adult', previewUrl: modelMaleSlimIndian },
+  { modelId: 'model_022', name: 'Chen Wei', gender: 'male', bodyType: 'average', ethnicity: 'Chinese', ageRange: 'mature', previewUrl: modelMaleAverageChinese },
+  { modelId: 'model_023', name: 'Tyler', gender: 'male', bodyType: 'athletic', ethnicity: 'Mixed', ageRange: 'young-adult', previewUrl: modelMaleAthleticMixed },
+  { modelId: 'model_024', name: 'Mateo', gender: 'male', bodyType: 'plus-size', ethnicity: 'Latino', ageRange: 'adult', previewUrl: modelMalePlussizeLatino },
+  { modelId: 'model_025', name: 'Sofia', gender: 'female', bodyType: 'athletic', ethnicity: 'European', ageRange: 'adult', previewUrl: modelFemaleAthleticEuropean },
+  { modelId: 'model_026', name: 'Elena', gender: 'female', bodyType: 'athletic', ethnicity: 'Latina', ageRange: 'young-adult', previewUrl: modelFemaleAthleticLatina },
+  { modelId: 'model_027', name: 'Maya', gender: 'female', bodyType: 'average', ethnicity: 'Black African', ageRange: 'adult', previewUrl: modelFemaleAverageAfrican },
+  { modelId: 'model_028', name: 'Akiko', gender: 'female', bodyType: 'plus-size', ethnicity: 'Japanese', ageRange: 'adult', previewUrl: modelFemalePlussizeJapanese },
+  { modelId: 'model_029', name: 'Freya', gender: 'female', bodyType: 'average', ethnicity: 'Nordic', ageRange: 'young-adult', previewUrl: modelFemaleAverageNordic },
+  { modelId: 'model_030', name: 'Mei', gender: 'female', bodyType: 'slim', ethnicity: 'Chinese', ageRange: 'mature', previewUrl: modelFemaleSlimChinese },
+  { modelId: 'model_031', name: 'Zara', gender: 'female', bodyType: 'athletic', ethnicity: 'Mixed', ageRange: 'young-adult', previewUrl: modelFemaleAthleticMixed },
+  { modelId: 'model_032', name: 'Fatima', gender: 'female', bodyType: 'plus-size', ethnicity: 'Middle Eastern', ageRange: 'adult', previewUrl: modelFemalePlussizeMiddleeast },
+  { modelId: 'model_033', name: 'Sienna', gender: 'female', bodyType: 'average', ethnicity: 'Irish', ageRange: 'young-adult', previewUrl: modelFemaleAverageIrish },
+  { modelId: 'model_034', name: 'Rowan', gender: 'male', bodyType: 'athletic', ethnicity: 'Scottish', ageRange: 'adult', previewUrl: modelMaleAthleticScottish },
 ];
 
 export const mockTryOnPoses: TryOnPose[] = [
-  {
-    poseId: 'pose_001',
-    name: 'Studio Front',
-    category: 'studio',
-    description: 'Classic front view on clean white background',
-    promptHint: 'Model standing facing camera in a classic lookbook pose, full body front view, relaxed shoulders, arms naturally at sides, clean white studio background',
-    previewUrl: poseStudioFront,
-    previewUrlMale: poseStudioFrontMale,
-  },
-  {
-    poseId: 'pose_002',
-    name: 'Studio Profile',
-    category: 'studio',
-    description: 'Elegant three-quarter turn with soft shadows',
-    promptHint: 'Model in elegant three-quarter turn, one shoulder slightly forward, chin tilted, professional studio lighting with soft shadows',
-    previewUrl: poseStudioProfile,
-    previewUrlMale: poseStudioProfileMale,
-  },
-  {
-    poseId: 'pose_007',
-    name: 'Studio Movement',
-    category: 'studio',
-    description: 'Walking pose with natural fabric flow',
-    promptHint: 'Model mid-stride walking naturally, arms in motion, fabric flowing with movement, clean white studio background',
-    previewUrl: poseStudioMovement,
-    previewUrlMale: poseStudioMovementMale,
-  },
-  {
-    poseId: 'pose_003',
-    name: 'Urban Walking',
-    category: 'lifestyle',
-    description: 'Candid street style with golden hour light',
-    promptHint: 'Model walking confidently down a city street, mid-stride with natural arm swing, candid street style, golden hour warm light casting long shadows',
-    previewUrl: poseLifestyleWalking,
-    previewUrlMale: poseLifestyleWalkingMale,
-  },
-  {
-    poseId: 'pose_004',
-    name: 'Relaxed Seated',
-    category: 'lifestyle',
-    description: 'Casual seated pose in modern interior',
-    promptHint: 'Model sitting casually in a modern chair, one leg crossed over the other, leaning back relaxed, natural window light in contemporary interior',
-    previewUrl: poseLifestyleSeated,
-    previewUrlMale: poseLifestyleSeatedMale,
-  },
-  {
-    poseId: 'pose_008',
-    name: 'Garden Natural',
-    category: 'lifestyle',
-    description: 'Relaxed pose among lush greenery',
-    promptHint: 'Model standing relaxed among lush greenery in a botanical garden, one hand gently touching a leaf, soft natural light filtering through foliage',
-    previewUrl: poseLifestyleGarden,
-    previewUrlMale: poseLifestyleGardenMale,
-  },
-  {
-    poseId: 'pose_005',
-    name: 'Editorial Dramatic',
-    category: 'editorial',
-    description: 'High-fashion stance with dramatic lighting',
-    promptHint: 'Model in a powerful high-fashion stance, sharp angular pose with one hand on hip, dramatic side lighting against a dark moody backdrop',
-    previewUrl: poseEditorialDramatic,
-    previewUrlMale: poseEditorialDramaticMale,
-  },
-  {
-    poseId: 'pose_009',
-    name: 'Editorial Minimal',
-    category: 'editorial',
-    description: 'Elegant minimal pose with geometric shadows',
-    promptHint: 'Model standing still in an elegant minimal pose, hands loosely at sides, geometric window shadows casting patterns across body and backdrop',
-    previewUrl: poseEditorialMinimal,
-    previewUrlMale: poseEditorialMinimalMale,
-  },
-  {
-    poseId: 'pose_006',
-    name: 'Street Lean',
-    category: 'streetwear',
-    description: 'Casual lean against urban wall',
-    promptHint: 'Model leaning casually against a graffiti-covered wall, one foot propped up, arms crossed or thumbs in pockets, hip-hop inspired urban attitude',
-    previewUrl: poseStreetwearUrban,
-    previewUrlMale: poseStreetwearUrbanMale,
-  },
-  {
-    poseId: 'pose_010',
-    name: 'Urban Stairs',
-    category: 'streetwear',
-    description: 'Seated on concrete stairs, urban vibe',
-    promptHint: 'Model sitting on concrete stairs, elbows resting on knees, relaxed forward lean with a cool confident expression, industrial urban vibe',
-    previewUrl: poseStreetwearStairs,
-    previewUrlMale: poseStreetwearStairsMale,
-  },
-  // === EXPANDED POSE LIBRARY (14 new poses) ===
-  // Studio Category (+3)
-  {
-    poseId: 'pose_011',
-    name: 'Studio Back View',
-    category: 'studio',
-    description: 'Over-the-shoulder rear view',
-    promptHint: 'Model with back to camera, looking over one shoulder, shoulders slightly angled to show garment rear details, clean studio backdrop',
-    previewUrl: poseStudioBack,
-    previewUrlMale: poseStudioBackMale,
-  },
-  {
-    poseId: 'pose_012',
-    name: 'Studio Close-Up',
-    category: 'studio',
-    description: 'Torso detail shot highlighting fabric',
-    promptHint: 'Close-up torso shot of model, hands adjusting collar or hem, highlighting fabric texture and garment fit details, tight studio crop',
-    previewUrl: poseStudioCloseup,
-    previewUrlMale: poseStudioCloseupMale,
-  },
-  {
-    poseId: 'pose_013',
-    name: 'Studio Crossed Arms',
-    category: 'studio',
-    description: 'Confident crossed-arms pose',
-    promptHint: 'Model standing with arms confidently crossed over chest, direct eye contact with camera, strong upright posture, clean studio background',
-    previewUrl: poseStudioArms,
-    previewUrlMale: poseStudioArmsMale,
-  },
-  // Lifestyle Category (+4)
-  {
-    poseId: 'pose_014',
-    name: 'Coffee Shop Casual',
-    category: 'lifestyle',
-    description: 'Relaxed café setting with morning light',
-    promptHint: 'Model sitting at a café table holding a coffee cup, relaxed posture with a soft smile, natural morning light through large café windows',
-    previewUrl: poseLifestyleCoffee,
-    previewUrlMale: poseLifestyleCoffeeMale,
-  },
-  {
-    poseId: 'pose_015',
-    name: 'Beach Sunset',
-    category: 'lifestyle',
-    description: 'Golden hour coastal walk',
-    promptHint: 'Model walking barefoot along the shore at golden hour, wind gently blowing hair, one hand brushing hair back, relaxed coastal lifestyle mood',
-    previewUrl: poseLifestyleBeach,
-    previewUrlMale: poseLifestyleBeachMale,
-  },
-  {
-    poseId: 'pose_016',
-    name: 'Park Bench',
-    category: 'lifestyle',
-    description: 'Casual outdoor pose on park bench',
-    promptHint: 'Model sitting casually on a wooden park bench, one arm draped over the backrest, legs relaxed, lush greenery and dappled sunlight',
-    previewUrl: poseLifestylePark,
-    previewUrlMale: poseLifestyleParkMale,
-  },
-  {
-    poseId: 'pose_017',
-    name: 'Rooftop City',
-    category: 'lifestyle',
-    description: 'City skyline views at dusk',
-    promptHint: 'Model standing at a rooftop railing gazing over the city skyline, relaxed lean on the rail, twilight sky with city lights glowing below',
-    previewUrl: poseLifestyleRooftop,
-    previewUrlMale: poseLifestyleRooftopMale,
-  },
-  // Editorial Category (+4)
-  {
-    poseId: 'pose_018',
-    name: 'Editorial Window',
-    category: 'editorial',
-    description: 'Silhouette against floor-to-ceiling window',
-    promptHint: 'Model standing in silhouette against a floor-to-ceiling window, one hand on the glass, contemplative pose bathed in natural backlight',
-    previewUrl: poseEditorialWindow,
-    previewUrlMale: poseEditorialWindowMale,
-  },
-  {
-    poseId: 'pose_019',
-    name: 'Editorial Moody',
-    category: 'editorial',
-    description: 'Dramatic single-light portrait',
-    promptHint: 'Model with face half-lit by a single dramatic side light, chin slightly lowered, intense gaze, low-key moody studio atmosphere',
-    previewUrl: poseEditorialMoody,
-    previewUrlMale: poseEditorialMoodyMale,
-  },
-  {
-    poseId: 'pose_020',
-    name: 'Editorial Artistic',
-    category: 'editorial',
-    description: 'Expressive high-fashion with bold backdrop',
-    promptHint: 'Model in an expressive high-fashion pose, body twisted artistically, one arm extended, abstract geometric shapes and bold colors in backdrop',
-    previewUrl: poseEditorialArtistic,
-    previewUrlMale: poseEditorialArtisticMale,
-  },
-  {
-    poseId: 'pose_021',
-    name: 'Editorial Movement',
-    category: 'editorial',
-    description: 'Dynamic spinning with flowing fabric',
-    promptHint: 'Model in dynamic spinning or turning motion, hair and fabric flowing with movement, subtle motion blur emphasizing energy and grace',
-    previewUrl: poseEditorialMotion,
-    previewUrlMale: poseEditorialMotionMale,
-  },
-  // Streetwear Category (+3)
-  {
-    poseId: 'pose_022',
-    name: 'Basketball Court',
-    category: 'streetwear',
-    description: 'Athletic casual on basketball court',
-    promptHint: 'Model standing on a basketball court, one foot on a ball or leaning against chain-link fence, athletic casual stance, urban playground vibe',
-    previewUrl: poseStreetwearBasketball,
-    previewUrlMale: poseStreetwearBasketballMale,
-  },
-  {
-    poseId: 'pose_023',
-    name: 'Industrial Underpass',
-    category: 'streetwear',
-    description: 'Dramatic tunnel with strong shadows',
-    promptHint: 'Model walking through an industrial underpass tunnel, hands in pockets, dramatic overhead lighting creating strong shadows on concrete walls',
-    previewUrl: poseStreetwearUnderpass,
-    previewUrlMale: poseStreetwearUnderpassMale,
-  },
-  {
-    poseId: 'pose_024',
-    name: 'Night Neon',
-    category: 'streetwear',
-    description: 'Neon-lit night scene with colorful glow',
-    promptHint: 'Model standing under neon signs at night, colorful glow reflecting on skin and clothing, relaxed urban pose with hands in jacket pockets',
-    previewUrl: poseStreetwearNeon,
-    previewUrlMale: poseStreetwearNeonMale,
-  },
-  // === EXPANDED ON-MODEL SCENES ===
-  {
-    poseId: 'pose_025',
-    name: 'Gym & Fitness',
-    category: 'lifestyle',
-    description: 'Athletic setting with modern gym',
-    promptHint: 'Model in active stance near gym equipment, confident athletic pose with hands on hips or gripping a weight, natural light streaming into modern fitness space',
-    previewUrl: poseLifestyleRooftop,
-    previewUrlMale: poseLifestyleGymMale,
-  },
-  {
-    poseId: 'pose_026',
-    name: 'Shopping District',
-    category: 'streetwear',
-    description: 'Walking through busy shopping area',
-    promptHint: 'Model walking through a busy shopping district carrying bags, mid-stride with a confident smile, storefronts and street energy in background',
-    previewUrl: poseStreetwearStairs,
-    previewUrlMale: poseStreetwearShoppingMale,
-  },
-  {
-    poseId: 'pose_027',
-    name: 'Resort Poolside',
-    category: 'lifestyle',
-    description: 'Luxury resort pool with warm light',
-    promptHint: 'Model lounging on a poolside daybed at a luxury resort, relaxed summer pose with sunglasses, warm golden afternoon light reflecting off turquoise water',
-    previewUrl: poseLifestyleBeach,
-    previewUrlMale: poseLifestyleResortMale,
-  },
-  {
-    poseId: 'pose_028',
-    name: 'Art Gallery',
-    category: 'editorial',
-    description: 'Contemplative pose in gallery space',
-    promptHint: 'Model standing contemplatively in a white gallery space, looking at an art installation, one hand resting on chin, clean architectural lines',
-    previewUrl: poseEditorialMinimal,
-    previewUrlMale: poseEditorialGalleryMale,
-  },
-  {
-    poseId: 'pose_029',
-    name: 'Autumn Park',
-    category: 'lifestyle',
-    description: 'Fall foliage with warm golden tones',
-    promptHint: 'Model walking along a tree-lined park path surrounded by fall foliage, hands in pockets, warm golden tones and soft dappled light filtering through autumn leaves',
-    previewUrl: poseLifestylePark,
-    previewUrlMale: poseLifestyleAutumnMale,
-  },
-  {
-    poseId: 'pose_030',
-    name: 'Warehouse Loft',
-    category: 'editorial',
-    description: 'Industrial loft with exposed brick',
-    promptHint: 'Model leaning against exposed brick in a raw industrial loft, arms folded, large windows casting directional light across the space',
-    previewUrl: poseEditorialWindow,
-    previewUrlMale: poseEditorialWarehouseMale,
-  },
+  { poseId: 'pose_001', name: 'Studio Front', category: 'studio', description: 'Classic front view on clean white background', promptHint: 'Model standing facing camera in a classic lookbook pose, full body front view, relaxed shoulders, arms naturally at sides, clean white studio background', previewUrl: poseStudioFront, previewUrlMale: poseStudioFrontMale },
+  { poseId: 'pose_002', name: 'Studio Profile', category: 'studio', description: 'Elegant three-quarter turn with soft shadows', promptHint: 'Model in elegant three-quarter turn, one shoulder slightly forward, chin tilted, professional studio lighting with soft shadows', previewUrl: poseStudioProfile, previewUrlMale: poseStudioProfileMale },
+  { poseId: 'pose_007', name: 'Studio Movement', category: 'studio', description: 'Walking pose with natural fabric flow', promptHint: 'Model mid-stride walking naturally, arms in motion, fabric flowing with movement, clean white studio background', previewUrl: poseStudioMovement, previewUrlMale: poseStudioMovementMale },
+  { poseId: 'pose_003', name: 'Urban Walking', category: 'lifestyle', description: 'Candid street style with golden hour light', promptHint: 'Model walking confidently down a city street, mid-stride with natural arm swing, candid street style, golden hour warm light casting long shadows', previewUrl: poseLifestyleWalking, previewUrlMale: poseLifestyleWalkingMale },
+  { poseId: 'pose_004', name: 'Relaxed Seated', category: 'lifestyle', description: 'Casual seated pose in modern interior', promptHint: 'Model sitting casually in a modern chair, one leg crossed over the other, leaning back relaxed, natural window light in contemporary interior', previewUrl: poseLifestyleSeated, previewUrlMale: poseLifestyleSeatedMale },
+  { poseId: 'pose_008', name: 'Garden Natural', category: 'lifestyle', description: 'Relaxed pose among lush greenery', promptHint: 'Model standing relaxed among lush greenery in a botanical garden, one hand gently touching a leaf, soft natural light filtering through foliage', previewUrl: poseLifestyleGarden, previewUrlMale: poseLifestyleGardenMale },
+  { poseId: 'pose_005', name: 'Editorial Dramatic', category: 'editorial', description: 'High-fashion stance with dramatic lighting', promptHint: 'Model in a powerful high-fashion stance, sharp angular pose with one hand on hip, dramatic side lighting against a dark moody backdrop', previewUrl: poseEditorialDramatic, previewUrlMale: poseEditorialDramaticMale },
+  { poseId: 'pose_009', name: 'Editorial Minimal', category: 'editorial', description: 'Elegant minimal pose with geometric shadows', promptHint: 'Model standing still in an elegant minimal pose, hands loosely at sides, geometric window shadows casting patterns across body and backdrop', previewUrl: poseEditorialMinimal, previewUrlMale: poseEditorialMinimalMale },
+  { poseId: 'pose_006', name: 'Street Lean', category: 'streetwear', description: 'Casual lean against urban wall', promptHint: 'Model leaning casually against a graffiti-covered wall, one foot propped up, arms crossed or thumbs in pockets, hip-hop inspired urban attitude', previewUrl: poseStreetwearUrban, previewUrlMale: poseStreetwearUrbanMale },
+  { poseId: 'pose_010', name: 'Urban Stairs', category: 'streetwear', description: 'Seated on concrete stairs, urban vibe', promptHint: 'Model sitting on concrete stairs, elbows resting on knees, relaxed forward lean with a cool confident expression, industrial urban vibe', previewUrl: poseStreetwearStairs, previewUrlMale: poseStreetwearStairsMale },
+  { poseId: 'pose_011', name: 'Studio Back View', category: 'studio', description: 'Over-the-shoulder rear view', promptHint: 'Model with back to camera, looking over one shoulder, shoulders slightly angled to show garment rear details, clean studio backdrop', previewUrl: poseStudioBack, previewUrlMale: poseStudioBackMale },
+  { poseId: 'pose_012', name: 'Studio Close-Up', category: 'studio', description: 'Torso detail shot highlighting fabric', promptHint: 'Close-up torso shot of model, hands adjusting collar or hem, highlighting fabric texture and garment fit details, tight studio crop', previewUrl: poseStudioCloseup, previewUrlMale: poseStudioCloseupMale },
+  { poseId: 'pose_013', name: 'Studio Crossed Arms', category: 'studio', description: 'Confident crossed-arms pose', promptHint: 'Model standing with arms confidently crossed over chest, direct eye contact with camera, strong upright posture, clean studio background', previewUrl: poseStudioArms, previewUrlMale: poseStudioArmsMale },
+  { poseId: 'pose_014', name: 'Coffee Shop Casual', category: 'lifestyle', description: 'Relaxed café setting with morning light', promptHint: 'Model sitting at a café table holding a coffee cup, relaxed posture with a soft smile, natural morning light through large café windows', previewUrl: poseLifestyleCoffee, previewUrlMale: poseLifestyleCoffeeMale },
+  { poseId: 'pose_015', name: 'Beach Sunset', category: 'lifestyle', description: 'Golden hour coastal walk', promptHint: 'Model walking barefoot along the shore at golden hour, wind gently blowing hair, one hand brushing hair back, relaxed coastal lifestyle mood', previewUrl: poseLifestyleBeach, previewUrlMale: poseLifestyleBeachMale },
+  { poseId: 'pose_016', name: 'Park Bench', category: 'lifestyle', description: 'Casual outdoor pose on park bench', promptHint: 'Model sitting casually on a wooden park bench, one arm draped over the backrest, legs relaxed, lush greenery and dappled sunlight', previewUrl: poseLifestylePark, previewUrlMale: poseLifestyleParkMale },
+  { poseId: 'pose_017', name: 'Rooftop City', category: 'lifestyle', description: 'City skyline views at dusk', promptHint: 'Model standing at a rooftop railing gazing over the city skyline, relaxed lean on the rail, twilight sky with city lights glowing below', previewUrl: poseLifestyleRooftop, previewUrlMale: poseLifestyleRooftopMale },
+  { poseId: 'pose_018', name: 'Editorial Window', category: 'editorial', description: 'Silhouette against floor-to-ceiling window', promptHint: 'Model standing in silhouette against a floor-to-ceiling window, one hand on the glass, contemplative pose bathed in natural backlight', previewUrl: poseEditorialWindow, previewUrlMale: poseEditorialWindowMale },
+  { poseId: 'pose_019', name: 'Editorial Moody', category: 'editorial', description: 'Dramatic single-light portrait', promptHint: 'Model with face half-lit by a single dramatic side light, chin slightly lowered, intense gaze, low-key moody studio atmosphere', previewUrl: poseEditorialMoody, previewUrlMale: poseEditorialMoodyMale },
+  { poseId: 'pose_020', name: 'Editorial Artistic', category: 'editorial', description: 'Expressive high-fashion with bold backdrop', promptHint: 'Model in an expressive high-fashion pose, body twisted artistically, one arm extended, abstract geometric shapes and bold colors in backdrop', previewUrl: poseEditorialArtistic, previewUrlMale: poseEditorialArtisticMale },
+  { poseId: 'pose_021', name: 'Editorial Movement', category: 'editorial', description: 'Dynamic spinning with flowing fabric', promptHint: 'Model in dynamic spinning or turning motion, hair and fabric flowing with movement, subtle motion blur emphasizing energy and grace', previewUrl: poseEditorialMotion, previewUrlMale: poseEditorialMotionMale },
+  { poseId: 'pose_022', name: 'Basketball Court', category: 'streetwear', description: 'Athletic casual on basketball court', promptHint: 'Model standing on a basketball court, one foot on a ball or leaning against chain-link fence, athletic casual stance, urban playground vibe', previewUrl: poseStreetwearBasketball, previewUrlMale: poseStreetwearBasketballMale },
+  { poseId: 'pose_023', name: 'Industrial Underpass', category: 'streetwear', description: 'Dramatic tunnel with strong shadows', promptHint: 'Model walking through an industrial underpass tunnel, hands in pockets, dramatic overhead lighting creating strong shadows on concrete walls', previewUrl: poseStreetwearUnderpass, previewUrlMale: poseStreetwearUnderpassMale },
+  { poseId: 'pose_024', name: 'Night Neon', category: 'streetwear', description: 'Neon-lit night scene with colorful glow', promptHint: 'Model standing under neon signs at night, colorful glow reflecting on skin and clothing, relaxed urban pose with hands in jacket pockets', previewUrl: poseStreetwearNeon, previewUrlMale: poseStreetwearNeonMale },
+  { poseId: 'pose_025', name: 'Gym & Fitness', category: 'lifestyle', description: 'Athletic setting with modern gym', promptHint: 'Model in active stance near gym equipment, confident athletic pose with hands on hips or gripping a weight, natural light streaming into modern fitness space', previewUrl: poseLifestyleRooftop, previewUrlMale: poseLifestyleGymMale },
+  { poseId: 'pose_026', name: 'Shopping District', category: 'streetwear', description: 'Walking through busy shopping area', promptHint: 'Model walking through a busy shopping district carrying bags, mid-stride with a confident smile, storefronts and street energy in background', previewUrl: poseStreetwearStairs, previewUrlMale: poseStreetwearShoppingMale },
+  { poseId: 'pose_027', name: 'Resort Poolside', category: 'lifestyle', description: 'Luxury resort pool with warm light', promptHint: 'Model lounging on a poolside daybed at a luxury resort, relaxed summer pose with sunglasses, warm golden afternoon light reflecting off turquoise water', previewUrl: poseLifestyleBeach, previewUrlMale: poseLifestyleResortMale },
+  { poseId: 'pose_028', name: 'Art Gallery', category: 'editorial', description: 'Contemplative pose in gallery space', promptHint: 'Model standing contemplatively in a white gallery space, looking at an art installation, one hand resting on chin, clean architectural lines', previewUrl: poseEditorialMinimal, previewUrlMale: poseEditorialGalleryMale },
+  { poseId: 'pose_029', name: 'Autumn Park', category: 'lifestyle', description: 'Fall foliage with warm golden tones', promptHint: 'Model walking along a tree-lined park path surrounded by fall foliage, hands in pockets, warm golden tones and soft dappled light filtering through autumn leaves', previewUrl: poseLifestylePark, previewUrlMale: poseLifestyleAutumnMale },
+  { poseId: 'pose_030', name: 'Warehouse Loft', category: 'editorial', description: 'Industrial loft with exposed brick', promptHint: 'Model leaning against exposed brick in a raw industrial loft, arms folded, large windows casting directional light across the space', previewUrl: poseEditorialWindow, previewUrlMale: poseEditorialWarehouseMale },
   // === PRODUCT ENVIRONMENT SCENES ===
-  // Clean Studio (3)
-  {
-    poseId: 'scene_001',
-    name: 'White Seamless',
-    category: 'clean-studio',
-    description: 'Pure white infinity backdrop, even lighting, e-commerce ready',
-    promptHint: 'Pure white infinity backdrop, even lighting, e-commerce ready',
-    previewUrl: templateClothingStudio,
-  },
-  {
-    poseId: 'scene_002',
-    name: 'Gradient Backdrop',
-    category: 'clean-studio',
-    description: 'Smooth gradient background for premium product positioning',
-    promptHint: 'Smooth gradient background for premium product positioning',
-    previewUrl: templateUniversalGradient,
-  },
-  {
-    poseId: 'scene_003',
-    name: 'Minimalist Platform',
-    category: 'clean-studio',
-    description: 'Clean pedestal or platform with soft shadows',
-    promptHint: 'Clean pedestal or platform with soft shadows',
-    previewUrl: templateUniversalClean,
-  },
-  // Surface & Texture (3)
-  {
-    poseId: 'scene_004',
-    name: 'Marble Surface',
-    category: 'surface',
-    description: 'Polished marble surface with elegant reflections',
-    promptHint: 'Polished marble surface with elegant reflections',
-    previewUrl: showcaseSkincareSerumMarble,
-  },
-  {
-    poseId: 'scene_005',
-    name: 'Wooden Table',
-    category: 'surface',
-    description: 'Warm rustic wood surface with natural grain texture',
-    promptHint: 'Warm rustic wood surface with natural grain texture',
-    previewUrl: showcaseFoodPastaRustic,
-  },
-  {
-    poseId: 'scene_006',
-    name: 'Concrete Slab',
-    category: 'surface',
-    description: 'Raw concrete surface for industrial-modern aesthetic',
-    promptHint: 'Raw concrete surface for industrial-modern aesthetic',
-    previewUrl: showcaseHomeConcrete,
-  },
-  // Flat Lay (2)
-  {
-    poseId: 'scene_007',
-    name: 'Overhead Clean',
-    category: 'flat-lay',
-    description: 'Top-down view on clean surface, minimal props',
-    promptHint: 'Top-down view on clean surface, minimal props',
-    previewUrl: templateClothingFlatlay,
-  },
-  {
-    poseId: 'scene_008',
-    name: 'Styled Flat Lay',
-    category: 'flat-lay',
-    description: 'Curated overhead arrangement with complementary props',
-    promptHint: 'Curated overhead arrangement with complementary props',
-    previewUrl: templateCosmeticsPastel,
-  },
-  // Kitchen & Dining (3)
-  {
-    poseId: 'scene_009',
-    name: 'Rustic Kitchen',
-    category: 'kitchen',
-    description: 'Farmhouse-style kitchen with warm natural light',
-    promptHint: 'Farmhouse-style kitchen with warm natural light',
-    previewUrl: showcaseFoodHoneyFarmhouse,
-  },
-  {
-    poseId: 'scene_010',
-    name: 'Bright Countertop',
-    category: 'kitchen',
-    description: 'Clean, bright kitchen countertop with modern styling',
-    promptHint: 'Clean, bright kitchen countertop with modern styling',
-    previewUrl: showcaseFoodBreadBakery,
-  },
-  {
-    poseId: 'scene_011',
-    name: 'Café Table',
-    category: 'kitchen',
-    description: 'Artisan café setting with coffee culture vibes',
-    promptHint: 'Artisan café setting with coffee culture vibes',
-    previewUrl: showcaseFoodCoffeeArtisan,
-  },
-  // Living Space (3)
-  {
-    poseId: 'scene_012',
-    name: 'Japandi Shelf',
-    category: 'living-space',
-    description: 'Zen-inspired minimal shelf with natural materials',
-    promptHint: 'Zen-inspired minimal shelf with natural materials',
-    previewUrl: showcaseHomeVasesJapandi,
-  },
-  {
-    poseId: 'scene_013',
-    name: 'Cozy Evening',
-    category: 'living-space',
-    description: 'Warm candlelit interior with soft textiles',
-    promptHint: 'Warm candlelit interior with soft textiles',
-    previewUrl: showcaseHomeCandleEvening,
-  },
-  {
-    poseId: 'scene_014',
-    name: 'Morning Bedroom',
-    category: 'living-space',
-    description: 'Bright morning light streaming into a styled bedroom',
-    promptHint: 'Bright morning light streaming into a styled bedroom',
-    previewUrl: showcaseHomeBedroomMorning,
-  },
-  // Bathroom & Vanity (2)
-  {
-    poseId: 'scene_015',
-    name: 'Marble Vanity',
-    category: 'bathroom',
-    description: 'Elegant bathroom vanity with marble surfaces',
-    promptHint: 'Elegant bathroom vanity with marble surfaces',
-    previewUrl: showcaseSkincareOilBathroom,
-  },
-  {
-    poseId: 'scene_016',
-    name: 'Bright Bathroom',
-    category: 'bathroom',
-    description: 'Clean, bright bathroom with natural light and botanicals',
-    promptHint: 'Clean, bright bathroom with natural light and botanicals',
-    previewUrl: showcaseSkincareCreamBotanical,
-  },
-  // Botanical (2)
-  {
-    poseId: 'scene_017',
-    name: 'Garden Setting',
-    category: 'botanical',
-    description: 'Lush garden environment with natural greenery',
-    promptHint: 'Lush garden environment with natural greenery',
-    previewUrl: showcaseFashionDressGarden,
-  },
-  {
-    poseId: 'scene_018',
-    name: 'Botanical Arrangement',
-    category: 'botanical',
-    description: 'Styled botanical backdrop with leaves and flowers',
-    promptHint: 'Styled botanical backdrop with leaves and flowers',
-    previewUrl: showcaseFashionDressBotanical,
-  },
+  { poseId: 'scene_001', name: 'White Seamless', category: 'clean-studio', description: 'Pure white infinity backdrop, even lighting, e-commerce ready', promptHint: 'Pure white infinity backdrop, even lighting, e-commerce ready', previewUrl: templateClothingStudio },
+  { poseId: 'scene_002', name: 'Gradient Backdrop', category: 'clean-studio', description: 'Smooth gradient background for premium product positioning', promptHint: 'Smooth gradient background for premium product positioning', previewUrl: templateUniversalGradient },
+  { poseId: 'scene_003', name: 'Minimalist Platform', category: 'clean-studio', description: 'Clean pedestal or platform with soft shadows', promptHint: 'Clean pedestal or platform with soft shadows', previewUrl: templateUniversalClean },
+  { poseId: 'scene_004', name: 'Marble Surface', category: 'surface', description: 'Polished marble surface with elegant reflections', promptHint: 'Polished marble surface with elegant reflections', previewUrl: showcaseSkincareSerumMarble },
+  { poseId: 'scene_005', name: 'Wooden Table', category: 'surface', description: 'Warm rustic wood surface with natural grain texture', promptHint: 'Warm rustic wood surface with natural grain texture', previewUrl: showcaseFoodPastaRustic },
+  { poseId: 'scene_006', name: 'Concrete Slab', category: 'surface', description: 'Raw concrete surface for industrial-modern aesthetic', promptHint: 'Raw concrete surface for industrial-modern aesthetic', previewUrl: showcaseHomeConcrete },
+  { poseId: 'scene_007', name: 'Overhead Clean', category: 'flat-lay', description: 'Top-down view on clean surface, minimal props', promptHint: 'Top-down view on clean surface, minimal props', previewUrl: templateClothingFlatlay },
+  { poseId: 'scene_008', name: 'Styled Flat Lay', category: 'flat-lay', description: 'Curated overhead arrangement with complementary props', promptHint: 'Curated overhead arrangement with complementary props', previewUrl: templateCosmeticsPastel },
+  { poseId: 'scene_009', name: 'Rustic Kitchen', category: 'kitchen', description: 'Farmhouse-style kitchen with warm natural light', promptHint: 'Farmhouse-style kitchen with warm natural light', previewUrl: showcaseFoodHoneyFarmhouse },
+  { poseId: 'scene_010', name: 'Bright Countertop', category: 'kitchen', description: 'Clean, bright kitchen countertop with modern styling', promptHint: 'Clean, bright kitchen countertop with modern styling', previewUrl: showcaseFoodBreadBakery },
+  { poseId: 'scene_011', name: 'Café Table', category: 'kitchen', description: 'Artisan café setting with coffee culture vibes', promptHint: 'Artisan café setting with coffee culture vibes', previewUrl: showcaseFoodCoffeeArtisan },
+  { poseId: 'scene_012', name: 'Japandi Shelf', category: 'living-space', description: 'Zen-inspired minimal shelf with natural materials', promptHint: 'Zen-inspired minimal shelf with natural materials', previewUrl: showcaseHomeVasesJapandi },
+  { poseId: 'scene_013', name: 'Cozy Evening', category: 'living-space', description: 'Warm candlelit interior with soft textiles', promptHint: 'Warm candlelit interior with soft textiles', previewUrl: showcaseHomeCandleEvening },
+  { poseId: 'scene_014', name: 'Morning Bedroom', category: 'living-space', description: 'Bright morning light streaming into a styled bedroom', promptHint: 'Bright morning light streaming into a styled bedroom', previewUrl: showcaseHomeBedroomMorning },
+  { poseId: 'scene_015', name: 'Marble Vanity', category: 'bathroom', description: 'Elegant bathroom vanity with marble surfaces', promptHint: 'Elegant bathroom vanity with marble surfaces', previewUrl: showcaseSkincareOilBathroom },
+  { poseId: 'scene_016', name: 'Bright Bathroom', category: 'bathroom', description: 'Clean, bright bathroom with natural light and botanicals', promptHint: 'Clean, bright bathroom with natural light and botanicals', previewUrl: showcaseSkincareCreamBotanical },
+  { poseId: 'scene_017', name: 'Garden Setting', category: 'botanical', description: 'Lush garden environment with natural greenery', promptHint: 'Lush garden environment with natural greenery', previewUrl: showcaseFashionDressGarden },
+  { poseId: 'scene_018', name: 'Botanical Arrangement', category: 'botanical', description: 'Styled botanical backdrop with leaves and flowers', promptHint: 'Styled botanical backdrop with leaves and flowers', previewUrl: showcaseFashionDressBotanical },
 ];
 
 export const poseCategoryLabels: Record<string, string> = {
@@ -2096,6 +1436,6 @@ export const creditPacks: CreditPack[] = [
     packId: 'pack_4000',
     credits: 4000,
     price: 89,
-    pricePerCredit: 0.0223,
+    pricePerCredit: 0.022,
   },
 ];

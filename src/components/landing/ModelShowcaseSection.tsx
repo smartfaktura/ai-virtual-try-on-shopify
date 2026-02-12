@@ -1,109 +1,63 @@
 import { Badge } from '@/components/ui/badge';
-
-// Models — full library, 34 diverse models
-import modelYuki from '@/assets/models/model-female-slim-asian.jpg';
-import modelMarcus from '@/assets/models/model-male-athletic-black.jpg';
-import modelElena from '@/assets/models/model-female-athletic-european.jpg';
-import modelArjun from '@/assets/models/model-male-slim-indian.jpg';
-import modelAmara from '@/assets/models/model-female-plussize-african.jpg';
-import modelKenji from '@/assets/models/model-male-athletic-japanese.jpg';
-import modelSienna from '@/assets/models/model-female-average-irish.jpg';
-import modelWei from '@/assets/models/model-male-average-chinese.jpg';
-import modelCharlotte from '@/assets/models/model-female-mature-european.jpg';
-import modelDiego from '@/assets/models/model-male-athletic-latino.jpg';
-import modelHana from '@/assets/models/model-female-petite-korean.jpg';
-import modelMax from '@/assets/models/model-male-plussize-european.jpg';
-import modelPriya from '@/assets/models/model-female-athletic-indian.jpg';
-import modelErik from '@/assets/models/model-male-slim-nordic.jpg';
-import modelIsabella from '@/assets/models/model-female-plussize-latina.jpg';
-import modelCallum from '@/assets/models/model-male-athletic-scottish.jpg';
-import modelAstrid from '@/assets/models/model-female-average-nordic.jpg';
-import modelCarlos from '@/assets/models/model-male-average-latino.jpg';
-import modelMadison from '@/assets/models/model-female-slim-american-blonde.jpg';
-import modelJake from '@/assets/models/model-male-athletic-american.jpg';
-import modelOlivia from '@/assets/models/model-female-athletic-american-brunette.jpg';
-import modelTyler from '@/assets/models/model-male-slim-american-blonde.jpg';
-import modelAubrey from '@/assets/models/model-female-average-american-redhead.jpg';
-import modelJordan from '@/assets/models/model-male-athletic-american-mixed.jpg';
-import modelZoe from '@/assets/models/model-female-athletic-american-black.jpg';
-import modelBrandon from '@/assets/models/model-male-average-american-beard.jpg';
-import modelValeria from '@/assets/models/model-female-slim-american-latina.jpg';
-import modelRyan from '@/assets/models/model-male-athletic-american-classic.jpg';
-
-// Additional models for fuller rows
-import modelNiamh from '@/assets/models/model-female-athletic-mixed.jpg';
-import modelAisha from '@/assets/models/model-female-average-african.jpg';
-import modelSophie from '@/assets/models/model-female-average-european.jpg';
-import modelLeila from '@/assets/models/model-female-average-middleeast.jpg';
-import modelMei from '@/assets/models/model-female-slim-chinese.jpg';
-import modelFreya from '@/assets/models/model-female-slim-nordic.jpg';
-import modelSakura from '@/assets/models/model-female-plussize-japanese.jpg';
-import modelFatima from '@/assets/models/model-female-plussize-middleeast.jpg';
-import modelLuca from '@/assets/models/model-male-athletic-european.jpg';
-import modelJamal from '@/assets/models/model-male-athletic-mixed.jpg';
-import modelHiro from '@/assets/models/model-male-average-asian.jpg';
-import modelKwame from '@/assets/models/model-male-plussize-african.jpg';
-import modelMarco from '@/assets/models/model-male-plussize-latino.jpg';
-import modelOmar from '@/assets/models/model-male-slim-middleeast.jpg';
-import modelCamila from '@/assets/models/model-female-athletic-latina.jpg';
-import modelNadia from '@/assets/models/model-female-athletic-black.jpg';
-import modelSophie2 from '@/assets/models/model-female-average-middleeast.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 interface ModelCard {
   name: string;
   image: string;
 }
 
+const m = (name: string, file: string): ModelCard => ({ name, image: getLandingAssetUrl(`models/${file}`) });
+
 // 22 unique models in row 1 — no overlap with row 2
 const ROW_1: ModelCard[] = [
-  { name: 'Madison', image: modelMadison },
-  { name: 'Marcus', image: modelMarcus },
-  { name: 'Olivia', image: modelOlivia },
-  { name: 'Arjun', image: modelArjun },
-  { name: 'Zoe', image: modelZoe },
-  { name: 'Luca', image: modelLuca },
-  { name: 'Elena', image: modelElena },
-  { name: 'Tyler', image: modelTyler },
-  { name: 'Amara', image: modelAmara },
-  { name: 'Ryan', image: modelRyan },
-  { name: 'Yuki', image: modelYuki },
-  { name: 'Brandon', image: modelBrandon },
-  { name: 'Mei', image: modelMei },
-  { name: 'Kenji', image: modelKenji },
-  { name: 'Aubrey', image: modelAubrey },
-  { name: 'Omar', image: modelOmar },
-  { name: 'Niamh', image: modelNiamh },
-  { name: 'Kwame', image: modelKwame },
-  { name: 'Sophie', image: modelSophie },
-  { name: 'Hiro', image: modelHiro },
-  { name: 'Camila', image: modelCamila },
-  { name: 'Marco', image: modelMarco },
+  m('Madison', 'model-female-slim-american-blonde.jpg'),
+  m('Marcus', 'model-male-athletic-black.jpg'),
+  m('Olivia', 'model-female-athletic-american-brunette.jpg'),
+  m('Arjun', 'model-male-slim-indian.jpg'),
+  m('Zoe', 'model-female-athletic-american-black.jpg'),
+  m('Luca', 'model-male-athletic-european.jpg'),
+  m('Elena', 'model-female-athletic-european.jpg'),
+  m('Tyler', 'model-male-slim-american-blonde.jpg'),
+  m('Amara', 'model-female-plussize-african.jpg'),
+  m('Ryan', 'model-male-athletic-american-classic.jpg'),
+  m('Yuki', 'model-female-slim-asian.jpg'),
+  m('Brandon', 'model-male-average-american-beard.jpg'),
+  m('Mei', 'model-female-slim-chinese.jpg'),
+  m('Kenji', 'model-male-athletic-japanese.jpg'),
+  m('Aubrey', 'model-female-average-american-redhead.jpg'),
+  m('Omar', 'model-male-slim-middleeast.jpg'),
+  m('Niamh', 'model-female-athletic-mixed.jpg'),
+  m('Kwame', 'model-male-plussize-african.jpg'),
+  m('Sophie', 'model-female-average-european.jpg'),
+  m('Hiro', 'model-male-average-asian.jpg'),
+  m('Camila', 'model-female-athletic-latina.jpg'),
+  m('Marco', 'model-male-plussize-latino.jpg'),
 ];
 
 // 22 unique models in row 2
 const ROW_2: ModelCard[] = [
-  { name: 'Jordan', image: modelJordan },
-  { name: 'Sienna', image: modelSienna },
-  { name: 'Diego', image: modelDiego },
-  { name: 'Valeria', image: modelValeria },
-  { name: 'Wei', image: modelWei },
-  { name: 'Charlotte', image: modelCharlotte },
-  { name: 'Hana', image: modelHana },
-  { name: 'Max', image: modelMax },
-  { name: 'Priya', image: modelPriya },
-  { name: 'Erik', image: modelErik },
-  { name: 'Isabella', image: modelIsabella },
-  { name: 'Callum', image: modelCallum },
-  { name: 'Aisha', image: modelAisha },
-  { name: 'Carlos', image: modelCarlos },
-  { name: 'Freya', image: modelFreya },
-  { name: 'Jamal', image: modelJamal },
-  { name: 'Sakura', image: modelSakura },
-  { name: 'Nadia', image: modelNadia },
-  { name: 'Astrid', image: modelAstrid },
-  { name: 'Leila', image: modelLeila },
-  { name: 'Fatima', image: modelFatima },
-  { name: 'Jake', image: modelJake },
+  m('Jordan', 'model-male-athletic-american-mixed.jpg'),
+  m('Sienna', 'model-female-average-irish.jpg'),
+  m('Diego', 'model-male-athletic-latino.jpg'),
+  m('Valeria', 'model-female-slim-american-latina.jpg'),
+  m('Wei', 'model-male-average-chinese.jpg'),
+  m('Charlotte', 'model-female-mature-european.jpg'),
+  m('Hana', 'model-female-petite-korean.jpg'),
+  m('Max', 'model-male-plussize-european.jpg'),
+  m('Priya', 'model-female-athletic-indian.jpg'),
+  m('Erik', 'model-male-slim-nordic.jpg'),
+  m('Isabella', 'model-female-plussize-latina.jpg'),
+  m('Callum', 'model-male-athletic-scottish.jpg'),
+  m('Aisha', 'model-female-average-african.jpg'),
+  m('Carlos', 'model-male-average-latino.jpg'),
+  m('Freya', 'model-female-slim-nordic.jpg'),
+  m('Jamal', 'model-male-athletic-mixed.jpg'),
+  m('Sakura', 'model-female-plussize-japanese.jpg'),
+  m('Nadia', 'model-female-athletic-black.jpg'),
+  m('Astrid', 'model-female-average-nordic.jpg'),
+  m('Leila', 'model-female-average-middleeast.jpg'),
+  m('Fatima', 'model-female-plussize-middleeast.jpg'),
+  m('Jake', 'model-male-athletic-american.jpg'),
 ];
 
 function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {

@@ -1,27 +1,28 @@
 import { Plus, User, MapPin, Camera, Layout, Star, Layers } from 'lucide-react';
 import type { WorkflowScene } from './WorkflowAnimatedThumbnail';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-/* ── Asset imports ── */
+/* ── Asset URLs ── */
 
 // Virtual Try-On
-import tryonProduct from '@/assets/workflows/workflow-tryon-product-flatlay.png';
-import tryonModel from '@/assets/models/model-female-average-european.jpg';
-import tryonScene from '@/assets/poses/pose-editorial-minimal.jpg';
-import tryonResult from '@/assets/workflows/workflow-tryon-result.png';
+const tryonProduct = getLandingAssetUrl('workflows/workflow-tryon-product-flatlay.png');
+const tryonModel = getLandingAssetUrl('models/model-female-average-european.jpg');
+const tryonScene = getLandingAssetUrl('poses/pose-editorial-minimal.jpg');
+const tryonResult = getLandingAssetUrl('workflows/workflow-tryon-result.png');
 
 // Product Listing Set
-import listingProduct from '@/assets/products/cream-hyaluronic.jpg';
-import listingResult from '@/assets/workflows/workflow-product-listing.jpg';
+const listingProduct = getLandingAssetUrl('products/cream-hyaluronic.jpg');
+const listingResult = getLandingAssetUrl('workflows/workflow-product-listing.jpg');
 
 // Selfie / UGC Set
-import ugcProduct from '@/assets/products/lipstick-matte.jpg';
-import ugcModel from '@/assets/models/model-female-average-american-redhead.jpg';
-import ugcResult from '@/assets/workflows/workflow-selfie-ugc.jpg';
+const ugcProduct = getLandingAssetUrl('products/lipstick-matte.jpg');
+const ugcModel = getLandingAssetUrl('models/model-female-average-american-redhead.jpg');
+const ugcResult = getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg');
 
 // Flat Lay Set
-import flatProduct1 from '@/assets/products/powder-setting.jpg';
-import flatProduct2 from '@/assets/products/lipstick-matte.jpg';
-import flatResult from '@/assets/workflows/workflow-flat-lay.jpg';
+const flatProduct1 = getLandingAssetUrl('products/powder-setting.jpg');
+const flatProduct2 = getLandingAssetUrl('products/lipstick-matte.jpg');
+const flatResult = getLandingAssetUrl('workflows/workflow-flat-lay.jpg');
 
 /* ── Scene definitions ── */
 

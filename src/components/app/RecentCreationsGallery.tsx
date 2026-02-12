@@ -6,15 +6,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-import imgShowcase1 from '@/assets/showcase/fashion-blazer-golden.jpg';
-import imgShowcase2 from '@/assets/showcase/skincare-serum-marble.jpg';
-import imgShowcase3 from '@/assets/showcase/food-coffee-artisan.jpg';
-import imgShowcase4 from '@/assets/showcase/home-candle-evening.jpg';
-import imgShowcase5 from '@/assets/showcase/fashion-activewear-studio.jpg';
-import imgShowcase6 from '@/assets/showcase/skincare-cream-botanical.jpg';
-
-const PLACEHOLDER_IMAGES = [imgShowcase1, imgShowcase2, imgShowcase3, imgShowcase4, imgShowcase5];
+const PLACEHOLDER_IMAGES = [
+  getLandingAssetUrl('showcase/fashion-blazer-golden.jpg'),
+  getLandingAssetUrl('showcase/skincare-serum-marble.jpg'),
+  getLandingAssetUrl('showcase/food-coffee-artisan.jpg'),
+  getLandingAssetUrl('showcase/home-candle-evening.jpg'),
+  getLandingAssetUrl('showcase/fashion-activewear-studio.jpg'),
+];
 
 interface CreationItem {
   id: string;

@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { Check, Upload, Palette, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-import imgProduct from '@/assets/products/serum-vitamin-c.jpg';
-import imgBrand from '@/assets/showcase/skincare-set-minimal.jpg';
-import imgGenerate from '@/assets/showcase/fashion-dress-botanical.jpg';
+const imgProduct = getLandingAssetUrl('products/serum-vitamin-c.jpg');
+const imgBrand = getLandingAssetUrl('showcase/skincare-set-minimal.jpg');
+const imgGenerate = getLandingAssetUrl('showcase/fashion-dress-botanical.jpg');
 
 interface OnboardingChecklistProps {
   productCount: number;

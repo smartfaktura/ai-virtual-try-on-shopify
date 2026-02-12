@@ -1,36 +1,19 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check, Calendar, Clock, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-// Product image
-import whiteCropTop from '@/assets/drops/drop-model-white-crop.jpg';
-
-// November — Pilates studio (portrait)
-import dropNovP1 from '@/assets/drops/drop-nov-portrait-1.jpg';
-import dropNovP2 from '@/assets/drops/drop-nov-portrait-2.jpg';
-import dropNovP3 from '@/assets/drops/drop-nov-portrait-3.jpg';
-
-// September — Autumn (portrait)
-import dropSeptP1 from '@/assets/drops/drop-sept-portrait-1.jpg';
-import dropSeptP2 from '@/assets/drops/drop-sept-portrait-2.jpg';
-import dropSeptP3 from '@/assets/drops/drop-sept-portrait-3.jpg';
-
-// June — Summer (portrait)
-import dropJuneP1 from '@/assets/drops/drop-june-portrait-1.jpg';
-import dropJuneP2 from '@/assets/drops/drop-june-portrait-2.jpg';
-import dropJuneP3 from '@/assets/drops/drop-june-portrait-3.jpg';
-
-const bullets = [
-  'Choose your products once',
-  'Pick your visual workflows',
-  'Fresh visuals arrive every month',
-];
+const whiteCropTop = getLandingAssetUrl('drops/drop-model-white-crop.jpg');
 
 const drops = [
   {
     month: 'November Drop',
     count: '16 visuals · Pilates Studio',
-    thumbnails: [dropNovP1, dropNovP2, dropNovP3],
+    thumbnails: [
+      getLandingAssetUrl('drops/drop-nov-portrait-1.jpg'),
+      getLandingAssetUrl('drops/drop-nov-portrait-2.jpg'),
+      getLandingAssetUrl('drops/drop-nov-portrait-3.jpg'),
+    ],
     overflow: 13,
     opacity: 'opacity-100',
     status: 'Delivered',
@@ -38,7 +21,11 @@ const drops = [
   {
     month: 'September Drop',
     count: '20 visuals · Autumn Collection',
-    thumbnails: [dropSeptP1, dropSeptP2, dropSeptP3],
+    thumbnails: [
+      getLandingAssetUrl('drops/drop-sept-portrait-1.jpg'),
+      getLandingAssetUrl('drops/drop-sept-portrait-2.jpg'),
+      getLandingAssetUrl('drops/drop-sept-portrait-3.jpg'),
+    ],
     overflow: 17,
     opacity: 'opacity-80',
     status: 'Delivered',
@@ -46,11 +33,21 @@ const drops = [
   {
     month: 'June Drop',
     count: '20 visuals · Summer Campaign',
-    thumbnails: [dropJuneP1, dropJuneP2, dropJuneP3],
+    thumbnails: [
+      getLandingAssetUrl('drops/drop-june-portrait-1.jpg'),
+      getLandingAssetUrl('drops/drop-june-portrait-2.jpg'),
+      getLandingAssetUrl('drops/drop-june-portrait-3.jpg'),
+    ],
     overflow: 17,
     opacity: 'opacity-60',
     status: 'Delivered',
   },
+];
+
+const bullets = [
+  'Choose your products once',
+  'Pick your visual workflows',
+  'Fresh visuals arrive every month',
 ];
 
 export function CreativeDropsSection() {

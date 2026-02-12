@@ -5,10 +5,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useStudioChat } from '@/hooks/useStudioChat';
 import { cn } from '@/lib/utils';
 import { ChatMessageBubble } from './ChatMessageBubble';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-import avatarSophia from '@/assets/team/avatar-sophia.jpg';
-import avatarKenji from '@/assets/team/avatar-kenji.jpg';
-import avatarZara from '@/assets/team/avatar-zara.jpg';
+const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
+const avatarKenji = getLandingAssetUrl('team/avatar-kenji.jpg');
+const avatarZara = getLandingAssetUrl('team/avatar-zara.jpg');
 
 const STARTER_CHIPS = [
   'What style works for skincare?',

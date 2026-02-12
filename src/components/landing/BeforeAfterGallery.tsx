@@ -1,28 +1,13 @@
 import { useState } from 'react';
-
-// Product (original) images
-import serumVitaminC from '@/assets/products/serum-vitamin-c.jpg';
-import hoodieGray from '@/assets/products/hoodie-gray-1.jpg';
-import granolaOrganic from '@/assets/products/granola-organic.jpg';
-import collagenPowder from '@/assets/products/collagen-powder.jpg';
-import candleSoy from '@/assets/products/candle-soy.jpg';
-import leggingsBlack from '@/assets/products/leggings-black-1.jpg';
-
-// Template (output) images
-import cosmeticsLuxury from '@/assets/templates/cosmetics-luxury.jpg';
-import clothingStudio from '@/assets/templates/clothing-studio.jpg';
-import foodRustic from '@/assets/templates/food-rustic.jpg';
-import supplementsLuxury from '@/assets/templates/supplements-luxury.jpg';
-import homeJapandi from '@/assets/templates/home-japandi.jpg';
-import clothingStreetwear from '@/assets/templates/clothing-streetwear.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const comparisons = [
-  { original: serumVitaminC, output: cosmeticsLuxury, label: 'Instagram Ad', category: 'Ads' },
-  { original: hoodieGray, output: clothingStudio, label: 'Amazon Listing', category: 'Listing' },
-  { original: granolaOrganic, output: foodRustic, label: 'Website Hero', category: 'Website' },
-  { original: collagenPowder, output: supplementsLuxury, label: 'Seasonal Campaign', category: 'Seasonal' },
-  { original: candleSoy, output: homeJapandi, label: 'Lifestyle Blog', category: 'Lifestyle' },
-  { original: leggingsBlack, output: clothingStreetwear, label: 'TikTok Ad', category: 'Ads' },
+  { original: getLandingAssetUrl('products/serum-vitamin-c.jpg'), output: getLandingAssetUrl('templates/cosmetics-luxury.jpg'), label: 'Instagram Ad', category: 'Ads' },
+  { original: getLandingAssetUrl('products/hoodie-gray-1.jpg'), output: getLandingAssetUrl('templates/clothing-studio.jpg'), label: 'Amazon Listing', category: 'Listing' },
+  { original: getLandingAssetUrl('products/granola-organic.jpg'), output: getLandingAssetUrl('templates/food-rustic.jpg'), label: 'Website Hero', category: 'Website' },
+  { original: getLandingAssetUrl('products/collagen-powder.jpg'), output: getLandingAssetUrl('templates/supplements-luxury.jpg'), label: 'Seasonal Campaign', category: 'Seasonal' },
+  { original: getLandingAssetUrl('products/candle-soy.jpg'), output: getLandingAssetUrl('templates/home-japandi.jpg'), label: 'Lifestyle Blog', category: 'Lifestyle' },
+  { original: getLandingAssetUrl('products/leggings-black-1.jpg'), output: getLandingAssetUrl('templates/clothing-streetwear.jpg'), label: 'TikTok Ad', category: 'Ads' },
 ];
 
 const categories = ['All', 'Ads', 'Website', 'Listing', 'Seasonal', 'Lifestyle'];

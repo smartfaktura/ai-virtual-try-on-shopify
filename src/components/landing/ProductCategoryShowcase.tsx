@@ -1,33 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
-
-// Fashion & Apparel (5 new high-quality images)
-import fashionBlazerGolden from '@/assets/showcase/fashion-blazer-golden.jpg';
-import fashionActivewearBright from '@/assets/showcase/fashion-activewear-bright.jpg';
-import fashionDressBotanical from '@/assets/showcase/fashion-dress-botanical.jpg';
-import fashionStreetDenim from '@/assets/showcase/fashion-street-denim.jpg';
-import fashionCashmereCafe from '@/assets/showcase/fashion-cashmere-cafe.jpg';
-
-// Skincare (5 new high-quality images — 1 failed moderation, using 4 + existing best)
-import skincareSerumMorning from '@/assets/showcase/skincare-serum-morning.jpg';
-import skincareCreamBotanical from '@/assets/showcase/skincare-cream-botanical.jpg';
-import skincareOilLifestyle from '@/assets/showcase/skincare-oil-lifestyle.jpg';
-import skincareRetinolModel from '@/assets/showcase/skincare-retinol-model.jpg';
-import skincareSetMinimal from '@/assets/showcase/skincare-set-minimal.jpg';
-
-// Food & Drinks (5 new high-quality images)
-import foodPastaArtisan from '@/assets/showcase/food-pasta-artisan.jpg';
-import foodCoffeePourover from '@/assets/showcase/food-coffee-pourover.jpg';
-import foodHoneyGolden from '@/assets/showcase/food-honey-golden.jpg';
-import foodAcaiBright from '@/assets/showcase/food-acai-bright.jpg';
-import foodBreadBakery from '@/assets/showcase/food-bread-bakery.jpg';
-
-// Home & Living (5 new high-quality images)
-import homeCandleEvening from '@/assets/showcase/home-candle-evening.jpg';
-import homeVasesShelf from '@/assets/showcase/home-vases-shelf.jpg';
-import homeLampEvening from '@/assets/showcase/home-lamp-evening.jpg';
-import homeBedroomMorning from '@/assets/showcase/home-bedroom-morning.jpg';
-import homePendantKitchen from '@/assets/showcase/home-pendant-kitchen.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 interface CategoryCardProps {
   label: string;
@@ -87,25 +60,27 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
   );
 }
 
+const s = (path: string) => getLandingAssetUrl(`showcase/${path}`);
+
 const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
-    images: [fashionBlazerGolden, fashionActivewearBright, fashionDressBotanical, fashionStreetDenim, fashionCashmereCafe],
+    images: [s('fashion-blazer-golden.jpg'), s('fashion-activewear-bright.jpg'), s('fashion-dress-botanical.jpg'), s('fashion-street-denim.jpg'), s('fashion-cashmere-cafe.jpg')],
     cycleDuration: 7000,
   },
   {
     label: 'Skincare',
-    images: [skincareSerumMorning, skincareCreamBotanical, skincareOilLifestyle, skincareRetinolModel, skincareSetMinimal],
+    images: [s('skincare-serum-morning.jpg'), s('skincare-cream-botanical.jpg'), s('skincare-oil-lifestyle.jpg'), s('skincare-retinol-model.jpg'), s('skincare-set-minimal.jpg')],
     cycleDuration: 8500,
   },
   {
     label: 'Food & Drinks',
-    images: [foodPastaArtisan, foodCoffeePourover, foodHoneyGolden, foodAcaiBright, foodBreadBakery],
+    images: [s('food-pasta-artisan.jpg'), s('food-coffee-pourover.jpg'), s('food-honey-golden.jpg'), s('food-acai-bright.jpg'), s('food-bread-bakery.jpg')],
     cycleDuration: 6000,
   },
   {
     label: 'Home & Living',
-    images: [homeCandleEvening, homeVasesShelf, homeLampEvening, homeBedroomMorning, homePendantKitchen],
+    images: [s('home-candle-evening.jpg'), s('home-vases-shelf.jpg'), s('home-lamp-evening.jpg'), s('home-bedroom-morning.jpg'), s('home-pendant-kitchen.jpg')],
     cycleDuration: 7500,
   },
 ];

@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import type { Workflow } from '@/types/workflow';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-import imgFallback from '@/assets/templates/universal-clean.jpg';
+const imgFallback = getLandingAssetUrl('templates/universal-clean.jpg');
 
 interface WorkflowRowProps {
   workflow: Workflow;

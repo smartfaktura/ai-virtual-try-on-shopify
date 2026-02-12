@@ -1,32 +1,26 @@
 import { CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Template } from '@/types';
-
-import clothingStudio from '@/assets/templates/clothing-studio.jpg';
-import clothingStreetwear from '@/assets/templates/clothing-streetwear.jpg';
-import clothingFlatlay from '@/assets/templates/clothing-flatlay.jpg';
-import cosmeticsLuxury from '@/assets/templates/cosmetics-luxury.jpg';
-import cosmeticsWater from '@/assets/templates/cosmetics-water.jpg';
-import cosmeticsPastel from '@/assets/templates/cosmetics-pastel.jpg';
-import foodCommercial from '@/assets/templates/food-commercial.jpg';
-import foodRustic from '@/assets/templates/food-rustic.jpg';
-import foodPackaging from '@/assets/templates/food-packaging.jpg';
-import homeJapandi from '@/assets/templates/home-japandi.jpg';
-import homeWarm from '@/assets/templates/home-warm.jpg';
-import homeConcrete from '@/assets/templates/home-concrete.jpg';
-import supplementsClinical from '@/assets/templates/supplements-clinical.jpg';
-import supplementsAthletic from '@/assets/templates/supplements-athletic.jpg';
-import supplementsLuxury from '@/assets/templates/supplements-luxury.jpg';
-import universalClean from '@/assets/templates/universal-clean.jpg';
-import universalGradient from '@/assets/templates/universal-gradient.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const templateImages: Record<string, string> = {
-  'tpl_001': clothingStudio, 'tpl_002': clothingStreetwear, 'tpl_003': clothingFlatlay,
-  'tpl_004': cosmeticsLuxury, 'tpl_005': cosmeticsWater, 'tpl_006': cosmeticsPastel,
-  'tpl_007': foodCommercial, 'tpl_008': foodRustic, 'tpl_009': foodPackaging,
-  'tpl_010': homeJapandi, 'tpl_011': homeWarm, 'tpl_012': homeConcrete,
-  'tpl_013': supplementsClinical, 'tpl_014': supplementsAthletic, 'tpl_015': supplementsLuxury,
-  'tpl_016': universalClean, 'tpl_017': universalGradient,
+  'tpl_001': getLandingAssetUrl('templates/clothing-studio.jpg'),
+  'tpl_002': getLandingAssetUrl('templates/clothing-streetwear.jpg'),
+  'tpl_003': getLandingAssetUrl('templates/clothing-flatlay.jpg'),
+  'tpl_004': getLandingAssetUrl('templates/cosmetics-luxury.jpg'),
+  'tpl_005': getLandingAssetUrl('templates/cosmetics-water.jpg'),
+  'tpl_006': getLandingAssetUrl('templates/cosmetics-pastel.jpg'),
+  'tpl_007': getLandingAssetUrl('templates/food-commercial.jpg'),
+  'tpl_008': getLandingAssetUrl('templates/food-rustic.jpg'),
+  'tpl_009': getLandingAssetUrl('templates/food-packaging.jpg'),
+  'tpl_010': getLandingAssetUrl('templates/home-japandi.jpg'),
+  'tpl_011': getLandingAssetUrl('templates/home-warm.jpg'),
+  'tpl_012': getLandingAssetUrl('templates/home-concrete.jpg'),
+  'tpl_013': getLandingAssetUrl('templates/supplements-clinical.jpg'),
+  'tpl_014': getLandingAssetUrl('templates/supplements-athletic.jpg'),
+  'tpl_015': getLandingAssetUrl('templates/supplements-luxury.jpg'),
+  'tpl_016': getLandingAssetUrl('templates/universal-clean.jpg'),
+  'tpl_017': getLandingAssetUrl('templates/universal-gradient.jpg'),
 };
 
 export function getTemplateImage(templateId: string): string | undefined {

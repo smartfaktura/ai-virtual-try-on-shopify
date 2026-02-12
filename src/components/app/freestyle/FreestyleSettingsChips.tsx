@@ -10,7 +10,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import avatarLuna from '@/assets/team/avatar-luna.jpg';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
+const avatarLuna = getLandingAssetUrl('team/avatar-luna.jpg');
 import { ModelSelectorChip } from './ModelSelectorChip';
 import { SceneSelectorChip } from './SceneSelectorChip';
 import { ProductSelectorChip } from './ProductSelectorChip';
