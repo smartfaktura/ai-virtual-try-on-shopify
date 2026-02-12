@@ -85,10 +85,10 @@ export function BuyCreditsModal() {
   return (
     <>
       <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
-        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden border-border/50 shadow-2xl">
+        <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden border-border/50 shadow-2xl">
           
           {/* Premium Balance Header */}
-          <div className="px-8 pt-8 pb-6 bg-gradient-to-b from-muted/60 to-background border-b border-border/50">
+          <div className="px-6 pt-6 pb-4 bg-gradient-to-b from-muted/60 to-background border-b border-border/50">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-4">
                 <div className="p-2.5 rounded-xl bg-primary/10">
@@ -96,7 +96,7 @@ export function BuyCreditsModal() {
                 </div>
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold tracking-tight">{balance.toLocaleString()}</span>
+                    <span className="text-3xl font-bold tracking-tight">{balance.toLocaleString()}</span>
                     <span className="text-sm text-muted-foreground font-medium">credits</span>
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export function BuyCreditsModal() {
           </div>
 
           {/* Custom Tab Switcher */}
-          <div className="px-8 pt-5">
+          <div className="px-6 pt-4">
             <div className="flex gap-1 border-b border-border/50">
               <button
                 onClick={() => setActiveTab('topup')}
@@ -161,7 +161,7 @@ export function BuyCreditsModal() {
           </div>
 
           {/* Tab Content */}
-          <div className="px-8 pb-8 pt-6 max-h-[60vh] overflow-y-auto">
+          <div className="px-6 pb-6 pt-5 max-h-[55vh] overflow-y-auto">
             
             {/* Top Up Tab */}
             {activeTab === 'topup' && (
@@ -170,7 +170,7 @@ export function BuyCreditsModal() {
                   One-time credit packs · Never expire · Use across all modes
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {creditPacks.map((pack) => (
                     <div
                       key={pack.packId}
@@ -187,16 +187,16 @@ export function BuyCreditsModal() {
                           </Badge>
                         </div>
                       )}
-                      <div className="p-7 sm:p-8 space-y-5">
+                      <div className="p-5 sm:p-6 space-y-4">
                         <div className="space-y-1">
-                          <p className="text-4xl font-bold tracking-tight">{pack.credits.toLocaleString()}</p>
+                          <p className="text-3xl font-bold tracking-tight">{pack.credits.toLocaleString()}</p>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-semibold">credits</p>
                         </div>
                         
                         <div className="h-px bg-border/60 mx-4" />
                         
                         <div className="space-y-1">
-                          <p className="text-2xl font-semibold tracking-tight">${pack.price}</p>
+                          <p className="text-xl font-semibold tracking-tight">${pack.price}</p>
                           <p className="text-xs text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢ per credit</p>
                         </div>
                         
@@ -255,7 +255,7 @@ export function BuyCreditsModal() {
                 </div>
 
                 {/* Plan columns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {mainPlans.map((p) => {
                     const isCurrent = p.planId === plan;
                     const currentIdx = PLAN_ORDER.indexOf(plan);
@@ -271,7 +271,7 @@ export function BuyCreditsModal() {
                     return (
                       <div
                         key={p.planId}
-                        className={`relative rounded-2xl p-6 space-y-5 transition-all duration-200 ${
+                        className={`relative rounded-2xl p-4 space-y-3 transition-all duration-200 ${
                           p.highlighted
                             ? 'border-2 border-primary bg-primary/[0.03] shadow-lg shadow-primary/5'
                             : isCurrent
@@ -318,7 +318,7 @@ export function BuyCreditsModal() {
 
                         {/* Features */}
                         <div className="space-y-2">
-                          {p.features.slice(0, 5).map((f, i) => (
+                          {p.features.slice(0, 4).map((f, i) => (
                             <div key={i} className="flex items-start gap-2.5">
                               <Check className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
                               <span className="text-[11px] text-muted-foreground leading-relaxed">{f}</span>
@@ -342,7 +342,7 @@ export function BuyCreditsModal() {
 
                 {/* Enterprise banner */}
                 {enterprisePlan && (
-                  <div className="rounded-2xl border border-border/50 bg-muted/20 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="rounded-2xl border border-border/50 bg-muted/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-4">
                       <div className="rounded-xl bg-primary/10 p-3">
                         <Building2 className="w-5 h-5 text-primary" />
