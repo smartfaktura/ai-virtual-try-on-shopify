@@ -16,6 +16,7 @@ import Jobs from '@/pages/Jobs';
 import Settings from '@/pages/Settings';
 import Landing from '@/pages/Landing';
 import Auth from '@/pages/Auth';
+import AssetMigration from '@/pages/AssetMigration';
 import Onboarding from '@/pages/Onboarding';
 import NotFound from '@/pages/NotFound';
 import BrandProfiles from '@/pages/BrandProfiles';
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
+            <Route path="/admin/asset-migration" element={<AssetMigration />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
