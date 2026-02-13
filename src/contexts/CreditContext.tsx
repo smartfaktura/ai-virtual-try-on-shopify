@@ -43,7 +43,7 @@ interface CreditContextValue {
   openBuyModal: () => void;
   closeBuyModal: () => void;
   
-  calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => number;
+  calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean }) => number;
 }
 
 const defaultValue: CreditContextValue = {
@@ -143,13 +143,20 @@ export function CreditProvider({ children }: CreditProviderProps) {
     toast('Subscription reactivated (placeholder)');
   }, []);
   
-  const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode }) => {
-    const { count, quality, mode } = settings;
+  const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean }) => {
+    const { count, quality, mode, hasModel, hasScene } = settings;
     if (mode === 'video') {
       return count * 30;
     }
     if (mode === 'virtual-try-on') {
       return count * 8;
+    }
+    // Model-reference pricing: Pro model is used automatically
+    if (hasModel && hasScene) {
+      return count * 15;
+    }
+    if (hasModel) {
+      return count * 12;
     }
     return count * (quality === 'high' ? 10 : 4);
   }, []);

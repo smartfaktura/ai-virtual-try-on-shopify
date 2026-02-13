@@ -133,7 +133,13 @@ export default function Freestyle() {
     enabled: !!user?.id,
   });
 
-  const creditCost = imageCount * (quality === 'high' ? 10 : 4);
+  const hasModel = !!selectedModel;
+  const hasScene = !!selectedScene;
+  const creditCost = hasModel && hasScene
+    ? imageCount * 15
+    : hasModel
+      ? imageCount * 12
+      : imageCount * (quality === 'high' ? 10 : 4);
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
   const canGenerate = (prompt.trim().length > 0 || hasAssets) && !isLoading && balance >= creditCost;
 
