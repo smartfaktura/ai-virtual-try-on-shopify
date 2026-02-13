@@ -198,6 +198,8 @@ export default function Generate() {
   // Selected variation indices for workflow generation
   const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
   const [workflowVariationLabels, setWorkflowVariationLabels] = useState<string[]>([]);
+  const [productAngle, setProductAngle] = useState<'front' | 'front-side' | 'front-back' | 'all'>('front');
+  const [sceneFilterCategory, setSceneFilterCategory] = useState<string>('all');
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
@@ -221,9 +223,13 @@ export default function Generate() {
       if (workflowConfig?.fixed_settings?.quality) {
         setQuality(workflowConfig.fixed_settings.quality as ImageQuality);
       }
-      // Auto-select all variations by default
+      // Start with none selected for scene-type workflows, auto-select all for others
       if (variationStrategy?.variations?.length) {
-        setSelectedVariationIndices(new Set(variationStrategy.variations.map((_, i) => i)));
+        if (variationStrategy.type === 'scene') {
+          setSelectedVariationIndices(new Set());
+        } else {
+          setSelectedVariationIndices(new Set(variationStrategy.variations.map((_, i) => i)));
+        }
       }
       // Auto-select template from workflow's template_ids (only if no config)
       if (!workflowConfig && activeWorkflow.template_ids?.length > 0) {
@@ -496,6 +502,7 @@ export default function Generate() {
         photography_reference: selectedBrandProfile.photography_reference,
       } : undefined,
       selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+      product_angles: productAngle !== 'front' ? productAngle : undefined,
       quality,
       framing: framing || undefined,
     };
@@ -656,8 +663,9 @@ export default function Generate() {
     return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Template' }, { name: 'Settings' }, { name: 'Results' }];
   };
 
-  const workflowImageCount = hasWorkflowConfig ? variationStrategy!.variations.length : parseInt(imageCount);
-  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 2 : 1) : parseInt(imageCount) * (quality === 'high' ? 10 : 4));
+  const angleMultiplier = productAngle === 'all' ? 3 : productAngle === 'front' ? 1 : 2;
+  const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier : parseInt(imageCount);
+  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 10 : 4) : parseInt(imageCount) * (quality === 'high' ? 10 : 4));
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 
@@ -1382,7 +1390,9 @@ export default function Generate() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold">What You'll Get</h3>
+                    <h3 className="text-base font-semibold">
+                      {variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
+                    </h3>
                     {variationStrategy?.type === 'scene' && (
                       <>
                         <Badge variant="secondary" className="text-[10px]"><Ban className="w-3 h-3 mr-1" />No People</Badge>
@@ -1391,14 +1401,14 @@ export default function Generate() {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
+                    {variationStrategy?.type === 'scene' ? 'Choose scenes for your product — select at least 1' :
+                     variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
                      variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
                      variationStrategy?.type === 'layout' ? 'Different layout compositions' :
                      variationStrategy?.type === 'paired' ? 'Before and after comparison' :
                      variationStrategy?.type === 'angle' ? 'Multiple angles and perspectives' :
                      variationStrategy?.type === 'mood' ? 'Different mood and energy styles' :
                      variationStrategy?.type === 'surface' ? 'Different surface and styling options' :
-                     variationStrategy?.type === 'scene' ? 'Your product photographed in diverse professional scenes' :
                      'Workflow-specific variations'}
                   </p>
                 </div>
@@ -1407,8 +1417,7 @@ export default function Generate() {
                   size="sm"
                   onClick={() => {
                     if (selectedVariationIndices.size === variationStrategy?.variations.length) {
-                      // Deselect all except first
-                      setSelectedVariationIndices(new Set([0]));
+                      setSelectedVariationIndices(new Set());
                     } else {
                       setSelectedVariationIndices(new Set(variationStrategy?.variations.map((_, i) => i)));
                     }
@@ -1418,10 +1427,39 @@ export default function Generate() {
                 </Button>
               </div>
 
+              {/* Scene category filter tabs */}
+              {variationStrategy?.type === 'scene' && (() => {
+                const cats = Array.from(new Set(variationStrategy.variations.map(v => v.category).filter(Boolean))) as string[];
+                if (cats.length <= 1) return null;
+                return (
+                  <div className="flex gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => setSceneFilterCategory('all')}
+                      className={cn(
+                        'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+                        sceneFilterCategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      )}
+                    >All</button>
+                    {cats.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setSceneFilterCategory(cat)}
+                        className={cn(
+                          'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+                          sceneFilterCategory === cat ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        )}
+                      >{cat}</button>
+                    ))}
+                  </div>
+                );
+              })()}
+
               {/* Visual scene cards grid */}
               <TooltipProvider delayDuration={300}>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
                   {variationStrategy?.variations.map((v, i) => {
+                    // Filter by category
+                    if (sceneFilterCategory !== 'all' && v.category && v.category !== sceneFilterCategory) return null;
                     const isSelected = selectedVariationIndices.has(i);
                     const hasPreview = !!v.preview_url;
 
@@ -1432,7 +1470,7 @@ export default function Generate() {
                             onClick={() => {
                               setSelectedVariationIndices(prev => {
                                 const next = new Set(prev);
-                                if (next.has(i)) { if (next.size > 1) next.delete(i); }
+                                if (next.has(i)) { next.delete(i); }
                                 else next.add(i);
                                 return next;
                               });
@@ -1456,24 +1494,24 @@ export default function Generate() {
                               ) : (
                                 <div className={cn(
                                   "w-full h-full flex items-center justify-center",
-                                  i === 0 ? "bg-gradient-to-br from-gray-100 to-white" :
-                                  i === 1 ? "bg-gradient-to-br from-gray-200 to-gray-100" :
-                                  i === 2 ? "bg-gradient-to-br from-amber-100 to-orange-50" :
-                                  i === 3 ? "bg-gradient-to-br from-pink-50 to-purple-50" :
-                                  i === 4 ? "bg-gradient-to-br from-green-100 to-emerald-50" :
-                                  i === 5 ? "bg-gradient-to-br from-blue-100 to-sky-50" :
-                                  i === 6 ? "bg-gradient-to-br from-yellow-100 to-amber-50" :
+                                  i % 8 === 0 ? "bg-gradient-to-br from-gray-100 to-white" :
+                                  i % 8 === 1 ? "bg-gradient-to-br from-gray-200 to-gray-100" :
+                                  i % 8 === 2 ? "bg-gradient-to-br from-amber-100 to-orange-50" :
+                                  i % 8 === 3 ? "bg-gradient-to-br from-pink-50 to-purple-50" :
+                                  i % 8 === 4 ? "bg-gradient-to-br from-green-100 to-emerald-50" :
+                                  i % 8 === 5 ? "bg-gradient-to-br from-blue-100 to-sky-50" :
+                                  i % 8 === 6 ? "bg-gradient-to-br from-yellow-100 to-amber-50" :
                                   "bg-gradient-to-br from-gray-700 to-gray-900"
                                 )}>
-                                  <Package className={cn("w-8 h-8", i === 7 ? "text-gray-400" : "text-muted-foreground/40")} />
+                                  <Package className={cn("w-8 h-8", i % 8 === 7 ? "text-gray-400" : "text-muted-foreground/40")} />
                                 </div>
                               )}
 
                               {/* Dark overlay for label readability */}
                               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2 pt-6">
                                 <p className="text-[11px] font-semibold text-white leading-tight">{v.label}</p>
-                                {v.aspect_ratio && (
-                                  <span className="text-[9px] text-white/70 font-medium">{v.aspect_ratio}</span>
+                                {v.category && (
+                                  <span className="text-[9px] text-white/60 font-medium">{v.category}</span>
                                 )}
                               </div>
 
@@ -1497,7 +1535,11 @@ export default function Generate() {
 
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">
-                  {selectedVariationIndices.size} of {variationStrategy?.variations.length} scenes selected
+                  {selectedVariationIndices.size === 0 ? (
+                    <span className="text-destructive font-medium">Select at least 1 scene to continue</span>
+                  ) : (
+                    <>{selectedVariationIndices.size} of {variationStrategy?.variations.length} scenes selected</>
+                  )}
                 </p>
                 {isAdmin && variationStrategy?.variations.some(v => !v.preview_url) && (
                   <Button
@@ -1517,17 +1559,50 @@ export default function Generate() {
               </div>
             </CardContent></Card>
 
+            {/* Product Angles */}
+            {variationStrategy?.type === 'scene' && (
+              <Card><CardContent className="p-5 space-y-4">
+                <div>
+                  <h3 className="text-base font-semibold">Product Angles</h3>
+                  <p className="text-sm text-muted-foreground">Choose which angles to generate for each scene</p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {([
+                    { key: 'front' as const, label: 'Front Only', desc: '1 image per scene', multiplier: '×1' },
+                    { key: 'front-side' as const, label: 'Front + Side', desc: '2 images per scene', multiplier: '×2' },
+                    { key: 'front-back' as const, label: 'Front + Back', desc: '2 images per scene', multiplier: '×2' },
+                    { key: 'all' as const, label: 'All Angles', desc: '3 images per scene', multiplier: '×3' },
+                  ]).map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setProductAngle(opt.key)}
+                      className={cn(
+                        'p-3 rounded-xl border-2 text-left transition-all',
+                        productAngle === opt.key
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                          : 'border-border hover:border-primary/40'
+                      )}
+                    >
+                      <p className="text-sm font-semibold">{opt.label}</p>
+                      <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                      <Badge variant="secondary" className="mt-1.5 text-[10px]">{opt.multiplier}</Badge>
+                    </button>
+                  ))}
+                </div>
+              </CardContent></Card>
+            )}
+
             {/* Quality & Settings */}
             <Card><CardContent className="p-5 space-y-4">
               <h3 className="text-base font-semibold">Generation Settings</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="space-y-2">
                   <Label>Quality</Label>
                   <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="standard">Standard (1 credit/img)</SelectItem>
-                      <SelectItem value="high">High (2 credits/img)</SelectItem>
+                      <SelectItem value="standard">Standard (4 credits/img)</SelectItem>
+                      <SelectItem value="high">High (10 credits/img)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1553,8 +1628,12 @@ export default function Generate() {
             {/* Cost summary */}
             <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold">Total: {selectedVariationIndices.size * (quality === 'high' ? 2 : 1)} credits</p>
-                <p className="text-xs text-muted-foreground">{selectedVariationIndices.size} variation{selectedVariationIndices.size !== 1 ? 's' : ''} × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''}</p>
+                <p className="text-sm font-semibold">Total: {creditCost} credits</p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedVariationIndices.size} scene{selectedVariationIndices.size !== 1 ? 's' : ''}
+                  {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
+                  {' '}× {quality === 'high' ? 10 : 4} credits
+                </p>
               </div>
               <p className="text-sm">{balance} credits available</p>
             </div>
