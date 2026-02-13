@@ -12,16 +12,31 @@ interface QueuePositionIndicatorProps {
 }
 
 function estimateSeconds(meta?: GenerationMeta): number {
-  if (!meta) return 30; // default fallback
-  let estimate = 15; // base
-  estimate += meta.imageCount * 10;
-  if (meta.quality === 'high') estimate += 15;
-  if (meta.hasModel) estimate += 10;
-  if (meta.hasScene) estimate += 5;
-  if (meta.hasProduct) estimate += 5;
+  if (!meta) return 45; // default fallback
+  let estimate = 20; // base
+  estimate += meta.imageCount * 12;
+  if (meta.quality === 'high') estimate += 20;
+  if (meta.hasModel) estimate += 30; // Pro model is much slower
+  if (meta.hasScene) estimate += 8;
+  if (meta.hasProduct) estimate += 8;
   const refCount = [meta.hasModel, meta.hasScene, meta.hasProduct].filter(Boolean).length;
-  if (refCount >= 2) estimate += 10;
+  if (refCount >= 2) estimate += 15;
   return estimate;
+}
+
+function getComplexityHint(meta?: GenerationMeta): string | null {
+  if (!meta) return null;
+  const refCount = [meta.hasModel, meta.hasScene, meta.hasProduct].filter(Boolean).length;
+  if (refCount >= 2) return 'Multiple references increase complexity';
+  if (meta.hasModel) return 'Model reference adds processing time';
+  return null;
+}
+
+function getOvertimeMessage(ratio: number): string | null {
+  if (ratio >= 2) return 'Almost there — high-quality results take a little extra time…';
+  if (ratio >= 1.5) return 'Complex generation in progress — your studio team is perfecting the details…';
+  if (ratio >= 1) return 'Taking a bit longer than usual — still working on it…';
+  return null;
 }
 
 function formatEstimateRange(seconds: number): string {
@@ -59,15 +74,23 @@ function ProcessingState({ job }: { job: QueueJob }) {
     return () => clearInterval(interval);
   }, []);
 
-  const progress = Math.min((elapsed / estimatedSeconds) * 90, 90);
+  const ratio = elapsed / estimatedSeconds;
+  // Progress: normal up to 90%, then crawl to 95% in overtime
+  const progress = ratio <= 1
+    ? Math.min(ratio * 90, 90)
+    : Math.min(90 + (ratio - 1) * 5, 95);
   const currentMember = TEAM_MEMBERS[teamIndex];
+  const overtimeMsg = getOvertimeMessage(ratio);
+  const complexityHint = getComplexityHint(job.generationMeta);
 
   return (
     <div className="flex flex-col gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
       <div className="flex items-center gap-3">
         <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground">Generating your images…</p>
+          <p className="text-sm font-medium text-foreground">
+            {overtimeMsg || 'Generating your images…'}
+          </p>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-muted-foreground">
               Est. {formatEstimateRange(estimatedSeconds)}
@@ -75,6 +98,9 @@ function ProcessingState({ job }: { job: QueueJob }) {
             <span className="text-xs text-muted-foreground/60">·</span>
             <span className="text-xs font-mono text-muted-foreground">{elapsed}s elapsed</span>
           </div>
+          {complexityHint && (
+            <p className="text-[11px] text-muted-foreground/70 mt-0.5">{complexityHint}</p>
+          )}
         </div>
       </div>
 
