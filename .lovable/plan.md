@@ -1,41 +1,32 @@
 
 
-## Add Side Profile + Regenerate 2 Framing Photos
+## Fix Framing Thumbnails - Generate Real Photos
 
-### Changes
+### Problem
+The AI image generation produced pictograms/icons instead of photographic crops matching the existing model (blonde woman in white crop top). Specifically:
+- **Side Profile** - shows a tiny ear icon instead of a photo
+- **Close-Up** - shows same upper body shot, not a tighter face portrait
+- **Neck/Shoulders** - shows same upper body shot, not a collarbone-focused crop
 
-**1. Add `side_profile` framing option**
+### Solution
+Re-generate all 3 images using the AI image generation API with the existing `upper_body.png` as an **input reference image**, asking the model to create specific crops of the same woman:
 
-- Add `'side_profile'` to the `FramingOption` union type in `src/types/index.ts`
-- Add config entry in `src/lib/framingUtils.ts` with keywords: `earring`, `earrings`, `ear cuff`, `ear`
-- Move earring-related keywords away from `neck_shoulders`
-- Add `buildFramingPrompt` case: "Side profile view focusing on the ear and jawline area. The product should be clearly visible on or near the ear."
-- Update `neck_shoulders` description to "Necklaces, pendants, chokers" (remove earrings mention)
+1. **`close_up.png`** - Generate using upper_body.png as reference: "Create a tight beauty headshot portrait of this exact woman. Frame from forehead to chin, face fills the entire frame. Same lighting, same background. Professional 85mm lens portrait."
 
-**2. Regenerate 2 existing photos + create 1 new**
+2. **`neck_shoulders.png`** - Generate using upper_body.png as reference: "Create a collarbone/necklace display crop of this exact woman. Frame from just below the chin to mid-chest. Do not show the face. Same clothing, lighting, background."
 
-| Photo | Fix |
-|-------|-----|
-| `neck_shoulders.png` | Faceless crop from chin down to mid-chest, collarbone/jewelry zone only |
-| `close_up.png` | Tighter beauty headshot, face fills the frame |
-| `side_profile.png` (new) | Side view of head showing ear/jawline area |
+3. **`side_profile.png`** - Generate using upper_body.png as reference: "Create a side profile view of this exact woman. Show the side of her head from temple to jawline, focusing on the ear area. Same lighting, same background."
 
-Same model (blonde supermodel, white crop top, grey leggings, light grey studio background) for consistency.
+### Technical Details
 
-**3. Update prompt injection**
+All 3 images will be generated via the image editing API (passing the existing `upper_body.png` as a reference) and saved to:
+- `public/images/framing/close_up.png`
+- `public/images/framing/neck_shoulders.png`
+- `public/images/framing/side_profile.png`
 
-- `neck_shoulders` prompt updated to: "...cropped from just below the chin to mid-chest. Do NOT include the face."
-- `close_up` prompt updated to: "Tight close-up portrait, face filling most of the frame."
+No code changes needed - only the image assets are replaced. The components already reference these paths correctly.
 
 ### Files Changed
-
-- `src/types/index.ts` -- add `'side_profile'` to FramingOption type
-- `src/lib/framingUtils.ts` -- add side_profile config, move earring keywords, update neck_shoulders description and prompt, update close_up prompt
-- `public/images/framing/neck_shoulders.png` -- regenerated (no face)
-- `public/images/framing/close_up.png` -- regenerated (tighter crop)
-- `public/images/framing/side_profile.png` -- new photo
-
-### No other file changes needed
-
-FramingSelectorChip and FramingSelector are already data-driven from the FRAMING_OPTIONS array, so they automatically pick up the new option.
-
+- `public/images/framing/close_up.png` (regenerated photo)
+- `public/images/framing/neck_shoulders.png` (regenerated photo)
+- `public/images/framing/side_profile.png` (regenerated photo)
