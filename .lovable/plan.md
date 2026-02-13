@@ -1,33 +1,31 @@
 
 
-## Replace "Quick Create" with "Workflows + Freestyle" Section
+## Fix: Product Generations Not Showing in Recent Creations
 
-### What Changes
+### Root Cause
 
-**File: `src/pages/Dashboard.tsx` (lines 268-272)**
+The `generate-product` edge function returns base64 data URLs from the AI gateway and saves them directly into the `generation_jobs.results` column without uploading to storage first. The dashboard's Recent Creations gallery intentionally filters out base64 URLs (they're massive strings that hurt performance), so these results never appear.
 
-Remove the current "Quick Create" section that renders `GenerationModeCards` (Product Photos + Virtual Try-On cards) and replace it with a new section containing two premium cards:
+Meanwhile, `generate-tryon` correctly uploads base64 images to the `tryon-images` storage bucket before saving -- which is why try-on results show up fine.
 
-1. **Workflows** -- Navigate to `/app/workflows`
-   - Icon: `Layers`
-   - Description: "Outcome-driven visual sets -- Try-On, Product Listing, UGC, Flat Lay. Pick a workflow and get a complete set."
-   - CTA: "Browse Workflows"
+### Fix
 
-2. **Freestyle Studio** -- Navigate to `/app/freestyle`
-   - Icon: `Sparkles`
-   - Description: "Full creative control -- mix prompts, products, models, scenes, and brand profiles to generate any image you imagine."
-   - CTA: "Open Studio"
+**File: `supabase/functions/generate-product/index.ts`**
 
-### Design
+Add a `uploadBase64ToStorage` helper (same pattern used in `generate-tryon`) that:
+1. Decodes the base64 data URL
+2. Uploads the image to a storage bucket (we'll use the existing `workflow-previews` bucket or create a `product-images` bucket)
+3. Returns the public URL
 
-- Same premium card styling as the current `GenerationModeCards` (rounded-2xl, hover shadow, border)
-- Workflows gets the primary CTA button, Freestyle gets outline
-- Compact layout matching the `compact` mode already used in the dashboard (short descriptions, no credit info)
-- Section title changed from "Quick Create" to "Create"
+Then, after each image is generated, upload it to storage before pushing to the `images` array. This way, `results` will contain proper storage URLs instead of giant base64 strings.
 
-### Technical Detail
+Changes:
+- Add `uploadBase64ToStorage()` function (same as in generate-tryon)
+- Add Supabase client initialization for storage access
+- After `generateImage()` returns a base64 URL, upload it to storage and use the public URL
+- No frontend changes needed -- the dashboard already handles storage URLs correctly
 
-- Edit `src/pages/Dashboard.tsx` lines 268-272: replace the `GenerationModeCards` usage with inline card markup using `Layers` and `Sparkles` icons
-- The `GenerationModeCards` component itself stays untouched (still used in the first-run dashboard)
-- No new components needed -- the cards are simple enough to inline
+### Why This Also Fixes the Library
+
+The Library currently renders base64 images directly, which works but is extremely slow (each image is ~12MB of text in the JSON column). After this fix, Library performance will improve too since it'll load from CDN-served storage URLs.
 
