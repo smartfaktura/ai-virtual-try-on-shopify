@@ -1,58 +1,41 @@
 
 
-## Replace Framing Icons with AI-Generated Model Photos
+## Add Side Profile + Regenerate 2 Framing Photos
 
-### What Changes
+### Changes
 
-Replace the hand-drawn SVG stick-figure icons in the Framing Selector dropdown with clean, professional AI-generated studio photos of a blonde supermodel (white crop top, grey leggings, casual sporty look) demonstrating each body crop zone.
+**1. Add `side_profile` framing option**
 
-### Image Generation
+- Add `'side_profile'` to the `FramingOption` union type in `src/types/index.ts`
+- Add config entry in `src/lib/framingUtils.ts` with keywords: `earring`, `earrings`, `ear cuff`, `ear`
+- Move earring-related keywords away from `neck_shoulders`
+- Add `buildFramingPrompt` case: "Side profile view focusing on the ear and jawline area. The product should be clearly visible on or near the ear."
+- Update `neck_shoulders` description to "Necklaces, pendants, chokers" (remove earrings mention)
 
-Generate **7 photos** (1:1 ratio, ~256px) using the AI image generation model, each showing the same model with the camera framed to match the framing option:
+**2. Regenerate 2 existing photos + create 1 new**
 
-| Option | Photo Description |
-|--------|------------------|
-| Full Body | Full head-to-toe shot, light grey studio background |
-| Upper Body | Waist-up crop, same model and background |
-| Close-Up | Shoulders-up portrait crop |
-| Hand / Wrist | Close-up of hand and wrist area only |
-| Neck / Shoulders | Collarbone/neckline area crop |
-| Lower Body | Hips-to-feet crop showing leggings and shoes |
-| Back View | Model facing away, full or upper back visible |
+| Photo | Fix |
+|-------|-----|
+| `neck_shoulders.png` | Faceless crop from chin down to mid-chest, collarbone/jewelry zone only |
+| `close_up.png` | Tighter beauty headshot, face fills the frame |
+| `side_profile.png` (new) | Side view of head showing ear/jawline area |
 
-All images will share the same model appearance, outfit, and clean light-grey studio backdrop for visual consistency.
+Same model (blonde supermodel, white crop top, grey leggings, light grey studio background) for consistency.
 
-### UI Update
+**3. Update prompt injection**
 
-**File: `src/components/app/FramingSelectorChip.tsx`**
-
-- Replace the `FramingIcon` SVG component with a `FramingThumbnail` component that renders a small circular `<img>` thumbnail (24x24px in the chip trigger, 32x32px in the dropdown list)
-- Each dropdown row gets a rounded photo thumbnail instead of the SVG silhouette
-- The "None (Auto)" option keeps the existing `Frame` lucide icon (no photo needed)
-- The chip trigger button also shows the selected framing's photo thumbnail
-
-**File: `src/lib/framingUtils.ts`**
-
-- Add a `previewUrl` field to each `FramingOptionConfig` entry pointing to the stored image path
-
-### Image Storage
-
-Images will be saved to `public/images/framing/` as:
-- `full_body.png`
-- `upper_body.png`
-- `close_up.png`
-- `hand_wrist.png`
-- `neck_shoulders.png`
-- `lower_body.png`
-- `back_view.png`
+- `neck_shoulders` prompt updated to: "...cropped from just below the chin to mid-chest. Do NOT include the face."
+- `close_up` prompt updated to: "Tight close-up portrait, face filling most of the frame."
 
 ### Files Changed
 
-- `public/images/framing/*.png` -- 7 new AI-generated photos
-- `src/lib/framingUtils.ts` -- add `previewUrl` to each option config
-- `src/components/app/FramingSelectorChip.tsx` -- replace SVG icons with circular photo thumbnails
+- `src/types/index.ts` -- add `'side_profile'` to FramingOption type
+- `src/lib/framingUtils.ts` -- add side_profile config, move earring keywords, update neck_shoulders description and prompt, update close_up prompt
+- `public/images/framing/neck_shoulders.png` -- regenerated (no face)
+- `public/images/framing/close_up.png` -- regenerated (tighter crop)
+- `public/images/framing/side_profile.png` -- new photo
 
-### Visual Result
+### No other file changes needed
 
-The dropdown transforms from abstract stick figures to a polished visual menu where users can instantly see what each framing looks like on a real model, making the selection intuitive and professional.
+FramingSelectorChip and FramingSelector are already data-driven from the FRAMING_OPTIONS array, so they automatically pick up the new option.
 
