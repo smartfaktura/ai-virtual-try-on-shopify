@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Image, ArrowRight } from 'lucide-react';
+import { ArrowRight, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +20,7 @@ interface CreationItem {
   id: string;
   imageUrl: string;
   label: string;
+  subtitle?: string;
   date: string;
   rawDate: string;
 }
@@ -50,7 +51,8 @@ export function RecentCreationsGallery() {
       if (!jobsResult.error) {
         for (const job of jobsResult.data ?? []) {
           const results = job.results as any;
-          const label = (job.workflows as any)?.name || 'Generated';
+          const workflowName = (job.workflows as any)?.name;
+          const productTitle = (job.user_products as any)?.title;
           let pushed = false;
 
           if (Array.isArray(results)) {
@@ -58,10 +60,13 @@ export function RecentCreationsGallery() {
               const r = results[i];
               const url = typeof r === 'string' ? r : r?.url || r?.image_url;
               if (url && !url.startsWith('data:')) {
+                const isTryOn = url.includes('tryon-images');
+                const label = isTryOn ? 'Virtual Try-On' : (workflowName || 'Product Shot');
                 items.push({
                   id: `${job.id}-${i}`,
                   imageUrl: url,
                   label,
+                  subtitle: productTitle || undefined,
                   date: new Date(job.created_at).toLocaleDateString(),
                   rawDate: job.created_at,
                 });
@@ -76,7 +81,8 @@ export function RecentCreationsGallery() {
               items.push({
                 id: job.id,
                 imageUrl: fallback,
-                label,
+                label: workflowName || 'Product Shot',
+                subtitle: productTitle || undefined,
                 date: new Date(job.created_at).toLocaleDateString(),
                 rawDate: job.created_at,
               });
@@ -157,11 +163,10 @@ export function RecentCreationsGallery() {
           className="flex gap-4 overflow-x-auto pb-2 px-1"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {displayItems.map((item, i) => (
+          {displayItems.map((item) => (
             <div
               key={item.id}
-              className="flex-shrink-0 w-[180px] group cursor-pointer"
-              onClick={() => !isPlaceholder && navigate('/app/library')}
+              className="flex-shrink-0 w-[180px] group"
             >
               <div className="aspect-[4/5] rounded-xl overflow-hidden border border-border relative shadow-sm">
                 <img
@@ -170,11 +175,23 @@ export function RecentCreationsGallery() {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                {/* Always-visible label bar */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
                   <p className="text-xs font-semibold text-white">{item.label}</p>
-                  <p className="text-[10px] text-white/70">{item.date}</p>
+                  {item.subtitle && <p className="text-[10px] text-white/70 truncate">{item.subtitle}</p>}
+                  <p className="text-[10px] text-white/50">{item.date}</p>
                 </div>
+                {/* Intentional View button overlay */}
+                {!isPlaceholder && (
+                  <button
+                    onClick={() => navigate('/app/library')}
+                    className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 active:opacity-100"
+                  >
+                    <span className="inline-flex items-center gap-1.5 bg-white/90 text-foreground text-xs font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
+                      <Eye className="w-3.5 h-3.5" /> View
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
           ))}
