@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles } from 'lucide-react';
+import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MetricCard } from '@/components/app/MetricCard';
@@ -265,10 +265,41 @@ export default function Dashboard() {
       {/* Your AI Studio Team */}
       <DashboardTeamCarousel />
 
-      {/* Quick Create */}
+      {/* Create */}
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground tracking-tight">Quick Create</h2>
-        <GenerationModeCards compact />
+        <h2 className="text-xl font-bold text-foreground tracking-tight">Create</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Layers className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-foreground">Workflows</h3>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                Outcome-driven visual sets — Try-On, Product Listing, UGC, Flat Lay. Pick a workflow and get a complete set.
+              </p>
+            </div>
+            <Button className="w-full rounded-full font-semibold gap-2 mt-4 shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
+              Browse Workflows
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-foreground">Freestyle Studio</h3>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                Full creative control — mix prompts, products, models, scenes, and brand profiles to generate any image you imagine.
+              </p>
+            </div>
+            <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4" onClick={() => navigate('/app/freestyle')}>
+              Open Studio
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Recent Jobs */}
