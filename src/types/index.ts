@@ -134,7 +134,7 @@ export interface BrandSettings {
 export type GenerationMode = 'product-only' | 'virtual-try-on' | 'video';
 
 // Framing / Body Crop
-export type FramingOption = 'full_body' | 'upper_body' | 'close_up' | 'hand_wrist' | 'neck_shoulders' | 'lower_body' | 'back_view';
+export type FramingOption = 'full_body' | 'upper_body' | 'close_up' | 'hand_wrist' | 'neck_shoulders' | 'side_profile' | 'lower_body' | 'back_view';
 
 // Virtual Try-On Types
 export type ModelGender = 'male' | 'female' | 'non-binary';
