@@ -1,73 +1,53 @@
 
 
-## Dynamic Generation Timer with Rotating Team Messages
+## Fix: Realistic Time Estimates and Overtime Messaging
+
+### Root Cause
+
+The AI model (`gemini-3-pro-image-preview`) used for model-reference generations has a 90-second timeout. When it times out, the system retries automatically (up to 2 retries). This means worst case is ~3 minutes for a single image. This is inherent to the AI provider and cannot be reduced.
 
 ### What Changes
 
-Replace the static "Usually takes a few seconds" text with a live elapsed timer, realistic time estimates based on complexity, and rotating studio team status messages to keep users engaged during longer generations.
+**1. Increase base estimates for model-reference generations**
 
-### User Experience
+The current formula underestimates because it doesn't account for the Pro model's slower speed or potential retries. Updated weights:
 
-**Before**: Static "Generating your images... Usually takes a few seconds" with a frozen progress bar at 50%.
+| Factor | Current | New |
+|--------|---------|-----|
+| Base | 15s | 20s |
+| Per image | +10s | +12s |
+| High quality (Pro) | +15s | +20s |
+| Model reference | +10s | +30s (Pro model is much slower) |
+| Scene reference | +5s | +8s |
+| Product reference | +5s | +8s |
+| 2+ references | +10s | +15s |
 
-**After**:
-- Live elapsed timer: "12s elapsed"
-- Dynamic estimate based on what was selected: "This usually takes about 45-60 seconds"
-- Rotating team member messages every 4 seconds: "Sophia is setting up the lighting...", "Kenji is reviewing the composition...", etc.
-- Progress bar that animates smoothly based on estimated duration instead of sitting at 50%
+Example: Product + Model + 1 image + Standard quality = 20 + 12 + 30 + 8 + 15 = 85s, displayed as "~70-100 seconds"
 
-### How It Works
+**2. Add overtime messaging when estimate is exceeded**
 
-**1. Add `GenerationMeta` to `QueueJob`** (`src/hooks/useGenerationQueue.ts`)
+When elapsed time passes the estimated range, instead of a frozen progress bar at 90%, show reassuring overtime messages:
 
-Store complexity metadata (image count, quality, whether model/scene/product references are attached) on the active job when `enqueue()` is called. This is client-side only -- no database changes.
+- At 1x estimate: "Taking a bit longer than usual -- still working on it..."
+- At 1.5x estimate: "Complex generation in progress -- your studio team is perfecting the details..."
+- At 2x estimate: "Almost there -- high-quality results take a little extra time..."
 
-```
-interface GenerationMeta {
-  imageCount: number;
-  quality: string;
-  hasModel: boolean;
-  hasScene: boolean;
-  hasProduct: boolean;
-}
-```
+The progress bar will slow down but continue crawling past 90% (caps at 95%) to maintain visual feedback.
 
-**2. Pass metadata at enqueue time** (`src/pages/Freestyle.tsx`, `src/pages/Generate.tsx`)
+**3. Show complexity breakdown chip**
 
-After calling `enqueue()`, store the meta on the active job from the payload that's already available (modelImage, sceneImage, sourceImage, imageCount, quality).
+Below the estimate, add a subtle line explaining WHY it takes longer:
+- "Model reference adds processing time" (when model is selected)
+- "Multiple references increase complexity" (when 2+ refs)
 
-**3. Overhaul `QueuePositionIndicator`** (`src/components/app/QueuePositionIndicator.tsx`)
-
-Major changes to the processing state:
-
-- **Elapsed timer**: Uses `useState` + `useEffect` with a 1-second interval, calculating seconds since `job.started_at` (or `job.created_at` as fallback). Displays "12s elapsed" next to the estimate.
-
-- **Time estimate calculation**:
-  | Factor | Added time |
-  |--------|-----------|
-  | Base | 15s |
-  | Per image | +10s each |
-  | High quality (Pro model) | +15s |
-  | Model reference | +10s |
-  | Scene reference | +5s |
-  | Product reference | +5s |
-  | 2+ references combined | +10s extra |
-  
-  Displayed as a range: "~45-60 seconds" (estimate x0.8 to x1.2).
-
-- **Rotating team messages**: Import `TEAM_MEMBERS` from `src/data/teamData.ts` (already has statusMessage per member). Cycle through them every 4 seconds with a fade transition. Shows messages like "Sophia is setting up the lighting..." and "Kenji is reviewing the composition..."
-
-- **Animated progress bar**: Instead of static `value={50}`, calculate progress as `(elapsed / estimatedSeconds) * 90` (caps at 90% until complete, never shows 100% prematurely). Smooth CSS transition.
+This sets expectations rather than leaving users wondering.
 
 ### Files Changed
 
-- `src/hooks/useGenerationQueue.ts` -- add `GenerationMeta` type and `generationMeta` field to `QueueJob`, store it when setting active job in `enqueue()`
-- `src/components/app/QueuePositionIndicator.tsx` -- elapsed timer, dynamic estimate, rotating team messages, animated progress bar
-- `src/pages/Freestyle.tsx` -- pass `generationMeta` to the queue hook after enqueue
-- `src/pages/Generate.tsx` -- pass `generationMeta` to the queue hook after enqueue
+- `src/components/app/QueuePositionIndicator.tsx` -- update `estimateSeconds()` weights, add overtime state and messaging, add complexity explanation text
 
-### No other changes
-- No database changes
-- No edge function changes
-- No new dependencies (uses existing `TEAM_MEMBERS` data)
+### No other changes needed
+- The meta is already being passed correctly from Freestyle.tsx and Generate.tsx
+- No database or edge function changes
+- No new dependencies
 
