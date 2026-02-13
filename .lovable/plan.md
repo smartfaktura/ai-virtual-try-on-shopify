@@ -1,37 +1,35 @@
 
 
-## Fix: Premium Mobile Buttons for Results Page
+## Fix: Recent Creations Gallery - Labels and Click Experience
 
-### Problem
-The three action buttons ("Download All", "Download Selected", "View in Library") look cramped and generic on mobile -- small `size="sm"` buttons stacked with minimal spacing, no visual hierarchy, and thin outline borders that feel flat.
+### Issue 1: Misleading Labels
 
-### Changes
+The gallery IS showing real generated try-on images (from the `tryon-images` storage bucket), not the original product photos. However, the label displays "Generated" because the workflow name lookup returns null when no workflow is associated (virtual try-on jobs may not have a workflow). This makes it hard to tell if you're seeing the actual AI output.
 
-**File: `src/pages/Generate.tsx` (lines 1734-1744)**
+**Fix:** Check the `results` URLs to detect the source type. If the URL contains `tryon-images`, label it "Virtual Try-On". Also show the product name alongside the label for better context.
 
-Replace the current button group with a more premium, spacious layout:
+**File: `src/components/app/RecentCreationsGallery.tsx` (lines 52-68)**
 
-1. **Full-width rounded buttons** -- Use `rounded-xl min-h-[44px]` (matching the premium button style used in `PlanChangeDialog`, `NoCreditsModal`, etc.) for better touch targets and visual consistency
-2. **Remove `size="sm"`** -- Let buttons breathe at default size on mobile
-3. **Visual hierarchy** -- Make "View in Library" the primary CTA (default variant), "Download All" secondary (outline), and "Download Selected" tertiary (ghost/outline)
-4. **Spacing** -- Increase gap from `gap-2` to `gap-2.5` for breathing room
-5. **On desktop** -- Keep horizontal layout with `sm:flex-row`
+- Detect try-on results by checking if the result URL contains `tryon-images`
+- Use "Virtual Try-On" label when detected, fall back to workflow name or "Product Shot"
+- Show product title as a subtitle for extra context
 
-```
-Before:
-<div className="flex flex-col sm:flex-row gap-2">
-  <Button variant="outline" size="sm" className="flex-1 sm:flex-none" ...>Download All</Button>
-  <Button variant="outline" size="sm" className="flex-1 sm:flex-none" ...>Download Selected</Button>
-  <Button size="sm" className="flex-1 sm:flex-none" ...>View in Library</Button>
-</div>
+### Issue 2: Click Sensitivity on Mobile
 
-After:
-<div className="flex flex-col sm:flex-row gap-2.5">
-  <Button variant="outline" className="rounded-xl min-h-[44px] flex-1 sm:flex-none" ...>Download All</Button>
-  <Button variant="outline" className="rounded-xl min-h-[44px] flex-1 sm:flex-none" ...>Download Selected</Button>
-  <Button className="rounded-xl min-h-[44px] flex-1 sm:flex-none" ...>View in Library</Button>
-</div>
-```
+Currently, the entire card has an `onClick` handler that navigates to `/app/library` on any tap. On mobile, this is too sensitive -- even a slight touch while scrolling triggers navigation.
 
-This matches the premium button styling used across all modals (`PlanChangeDialog`, `NoCreditsModal`, `BuyCreditsModal`) with `rounded-xl min-h-[44px]` for a consistent, branded feel.
+**Fix:** Remove the navigation `onClick` from the card wrapper. Instead, add a small overlay button ("View") that appears on hover/tap, so navigation is intentional and not triggered by accidental touches during scrolling.
 
+**File: `src/components/app/RecentCreationsGallery.tsx` (lines 160-179)**
+
+- Remove `onClick` and `cursor-pointer` from the card wrapper `div`
+- Make the hover overlay always visible on mobile (using `group-active:` or always-on for touch)
+- Add a dedicated "View" button in the overlay that navigates to library
+- Keep hover interaction on desktop for the label reveal
+
+### Summary of Changes
+
+One file: `src/components/app/RecentCreationsGallery.tsx`
+
+1. Smart labeling: detect "Virtual Try-On" from result URLs, show product name
+2. Safe click: replace card-level onClick with an intentional overlay button to prevent accidental navigation while scrolling
