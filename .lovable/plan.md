@@ -1,29 +1,34 @@
 
 
-## Redesign Framing Selector: 5-Column Grid with Larger Thumbnails
+## Show "New images incoming" banner in Library after recent generations
 
 ### Problem
-The current framing options are still too small and use a basic flex-wrap layout that doesn't look polished. The user wants a proper 5-column, 2-row grid with larger, more showcase-worthy thumbnails.
+After completing a Virtual Try-On or other generation, users navigate to the Library and don't immediately see their new images (due to the 15-second polling interval). This looks like a bug.
 
 ### Solution
-Rebuild the layout in `FramingSelector.tsx` to use a CSS grid with 5 columns per row (9 items = 5 + 4), with significantly larger thumbnails and better visual presentation.
+Add a subtle info banner at the top of the Library page that appears when a generation was recently completed. It will say something like "New images are on the way -- they'll appear here shortly" with a refresh button, and auto-dismiss after the next successful data fetch includes the new items.
+
+### How it works
+- Use the existing `useGenerationQueue` hook to detect if a job just completed (status = `completed` and `completed_at` within the last 30 seconds)
+- Alternatively, use a simpler approach: store a timestamp in sessionStorage when any generation completes, and check it in the Library page
+- Show a small animated banner with a Loader icon and message, plus a manual "Refresh" button that triggers an immediate refetch
+- The banner disappears once the library data refreshes and includes items newer than the stored timestamp
 
 ### Technical Details
 
-**File: `src/components/app/FramingSelector.tsx`**
+**File: `src/pages/Jobs.tsx`** (the Library page)
+- Import `useGenerationQueue` and `Sparkles` icon
+- After the header, add a conditional banner:
+  - Check `useGenerationQueue` for a recently completed job (completed within last 30s)
+  - Render a small info bar: `"Your latest images are being processed and will appear here shortly."` with a spinning loader icon and a "Refresh now" button that calls `queryClient.invalidateQueries(['library'])`
+- Style it as a soft muted banner matching the existing UI aesthetic (rounded-2xl, bg-muted/30, subtle border)
 
-- Change container from `flex gap-2 flex-wrap` to `grid grid-cols-5 gap-2`
-- Increase thumbnail size from `w-10 h-10` to `w-14 h-14` for a more showcase feel
-- Increase button padding slightly for breathing room
-- Keep `rounded-lg object-cover` on images for clean crops
-- Match the Frame icon size to `w-14 h-14`
+**File: `src/hooks/useGenerationQueue.ts`**
+- Expose `lastCompletedAt` (the `completed_at` timestamp of the most recent completed job) so the Library can check recency
 
-This creates a clean 5-column layout:
-```text
-Row 1: [Auto] [Full Body] [Upper Body] [Close-Up] [Hand/Wrist]
-Row 2: [Neck/Shoulders] [Side Profile] [Lower Body] [Back View]
-```
-
-### Files Changed
-- `src/components/app/FramingSelector.tsx` (layout + sizing update)
+### Changes summary
+| File | Change |
+|------|--------|
+| `src/hooks/useGenerationQueue.ts` | Expose `lastCompletedAt` field from the hook return |
+| `src/pages/Jobs.tsx` | Add conditional "images incoming" banner when a generation completed in the last 30 seconds |
 
