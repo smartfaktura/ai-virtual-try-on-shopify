@@ -1,31 +1,54 @@
 
 
-## Fix: Product Generations Not Showing in Recent Creations
+## Add 15 New European/American Models (10 Female + 5 Male)
 
-### Root Cause
+### New Models
 
-The `generate-product` edge function returns base64 data URLs from the AI gateway and saves them directly into the `generation_jobs.results` column without uploading to storage first. The dashboard's Recent Creations gallery intentionally filters out base64 URLs (they're massive strings that hurt performance), so these results never appear.
+**10 Females:**
 
-Meanwhile, `generate-tryon` correctly uploads base64 images to the `tryon-images` storage bucket before saving -- which is why try-on results show up fine.
+| ID | Name | Body Type | Ethnicity | Age | File Name |
+|----|------|-----------|-----------|-----|-----------|
+| 035 | Olivia | Slim | American | Young Adult | model-female-slim-american.jpg |
+| 036 | Emma | Athletic | British | Adult | model-female-athletic-british.jpg |
+| 037 | Clara | Average | German | Young Adult | model-female-average-german.jpg |
+| 038 | Amelie | Slim | French | Adult | model-female-slim-french.jpg |
+| 039 | Giulia | Athletic | Italian | Young Adult | model-female-athletic-italian.jpg |
+| 040 | Lina | Average | Swedish | Young Adult | model-female-average-swedish.jpg |
+| 041 | Mila | Slim | Spanish | Adult | model-female-slim-spanish.jpg |
+| 042 | Daphne | Athletic | Greek | Young Adult | model-female-athletic-greek.jpg |
+| 043 | Natalie | Average | American | Adult | model-female-average-american.jpg |
+| 044 | Elise | Slim | Dutch | Young Adult | model-female-slim-dutch.jpg |
 
-### Fix
+**5 Males:**
 
-**File: `supabase/functions/generate-product/index.ts`**
+| ID | Name | Body Type | Ethnicity | Age | File Name |
+|----|------|-----------|-----------|-----|-----------|
+| 045 | Ethan | Athletic | American | Young Adult | model-male-athletic-american.jpg |
+| 046 | James | Average | British | Adult | model-male-average-british.jpg |
+| 047 | Lucas | Slim | French | Young Adult | model-male-slim-french.jpg |
+| 048 | Matteo | Athletic | Italian | Adult | model-male-athletic-italian.jpg |
+| 049 | Sebastian | Average | German | Young Adult | model-male-average-german.jpg |
 
-Add a `uploadBase64ToStorage` helper (same pattern used in `generate-tryon`) that:
-1. Decodes the base64 data URL
-2. Uploads the image to a storage bucket (we'll use the existing `workflow-previews` bucket or create a `product-images` bucket)
-3. Returns the public URL
+### Implementation Steps
 
-Then, after each image is generated, upload it to storage before pushing to the `images` array. This way, `results` will contain proper storage URLs instead of giant base64 strings.
+**Step 1: Create one-time edge function to generate portraits**
 
-Changes:
-- Add `uploadBase64ToStorage()` function (same as in generate-tryon)
-- Add Supabase client initialization for storage access
-- After `generateImage()` returns a base64 URL, upload it to storage and use the public URL
-- No frontend changes needed -- the dashboard already handles storage URLs correctly
+Create `supabase/functions/generate-model-portraits/index.ts` that:
+- Loops through all 15 model definitions
+- Uses `google/gemini-2.5-flash-image` with prompt: "Hyper-realistic studio portrait photo of a beautiful [gender] fashion model, [nationality/ethnicity], [age range], [body build], naturally pretty face with soft features, warm natural expression, soft studio lighting, minimalist light gray background, shoulders visible, looking at camera, high-end model card photo"
+- Decodes the base64 response and uploads each image to `landing-assets/models/` storage bucket
+- Returns the list of generated file paths
 
-### Why This Also Fixes the Library
+**Step 2: Update `src/data/mockData.ts`**
 
-The Library currently renders base64 images directly, which works but is extremely slow (each image is ~12MB of text in the JSON column). After this fix, Library performance will improve too since it'll load from CDN-served storage URLs.
+- Add 15 new image URL constants after line 1135 (before the pose section)
+- Add 15 new model entries to the `mockModels` array after line 1249
+
+**Step 3: Deploy and run the edge function once**
+
+Call the deployed function to generate all 15 portraits and populate the storage bucket. After verification, delete the edge function since it is a one-time utility.
+
+### Result
+
+Model library grows from 34 to 49 models with strong European/American representation. All model selectors in Workflows and Freestyle automatically display the new models.
 
