@@ -1,49 +1,134 @@
 
 
-## Regenerate All 10 Remaining Models (Excluding Sofia) with Fresh Faces
+## Framing / Body Crop Selector -- Full Implementation Plan
 
-### What We're Doing
-Regenerating all 10 models from the last batch (keeping Sofia as the style reference) with completely new faces and matching Sofia's tight, centered head-and-shoulders framing.
+### What We're Building
 
-### Models to Regenerate (10 total)
+A "Framing" selector that tells the AI what part of the body to show (full body, upper body, hand/wrist, neck/shoulders, etc.). This is a **text-only prompt injection** -- no extra image references, no extra cost, no extra loading time. The AI uses the selected model's face/skin as a reference for body characteristics but frames the shot according to the framing choice.
 
-| # | Name | Gender | Ethnicity | Age | Unique Look Details |
-|---|------|--------|-----------|-----|---------------------|
-| 035 | Olivia | F | American | Young Adult | Long blonde hair, blue eyes, sun-kissed skin |
-| 036 | Marcus | M | African American | Adult | Short fade haircut, dark skin, strong jawline |
-| 040 | Ethan | M | American | Young Adult | Messy brown hair, green eyes |
-| 041 | Sienna | F | Italian | Mature | Auburn red hair, freckles |
-| 044 | Priya | F | Indian | Adult | Long dark hair, warm brown skin |
-| 045 | Clara | F | German | Young Adult | Honey blonde bob, blue-green eyes |
-| 046 | Daphne | F | Greek | Adult | Long dark brown hair, Mediterranean tan |
-| 047 | Leo | M | Brazilian | Young Adult | Tanned skin, dark wavy hair, bright smile |
-| 048 | Elise | F | Dutch | Mature | Strawberry blonde hair, light freckles |
-| 049 | Kai | M | Hawaiian/Mixed | Adult | Dark skin, curly black hair |
+### How It Looks in the UI
 
-Sofia (039) stays untouched -- she's the gold standard.
+**In Freestyle Studio (chip in settings bar):**
+- A new chip between "Scene" and "Brand Profile" in the settings row
+- Default state: ghost chip showing a `Frame` icon + "Framing"
+- Selected state: highlighted chip showing the chosen option (e.g., "Hand / Wrist") with a small X to clear
+- Clicking opens a popover (same pattern as Camera Style / Quality dropdowns) showing 7 options, each with:
+  - A simple body-zone **silhouette icon** (inline SVG, no images to generate)
+  - Title (e.g., "Hand / Wrist")
+  - One-line description (e.g., "Watches, bracelets, rings")
+  - Checkmark on the active selection
 
-### Prompt Strategy
+**In Generate Wizard (Try-On flow):**
+- A new card on the **Settings step**, positioned above the Aspect Ratio selector
+- Same visual options as the Freestyle chip popover but laid out as a horizontal scrollable row of small cards (icon + label), matching the existing Aspect Ratio selector pattern
 
-Use a prompt closely modeled on what produced the Sofia portrait:
+**No preview images needed** -- each option uses a minimal SVG silhouette icon showing the body zone highlighted. These are ~10-line inline SVGs, not generated images.
 
-> "Hyper-realistic studio portrait photo of a [beautiful/handsome] [gender] fashion model, [ethnicity], [age description], [specific hair/skin/eye details]. Face perfectly centered in frame, symmetrical composition, head and shoulders portrait, face fills most of the frame, eyes at center of image, looking directly at camera with a natural confident expression. Soft diffused studio lighting, minimalist light gray background, high-end fashion model card photo, sharp focus on face, 85mm lens look."
+### Framing Options
 
-Key additions vs previous attempts:
-- "85mm lens look" for consistent shallow-depth feel
-- "natural confident expression" instead of generic smile
-- "face fills most of the frame" to match Sofia's tight crop
+| Option | Label | Description | Auto-detect Keywords |
+|--------|-------|-------------|---------------------|
+| `full_body` | Full Body | Head to toe, full outfit | (default for clothing) |
+| `upper_body` | Upper Body | Waist up, tops & social | (default for tops, social) |
+| `close_up` | Close-Up | Shoulders up, detail focus | scarves |
+| `hand_wrist` | Hand / Wrist | Watches, bracelets, rings | watch, bracelet, ring |
+| `neck_shoulders` | Neck / Shoulders | Necklaces, earrings | necklace, earrings, pendant |
+| `lower_body` | Lower Body | Shoes, pants, skirts | shoes, sneakers, boots, heels |
+| `back_view` | Back View | Backpacks, rear details | backpack, tote |
 
-### Implementation Steps
+### Auto-Detection Logic
 
-**Step 1: Create temporary edge function**
+When a product is selected, the system auto-suggests the best framing based on product type and tags. Users can always override. If no match, framing defaults to `null` (no override -- AI decides naturally).
 
-Create `supabase/functions/generate-model-portraits/index.ts` with the 10 model definitions and the improved prompt template. Process one at a time to ensure quality. Upload each to `landing-assets/models/` overwriting existing files.
+### How the Prompt Injection Works
 
-**Step 2: No code changes needed**
+The framing option gets injected into the prompt as a text instruction. Examples:
 
-Since the file names remain identical (model-035-olivia.jpg, etc.), `src/data/mockData.ts` stays untouched. Only the storage images get replaced.
+- **hand_wrist + model selected**: "FRAMING: Show only the hand and wrist area. The hand/wrist must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE]. The product should be naturally worn on the wrist. Do NOT include the face."
+- **neck_shoulders + model selected**: "FRAMING: Close-up of the neck, shoulders, and upper chest area. Match the exact skin tone and body of the person in [MODEL IMAGE]. Product should be visible on/near the neck area."
+- **lower_body + model selected**: "FRAMING: Lower body shot from hips to feet. Match body type and skin tone of [MODEL IMAGE]."
+- **full_body** (default behavior, minimal injection): "FRAMING: Full body, head to toe."
 
-**Step 3: Deploy, execute, verify, then delete the function**
+When no model is selected (product-only), framing still works but without model identity references.
 
-Run the function once, confirm all 10 images uploaded, then remove the temporary edge function and its config entry.
+---
+
+### Files to Create
+
+**1. `src/components/app/FramingSelectorChip.tsx`**
+- Popover chip component for Freestyle settings bar
+- Contains the 7 framing options with inline SVG silhouette icons
+- Follows exact same pattern as the Camera Style dropdown in `FreestyleSettingsChips.tsx` (lines 225-260): Popover with PopoverTrigger button and PopoverContent listing options with icon, title, description, and checkmark
+- Props: `framing`, `onFramingChange`, `open`, `onOpenChange`
+- Includes a "None (Auto)" option at top to clear selection
+
+**2. `src/components/app/FramingSelector.tsx`**
+- Horizontal card-row component for the Generate wizard Settings step
+- Same 7 options but rendered as small selectable cards in a scrollable row (similar to the AspectRatioSelector pattern)
+- Props: `framing`, `onFramingChange`
+
+**3. `src/lib/framingUtils.ts`**
+- `FRAMING_OPTIONS` constant array with all 7 options (value, label, description, icon component, auto-detect keywords)
+- `detectDefaultFraming(productType: string, tags: string[]): FramingOption | null` -- keyword matching function
+- `buildFramingPrompt(framing: FramingOption, hasModel: boolean): string` -- returns the prompt text to inject
+
+---
+
+### Files to Modify
+
+**4. `src/types/index.ts`**
+- Add: `export type FramingOption = 'full_body' | 'upper_body' | 'close_up' | 'hand_wrist' | 'neck_shoulders' | 'lower_body' | 'back_view';`
+
+**5. `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
+- Add `framing` and `onFramingChange` props to the interface
+- Add `framingPopoverOpen` and `onFramingPopoverChange` props
+- Render `<FramingSelectorChip>` between the Scene chip and the Brand Profile chip (after line 142)
+
+**6. `src/components/app/freestyle/FreestylePromptPanel.tsx`**
+- Thread `framing` / `onFramingChange` / popover state props through to `FreestyleSettingsChips`
+
+**7. `src/pages/Freestyle.tsx`**
+- Add `framing` state: `const [framing, setFraming] = useState<FramingOption | null>(null)`
+- Add `framingPopoverOpen` state
+- Auto-detect framing when product is selected (in `handleProductSelect`)
+- Include `framing` in the queue payload (line ~270): `framing: framing || undefined`
+- Pass framing props through to `FreestylePromptPanel`
+
+**8. `src/pages/Generate.tsx`**
+- Add `framing` state
+- Auto-detect framing when product is selected (in `handleSelectProduct`, line ~331)
+- Show `<FramingSelector>` on the Settings step (before Aspect Ratio selector)
+- Include `framing` in the try-on payload (line ~541): `framing: framing || undefined`
+- Include `framing` in the workflow payload (line ~475)
+
+**9. `supabase/functions/generate-freestyle/index.ts`**
+- Add `framing?: string` to `FreestyleRequest` interface (line ~37)
+- In `polishUserPrompt()`: after the existing framing layers (~lines 241-244), check if `framing` is provided and override with the specific framing instructions
+- New parameter threaded through: `polishUserPrompt(rawPrompt, context, brandProfile, userNegatives, modelContext, cameraStyle, framing)`
+
+**10. `supabase/functions/generate-tryon/index.ts`**
+- Add `framing?: string` to `TryOnRequest` interface (line ~10)
+- In `buildPrompt()`: inject framing instructions after the photography style section (line ~63). For non-full-body framings, modify the prompt to focus on the specific body zone while maintaining model identity matching
+
+**11. `src/lib/categoryUtils.ts`**
+- Add new category keywords for `accessories` and `footwear` detection (to improve auto-detection accuracy)
+
+---
+
+### Implementation Order
+
+1. Create `src/lib/framingUtils.ts` (constants, detection, prompt builder)
+2. Add `FramingOption` type to `src/types/index.ts`
+3. Create `src/components/app/FramingSelectorChip.tsx` (Freestyle chip)
+4. Create `src/components/app/FramingSelector.tsx` (Generate wizard card row)
+5. Wire into Freestyle: modify `FreestyleSettingsChips.tsx`, `FreestylePromptPanel.tsx`, `Freestyle.tsx`
+6. Wire into Generate: modify `Generate.tsx`
+7. Update edge functions: `generate-freestyle/index.ts`, `generate-tryon/index.ts`
+
+### What This Does NOT Require
+- No preview images to generate (SVG silhouettes only)
+- No database changes
+- No new edge functions
+- No extra API calls or image references during generation
+- No extra credits cost
 
