@@ -1,62 +1,60 @@
 
 
-## Smart Quality Auto-Upgrade and Model Reference Credit Pricing
+## Extract and Use Product Dimensions for Realistic AI Generations
 
-### Problem
+### Why This Matters
 
-1. The quality selector shows "Standard - 4 credits/image" even when a model is selected, but the backend always uses the expensive Pro AI model for model-reference generations. This is misleading.
-2. Credits charged don't reflect the actual cost of model-reference generations, which use 3-5x more compute.
-3. Users don't understand why generation takes longer when they see "Standard" selected.
+When the AI generates a model wearing/carrying a product, it guesses the size. A backpack that's 28x35cm might render as tiny or oversized. If we feed the AI real dimensions (e.g., "backpack: 28cm wide x 35cm tall x 13cm deep"), it can scale the product correctly on the model.
 
-### Changes
+### How Dimensions Get Extracted
 
-**1. Auto-upgrade quality indicator when model is selected** (`FreestyleSettingsChips.tsx`)
+**During Store URL import**: The AI already analyzes the HTML to extract title, images, and description. We extend the extraction prompt to also look for dimensions in:
+- Product specification tables (like the example: Gylis 13cm, Plotis 28cm, Aukstis 35cm)
+- JSON-LD structured data (many stores include `width`, `height`, `depth`)
+- Description text (e.g., "Dimensions: 28 x 35 x 13 cm")
 
-When a model reference is active:
-- The quality chip automatically shows "Pro Model" with a lock icon and primary styling
-- The dropdown is disabled with a tooltip on hover: "Pro model is required for model-reference generations to preserve identity"
-- When the model is removed, quality reverts to whatever the user had selected before
+The AI returns a new `dimensions` field like `"28 x 35 x 13 cm"` or `null` if not found.
 
-**2. Update credit pricing to reflect model reference cost** (`CreditContext.tsx` + `Freestyle.tsx`)
+**During manual upload**: Users can optionally type dimensions in the product edit form.
 
-New pricing structure:
+### What Changes
 
-| Scenario | Credits per image |
-|----------|------------------|
-| Standard (no model) | 4 |
-| High quality (no model) | 10 |
-| With model reference (any quality) | 12 |
-| With model + scene references | 15 |
-| Video | 30 |
+**1. Add `dimensions` column to `user_products` table**
 
-Update `calculateCost` to accept an optional `hasModel` and `hasScene` parameter, and update the Freestyle page's local `creditCost` calculation to match.
+A nullable text column to store free-form dimensions (e.g., "28 x 35 x 13 cm", "One size", "L: 42cm, W: 30cm").
 
-**3. Show credit breakdown in Generate button tooltip** (`Freestyle.tsx`)
+**2. Update import-product edge function** to extract dimensions
 
-The Generate button already shows the total cost like "Generate (12)". Add a hover tooltip that breaks down the cost: "12 credits: Model reference (12/image) x 1 image"
+Add `dimensions` to the AI extraction prompt so it looks for size/dimension specs in the HTML. Return it alongside title, images, etc.
+
+**3. Store dimensions when saving product** (frontend)
+
+The `StoreImportTab` and `ManualProductTab` components pass dimensions through to the database insert. The Edit Product modal shows a "Dimensions" field.
+
+**4. Pass dimensions into generation prompts**
+
+When a product is selected for generation, include its dimensions in the prompt context: "Product dimensions: 28 x 35 x 13 cm -- render at realistic scale relative to the model."
+
+**5. Show dimensions on product cards** (optional nice-to-have)
+
+Display dimensions as a subtle chip on product cards in the library so users can verify the data.
 
 ### Technical Details
 
+**Database migration:**
+```sql
+ALTER TABLE public.user_products 
+ADD COLUMN dimensions text;
+```
+
 **Files changed:**
 
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx`
-  - Accept `hasModelSelected: boolean` prop
-  - When true: override quality chip to show "Pro Model" with lock icon, disable dropdown, add tooltip explaining why
-  - Visual: primary-colored chip with lock icon instead of chevron
+- `supabase/functions/import-product/index.ts` -- extend AI extraction prompt to include `dimensions` field, return it in response
+- `src/components/app/StoreImportTab.tsx` -- pass `dimensions` from import response when saving product
+- `src/components/app/ManualProductTab.tsx` -- add optional dimensions input field
+- `src/components/app/AddProductModal.tsx` -- pass dimensions through the save flow (if needed)
+- `src/pages/Freestyle.tsx` -- include `selectedProduct.dimensions` in the prompt context sent to generate-freestyle
+- `supabase/functions/generate-freestyle/index.ts` -- use dimensions in the product reference section of the prompt (e.g., "Product dimensions: 28x35x13cm, render at correct scale")
+- `src/pages/Products.tsx` or product card component -- show dimensions chip if available
 
-- `src/contexts/CreditContext.tsx`
-  - Extend `calculateCost` signature: `(settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean }) => number`
-  - New logic: if `hasModel`, base cost = 12/image; if `hasModel && hasScene`, base cost = 15/image; otherwise keep existing 4/10 standard/high logic
-
-- `src/pages/Freestyle.tsx`
-  - Update `creditCost` calculation (line 136) to use model/scene-aware pricing instead of just quality-based
-  - Pass `hasModelSelected={!!selectedModel}` to `FreestyleSettingsChips`
-  - Add tooltip to Generate button showing cost breakdown
-
-- `src/pages/Generate.tsx`
-  - Update `calculateCost` call to pass `hasModel` when in virtual-try-on mode (already charges 8, but should be consistent)
-
-### No other changes
-- No database changes
-- No edge function changes
-- No new dependencies
+**No new dependencies needed.**
