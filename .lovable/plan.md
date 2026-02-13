@@ -1,71 +1,48 @@
 
 
-## Fix: Remaining Framing Conflicts in Standard Path
+## Fix: Product Import Failing on Protected Sites (Tiffany 403)
 
-### Problems Found
+### Problem
+Tiffany.es (and many other brand sites) blocks server-side requests with anti-bot protection, returning a **403 Forbidden**. The current `import-product` edge function uses a simple `fetch()` which can't bypass these protections.
 
-The `noFaceFramings` fix from the last edit only covers the **condensed path** (2+ reference images). But when a user selects just a model (no product, no scene), the code takes the **standard path** (lines 244-270) where the MODEL IDENTITY block still demands full face matching for ALL framings -- causing the same timeout contradiction for `back_view` and `lower_body`.
+### Solution: Add Firecrawl as a Fallback
 
-Additionally, the `close_up` framing uses "shoulders and chest upward" which risks triggering safety filters.
+Use the **Firecrawl connector** to handle sites that block direct fetching. The flow becomes:
 
-### Scene + Framing: No Issues
+1. Try direct `fetch()` first (free, works for most sites)
+2. If it fails (403, 429, etc.), fall back to Firecrawl's scrape API which handles anti-bot measures
+3. Feed the scraped HTML/markdown to the same AI extraction pipeline
 
-The scene instruction ("placed in EXACT environment from SCENE IMAGE") is purely about background/environment and works with any body crop. No changes needed.
+### Steps
 
-### Changes
+**Step 1 — Connect Firecrawl**
+- Enable the Firecrawl connector so the `FIRECRAWL_API_KEY` environment variable is available to edge functions
 
-**File: `supabase/functions/generate-freestyle/index.ts`**
+**Step 2 — Update `supabase/functions/import-product/index.ts`**
+- After the direct `fetch()` fails (non-200 status), check if `FIRECRAWL_API_KEY` is available
+- If available, call `https://api.firecrawl.dev/v1/scrape` with the URL, requesting `html` and `markdown` formats
+- Use the Firecrawl response content instead of the direct fetch HTML
+- If Firecrawl is not configured, return the current error as-is (graceful degradation)
 
-1. **Standard path MODEL IDENTITY (line 245-249)**: Make the identity instruction conditional on framing, same pattern as the condensed path:
-   - If framing is `hand_wrist`, `lower_body`, or `back_view`: use "Match skin tone, body type, and physical characteristics" without face-matching demands
-   - All other framings: keep the current full identity matching instruction
-
-2. **Standard path default framing (lines 264-269)**: The existing `if (!framing)` block already correctly skips when framing is set -- no change needed here.
-
-3. **Rephrase `close_up` framing** in both the condensed path (line 151) and standard path (line 299):
-   - Current: "Close-up shot from the shoulders and chest upward"
-   - New: "Close-up portrait from the shoulders upward, emphasizing fine product details. Professional headshot composition."
-
-**File: `src/lib/framingUtils.ts`**
-
-4. **Update `close_up` prompt** (line 86) to match the safer wording for consistency.
-
-### Summary of All Framings After Fix
-
-| Framing | Face visible? | Model instruction | Safety risk | Scene conflict |
-|---------|--------------|-------------------|-------------|----------------|
-| full_body | Yes | Full identity match | None | None |
-| upper_body | Yes | Full identity match | None | None |
-| close_up | Yes | Full identity match | Fixed (rephrased) | None |
-| hand_wrist | No | Skin tone/body only | Already fixed | None |
-| neck_shoulders | No (partial) | Skin tone only | Already fixed | None |
-| lower_body | No | Skin tone/body only | None | None |
-| back_view | No | Body match only | None | None |
-
-### Technical Details
-
-The key change in the standard path MODEL IDENTITY block (~line 245):
+### Technical Detail
 
 ```text
-// Current (always full identity):
-"MODEL IDENTITY: The generated person MUST be the EXACT same person... 
- face must be recognizable..."
+Current flow:
+  fetch(url) --> 403 --> return error
 
-// New (conditional):
-if framing in [hand_wrist, lower_body, back_view]:
-  "MODEL IDENTITY: Match the skin tone, body type, and physical 
-   characteristics of [MODEL IMAGE]. Face is not visible in this 
-   framing composition."
-else:
-  (keep current full identity instruction)
+New flow:
+  fetch(url) --> 403 --> check FIRECRAWL_API_KEY
+    --> if available: call Firecrawl scrape API --> get HTML/markdown --> continue to AI extraction
+    --> if not available: return error with hint "This site blocks automated access"
 ```
 
-### Files Changed
-- `supabase/functions/generate-freestyle/index.ts` -- conditional MODEL IDENTITY in standard path + rephrase close_up
-- `src/lib/framingUtils.ts` -- rephrase close_up for consistency
+The change is ~20 lines added to the existing edge function, wrapping the fetch failure path with a Firecrawl fallback. No UI changes needed — the same StoreImportTab component will work seamlessly since the response format stays identical.
 
-### No other changes needed
-- No UI changes
+### Files Changed
+- `supabase/functions/import-product/index.ts` — add Firecrawl fallback after direct fetch failure
+
+### No other changes
 - No database changes
-- Scene logic is clean
+- No UI changes
+- The Firecrawl connector needs to be enabled first
 
