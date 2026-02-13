@@ -1,105 +1,88 @@
 
-## Overhaul Product Listing Set Workflow
 
-### Current Problems
-1. **Scene previews are low quality** -- the current 8 AI-generated scene backgrounds look generic and unprofessional
-2. **All scenes pre-selected by default** -- users should actively choose which scenes they want, not deselect from a pre-selected list
-3. **Credit pricing is too cheap** -- currently 1 credit/standard, 2 credits/high per scene. Should match the Freestyle Pro pricing model (4 credits standard, 10 credits high)
-4. **No product angle options** -- users can't specify front, side, back, or mixed angles
-5. **Only 8 scenes** -- needs expansion to 20 premium, diverse scenes
+## Expand Product Listing Set to 30 Pro Scenes
 
-### Solution Overview
+### What We Learned from the Research
 
-Expand to 20 pro-level scenes organized in categories, start with none selected, add product angle controls, and align credit costs with the Freestyle pricing model.
+Both Cherrydeck and Squareshot highlight several high-converting photography styles that our current 20 scenes don't cover:
 
-### New Scene Library (20 Scenes)
+- **Floating/Levitation** -- product suspended mid-air, defying gravity (top trend for 2025)
+- **Still Life with Props** -- curated complementary objects that tell a story
+- **Monochromatic/Color Blocking** -- bold single-color backdrops for social media impact
+- **Mirror/Reflections** -- reflective surfaces creating depth and intrigue
+- **Content Pour-out/Texture** -- showing what's inside (cream swirls, ingredients)
+- **Hand-in-Shot** -- a human hand holding/interacting with the product for scale and relatability
+- **Geometric Shapes** -- architectural pedestals, arches, and abstract shapes
+- **Mesmerizing Locations** -- aspirational outdoor environments (beach, poolside)
+- **Packaging Showcase** -- celebrating the unboxing experience
+- **Color Gel Lighting** -- bold colored lighting for modern, editorial impact
 
-Organized into 4 categories for easy browsing:
+### Updated Scene Library: 30 Scenes in 6 Categories
 
-**Studio Essentials (5)**
-1. Hero White -- clean white studio, the primary listing shot
-2. Soft Gray Infinity -- seamless light gray sweep
-3. Gradient Glow -- soft white-to-color gradient, floating feel
-4. Shadow Play -- hard directional light, dramatic long shadows
-5. Dark & Moody -- deep black/charcoal, rim lighting
+We expand from 4 categories to 6, going from 20 to 30 scenes total.
 
-**Surface & Texture (5)**
-6. White Marble -- veined marble slab, luxury feel
-7. Raw Concrete -- industrial textured concrete
-8. Warm Wood Grain -- natural oak/walnut surface
-9. Linen & Fabric -- soft draped linen/cotton backdrop
-10. Terrazzo Stone -- speckled terrazzo, contemporary
+**Studio Essentials (5)** -- unchanged
+1. Hero White
+2. Soft Gray Infinity
+3. Gradient Glow
+4. Shadow Play
+5. Dark and Moody
 
-**Lifestyle Context (5)**
-11. Bathroom Shelf -- product on a styled bathroom shelf
-12. Kitchen Counter -- clean kitchen countertop setting
-13. Vanity Table -- beauty vanity with soft mirror reflections
-14. Office Desk -- minimal workspace scene
-15. Bedside Table -- cozy bedroom nightstand
+**Surface and Texture (5)** -- unchanged
+6. White Marble
+7. Raw Concrete
+8. Warm Wood Grain
+9. Linen and Fabric
+10. Terrazzo Stone
 
-**Editorial & Creative (5)**
-16. Botanical Garden -- surrounded by lush greenery/flowers
-17. Water Splash -- dynamic water droplets, freshness
-18. Golden Hour -- warm sunset lighting, outdoor feel
-19. Neon Accent -- dark scene with colored neon rim light
-20. Flat Lay Overhead -- top-down with styled props
+**Lifestyle Context (5)** -- unchanged
+11. Bathroom Shelf
+12. Kitchen Counter
+13. Vanity Table
+14. Office Desk
+15. Bedside Table
 
-### Product Angle Options
-Add a new "Product Angles" selector in the settings step with options:
-- **Front Only** (default) -- standard front-facing shot
-- **Front + Side** -- generates each selected scene twice (front and side view)
-- **Front + Back** -- generates each selected scene twice (front and back view)
-- **All Angles** -- generates each selected scene three times (front, side, back)
+**Editorial and Creative (5)** -- unchanged
+16. Botanical Garden
+17. Water Splash
+18. Golden Hour
+19. Neon Accent
+20. Flat Lay Overhead
 
-The angle multiplier affects the total image count and credits accordingly.
+**NEW: Dynamic and Effects (5)**
+21. **Floating Levitation** -- product suspended mid-air with soft shadow below, defying gravity, clean background, editorial magic
+22. **Mirror Reflection** -- product on a reflective mirror surface creating a perfect symmetrical reflection, dramatic and elegant
+23. **Monochrome Color Block** -- bold single saturated color backdrop (matching or complementing the product), Glossier-style pop art feel
+24. **Geometric Pedestal** -- product elevated on abstract geometric shapes (cylinders, arches, cubes) in neutral tones, architectural and modern
+25. **Smoke and Mist** -- product emerging from soft atmospheric fog or mist, mysterious and premium, soft rim lighting
 
-### Credit Pricing Alignment
-Match Freestyle pricing:
-- Standard quality: **4 credits per image**
-- High quality: **10 credits per image**
+**NEW: Storytelling and Context (5)**
+26. **Hand-in-Shot** -- a clean, well-groomed hand holding or presenting the product naturally, adding human scale and relatability
+27. **Still Life Composition** -- product as hero surrounded by curated complementary props (dried flowers, stones, fabric), artful arrangement
+28. **Content Pour-out** -- product contents spilling out artfully (powder, liquid, cream texture), showing what's inside, macro-style detail
+29. **Beach and Sand** -- product on natural sand with soft ocean light, warm coastal tones, aspirational travel context
+30. **Gift and Unboxing** -- product emerging from premium packaging with tissue paper and ribbon, celebrating the unboxing experience
 
 ### Technical Details
 
-**Database Migration: Update `workflows.generation_config`**
-- Update the Product Listing Set workflow's `generation_config` JSONB to include 20 new scene variations with upgraded prompt instructions
-- Add a `custom_settings` entry in `ui_config` for product angles
+**Database Migration**
+- Update the Product Listing Set workflow's `generation_config` JSONB to replace the current 20 variations with 30 new ones
+- Each new scene includes a detailed `instruction` prompt optimized for AI generation and a `category` field
 
 **File: `src/pages/Generate.tsx`**
+- Add two new category filter tabs: "Dynamic" and "Storytelling" alongside the existing All, Studio, Surface, Lifestyle, Editorial tabs
+- The grid layout already supports 5 columns (`lg:grid-cols-5`), so 30 scenes will fill 6 clean rows
 
-Settings step changes (lines ~1380-1570):
-- **Scene selection**: Change default from all-selected to none-selected. Show a prompt: "Select the scenes you want (min 1)"
-- **Category tabs**: Add horizontal filter tabs (All, Studio, Surface, Lifestyle, Editorial) above the scene grid
-- **Scene grid**: Increase to `grid-cols-2 sm:grid-cols-4 lg:grid-cols-5` for 20 items
-- **Product Angle selector**: Add a new card section between scene selection and Generation Settings with angle options (Front Only, Front+Side, Front+Back, All Angles)
-- **Credit calculation**: Update line 660 from `workflowImageCount * (quality === 'high' ? 2 : 1)` to `workflowImageCount * (quality === 'high' ? 10 : 4)`, multiplied by the angle count
-- **Generate button**: Disable when 0 scenes selected, show "Select at least 1 scene"
-- **Total image count**: `selectedScenes * angleMultiplier`
+**File: `supabase/functions/generate-scene-previews/index.ts`**
+- Add prompt entries for the 10 new scenes in the `scenePreviewPrompts` map so the admin can generate AI preview thumbnails for all 30 scenes
 
-**File: `supabase/functions/generate-workflow/index.ts`**
-- Accept new `product_angles` field in the request body
-- For each selected scene variation, generate images for each requested angle by appending angle instructions to the prompt (e.g., "Show the product from a 45-degree side angle" or "Show the back/rear of the product")
+No changes needed to the edge function, credit logic, or angle selector -- those were already implemented correctly in the previous update.
 
-**File: `src/types/workflow.ts`**
-- Add `category?: string` to `WorkflowVariationItem` interface for scene categorization
+### Changes Summary
 
-### UX Flow After Changes
-
-```text
-Step 1: Select Product
-Step 2: Brand Profile (if available)
-Step 3: Settings
-  - Product summary card
-  - "Select Your Scenes" card (category tabs + 20 scene grid, none pre-selected)
-  - "Product Angles" card (Front Only / Front+Side / Front+Back / All Angles)
-  - "Generation Settings" card (Quality dropdown with 4/10 credit costs, Aspect Ratio)
-  - Credit summary: "X scenes x Y angles x Z credits = Total"
-  - Generate button (disabled until at least 1 scene selected)
-```
-
-### Files Changed Summary
 | File | Change |
 |------|--------|
-| Database migration | Update Product Listing Set `generation_config` with 20 scenes + angle custom_setting |
-| `src/pages/Generate.tsx` | Scene category tabs, none-selected default, angle selector, updated credit math |
-| `src/types/workflow.ts` | Add `category` field to `WorkflowVariationItem` |
-| `supabase/functions/generate-workflow/index.ts` | Handle `product_angles` param, multiply generations per angle |
+| Database migration | Update `generation_config` from 20 to 30 scene variations with 2 new categories |
+| `src/pages/Generate.tsx` | Add "Dynamic" and "Storytelling" category tabs |
+| `supabase/functions/generate-scene-previews/index.ts` | Add 10 new scene preview prompts |
+
