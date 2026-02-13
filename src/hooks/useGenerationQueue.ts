@@ -5,6 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export type QueueJobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';
 
+export interface GenerationMeta {
+  imageCount: number;
+  quality: string;
+  hasModel: boolean;
+  hasScene: boolean;
+  hasProduct: boolean;
+}
+
 export interface QueueJob {
   id: string;
   status: QueueJobStatus;
@@ -15,6 +23,7 @@ export interface QueueJob {
   created_at: string;
   started_at: string | null;
   completed_at: string | null;
+  generationMeta?: GenerationMeta;
 }
 
 interface EnqueueParams {
@@ -33,7 +42,7 @@ interface EnqueueResult {
 }
 
 interface UseGenerationQueueReturn {
-  enqueue: (params: EnqueueParams) => Promise<EnqueueResult | null>;
+  enqueue: (params: EnqueueParams, meta?: GenerationMeta) => Promise<EnqueueResult | null>;
   activeJob: QueueJob | null;
   isEnqueuing: boolean;
   isProcessing: boolean;
@@ -195,7 +204,7 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
     restoreActiveJob();
   }, [user, pollJobStatus]);
 
-  const enqueue = useCallback(async (params: EnqueueParams): Promise<EnqueueResult | null> => {
+  const enqueue = useCallback(async (params: EnqueueParams, meta?: GenerationMeta): Promise<EnqueueResult | null> => {
     if (!user) {
       toast.error('Please sign in to generate images');
       return null;
@@ -262,6 +271,7 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
         created_at: new Date().toISOString(),
         started_at: null,
         completed_at: null,
+        generationMeta: meta,
       });
 
       jobIdRef.current = result.jobId;
