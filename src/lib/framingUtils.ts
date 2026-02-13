@@ -5,6 +5,7 @@ export interface FramingOptionConfig {
   label: string;
   description: string;
   keywords: string[];
+  previewUrl: string;
 }
 
 export const FRAMING_OPTIONS: FramingOptionConfig[] = [
@@ -13,42 +14,49 @@ export const FRAMING_OPTIONS: FramingOptionConfig[] = [
     label: 'Full Body',
     description: 'Head to toe, full outfit',
     keywords: ['dress', 'jumpsuit', 'romper', 'outfit', 'full body'],
+    previewUrl: '/images/framing/full_body.png',
   },
   {
     value: 'upper_body',
     label: 'Upper Body',
     description: 'Waist up, tops & social',
     keywords: ['top', 'shirt', 'blouse', 'hoodie', 'sweater', 'jacket'],
+    previewUrl: '/images/framing/upper_body.png',
   },
   {
     value: 'close_up',
     label: 'Close-Up',
     description: 'Shoulders up, detail focus',
     keywords: ['scarf', 'scarves', 'glasses', 'sunglasses'],
+    previewUrl: '/images/framing/close_up.png',
   },
   {
     value: 'hand_wrist',
     label: 'Hand / Wrist',
     description: 'Watches, bracelets, rings',
     keywords: ['watch', 'bracelet', 'ring', 'bangle', 'wristband', 'cuff'],
+    previewUrl: '/images/framing/hand_wrist.png',
   },
   {
     value: 'neck_shoulders',
     label: 'Neck / Shoulders',
     description: 'Necklaces, earrings, pendants',
     keywords: ['necklace', 'earring', 'earrings', 'pendant', 'choker', 'collar'],
+    previewUrl: '/images/framing/neck_shoulders.png',
   },
   {
     value: 'lower_body',
     label: 'Lower Body',
     description: 'Shoes, pants, skirts',
     keywords: ['shoes', 'sneakers', 'boots', 'heels', 'sandals', 'loafers', 'slides'],
+    previewUrl: '/images/framing/lower_body.png',
   },
   {
     value: 'back_view',
     label: 'Back View',
     description: 'Backpacks, rear details',
     keywords: ['backpack', 'tote', 'rucksack'],
+    previewUrl: '/images/framing/back_view.png',
   },
 ];
 
