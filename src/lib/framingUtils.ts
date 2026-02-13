@@ -8,62 +8,64 @@ export interface FramingOptionConfig {
   previewUrl: string;
 }
 
+const CACHE_BUST = 'v2';
+
 export const FRAMING_OPTIONS: FramingOptionConfig[] = [
   {
     value: 'full_body',
     label: 'Full Body',
     description: 'Head to toe, full outfit',
     keywords: ['dress', 'jumpsuit', 'romper', 'outfit', 'full body'],
-    previewUrl: '/images/framing/full_body.png',
+    previewUrl: `/images/framing/full_body.png?${CACHE_BUST}`,
   },
   {
     value: 'upper_body',
     label: 'Upper Body',
     description: 'Waist up, tops & social',
     keywords: ['top', 'shirt', 'blouse', 'hoodie', 'sweater', 'jacket'],
-    previewUrl: '/images/framing/upper_body.png',
+    previewUrl: `/images/framing/upper_body.png?${CACHE_BUST}`,
   },
   {
     value: 'close_up',
     label: 'Close-Up',
     description: 'Shoulders up, detail focus',
     keywords: ['scarf', 'scarves', 'glasses', 'sunglasses'],
-    previewUrl: '/images/framing/close_up.png',
+    previewUrl: `/images/framing/close_up.png?${CACHE_BUST}`,
   },
   {
     value: 'hand_wrist',
     label: 'Hand / Wrist',
     description: 'Watches, bracelets, rings',
     keywords: ['watch', 'bracelet', 'ring', 'bangle', 'wristband', 'cuff'],
-    previewUrl: '/images/framing/hand_wrist.png',
+    previewUrl: `/images/framing/hand_wrist.png?${CACHE_BUST}`,
   },
   {
     value: 'neck_shoulders',
     label: 'Neck / Shoulders',
     description: 'Necklaces, pendants, chokers',
     keywords: ['necklace', 'pendant', 'choker', 'collar'],
-    previewUrl: '/images/framing/neck_shoulders.png',
+    previewUrl: `/images/framing/neck_shoulders.png?${CACHE_BUST}`,
   },
   {
     value: 'side_profile',
     label: 'Side Profile',
     description: 'Earrings, ear cuffs',
     keywords: ['earring', 'earrings', 'ear cuff', 'ear'],
-    previewUrl: '/images/framing/side_profile.png',
+    previewUrl: `/images/framing/side_profile.png?${CACHE_BUST}`,
   },
   {
     value: 'lower_body',
     label: 'Lower Body',
     description: 'Shoes, pants, skirts',
     keywords: ['shoes', 'sneakers', 'boots', 'heels', 'sandals', 'loafers', 'slides'],
-    previewUrl: '/images/framing/lower_body.png',
+    previewUrl: `/images/framing/lower_body.png?${CACHE_BUST}`,
   },
   {
     value: 'back_view',
     label: 'Back View',
     description: 'Backpacks, rear details',
     keywords: ['backpack', 'tote', 'rucksack'],
-    previewUrl: '/images/framing/back_view.png',
+    previewUrl: `/images/framing/back_view.png?${CACHE_BUST}`,
   },
 ];
 
