@@ -43,6 +43,7 @@ interface WorkflowRequest {
     title: string;
     productType: string;
     description: string;
+    dimensions?: string;
     imageUrl: string; // base64 or URL
   };
   model?: {
@@ -129,6 +130,7 @@ The person in this image MUST be the EXACT same person shown in [MODEL IMAGE].
 PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
+${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
 ${product.description ? `- Description: ${product.description}` : ""}
 ${modelBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
