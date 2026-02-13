@@ -1134,22 +1134,22 @@ const modelFemalePlussizeMiddleeast = getLandingAssetUrl('models/model-female-pl
 const modelFemaleAverageIrish = getLandingAssetUrl('models/model-female-average-irish.jpg');
 const modelMaleAthleticScottish = getLandingAssetUrl('models/model-male-athletic-scottish.jpg');
 
-// New European/American models
-const modelFemaleSlimAmerican = getLandingAssetUrl('models/model-female-slim-american.jpg');
-const modelFemaleAthleticBritish = getLandingAssetUrl('models/model-female-athletic-british.jpg');
-const modelFemaleAverageGerman = getLandingAssetUrl('models/model-female-average-german.jpg');
-const modelFemaleSlimFrench = getLandingAssetUrl('models/model-female-slim-french.jpg');
-const modelFemaleAthleticItalian = getLandingAssetUrl('models/model-female-athletic-italian.jpg');
-const modelFemaleAverageSwedish = getLandingAssetUrl('models/model-female-average-swedish.jpg');
-const modelFemaleSlimSpanish = getLandingAssetUrl('models/model-female-slim-spanish.jpg');
-const modelFemaleAthleticGreek = getLandingAssetUrl('models/model-female-athletic-greek.jpg');
-const modelFemaleAverageAmerican = getLandingAssetUrl('models/model-female-average-american.jpg');
-const modelFemaleSlimDutch = getLandingAssetUrl('models/model-female-slim-dutch.jpg');
-const modelMaleAthleticAmerican = getLandingAssetUrl('models/model-male-athletic-american.jpg');
-const modelMaleAverageBritish = getLandingAssetUrl('models/model-male-average-british.jpg');
-const modelMaleSlimFrench = getLandingAssetUrl('models/model-male-slim-french.jpg');
-const modelMaleAthleticItalian = getLandingAssetUrl('models/model-male-athletic-italian.jpg');
-const modelMaleAverageGerman = getLandingAssetUrl('models/model-male-average-german.jpg');
+// Diverse mixed models (035-049)
+const model035Olivia = getLandingAssetUrl('models/model-035-olivia.jpg');
+const model036Marcus = getLandingAssetUrl('models/model-036-marcus.jpg');
+const model037Yuna = getLandingAssetUrl('models/model-037-yuna.jpg');
+const model038James = getLandingAssetUrl('models/model-038-james.jpg');
+const model039Sofia = getLandingAssetUrl('models/model-039-sofia.jpg');
+const model040Ethan = getLandingAssetUrl('models/model-040-ethan.jpg');
+const model041Sienna = getLandingAssetUrl('models/model-041-sienna.jpg');
+const model042Nina = getLandingAssetUrl('models/model-042-nina.jpg');
+const model043Andre = getLandingAssetUrl('models/model-043-andre.jpg');
+const model044Priya = getLandingAssetUrl('models/model-044-priya.jpg');
+const model045Clara = getLandingAssetUrl('models/model-045-clara.jpg');
+const model046Daphne = getLandingAssetUrl('models/model-046-daphne.jpg');
+const model047Leo = getLandingAssetUrl('models/model-047-leo.jpg');
+const model048Elise = getLandingAssetUrl('models/model-048-elise.jpg');
+const model049Kai = getLandingAssetUrl('models/model-049-kai.jpg');
 
 // Pose preview images via storage
 const poseStudioFront = getLandingAssetUrl('poses/pose-studio-front.jpg');
@@ -1264,21 +1264,21 @@ export const mockModels: ModelProfile[] = [
   { modelId: 'model_032', name: 'Fatima', gender: 'female', bodyType: 'plus-size', ethnicity: 'Middle Eastern', ageRange: 'adult', previewUrl: modelFemalePlussizeMiddleeast },
   { modelId: 'model_033', name: 'Sienna', gender: 'female', bodyType: 'average', ethnicity: 'Irish', ageRange: 'young-adult', previewUrl: modelFemaleAverageIrish },
   { modelId: 'model_034', name: 'Rowan', gender: 'male', bodyType: 'athletic', ethnicity: 'Scottish', ageRange: 'adult', previewUrl: modelMaleAthleticScottish },
-  { modelId: 'model_035', name: 'Olivia', gender: 'female', bodyType: 'slim', ethnicity: 'American', ageRange: 'young-adult', previewUrl: modelFemaleSlimAmerican },
-  { modelId: 'model_036', name: 'Emma', gender: 'female', bodyType: 'athletic', ethnicity: 'British', ageRange: 'adult', previewUrl: modelFemaleAthleticBritish },
-  { modelId: 'model_037', name: 'Clara', gender: 'female', bodyType: 'average', ethnicity: 'German', ageRange: 'young-adult', previewUrl: modelFemaleAverageGerman },
-  { modelId: 'model_038', name: 'Amelie', gender: 'female', bodyType: 'slim', ethnicity: 'French', ageRange: 'adult', previewUrl: modelFemaleSlimFrench },
-  { modelId: 'model_039', name: 'Giulia', gender: 'female', bodyType: 'athletic', ethnicity: 'Italian', ageRange: 'young-adult', previewUrl: modelFemaleAthleticItalian },
-  { modelId: 'model_040', name: 'Lina', gender: 'female', bodyType: 'average', ethnicity: 'Swedish', ageRange: 'young-adult', previewUrl: modelFemaleAverageSwedish },
-  { modelId: 'model_041', name: 'Mila', gender: 'female', bodyType: 'slim', ethnicity: 'Spanish', ageRange: 'adult', previewUrl: modelFemaleSlimSpanish },
-  { modelId: 'model_042', name: 'Daphne', gender: 'female', bodyType: 'athletic', ethnicity: 'Greek', ageRange: 'young-adult', previewUrl: modelFemaleAthleticGreek },
-  { modelId: 'model_043', name: 'Natalie', gender: 'female', bodyType: 'average', ethnicity: 'American', ageRange: 'adult', previewUrl: modelFemaleAverageAmerican },
-  { modelId: 'model_044', name: 'Elise', gender: 'female', bodyType: 'slim', ethnicity: 'Dutch', ageRange: 'young-adult', previewUrl: modelFemaleSlimDutch },
-  { modelId: 'model_045', name: 'Ethan', gender: 'male', bodyType: 'athletic', ethnicity: 'American', ageRange: 'young-adult', previewUrl: modelMaleAthleticAmerican },
-  { modelId: 'model_046', name: 'James', gender: 'male', bodyType: 'average', ethnicity: 'British', ageRange: 'adult', previewUrl: modelMaleAverageBritish },
-  { modelId: 'model_047', name: 'Lucas', gender: 'male', bodyType: 'slim', ethnicity: 'French', ageRange: 'young-adult', previewUrl: modelMaleSlimFrench },
-  { modelId: 'model_048', name: 'Matteo', gender: 'male', bodyType: 'athletic', ethnicity: 'Italian', ageRange: 'adult', previewUrl: modelMaleAthleticItalian },
-  { modelId: 'model_049', name: 'Sebastian', gender: 'male', bodyType: 'average', ethnicity: 'German', ageRange: 'young-adult', previewUrl: modelMaleAverageGerman },
+  { modelId: 'model_035', name: 'Olivia', gender: 'female', bodyType: 'slim', ethnicity: 'American', ageRange: 'young-adult', previewUrl: model035Olivia },
+  { modelId: 'model_036', name: 'Marcus', gender: 'male', bodyType: 'athletic', ethnicity: 'African American', ageRange: 'adult', previewUrl: model036Marcus },
+  { modelId: 'model_037', name: 'Yuna', gender: 'female', bodyType: 'slim', ethnicity: 'Korean', ageRange: 'young-adult', previewUrl: model037Yuna },
+  { modelId: 'model_038', name: 'James', gender: 'male', bodyType: 'average', ethnicity: 'British', ageRange: 'mature', previewUrl: model038James },
+  { modelId: 'model_039', name: 'Sofia', gender: 'female', bodyType: 'athletic', ethnicity: 'Spanish', ageRange: 'adult', previewUrl: model039Sofia },
+  { modelId: 'model_040', name: 'Ethan', gender: 'male', bodyType: 'athletic', ethnicity: 'American', ageRange: 'young-adult', previewUrl: model040Ethan },
+  { modelId: 'model_041', name: 'Sienna', gender: 'female', bodyType: 'average', ethnicity: 'Italian', ageRange: 'mature', previewUrl: model041Sienna },
+  { modelId: 'model_042', name: 'Nina', gender: 'female', bodyType: 'slim', ethnicity: 'Scandinavian', ageRange: 'young-adult', previewUrl: model042Nina },
+  { modelId: 'model_043', name: 'Andre', gender: 'male', bodyType: 'slim', ethnicity: 'French', ageRange: 'adult', previewUrl: model043Andre },
+  { modelId: 'model_044', name: 'Priya', gender: 'female', bodyType: 'athletic', ethnicity: 'Indian', ageRange: 'adult', previewUrl: model044Priya },
+  { modelId: 'model_045', name: 'Clara', gender: 'female', bodyType: 'average', ethnicity: 'German', ageRange: 'young-adult', previewUrl: model045Clara },
+  { modelId: 'model_046', name: 'Daphne', gender: 'female', bodyType: 'slim', ethnicity: 'Greek', ageRange: 'adult', previewUrl: model046Daphne },
+  { modelId: 'model_047', name: 'Leo', gender: 'male', bodyType: 'athletic', ethnicity: 'Brazilian', ageRange: 'young-adult', previewUrl: model047Leo },
+  { modelId: 'model_048', name: 'Elise', gender: 'female', bodyType: 'average', ethnicity: 'Dutch', ageRange: 'mature', previewUrl: model048Elise },
+  { modelId: 'model_049', name: 'Kai', gender: 'male', bodyType: 'average', ethnicity: 'Hawaiian/Mixed', ageRange: 'adult', previewUrl: model049Kai },
 ];
 
 export const mockTryOnPoses: TryOnPose[] = [
