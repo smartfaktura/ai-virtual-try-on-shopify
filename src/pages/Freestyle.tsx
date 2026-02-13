@@ -295,6 +295,7 @@ export default function Freestyle() {
       negatives: negatives.length > 0 ? negatives : undefined,
       cameraStyle,
       framing: framing || undefined,
+      productDimensions: selectedProduct?.dimensions || undefined,
     };
 
     // Enqueue via priority queue
