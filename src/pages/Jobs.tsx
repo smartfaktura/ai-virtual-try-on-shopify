@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Search, Image, Loader2, Download, CheckSquare, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
+import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -52,7 +53,14 @@ export default function Jobs() {
   const queryClient = useQueryClient();
 
   const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
+  const { lastCompletedAt } = useGenerationQueue();
   const columnCount = useColumnCount();
+
+  const showIncomingBanner = useMemo(() => {
+    if (!lastCompletedAt) return false;
+    const elapsed = Date.now() - new Date(lastCompletedAt).getTime();
+    return elapsed < 30_000;
+  }, [lastCompletedAt]);
 
   const columns: typeof items[] = Array.from({ length: columnCount }, () => []);
   items.forEach((item, i) => {
@@ -148,6 +156,25 @@ export default function Jobs() {
           <h1 className="text-3xl font-semibold tracking-tight">Library</h1>
           <p className="text-muted-foreground mt-1">Your generated images and freestyle creations</p>
         </div>
+
+        {/* Incoming images banner */}
+        {showIncomingBanner && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-muted/30 border border-border/50">
+            <Sparkles className="w-4 h-4 text-primary shrink-0" />
+            <p className="text-sm text-muted-foreground flex-1">
+              Your latest images are being processed and will appear here shortly.
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0 gap-1.5 text-xs"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['library'] })}
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Refresh
+            </Button>
+          </div>
+        )}
 
         {/* Search + Sort + Select */}
         <div className="flex flex-wrap items-center gap-3">
