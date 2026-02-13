@@ -117,7 +117,12 @@ function polishUserPrompt(
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
       const num = context.hasSource ? 2 : 1;
-      parts.push(`${num}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body${identityDetails}. Ignore any person in the product image.`);
+      const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view'];
+      if (framing && noFaceFramings.includes(framing)) {
+        parts.push(`${num}. MODEL: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`);
+      } else {
+        parts.push(`${num}. MODEL: The person must be the exact individual from [MODEL IMAGE] — same face, hair, skin tone, body${identityDetails}. Ignore any person in the product image.`);
+      }
     }
     if (context.hasScene) {
       const num = [context.hasSource, context.hasModel].filter(Boolean).length + 1;
@@ -163,8 +168,6 @@ function polishUserPrompt(
       const deduped = [...new Set(allNeg.map(n => n.toLowerCase()))];
       parts.push(`Also avoid: ${deduped.join(", ")}`);
     }
-
-    return parts.join("\n");
 
     return parts.join("\n");
   }
