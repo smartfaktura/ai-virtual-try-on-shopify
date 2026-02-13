@@ -35,6 +35,7 @@ interface VariationItem {
   label: string;
   instruction: string;
   aspect_ratio?: string;
+  category?: string;
 }
 
 interface WorkflowRequest {
@@ -68,6 +69,7 @@ interface WorkflowRequest {
     photography_reference?: string;
   };
   selected_variations?: number[]; // indices of which variations to generate
+  product_angles?: 'front' | 'front-side' | 'front-back' | 'all';
   quality?: string;
   image_count?: number;
 }
@@ -418,15 +420,28 @@ serve(async (req) => {
       variationsToGenerate = allVariations;
     }
 
-    const maxImages = Math.min(variationsToGenerate.length, 8);
+    const maxImages = 20; // increased from 8 to support 20 scenes
     variationsToGenerate = variationsToGenerate.slice(0, maxImages);
+
+    // Determine angle variations
+    const angleOption = body.product_angles || 'front';
+    const angleInstructions: Array<{ suffix: string; label: string }> = [
+      { suffix: '', label: 'Front' },
+    ];
+    if (angleOption === 'front-side' || angleOption === 'all') {
+      angleInstructions.push({ suffix: '\n\nANGLE: Show the product from a 45-degree side angle, revealing the side profile and depth of the product.', label: 'Side' });
+    }
+    if (angleOption === 'front-back' || angleOption === 'all') {
+      angleInstructions.push({ suffix: '\n\nANGLE: Show the back/rear of the product, revealing the back panel, ingredients list, or back design.', label: 'Back' });
+    }
 
     const quality =
       body.quality || config.fixed_settings.quality || "standard";
     const model = getModelForQuality(quality);
 
+    const totalToGenerate = variationsToGenerate.length * angleInstructions.length;
     console.log(
-      `[generate-workflow] Generating ${variationsToGenerate.length} variations using ${model}`
+      `[generate-workflow] Generating ${variationsToGenerate.length} variations × ${angleInstructions.length} angles = ${totalToGenerate} images using ${model}`
     );
 
     const images: Array<{
@@ -440,75 +455,88 @@ serve(async (req) => {
       const variation = variationsToGenerate[i];
       const aspectRatio = getAspectRatioForVariation(config, variation);
 
-      try {
-        const prompt = buildVariationPrompt(
-          config,
-          variation,
-          body.product,
-          body.brand_profile,
-          i,
-          variationsToGenerate.length,
-          body.model
-        );
+      for (let a = 0; a < angleInstructions.length; a++) {
+        const angle = angleInstructions[a];
 
-        console.log(
-          `[generate-workflow] Variation ${i + 1}/${variationsToGenerate.length}: "${variation.label}" (${aspectRatio})${body.model ? ` [with model: ${body.model.name}]` : ""}`
-        );
+        try {
+          // Build variation with angle instruction appended
+          const angleVariation: VariationItem = {
+            ...variation,
+            instruction: variation.instruction + angle.suffix,
+          };
+          const imageLabel = angleInstructions.length > 1 ? `${variation.label} (${angle.label})` : variation.label;
 
-        const referenceImages: Array<{ url: string; label: string }> = [
-          { url: body.product.imageUrl, label: "product" },
-        ];
-        if (body.model?.imageUrl) {
-          referenceImages.push({ url: body.model.imageUrl, label: "model" });
-        }
+          const prompt = buildVariationPrompt(
+            config,
+            angleVariation,
+            body.product,
+            body.brand_profile,
+            i,
+            variationsToGenerate.length,
+            body.model
+          );
 
-        const imageUrl = await generateImage(
-          prompt,
-          referenceImages,
-          model,
-          LOVABLE_API_KEY
-        );
-
-        if (imageUrl) {
-          images.push({
-            url: imageUrl,
-            label: variation.label,
-            aspect_ratio: aspectRatio,
-          });
           console.log(
-            `[generate-workflow] ✓ Variation "${variation.label}" generated`
+            `[generate-workflow] Variation ${i + 1}/${variationsToGenerate.length} [${angle.label}]: "${variation.label}" (${aspectRatio})${body.model ? ` [with model: ${body.model.name}]` : ""}`
           );
-        } else {
-          errors.push(`"${variation.label}" failed to generate`);
-        }
-      } catch (error: unknown) {
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          "status" in error
-        ) {
-          const statusError = error as { status: number; message: string };
-          if (isQueueInternal && body.job_id) {
-            await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], variationsToGenerate.length, [statusError.message], body as unknown as Record<string, unknown>);
-          }
-          return new Response(
-            JSON.stringify({ error: statusError.message }),
-            {
-              status: statusError.status,
-              headers: {
-                ...corsHeaders,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-        }
-        errors.push(
-          `"${variation.label}": ${error instanceof Error ? error.message : "Unknown error"}`
-        );
-      }
 
-      if (i < variationsToGenerate.length - 1) {
-        await new Promise((r) => setTimeout(r, 500));
+          const referenceImages: Array<{ url: string; label: string }> = [
+            { url: body.product.imageUrl, label: "product" },
+          ];
+          if (body.model?.imageUrl) {
+            referenceImages.push({ url: body.model.imageUrl, label: "model" });
+          }
+
+          const imageUrl = await generateImage(
+            prompt,
+            referenceImages,
+            model,
+            LOVABLE_API_KEY
+          );
+
+          if (imageUrl) {
+            images.push({
+              url: imageUrl,
+              label: imageLabel,
+              aspect_ratio: aspectRatio,
+            });
+            console.log(
+              `[generate-workflow] ✓ "${imageLabel}" generated`
+            );
+          } else {
+            errors.push(`"${imageLabel}" failed to generate`);
+          }
+        } catch (error: unknown) {
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "status" in error
+          ) {
+            const statusError = error as { status: number; message: string };
+            if (isQueueInternal && body.job_id) {
+              await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], totalToGenerate, [statusError.message], body as unknown as Record<string, unknown>);
+            }
+            return new Response(
+              JSON.stringify({ error: statusError.message }),
+              {
+                status: statusError.status,
+                headers: {
+                  ...corsHeaders,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+          }
+          const imageLabel = angleInstructions.length > 1 ? `${variation.label} (${angle.label})` : variation.label;
+          errors.push(
+            `"${imageLabel}": ${error instanceof Error ? error.message : "Unknown error"}`
+          );
+        }
+
+        // Delay between generations
+        if (a < angleInstructions.length - 1 || i < variationsToGenerate.length - 1) {
+          await new Promise((r) => setTimeout(r, 500));
+        }
       }
     }
 
@@ -516,7 +544,7 @@ serve(async (req) => {
 
     // Queue self-completion
     if (isQueueInternal && body.job_id) {
-      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, imageUrls, variationsToGenerate.length, errors, body as unknown as Record<string, unknown>);
+      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, imageUrls, totalToGenerate, errors, body as unknown as Record<string, unknown>);
     }
 
     if (images.length === 0) {
@@ -540,8 +568,8 @@ serve(async (req) => {
           aspect_ratio: img.aspect_ratio,
         })),
         generatedCount: images.length,
-        requestedCount: variationsToGenerate.length,
-        partialSuccess: images.length < variationsToGenerate.length,
+        requestedCount: totalToGenerate,
+        partialSuccess: images.length < totalToGenerate,
         workflow_name: workflow.name,
         strategy_type: config.variation_strategy.type,
         errors: errors.length > 0 ? errors : undefined,
