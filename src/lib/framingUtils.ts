@@ -40,9 +40,16 @@ export const FRAMING_OPTIONS: FramingOptionConfig[] = [
   {
     value: 'neck_shoulders',
     label: 'Neck / Shoulders',
-    description: 'Necklaces, earrings, pendants',
-    keywords: ['necklace', 'earring', 'earrings', 'pendant', 'choker', 'collar'],
+    description: 'Necklaces, pendants, chokers',
+    keywords: ['necklace', 'pendant', 'choker', 'collar'],
     previewUrl: '/images/framing/neck_shoulders.png',
+  },
+  {
+    value: 'side_profile',
+    label: 'Side Profile',
+    description: 'Earrings, ear cuffs',
+    keywords: ['earring', 'earrings', 'ear cuff', 'ear'],
+    previewUrl: '/images/framing/side_profile.png',
   },
   {
     value: 'lower_body',
@@ -91,11 +98,13 @@ export function buildFramingPrompt(framing: FramingOption, hasModel: boolean): s
     case 'upper_body':
       return `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${modelRef}`;
     case 'close_up':
-      return `FRAMING: Close-up portrait from the shoulders upward, emphasizing fine product details. Professional headshot composition.${modelRef}`;
+      return `FRAMING: Tight close-up portrait, face filling most of the frame. Professional beauty/headshot composition emphasizing facial area and any worn accessories.${modelRef}`;
     case 'hand_wrist':
       return `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${modelRef}`;
     case 'neck_shoulders':
-      return `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${modelRef}`;
+      return `FRAMING: Jewelry display framing — collarbone and neckline area, cropped from just below the chin to mid-chest. Do NOT include the face. Professional product photography composition.${modelRef}`;
+    case 'side_profile':
+      return `FRAMING: Side profile view focusing on the ear and jawline area. Show the side of the head from temple to jawline. The product should be clearly visible on or near the ear.${modelRef}`;
     case 'lower_body':
       return `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${modelRef}`;
     case 'back_view':
