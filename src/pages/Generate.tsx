@@ -444,6 +444,12 @@ export default function Generate() {
       },
       imageCount: parseInt(imageCount),
       quality,
+    }, {
+      imageCount: parseInt(imageCount),
+      quality,
+      hasModel: false,
+      hasScene: false,
+      hasProduct: true,
     });
     if (enqueueResult) {
       setBalanceFromServer(enqueueResult.newBalance);
@@ -509,6 +515,12 @@ export default function Generate() {
       payload,
       imageCount: workflowImageCount,
       quality,
+    }, {
+      imageCount: workflowImageCount,
+      quality,
+      hasModel: !!needsModel,
+      hasScene: false,
+      hasProduct: true,
     });
     if (enqueueResult) {
       setBalanceFromServer(enqueueResult.newBalance);
@@ -554,6 +566,12 @@ export default function Generate() {
       },
       imageCount: parseInt(imageCount),
       quality,
+    }, {
+      imageCount: parseInt(imageCount),
+      quality,
+      hasModel: true,
+      hasScene: true,
+      hasProduct: true,
     });
     if (enqueueResult) {
       setBalanceFromServer(enqueueResult.newBalance);

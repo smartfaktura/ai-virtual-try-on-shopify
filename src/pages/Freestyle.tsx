@@ -297,6 +297,12 @@ export default function Freestyle() {
       payload: queuePayload,
       imageCount,
       quality,
+    }, {
+      imageCount,
+      quality,
+      hasModel: !!selectedModel,
+      hasScene: !!selectedScene,
+      hasProduct: !!selectedProduct || !!sourceImage,
     });
 
     if (enqueueResult) {
