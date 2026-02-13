@@ -1,32 +1,21 @@
 
 
-## Fix Framing Thumbnails - Generate Real Photos
+## Fix: Side Profile Framing Not Working
 
 ### Problem
-The AI image generation produced pictograms/icons instead of photographic crops matching the existing model (blonde woman in white crop top). Specifically:
-- **Side Profile** - shows a tiny ear icon instead of a photo
-- **Close-Up** - shows same upper body shot, not a tighter face portrait
-- **Neck/Shoulders** - shows same upper body shot, not a collarbone-focused crop
+When "Side Profile" is selected, the generated image ignores the framing entirely (showing a front-facing model with a backpack). This happens because the `side_profile` framing prompt is **missing** from the edge function's prompt mapping.
+
+The `framingPrompts` dictionary in the `generate-freestyle` edge function includes all 7 other framing options but omits `side_profile`. When the framing value doesn't match any key, the prompt injection is skipped entirely.
 
 ### Solution
-Re-generate all 3 images using the AI image generation API with the existing `upper_body.png` as an **input reference image**, asking the model to create specific crops of the same woman:
+Add the `side_profile` entry to the `framingPrompts` dictionary in the edge function, matching the same prompt pattern already defined in `src/lib/framingUtils.ts`.
 
-1. **`close_up.png`** - Generate using upper_body.png as reference: "Create a tight beauty headshot portrait of this exact woman. Frame from forehead to chin, face fills the entire frame. Same lighting, same background. Professional 85mm lens portrait."
+### Changes
 
-2. **`neck_shoulders.png`** - Generate using upper_body.png as reference: "Create a collarbone/necklace display crop of this exact woman. Frame from just below the chin to mid-chest. Do not show the face. Same clothing, lighting, background."
+**File: `supabase/functions/generate-freestyle/index.ts`**
+- Add `side_profile` to the `framingPrompts` object (around line 158) with the prompt:
+  `"FRAMING: Side profile view focusing on the ear and jawline area. Show the side of the head from temple to jawline. The product should be clearly visible on or near the ear."`
+- Also add `side_profile` to the `noFaceFramings` array (currently only `hand_wrist`, `lower_body`, `back_view`) so the model identity logic doesn't force a face-forward composition.
 
-3. **`side_profile.png`** - Generate using upper_body.png as reference: "Create a side profile view of this exact woman. Show the side of her head from temple to jawline, focusing on the ear area. Same lighting, same background."
+Both changes are single-line additions to existing code blocks. The edge function will be automatically redeployed.
 
-### Technical Details
-
-All 3 images will be generated via the image editing API (passing the existing `upper_body.png` as a reference) and saved to:
-- `public/images/framing/close_up.png`
-- `public/images/framing/neck_shoulders.png`
-- `public/images/framing/side_profile.png`
-
-No code changes needed - only the image assets are replaced. The components already reference these paths correctly.
-
-### Files Changed
-- `public/images/framing/close_up.png` (regenerated photo)
-- `public/images/framing/neck_shoulders.png` (regenerated photo)
-- `public/images/framing/side_profile.png` (regenerated photo)
