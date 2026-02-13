@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
-import type { ModelProfile, TryOnPose } from '@/types';
+import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -62,6 +62,8 @@ export default function Freestyle() {
   const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
   const [showSceneHint, setShowSceneHint] = useState(false);
+  const [framing, setFraming] = useState<FramingOption | null>(null);
+  const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -179,6 +181,11 @@ export default function Freestyle() {
     setProductSourced(true);
     const base64 = await convertImageToBase64(product.image_url);
     setSourceImage(base64);
+
+    // Auto-detect framing
+    const { detectDefaultFraming } = await import('@/lib/framingUtils');
+    const detected = detectDefaultFraming(product.product_type, product.tags || []);
+    if (detected) setFraming(detected);
   }, [productSourced]);
 
   const handleGenerate = useCallback(async () => {
@@ -281,6 +288,7 @@ export default function Freestyle() {
       brandProfile: brandContext,
       negatives: negatives.length > 0 ? negatives : undefined,
       cameraStyle,
+      framing: framing || undefined,
     };
 
     // Enqueue via priority queue
@@ -422,6 +430,10 @@ export default function Freestyle() {
     onNegativesPopoverChange: setNegativesPopoverOpen,
     cameraStyle,
     onCameraStyleChange: setCameraStyle,
+    framing,
+    onFramingChange: setFraming,
+    framingPopoverOpen,
+    onFramingPopoverChange: setFramingPopoverOpen,
   };
 
   return (

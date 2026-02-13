@@ -18,8 +18,8 @@ import { ProductSelectorChip } from './ProductSelectorChip';
 import { StylePresetChips } from './StylePresetChips';
 import { BrandProfileChip } from './BrandProfileChip';
 import { NegativesChip } from './NegativesChip';
-import type { ModelProfile } from '@/types';
-import type { TryOnPose } from '@/types';
+import { FramingSelectorChip } from '@/components/app/FramingSelectorChip';
+import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
@@ -86,6 +86,11 @@ interface FreestyleSettingsChipsProps {
   // Camera style
   cameraStyle: 'pro' | 'natural';
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
+  // Framing
+  framing: FramingOption | null;
+  onFramingChange: (f: FramingOption | null) => void;
+  framingPopoverOpen: boolean;
+  onFramingPopoverChange: (open: boolean) => void;
 }
 
 export function FreestyleSettingsChips({
@@ -103,6 +108,7 @@ export function FreestyleSettingsChips({
   brandProfiles, isLoadingBrandProfiles,
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
+  framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
 }: FreestyleSettingsChipsProps) {
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
   const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
@@ -139,6 +145,14 @@ export function FreestyleSettingsChips({
             open={scenePopoverOpen}
             onOpenChange={onScenePopoverChange}
             onSelect={onSceneSelect}
+          />
+
+          {/* Framing Selector */}
+          <FramingSelectorChip
+            framing={framing}
+            onFramingChange={onFramingChange}
+            open={framingPopoverOpen}
+            onOpenChange={onFramingPopoverChange}
           />
 
           {/* Brand Profile Selector */}

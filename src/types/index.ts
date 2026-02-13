@@ -133,6 +133,9 @@ export interface BrandSettings {
 // Generation Mode
 export type GenerationMode = 'product-only' | 'virtual-try-on' | 'video';
 
+// Framing / Body Crop
+export type FramingOption = 'full_body' | 'upper_body' | 'close_up' | 'hand_wrist' | 'neck_shoulders' | 'lower_body' | 'back_view';
+
 // Virtual Try-On Types
 export type ModelGender = 'male' | 'female' | 'non-binary';
 export type ModelBodyType = 'slim' | 'athletic' | 'average' | 'plus-size';

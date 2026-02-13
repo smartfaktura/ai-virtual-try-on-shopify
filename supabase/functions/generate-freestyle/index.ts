@@ -48,6 +48,7 @@ interface FreestyleRequest {
   brandProfile?: BrandProfileContext;
   negatives?: string[];
   cameraStyle?: "pro" | "natural";
+  framing?: string;
   user_id?: string; // Injected by process-queue for queue-internal calls
   modelId?: string;
   sceneId?: string;
@@ -95,7 +96,8 @@ function polishUserPrompt(
   brandProfile?: BrandProfileContext,
   userNegatives?: string[],
   modelContext?: string,
-  cameraStyle?: "pro" | "natural"
+  cameraStyle?: "pro" | "natural",
+  framing?: string
 ): string {
   const layers: string[] = [];
   const isSelfie = detectSelfieIntent(rawPrompt);
@@ -238,10 +240,12 @@ function polishUserPrompt(
       layers.push(
         "PORTRAIT QUALITY: Natural skin pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
       );
-      // Framing for standard portrait/model shots
-      layers.push(
-        "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head — do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
-      );
+      // Framing for standard portrait/model shots (only if no explicit framing override)
+      if (!framing) {
+        layers.push(
+          "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head — do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
+        );
+      }
     }
   }
 
@@ -264,6 +268,22 @@ Apply these rendering characteristics ONLY — do NOT change the subject, scene,
 - OVERALL FEEL: The image should look like it was taken by someone with a latest-generation iPhone and posted directly — no Lightroom, no Photoshop, no professional retouching. Clean, sharp, true-to-life. The hallmark is "impressive but clearly a phone photo."
 ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing camera mode (NOT Portrait Mode). The background MUST remain sharp and detailed — absolutely no depth-of-field blur, no bokeh effect whatsoever. Everything from foreground to background is in focus.` : ''}`
     );
+  }
+
+  // Explicit framing override (injected after camera style, before negatives)
+  if (framing) {
+    const framingPrompts: Record<string, string> = {
+      full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
+      upper_body: `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+      close_up: `FRAMING: Close-up shot from the shoulders and chest upward. Emphasize fine details of the product.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+      hand_wrist: `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${context.hasModel ? ' The hand/wrist must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
+      neck_shoulders: `FRAMING: Close-up of the neck, shoulders, and upper chest area. Product should be visible on or near the neck. Do NOT show below the chest.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
+      lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${context.hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,
+      back_view: `FRAMING: Back view showing the product from behind. The subject should be facing away from the camera.${context.hasModel ? ' Match the body of [MODEL IMAGE].' : ''}`,
+    };
+    if (framingPrompts[framing]) {
+      layers.push(framingPrompts[framing]);
+    }
   }
 
   // Build combined negatives list
@@ -593,7 +613,7 @@ serve(async (req) => {
 
     let finalPrompt: string;
     if (body.polishPrompt) {
-      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle);
+      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing);
     } else {
       let unpolished = enrichedPrompt;
       if (body.brandProfile) {

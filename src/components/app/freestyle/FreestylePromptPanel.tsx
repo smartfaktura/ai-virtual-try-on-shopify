@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { Plus, X, Sparkles, Loader2, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
-import type { ModelProfile, TryOnPose } from '@/types';
+import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
@@ -59,6 +59,11 @@ interface FreestylePromptPanelProps {
   // Camera style
   cameraStyle: 'pro' | 'natural';
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
+  // Framing
+  framing: FramingOption | null;
+  onFramingChange: (f: FramingOption | null) => void;
+  framingPopoverOpen: boolean;
+  onFramingPopoverChange: (open: boolean) => void;
   // Drag and drop
   onFileDrop?: (file: File) => void;
 }
@@ -81,6 +86,7 @@ export function FreestylePromptPanel({
   brandProfiles, isLoadingBrandProfiles,
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
+  framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
 }: FreestylePromptPanelProps) {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -210,6 +216,8 @@ export function FreestylePromptPanel({
           negatives={negatives} onNegativesChange={onNegativesChange}
           negativesPopoverOpen={negativesPopoverOpen} onNegativesPopoverChange={onNegativesPopoverChange}
           cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
+          framing={framing} onFramingChange={onFramingChange}
+          framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
         />
       </div>
 

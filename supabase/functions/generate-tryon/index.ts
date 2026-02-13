@@ -29,6 +29,21 @@ interface TryOnRequest {
   };
   aspectRatio: "1:1" | "4:5" | "9:16" | "16:9";
   imageCount: number;
+  framing?: string;
+}
+
+function buildFramingInstruction(framing: string, model: TryOnRequest['model']): string {
+  const modelRef = `Match the exact skin tone, age, and body characteristics of ${model.name} from [MODEL IMAGE].`;
+  const instructions: Record<string, string> = {
+    full_body: `5. FRAMING: Full body shot, head to toe. Show the complete outfit.\n\n`,
+    upper_body: `5. FRAMING: Upper body shot, waist up. ${modelRef}\n\n`,
+    close_up: `5. FRAMING: Close-up from shoulders up. Emphasize product detail. ${modelRef}\n\n`,
+    hand_wrist: `5. FRAMING: Show only the hand and wrist area. Product naturally worn on wrist/hand. Do NOT include the face. ${modelRef}\n\n`,
+    neck_shoulders: `5. FRAMING: Close-up of neck, shoulders, and upper chest. Product visible on/near neck. ${modelRef}\n\n`,
+    lower_body: `5. FRAMING: Lower body from hips to feet. Focus on legs and footwear. ${modelRef}\n\n`,
+    back_view: `5. FRAMING: Back view, subject facing away. ${modelRef}\n\n`,
+  };
+  return instructions[framing] || '';
 }
 
 function buildPrompt(req: TryOnRequest): string {
@@ -73,7 +88,7 @@ CRITICAL REQUIREMENTS:
    - No AI artifacts or distortions
    - Ultra high resolution
 
-Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].`;
+${req.framing ? buildFramingInstruction(req.framing, req.model) : ''}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].`;
 }
 
 const negativePrompt =
