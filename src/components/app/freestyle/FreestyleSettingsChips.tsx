@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Square, RectangleHorizontal, ChevronDown,
   Minus, Plus, Wand2, Image as ImageIcon,
-  Smartphone, Camera,
+  Smartphone, Camera, Lock,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -91,6 +91,8 @@ interface FreestyleSettingsChipsProps {
   onFramingChange: (f: FramingOption | null) => void;
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
+  // Model-reference quality auto-upgrade
+  hasModelSelected?: boolean;
 }
 
 export function FreestyleSettingsChips({
@@ -109,6 +111,7 @@ export function FreestyleSettingsChips({
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
+  hasModelSelected = false,
 }: FreestyleSettingsChipsProps) {
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
   const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
@@ -199,41 +202,55 @@ export function FreestyleSettingsChips({
             </PopoverContent>
           </Popover>
 
-          {/* Quality Dropdown */}
-          <Popover open={qualityPopoverOpen} onOpenChange={setQualityPopoverOpen}>
-            <PopoverTrigger asChild>
-              <button className={cn(
-                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-                quality === 'high'
-                  ? 'border-primary/30 bg-primary/10 text-primary'
-                  : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-              )}>
-                {quality === 'high' ? '✦ High' : 'Standard'}
-                <ChevronDown className="w-3 h-3 opacity-40" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 p-1.5" align="start">
-              {([
-                { value: 'standard' as const, label: 'Standard', desc: 'Fast generation at standard resolution. 4 credits per image.' },
-                { value: 'high' as const, label: '✦ High', desc: 'Higher detail and resolution output. 10 credits per image.' },
-              ]).map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => { onQualityChange(opt.value); setQualityPopoverOpen(false); }}
-                  className={cn(
-                    'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
-                    quality === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-                  )}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-[13px]">{opt.label}</div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
-                  </div>
-                  {quality === opt.value && <span className="text-primary mt-0.5">✓</span>}
+          {/* Quality Dropdown — auto-upgrades to Pro when model is selected */}
+          {hasModelSelected ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary cursor-default">
+                  <Lock className="w-3 h-3" />
+                  Pro Model
                 </button>
-              ))}
-            </PopoverContent>
-          </Popover>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[220px] text-center">
+                Pro model is required for model-reference generations to preserve identity. 12 credits/image.
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Popover open={qualityPopoverOpen} onOpenChange={setQualityPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button className={cn(
+                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                  quality === 'high'
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+                )}>
+                  {quality === 'high' ? '✦ High' : 'Standard'}
+                  <ChevronDown className="w-3 h-3 opacity-40" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-1.5" align="start">
+                {([
+                  { value: 'standard' as const, label: 'Standard', desc: 'Fast generation at standard resolution. 4 credits per image.' },
+                  { value: 'high' as const, label: '✦ High', desc: 'Higher detail and resolution output. 10 credits per image.' },
+                ]).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => { onQualityChange(opt.value); setQualityPopoverOpen(false); }}
+                    className={cn(
+                      'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
+                      quality === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-[13px]">{opt.label}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
+                    </div>
+                    {quality === opt.value && <span className="text-primary mt-0.5">✓</span>}
+                  </button>
+                ))}
+              </PopoverContent>
+            </Popover>
+          )}
 
           {/* Camera Style Dropdown */}
           <Popover open={cameraPopoverOpen} onOpenChange={setCameraPopoverOpen}>

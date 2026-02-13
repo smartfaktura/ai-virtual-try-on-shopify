@@ -402,7 +402,7 @@ export default function Generate() {
       toast.error('Please select a product first');
       return;
     }
-    const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode });
+    const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode, hasModel: !!selectedModel });
     if (balance < cost) { setNoCreditsModalOpen(true); return; }
     if (generationMode === 'virtual-try-on') {
       if (!selectedModel || !selectedPose) { toast.error('Please select a model and scene first'); return; }

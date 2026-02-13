@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Plus, X, Sparkles, Loader2, ImagePlus } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
@@ -218,6 +219,7 @@ export function FreestylePromptPanel({
           cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
           framing={framing} onFramingChange={onFramingChange}
           framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
+          hasModelSelected={!!selectedModel}
         />
       </div>
 
@@ -226,16 +228,29 @@ export function FreestylePromptPanel({
 
       {/* Row 3 — Action Bar */}
       <div className="px-4 sm:px-5 py-3 flex items-center justify-end">
-        <Button
-          onClick={onGenerate}
-          disabled={!canGenerate}
-          size="lg"
-          className="h-11 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold w-full sm:w-auto"
-        >
-          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          Generate
-          <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
-        </Button>
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={onGenerate}
+                disabled={!canGenerate}
+                size="lg"
+                className="h-11 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold w-full sm:w-auto"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                Generate
+                <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {selectedModel && selectedScene
+                ? `${creditCost} credits: Model + Scene (15/image) × ${imageCount}`
+                : selectedModel
+                  ? `${creditCost} credits: Model reference (12/image) × ${imageCount}`
+                  : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'} × ${imageCount}`}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
