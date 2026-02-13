@@ -1,53 +1,62 @@
 
 
-## Fix: Realistic Time Estimates and Overtime Messaging
+## Smart Quality Auto-Upgrade and Model Reference Credit Pricing
 
-### Root Cause
+### Problem
 
-The AI model (`gemini-3-pro-image-preview`) used for model-reference generations has a 90-second timeout. When it times out, the system retries automatically (up to 2 retries). This means worst case is ~3 minutes for a single image. This is inherent to the AI provider and cannot be reduced.
+1. The quality selector shows "Standard - 4 credits/image" even when a model is selected, but the backend always uses the expensive Pro AI model for model-reference generations. This is misleading.
+2. Credits charged don't reflect the actual cost of model-reference generations, which use 3-5x more compute.
+3. Users don't understand why generation takes longer when they see "Standard" selected.
 
-### What Changes
+### Changes
 
-**1. Increase base estimates for model-reference generations**
+**1. Auto-upgrade quality indicator when model is selected** (`FreestyleSettingsChips.tsx`)
 
-The current formula underestimates because it doesn't account for the Pro model's slower speed or potential retries. Updated weights:
+When a model reference is active:
+- The quality chip automatically shows "Pro Model" with a lock icon and primary styling
+- The dropdown is disabled with a tooltip on hover: "Pro model is required for model-reference generations to preserve identity"
+- When the model is removed, quality reverts to whatever the user had selected before
 
-| Factor | Current | New |
-|--------|---------|-----|
-| Base | 15s | 20s |
-| Per image | +10s | +12s |
-| High quality (Pro) | +15s | +20s |
-| Model reference | +10s | +30s (Pro model is much slower) |
-| Scene reference | +5s | +8s |
-| Product reference | +5s | +8s |
-| 2+ references | +10s | +15s |
+**2. Update credit pricing to reflect model reference cost** (`CreditContext.tsx` + `Freestyle.tsx`)
 
-Example: Product + Model + 1 image + Standard quality = 20 + 12 + 30 + 8 + 15 = 85s, displayed as "~70-100 seconds"
+New pricing structure:
 
-**2. Add overtime messaging when estimate is exceeded**
+| Scenario | Credits per image |
+|----------|------------------|
+| Standard (no model) | 4 |
+| High quality (no model) | 10 |
+| With model reference (any quality) | 12 |
+| With model + scene references | 15 |
+| Video | 30 |
 
-When elapsed time passes the estimated range, instead of a frozen progress bar at 90%, show reassuring overtime messages:
+Update `calculateCost` to accept an optional `hasModel` and `hasScene` parameter, and update the Freestyle page's local `creditCost` calculation to match.
 
-- At 1x estimate: "Taking a bit longer than usual -- still working on it..."
-- At 1.5x estimate: "Complex generation in progress -- your studio team is perfecting the details..."
-- At 2x estimate: "Almost there -- high-quality results take a little extra time..."
+**3. Show credit breakdown in Generate button tooltip** (`Freestyle.tsx`)
 
-The progress bar will slow down but continue crawling past 90% (caps at 95%) to maintain visual feedback.
+The Generate button already shows the total cost like "Generate (12)". Add a hover tooltip that breaks down the cost: "12 credits: Model reference (12/image) x 1 image"
 
-**3. Show complexity breakdown chip**
+### Technical Details
 
-Below the estimate, add a subtle line explaining WHY it takes longer:
-- "Model reference adds processing time" (when model is selected)
-- "Multiple references increase complexity" (when 2+ refs)
+**Files changed:**
 
-This sets expectations rather than leaving users wondering.
+- `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+  - Accept `hasModelSelected: boolean` prop
+  - When true: override quality chip to show "Pro Model" with lock icon, disable dropdown, add tooltip explaining why
+  - Visual: primary-colored chip with lock icon instead of chevron
 
-### Files Changed
+- `src/contexts/CreditContext.tsx`
+  - Extend `calculateCost` signature: `(settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean }) => number`
+  - New logic: if `hasModel`, base cost = 12/image; if `hasModel && hasScene`, base cost = 15/image; otherwise keep existing 4/10 standard/high logic
 
-- `src/components/app/QueuePositionIndicator.tsx` -- update `estimateSeconds()` weights, add overtime state and messaging, add complexity explanation text
+- `src/pages/Freestyle.tsx`
+  - Update `creditCost` calculation (line 136) to use model/scene-aware pricing instead of just quality-based
+  - Pass `hasModelSelected={!!selectedModel}` to `FreestyleSettingsChips`
+  - Add tooltip to Generate button showing cost breakdown
 
-### No other changes needed
-- The meta is already being passed correctly from Freestyle.tsx and Generate.tsx
-- No database or edge function changes
+- `src/pages/Generate.tsx`
+  - Update `calculateCost` call to pass `hasModel` when in virtual-try-on mode (already charges 8, but should be consistent)
+
+### No other changes
+- No database changes
+- No edge function changes
 - No new dependencies
-
