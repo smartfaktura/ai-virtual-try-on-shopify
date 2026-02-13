@@ -16,6 +16,16 @@ const scenePreviewPrompts: Record<string, string> = {
   "Detail Close-up": "Extreme close-up macro photography background with soft bokeh, neutral tones, shallow depth of field, studio lighting with soft highlights, product detail photography backdrop, ultra high resolution, photorealistic",
   "Scale & Context": "Styled flat-lay arrangement surface with small complementary props (a ruler, a coin, dried flowers) on light neutral background, product scale reference photography, soft overhead lighting, ultra high resolution, photorealistic",
   "Dark & Moody": "Dark charcoal slate surface with dramatic side lighting, deep shadows, single warm rim light from right, luxury moody product photography backdrop, premium dark aesthetic, ultra high resolution, photorealistic",
+  "Floating Levitation": "Product suspended mid-air defying gravity with soft diffused shadow on clean surface below, clean white gradient background, zero gravity editorial magic, premium surreal photography backdrop, ultra high resolution, photorealistic",
+  "Mirror Reflection": "Perfectly reflective mirror surface creating crisp symmetrical reflection, dark gradient background for dramatic contrast, elegant high-end photography backdrop, sharp directional lighting, ultra high resolution, photorealistic",
+  "Monochrome Color Block": "Bold single saturated coral color backdrop, flat even matte color background, Glossier-style pop art aesthetic, clean graphic high contrast product photography backdrop, ultra high resolution, photorealistic",
+  "Geometric Pedestal": "Abstract geometric shapes cylinders arches and cubes in neutral cream and stone tones, architectural modern composition, soft directional shadows, museum display aesthetic, ultra high resolution, photorealistic",
+  "Smoke & Mist": "Soft atmospheric fog and mist swirling on dark moody background, soft rim lighting through haze, mysterious premium cinematic atmosphere, product photography backdrop, ultra high resolution, photorealistic",
+  "Hand-in-Shot": "Clean well-groomed hand presenting against neutral clean background, natural skin tones, soft directional lighting, lifestyle authenticity product photography, ultra high resolution, photorealistic",
+  "Still Life Composition": "Artful arrangement of dried flowers natural stones draped fabric small ceramics on neutral surface, painterly editorial still life photography, warm side lighting, ultra high resolution, photorealistic",
+  "Content Pour-out": "Product contents artfully spilling powder liquid cream texture across surface, macro-style detail, clean background, dramatic close-up lighting revealing texture, ultra high resolution, photorealistic",
+  "Beach & Sand": "Natural sand surface with soft ocean light, warm coastal tones, gentle golden sunlight, small shells and driftwood, aspirational travel vacation context, ultra high resolution, photorealistic",
+  "Gift & Unboxing": "Premium packaging tissue paper ribbon and quality box arranged as if being unwrapped, celebratory gift-giving atmosphere, soft warm lighting, unboxing experience product photography, ultra high resolution, photorealistic",
 };
 
 serve(async (req) => {
