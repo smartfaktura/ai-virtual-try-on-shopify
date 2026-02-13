@@ -1,48 +1,73 @@
 
 
-## Fix: Product Import Failing on Protected Sites (Tiffany 403)
+## Dynamic Generation Timer with Rotating Team Messages
 
-### Problem
-Tiffany.es (and many other brand sites) blocks server-side requests with anti-bot protection, returning a **403 Forbidden**. The current `import-product` edge function uses a simple `fetch()` which can't bypass these protections.
+### What Changes
 
-### Solution: Add Firecrawl as a Fallback
+Replace the static "Usually takes a few seconds" text with a live elapsed timer, realistic time estimates based on complexity, and rotating studio team status messages to keep users engaged during longer generations.
 
-Use the **Firecrawl connector** to handle sites that block direct fetching. The flow becomes:
+### User Experience
 
-1. Try direct `fetch()` first (free, works for most sites)
-2. If it fails (403, 429, etc.), fall back to Firecrawl's scrape API which handles anti-bot measures
-3. Feed the scraped HTML/markdown to the same AI extraction pipeline
+**Before**: Static "Generating your images... Usually takes a few seconds" with a frozen progress bar at 50%.
 
-### Steps
+**After**:
+- Live elapsed timer: "12s elapsed"
+- Dynamic estimate based on what was selected: "This usually takes about 45-60 seconds"
+- Rotating team member messages every 4 seconds: "Sophia is setting up the lighting...", "Kenji is reviewing the composition...", etc.
+- Progress bar that animates smoothly based on estimated duration instead of sitting at 50%
 
-**Step 1 — Connect Firecrawl**
-- Enable the Firecrawl connector so the `FIRECRAWL_API_KEY` environment variable is available to edge functions
+### How It Works
 
-**Step 2 — Update `supabase/functions/import-product/index.ts`**
-- After the direct `fetch()` fails (non-200 status), check if `FIRECRAWL_API_KEY` is available
-- If available, call `https://api.firecrawl.dev/v1/scrape` with the URL, requesting `html` and `markdown` formats
-- Use the Firecrawl response content instead of the direct fetch HTML
-- If Firecrawl is not configured, return the current error as-is (graceful degradation)
+**1. Add `GenerationMeta` to `QueueJob`** (`src/hooks/useGenerationQueue.ts`)
 
-### Technical Detail
+Store complexity metadata (image count, quality, whether model/scene/product references are attached) on the active job when `enqueue()` is called. This is client-side only -- no database changes.
 
-```text
-Current flow:
-  fetch(url) --> 403 --> return error
-
-New flow:
-  fetch(url) --> 403 --> check FIRECRAWL_API_KEY
-    --> if available: call Firecrawl scrape API --> get HTML/markdown --> continue to AI extraction
-    --> if not available: return error with hint "This site blocks automated access"
+```
+interface GenerationMeta {
+  imageCount: number;
+  quality: string;
+  hasModel: boolean;
+  hasScene: boolean;
+  hasProduct: boolean;
+}
 ```
 
-The change is ~20 lines added to the existing edge function, wrapping the fetch failure path with a Firecrawl fallback. No UI changes needed — the same StoreImportTab component will work seamlessly since the response format stays identical.
+**2. Pass metadata at enqueue time** (`src/pages/Freestyle.tsx`, `src/pages/Generate.tsx`)
+
+After calling `enqueue()`, store the meta on the active job from the payload that's already available (modelImage, sceneImage, sourceImage, imageCount, quality).
+
+**3. Overhaul `QueuePositionIndicator`** (`src/components/app/QueuePositionIndicator.tsx`)
+
+Major changes to the processing state:
+
+- **Elapsed timer**: Uses `useState` + `useEffect` with a 1-second interval, calculating seconds since `job.started_at` (or `job.created_at` as fallback). Displays "12s elapsed" next to the estimate.
+
+- **Time estimate calculation**:
+  | Factor | Added time |
+  |--------|-----------|
+  | Base | 15s |
+  | Per image | +10s each |
+  | High quality (Pro model) | +15s |
+  | Model reference | +10s |
+  | Scene reference | +5s |
+  | Product reference | +5s |
+  | 2+ references combined | +10s extra |
+  
+  Displayed as a range: "~45-60 seconds" (estimate x0.8 to x1.2).
+
+- **Rotating team messages**: Import `TEAM_MEMBERS` from `src/data/teamData.ts` (already has statusMessage per member). Cycle through them every 4 seconds with a fade transition. Shows messages like "Sophia is setting up the lighting..." and "Kenji is reviewing the composition..."
+
+- **Animated progress bar**: Instead of static `value={50}`, calculate progress as `(elapsed / estimatedSeconds) * 90` (caps at 90% until complete, never shows 100% prematurely). Smooth CSS transition.
 
 ### Files Changed
-- `supabase/functions/import-product/index.ts` — add Firecrawl fallback after direct fetch failure
+
+- `src/hooks/useGenerationQueue.ts` -- add `GenerationMeta` type and `generationMeta` field to `QueueJob`, store it when setting active job in `enqueue()`
+- `src/components/app/QueuePositionIndicator.tsx` -- elapsed timer, dynamic estimate, rotating team messages, animated progress bar
+- `src/pages/Freestyle.tsx` -- pass `generationMeta` to the queue hook after enqueue
+- `src/pages/Generate.tsx` -- pass `generationMeta` to the queue hook after enqueue
 
 ### No other changes
 - No database changes
-- No UI changes
-- The Firecrawl connector needs to be enabled first
+- No edge function changes
+- No new dependencies (uses existing `TEAM_MEMBERS` data)
 
