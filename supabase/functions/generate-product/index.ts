@@ -221,6 +221,31 @@ async function generateImage(
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
+async function uploadBase64ToStorage(
+  base64Url: string,
+  userId: string,
+  supabaseUrl: string,
+  serviceRoleKey: string
+): Promise<string> {
+  const base64Data = base64Url.includes(",") ? base64Url.split(",")[1] : base64Url;
+  const binaryStr = atob(base64Data);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+  const fileName = `${userId}/${crypto.randomUUID()}.png`;
+  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+  const { error } = await supabase.storage
+    .from("workflow-previews")
+    .upload(fileName, bytes, { contentType: "image/png", upsert: false });
+  if (error) {
+    console.error("Storage upload failed:", error);
+    throw new Error(`Storage upload failed: ${error.message}`);
+  }
+  const { data: urlData } = supabase.storage.from("workflow-previews").getPublicUrl(fileName);
+  return urlData.publicUrl;
+}
+
 /** Helper: update generation_queue and handle credits when called from the queue */
 async function completeQueueJob(
   jobId: string,
@@ -298,6 +323,8 @@ serve(async (req) => {
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY is not configured");
       return new Response(
@@ -340,8 +367,13 @@ serve(async (req) => {
         );
 
         if (imageUrl) {
-          images.push(imageUrl);
-          console.log(`Generated image ${i + 1}/${imageCount}`);
+          if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && imageUrl.startsWith("data:")) {
+            const publicUrl = await uploadBase64ToStorage(imageUrl, body.user_id || "anonymous", SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            images.push(publicUrl);
+          } else {
+            images.push(imageUrl);
+          }
+          console.log(`Generated and uploaded image ${i + 1}/${imageCount}`);
         } else {
           errors.push(`Image ${i + 1} failed to generate`);
         }
