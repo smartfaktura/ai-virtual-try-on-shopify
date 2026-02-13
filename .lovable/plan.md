@@ -1,31 +1,29 @@
 
 
-## Fix Framing Selector Design in Virtual Try-On Workflow
+## Redesign Framing Selector: 5-Column Grid with Larger Thumbnails
 
 ### Problem
-The Framing selector in the Virtual Try-On workflow settings has two issues:
-1. **Thumbnails are too small** -- images are only 20x20px (`w-5 h-5`), making them hard to see
-2. **Horizontal carousel scroll** -- the `overflow-x-auto` creates a scrollbar, cutting off items like "Back View"
+The current framing options are still too small and use a basic flex-wrap layout that doesn't look polished. The user wants a proper 5-column, 2-row grid with larger, more showcase-worthy thumbnails.
 
 ### Solution
-Update `FramingSelector.tsx` to use a **wrapping grid layout** with larger thumbnails:
-
-- Change the container from `flex overflow-x-auto` to `flex flex-wrap` so all options wrap to multiple rows instead of scrolling
-- Increase image size from `w-5 h-5` (20px) to `w-10 h-10` (40px) for better visibility
-- Increase the icon size for the "Auto" option to match
-- Slightly increase the minimum button width from `72px` to `80px` for better proportions
-- Remove `flex-shrink-0` since wrapping handles layout
+Rebuild the layout in `FramingSelector.tsx` to use a CSS grid with 5 columns per row (9 items = 5 + 4), with significantly larger thumbnails and better visual presentation.
 
 ### Technical Details
 
 **File: `src/components/app/FramingSelector.tsx`**
 
-| Line | Current | New |
-|------|---------|-----|
-| 20 | `flex gap-2 overflow-x-auto pb-1 -mx-1 px-1` | `flex gap-2 flex-wrap` |
-| 26 | `min-w-[72px] ... flex-shrink-0` | `min-w-[80px]` (remove flex-shrink-0) |
-| 33 | `w-5 h-5 rounded-full` | `w-10 h-10 rounded-lg` |
-| 35 | `w-5 h-5` (Frame icon) | `w-10 h-10` |
+- Change container from `flex gap-2 flex-wrap` to `grid grid-cols-5 gap-2`
+- Increase thumbnail size from `w-10 h-10` to `w-14 h-14` for a more showcase feel
+- Increase button padding slightly for breathing room
+- Keep `rounded-lg object-cover` on images for clean crops
+- Match the Frame icon size to `w-14 h-14`
 
-No other files need changes.
+This creates a clean 5-column layout:
+```text
+Row 1: [Auto] [Full Body] [Upper Body] [Close-Up] [Hand/Wrist]
+Row 2: [Neck/Shoulders] [Side Profile] [Lower Body] [Back View]
+```
+
+### Files Changed
+- `src/components/app/FramingSelector.tsx` (layout + sizing update)
 
