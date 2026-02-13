@@ -120,7 +120,7 @@ function polishUserPrompt(
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
       const num = context.hasSource ? 2 : 1;
-      const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view'];
+      const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view', 'side_profile'];
       if (framing && noFaceFramings.includes(framing)) {
         parts.push(`${num}. MODEL: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`);
       } else {
@@ -156,6 +156,7 @@ function polishUserPrompt(
         neck_shoulders: `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
         lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${context.hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,
         back_view: `FRAMING: Back view showing the product from behind. The subject should be facing away from the camera.${context.hasModel ? ' Match the body of [MODEL IMAGE].' : ''}`,
+        side_profile: `FRAMING: Side profile view focusing on the ear and jawline area. Show the side of the head from temple to jawline. The product should be clearly visible on or near the ear.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
       };
       if (framingPrompts[framing]) {
         parts.push(framingPrompts[framing]);
@@ -248,7 +249,7 @@ function polishUserPrompt(
   // Model / portrait layer — strong identity matching
   if (context.hasModel) {
     const identityDetails = modelContext ? ` (${modelContext})` : "";
-    const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view'];
+    const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view', 'side_profile'];
     if (framing && noFaceFramings.includes(framing)) {
       layers.push(
         `MODEL IDENTITY: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing composition. If a product reference image also contains a person, IGNORE that person entirely.`
@@ -312,6 +313,7 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
       neck_shoulders: `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
       lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${context.hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,
       back_view: `FRAMING: Back view showing the product from behind. The subject should be facing away from the camera.${context.hasModel ? ' Match the body of [MODEL IMAGE].' : ''}`,
+      side_profile: `FRAMING: Side profile view focusing on the ear and jawline area. Show the side of the head from temple to jawline. The product should be clearly visible on or near the ear.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
     };
     if (framingPrompts[framing]) {
       layers.push(framingPrompts[framing]);
