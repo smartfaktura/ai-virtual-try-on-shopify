@@ -87,7 +87,7 @@ export function buildFramingPrompt(framing: FramingOption, hasModel: boolean): s
     case 'hand_wrist':
       return `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${modelRef}`;
     case 'neck_shoulders':
-      return `FRAMING: Close-up of the neck, shoulders, and upper chest area. Product should be visible on or near the neck. Do NOT show below the chest.${modelRef}`;
+      return `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${modelRef}`;
     case 'lower_body':
       return `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${modelRef}`;
     case 'back_view':

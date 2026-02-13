@@ -138,6 +138,22 @@ function polishUserPrompt(
       parts.push("Shot on iPhone — deep depth of field, true-to-life colors, no retouching.");
     }
 
+    // Framing override (condensed path)
+    if (framing) {
+      const framingPrompts: Record<string, string> = {
+        full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
+        upper_body: `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+        close_up: `FRAMING: Close-up shot from the shoulders and chest upward. Emphasize fine details of the product.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+        hand_wrist: `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${context.hasModel ? ' The hand/wrist must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
+        neck_shoulders: `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
+        lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${context.hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,
+        back_view: `FRAMING: Back view showing the product from behind. The subject should be facing away from the camera.${context.hasModel ? ' Match the body of [MODEL IMAGE].' : ''}`,
+      };
+      if (framingPrompts[framing]) {
+        parts.push(framingPrompts[framing]);
+      }
+    }
+
     // Negatives
     const allNeg: string[] = [];
     if (brandProfile?.doNotRules?.length) allNeg.push(...brandProfile.doNotRules);
@@ -147,6 +163,8 @@ function polishUserPrompt(
       const deduped = [...new Set(allNeg.map(n => n.toLowerCase()))];
       parts.push(`Also avoid: ${deduped.join(", ")}`);
     }
+
+    return parts.join("\n");
 
     return parts.join("\n");
   }
@@ -277,7 +295,7 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
       upper_body: `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
       close_up: `FRAMING: Close-up shot from the shoulders and chest upward. Emphasize fine details of the product.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
       hand_wrist: `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${context.hasModel ? ' The hand/wrist must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
-      neck_shoulders: `FRAMING: Close-up of the neck, shoulders, and upper chest area. Product should be visible on or near the neck. Do NOT show below the chest.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
+      neck_shoulders: `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
       lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${context.hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,
       back_view: `FRAMING: Back view showing the product from behind. The subject should be facing away from the camera.${context.hasModel ? ' Match the body of [MODEL IMAGE].' : ''}`,
     };
