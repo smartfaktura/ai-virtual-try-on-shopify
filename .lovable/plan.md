@@ -1,34 +1,58 @@
 
 
-## Pass Product Dimensions to Workflow Generations
-
-### Problem
-
-Freestyle generations correctly include product dimensions in the AI prompt, but Workflow generations (Virtual Try-On, Product Listing Set, Flat Lay, etc.) do not. This means workflows ignore dimension data even when it's stored on the product.
+## Replace Framing Icons with AI-Generated Model Photos
 
 ### What Changes
 
-**1. Update `generate-workflow` edge function** (`supabase/functions/generate-workflow/index.ts`)
+Replace the hand-drawn SVG stick-figure icons in the Framing Selector dropdown with clean, professional AI-generated studio photos of a blonde supermodel (white crop top, grey leggings, casual sporty look) demonstrating each body crop zone.
 
-- Add `dimensions?: string` to the `product` object inside `WorkflowRequest`
-- In `buildVariationPrompt`, append a dimension line to the PRODUCT DETAILS section:
-  ```
-  PRODUCT DETAILS:
-  - Product: Backpack CM8309
-  - Type: Backpack
-  - Dimensions: 28 x 35 x 13 cm -- render at realistic scale
-  ```
+### Image Generation
 
-**2. Update `Generate.tsx`** (`src/pages/Generate.tsx`)
+Generate **7 photos** (1:1 ratio, ~256px) using the AI image generation model, each showing the same model with the camera framed to match the framing option:
 
-- When building the request payload for workflow generation, include `dimensions` from the selected product (pulled from the user's product library)
+| Option | Photo Description |
+|--------|------------------|
+| Full Body | Full head-to-toe shot, light grey studio background |
+| Upper Body | Waist-up crop, same model and background |
+| Close-Up | Shoulders-up portrait crop |
+| Hand / Wrist | Close-up of hand and wrist area only |
+| Neck / Shoulders | Collarbone/neckline area crop |
+| Lower Body | Hips-to-feet crop showing leggings and shoes |
+| Back View | Model facing away, full or upper back visible |
+
+All images will share the same model appearance, outfit, and clean light-grey studio backdrop for visual consistency.
+
+### UI Update
+
+**File: `src/components/app/FramingSelectorChip.tsx`**
+
+- Replace the `FramingIcon` SVG component with a `FramingThumbnail` component that renders a small circular `<img>` thumbnail (24x24px in the chip trigger, 32x32px in the dropdown list)
+- Each dropdown row gets a rounded photo thumbnail instead of the SVG silhouette
+- The "None (Auto)" option keeps the existing `Frame` lucide icon (no photo needed)
+- The chip trigger button also shows the selected framing's photo thumbnail
+
+**File: `src/lib/framingUtils.ts`**
+
+- Add a `previewUrl` field to each `FramingOptionConfig` entry pointing to the stored image path
+
+### Image Storage
+
+Images will be saved to `public/images/framing/` as:
+- `full_body.png`
+- `upper_body.png`
+- `close_up.png`
+- `hand_wrist.png`
+- `neck_shoulders.png`
+- `lower_body.png`
+- `back_view.png`
 
 ### Files Changed
 
-- `supabase/functions/generate-workflow/index.ts` -- add `dimensions` to interface and prompt builder
-- `src/pages/Generate.tsx` -- pass `dimensions` in the product payload sent to the workflow edge function
+- `public/images/framing/*.png` -- 7 new AI-generated photos
+- `src/lib/framingUtils.ts` -- add `previewUrl` to each option config
+- `src/components/app/FramingSelectorChip.tsx` -- replace SVG icons with circular photo thumbnails
 
-### No database or dependency changes needed
+### Visual Result
 
-The `dimensions` column already exists on `user_products`. This just pipes the existing data through to the workflow generation path.
+The dropdown transforms from abstract stick figures to a polished visual menu where users can instantly see what each framing looks like on a real model, making the selection intuitive and professional.
 
