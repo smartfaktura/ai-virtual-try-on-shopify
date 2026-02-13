@@ -1,21 +1,31 @@
 
 
-## Fix: Side Profile Framing Not Working
+## Fix Framing Selector Design in Virtual Try-On Workflow
 
 ### Problem
-When "Side Profile" is selected, the generated image ignores the framing entirely (showing a front-facing model with a backpack). This happens because the `side_profile` framing prompt is **missing** from the edge function's prompt mapping.
-
-The `framingPrompts` dictionary in the `generate-freestyle` edge function includes all 7 other framing options but omits `side_profile`. When the framing value doesn't match any key, the prompt injection is skipped entirely.
+The Framing selector in the Virtual Try-On workflow settings has two issues:
+1. **Thumbnails are too small** -- images are only 20x20px (`w-5 h-5`), making them hard to see
+2. **Horizontal carousel scroll** -- the `overflow-x-auto` creates a scrollbar, cutting off items like "Back View"
 
 ### Solution
-Add the `side_profile` entry to the `framingPrompts` dictionary in the edge function, matching the same prompt pattern already defined in `src/lib/framingUtils.ts`.
+Update `FramingSelector.tsx` to use a **wrapping grid layout** with larger thumbnails:
 
-### Changes
+- Change the container from `flex overflow-x-auto` to `flex flex-wrap` so all options wrap to multiple rows instead of scrolling
+- Increase image size from `w-5 h-5` (20px) to `w-10 h-10` (40px) for better visibility
+- Increase the icon size for the "Auto" option to match
+- Slightly increase the minimum button width from `72px` to `80px` for better proportions
+- Remove `flex-shrink-0` since wrapping handles layout
 
-**File: `supabase/functions/generate-freestyle/index.ts`**
-- Add `side_profile` to the `framingPrompts` object (around line 158) with the prompt:
-  `"FRAMING: Side profile view focusing on the ear and jawline area. Show the side of the head from temple to jawline. The product should be clearly visible on or near the ear."`
-- Also add `side_profile` to the `noFaceFramings` array (currently only `hand_wrist`, `lower_body`, `back_view`) so the model identity logic doesn't force a face-forward composition.
+### Technical Details
 
-Both changes are single-line additions to existing code blocks. The edge function will be automatically redeployed.
+**File: `src/components/app/FramingSelector.tsx`**
+
+| Line | Current | New |
+|------|---------|-----|
+| 20 | `flex gap-2 overflow-x-auto pb-1 -mx-1 px-1` | `flex gap-2 flex-wrap` |
+| 26 | `min-w-[72px] ... flex-shrink-0` | `min-w-[80px]` (remove flex-shrink-0) |
+| 33 | `w-5 h-5 rounded-full` | `w-10 h-10 rounded-lg` |
+| 35 | `w-5 h-5` (Frame icon) | `w-10 h-10` |
+
+No other files need changes.
 
