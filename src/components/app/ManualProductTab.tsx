@@ -52,6 +52,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [title, setTitle] = useState('');
   const [productType, setProductType] = useState('');
   const [description, setDescription] = useState('');
+  const [dimensions, setDimensions] = useState('');
   const [images, setImages] = useState<ImageItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -63,6 +64,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       setTitle(editingProduct.title);
       setProductType(editingProduct.product_type);
       setDescription(editingProduct.description);
+      setDimensions((editingProduct as any).dimensions || '');
       loadExistingImages(editingProduct.id, editingProduct.image_url);
     }
   }, [editingProduct]);
@@ -235,7 +237,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           product_type: productType || '',
           description: description.trim().substring(0, 500),
           image_url: primarySignedUrl,
-        })
+          dimensions: dimensions.trim() || null,
+        } as any)
         .select('id')
         .single();
 
@@ -322,7 +325,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           product_type: productType || '',
           description: description.trim().substring(0, 500),
           image_url: primarySignedUrl,
-        })
+          dimensions: dimensions.trim() || null,
+        } as any)
         .eq('id', editingProduct.id);
 
       if (updateError) throw new Error(updateError.message);
@@ -494,6 +498,20 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             rows={2}
             className="resize-none"
           />
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="product-dimensions" className="text-xs font-medium">
+            Dimensions <span className="text-muted-foreground font-normal">(optional)</span>
+          </Label>
+          <Input
+            id="product-dimensions"
+            placeholder="e.g. 28 x 35 x 13 cm"
+            value={dimensions}
+            onChange={(e) => setDimensions(e.target.value)}
+            maxLength={100}
+          />
+          <p className="text-[11px] text-muted-foreground">Helps AI render the product at realistic scale</p>
         </div>
       </div>
 

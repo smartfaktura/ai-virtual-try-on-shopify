@@ -53,6 +53,7 @@ interface FreestyleRequest {
   modelId?: string;
   sceneId?: string;
   productId?: string;
+  productDimensions?: string;
 }
 
 // ── Selfie / UGC intent detection ─────────────────────────────────────────
@@ -97,7 +98,8 @@ function polishUserPrompt(
   userNegatives?: string[],
   modelContext?: string,
   cameraStyle?: "pro" | "natural",
-  framing?: string
+  framing?: string,
+  productDimensions?: string
 ): string {
   const layers: string[] = [];
   const isSelfie = detectSelfieIntent(rawPrompt);
@@ -112,7 +114,8 @@ function polishUserPrompt(
     ];
 
     if (context.hasSource) {
-      parts.push(`1. PRODUCT: The item must match [PRODUCT IMAGE] in design, color, and material. Show it naturally in the scene with correct lighting and shadows.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}`);
+      const dimNote = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
+      parts.push(`1. PRODUCT: The item must match [PRODUCT IMAGE] in design, color, and material. Show it naturally in the scene with correct lighting and shadows.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${dimNote}`);
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
@@ -225,8 +228,9 @@ function polishUserPrompt(
 
   // Product / source image layer
   if (context.hasSource) {
+    const dimLayer = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
     layers.push(
-      "PRODUCT ACCURACY: The product must match the reference image in design, color, and material. Show it naturally with correct lighting and shadows — it should look photographed, not composited."
+      `PRODUCT ACCURACY: The product must match the reference image in design, color, and material. Show it naturally with correct lighting and shadows — it should look photographed, not composited.${dimLayer}`
     );
     if (isSelfie) {
       layers.push(
@@ -641,7 +645,7 @@ serve(async (req) => {
 
     let finalPrompt: string;
     if (body.polishPrompt) {
-      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing);
+      finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing, body.productDimensions);
     } else {
       let unpolished = enrichedPrompt;
       if (body.brandProfile) {

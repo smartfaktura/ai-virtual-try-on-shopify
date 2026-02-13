@@ -21,6 +21,7 @@ interface ExtractedProduct {
   product_type: string;
   description: string;
   storage_path: string;
+  dimensions?: string | null;
 }
 
 export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps) {
@@ -74,7 +75,8 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
           product_type: extracted.product_type || '',
           description: extracted.description || '',
           image_url: extracted.image_url,
-        })
+          dimensions: extracted.dimensions || null,
+        } as any)
         .select('id')
         .single();
 
@@ -199,6 +201,11 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
                   </span>
                 )}
               </div>
+              {extracted.dimensions && (
+                <Badge variant="outline" className="text-[10px] gap-1">
+                  📐 {extracted.dimensions}
+                </Badge>
+              )}
               {extracted.description && (
                 <p className="text-xs text-muted-foreground line-clamp-2">{extracted.description}</p>
               )}

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Ruler } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Package, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -265,9 +266,17 @@ export default function Products() {
                   </div>
                   <CardContent className="p-3 space-y-1">
                     <p className="text-sm font-medium truncate">{product.title}</p>
-                    {product.product_type && (
-                      <Badge variant="secondary" className="text-[10px]">{product.product_type}</Badge>
-                    )}
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {product.product_type && (
+                        <Badge variant="secondary" className="text-[10px]">{product.product_type}</Badge>
+                      )}
+                      {(product as any).dimensions && (
+                        <Badge variant="outline" className="text-[10px] gap-0.5">
+                          <Ruler className="w-2.5 h-2.5" />
+                          {(product as any).dimensions}
+                        </Badge>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               );
@@ -312,6 +321,12 @@ export default function Products() {
                       <span className="flex items-center gap-1">
                         <ImageIcon className="w-3 h-3" />
                         {imgCount} {imgCount === 1 ? 'photo' : 'photos'}
+                      </span>
+                    )}
+                    {(product as any).dimensions && (
+                      <span className="flex items-center gap-1">
+                        <Ruler className="w-3 h-3" />
+                        {(product as any).dimensions}
                       </span>
                     )}
                     <span>{format(new Date(product.created_at), 'MMM d, yyyy')}</span>

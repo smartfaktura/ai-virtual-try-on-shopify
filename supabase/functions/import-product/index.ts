@@ -106,14 +106,16 @@ Deno.serve(async (req) => {
 - "image_urls": an array of ALL product image URLs found on the page (array of strings, must be absolute URLs). Include the primary/hero image first, then any gallery/variant images. Maximum 6 images.
 - "product_type": the product category/type like "T-Shirt", "Sneakers", "Serum", etc. (string)
 - "description": a short product description if available (string, max 200 chars)
+- "dimensions": the product's physical dimensions if found (string, e.g. "28 x 35 x 13 cm", "L: 42cm, W: 30cm"), or null if not available
 
 Look for:
 1. Open Graph meta tags (og:title, og:image)
-2. JSON-LD structured data (Product schema) — check for "image" array
+2. JSON-LD structured data (Product schema) — check for "image" array, and "width", "height", "depth" fields
 3. Shopify/WooCommerce product gallery images
 4. HTML title tag and main product images
 5. Meta description
 6. Any <img> tags within product gallery/carousel sections
+7. Product specification/details tables for dimensions (look for words like "dimensions", "size", "width", "height", "depth", "length", "gylis", "plotis", "aukštis", "ilgis" in any language)
 
 If image URLs are relative, make them absolute using the page URL. Return ONLY the JSON object, no markdown.`,
           },
@@ -139,7 +141,7 @@ If image URLs are relative, make them absolute using the page URL. Return ONLY t
     const aiContent = aiResult.choices?.[0]?.message?.content || "";
 
     // Parse AI response - strip markdown fences if present
-    let productData: { title: string; image_urls?: string[]; image_url?: string; product_type: string; description: string };
+    let productData: { title: string; image_urls?: string[]; image_url?: string; product_type: string; description: string; dimensions?: string | null };
     try {
       const cleanJson = aiContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       productData = JSON.parse(cleanJson);
@@ -248,6 +250,7 @@ If image URLs are relative, make them absolute using the page URL. Return ONLY t
         product_type: (productData.product_type || "").substring(0, 100),
         description: (productData.description || "").substring(0, 500),
         storage_path: uploadedImages[0].storage_path,
+        dimensions: productData.dimensions || null,
       }),
       {
         status: 200,
