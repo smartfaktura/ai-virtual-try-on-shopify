@@ -48,12 +48,14 @@ interface UseGenerationQueueReturn {
   isProcessing: boolean;
   cancel: () => Promise<void>;
   reset: () => void;
+  lastCompletedAt: string | null;
 }
 
 export function useGenerationQueue(): UseGenerationQueueReturn {
   const { user } = useAuth();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
+  const [lastCompletedAt, setLastCompletedAt] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdRef = useRef<string | null>(null);
   const retriggeredRef = useRef(false);
@@ -149,6 +151,10 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
       // Stop polling on terminal states
       if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
         stopPolling();
+
+        if (job.status === 'completed' && job.completed_at) {
+          setLastCompletedAt(job.completed_at);
+        }
 
         if (job.status === 'failed') {
           toast.error(job.error_message || 'Generation failed. Credits have been refunded.');
@@ -336,5 +342,6 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
     isProcessing,
     cancel,
     reset,
+    lastCompletedAt,
   };
 }
