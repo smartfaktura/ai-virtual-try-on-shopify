@@ -59,13 +59,14 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
-import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload } from '@/types';
+import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload, FramingOption } from '@/types';
 import { toast } from 'sonner';
 import type { Workflow } from '@/types/workflow';
 import type { BrandProfile } from '@/pages/BrandProfiles';
 import type { Tables } from '@/integrations/supabase/types';
 import { TryOnUploadGuide } from '@/components/app/TryOnUploadGuide';
-
+import { FramingSelector } from '@/components/app/FramingSelector';
+import { detectDefaultFraming } from '@/lib/framingUtils';
 type UserProduct = Tables<'user_products'>;
 
 type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
@@ -174,7 +175,7 @@ export default function Generate() {
   const [imageCount, setImageCount] = useState<'1' | '4' | '8'>('4');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [quality, setQuality] = useState<ImageQuality>('standard');
-
+  const [framing, setFraming] = useState<FramingOption | null>(null);
 
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -338,6 +339,9 @@ export default function Generate() {
     }
     const detectedCategory = detectProductCategory(product);
     if (detectedCategory) setSelectedCategory(detectedCategory);
+    // Auto-detect framing
+    const detectedFraming = detectDefaultFraming(product.productType, product.tags);
+    if (detectedFraming) setFraming(detectedFraming);
     // Go to brand profile step if profiles exist
     if (brandProfiles.length > 0) {
       setCurrentStep('brand-profile');
@@ -485,6 +489,7 @@ export default function Generate() {
       } : undefined,
       selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
       quality,
+      framing: framing || undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -542,6 +547,7 @@ export default function Generate() {
         model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
         pose: { name: selectedPose.name, description: selectedPose.promptHint || selectedPose.description, category: selectedPose.category },
         aspectRatio, imageCount: parseInt(imageCount),
+        framing: framing || undefined,
         workflow_id: activeWorkflow?.id || null,
         product_id: selectedProduct?.id || null,
         brand_profile_id: selectedBrandProfileId || null,
@@ -1585,6 +1591,7 @@ export default function Generate() {
                 </div>
                 <div><Label>Quality</Label><p className="text-sm text-muted-foreground mt-1">Virtual Try-On uses High quality by default</p></div>
               </div>
+              <FramingSelector framing={framing} onFramingChange={setFraming} />
               <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
             </CardContent></Card>
 
