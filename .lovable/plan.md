@@ -1,35 +1,33 @@
 
 
-## Fix: Recent Creations Gallery - Labels and Click Experience
+## Replace "Quick Create" with "Workflows + Freestyle" Section
 
-### Issue 1: Misleading Labels
+### What Changes
 
-The gallery IS showing real generated try-on images (from the `tryon-images` storage bucket), not the original product photos. However, the label displays "Generated" because the workflow name lookup returns null when no workflow is associated (virtual try-on jobs may not have a workflow). This makes it hard to tell if you're seeing the actual AI output.
+**File: `src/pages/Dashboard.tsx` (lines 268-272)**
 
-**Fix:** Check the `results` URLs to detect the source type. If the URL contains `tryon-images`, label it "Virtual Try-On". Also show the product name alongside the label for better context.
+Remove the current "Quick Create" section that renders `GenerationModeCards` (Product Photos + Virtual Try-On cards) and replace it with a new section containing two premium cards:
 
-**File: `src/components/app/RecentCreationsGallery.tsx` (lines 52-68)**
+1. **Workflows** -- Navigate to `/app/workflows`
+   - Icon: `Layers`
+   - Description: "Outcome-driven visual sets -- Try-On, Product Listing, UGC, Flat Lay. Pick a workflow and get a complete set."
+   - CTA: "Browse Workflows"
 
-- Detect try-on results by checking if the result URL contains `tryon-images`
-- Use "Virtual Try-On" label when detected, fall back to workflow name or "Product Shot"
-- Show product title as a subtitle for extra context
+2. **Freestyle Studio** -- Navigate to `/app/freestyle`
+   - Icon: `Sparkles`
+   - Description: "Full creative control -- mix prompts, products, models, scenes, and brand profiles to generate any image you imagine."
+   - CTA: "Open Studio"
 
-### Issue 2: Click Sensitivity on Mobile
+### Design
 
-Currently, the entire card has an `onClick` handler that navigates to `/app/library` on any tap. On mobile, this is too sensitive -- even a slight touch while scrolling triggers navigation.
+- Same premium card styling as the current `GenerationModeCards` (rounded-2xl, hover shadow, border)
+- Workflows gets the primary CTA button, Freestyle gets outline
+- Compact layout matching the `compact` mode already used in the dashboard (short descriptions, no credit info)
+- Section title changed from "Quick Create" to "Create"
 
-**Fix:** Remove the navigation `onClick` from the card wrapper. Instead, add a small overlay button ("View") that appears on hover/tap, so navigation is intentional and not triggered by accidental touches during scrolling.
+### Technical Detail
 
-**File: `src/components/app/RecentCreationsGallery.tsx` (lines 160-179)**
+- Edit `src/pages/Dashboard.tsx` lines 268-272: replace the `GenerationModeCards` usage with inline card markup using `Layers` and `Sparkles` icons
+- The `GenerationModeCards` component itself stays untouched (still used in the first-run dashboard)
+- No new components needed -- the cards are simple enough to inline
 
-- Remove `onClick` and `cursor-pointer` from the card wrapper `div`
-- Make the hover overlay always visible on mobile (using `group-active:` or always-on for touch)
-- Add a dedicated "View" button in the overlay that navigates to library
-- Keep hover interaction on desktop for the label reveal
-
-### Summary of Changes
-
-One file: `src/components/app/RecentCreationsGallery.tsx`
-
-1. Smart labeling: detect "Virtual Try-On" from result URLs, show product name
-2. Safe click: replace card-level onClick with an intentional overlay button to prevent accidental navigation while scrolling
