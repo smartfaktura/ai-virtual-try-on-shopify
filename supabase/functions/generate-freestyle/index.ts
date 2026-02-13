@@ -148,7 +148,7 @@ function polishUserPrompt(
       const framingPrompts: Record<string, string> = {
         full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
         upper_body: `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
-        close_up: `FRAMING: Close-up shot from the shoulders and chest upward. Emphasize fine details of the product.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+        close_up: `FRAMING: Close-up portrait from the shoulders upward, emphasizing fine product details. Professional headshot composition.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
         hand_wrist: `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${context.hasModel ? ' The hand/wrist must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
         neck_shoulders: `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
         lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${context.hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,
@@ -244,9 +244,16 @@ function polishUserPrompt(
   // Model / portrait layer — strong identity matching
   if (context.hasModel) {
     const identityDetails = modelContext ? ` (${modelContext})` : "";
-    layers.push(
-      `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo. If a product reference image also contains a person, IGNORE that person entirely. The generated person must match ONLY the [MODEL IMAGE] reference.`
-    );
+    const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view'];
+    if (framing && noFaceFramings.includes(framing)) {
+      layers.push(
+        `MODEL IDENTITY: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing composition. If a product reference image also contains a person, IGNORE that person entirely.`
+      );
+    } else {
+      layers.push(
+        `MODEL IDENTITY: The generated person MUST be the EXACT same person shown in the MODEL REFERENCE IMAGE${identityDetails}. Replicate their exact face, facial features, skin tone, hair color, hair style, and body proportions with 100% fidelity. This is a specific real person — do NOT generate a different person who merely shares the same gender or ethnicity. The face must be recognizable as the same individual from the reference photo. If a product reference image also contains a person, IGNORE that person entirely. The generated person must match ONLY the [MODEL IMAGE] reference.`
+      );
+    }
     if (isSelfie) {
       if (cameraStyle === 'natural') {
         layers.push(
@@ -296,7 +303,7 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
     const framingPrompts: Record<string, string> = {
       full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
       upper_body: `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
-      close_up: `FRAMING: Close-up shot from the shoulders and chest upward. Emphasize fine details of the product.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+      close_up: `FRAMING: Close-up portrait from the shoulders upward, emphasizing fine product details. Professional headshot composition.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
       hand_wrist: `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${context.hasModel ? ' The hand/wrist must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
       neck_shoulders: `FRAMING: Jewelry display framing — product shown on the collarbone area of the model, cropped from just above the shoulders to below the collarbones. Professional product photography composition.${context.hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
       lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${context.hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,

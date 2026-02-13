@@ -83,7 +83,7 @@ export function buildFramingPrompt(framing: FramingOption, hasModel: boolean): s
     case 'upper_body':
       return `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${modelRef}`;
     case 'close_up':
-      return `FRAMING: Close-up shot from the shoulders and chest upward. Emphasize fine details of the product.${modelRef}`;
+      return `FRAMING: Close-up portrait from the shoulders upward, emphasizing fine product details. Professional headshot composition.${modelRef}`;
     case 'hand_wrist':
       return `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${modelRef}`;
     case 'neck_shoulders':
