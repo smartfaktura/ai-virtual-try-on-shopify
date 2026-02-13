@@ -461,7 +461,7 @@ export default function Generate() {
   const handleWorkflowGenerate = async () => {
     if (!selectedProduct && !scratchUpload) return;
     let sourceImageUrl = '';
-    let productData = { title: '', productType: '', description: '' };
+    let productData: { title: string; productType: string; description: string; dimensions?: string } = { title: '', productType: '', description: '' };
     if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
       sourceImageUrl = scratchUpload.uploadedUrl;
       productData = scratchUpload.productInfo;
@@ -469,7 +469,9 @@ export default function Generate() {
       const selectedImageId = Array.from(selectedSourceImages)[0];
       const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
       sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
-      productData = { title: selectedProduct.title, productType: selectedProduct.productType, description: selectedProduct.description };
+      // Look up original UserProduct to get dimensions
+      const originalUp = userProducts.find(up => up.id === selectedProduct.id);
+      productData = { title: selectedProduct.title, productType: selectedProduct.productType, description: selectedProduct.description, dimensions: originalUp?.dimensions || undefined };
     }
     if (!sourceImageUrl) { toast.error('No source image available'); return; }
     setCurrentStep('generating');

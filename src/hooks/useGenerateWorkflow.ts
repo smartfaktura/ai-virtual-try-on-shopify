@@ -13,6 +13,7 @@ export interface GenerateWorkflowParams {
     title: string;
     productType: string;
     description: string;
+    dimensions?: string;
     imageUrl: string; // source image URL to convert to base64
   };
   brandProfile?: {
