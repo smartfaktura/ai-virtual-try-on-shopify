@@ -1458,6 +1458,11 @@ export default function Generate() {
                      variationStrategy?.type === 'surface' ? 'Different surface and styling options' :
                      'Workflow-specific variations'}
                   </p>
+                  {variationStrategy?.type === 'scene' && (
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                      Products shown are reference examples only. Our VOVV Studio AI team will generate each scene with your selected product.
+                    </p>
+                  )}
                 </div>
                 <Button
                   variant="ghost"
