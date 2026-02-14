@@ -1,110 +1,55 @@
 
 
-## Mirror Selfie Set: Custom Wizard Flow, More Scenes, and AI Previews
+## Fix Mirror Selfie Set: Multi-Product Flow and Scene Preview Generation
 
-### Overview
+### Problem 1: Multi-product selection goes to bulk instead of scenes
 
-Restructure the Mirror Selfie Set wizard to use a custom step order, remove the Brand step, unlock aspect ratio selection, expand from 8 to 16 mirror scenes, and add AI-generated preview images for all scenes.
+Currently at line 1047, when 2+ products are selected, the code navigates to `/app/generate/bulk`. For the Mirror Selfie Set, it should instead continue to the Scenes step with all selected products.
 
-### New Wizard Step Order
+**Fix in `src/pages/Generate.tsx`**:
+- In the product "Continue" button handler (~line 1013-1051), add a `isMirrorSelfie` check before the bulk redirect
+- When Mirror Selfie + multiple products: store all selected products (not just one), set `mirrorSettingsPhase` to `'scenes'`, and navigate to `settings` step
+- Add a new state `selectedProducts` (array) to hold multiple products for mirror selfie
+- Update the product summary card in the scenes step to show all selected products (not just one)
+- Update `handleWorkflowGenerate` to pass all product images to the payload
 
-```text
-Current:  Product -> Brand -> Model -> Settings -> Results
-New:      Product -> Scenes -> Model -> Settings -> Results
-```
+### Problem 2: Scene preview images not generated
 
-- **Product step**: Updated copy to clarify the product will appear in a mirror selfie ("Select the product(s) that will appear in your mirror selfie")
-- **Scenes step**: NEW dedicated step showing all 16 mirror scene variations with AI preview images. User picks which compositions to generate
-- **Model step**: Select the model who will take the selfie
-- **Settings step**: Quality + Aspect Ratio (unlocked) + cost summary
-- **No Brand step** for this workflow
+The scenes show gradient fallbacks because no one has triggered the `generate-scene-previews` edge function for the Mirror Selfie Set workflow yet. The "Regenerate Previews" button exists but is admin-only and hasn't been clicked.
 
-### 16 Mirror Selfie Scenes (expanded from 8)
-
-| # | Label | Category | Description |
-|---|-------|----------|-------------|
-| 1 | Bedroom Full-Length | home | Floor mirror, bedroom, natural daylight |
-| 2 | Bathroom Vanity | home | Bathroom mirror, vanity lighting, marble |
-| 3 | Boutique Fitting Room | retail | Clothing store mirror, bright even lighting |
-| 4 | Elevator / Lobby | urban | Reflective elevator doors, moody lighting |
-| 5 | Gym Mirror | fitness | Gym wall mirror, bright overhead lights |
-| 6 | Hotel Room | travel | Luxury hotel mirror, warm ambient lighting |
-| 7 | Walk-in Closet | home | Closet mirror, organized racks around |
-| 8 | Minimalist Hallway | home | Standing mirror, clean hallway, natural light |
-| 9 | Coffee Shop Window | urban | Reflective coffee shop window, warm interior |
-| 10 | Car Side Mirror | urban | Car window/side mirror reflection, outdoor |
-| 11 | Rooftop Terrace | outdoor | Glass door reflection, city skyline behind |
-| 12 | Pool / Resort | travel | Poolside mirror, tropical setting, golden light |
-| 13 | Art Gallery | retail | Gallery mirror, white walls, gallery lighting |
-| 14 | Hair Salon | retail | Salon mirror with styling station, professional lighting |
-| 15 | Vintage Shop | retail | Ornate antique mirror, eclectic decor |
-| 16 | Studio Apartment | home | Full-length mirror, cozy studio, warm window light |
+**Fix**: After making the code changes, we will invoke the `generate-scene-previews` edge function directly with the Mirror Selfie Set workflow ID to generate all 16 AI preview images. This is a one-time operation that populates the `preview_url` field for each variation in the database.
 
 ### Technical Changes
 
-#### 1. Database Update -- Update workflow `generation_config`
+**`src/pages/Generate.tsx`**:
 
-Update the Mirror Selfie Set row to:
-- Set `lock_aspect_ratio: false` (unlock aspect ratio)
-- Add 8 new scene variations to the existing 8 (total 16)
-- Keep `show_model_picker: true`, `skip_template: true`
+1. **Add multi-product state**: Add `const [mirrorSelectedProducts, setMirrorSelectedProducts] = useState<Product[]>([]);` to track multiple products for mirror selfie
 
-#### 2. `src/pages/Generate.tsx` -- Custom wizard routing
-
-**Mirror Selfie detection**: Add `const isMirrorSelfie = activeWorkflow?.name === 'Mirror Selfie Set';`
-
-**`getSteps()`**: Add a dedicated path for Mirror Selfie:
-```
-Product -> Scenes -> Model -> Settings -> Results
-```
-
-**`getStepNumber()`**: Add matching step number mapping:
-```
-source/product: 1, settings(scenes): 2, model: 3, settings(final): 4, results: 5
+2. **Fix product Continue handler** (around line 1013-1051): Before the `selected.length > 1 => bulk` redirect, add:
+```typescript
+if (isMirrorSelfie) {
+  // Store all selected products, set first as primary
+  setMirrorSelectedProducts(selected);
+  setSelectedProduct(selected[0]);
+  if (selected[0].images.length > 0) {
+    setSelectedSourceImages(new Set([selected[0].images[0].id]));
+  }
+  setMirrorSettingsPhase('scenes');
+  setCurrentStep('settings');
+  return; // Don't go to bulk
+}
 ```
 
-Since the existing code uses a single `'settings'` step for scene selection AND generation settings, we need a way to differentiate. The approach:
-- Use the existing `'settings'` step for scenes (step 2 in the new flow)  
-- After scene selection, go to `'model'` (step 3)
-- After model selection, the model step "Continue" navigates to a final settings sub-state
-- Use a state variable `mirrorSettingsPhase` to distinguish between "scenes" and "final settings" within the `'settings'` step
+3. **Update product summary in scenes step**: Show all mirror-selected products (thumbnails row) instead of just one, so the user sees "2 products selected for mirror selfie"
 
-**Product step copy**: When `isMirrorSelfie`, update heading and description:
-- Title: "Select Product(s) for Mirror Selfie"
-- Description: "Choose the product(s) your model will wear or hold in the mirror selfie"
+4. **Update workflow payload**: In `handleWorkflowGenerate`, when `isMirrorSelfie` and multiple products, include all product images in the payload
 
-**Product step navigation**: When `isMirrorSelfie`, skip brand profile and go directly to `'settings'` (scenes phase)
-
-**Model step navigation**: When `isMirrorSelfie`, model "Continue" goes to final settings phase
-
-**Settings step split**: When `isMirrorSelfie`:
-- Phase 1 (scenes): Show scene selection grid with tips card. "Continue" goes to `'model'`
-- Phase 2 (final settings): Show quality + aspect ratio selector (unlocked). "Back" goes to `'model'`
-
-**Back button adjustments**: All back buttons in the mirror selfie flow respect the new order
-
-#### 3. `supabase/functions/generate-scene-previews/index.ts` -- Add mirror scene prompts
-
-Add 16 new mirror-selfie-specific preview prompts to the `scenePreviewPrompts` map. These will generate actual AI preview images showing a person taking a mirror selfie in each environment:
-
-```text
-"Bedroom Full-Length": "Photorealistic mirror selfie of a young woman in a stylish outfit 
-standing in front of a full-length floor mirror in a modern bedroom, holding smartphone at 
-chest level capturing reflection, natural daylight through sheer curtains, warm wood floors, 
-bed visible in background, iPhone quality, Instagram aesthetic, 4:5 portrait"
-```
-
-Each prompt follows the mirror selfie composition rules: phone visible, reflection-based, environment-specific lighting, casual authentic pose.
-
-#### 4. Deploy and Generate Previews
-
-After deploying the updated edge function, the admin can click "Regenerate Previews" on the settings page to generate AI preview images for all 16 mirror scenes.
+**Edge function invocation**: After deploying, call `generate-scene-previews` with the Mirror Selfie Set workflow ID to populate all 16 scene preview images.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| Database (UPDATE) | Update Mirror Selfie Set `generation_config` with 16 variations, `lock_aspect_ratio: false` |
-| `src/pages/Generate.tsx` | Custom wizard routing for mirror selfie: Product -> Scenes -> Model -> Settings. Mirror-specific product step copy. Split settings step into scenes phase and final settings phase. |
-| `supabase/functions/generate-scene-previews/index.ts` | Add 16 mirror selfie scene preview prompts |
+| `src/pages/Generate.tsx` | Add `mirrorSelectedProducts` state; fix multi-product Continue to go to scenes instead of bulk; update product summary to show all selected products; update payload for multi-product |
+| Edge function call | Invoke `generate-scene-previews` for Mirror Selfie Set to populate preview images |
 
