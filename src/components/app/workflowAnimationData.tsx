@@ -1,4 +1,4 @@
-import { Plus, User, MapPin, Camera, Layout, Star, Layers } from 'lucide-react';
+import { Plus, User, MapPin, Camera, Layout, Star, Layers, Smartphone } from 'lucide-react';
 import type { WorkflowScene } from './WorkflowAnimatedThumbnail';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
@@ -112,7 +112,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     background: ugcResult,
     elements: [
       {
-        type: 'product', image: ugcProduct, label: 'Product', sublabel: 'Your Item',
+        type: 'product', image: ugcProduct, label: 'Outfit', sublabel: 'Product',
         icon: <Plus className="w-3 h-3" />,
         position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
@@ -122,8 +122,12 @@ export const workflowScenes: Record<string, WorkflowScene> = {
         position: { top: '34%', right: '6%' }, enterDelay: 1.0, animation: 'slide-right',
       },
       {
-        type: 'badge', label: '8 Mirrors', icon: <Camera className="w-3 h-3" />,
-        position: { bottom: '20%', left: '6%' }, enterDelay: 1.6, animation: 'slide-up',
+        type: 'badge', label: 'Mirror Selfie', icon: <Smartphone className="w-3 h-3" />,
+        position: { bottom: '24%', left: '6%' }, enterDelay: 1.6, animation: 'slide-up',
+      },
+      {
+        type: 'badge', label: '4:5 Portrait', icon: <Layout className="w-3 h-3" />,
+        position: { bottom: '24%', right: '6%' }, enterDelay: 2.1, animation: 'slide-up',
       },
     ],
   },
