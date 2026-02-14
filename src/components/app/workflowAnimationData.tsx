@@ -20,10 +20,9 @@ const ugcModel = getLandingAssetUrl('models/model-female-average-american-redhea
 const ugcResult = getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg');
 
 // Mirror Selfie Set
-const mirrorSelfieResult = getLandingAssetUrl('workflows/workflow-mirror-selfie.jpg');
-const mirrorSelfieModel = getLandingAssetUrl('models/model-mirror-selfie.jpg');
-const mirrorSelfieScene = getLandingAssetUrl('scenes/scene-bedroom-mirror.jpg');
-const mirrorSelfieProduct = getLandingAssetUrl('products/sweater-brown.jpg');
+const mirrorSelfieModel = getLandingAssetUrl('models/model-mirror-selfie-blonde.jpg');
+const mirrorSelfieScene = getLandingAssetUrl('scenes/scene-cozy-bedroom.jpg');
+const mirrorSelfieProduct = getLandingAssetUrl('products/crop-top-white.jpg');
 
 // Flat Lay Set
 const flatProduct1 = getLandingAssetUrl('products/powder-setting.jpg');
@@ -110,6 +109,31 @@ export const workflowScenes: Record<string, WorkflowScene> = {
       {
         type: 'badge', label: 'Arrange', icon: <Layers className="w-3 h-3" />,
         position: { bottom: '22%', left: '28%' }, enterDelay: 1.5, animation: 'pop',
+      },
+    ],
+  },
+
+  'Mirror Selfie Set': {
+    background: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_1771106949688.png',
+    elements: [
+      {
+        type: 'product', image: mirrorSelfieProduct, label: 'Crop Top', sublabel: 'Product',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
+        position: { top: '40%', left: '38%' }, enterDelay: 0.9, animation: 'pop',
+      },
+      {
+        type: 'model', image: mirrorSelfieModel, label: 'Model',
+        icon: <User className="w-3 h-3" />,
+        position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
+      },
+      {
+        type: 'scene', image: mirrorSelfieScene, label: 'Cozy Bedroom', sublabel: 'Scene',
+        icon: <MapPin className="w-3 h-3" />,
+        position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
       },
     ],
   },
