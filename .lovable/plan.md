@@ -1,80 +1,47 @@
 
 
-## Generate Pro-Quality Scene Preview Images with Showcase Products
+## Regenerate 4 Scene Previews + Grid Layout + Image Optimization
 
-### What This Does
+### 1. Update Prompts for 4 Scenes
 
-Updates the 30 scene preview prompts to feature specific showcase products (as you specified), upgrades to the pro image model, and regenerates all preview thumbnails. The core generation workflow logic stays completely untouched.
+Update the edge function prompts for these 4 scenes to emphasize the dynamic elements more prominently:
 
-### Changes
+| Scene | Updated Prompt Focus |
+|-------|---------------------|
+| **Water Splash** | Energy drink can with dramatic water splashes and droplets filling the entire frame, water erupting around and behind the product, editorial water photography |
+| **Neon Accent** | Gaming mouse with vivid neon cyan and magenta light rays, glowing neon streaks on background and reflecting off the product surface, full neon atmosphere |
+| **Beach & Sand** | Espadrille sandals placed directly on natural beach sand with ocean waves lapping nearby, shells, warm coastal light |
+| **Gift & Unboxing** | Burgundy wool socks mid-unbox from a premium gift box with tissue paper, ribbon, and wrapping details visible |
 
-**1. Edge Function: `supabase/functions/generate-scene-previews/index.ts`**
+**File:** `supabase/functions/generate-scene-previews/index.ts` -- update 4 prompt strings only.
 
-Update the `scenePreviewPrompts` map only -- replace all 30 generic background-only prompts with product-specific showcase prompts using your master prompt template:
+### 2. Change Grid from 5 to 4 Columns
 
-| Scene | Showcase Product | Prompt Approach |
-|-------|-----------------|-----------------|
-| Hero White | Luxury cognac leather handbag | Clean white studio, no visible lights |
-| Soft Gray Infinity | Premium hyaluronic acid serum | Seamless gray sweep |
-| Gradient Glow | Rose gold moisturizer set | White-to-blush gradient |
-| Shadow Play | Designer crystal perfume | Hard directional shadows |
-| Dark and Moody | Black leather bifold wallet | Dark charcoal, rim lighting |
-| White Marble | Stainless steel automatic watch | Veined marble slab |
-| Raw Concrete | Hex dumbbells and resistance bands | Industrial concrete surface |
-| Warm Wood Grain | Ceramic tea set with bamboo tray | Natural oak surface |
-| Linen and Fabric | Facial oil and cream duo | Soft draped linen |
-| Terrazzo Stone | Wooden stacking toy blocks | Speckled terrazzo |
-| Bathroom Shelf | Facial cleanser and toner | Styled bathroom shelf |
-| Kitchen Counter | Stainless steel cookware with copper | Clean kitchen countertop |
-| Vanity Table | Velvet jewelry organizer | Beauty vanity with mirror |
-| Office Desk | Space gray premium laptop | Minimal workspace |
-| Bedside Table | Navy silk sleep mask | Cozy bedroom nightstand |
-| Botanical Garden | Copper watering can and pruning shears | Lush greenery |
-| Water Splash | Electric blue energy drink can | Dynamic water droplets |
-| Golden Hour | White and neon orange running shoes | Warm sunset lighting |
-| Neon Accent | Matte black RGB gaming mouse | Dark scene with neon rim |
-| Flat Lay Overhead | Complete skincare routine collection | Top-down styled arrangement |
-| Floating Levitation | Designer perfume bottle | Suspended mid-air |
-| Mirror Reflection | Black wool baseball cap | Reflective mirror surface |
-| Monochrome Color Block | Shoe care kit | Olive-toned matte backdrop |
-| Geometric Pedestal | Crystal perfume bottle | Stone cylinders and arches |
-| Smoke and Mist | Charcoal hard-shell suitcase | Atmospheric fog |
-| Hand-in-Shot | Gold chain bracelet | Hand presenting naturally |
-| Still Life Composition | Premium hardcover book | Curated props arrangement |
-| Content Pour-out | Hydrating face cream | Cream spilling from jar |
-| Beach and Sand | Woven jute espadrille sandals | Natural sand, ocean light |
-| Gift and Unboxing | Burgundy merino wool socks | Premium packaging, tissue paper |
+Update the scene cards grid from `lg:grid-cols-5` to `lg:grid-cols-4` for better visibility of each scene preview.
 
-Each prompt follows your master template:
-"Ultra high-end commercial product photography of [PRODUCT], luxury brand campaign style, clean modern composition, premium minimal aesthetic, soft natural but controlled studio lighting..."
+**File:** `src/pages/Generate.tsx` line 1459 -- change `lg:grid-cols-5` to `lg:grid-cols-4`.
 
-Additional function changes (structure stays the same):
-- Upgrade model from `google/gemini-2.5-flash-image` to `google/gemini-3-pro-image-preview` for dramatically better quality
-- Accept optional `force_regenerate` boolean parameter to skip the "already has preview" check
-- Clear existing `preview_url` values when force regenerating
+### 3. Optimize Scene Preview Images for Faster Loading
 
-**2. UI: `src/pages/Generate.tsx`**
+Apply the existing `getOptimizedUrl` utility to scene preview thumbnails so they load as compressed versions instead of full-resolution originals.
 
-Add a small info note below the scene selection grid:
-- Text: "Products shown are for demonstration only -- your product will be placed in each selected scene."
-- Styled with an Info icon in muted text
+**File:** `src/pages/Generate.tsx` line 1489 -- wrap `v.preview_url` with `getOptimizedUrl(v.preview_url, { width: 400, quality: 60 })`.
 
-Update the admin "Generate Scene Previews" button to pass `force_regenerate: true` so it always regenerates.
+### 4. Trigger Regeneration
 
-**3. Trigger Generation**
+After deploying the updated edge function, call it to regenerate only the 4 updated scenes (Water Splash, Neon Accent, Beach & Sand, Gift & Unboxing) by temporarily clearing their `preview_url` values and invoking the function.
 
-After deploying the updated edge function, call it with `force_regenerate: true` for the Product Listing Set workflow to generate all 30 new pro-quality showcase images. This will run in batches (the function saves progress after each image to handle timeouts).
+### Technical Details
 
-### What Does NOT Change
-
-- The core generation workflow logic (generate-workflow edge function)
-- Credit pricing, angle selection, or any other workflow behavior
-- The database schema or generation_config structure
-- How the actual user product generation works
+- Grid change: single class name update on line 1459
+- Image optimization: wrap one `src` attribute with `getOptimizedUrl()` (already imported)
+- Edge function: update 4 prompt strings to emphasize environmental effects (water/neon/sand/unboxing) surrounding the product
+- Regeneration: clear the 4 specific `preview_url` values via SQL, then call the edge function which will skip scenes that already have previews
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/generate-scene-previews/index.ts` | Replace 30 prompts with product-showcase versions, upgrade model, add force_regenerate |
-| `src/pages/Generate.tsx` | Add info note about showcase products, update admin button |
+| `supabase/functions/generate-scene-previews/index.ts` | Update 4 scene prompts |
+| `src/pages/Generate.tsx` | Grid cols 5 to 4, add `getOptimizedUrl` to preview images |
+
