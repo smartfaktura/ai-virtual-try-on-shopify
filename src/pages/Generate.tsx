@@ -1522,21 +1522,6 @@ export default function Generate() {
                     </div>
                   );
 
-                  if (isAdmin) {
-                    return (
-                      <TooltipProvider key={i} delayDuration={300}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            {cardContent}
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" className="max-w-[200px] text-xs">
-                            {v.instruction}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    );
-                  }
-
                   return <div key={i}>{cardContent}</div>;
                 })}
               </div>
