@@ -43,7 +43,7 @@ const featureMap: Record<string, string[]> = {
   ],
   'Mirror Selfie Set': [
     'Realistic mirror selfie compositions with phone visible',
-    '8 room/mirror environments (bedroom, bathroom, elevator, gym…)',
+    'Diverse room and mirror environments to choose from',
     'Identity-preserved model with your product',
     'All aspect ratios supported',
   ],

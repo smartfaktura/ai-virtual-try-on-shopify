@@ -50,6 +50,3 @@ verify_jwt = false
 
 [functions.generate-scene-previews]
 verify_jwt = false
-
-[functions.generate-mirror-selfie-cover]
-verify_jwt = false
