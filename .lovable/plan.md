@@ -1,28 +1,23 @@
 
 
-## Fix Scene Preview Images and Remove Hover Tooltips
+## Remove Hover Tooltip Text from Scene Cards
 
-### 1. Fix Image Display: Use `object-cover` to Fill 1:1 Square
+### Problem
+The scene cards in the Product Listing Set workflow show the full scene instruction/prompt text when hovering over them. This tooltip appears for admin users (which you are), displaying internal prompt details like "Seamless light gray studio sweep..." on hover.
 
-The current `object-contain` leaves empty space (letterboxing) inside the square container. Change back to `object-cover` so images fill the 1:1 square naturally -- this crops edges slightly but shows the image at the correct zoom level without empty bars.
+### Solution
+Remove the tooltip entirely from the scene cards — even for admin users. The scene label and category shown on the card itself is sufficient information.
 
-**File:** `src/pages/Generate.tsx` line 1489
-- Change `object-contain` to `object-cover`
+### Changes
 
-### 2. Remove Tooltip for All Users (Keep Admin-Only)
+**File: `src/pages/Generate.tsx`**
 
-The `<TooltipProvider>` still wraps the entire grid for all users, causing hover text to appear. The fix already has the admin-only conditional, but the `<TooltipProvider>` wrapper and the non-admin `<div key={i}>` wrapper need cleanup:
+1. Remove the admin-only tooltip wrapper (lines 1525-1537) so that all users — including admins — get the plain card without any hover text
+2. The rendering will always return `<div key={i}>{cardContent}</div>` without any `Tooltip` wrapping
+3. Clean up unused tooltip imports (`Tooltip`, `TooltipContent`, `TooltipProvider`, `TooltipTrigger`) if no longer used elsewhere in the file
 
-**File:** `src/pages/Generate.tsx`
-- Move `<TooltipProvider>` inside the admin check so it only renders for admins
-- For non-admin users, render the card directly without any tooltip wrapper
-
-### Technical Details
-
-| Line | Current | Change |
-|------|---------|--------|
-| 1489 | `object-contain` | `object-cover` |
-| ~1458/1542 | `<TooltipProvider>` wraps all | Only wrap when `isAdmin` |
-
-Two small edits in `src/pages/Generate.tsx`.
+### Result
+- No hover text will appear on any scene card for any user
+- Scene cards will still show the label and category directly on the card image overlay
+- Admin-only features like the "Regenerate Previews" button remain unaffected
 
