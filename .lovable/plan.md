@@ -1,42 +1,46 @@
 
 
-## Fix Mirror Selfie Set: Clean Image + Updated Text
+## Add More Mirror Selfie Scenes
 
-### Problem
-1. The Mirror Selfie Set preview/background image has Instagram UI overlays (username "erinnasmith", verified badge, "1/2" slide counter, icons) that should not be visible
-2. The description and bullet points reference specific counts ("8 diverse room and mirror environments") that need to be made generic
+### Current State
+The Mirror Selfie Set has 16 scenes across categories: home (5), retail (3), urban (3), fitness (1), travel (2), outdoor (1). Based on your Pinterest references, there are several new environment types that would add variety -- particularly luxury/lifestyle, fashion-forward, and casual everyday settings.
 
-### Changes
+### New Scenes to Add (8 new scenes, bringing total to 24)
 
-#### 1. Generate a clean background image
+| Scene Name | Category | Description |
+|---|---|---|
+| Living Room Arch Mirror | home | Arched decorative mirror in a stylish living room with warm earth tones, textured rug, and plants |
+| Entryway Console | home | Full-length or round mirror above a console table in a modern entryway/foyer, coat hooks and bags visible |
+| Dance Studio | fitness | Full-length wall-to-wall dance studio mirror, wooden barre, sprung flooring, bright natural light |
+| Restaurant Restroom | urban | Sleek modern restaurant or club restroom mirror, moody ambient lighting, dark tile or marble walls |
+| Luxury Dressing Room | retail | High-end department store dressing room with velvet curtains, warm spotlights, plush carpet |
+| Sunlit Loft | home | Large industrial loft with exposed brick, floor-to-ceiling windows, full-length mirror leaning against wall |
+| Shopping Mall | retail | Reflective glass or mirror in a bright modern shopping mall corridor, marble floors, retail stores in background |
+| Beach House | travel | Relaxed coastal mirror selfie in a bright beach house with white-washed wood, rattan furniture, ocean light |
 
-Create a one-time edge function to generate a new mirror selfie preview image without any Instagram/social media UI elements -- just a clean photo of a woman taking a mirror selfie in a bedroom, wearing a brown sweater, holding a smartphone. Upload it to `landing-assets/workflows/workflow-mirror-selfie.jpg`, replacing the current image.
+### Implementation Steps
 
-**Prompt**: "A young woman taking a mirror selfie in a cozy bedroom. She is wearing a beige/brown knit cropped sweater and light blue jeans. She holds a smartphone at chest level, capturing her reflection in a round gold-framed mirror. Warm natural light from sheer curtains, neutral bedding, jute rug. Clean photo, no text, no UI overlays, no watermarks, no social media interface. Professional lifestyle photography."
+#### 1. Database Migration
+Update the `generation_config` JSONB in the `workflows` table for the Mirror Selfie Set to append the 8 new variation objects to `variation_strategy.variations`. Each new entry follows the existing structure with `label`, `instruction`, `aspect_ratio`, `category`, and `preview_url` (set to null initially).
 
-#### 2. Update database description
+Also update `default_image_count` from 8 to 8 (keep same -- users still select which scenes they want).
 
-Run a migration to update the workflow description to be more generic:
+#### 2. Update Scene Preview Prompts
+Add 8 new entries to the `scenePreviewPrompts` map in `supabase/functions/generate-scene-previews/index.ts` matching the new scene labels with detailed, Pinterest-inspired prompts for preview image generation.
 
-**Before**: "Generate Instagram-style mirror selfie content featuring your product worn or held by a selected model. Realistic smartphone-in-hand compositions across 8 diverse room and mirror environments."
+#### 3. Generate Preview Images
+Call the `generate-scene-previews` edge function for the Mirror Selfie workflow. The function will skip scenes that already have previews and only generate images for the new ones (where `preview_url` is null). The images get uploaded to the `workflow-previews` storage bucket.
 
-**After**: "Generate authentic mirror selfie content featuring your product worn or held by a selected model. Realistic smartphone-in-hand compositions across diverse room and mirror environments."
+#### 4. Update Environment Count Badge
+In `src/pages/Generate.tsx`, the scene selection step shows a "16 Environments" badge. This will be updated dynamically or to "24 Environments" to reflect the new total.
 
-#### 3. Update feature bullet points
+### Technical Details
 
-**File: `src/components/app/WorkflowCard.tsx`** (lines 44-49)
+**Database change**: Single UPDATE to `workflows.generation_config` JSONB, appending 8 objects to the `variation_strategy.variations` array.
 
-Update the featureMap for Mirror Selfie Set:
+**Edge function change**: Add 8 new prompt entries to `scenePreviewPrompts` in `generate-scene-previews/index.ts`.
 
-| Before | After |
-|--------|-------|
-| Realistic mirror selfie compositions with phone visible | Realistic mirror selfie compositions with phone visible |
-| 8 room/mirror environments (bedroom, bathroom, elevator, gym...) | Diverse room and mirror environments to choose from |
-| Identity-preserved model with your product | Identity-preserved model with your product |
-| All aspect ratios supported | All aspect ratios supported |
+**Generate.tsx change**: Update environment count display if hardcoded.
 
-Only the second bullet changes -- removing the specific count and room list.
+**No new tables or schema changes needed** -- everything lives in the existing JSONB config.
 
-#### 4. Clean up
-
-Delete the one-time edge function after the image is generated and uploaded.
