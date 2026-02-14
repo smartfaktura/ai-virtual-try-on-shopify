@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban } from 'lucide-react';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info } from 'lucide-react';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -87,7 +87,7 @@ export default function Generate() {
     setIsGeneratingPreviews(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-scene-previews', {
-        body: { workflow_id: workflowId },
+        body: { workflow_id: workflowId, force_regenerate: true },
       });
       if (error) throw error;
       toast.success('Scene previews generated! Refreshing...');
@@ -1533,6 +1533,14 @@ export default function Generate() {
                 </div>
               </TooltipProvider>
 
+              {/* Info note about showcase products */}
+              <div className="flex items-start gap-2 px-1">
+                <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  Products shown are for demonstration only — your product will be placed in each selected scene.
+                </p>
+              </div>
+
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">
                   {selectedVariationIndices.size === 0 ? (
@@ -1541,7 +1549,7 @@ export default function Generate() {
                     <>{selectedVariationIndices.size} of {variationStrategy?.variations.length} scenes selected</>
                   )}
                 </p>
-                {isAdmin && variationStrategy?.variations.some(v => !v.preview_url) && (
+                {isAdmin && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -1552,7 +1560,7 @@ export default function Generate() {
                     {isGeneratingPreviews ? (
                       <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Generating Previews...</>
                     ) : (
-                      <><Sparkles className="w-3 h-3 mr-1" />Generate Scene Previews</>
+                      <><Sparkles className="w-3 h-3 mr-1" />Regenerate Previews</>
                     )}
                   </Button>
                 )}
