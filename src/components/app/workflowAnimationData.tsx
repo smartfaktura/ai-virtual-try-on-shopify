@@ -21,8 +21,9 @@ const ugcResult = getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg');
 
 // Mirror Selfie Set
 const mirrorSelfieResult = getLandingAssetUrl('workflows/workflow-mirror-selfie.jpg');
-const mirrorSelfieModel = getLandingAssetUrl('models/model-female-average-european.jpg');
-const mirrorSelfieScene = getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg');
+const mirrorSelfieModel = getLandingAssetUrl('models/model-mirror-selfie.jpg');
+const mirrorSelfieScene = getLandingAssetUrl('scenes/scene-bedroom-mirror.jpg');
+const mirrorSelfieProduct = getLandingAssetUrl('products/sweater-brown.jpg');
 
 // Flat Lay Set
 const flatProduct1 = getLandingAssetUrl('products/powder-setting.jpg');
@@ -117,7 +118,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     background: mirrorSelfieResult,
     elements: [
       {
-        type: 'product', image: ugcProduct, label: 'Outfit', sublabel: 'Product',
+        type: 'product', image: mirrorSelfieProduct, label: 'Sweater', sublabel: 'Product',
         icon: <Plus className="w-3 h-3" />,
         position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
