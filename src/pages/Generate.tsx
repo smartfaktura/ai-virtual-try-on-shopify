@@ -1024,17 +1024,24 @@ export default function Generate() {
                     ? userProducts.map(up => mapUserProductToProduct(up))
                     : mockProducts;
                   const selected = mappedProducts.filter(p => selectedProductIds.has(p.id));
+                  
+                  // Mirror Selfie: always go to scenes, even with multiple products
+                  if (isMirrorSelfie) {
+                    setSelectedProduct(selected[0]);
+                    if (selected[0].images.length > 0) setSelectedSourceImages(new Set([selected[0].images[0].id]));
+                    setMirrorSettingsPhase('scenes');
+                    setCurrentStep('settings');
+                    return;
+                  }
+                  
                   if (selected.length === 1) {
                     const product = selected[0];
                     setSelectedProduct(product);
                     if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
                     const cat = detectProductCategory(product);
                     if (cat) setSelectedCategory(cat);
-                    if (brandProfiles.length > 0 && !isMirrorSelfie) {
+                    if (brandProfiles.length > 0) {
                        setCurrentStep('brand-profile');
-                     } else if (isMirrorSelfie) {
-                       setMirrorSettingsPhase('scenes');
-                       setCurrentStep('settings');
                      } else if (uiConfig?.show_model_picker) {
                        setCurrentStep('model');
                      } else if (isClothingProduct(product)) {
