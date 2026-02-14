@@ -1,26 +1,28 @@
 
 
-## Fix Scene Preview Display and Remove End-User Tooltip
+## Fix Scene Preview Images and Remove Hover Tooltips
 
-### Issue 1: Images appear zoomed/cropped
+### 1. Fix Image Display: Use `object-cover` to Fill 1:1 Square
 
-The scene preview images are displayed inside an `aspect-square` container with `object-cover`, which crops the images. Additionally, the `getOptimizedUrl` call uses `width: 400` which forces a low resolution that gets stretched.
+The current `object-contain` leaves empty space (letterboxing) inside the square container. Change back to `object-cover` so images fill the 1:1 square naturally -- this crops edges slightly but shows the image at the correct zoom level without empty bars.
 
-**Fix in `src/pages/Generate.tsx` (line 1489-1491):**
-- Remove the `width: 400` parameter from `getOptimizedUrl` -- keep only `quality: 60` for compression without resizing
-- Change `object-cover` to `object-contain` so the full image is visible without cropping
+**File:** `src/pages/Generate.tsx` line 1489
+- Change `object-contain` to `object-cover`
 
-### Issue 2: Tooltip showing scene description to all visitors
+### 2. Remove Tooltip for All Users (Keep Admin-Only)
 
-The `<Tooltip>` component wrapping each scene card shows `v.instruction` (the scene prompt description like "Product placed on a polished white marble slab...") on hover to ALL users. This should only be visible to admins.
+The `<TooltipProvider>` still wraps the entire grid for all users, causing hover text to appear. The fix already has the admin-only conditional, but the `<TooltipProvider>` wrapper and the non-admin `<div key={i}>` wrapper need cleanup:
 
-**Fix in `src/pages/Generate.tsx` (lines 1458, 1467-1530):**
-- Remove the `<TooltipProvider>`, `<Tooltip>`, `<TooltipTrigger>`, and `<TooltipContent>` wrappers for non-admin users
-- Keep the tooltip only when `isAdmin` is true so the description is hidden from end users
+**File:** `src/pages/Generate.tsx`
+- Move `<TooltipProvider>` inside the admin check so it only renders for admins
+- For non-admin users, render the card directly without any tooltip wrapper
 
-### Files Changed
+### Technical Details
 
-| File | Change |
-|------|--------|
-| `src/pages/Generate.tsx` | Remove width constraint from image optimization, change object-cover to object-contain, make tooltip admin-only |
+| Line | Current | Change |
+|------|---------|--------|
+| 1489 | `object-contain` | `object-cover` |
+| ~1458/1542 | `<TooltipProvider>` wraps all | Only wrap when `isAdmin` |
+
+Two small edits in `src/pages/Generate.tsx`.
 
