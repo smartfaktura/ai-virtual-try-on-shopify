@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
 import { useQuery } from '@tanstack/react-query';
-import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info } from 'lucide-react';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone } from 'lucide-react';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -689,6 +689,10 @@ export default function Generate() {
       return map[currentStep] || 1;
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
+      if (uiConfig?.show_model_picker) {
+        const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, settings: 4, generating: 5, results: 5 };
+        return map[currentStep] || 1;
+      }
       const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, settings: 3, generating: 4, results: 4 };
       return map[currentStep] || 1;
     }
@@ -705,6 +709,9 @@ export default function Generate() {
       ];
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
+      if (uiConfig?.show_model_picker) {
+        return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Model' }, { name: 'Settings' }, { name: 'Results' }];
+      }
       return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Settings' }, { name: 'Results' }];
     }
     return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Template' }, { name: 'Settings' }, { name: 'Results' }];
@@ -1107,7 +1114,11 @@ export default function Generate() {
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <h2 className="text-base font-semibold">Select a Model</h2>
-                <p className="text-sm text-muted-foreground">Choose the model who will wear your clothing</p>
+                <p className="text-sm text-muted-foreground">
+                  {activeWorkflow?.name === 'Mirror Selfie Set'
+                    ? 'This model will appear taking a mirror selfie wearing your product'
+                    : 'Choose the model who will wear your clothing'}
+                </p>
               </div>
               <ModelFilterBar genderFilter={modelGenderFilter} bodyTypeFilter={modelBodyTypeFilter} ageFilter={modelAgeFilter}
                 onGenderChange={setModelGenderFilter} onBodyTypeChange={setModelBodyTypeFilter} onAgeChange={setModelAgeFilter} />
@@ -1440,10 +1451,16 @@ export default function Generate() {
                     <h3 className="text-base font-semibold">
                       {variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
                     </h3>
-                    {variationStrategy?.type === 'scene' && (
+                    {variationStrategy?.type === 'scene' && activeWorkflow?.name !== 'Mirror Selfie Set' && (
                       <>
                         <Badge variant="secondary" className="text-[10px]"><Ban className="w-3 h-3 mr-1" />No People</Badge>
                         <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
+                      </>
+                    )}
+                    {variationStrategy?.type === 'scene' && activeWorkflow?.name === 'Mirror Selfie Set' && (
+                      <>
+                        <Badge variant="secondary" className="text-[10px]"><Smartphone className="w-3 h-3 mr-1" />Mirror Selfie</Badge>
+                        <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Environments</Badge>
                       </>
                     )}
                   </div>
@@ -1506,6 +1523,21 @@ export default function Generate() {
                   </div>
                 );
               })()}
+
+              {/* Mirror Selfie Tips */}
+              {activeWorkflow?.name === 'Mirror Selfie Set' && (
+                <Alert className="border-primary/20 bg-primary/5">
+                  <Smartphone className="w-4 h-4 text-primary" />
+                  <AlertDescription className="space-y-1.5">
+                    <p className="font-semibold text-sm">Mirror Selfie Composition</p>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Your model will appear holding a smartphone, capturing their reflection in a mirror</li>
+                      <li>Each environment places your product in a different real-world mirror setting</li>
+                      <li>Output is Instagram-ready at 4:5 portrait format</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Visual scene cards grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -1629,8 +1661,8 @@ export default function Generate() {
               </div>
             </CardContent></Card>
 
-            {/* Product Angles */}
-            {variationStrategy?.type === 'scene' && (
+            {/* Product Angles — hidden for Mirror Selfie Set */}
+            {variationStrategy?.type === 'scene' && activeWorkflow?.name !== 'Mirror Selfie Set' && (
               <Card><CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">Product Angles</h3>
