@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { Star, X, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 interface ImageItem {
   id: string;
@@ -52,11 +53,12 @@ export function ProductImageGallery({
           )}
         >
           {/* Image with inner zoom — no overflow */}
-          <img
-            src={img.src}
-            alt="Product"
-            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-          />
+           <ShimmerImage
+             src={img.src}
+             alt="Product"
+             className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+             aspectRatio="1/1"
+           />
 
           {/* Primary star — small, tucked in corner */}
           <button

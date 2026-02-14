@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 interface CategoryCardProps {
@@ -44,18 +45,18 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
 
       {/* All images stacked — only currentIndex is visible */}
       {images.map((img, i) => (
-        <img
-          key={i}
-          src={img}
-          alt={`${label} AI-generated product shot`}
-          decoding="async"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{
-            opacity: i === currentIndex ? 1 : 0,
-            transition: 'opacity 1.2s ease-in-out',
-          }}
-        />
-      ))}
+         <ShimmerImage
+           key={i}
+           src={img}
+           alt={`${label} AI-generated product shot`}
+           decoding="async"
+           className="absolute inset-0 w-full h-full object-cover"
+           style={{
+             opacity: i === currentIndex ? 1 : 0,
+             transition: 'opacity 1.2s ease-in-out',
+           }}
+         />
+       ))}
     </div>
   );
 }

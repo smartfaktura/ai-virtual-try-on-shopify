@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 interface ModelCard {
@@ -81,10 +82,11 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
         {tripled.map((model, i) => (
           <div key={`${model.name}-${i}`} className="flex flex-col items-center gap-2 flex-shrink-0">
             <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
-              <img
+              <ShimmerImage
                 src={model.image}
                 alt={model.name}
                 className="w-full h-full object-cover object-top"
+                aspectRatio="3/4"
               />
             </div>
             <span className="text-xs sm:text-sm font-medium text-foreground">{model.name}</span>

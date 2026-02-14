@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const comparisons = [
@@ -56,19 +57,21 @@ export function BeforeAfterGallery() {
             >
               {/* PiP layout: large output image with small inset original */}
               <div className="relative">
-                <img
-                  src={comp.output}
-                  alt={`${comp.label} visual`}
-                  className="w-full h-52 object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                />
-                {/* Inset original (PiP) */}
-                <div className="absolute top-3 left-3 w-14 h-14 rounded-lg border-2 border-background/80 shadow-lg overflow-hidden">
-                  <img
-                    src={comp.original}
-                    alt="Original product"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <ShimmerImage
+                   src={comp.output}
+                   alt={`${comp.label} visual`}
+                   className="w-full h-52 object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                   aspectRatio="16/9"
+                 />
+                 {/* Inset original (PiP) */}
+                 <div className="absolute top-3 left-3 w-14 h-14 rounded-lg border-2 border-background/80 shadow-lg overflow-hidden">
+                   <ShimmerImage
+                     src={comp.original}
+                     alt="Original product"
+                     className="w-full h-full object-cover"
+                     aspectRatio="1/1"
+                   />
+                 </div>
               </div>
               <div className="p-4">
                 <p className="text-sm font-semibold text-foreground">{comp.label}</p>

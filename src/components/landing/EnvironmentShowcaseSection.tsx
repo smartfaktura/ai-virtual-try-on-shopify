@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 interface EnvironmentCard {
@@ -67,12 +68,13 @@ function MarqueeRow({ items, direction = 'left' }: { items: EnvironmentCard[]; d
         {doubled.map((env, i) => (
           <div key={`${env.name}-${i}`} className="flex flex-col items-center gap-2 flex-shrink-0">
             <div className="w-36 h-48 sm:w-44 sm:h-56 lg:w-52 lg:h-64 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
-              <img
-                src={env.image}
-                alt={env.name}
-                className="w-full h-full object-cover"
-                decoding="async"
-              />
+              <ShimmerImage
+                 src={env.image}
+                 alt={env.name}
+                 className="w-full h-full object-cover"
+                 decoding="async"
+                 aspectRatio="3/4"
+               />
             </div>
             <span className="text-xs sm:text-sm font-medium text-foreground">{env.name}</span>
           </div>

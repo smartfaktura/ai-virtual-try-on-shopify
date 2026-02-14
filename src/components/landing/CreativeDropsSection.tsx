@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Check, Calendar, Clock, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const whiteCropTop = getLandingAssetUrl('drops/drop-model-white-crop.jpg');
@@ -93,11 +94,12 @@ export function CreativeDropsSection() {
               {/* Scheduled product card */}
               <div className="rounded-2xl border border-border bg-card shadow-sm p-3 flex items-center gap-3 mb-1">
                 <div className="w-12 h-12 rounded-lg overflow-hidden border border-border shrink-0">
-                  <img
-                    src={whiteCropTop}
-                    alt="White Crop Top"
-                    className="w-full h-full object-cover object-top"
-                  />
+                   <ShimmerImage
+                     src={whiteCropTop}
+                     alt="White Crop Top"
+                     className="w-full h-full object-cover object-top"
+                     aspectRatio="1/1"
+                   />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground">White Crop Top</p>
@@ -134,11 +136,12 @@ export function CreativeDropsSection() {
                     <div className="flex gap-1.5">
                       {drop.thumbnails.map((thumb, i) => (
                         <div key={i} className="rounded-md overflow-hidden border border-border flex-1">
-                          <img
-                            src={thumb}
-                            alt="Campaign visual"
-                            className="w-full h-28 object-cover object-top"
-                          />
+                           <ShimmerImage
+                             src={thumb}
+                             alt="Campaign visual"
+                             className="w-full h-28 object-cover object-top"
+                             aspectRatio="4/3"
+                           />
                         </div>
                       ))}
                       {/* Overflow indicator */}
