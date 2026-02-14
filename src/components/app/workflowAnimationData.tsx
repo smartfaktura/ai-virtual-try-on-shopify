@@ -114,28 +114,4 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     ],
   },
 
-  'Mirror Selfie Set': {
-    background: mirrorSelfieResult,
-    elements: [
-      {
-        type: 'product', image: mirrorSelfieProduct, label: 'Sweater', sublabel: 'Product',
-        icon: <Plus className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
-      },
-      {
-        type: 'model', image: mirrorSelfieModel, label: 'Model',
-        icon: <User className="w-3 h-3" />,
-        position: { top: '34%', right: '6%' }, enterDelay: 0.9, animation: 'slide-right',
-      },
-      {
-        type: 'scene', image: mirrorSelfieScene, label: 'Bedroom Mirror', sublabel: 'Scene',
-        icon: <MapPin className="w-3 h-3" />,
-        position: { bottom: '28%', left: '6%' }, enterDelay: 1.5, animation: 'slide-up',
-      },
-      {
-        type: 'badge', label: 'Mirror Selfie', icon: <Smartphone className="w-3 h-3" />,
-        position: { bottom: '10%', left: '28%' }, enterDelay: 2.0, animation: 'pop',
-      },
-    ],
-  },
 };
