@@ -317,7 +317,7 @@ export default function Dashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Product</TableHead>
+                    <TableHead>Source</TableHead>
                     <TableHead>Workflow</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Credits</TableHead>
@@ -332,13 +332,17 @@ export default function Dashboard() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg overflow-hidden border border-border flex-shrink-0">
                             <img
-                              src={getOptimizedUrl(job.user_products?.image_url, { width: 80, quality: 50 }) || '/placeholder.svg'}
-                              alt={job.user_products?.title || 'Product'}
+                              src={
+                                getOptimizedUrl(job.user_products?.image_url, { width: 80, quality: 50 })
+                                || (Array.isArray(job.results) && (job.results as any[])[0]?.url)
+                                || '/placeholder.svg'
+                              }
+                              alt={job.user_products?.title || job.workflows?.name || 'Generation'}
                               className="w-full h-full object-cover"
                             />
                           </div>
                           <span className="font-medium text-sm">
-                            {job.user_products?.title || 'Unknown product'}
+                            {job.user_products?.title || job.workflows?.name || 'Freestyle Generation'}
                           </span>
                         </div>
                       </TableCell>
