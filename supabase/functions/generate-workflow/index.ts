@@ -495,8 +495,48 @@ serve(async (req) => {
           );
 
           if (imageUrl) {
+            // Upload base64 to storage to avoid bloating the database
+            let finalUrl = imageUrl;
+            if (imageUrl.startsWith("data:")) {
+              try {
+                const [meta, base64Data] = imageUrl.split(",");
+                const mimeMatch = meta.match(/^data:(.*?);/);
+                const mimeType = mimeMatch?.[1] || "image/png";
+                const ext = mimeType === "image/jpeg" ? "jpg" : "png";
+
+                const binaryString = atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let k = 0; k < binaryString.length; k++) {
+                  bytes[k] = binaryString.charCodeAt(k);
+                }
+
+                const userId = body.user_id || "anonymous";
+                const jobId = body.job_id || crypto.randomUUID();
+                const storagePath = `${userId}/${jobId}/${i}-${a}.${ext}`;
+
+                const { error: uploadError } = await supabase.storage
+                  .from("workflow-previews")
+                  .upload(storagePath, bytes, {
+                    contentType: mimeType,
+                    cacheControl: "3600",
+                  });
+
+                if (!uploadError) {
+                  const { data: publicUrlData } = supabase.storage
+                    .from("workflow-previews")
+                    .getPublicUrl(storagePath);
+                  finalUrl = publicUrlData.publicUrl;
+                  console.log(`[generate-workflow] Uploaded to storage: ${storagePath}`);
+                } else {
+                  console.error("[generate-workflow] Storage upload failed, keeping base64:", uploadError.message);
+                }
+              } catch (uploadErr) {
+                console.error("[generate-workflow] Storage upload error:", uploadErr);
+              }
+            }
+
             images.push({
-              url: imageUrl,
+              url: finalUrl,
               label: imageLabel,
               aspect_ratio: aspectRatio,
             });
