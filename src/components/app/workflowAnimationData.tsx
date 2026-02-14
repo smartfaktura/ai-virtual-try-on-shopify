@@ -1,4 +1,4 @@
-import { Plus, User, MapPin, Camera, Layout, Star, Layers, Smartphone } from 'lucide-react';
+import { Plus, User, MapPin, Camera, Star, Layers, Smartphone } from 'lucide-react';
 import type { WorkflowScene } from './WorkflowAnimatedThumbnail';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
@@ -18,6 +18,11 @@ const listingResult = getLandingAssetUrl('workflows/workflow-product-listing.jpg
 const ugcProduct = getLandingAssetUrl('products/lipstick-matte.jpg');
 const ugcModel = getLandingAssetUrl('models/model-female-average-american-redhead.jpg');
 const ugcResult = getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg');
+
+// Mirror Selfie Set
+const mirrorSelfieResult = getLandingAssetUrl('workflows/workflow-mirror-selfie.jpg');
+const mirrorSelfieModel = getLandingAssetUrl('models/model-female-average-european.jpg');
+const mirrorSelfieScene = getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg');
 
 // Flat Lay Set
 const flatProduct1 = getLandingAssetUrl('products/powder-setting.jpg');
@@ -109,7 +114,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   },
 
   'Mirror Selfie Set': {
-    background: ugcResult,
+    background: mirrorSelfieResult,
     elements: [
       {
         type: 'product', image: ugcProduct, label: 'Outfit', sublabel: 'Product',
@@ -117,17 +122,18 @@ export const workflowScenes: Record<string, WorkflowScene> = {
         position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
       {
-        type: 'model', image: ugcModel, label: 'Model',
+        type: 'model', image: mirrorSelfieModel, label: 'Model',
         icon: <User className="w-3 h-3" />,
-        position: { top: '34%', right: '6%' }, enterDelay: 1.0, animation: 'slide-right',
+        position: { top: '34%', right: '6%' }, enterDelay: 0.9, animation: 'slide-right',
+      },
+      {
+        type: 'scene', image: mirrorSelfieScene, label: 'Bedroom Mirror', sublabel: 'Scene',
+        icon: <MapPin className="w-3 h-3" />,
+        position: { bottom: '28%', left: '6%' }, enterDelay: 1.5, animation: 'slide-up',
       },
       {
         type: 'badge', label: 'Mirror Selfie', icon: <Smartphone className="w-3 h-3" />,
-        position: { bottom: '24%', left: '6%' }, enterDelay: 1.6, animation: 'slide-up',
-      },
-      {
-        type: 'badge', label: '4:5 Portrait', icon: <Layout className="w-3 h-3" />,
-        position: { bottom: '24%', right: '6%' }, enterDelay: 2.1, animation: 'slide-up',
+        position: { bottom: '10%', left: '28%' }, enterDelay: 2.0, animation: 'pop',
       },
     ],
   },
