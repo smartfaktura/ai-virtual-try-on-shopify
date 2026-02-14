@@ -19,9 +19,9 @@ interface WorkflowRowProps {
 const featureMap: Record<string, string[]> = {
   'Virtual Try-On Set': [
     'AI-powered virtual try-on on real models',
-    'Choose from curated model & scene libraries',
+    '30+ diverse models & 30+ curated scenes to choose from',
     'Professional editorial-quality results',
-    'Portrait-optimized 3:4 output ratio',
+    'All aspect ratios supported — portrait, square & landscape',
   ],
   'Product Listing Set': [
     '8 diverse scenes from white studio to lifestyle',
