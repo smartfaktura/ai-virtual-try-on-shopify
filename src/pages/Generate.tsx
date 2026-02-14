@@ -1456,7 +1456,7 @@ export default function Generate() {
 
               {/* Visual scene cards grid */}
               <TooltipProvider delayDuration={300}>
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {variationStrategy?.variations.map((v, i) => {
                     // Filter by category
                     if (sceneFilterCategory !== 'all' && v.category && v.category !== sceneFilterCategory) return null;
@@ -1486,7 +1486,7 @@ export default function Generate() {
                             <div className="aspect-square relative">
                               {hasPreview ? (
                                 <img
-                                  src={v.preview_url}
+                                  src={getOptimizedUrl(v.preview_url, { width: 400, quality: 60 })}
                                   alt={v.label}
                                   className="w-full h-full object-cover"
                                   loading="lazy"
