@@ -140,7 +140,7 @@ serve(async (req) => {
       .from("workflow-previews")
       .getPublicUrl(fileName);
 
-    const publicUrl = publicUrlData.publicUrl;
+    const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
 
     // Update workflow row with preview URL
     const { error: updateErr } = await supabase
