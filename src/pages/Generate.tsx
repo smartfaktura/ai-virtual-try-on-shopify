@@ -1616,7 +1616,7 @@ export default function Generate() {
                         "relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group border-2",
                         isSelected
                           ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
-                          : "border-border opacity-70 hover:opacity-100 hover:border-primary/40 hover:scale-[1.02]"
+                          : "border-border hover:border-primary/40 hover:scale-[1.02]"
                       )}
                     >
                       {/* Image or gradient fallback */}
