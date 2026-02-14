@@ -107,4 +107,24 @@ export const workflowScenes: Record<string, WorkflowScene> = {
       },
     ],
   },
+
+  'Mirror Selfie Set': {
+    background: ugcResult,
+    elements: [
+      {
+        type: 'product', image: ugcProduct, label: 'Product', sublabel: 'Your Item',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'model', image: ugcModel, label: 'Model',
+        icon: <User className="w-3 h-3" />,
+        position: { top: '34%', right: '6%' }, enterDelay: 1.0, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: '8 Mirrors', icon: <Camera className="w-3 h-3" />,
+        position: { bottom: '20%', left: '6%' }, enterDelay: 1.6, animation: 'slide-up',
+      },
+    ],
+  },
 };
