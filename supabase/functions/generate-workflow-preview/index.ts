@@ -23,7 +23,7 @@ const workflowPrompts: Record<string, string> = {
   "Selfie / UGC Set":
     "Ultra high resolution casual user-generated content style photo. A young woman taking a mirror selfie in a warm coffee shop, holding a skincare product, natural phone-camera aesthetic with soft warm tones. 3:4 portrait orientation, authentic and relatable UGC style. No text, no watermarks, no overlays, no labels, no UI elements.",
   "Mirror Selfie Set":
-    "Ultra high resolution authentic mirror selfie photograph. A stylish young woman in a cozy knit sweater taking a mirror selfie with her smartphone visible in the reflection, standing in a beautifully decorated bedroom with warm ambient lighting. Natural casual pose, phone held at chest level, soft bokeh background with fairy lights. 3:4 portrait orientation, realistic smartphone camera aesthetic, no text, no watermarks, no overlays, no labels, no UI elements, no graphics, just the photograph.",
+    "Full height photograph of a beautiful blonde top model taking a mirror selfie with her smartphone visible in the reflection, standing in a cozy decorated bedroom with warm ambient lighting. She is wearing a white crop top. Natural casual pose, phone held at chest level, soft bokeh background. 3:4 portrait orientation, realistic smartphone camera aesthetic, no text, no watermarks, no overlays, no labels, no UI elements, no graphics, just the photograph.",
   "Flat Lay Set":
     "Ultra high resolution overhead flat lay product photography. A beautifully arranged collection of fashion accessories, cosmetics, and lifestyle items on a clean white marble surface with eucalyptus leaves and gold accents. 3:4 portrait orientation, styled editorial flat lay.",
   "Seasonal Campaign Set":
