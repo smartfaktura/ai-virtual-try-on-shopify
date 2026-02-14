@@ -205,6 +205,10 @@ export default function Generate() {
   const [workflowVariationLabels, setWorkflowVariationLabels] = useState<string[]>([]);
   const [productAngle, setProductAngle] = useState<'front' | 'front-side' | 'front-back' | 'all'>('front');
   const [sceneFilterCategory, setSceneFilterCategory] = useState<string>('all');
+  const [mirrorSettingsPhase, setMirrorSettingsPhase] = useState<'scenes' | 'final'>('scenes');
+
+  // Mirror Selfie detection
+  const isMirrorSelfie = activeWorkflow?.name === 'Mirror Selfie Set';
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
@@ -684,6 +688,16 @@ export default function Generate() {
   const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 
   const getStepNumber = () => {
+    if (isMirrorSelfie) {
+      if (currentStep === 'settings' && mirrorSettingsPhase === 'scenes') {
+        return 2;
+      }
+      if (currentStep === 'settings' && mirrorSettingsPhase === 'final') {
+        return 4;
+      }
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, model: 3, generating: 5, results: 5 };
+      return map[currentStep] || 1;
+    }
     if (generationMode === 'virtual-try-on') {
       const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, pose: 4, settings: 5, generating: 6, results: 6 };
       return map[currentStep] || 1;
@@ -701,6 +715,15 @@ export default function Generate() {
   };
 
   const getSteps = () => {
+    if (isMirrorSelfie) {
+      return [
+        { name: sourceType === 'scratch' ? 'Source' : 'Product' },
+        { name: 'Scenes' },
+        { name: 'Model' },
+        { name: 'Settings' },
+        { name: 'Results' },
+      ];
+    }
     if (generationMode === 'virtual-try-on') {
       return [
         { name: sourceType === 'scratch' ? 'Source' : 'Product' },
@@ -912,13 +935,16 @@ export default function Generate() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base font-semibold">
-                  {activeWorkflow?.uses_tryon ? 'Select a Clothing Item' : 'Select Product(s)'}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {activeWorkflow?.uses_tryon
-                    ? 'Choose the clothing item you want to try on a model.'
-                    : 'Choose one or multiple products. 2+ products will use bulk generation.'}
-                </p>
+                   {isMirrorSelfie ? 'Select Product(s) for Mirror Selfie'
+                     : activeWorkflow?.uses_tryon ? 'Select a Clothing Item' : 'Select Product(s)'}
+                 </h2>
+                 <p className="text-sm text-muted-foreground">
+                   {isMirrorSelfie
+                     ? 'Choose the product(s) your model will wear or hold in the mirror selfie'
+                     : activeWorkflow?.uses_tryon
+                     ? 'Choose the clothing item you want to try on a model.'
+                     : 'Choose one or multiple products. 2+ products will use bulk generation.'}
+                 </p>
               </div>
               <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
             </div>
@@ -1004,17 +1030,20 @@ export default function Generate() {
                     if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
                     const cat = detectProductCategory(product);
                     if (cat) setSelectedCategory(cat);
-                    if (brandProfiles.length > 0) {
-                      setCurrentStep('brand-profile');
-                    } else if (uiConfig?.show_model_picker) {
-                      setCurrentStep('model');
-                    } else if (isClothingProduct(product)) {
-                      setCurrentStep('mode');
-                    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
-                      setCurrentStep('settings');
-                    } else {
-                      setCurrentStep('template');
-                    }
+                    if (brandProfiles.length > 0 && !isMirrorSelfie) {
+                       setCurrentStep('brand-profile');
+                     } else if (isMirrorSelfie) {
+                       setMirrorSettingsPhase('scenes');
+                       setCurrentStep('settings');
+                     } else if (uiConfig?.show_model_picker) {
+                       setCurrentStep('model');
+                     } else if (isClothingProduct(product)) {
+                       setCurrentStep('mode');
+                     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+                       setCurrentStep('settings');
+                     } else {
+                       setCurrentStep('template');
+                     }
                   } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
                 }
               }}>
@@ -1128,8 +1157,17 @@ export default function Generate() {
                 ))}
               </div>
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product')}>Back</Button>
-                {uiConfig?.show_model_picker && !activeWorkflow?.uses_tryon ? (
+                <Button variant="outline" onClick={() => {
+                  if (isMirrorSelfie) {
+                    setMirrorSettingsPhase('scenes');
+                    setCurrentStep('settings');
+                  } else {
+                    setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product');
+                  }
+                }}>Back</Button>
+                {isMirrorSelfie ? (
+                  <Button disabled={!selectedModel} onClick={() => { setMirrorSettingsPhase('final'); setCurrentStep('settings'); }}>Continue to Settings</Button>
+                ) : uiConfig?.show_model_picker && !activeWorkflow?.uses_tryon ? (
                   <Button disabled={!selectedModel} onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
                 ) : (
                   <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
@@ -1414,7 +1452,8 @@ export default function Generate() {
         {/* Workflow-Specific Settings */}
         {hasWorkflowConfig && currentStep === 'settings' && generationMode !== 'virtual-try-on' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
-            {/* Product summary */}
+            {/* Product summary — hidden in mirror selfie final phase */}
+            {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && (
             <Card><CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">{sourceType === 'scratch' ? 'Uploaded Image' : 'Selected Product'}</span>
@@ -1442,8 +1481,10 @@ export default function Generate() {
                 </div>
               )}
             </CardContent></Card>
+            )}
 
-            {/* Variation Strategy Preview */}
+            {/* Variation Strategy Preview — hidden in mirror selfie final phase */}
+            {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && (
             <Card><CardContent className="p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -1533,7 +1574,7 @@ export default function Generate() {
                     <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                       <li>Your model will appear holding a smartphone, capturing their reflection in a mirror</li>
                       <li>Each environment places your product in a different real-world mirror setting</li>
-                      <li>Output is Instagram-ready at 4:5 portrait format</li>
+                      <li>Choose any aspect ratio in the next step — 4:5 portrait recommended for Instagram</li>
                     </ul>
                   </AlertDescription>
                 </Alert>
@@ -1660,9 +1701,20 @@ export default function Generate() {
                 )}
               </div>
             </CardContent></Card>
+            )}
+
+            {/* Mirror Selfie scenes phase: Continue to Model */}
+            {isMirrorSelfie && mirrorSettingsPhase === 'scenes' && (
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
+                <Button disabled={selectedVariationIndices.size === 0} onClick={() => setCurrentStep('model')}>
+                  Continue to Model
+                </Button>
+              </div>
+            )}
 
             {/* Product Angles — hidden for Mirror Selfie Set */}
-            {variationStrategy?.type === 'scene' && activeWorkflow?.name !== 'Mirror Selfie Set' && (
+            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !(isMirrorSelfie && mirrorSettingsPhase === 'scenes') && (
               <Card><CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">Product Angles</h3>
@@ -1694,58 +1746,68 @@ export default function Generate() {
               </CardContent></Card>
             )}
 
-            {/* Quality & Settings */}
-            <Card><CardContent className="p-5 space-y-4">
-              <h3 className="text-base font-semibold">Generation Settings</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                  <Label>Quality</Label>
-                  <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">Standard (4 credits/img)</SelectItem>
-                      <SelectItem value="high">High (10 credits/img)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Aspect Ratio</Label>
-                  {uiConfig?.lock_aspect_ratio ? (
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{workflowConfig?.fixed_settings?.aspect_ratios?.[0] || aspectRatio}</Badge>
-                      <span className="text-xs text-muted-foreground">Locked by workflow</span>
+            {/* Quality & Settings — hidden during mirror selfie scenes phase */}
+            {!(isMirrorSelfie && mirrorSettingsPhase === 'scenes') && (
+              <>
+                <Card><CardContent className="p-5 space-y-4">
+                  <h3 className="text-base font-semibold">Generation Settings</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                      <Label>Quality</Label>
+                      <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard (4 credits/img)</SelectItem>
+                          <SelectItem value="high">High (10 credits/img)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  ) : variationStrategy?.type === 'multi-ratio' ? (
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">Multiple</Badge>
-                      <span className="text-xs text-muted-foreground">Each variation uses its own ratio</span>
+                    <div className="space-y-2">
+                      <Label>Aspect Ratio</Label>
+                      {uiConfig?.lock_aspect_ratio ? (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">{workflowConfig?.fixed_settings?.aspect_ratios?.[0] || aspectRatio}</Badge>
+                          <span className="text-xs text-muted-foreground">Locked by workflow</span>
+                        </div>
+                      ) : variationStrategy?.type === 'multi-ratio' ? (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Multiple</Badge>
+                          <span className="text-xs text-muted-foreground">Each variation uses its own ratio</span>
+                        </div>
+                      ) : (
+                        <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                      )}
                     </div>
-                  ) : (
-                    <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
-                  )}
+                  </div>
+                </CardContent></Card>
+
+                {/* Cost summary */}
+                <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Total: {creditCost} credits</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedVariationIndices.size} scene{selectedVariationIndices.size !== 1 ? 's' : ''}
+                      {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
+                      {' '}× {quality === 'high' ? 10 : 4} credits
+                    </p>
+                  </div>
+                  <p className="text-sm">{balance} credits available</p>
                 </div>
-              </div>
-            </CardContent></Card>
 
-            {/* Cost summary */}
-            <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold">Total: {creditCost} credits</p>
-                <p className="text-xs text-muted-foreground">
-                  {selectedVariationIndices.size} scene{selectedVariationIndices.size !== 1 ? 's' : ''}
-                  {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                  {' '}× {quality === 'high' ? 10 : 4} credits
-                </p>
-              </div>
-              <p className="text-sm">{balance} credits available</p>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'))}>Back</Button>
-              <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0}>
-                Generate {selectedVariationIndices.size} {activeWorkflow?.name} Images
-              </Button>
-            </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => {
+                    if (isMirrorSelfie) {
+                      setCurrentStep('model');
+                    } else {
+                      setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'));
+                    }
+                  }}>Back</Button>
+                  <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0}>
+                    Generate {selectedVariationIndices.size} {activeWorkflow?.name} Images
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         )}
 
