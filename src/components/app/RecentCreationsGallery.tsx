@@ -59,7 +59,7 @@ export function RecentCreationsGallery() {
             for (let i = 0; i < results.length; i++) {
               const r = results[i];
               const url = typeof r === 'string' ? r : r?.url || r?.image_url;
-              if (url && !url.startsWith('data:')) {
+              if (url) {
                 const isTryOn = url.includes('tryon-images');
                 const label = isTryOn ? 'Virtual Try-On' : (workflowName || 'Product Shot');
                 items.push({
