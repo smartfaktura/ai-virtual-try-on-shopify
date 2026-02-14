@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -169,12 +170,13 @@ export function RecentCreationsGallery() {
               className="flex-shrink-0 w-[180px] group"
             >
               <div className="aspect-[4/5] rounded-xl overflow-hidden border border-border relative shadow-sm">
-                <img
-                  src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
-                  alt={item.label}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
+                <ShimmerImage
+                   src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
+                   alt={item.label}
+                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                   loading="lazy"
+                   aspectRatio="4/5"
+                 />
                 {/* Always-visible label bar */}
                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
                   <p className="text-xs font-semibold text-white">{item.label}</p>

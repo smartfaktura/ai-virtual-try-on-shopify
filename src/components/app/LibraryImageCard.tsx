@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { Sparkles, Camera, Download, Check, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 function getAspectClass(ratio?: string) {
   switch (ratio) {
@@ -47,8 +47,6 @@ async function downloadImage(url: string, filename: string) {
 }
 
 export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected }: LibraryImageCardProps) {
-  const [loaded, setLoaded] = useState(false);
-
   return (
     <div
       className={cn(
@@ -69,20 +67,12 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
         </div>
       )}
 
-      {/* Shimmer placeholder */}
-      {!loaded && (
-        <div className={cn("w-full animate-pulse bg-muted", getAspectClass(item.aspectRatio))} />
-      )}
-
-      <img
+      <ShimmerImage
         src={getOptimizedUrl(item.imageUrl, { quality: 60 })}
         alt={item.label}
-        className={cn(
-          'w-full h-auto block transition-all duration-500 group-hover:scale-[1.03]',
-          loaded ? 'opacity-100' : 'opacity-0 absolute inset-0'
-        )}
+        className="w-full h-auto block group-hover:scale-[1.03] transition-all duration-500"
         loading="lazy"
-        onLoad={() => setLoaded(true)}
+        aspectRatio={item.aspectRatio === '1:1' ? '1/1' : item.aspectRatio === '9:16' ? '9/16' : item.aspectRatio === '16:9' ? '16/9' : '3/4'}
       />
 
       {/* Hover overlay — minimal: badge + date */}

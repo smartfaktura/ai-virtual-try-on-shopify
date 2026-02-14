@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { Heart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import type { DiscoverPreset } from '@/hooks/useDiscoverPresets';
 import type { TryOnPose } from '@/types';
 
@@ -22,27 +22,18 @@ interface DiscoverCardProps {
 export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
-  const [loaded, setLoaded] = useState(false);
 
   return (
     <div
       className="group relative rounded-lg overflow-hidden cursor-pointer break-inside-avoid mb-1 bg-muted"
       onClick={onClick}
     >
-      {/* Shimmer placeholder */}
-      {!loaded && (
-        <div className="w-full aspect-[3/4] animate-pulse bg-muted" />
-      )}
-
-      <img
+      <ShimmerImage
         src={getOptimizedUrl(imageUrl, { quality: 60 })}
         alt={isScene ? item.data.name : item.data.title}
-        className={cn(
-          'w-full h-auto block transition-opacity duration-500 group-hover:scale-[1.03] transition-transform',
-          loaded ? 'opacity-100' : 'opacity-0 absolute inset-0'
-        )}
+        className="w-full h-auto block group-hover:scale-[1.03] transition-transform duration-500"
         loading="lazy"
-        onLoad={() => setLoaded(true)}
+        aspectRatio="3/4"
       />
 
       {/* Save button overlay */}
