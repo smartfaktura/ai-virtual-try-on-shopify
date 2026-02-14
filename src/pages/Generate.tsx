@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useGenerationBatch } from '@/hooks/useGenerationBatch';
 import { useQuery } from '@tanstack/react-query';
 import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info } from 'lucide-react';
 
@@ -37,6 +38,8 @@ import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
+const MAX_IMAGES_PER_JOB = 4;
+const FREE_SCENE_LIMIT = 3;
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
@@ -77,8 +80,10 @@ export default function Generate() {
   const [searchParams] = useSearchParams();
   const workflowId = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
-  const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance } = useCredits();
+  const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue();
+  const { startBatch, batchState, isBatching, resetBatch } = useGenerationBatch();
+  const isFreeUser = plan === 'free';
   const { isAdmin } = useIsAdmin();
   const [isGeneratingPreviews, setIsGeneratingPreviews] = useState(false);
 
@@ -519,22 +524,38 @@ export default function Generate() {
       };
     }
 
-    const enqueueResult = await enqueue({
-      jobType: 'workflow',
-      payload,
-      imageCount: workflowImageCount,
-      quality,
-    }, {
-      imageCount: workflowImageCount,
-      quality,
-      hasModel: !!needsModel,
-      hasScene: false,
-      hasProduct: true,
-    });
-    if (enqueueResult) {
-      setBalanceFromServer(enqueueResult.newBalance);
+    // Decide: single job or batch
+    if (workflowImageCount <= MAX_IMAGES_PER_JOB) {
+      // Single job — existing behavior
+      const enqueueResult = await enqueue({
+        jobType: 'workflow',
+        payload,
+        imageCount: workflowImageCount,
+        quality,
+      }, {
+        imageCount: workflowImageCount,
+        quality,
+        hasModel: !!needsModel,
+        hasScene: false,
+        hasProduct: true,
+      });
+      if (enqueueResult) {
+        setBalanceFromServer(enqueueResult.newBalance);
+      } else {
+        setCurrentStep('settings');
+      }
     } else {
-      setCurrentStep('settings');
+      // Batch mode — split into multiple jobs
+      const success = await startBatch({
+        payload,
+        selectedVariationIndices: Array.from(selectedVariationIndices),
+        angleMultiplier,
+        quality,
+        imageCount: workflowImageCount,
+      });
+      if (!success) {
+        setCurrentStep('settings');
+      }
     }
   };
 
@@ -611,6 +632,32 @@ export default function Generate() {
       resetQueue();
     }
   }, [activeJob, refreshBalance, resetQueue]);
+
+  // Watch batch completion
+  useEffect(() => {
+    if (!batchState) return;
+    if (batchState.allDone) {
+      if (batchState.aggregatedImages.length > 0) {
+        setGeneratedImages(batchState.aggregatedImages);
+        setWorkflowVariationLabels(batchState.aggregatedLabels);
+        setGeneratingProgress(100);
+        setCurrentStep('results');
+        if (batchState.hasPartialFailure) {
+          toast.warning(`Generated ${batchState.aggregatedImages.length} images. ${batchState.failedJobs} batch${batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded for those.`);
+        } else {
+          toast.success(`Generated ${batchState.aggregatedImages.length} images!`);
+        }
+        refreshBalance();
+        resetBatch();
+      } else {
+        // All batches failed
+        toast.error('All generation batches failed. Credits have been refunded.');
+        setCurrentStep('settings');
+        refreshBalance();
+        resetBatch();
+      }
+    }
+  }, [batchState, refreshBalance, resetBatch]);
 
   const handlePublishClick = () => {
     if (selectedForPublish.size === 0) { toast.error('Please select at least one image to download'); return; }
@@ -1416,14 +1463,15 @@ export default function Generate() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (selectedVariationIndices.size === variationStrategy?.variations.length) {
+                    if (selectedVariationIndices.size === (isFreeUser ? Math.min(FREE_SCENE_LIMIT, variationStrategy?.variations.length || 0) : variationStrategy?.variations.length)) {
                       setSelectedVariationIndices(new Set());
                     } else {
-                      setSelectedVariationIndices(new Set(variationStrategy?.variations.map((_, i) => i)));
+                      const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : (variationStrategy?.variations.length || 0);
+                      setSelectedVariationIndices(new Set(variationStrategy?.variations.slice(0, maxSelect).map((_, i) => i)));
                     }
                   }}
                 >
-                  {selectedVariationIndices.size === variationStrategy?.variations.length ? 'Deselect All' : 'Select All'}
+                  {selectedVariationIndices.size === variationStrategy?.variations.length ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : 'Select All'}
                 </Button>
               </div>
 
@@ -1468,7 +1516,14 @@ export default function Generate() {
                         setSelectedVariationIndices(prev => {
                           const next = new Set(prev);
                           if (next.has(i)) { next.delete(i); }
-                          else next.add(i);
+                          else {
+                            // Free user cap
+                            if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
+                              toast.error(`Free plan: up to ${FREE_SCENE_LIMIT} scenes. Upgrade for more.`);
+                              return prev;
+                            }
+                            next.add(i);
+                          }
                           return next;
                         });
                       }}
@@ -1535,13 +1590,22 @@ export default function Generate() {
               </div>
 
               <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">
-                  {selectedVariationIndices.size === 0 ? (
-                    <span className="text-destructive font-medium">Select at least 1 scene to continue</span>
-                  ) : (
-                    <>{selectedVariationIndices.size} of {variationStrategy?.variations.length} scenes selected</>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedVariationIndices.size === 0 ? (
+                      <span className="text-destructive font-medium">Select at least 1 scene to continue</span>
+                    ) : (
+                      <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : variationStrategy?.variations.length} scenes selected
+                        {workflowImageCount > MAX_IMAGES_PER_JOB && (
+                          <span className="ml-1 text-muted-foreground">· Will split into {Math.ceil(selectedVariationIndices.size / Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier)))} batches</span>
+                        )}
+                      </>
+                    )}
+                  </p>
+                  {isFreeUser && (
+                    <p className="text-xs text-amber-600 mt-0.5">Free plan: up to {FREE_SCENE_LIMIT} scenes. <button className="underline font-medium" onClick={openBuyModal}>Upgrade for more</button></p>
                   )}
-                </p>
+                </div>
                 {isAdmin && (
                   <Button
                     variant="outline"
@@ -1729,13 +1793,32 @@ export default function Generate() {
                  `Creating ${imageCount} images of "${selectedProduct?.title}"`}
               </p>
             </div>
-            <div className="w-full max-w-md">
-              {activeJob ? (
-                <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
-              ) : (
-                <Progress value={0} className="h-2 animate-pulse" />
-              )}
-            </div>
+
+            {/* Batch progress */}
+            {batchState && batchState.totalJobs > 1 && (
+              <div className="w-full max-w-md space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Batch {batchState.completedJobs + batchState.failedJobs} of {batchState.totalJobs}</span>
+                  <span className="text-muted-foreground">{batchState.readyImages} images ready</span>
+                </div>
+                <Progress value={(batchState.completedJobs + batchState.failedJobs) / batchState.totalJobs * 100} className="h-2" />
+                {batchState.failedJobs > 0 && (
+                  <p className="text-xs text-amber-600">{batchState.failedJobs} batch{batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded</p>
+                )}
+              </div>
+            )}
+
+            {/* Single job progress */}
+            {(!batchState || batchState.totalJobs <= 1) && (
+              <div className="w-full max-w-md">
+                {activeJob ? (
+                  <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
+                ) : (
+                  <Progress value={0} className="h-2 animate-pulse" />
+                )}
+              </div>
+            )}
+
             {/* Team member working message */}
             <div className="flex items-center gap-2.5">
               <img
@@ -1752,7 +1835,10 @@ export default function Generate() {
             </div>
             <p className="text-xs text-muted-foreground">
               {generationMode === 'virtual-try-on' ? '20-30 seconds' :
-               hasWorkflowConfig ? `${selectedVariationIndices.size * 10}-${selectedVariationIndices.size * 15} seconds` : '10-15 seconds'}
+               hasWorkflowConfig ? (batchState && batchState.totalJobs > 1
+                 ? `~${batchState.totalJobs * 30}-${batchState.totalJobs * 45} seconds total`
+                 : `${selectedVariationIndices.size * 10}-${selectedVariationIndices.size * 15} seconds`)
+               : '10-15 seconds'}
             </p>
             <Button variant="link" onClick={handleCancelGeneration}><X className="w-4 h-4 mr-1" /> Cancel</Button>
           </CardContent></Card>
