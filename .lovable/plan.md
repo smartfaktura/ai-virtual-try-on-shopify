@@ -1,47 +1,115 @@
 
 
-## Update Mirror Selfie Set Animation Chips to Match Result Image
+## Add Shimmer Loading States to All Image Components
 
 ### Problem
-The Mirror Selfie Set card's floating animation chips use mismatched assets:
-- **Product** chip shows a lipstick (from UGC workflow) instead of a sweater
-- **Scene** chip shows the Selfie/UGC result image instead of the actual bedroom from the mirror selfie result
-- **Model** chip may not visually match the model in the generated result
+Most image-heavy components render raw `<img>` tags without any loading placeholder. When images load from cloud storage, they appear in chunks — giving a "laggy", broken feel. Only 3 components (LibraryImageCard, DiscoverCard, FreestyleGallery) currently have shimmer loading states.
 
-### Plan
+### Solution: Reusable `ShimmerImage` Component
 
-#### Step 1: Generate 3 new matching assets via edge function
+Create a single reusable `ShimmerImage` component that wraps any `<img>` with the existing shimmer animation. This avoids duplicating `useState`/`onLoad` logic across 15+ files.
 
-Create a one-time edge function that generates and uploads three images to the `landing-assets` storage bucket:
+```text
+ShimmerImage
+  - Shows a shimmer placeholder (bg-muted + animate-shimmer gradient) while loading
+  - On image load, crossfades to the real image (300ms opacity transition)
+  - Accepts all standard img props + optional aspectRatio for placeholder sizing
+  - Falls back gracefully if image fails to load
+```
 
-| Asset | Prompt | Storage Path |
-|-------|--------|-------------|
-| **Product** | A brown/beige knit sweater folded neatly on a clean white background, product flatlay photography | `products/sweater-brown.jpg` |
-| **Scene** | A cozy modern bedroom interior with warm natural light, sheer curtains, full-length mirror, neutral bedding -- matching the mirror selfie result environment | `scenes/scene-bedroom-mirror.jpg` |
-| **Model portrait** | A head-and-shoulders portrait of the same woman from the mirror selfie result -- brunette, warm-toned, 85mm lens aesthetic, light gray background | `models/model-mirror-selfie.jpg` |
+### Components to Update
 
-All three will be generated using `google/gemini-3-pro-image-preview` and uploaded to storage in a single edge function call.
+**Landing Page (public-facing, high impact):**
 
-#### Step 2: Update animation data
+| Component | Images affected |
+|-----------|----------------|
+| HeroSection | Product upload card + 8 output carousel cards |
+| ModelShowcaseSection | 44+ model cards in marquee rows |
+| BeforeAfterGallery | Output images + PiP inset originals |
+| ProductCategoryShowcase | Category grid images |
+| EnvironmentShowcaseSection | Environment preview images |
+| StudioTeamSection | Team member avatars |
+| CreativeDropsSection | Drop preview images |
 
-**File: `src/components/app/workflowAnimationData.tsx`**
+**App (authenticated, functional):**
 
-Update the Mirror Selfie Set asset URLs (lines 22-25) and element references (lines 116-139):
+| Component | Images affected |
+|-----------|----------------|
+| ModelSelectorCard | Model preview thumbnails in generation flow |
+| PoseSelectorCard | Pose/scene thumbnails in generation flow |
+| WorkflowAnimatedThumbnail | Background image + floating chip images |
+| RecentCreationsGallery | Dashboard recent images |
+| ProductImageGallery | Product detail images |
+| TryOnPreview | Try-on result preview |
 
-- `mirrorSelfieModel` -> new `models/model-mirror-selfie.jpg`
-- `mirrorSelfieScene` -> new `scenes/scene-bedroom-mirror.jpg`  
-- Product image -> new `products/sweater-brown.jpg`
-- Product label: "Outfit" stays, but sublabel could say "Sweater"
+### Technical Details
 
-#### Step 3: Clean up
+**Step 1: Create `src/components/ui/shimmer-image.tsx`**
 
-Delete the one-time generation edge function after use.
+A lightweight wrapper component:
+- Uses `useState(false)` for `loaded` state
+- Renders a shimmer div (using existing Tailwind `animate-shimmer` keyframe) as placeholder
+- Renders the `<img>` with `onLoad` callback to flip state
+- Uses `opacity-0`/`opacity-100` with `transition-opacity duration-300` for smooth crossfade
+- Accepts `className`, `aspectRatio` (for placeholder sizing), and all standard `<img>` props
+- Accepts optional `onError` fallback
 
-### Result
+**Step 2: Update landing page components**
 
-All animation chips will visually match the background result image:
-- Brown sweater product chip (matching the outfit in the photo)
-- Bedroom scene chip (matching the room environment)
-- Model portrait chip (matching the woman in the mirror selfie)
-- "Mirror Selfie" badge (unchanged)
+Replace raw `<img>` tags with `ShimmerImage` in:
+- `HeroSection.tsx` — product card image + output carousel images
+- `ModelShowcaseSection.tsx` — marquee model cards
+- `BeforeAfterGallery.tsx` — output + PiP images
+- `ProductCategoryShowcase.tsx` — category images (these already stack, add shimmer to initial load)
+- `EnvironmentShowcaseSection.tsx` — environment cards
+- `CreativeDropsSection.tsx` — drop previews
+
+**Step 3: Update app components**
+
+Replace raw `<img>` tags with `ShimmerImage` in:
+- `ModelSelectorCard.tsx` — model preview in generation
+- `PoseSelectorCard.tsx` — pose preview in generation
+- `WorkflowAnimatedThumbnail.tsx` — background image + floating element images
+- `RecentCreationsGallery.tsx` — dashboard thumbnails
+- `ProductImageGallery.tsx` — product detail images
+
+**Step 4: Migrate existing implementations**
+
+Refactor `LibraryImageCard`, `DiscoverCard`, and `FreestyleGallery` to use `ShimmerImage` instead of their custom inline `loaded`/`onLoad` logic, reducing code duplication.
+
+### Shimmer Placeholder Behavior
+
+```text
+Before load:
++-------------------+
+|  ~~~shimmer~~~    |  <- bg-muted with animated gradient sweep
+|  ~~~shimmer~~~    |     (uses existing animate-shimmer keyframe)
++-------------------+
+
+After load (300ms crossfade):
++-------------------+
+|                   |
+|   actual image    |
+|                   |
++-------------------+
+```
+
+### Files Changed
+
+| File | Action |
+|------|--------|
+| `src/components/ui/shimmer-image.tsx` | **Create** -- reusable shimmer image component |
+| `src/components/landing/HeroSection.tsx` | Update `<img>` to `<ShimmerImage>` |
+| `src/components/landing/ModelShowcaseSection.tsx` | Update marquee `<img>` to `<ShimmerImage>` |
+| `src/components/landing/BeforeAfterGallery.tsx` | Update `<img>` to `<ShimmerImage>` |
+| `src/components/landing/ProductCategoryShowcase.tsx` | Update `<img>` to `<ShimmerImage>` |
+| `src/components/landing/EnvironmentShowcaseSection.tsx` | Update `<img>` to `<ShimmerImage>` |
+| `src/components/landing/CreativeDropsSection.tsx` | Update `<img>` to `<ShimmerImage>` |
+| `src/components/app/ModelSelectorCard.tsx` | Update `<img>` to `<ShimmerImage>` |
+| `src/components/app/PoseSelectorCard.tsx` | Update `<img>` to `<ShimmerImage>` |
+| `src/components/app/WorkflowAnimatedThumbnail.tsx` | Update background + chip `<img>` to `<ShimmerImage>` |
+| `src/components/app/RecentCreationsGallery.tsx` | Update `<img>` to `<ShimmerImage>` |
+| `src/components/app/LibraryImageCard.tsx` | Refactor to use `<ShimmerImage>` (remove inline logic) |
+| `src/components/app/DiscoverCard.tsx` | Refactor to use `<ShimmerImage>` (remove inline logic) |
+| `src/components/app/freestyle/FreestyleGallery.tsx` | Refactor to use `<ShimmerImage>` (remove inline logic) |
 
