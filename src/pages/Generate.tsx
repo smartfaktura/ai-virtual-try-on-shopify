@@ -1845,14 +1845,20 @@ export default function Generate() {
             </CardContent></Card>
 
             <Card><CardContent className="p-5 space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                   <h2 className="text-base font-semibold">Generated Images</h2>
-                  <p className="text-xs text-muted-foreground">👆 Click images to select them</p>
+                  <p className="text-xs text-muted-foreground">Click images to select them</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setCurrentStep('settings')}>← Adjust</Button>
-                  <Button variant="outline" size="sm" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); }}>Start Over</Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => {
+                    setSelectedForPublish(new Set(generatedImages.map((_, i) => i)));
+                  }}>Select All</Button>
+                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={handleDownloadAll}>
+                    <Download className="w-3.5 h-3.5 mr-1.5" /> Download All
+                  </Button>
+                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => setCurrentStep('settings')}>Adjust</Button>
+                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); }}>Start Over</Button>
                 </div>
               </div>
 
@@ -1911,7 +1917,6 @@ export default function Generate() {
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-primary" /> Saved to your library</p>
               <div className="flex flex-col sm:flex-row gap-2.5">
-                <Button variant="outline" className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={handleDownloadAll}><Download className="w-4 h-4 mr-2" /> Download All</Button>
                 <Button variant="outline" className="rounded-xl min-h-[44px] flex-1 sm:flex-none" onClick={() => {
                   if (selectedForPublish.size === 0) { toast.error('Select images to download'); return; }
                   selectedForPublish.forEach(idx => handleDownloadImage(idx));
