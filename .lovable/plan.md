@@ -1,80 +1,110 @@
 
 
-## Mirror Selfie Set: Fix Wizard Flow and Improve Animation
+## Mirror Selfie Set: Custom Wizard Flow, More Scenes, and AI Previews
 
-### Problem
+### Overview
 
-1. The Mirror Selfie Set has `uses_tryon: true` in the database, which forces it through the **Virtual Try-On wizard** (Product -> Model -> Pose/Scene -> Settings). This is wrong because the Mirror Selfie scenes are defined as **variation strategies** (the 8 mirror environments), not as try-on poses.
+Restructure the Mirror Selfie Set wizard to use a custom step order, remove the Brand step, unlock aspect ratio selection, expand from 8 to 16 mirror scenes, and add AI-generated preview images for all scenes.
 
-2. The animated thumbnail on the Workflows page reuses the Selfie/UGC background image instead of a mirror selfie image.
+### New Wizard Step Order
 
-3. The wizard shows no mirror-specific guidance or composition examples.
+```text
+Current:  Product -> Brand -> Model -> Settings -> Results
+New:      Product -> Scenes -> Model -> Settings -> Results
+```
 
----
+- **Product step**: Updated copy to clarify the product will appear in a mirror selfie ("Select the product(s) that will appear in your mirror selfie")
+- **Scenes step**: NEW dedicated step showing all 16 mirror scene variations with AI preview images. User picks which compositions to generate
+- **Model step**: Select the model who will take the selfie
+- **Settings step**: Quality + Aspect Ratio (unlocked) + cost summary
+- **No Brand step** for this workflow
 
-### Fix 1: Database Migration
+### 16 Mirror Selfie Scenes (expanded from 8)
 
-Set `uses_tryon = false` for the Mirror Selfie Set workflow. The existing `ui_config` already has `show_model_picker: true` and `skip_template: true`, which will correctly route the wizard as:
+| # | Label | Category | Description |
+|---|-------|----------|-------------|
+| 1 | Bedroom Full-Length | home | Floor mirror, bedroom, natural daylight |
+| 2 | Bathroom Vanity | home | Bathroom mirror, vanity lighting, marble |
+| 3 | Boutique Fitting Room | retail | Clothing store mirror, bright even lighting |
+| 4 | Elevator / Lobby | urban | Reflective elevator doors, moody lighting |
+| 5 | Gym Mirror | fitness | Gym wall mirror, bright overhead lights |
+| 6 | Hotel Room | travel | Luxury hotel mirror, warm ambient lighting |
+| 7 | Walk-in Closet | home | Closet mirror, organized racks around |
+| 8 | Minimalist Hallway | home | Standing mirror, clean hallway, natural light |
+| 9 | Coffee Shop Window | urban | Reflective coffee shop window, warm interior |
+| 10 | Car Side Mirror | urban | Car window/side mirror reflection, outdoor |
+| 11 | Rooftop Terrace | outdoor | Glass door reflection, city skyline behind |
+| 12 | Pool / Resort | travel | Poolside mirror, tropical setting, golden light |
+| 13 | Art Gallery | retail | Gallery mirror, white walls, gallery lighting |
+| 14 | Hair Salon | retail | Salon mirror with styling station, professional lighting |
+| 15 | Vintage Shop | retail | Ornate antique mirror, eclectic decor |
+| 16 | Studio Apartment | home | Full-length mirror, cozy studio, warm window light |
 
-**Product -> Brand Profile -> Model -> Settings (with 8 mirror scene checkboxes) -> Generate -> Results**
+### Technical Changes
 
-This means:
-- Model selection still works (identity preservation)
-- Scene selection happens via the variation strategy checkboxes (Bedroom, Bathroom, Elevator, etc.) in the Settings step -- not via the try-on pose picker
-- The "Product Angles" section won't show (not relevant for mirror selfies -- will add a condition to hide it for this workflow)
+#### 1. Database Update -- Update workflow `generation_config`
 
----
+Update the Mirror Selfie Set row to:
+- Set `lock_aspect_ratio: false` (unlock aspect ratio)
+- Add 8 new scene variations to the existing 8 (total 16)
+- Keep `show_model_picker: true`, `skip_template: true`
 
-### Fix 2: Workflow Animation Thumbnail
+#### 2. `src/pages/Generate.tsx` -- Custom wizard routing
 
-**File: `src/components/app/workflowAnimationData.tsx`**
+**Mirror Selfie detection**: Add `const isMirrorSelfie = activeWorkflow?.name === 'Mirror Selfie Set';`
 
-Update the Mirror Selfie Set scene to use a mirror-selfie-appropriate background. Since we don't have a dedicated mirror selfie image in storage yet, we'll use the `generate-workflow-preview` edge function approach: for now, use a more fitting placeholder and add a badge element labeled "Mirror" with a phone icon instead of camera to better communicate the concept.
+**`getSteps()`**: Add a dedicated path for Mirror Selfie:
+```
+Product -> Scenes -> Model -> Settings -> Results
+```
 
-Update elements to be more descriptive:
-- Product chip stays
-- Model chip stays
-- Change "8 Mirrors" badge to "Mirror Selfie" with a Smartphone icon
-- Add a "4:5 Portrait" badge
+**`getStepNumber()`**: Add matching step number mapping:
+```
+source/product: 1, settings(scenes): 2, model: 3, settings(final): 4, results: 5
+```
 
----
+Since the existing code uses a single `'settings'` step for scene selection AND generation settings, we need a way to differentiate. The approach:
+- Use the existing `'settings'` step for scenes (step 2 in the new flow)  
+- After scene selection, go to `'model'` (step 3)
+- After model selection, the model step "Continue" navigates to a final settings sub-state
+- Use a state variable `mirrorSettingsPhase` to distinguish between "scenes" and "final settings" within the `'settings'` step
 
-### Fix 3: Mirror-Specific Wizard Content
+**Product step copy**: When `isMirrorSelfie`, update heading and description:
+- Title: "Select Product(s) for Mirror Selfie"
+- Description: "Choose the product(s) your model will wear or hold in the mirror selfie"
 
-**File: `src/pages/Generate.tsx`**
+**Product step navigation**: When `isMirrorSelfie`, skip brand profile and go directly to `'settings'` (scenes phase)
 
-Add mirror selfie-specific guidance in the Settings step when the active workflow is "Mirror Selfie Set":
+**Model step navigation**: When `isMirrorSelfie`, model "Continue" goes to final settings phase
 
-1. **Hide "Product Angles" card** for Mirror Selfie Set (angles don't apply -- it's always a front-facing mirror reflection)
+**Settings step split**: When `isMirrorSelfie`:
+- Phase 1 (scenes): Show scene selection grid with tips card. "Continue" goes to `'model'`
+- Phase 2 (final settings): Show quality + aspect ratio selector (unlocked). "Back" goes to `'model'`
 
-2. **Add a "Mirror Selfie Tips" info card** above the scene selection grid with composition guidance:
-   - "Your model will appear holding a smartphone, capturing their reflection"
-   - "Each scene places your product in a different mirror environment"
-   - "Output is Instagram-ready at 4:5 portrait format"
+**Back button adjustments**: All back buttons in the mirror selfie flow respect the new order
 
-3. **Update the model selection step heading** when the workflow name is "Mirror Selfie Set":
-   - Title: "Choose Your Model" (same)
-   - Subtitle: "This model will appear taking a mirror selfie wearing your product"
+#### 3. `supabase/functions/generate-scene-previews/index.ts` -- Add mirror scene prompts
 
----
+Add 16 new mirror-selfie-specific preview prompts to the `scenePreviewPrompts` map. These will generate actual AI preview images showing a person taking a mirror selfie in each environment:
 
-### Technical Details
+```text
+"Bedroom Full-Length": "Photorealistic mirror selfie of a young woman in a stylish outfit 
+standing in front of a full-length floor mirror in a modern bedroom, holding smartphone at 
+chest level capturing reflection, natural daylight through sheer curtains, warm wood floors, 
+bed visible in background, iPhone quality, Instagram aesthetic, 4:5 portrait"
+```
+
+Each prompt follows the mirror selfie composition rules: phone visible, reflection-based, environment-specific lighting, casual authentic pose.
+
+#### 4. Deploy and Generate Previews
+
+After deploying the updated edge function, the admin can click "Regenerate Previews" on the settings page to generate AI preview images for all 16 mirror scenes.
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| Database migration | `UPDATE workflows SET uses_tryon = false WHERE name = 'Mirror Selfie Set'` |
-| `src/components/app/workflowAnimationData.tsx` | Update Mirror Selfie Set scene with Smartphone icon and better badge labels |
-| `src/pages/Generate.tsx` | Hide Product Angles for mirror selfie; add mirror tips card; update model step subtitle |
-| `src/components/app/WorkflowCard.tsx` | No changes needed (features already correct) |
-
-### Wizard Flow After Fix
-
-```text
-Step 1: Product  -->  Select clothing item(s)
-Step 2: Brand    -->  Optional brand profile
-Step 3: Model    -->  Pick model (with mirror selfie context text)
-Step 4: Settings -->  Mirror tips card + 8 scene checkboxes + quality
-Step 5: Generate -->  Queue with team avatar
-Step 6: Results  -->  Image grid
-```
+| Database (UPDATE) | Update Mirror Selfie Set `generation_config` with 16 variations, `lock_aspect_ratio: false` |
+| `src/pages/Generate.tsx` | Custom wizard routing for mirror selfie: Product -> Scenes -> Model -> Settings. Mirror-specific product step copy. Split settings step into scenes phase and final settings phase. |
+| `supabase/functions/generate-scene-previews/index.ts` | Add 16 mirror selfie scene preview prompts |
 
