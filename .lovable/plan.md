@@ -1,26 +1,18 @@
 
 
-## Fix Dashboard "Generate Images" Button and Jobs "Unknown Product"
+## Fix Scene Card Opacity
 
-### Problem 1: "Generate Images" button goes to wrong page
-The `DashboardQuickActions` component has `Generate Images` pointing to `/app/generate` (the workflow wizard). It should point to `/app/freestyle` (the Freestyle Studio).
+### Problem
+Unselected scene cards in the workflow wizard have `opacity-70` applied, making the product images look faded and hard to see. This affects visual clarity and makes the selection UI feel unclear.
 
-**Fix in `src/components/app/DashboardQuickActions.tsx`**:
-- Change path from `/app/generate` to `/app/freestyle`
+### Fix
+In `src/pages/Generate.tsx` (line 1619), remove `opacity-70` and `hover:opacity-100` from unselected scene cards. Instead, rely on the existing border styling to indicate selection state -- unselected cards keep their `border-border` and selected cards get `border-primary ring-2`.
 
-### Problem 2: Jobs show "Unknown product" for all entries
-The `generation_jobs` table has `product_id = NULL` for most jobs (workflow and freestyle generations don't always link a product). The dashboard query joins `user_products` via `product_id`, which returns null, so the fallback text "Unknown product" appears.
+### Change
 
-**Fix in `src/pages/Dashboard.tsx`**:
-- When `product_id` is null but `workflow_id` exists, show the workflow name instead (e.g., "Mirror Selfie Set", "Product Listing Set")
-- When both are null (freestyle), show "Freestyle Generation"
-- Update the product image fallback: use the first result image from `results` array when no product image exists
-- Change the column header from "Product" to "Source" to better reflect mixed content
+**`src/pages/Generate.tsx` (~line 1619)**:
+- Before: `"border-border opacity-70 hover:opacity-100 hover:border-primary/40 hover:scale-[1.02]"`
+- After: `"border-border hover:border-primary/40 hover:scale-[1.02]"`
 
-### Technical Details
-
-| File | Change |
-|------|--------|
-| `src/components/app/DashboardQuickActions.tsx` | Change "Generate Images" path to `/app/freestyle` |
-| `src/pages/Dashboard.tsx` | Update job row to show workflow name or "Freestyle" when product is null; use result image as thumbnail fallback; rename column to "Source" |
+This keeps the hover scale and border highlight for interactivity cues, but all cards display at full opacity so images are crisp and clearly visible.
 
