@@ -1,37 +1,28 @@
 
-
-## Regenerate All 24 Mirror Selfie Scene Previews
+## Instant Discover Updates After Approval
 
 ### Problem
-The edge function tries to generate all 24 scene previews in a single call, but times out after ~3 images (each takes ~20s, edge function limit is ~60s). Currently 8/24 scenes have previews, 16 are missing.
+When an admin approves a submission, the new item only appears in the admin's own Discover feed (via React Query cache invalidation). Other users won't see it until they refresh the page or navigate away and back.
 
-### Solution: Add batch processing to the edge function
-
-Modify `generate-scene-previews` to accept `batch_size` and `start_index` parameters, defaulting to processing 3 scenes per call. Then call it repeatedly to cover all scenes.
+### Solution
+Enable Realtime on the `discover_presets` table and add a subscription in `useDiscoverPresets` that automatically invalidates the query cache whenever a new preset is inserted. This ensures all connected users see new items instantly.
 
 ### Changes
 
-#### 1. Update edge function (`supabase/functions/generate-scene-previews/index.ts`)
+#### 1. Database Migration
+Enable Realtime for the `discover_presets` table:
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.discover_presets;
+```
 
-Add two new optional parameters:
-- `batch_size` (default: 3) -- how many scenes to generate per call
-- `start_index` (default: 0) -- which scene index to start from (for manual control)
+#### 2. Update `src/hooks/useDiscoverPresets.ts`
+Add a Realtime subscription that listens for `INSERT` events on `discover_presets` and calls `queryClient.invalidateQueries({ queryKey: ['discover-presets'] })` when triggered. This will cause all users' Discover pages to automatically refetch the latest data within seconds of an approval.
 
-The function will:
-- Skip scenes that already have `preview_url` (existing behavior)
-- Stop after generating `batch_size` images
-- Return status indicating how many were generated and how many remain
+The hook will set up the subscription via `useEffect`, subscribing on mount and cleaning up on unmount.
 
-This way each call completes within the timeout window.
-
-#### 2. Call the function multiple times
-
-After deploying, call the function 6 times (16 remaining scenes / 3 per batch) with `force_regenerate: true` on the first call to regenerate everything fresh, or without it to just fill in the missing 16.
-
-Since the user wants ALL scenes regenerated, the first call will use `force_regenerate: true` which clears all preview URLs, then subsequent calls will process 3 scenes at a time until all 24 are done.
-
-### Technical Details
-
-**Edge function change**: Add `batch_size` parameter, add a counter that breaks the loop after N successful generations. Return `{ success: true, generated: N, remaining: M }`.
-
-**Execution**: 8 sequential calls (24 scenes / 3 per batch), each taking ~60s. Total time: ~8 minutes. Progress is saved after each image, so any timeout is safe.
+### Result
+- Admin approves a submission
+- New row inserted into `discover_presets`
+- Realtime broadcasts the INSERT event to all connected clients
+- Each client's `useDiscoverPresets` hook invalidates the cache and refetches
+- New item appears in everyone's Discover feed within 1-2 seconds, no refresh needed
