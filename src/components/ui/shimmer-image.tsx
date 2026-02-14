@@ -29,7 +29,7 @@ export function ShimmerImage({
 
   return (
     <div
-      className={cn('relative overflow-hidden', wrapperClassName)}
+      className={cn('relative overflow-hidden w-full h-full', wrapperClassName)}
       style={aspectRatio && !loaded ? { aspectRatio } : undefined}
     >
       {/* Shimmer placeholder */}
