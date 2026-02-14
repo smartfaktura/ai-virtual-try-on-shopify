@@ -420,7 +420,7 @@ serve(async (req) => {
       variationsToGenerate = allVariations;
     }
 
-    const maxImages = 20; // increased from 8 to support 20 scenes
+    const maxImages = 4; // max 4 images per job; frontend splits larger requests into batches
     variationsToGenerate = variationsToGenerate.slice(0, maxImages);
 
     // Determine angle variations
