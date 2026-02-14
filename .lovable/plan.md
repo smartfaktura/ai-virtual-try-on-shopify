@@ -1,46 +1,37 @@
 
 
-## Add More Mirror Selfie Scenes
+## Regenerate All 24 Mirror Selfie Scene Previews
 
-### Current State
-The Mirror Selfie Set has 16 scenes across categories: home (5), retail (3), urban (3), fitness (1), travel (2), outdoor (1). Based on your Pinterest references, there are several new environment types that would add variety -- particularly luxury/lifestyle, fashion-forward, and casual everyday settings.
+### Problem
+The edge function tries to generate all 24 scene previews in a single call, but times out after ~3 images (each takes ~20s, edge function limit is ~60s). Currently 8/24 scenes have previews, 16 are missing.
 
-### New Scenes to Add (8 new scenes, bringing total to 24)
+### Solution: Add batch processing to the edge function
 
-| Scene Name | Category | Description |
-|---|---|---|
-| Living Room Arch Mirror | home | Arched decorative mirror in a stylish living room with warm earth tones, textured rug, and plants |
-| Entryway Console | home | Full-length or round mirror above a console table in a modern entryway/foyer, coat hooks and bags visible |
-| Dance Studio | fitness | Full-length wall-to-wall dance studio mirror, wooden barre, sprung flooring, bright natural light |
-| Restaurant Restroom | urban | Sleek modern restaurant or club restroom mirror, moody ambient lighting, dark tile or marble walls |
-| Luxury Dressing Room | retail | High-end department store dressing room with velvet curtains, warm spotlights, plush carpet |
-| Sunlit Loft | home | Large industrial loft with exposed brick, floor-to-ceiling windows, full-length mirror leaning against wall |
-| Shopping Mall | retail | Reflective glass or mirror in a bright modern shopping mall corridor, marble floors, retail stores in background |
-| Beach House | travel | Relaxed coastal mirror selfie in a bright beach house with white-washed wood, rattan furniture, ocean light |
+Modify `generate-scene-previews` to accept `batch_size` and `start_index` parameters, defaulting to processing 3 scenes per call. Then call it repeatedly to cover all scenes.
 
-### Implementation Steps
+### Changes
 
-#### 1. Database Migration
-Update the `generation_config` JSONB in the `workflows` table for the Mirror Selfie Set to append the 8 new variation objects to `variation_strategy.variations`. Each new entry follows the existing structure with `label`, `instruction`, `aspect_ratio`, `category`, and `preview_url` (set to null initially).
+#### 1. Update edge function (`supabase/functions/generate-scene-previews/index.ts`)
 
-Also update `default_image_count` from 8 to 8 (keep same -- users still select which scenes they want).
+Add two new optional parameters:
+- `batch_size` (default: 3) -- how many scenes to generate per call
+- `start_index` (default: 0) -- which scene index to start from (for manual control)
 
-#### 2. Update Scene Preview Prompts
-Add 8 new entries to the `scenePreviewPrompts` map in `supabase/functions/generate-scene-previews/index.ts` matching the new scene labels with detailed, Pinterest-inspired prompts for preview image generation.
+The function will:
+- Skip scenes that already have `preview_url` (existing behavior)
+- Stop after generating `batch_size` images
+- Return status indicating how many were generated and how many remain
 
-#### 3. Generate Preview Images
-Call the `generate-scene-previews` edge function for the Mirror Selfie workflow. The function will skip scenes that already have previews and only generate images for the new ones (where `preview_url` is null). The images get uploaded to the `workflow-previews` storage bucket.
+This way each call completes within the timeout window.
 
-#### 4. Update Environment Count Badge
-In `src/pages/Generate.tsx`, the scene selection step shows a "16 Environments" badge. This will be updated dynamically or to "24 Environments" to reflect the new total.
+#### 2. Call the function multiple times
+
+After deploying, call the function 6 times (16 remaining scenes / 3 per batch) with `force_regenerate: true` on the first call to regenerate everything fresh, or without it to just fill in the missing 16.
+
+Since the user wants ALL scenes regenerated, the first call will use `force_regenerate: true` which clears all preview URLs, then subsequent calls will process 3 scenes at a time until all 24 are done.
 
 ### Technical Details
 
-**Database change**: Single UPDATE to `workflows.generation_config` JSONB, appending 8 objects to the `variation_strategy.variations` array.
+**Edge function change**: Add `batch_size` parameter, add a counter that breaks the loop after N successful generations. Return `{ success: true, generated: N, remaining: M }`.
 
-**Edge function change**: Add 8 new prompt entries to `scenePreviewPrompts` in `generate-scene-previews/index.ts`.
-
-**Generate.tsx change**: Update environment count display if hardcoded.
-
-**No new tables or schema changes needed** -- everything lives in the existing JSONB config.
-
+**Execution**: 8 sequential calls (24 scenes / 3 per batch), each taking ~60s. Total time: ~8 minutes. Progress is saved after each image, so any timeout is safe.
