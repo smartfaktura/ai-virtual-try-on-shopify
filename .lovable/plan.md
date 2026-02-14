@@ -1,44 +1,47 @@
 
 
-## Update Mirror Selfie Set Workflow Card
+## Update Mirror Selfie Set Animation Chips to Match Result Image
 
-### What Changes
+### Problem
+The Mirror Selfie Set card's floating animation chips use mismatched assets:
+- **Product** chip shows a lipstick (from UGC workflow) instead of a sweater
+- **Scene** chip shows the Selfie/UGC result image instead of the actual bedroom from the mirror selfie result
+- **Model** chip may not visually match the model in the generated result
 
-**1. Generate a unique cover image for Mirror Selfie Set**
+### Plan
 
-Create a new edge function call to generate a mirror selfie background image using AI (google/gemini-3-pro-image-preview) and upload it to the `landing-assets` bucket at `workflows/workflow-mirror-selfie.jpg`. This replaces the current reuse of `ugcResult` (the Selfie/UGC background).
+#### Step 1: Generate 3 new matching assets via edge function
 
-The prompt will describe: a stylish woman taking a mirror selfie with a visible smartphone, modern bedroom with full-length mirror, warm natural light, Instagram 4:5 aesthetic.
+Create a one-time edge function that generates and uploads three images to the `landing-assets` storage bucket:
 
-**2. Update animation data with unique assets and improved storytelling**
+| Asset | Prompt | Storage Path |
+|-------|--------|-------------|
+| **Product** | A brown/beige knit sweater folded neatly on a clean white background, product flatlay photography | `products/sweater-brown.jpg` |
+| **Scene** | A cozy modern bedroom interior with warm natural light, sheer curtains, full-length mirror, neutral bedding -- matching the mirror selfie result environment | `scenes/scene-bedroom-mirror.jpg` |
+| **Model portrait** | A head-and-shoulders portrait of the same woman from the mirror selfie result -- brunette, warm-toned, 85mm lens aesthetic, light gray background | `models/model-mirror-selfie.jpg` |
 
-In `src/components/app/workflowAnimationData.tsx`, the Mirror Selfie Set entry will be updated:
+All three will be generated using `google/gemini-3-pro-image-preview` and uploaded to storage in a single edge function call.
 
-- **New background**: Point to the newly generated `workflows/workflow-mirror-selfie.jpg`
-- **Distinct model**: Use a different model image (e.g., `model-female-average-european.jpg`) instead of sharing `ugcModel` with the Selfie/UGC Set
-- **Add scene chip**: New "scene" type element showing a mirror environment thumbnail with label "Bedroom Mirror" (slides up from bottom-left)
-- **Remove "4:5 Portrait" badge**: Per user request, no aspect ratio step -- all formats supported
-- **Keep "Mirror Selfie" badge**: Retains the workflow identity badge
-- **Improved timing**: Product (0.3s) -> Model (0.9s) -> Scene (1.5s) -> Mirror Selfie badge (2.0s)
+#### Step 2: Update animation data
 
-**3. Animation flow (updated)**
+**File: `src/components/app/workflowAnimationData.tsx`**
 
-```text
-0.3s  Product chip slides in from left ("Outfit" + product thumbnail)
-0.9s  Model avatar slides in from right (distinct model photo)
-1.5s  Scene chip slides up from bottom-left ("Bedroom Mirror" + scene thumbnail)
-2.0s  "Mirror Selfie" badge pops in bottom-center
-~4s   All elements exit, shimmer sweep, "Generated" badge appears
-```
+Update the Mirror Selfie Set asset URLs (lines 22-25) and element references (lines 116-139):
 
-### Technical Details
+- `mirrorSelfieModel` -> new `models/model-mirror-selfie.jpg`
+- `mirrorSelfieScene` -> new `scenes/scene-bedroom-mirror.jpg`  
+- Product image -> new `products/sweater-brown.jpg`
+- Product label: "Outfit" stays, but sublabel could say "Sweater"
 
-| File | Change |
-|------|--------|
-| `src/components/app/workflowAnimationData.tsx` | New background URL, distinct model, add scene element, remove "4:5 Portrait" badge, adjust timing |
-| New edge function or one-time script | Generate mirror selfie cover image via AI and upload to `landing-assets/workflows/workflow-mirror-selfie.jpg` |
+#### Step 3: Clean up
 
-### Image Generation Approach
+Delete the one-time generation edge function after use.
 
-A one-time call to the `generate-scene-previews` pattern or a direct edge function invocation will generate the cover image using `google/gemini-3-pro-image-preview` with a prompt for a stylish mirror selfie scene. The resulting image will be uploaded to the `landing-assets` storage bucket and the URL referenced in `workflowAnimationData.tsx`.
+### Result
+
+All animation chips will visually match the background result image:
+- Brown sweater product chip (matching the outfit in the photo)
+- Bedroom scene chip (matching the room environment)
+- Model portrait chip (matching the woman in the mirror selfie)
+- "Mirror Selfie" badge (unchanged)
 
