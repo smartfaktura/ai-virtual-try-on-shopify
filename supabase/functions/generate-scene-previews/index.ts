@@ -74,7 +74,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { workflow_id, force_regenerate } = await req.json();
+    const { workflow_id, force_regenerate, batch_size = 3 } = await req.json();
     if (!workflow_id) throw new Error("workflow_id is required");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -115,7 +115,10 @@ serve(async (req) => {
 
     const updatedVariations = [...variations];
 
-    console.log(`Generating ${variations.length} scene previews for workflow ${workflow_id} (force=${!!force_regenerate})`);
+    console.log(`Generating ${variations.length} scene previews for workflow ${workflow_id} (force=${!!force_regenerate}, batch_size=${batch_size})`);
+
+    let generatedCount = 0;
+    let remainingCount = 0;
 
     for (let i = 0; i < variations.length; i++) {
       const v = variations[i];
@@ -123,9 +126,16 @@ serve(async (req) => {
         console.log(`Skipping ${v.label} (already has preview)`);
         continue;
       }
+
+      // Check if we've hit the batch limit
+      if (generatedCount >= batch_size) {
+        remainingCount++;
+        continue;
+      }
+
       const prompt = scenePreviewPrompts[v.label] || `Ultra high-end commercial product photography in a ${v.label} setting, ${v.instruction}, ${MASTER_SUFFIX}`;
 
-      console.log(`Generating preview ${i + 1}/${variations.length}: ${v.label}`);
+      console.log(`Generating preview ${i + 1}/${variations.length}: ${v.label} (batch ${generatedCount + 1}/${batch_size})`);
 
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -196,7 +206,13 @@ serve(async (req) => {
         .update({ generation_config: progressConfig })
         .eq("id", workflow_id);
 
-      console.log(`✓ Preview generated and saved for ${v.label}`);
+      generatedCount++;
+      console.log(`✓ Preview generated and saved for ${v.label} (${generatedCount}/${batch_size})`);
+    }
+
+    // Count remaining after loop
+    if (generatedCount >= batch_size) {
+      remainingCount = variations.filter((v: any, idx: number) => !updatedVariations[idx].preview_url).length;
     }
 
     // Update the generation_config with preview URLs
@@ -215,7 +231,12 @@ serve(async (req) => {
 
     if (updateError) throw new Error(`Failed to update workflow: ${updateError.message}`);
 
-    return new Response(JSON.stringify({ success: true, variations: updatedVariations }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      generated: generatedCount, 
+      remaining: remainingCount,
+      total: variations.length,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
