@@ -1463,72 +1463,80 @@ export default function Generate() {
                     const isSelected = selectedVariationIndices.has(i);
                     const hasPreview = !!v.preview_url;
 
-                    return (
-                      <Tooltip key={i}>
-                        <TooltipTrigger asChild>
-                          <div
-                            onClick={() => {
-                              setSelectedVariationIndices(prev => {
-                                const next = new Set(prev);
-                                if (next.has(i)) { next.delete(i); }
-                                else next.add(i);
-                                return next;
-                              });
-                            }}
-                            className={cn(
-                              "relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group border-2",
-                              isSelected
-                                ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
-                                : "border-border opacity-70 hover:opacity-100 hover:border-primary/40 hover:scale-[1.02]"
-                            )}
-                          >
-                            {/* Image or gradient fallback */}
-                            <div className="aspect-square relative">
-                              {hasPreview ? (
-                                <img
-                                  src={getOptimizedUrl(v.preview_url, { width: 400, quality: 60 })}
-                                  alt={v.label}
-                                  className="w-full h-full object-cover"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <div className={cn(
-                                  "w-full h-full flex items-center justify-center",
-                                  i % 8 === 0 ? "bg-gradient-to-br from-gray-100 to-white" :
-                                  i % 8 === 1 ? "bg-gradient-to-br from-gray-200 to-gray-100" :
-                                  i % 8 === 2 ? "bg-gradient-to-br from-amber-100 to-orange-50" :
-                                  i % 8 === 3 ? "bg-gradient-to-br from-pink-50 to-purple-50" :
-                                  i % 8 === 4 ? "bg-gradient-to-br from-green-100 to-emerald-50" :
-                                  i % 8 === 5 ? "bg-gradient-to-br from-blue-100 to-sky-50" :
-                                  i % 8 === 6 ? "bg-gradient-to-br from-yellow-100 to-amber-50" :
-                                  "bg-gradient-to-br from-gray-700 to-gray-900"
-                                )}>
-                                  <Package className={cn("w-8 h-8", i % 8 === 7 ? "text-gray-400" : "text-muted-foreground/40")} />
-                                </div>
-                              )}
-
-                              {/* Dark overlay for label readability */}
-                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2 pt-6">
-                                <p className="text-[11px] font-semibold text-white leading-tight">{v.label}</p>
-                                {v.category && (
-                                  <span className="text-[9px] text-white/60 font-medium">{v.category}</span>
-                                )}
-                              </div>
-
-                              {/* Selection checkmark */}
-                              {isSelected && (
-                                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-md">
-                                  <Check className="w-3 h-3 text-primary-foreground" />
-                                </div>
-                              )}
+                    const cardContent = (
+                      <div
+                        onClick={() => {
+                          setSelectedVariationIndices(prev => {
+                            const next = new Set(prev);
+                            if (next.has(i)) { next.delete(i); }
+                            else next.add(i);
+                            return next;
+                          });
+                        }}
+                        className={cn(
+                          "relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group border-2",
+                          isSelected
+                            ? "border-primary ring-2 ring-primary/20 scale-[1.02]"
+                            : "border-border opacity-70 hover:opacity-100 hover:border-primary/40 hover:scale-[1.02]"
+                        )}
+                      >
+                        {/* Image or gradient fallback */}
+                        <div className="aspect-square relative">
+                          {hasPreview ? (
+                            <img
+                              src={getOptimizedUrl(v.preview_url, { quality: 60 })}
+                              alt={v.label}
+                              className="w-full h-full object-contain"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className={cn(
+                              "w-full h-full flex items-center justify-center",
+                              i % 8 === 0 ? "bg-gradient-to-br from-gray-100 to-white" :
+                              i % 8 === 1 ? "bg-gradient-to-br from-gray-200 to-gray-100" :
+                              i % 8 === 2 ? "bg-gradient-to-br from-amber-100 to-orange-50" :
+                              i % 8 === 3 ? "bg-gradient-to-br from-pink-50 to-purple-50" :
+                              i % 8 === 4 ? "bg-gradient-to-br from-green-100 to-emerald-50" :
+                              i % 8 === 5 ? "bg-gradient-to-br from-blue-100 to-sky-50" :
+                              i % 8 === 6 ? "bg-gradient-to-br from-yellow-100 to-amber-50" :
+                              "bg-gradient-to-br from-gray-700 to-gray-900"
+                            )}>
+                              <Package className={cn("w-8 h-8", i % 8 === 7 ? "text-gray-400" : "text-muted-foreground/40")} />
                             </div>
+                          )}
+
+                          {/* Dark overlay for label readability */}
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2 pt-6">
+                            <p className="text-[11px] font-semibold text-white leading-tight">{v.label}</p>
+                            {v.category && (
+                              <span className="text-[9px] text-white/60 font-medium">{v.category}</span>
+                            )}
                           </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="max-w-[200px] text-xs">
-                          {v.instruction}
-                        </TooltipContent>
-                      </Tooltip>
+
+                          {/* Selection checkmark */}
+                          {isSelected && (
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-md">
+                              <Check className="w-3 h-3 text-primary-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     );
+
+                    if (isAdmin) {
+                      return (
+                        <Tooltip key={i}>
+                          <TooltipTrigger asChild>
+                            {cardContent}
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+                            {v.instruction}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+
+                    return <div key={i}>{cardContent}</div>;
                   })}
                 </div>
               </TooltipProvider>
