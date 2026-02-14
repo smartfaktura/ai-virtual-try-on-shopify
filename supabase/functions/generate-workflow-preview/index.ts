@@ -120,7 +120,7 @@ serve(async (req) => {
     // Determine file extension from data URL
     const mimeMatch = imageDataUrl.match(/^data:image\/(\w+);/);
     const ext = mimeMatch ? mimeMatch[1] : "png";
-    const fileName = `${workflow_id}.${ext}`;
+    const fileName = `${workflow_id}_${Date.now()}.${ext}`;
 
     // Upload to storage bucket
     const { error: uploadErr } = await supabase.storage
