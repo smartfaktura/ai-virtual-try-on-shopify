@@ -45,7 +45,7 @@ const featureMap: Record<string, string[]> = {
     'Realistic mirror selfie compositions with phone visible',
     '8 room/mirror environments (bedroom, bathroom, elevator, gym…)',
     'Identity-preserved model with your product',
-    'Instagram-ready 4:5 portrait format',
+    'All aspect ratios supported',
   ],
 };
 
