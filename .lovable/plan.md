@@ -1,88 +1,80 @@
 
 
-## Expand Product Listing Set to 30 Pro Scenes
+## Generate Pro-Quality Scene Preview Images with Showcase Products
 
-### What We Learned from the Research
+### What This Does
 
-Both Cherrydeck and Squareshot highlight several high-converting photography styles that our current 20 scenes don't cover:
+Updates the 30 scene preview prompts to feature specific showcase products (as you specified), upgrades to the pro image model, and regenerates all preview thumbnails. The core generation workflow logic stays completely untouched.
 
-- **Floating/Levitation** -- product suspended mid-air, defying gravity (top trend for 2025)
-- **Still Life with Props** -- curated complementary objects that tell a story
-- **Monochromatic/Color Blocking** -- bold single-color backdrops for social media impact
-- **Mirror/Reflections** -- reflective surfaces creating depth and intrigue
-- **Content Pour-out/Texture** -- showing what's inside (cream swirls, ingredients)
-- **Hand-in-Shot** -- a human hand holding/interacting with the product for scale and relatability
-- **Geometric Shapes** -- architectural pedestals, arches, and abstract shapes
-- **Mesmerizing Locations** -- aspirational outdoor environments (beach, poolside)
-- **Packaging Showcase** -- celebrating the unboxing experience
-- **Color Gel Lighting** -- bold colored lighting for modern, editorial impact
+### Changes
 
-### Updated Scene Library: 30 Scenes in 6 Categories
+**1. Edge Function: `supabase/functions/generate-scene-previews/index.ts`**
 
-We expand from 4 categories to 6, going from 20 to 30 scenes total.
+Update the `scenePreviewPrompts` map only -- replace all 30 generic background-only prompts with product-specific showcase prompts using your master prompt template:
 
-**Studio Essentials (5)** -- unchanged
-1. Hero White
-2. Soft Gray Infinity
-3. Gradient Glow
-4. Shadow Play
-5. Dark and Moody
+| Scene | Showcase Product | Prompt Approach |
+|-------|-----------------|-----------------|
+| Hero White | Luxury cognac leather handbag | Clean white studio, no visible lights |
+| Soft Gray Infinity | Premium hyaluronic acid serum | Seamless gray sweep |
+| Gradient Glow | Rose gold moisturizer set | White-to-blush gradient |
+| Shadow Play | Designer crystal perfume | Hard directional shadows |
+| Dark and Moody | Black leather bifold wallet | Dark charcoal, rim lighting |
+| White Marble | Stainless steel automatic watch | Veined marble slab |
+| Raw Concrete | Hex dumbbells and resistance bands | Industrial concrete surface |
+| Warm Wood Grain | Ceramic tea set with bamboo tray | Natural oak surface |
+| Linen and Fabric | Facial oil and cream duo | Soft draped linen |
+| Terrazzo Stone | Wooden stacking toy blocks | Speckled terrazzo |
+| Bathroom Shelf | Facial cleanser and toner | Styled bathroom shelf |
+| Kitchen Counter | Stainless steel cookware with copper | Clean kitchen countertop |
+| Vanity Table | Velvet jewelry organizer | Beauty vanity with mirror |
+| Office Desk | Space gray premium laptop | Minimal workspace |
+| Bedside Table | Navy silk sleep mask | Cozy bedroom nightstand |
+| Botanical Garden | Copper watering can and pruning shears | Lush greenery |
+| Water Splash | Electric blue energy drink can | Dynamic water droplets |
+| Golden Hour | White and neon orange running shoes | Warm sunset lighting |
+| Neon Accent | Matte black RGB gaming mouse | Dark scene with neon rim |
+| Flat Lay Overhead | Complete skincare routine collection | Top-down styled arrangement |
+| Floating Levitation | Designer perfume bottle | Suspended mid-air |
+| Mirror Reflection | Black wool baseball cap | Reflective mirror surface |
+| Monochrome Color Block | Shoe care kit | Olive-toned matte backdrop |
+| Geometric Pedestal | Crystal perfume bottle | Stone cylinders and arches |
+| Smoke and Mist | Charcoal hard-shell suitcase | Atmospheric fog |
+| Hand-in-Shot | Gold chain bracelet | Hand presenting naturally |
+| Still Life Composition | Premium hardcover book | Curated props arrangement |
+| Content Pour-out | Hydrating face cream | Cream spilling from jar |
+| Beach and Sand | Woven jute espadrille sandals | Natural sand, ocean light |
+| Gift and Unboxing | Burgundy merino wool socks | Premium packaging, tissue paper |
 
-**Surface and Texture (5)** -- unchanged
-6. White Marble
-7. Raw Concrete
-8. Warm Wood Grain
-9. Linen and Fabric
-10. Terrazzo Stone
+Each prompt follows your master template:
+"Ultra high-end commercial product photography of [PRODUCT], luxury brand campaign style, clean modern composition, premium minimal aesthetic, soft natural but controlled studio lighting..."
 
-**Lifestyle Context (5)** -- unchanged
-11. Bathroom Shelf
-12. Kitchen Counter
-13. Vanity Table
-14. Office Desk
-15. Bedside Table
+Additional function changes (structure stays the same):
+- Upgrade model from `google/gemini-2.5-flash-image` to `google/gemini-3-pro-image-preview` for dramatically better quality
+- Accept optional `force_regenerate` boolean parameter to skip the "already has preview" check
+- Clear existing `preview_url` values when force regenerating
 
-**Editorial and Creative (5)** -- unchanged
-16. Botanical Garden
-17. Water Splash
-18. Golden Hour
-19. Neon Accent
-20. Flat Lay Overhead
+**2. UI: `src/pages/Generate.tsx`**
 
-**NEW: Dynamic and Effects (5)**
-21. **Floating Levitation** -- product suspended mid-air with soft shadow below, defying gravity, clean background, editorial magic
-22. **Mirror Reflection** -- product on a reflective mirror surface creating a perfect symmetrical reflection, dramatic and elegant
-23. **Monochrome Color Block** -- bold single saturated color backdrop (matching or complementing the product), Glossier-style pop art feel
-24. **Geometric Pedestal** -- product elevated on abstract geometric shapes (cylinders, arches, cubes) in neutral tones, architectural and modern
-25. **Smoke and Mist** -- product emerging from soft atmospheric fog or mist, mysterious and premium, soft rim lighting
+Add a small info note below the scene selection grid:
+- Text: "Products shown are for demonstration only -- your product will be placed in each selected scene."
+- Styled with an Info icon in muted text
 
-**NEW: Storytelling and Context (5)**
-26. **Hand-in-Shot** -- a clean, well-groomed hand holding or presenting the product naturally, adding human scale and relatability
-27. **Still Life Composition** -- product as hero surrounded by curated complementary props (dried flowers, stones, fabric), artful arrangement
-28. **Content Pour-out** -- product contents spilling out artfully (powder, liquid, cream texture), showing what's inside, macro-style detail
-29. **Beach and Sand** -- product on natural sand with soft ocean light, warm coastal tones, aspirational travel context
-30. **Gift and Unboxing** -- product emerging from premium packaging with tissue paper and ribbon, celebrating the unboxing experience
+Update the admin "Generate Scene Previews" button to pass `force_regenerate: true` so it always regenerates.
 
-### Technical Details
+**3. Trigger Generation**
 
-**Database Migration**
-- Update the Product Listing Set workflow's `generation_config` JSONB to replace the current 20 variations with 30 new ones
-- Each new scene includes a detailed `instruction` prompt optimized for AI generation and a `category` field
+After deploying the updated edge function, call it with `force_regenerate: true` for the Product Listing Set workflow to generate all 30 new pro-quality showcase images. This will run in batches (the function saves progress after each image to handle timeouts).
 
-**File: `src/pages/Generate.tsx`**
-- Add two new category filter tabs: "Dynamic" and "Storytelling" alongside the existing All, Studio, Surface, Lifestyle, Editorial tabs
-- The grid layout already supports 5 columns (`lg:grid-cols-5`), so 30 scenes will fill 6 clean rows
+### What Does NOT Change
 
-**File: `supabase/functions/generate-scene-previews/index.ts`**
-- Add prompt entries for the 10 new scenes in the `scenePreviewPrompts` map so the admin can generate AI preview thumbnails for all 30 scenes
+- The core generation workflow logic (generate-workflow edge function)
+- Credit pricing, angle selection, or any other workflow behavior
+- The database schema or generation_config structure
+- How the actual user product generation works
 
-No changes needed to the edge function, credit logic, or angle selector -- those were already implemented correctly in the previous update.
-
-### Changes Summary
+### Files Changed
 
 | File | Change |
 |------|--------|
-| Database migration | Update `generation_config` from 20 to 30 scene variations with 2 new categories |
-| `src/pages/Generate.tsx` | Add "Dynamic" and "Storytelling" category tabs |
-| `supabase/functions/generate-scene-previews/index.ts` | Add 10 new scene preview prompts |
-
+| `supabase/functions/generate-scene-previews/index.ts` | Replace 30 prompts with product-showcase versions, upgrade model, add force_regenerate |
+| `src/pages/Generate.tsx` | Add info note about showcase products, update admin button |
