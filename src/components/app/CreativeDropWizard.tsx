@@ -428,7 +428,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const validationHint = getValidationHint();
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0 touch-auto">
       {/* Header — elegant step indicator */}
       <div className="pb-6">
         <h2 className="text-xl font-semibold tracking-tight mb-1">
