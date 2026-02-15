@@ -77,32 +77,44 @@ export type Database = {
       creative_drops: {
         Row: {
           created_at: string
+          credits_charged: number
+          download_url: string | null
           generation_job_ids: string[]
           id: string
+          images: Json
           run_date: string
           schedule_id: string | null
           status: string
           summary: Json
+          total_images: number
           user_id: string
         }
         Insert: {
           created_at?: string
+          credits_charged?: number
+          download_url?: string | null
           generation_job_ids?: string[]
           id?: string
+          images?: Json
           run_date?: string
           schedule_id?: string | null
           status?: string
           summary?: Json
+          total_images?: number
           user_id: string
         }
         Update: {
           created_at?: string
+          credits_charged?: number
+          download_url?: string | null
           generation_job_ids?: string[]
           id?: string
+          images?: Json
           run_date?: string
           schedule_id?: string | null
           status?: string
           summary?: Json
+          total_images?: number
           user_id?: string
         }
         Relationships: [
@@ -120,12 +132,21 @@ export type Database = {
           active: boolean
           brand_profile_id: string | null
           created_at: string
+          estimated_credits: number
+          freestyle_prompts: string[]
           frequency: string
           id: string
+          images_per_drop: number
+          include_freestyle: boolean
+          model_ids: string[]
           name: string
           next_run_at: string | null
           products_scope: string
+          scene_config: Json
           selected_product_ids: string[]
+          start_date: string
+          theme: string
+          theme_notes: string
           updated_at: string
           user_id: string
           workflow_ids: string[]
@@ -134,12 +155,21 @@ export type Database = {
           active?: boolean
           brand_profile_id?: string | null
           created_at?: string
+          estimated_credits?: number
+          freestyle_prompts?: string[]
           frequency?: string
           id?: string
+          images_per_drop?: number
+          include_freestyle?: boolean
+          model_ids?: string[]
           name: string
           next_run_at?: string | null
           products_scope?: string
+          scene_config?: Json
           selected_product_ids?: string[]
+          start_date?: string
+          theme?: string
+          theme_notes?: string
           updated_at?: string
           user_id: string
           workflow_ids?: string[]
@@ -148,12 +178,21 @@ export type Database = {
           active?: boolean
           brand_profile_id?: string | null
           created_at?: string
+          estimated_credits?: number
+          freestyle_prompts?: string[]
           frequency?: string
           id?: string
+          images_per_drop?: number
+          include_freestyle?: boolean
+          model_ids?: string[]
           name?: string
           next_run_at?: string | null
           products_scope?: string
+          scene_config?: Json
           selected_product_ids?: string[]
+          start_date?: string
+          theme?: string
+          theme_notes?: string
           updated_at?: string
           user_id?: string
           workflow_ids?: string[]
