@@ -220,7 +220,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     }));
 
   const effectiveFrequency = deliveryMode === 'now' ? 'one-time' : frequency;
-  const costEstimate = calculateDropCredits(workflowConfigs, imagesPerDrop, effectiveFrequency);
+  const costEstimate = calculateDropCredits(workflowConfigs, imagesPerDrop, effectiveFrequency, selectedProductIds.size);
 
   // Collapsible section state — tracks which section is open per workflow
   const [expandedSection, setExpandedSection] = useState<Record<string, string | null>>({});
@@ -370,20 +370,49 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         freestyle_prompts: cleanPrompts,
       };
 
+      let scheduleId = editingScheduleId;
+
       if (editingScheduleId) {
         const { error } = await supabase.from('creative_schedules').update(payload).eq('id', editingScheduleId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('creative_schedules').insert({ ...payload, user_id: user.id });
+        const { data, error } = await supabase.from('creative_schedules').insert({ ...payload, user_id: user.id }).select('id').single();
         if (error) throw error;
+        scheduleId = data.id;
       }
+
+      return { scheduleId: scheduleId!, isNow: deliveryMode === 'now' };
     },
-    onSuccess: () => {
+    onSuccess: async ({ scheduleId, isNow }) => {
       queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
-      toast.success(editingScheduleId ? 'Schedule updated!' : deliveryMode === 'now' ? 'Drop created — generating now!' : 'Schedule created successfully!');
+      queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
+
+      if (isNow && !editingScheduleId) {
+        // Trigger the drop immediately via edge function
+        toast.success('Drop created — generating now!');
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await supabase.functions.invoke('trigger-creative-drop', {
+            body: { schedule_id: scheduleId },
+          });
+          if (res.error) {
+            console.error('Trigger error:', res.error);
+            toast.error(`Generation trigger failed: ${res.error.message}`);
+          }
+        } catch (e) {
+          console.error('Trigger error:', e);
+          toast.error('Failed to trigger generation');
+        }
+      } else {
+        toast.success(editingScheduleId ? 'Schedule updated!' : 'Schedule created successfully!');
+      }
       onClose();
     },
-    onError: () => toast.error(editingScheduleId ? 'Failed to update schedule' : 'Failed to create schedule'),
+    onError: (error: Error) => toast.error(
+      editingScheduleId
+        ? `Failed to update schedule: ${error.message}`
+        : `Failed to create schedule: ${error.message}`
+    ),
   });
 
   const filteredProducts = products.filter(p =>
@@ -633,11 +662,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             next.delete(wf.id);
                           } else {
                             next.add(wf.id);
-                            // Initialize with EMPTY scene selection — user picks what they want
+                            // Fix #9: Auto-select ALL scenes so cost estimate matches behavior
+                            // (empty selection = generate all in generate-workflow, which is confusing)
                             if (variations.length > 0 && !workflowSceneSelections[wf.id]) {
                               setWorkflowSceneSelections(prev => ({
                                 ...prev,
-                                [wf.id]: new Set<string>(),
+                                [wf.id]: new Set(variations.map((v: { label: string }) => v.label)),
                               }));
                             }
                           }
