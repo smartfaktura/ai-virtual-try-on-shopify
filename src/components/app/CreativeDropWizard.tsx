@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 
 import {
   ArrowLeft, ArrowRight, Check, Calendar, Sun, Snowflake, Leaf, Flower2,
-  Gift, ShoppingBag, Heart, GraduationCap, Sparkles, Search, Image, Loader2,
+  Gift, ShoppingBag, Heart, GraduationCap, Sparkles, Search, Loader2,
   Zap, CreditCard,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -61,7 +61,7 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
   const [brandProfileId, setBrandProfileId] = useState('');
 
   // Step 2: Products
-  const [productsScope, setProductsScope] = useState<'all' | 'selected'>('all');
+  
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [productSearch, setProductSearch] = useState('');
 
@@ -129,7 +129,7 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
   const canNext = (): boolean => {
     switch (step) {
       case 0: return name.trim().length > 0;
-      case 1: return productsScope === 'all' || selectedProductIds.size > 0;
+      case 1: return selectedProductIds.size > 0;
       case 2: return selectedWorkflowIds.size > 0;
       case 3: return imagesPerDrop > 0;
       case 4: return true;
@@ -152,8 +152,8 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
         theme,
         theme_notes: themeNotes,
         frequency,
-        products_scope: productsScope,
-        selected_product_ids: productsScope === 'selected' ? Array.from(selectedProductIds) : [],
+        products_scope: 'selected',
+        selected_product_ids: Array.from(selectedProductIds),
         workflow_ids: Array.from(selectedWorkflowIds),
         model_ids: selectedModelIds,
         brand_profile_id: brandProfileId || null,
@@ -277,72 +277,47 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
             {/* Step 2: Products */}
             {step === 1 && (
               <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Button
-                    variant={productsScope === 'all' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setProductsScope('all')}
-                  >
-                    All Products
-                  </Button>
-                  <Button
-                    variant={productsScope === 'selected' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setProductsScope('selected')}
-                  >
-                    Choose Specific
-                  </Button>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    value={productSearch}
+                    onChange={e => setProductSearch(e.target.value)}
+                    className="pl-9"
+                  />
                 </div>
-
-                {productsScope === 'all' ? (
-                  <Card>
-                    <CardContent className="p-4 text-center text-muted-foreground">
-                      <Image className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">All {products.length} products will be included in each drop.</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search products..."
-                        value={productSearch}
-                        onChange={e => setProductSearch(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
-                    <Badge variant="secondary">{selectedProductIds.size} selected</Badge>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[300px] overflow-y-auto">
-                      {filteredProducts.map(product => {
-                        const isSelected = selectedProductIds.has(product.id);
-                        return (
-                          <button
-                            key={product.id}
-                            onClick={() => {
-                              const next = new Set(selectedProductIds);
-                              isSelected ? next.delete(product.id) : next.add(product.id);
-                              setSelectedProductIds(next);
-                            }}
-                            className={cn(
-                              'relative rounded-lg border-2 p-1.5 transition-all text-left',
-                              isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
-                            )}
-                          >
-                            {isSelected && (
-                              <div className="absolute top-1 right-1 z-10 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                              </div>
-                            )}
-                            <div className="aspect-square rounded overflow-hidden bg-muted mb-1">
-                              <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
-                            </div>
-                            <p className="text-xs font-medium truncate">{product.title}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
+                <Badge variant="secondary">{selectedProductIds.size} selected</Badge>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[300px] overflow-y-auto">
+                  {filteredProducts.map(product => {
+                    const isSelected = selectedProductIds.has(product.id);
+                    return (
+                      <button
+                        key={product.id}
+                        onClick={() => {
+                          const next = new Set(selectedProductIds);
+                          isSelected ? next.delete(product.id) : next.add(product.id);
+                          setSelectedProductIds(next);
+                        }}
+                        className={cn(
+                          'relative rounded-lg border-2 p-1.5 transition-all text-left',
+                          isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+                        )}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 z-10 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                          </div>
+                        )}
+                        <div className="aspect-square rounded overflow-hidden bg-muted mb-1">
+                          <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-xs font-medium truncate">{product.title}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+                {filteredProducts.length === 0 && (
+                  <p className="text-center text-sm text-muted-foreground py-4">No products found.</p>
                 )}
               </div>
             )}
@@ -542,7 +517,7 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <p className="text-muted-foreground text-xs">Products</p>
-                        <p className="font-medium">{productsScope === 'all' ? `All (${products.length})` : `${selectedProductIds.size} selected`}</p>
+                        <p className="font-medium">{selectedProductIds.size} selected</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground text-xs">Workflows</p>
