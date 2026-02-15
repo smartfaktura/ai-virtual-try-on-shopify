@@ -2104,7 +2104,8 @@ export default function Generate() {
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
-                 hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variations of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
+                 isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
+                 hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
                  `Creating ${imageCount} images of "${selectedProduct?.title}"`}
               </p>
             </div>
