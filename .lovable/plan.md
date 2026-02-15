@@ -1,21 +1,22 @@
 
 
-## Simplify Products Step -- Show All Products Directly
+## Add Fallback Preview Images for Workflows in Creative Drop Wizard
 
-### Change
+### Problem
+Three workflows (Product Listing Set, Selfie / UGC Set, Flat Lay Set) have no `preview_image_url` in the database, so they show empty gray boxes in the wizard's Step 3.
 
-Remove the "All Products" / "Choose Specific" toggle buttons from Step 2. Instead, always show the full product grid with a search box. Users click products to select which ones to include in the drop.
+### Solution
+Add a fallback image map in the wizard that uses the existing landing asset images (same ones used on the Workflows page) when `preview_image_url` is null.
 
 ### Technical Details
 
 **File: `src/components/app/CreativeDropWizard.tsx`**
 
-1. **Remove `productsScope` state** (line 64) -- no longer needed since we always show the grid
-2. **Remove the toggle buttons** (lines 280-295) and the "All products" placeholder card (lines 297-303)
-3. **Always show** the search input + product grid (currently lines 306-345), but without the wrapping conditional
-4. **Update validation** (line 132): change from `productsScope === 'all' || selectedProductIds.size > 0` to just `selectedProductIds.size > 0` -- user must select at least one product
-5. **Update save mutation** (lines 154-156): always send `products_scope: 'selected'` and `selected_product_ids: Array.from(selectedProductIds)`
-6. **Update review step** to show selected product count instead of "All products"
+1. Import `getLandingAssetUrl` from `@/lib/landingAssets`
+2. Add a constant map of workflow name to fallback image URL:
+   - `'Product Listing Set'` -> `getLandingAssetUrl('workflows/workflow-product-listing.jpg')`
+   - `'Selfie / UGC Set'` -> `getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg')`
+   - `'Flat Lay Set'` -> `getLandingAssetUrl('workflows/workflow-flat-lay.jpg')`
+3. Update the workflow card rendering (around line 345-348) to use `wf.preview_image_url || fallbackMap[wf.name]` as the image source, and always render the `<img>` tag (removing the conditional `{wf.preview_image_url && ...}`)
 
-The search box and selection grid remain exactly as they are today in the "Choose Specific" branch -- they just become the default and only view for this step.
-
+This is a one-file, ~10-line change. No database changes needed.
