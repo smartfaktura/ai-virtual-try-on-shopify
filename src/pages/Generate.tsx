@@ -75,10 +75,10 @@ type UserProduct = Tables<'user_products'>;
 
 const FLAT_LAY_AESTHETICS = [
   { id: 'minimal', label: 'Minimal', hint: 'clean, few props, whitespace' },
-  { id: 'botanical', label: 'Botanical', hint: 'dried flowers, eucalyptus, greenery' },
-  { id: 'coffee-books', label: 'Coffee & Books', hint: 'coffee cup, open book, reading glasses' },
-  { id: 'travel', label: 'Travel', hint: 'passport, sunglasses, map, boarding pass' },
-  { id: 'beauty', label: 'Beauty', hint: 'makeup brushes, lipstick, mirror, perfume' },
+  { id: 'botanical', label: 'Botanical', hint: 'dried flowers, eucalyptus leaves, greenery accents' },
+  { id: 'coffee-books', label: 'Coffee & Books', hint: 'coffee cup, open book pages' },
+  { id: 'textured', label: 'Textured', hint: 'linen fabric, kraft paper, washi tape' },
+  { id: 'soft-glam', label: 'Soft Glam', hint: 'silk ribbon, dried petals, soft fabric swatches' },
   { id: 'cozy', label: 'Cozy', hint: 'knit blanket, candle, warm tones' },
   { id: 'seasonal', label: 'Seasonal', hint: 'seasonal elements matching current time of year' },
 ];
@@ -224,6 +224,7 @@ export default function Generate() {
   const [stylingNotes, setStylingNotes] = useState('');
   const [selectedAesthetics, setSelectedAesthetics] = useState<string[]>([]);
   const [selectedFlatLayProductIds, setSelectedFlatLayProductIds] = useState<Set<string>>(new Set());
+  const [flatLayPropStyle, setFlatLayPropStyle] = useState<'clean' | 'decorated'>('clean');
 
   // Mirror Selfie detection
   const isMirrorSelfie = activeWorkflow?.name === 'Mirror Selfie Set';
@@ -556,6 +557,7 @@ export default function Generate() {
       quality,
       framing: framing || undefined,
       styling_notes: flatLayStylingNotes || undefined,
+      prop_style: isFlatLay ? flatLayPropStyle : undefined,
       additional_products: additionalProducts,
     };
 
@@ -1833,16 +1835,47 @@ export default function Generate() {
             {/* Flat Lay details phase: Aesthetics + Styling Notes + Quality */}
             {isFlatLay && flatLayPhase === 'details' && (
               <>
+                {/* Composition Style Toggle */}
                 <Card><CardContent className="p-5 space-y-4">
                   <div>
                     <h3 className="text-base font-semibold flex items-center gap-2">
                       <Layers className="w-5 h-5 text-primary" />
-                      Styling & Aesthetics
+                      Composition Style
                     </h3>
-                    <p className="text-sm text-muted-foreground">Optional — add props and mood to your flat lay</p>
+                    <p className="text-sm text-muted-foreground">Choose what appears alongside your products</p>
                   </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {([
+                      { key: 'clean' as const, label: 'Products Only', desc: 'Clean layout with just your products, no extra items' },
+                      { key: 'decorated' as const, label: 'Add Styling Props', desc: 'Include decorative elements (leaves, fabric, abstract shapes) around your products' },
+                    ]).map(opt => (
+                      <button
+                        key={opt.key}
+                        onClick={() => {
+                          setFlatLayPropStyle(opt.key);
+                          if (opt.key === 'clean') { setSelectedAesthetics([]); setStylingNotes(''); }
+                        }}
+                        className={cn(
+                          'p-4 rounded-xl border-2 text-left transition-all',
+                          flatLayPropStyle === opt.key
+                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                            : 'border-border hover:border-primary/40'
+                        )}
+                      >
+                        <p className="text-sm font-semibold">{opt.label}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{opt.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </CardContent></Card>
 
-                  {/* Aesthetic quick-chips */}
+                {/* Aesthetic quick-chips — only when decorated */}
+                {flatLayPropStyle === 'decorated' && (
+                <Card><CardContent className="p-5 space-y-4">
+                  <div>
+                    <h3 className="text-base font-semibold">Styling & Aesthetics</h3>
+                    <p className="text-sm text-muted-foreground">Add decorative props and mood to your flat lay</p>
+                  </div>
                   <div className="space-y-2">
                     <Label>Quick Aesthetics</Label>
                     <div className="flex flex-wrap gap-2">
@@ -1873,19 +1906,18 @@ export default function Generate() {
                       </p>
                     )}
                   </div>
-
-                  {/* Free-form styling notes */}
                   <div className="space-y-2">
                     <Label>Styling Notes (optional)</Label>
                     <Textarea
-                      placeholder="e.g. eucalyptus leaves, gold jewelry, coffee cup, warm tones..."
+                      placeholder="e.g. eucalyptus leaves, silk ribbon, warm tones..."
                       value={stylingNotes}
                       onChange={e => setStylingNotes(e.target.value)}
                       className="min-h-[60px]"
                     />
-                    <p className="text-xs text-muted-foreground">Describe any specific props, colors, or mood you'd like in the composition</p>
+                    <p className="text-xs text-muted-foreground">Describe any specific decorative props, colors, or mood (no commercial products)</p>
                   </div>
                 </CardContent></Card>
+                )}
 
                 <Card><CardContent className="p-5 space-y-4">
                   <h3 className="text-base font-semibold">Generation Settings</h3>
