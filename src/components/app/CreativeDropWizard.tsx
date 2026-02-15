@@ -818,7 +818,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           )}
 
                           {/* ── Collapsible: Pose / Scene Library ── */}
-                          {showPosePicker && (
+                          {showPosePicker && !wf.uses_tryon && (
                             <div className="border-t border-border/50 pt-1">
                               <button
                                 onClick={() => toggleSection(wf.id, 'poses')}
@@ -1389,7 +1389,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         {variations.length > 0 && (
                           <Badge variant="secondary" className="text-[10px] rounded-full">{sceneCount}/{variations.length} scenes</Badge>
                         )}
-                        {showPosePicker && (
+                        {showPosePicker && !wf.uses_tryon && (
                           <Badge variant="secondary" className="text-[10px] rounded-full">{poseCount} pose{poseCount !== 1 ? 's' : ''}</Badge>
                         )}
                         {needsModels && (
