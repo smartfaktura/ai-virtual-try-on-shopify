@@ -20,7 +20,9 @@ interface ScheduleCardProps {
   drop?: never;
   onViewDrop?: never;
   onDuplicate?: (schedule: CreativeSchedule) => void;
+  onEdit?: (schedule: CreativeSchedule) => void;
   scheduleName?: never;
+  workflowNames?: string[];
 }
 
 interface DropCardProps {
@@ -95,7 +97,7 @@ export function DropCard(props: Props) {
 
   // ── Schedule Card ──
   if (props.type === 'schedule') {
-    const { schedule, onDuplicate } = props;
+    const { schedule, onDuplicate, onEdit, workflowNames } = props;
     const isPaused = !schedule.active;
 
     return (
@@ -110,11 +112,19 @@ export function DropCard(props: Props) {
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{schedule.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {schedule.frequency} · {schedule.images_per_drop} images per drop
+                    {schedule.frequency} · {schedule.images_per_drop} images per drop · {schedule.selected_product_ids?.length || 0} product{(schedule.selected_product_ids?.length || 0) !== 1 ? 's' : ''}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {schedule.selected_product_ids?.length || 0} product{(schedule.selected_product_ids?.length || 0) !== 1 ? 's' : ''} · {schedule.workflow_ids.length} workflow{schedule.workflow_ids.length !== 1 ? 's' : ''}
+                    {workflowNames && workflowNames.length > 0
+                      ? workflowNames.slice(0, 2).join(', ') + (workflowNames.length > 2 ? ` +${workflowNames.length - 2} more` : '')
+                      : `${schedule.workflow_ids.length} workflow${schedule.workflow_ids.length !== 1 ? 's' : ''}`}
                   </p>
+                  {schedule.next_run_at && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <Clock className="w-3 h-3" />
+                      Next: {new Date(schedule.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -134,20 +144,6 @@ export function DropCard(props: Props) {
                   {schedule.active ? 'Active' : 'Paused'}
                 </span>
 
-                {schedule.next_run_at && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-xs text-muted-foreground hidden sm:block cursor-default">
-                          {formatDistanceToNow(new Date(schedule.next_run_at), { addSuffix: true })}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {new Date(schedule.next_run_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
 
                 <Button
                   variant="ghost"
@@ -172,9 +168,9 @@ export function DropCard(props: Props) {
                       <RocketIcon className="w-3.5 h-3.5 mr-2" />
                       Run Now
                     </DropdownMenuItem>
-                    <DropdownMenuItem disabled>
+                    <DropdownMenuItem onClick={() => onEdit?.(schedule)}>
                       <Pencil className="w-3.5 h-3.5 mr-2" />
-                      Edit (coming soon)
+                      Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -244,6 +240,19 @@ export function DropCard(props: Props) {
                     : `${drop.generation_job_ids.length} job${drop.generation_job_ids.length !== 1 ? 's' : ''}`}
                 {drop.credits_charged > 0 && ` · ${drop.credits_charged} credits`}
               </p>
+              {drop.status === 'generating' && (() => {
+                const SECONDS_PER_IMAGE = 8;
+                const elapsedMs = Date.now() - new Date(drop.created_at).getTime();
+                const estimatedTotalMs = targetImages * SECONDS_PER_IMAGE * 1000;
+                const remainingMs = Math.max(0, estimatedTotalMs - elapsedMs);
+                const remainingMin = Math.ceil(remainingMs / 60000);
+                return (
+                  <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                    Started {formatDistanceToNow(new Date(drop.created_at), { addSuffix: true })}
+                    {remainingMin > 0 ? ` · ~${remainingMin} min remaining` : ' · Finishing up…'}
+                  </p>
+                );
+              })()}
               {scheduleName && (
                 <p className="text-[11px] text-muted-foreground/70 mt-0.5">From: {scheduleName}</p>
               )}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, BarChart3, Image, CreditCard } from 'lucide-react';
+import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +58,7 @@ export default function CreativeDrops() {
   const { user } = useAuth();
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardInitialData, setWizardInitialData] = useState<CreativeDropWizardInitialData | undefined>(undefined);
+  const [editingScheduleId, setEditingScheduleId] = useState<string | undefined>(undefined);
   const [selectedDrop, setSelectedDrop] = useState<CreativeDrop | null>(null);
   const [activeTab, setActiveTab] = useState('schedules');
   const [dropStatusFilter, setDropStatusFilter] = useState<string>('all');
@@ -92,13 +93,28 @@ export default function CreativeDrops() {
     enabled: !!user,
   });
 
+  const { data: workflows = [] } = useQuery({
+    queryKey: ['workflows'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('workflows').select('id, name').order('sort_order');
+      if (error) throw error;
+      return data as { id: string; name: string }[];
+    },
+  });
+
+  const workflowNameMap = new Map(workflows.map(w => [w.id, w.name]));
+
   // Stats
   const activeCount = schedules.filter(s => s.active).length;
   const totalDrops = drops.length;
   const totalImages = drops.reduce((sum, d) => sum + d.total_images, 0);
   const totalCredits = drops.reduce((sum, d) => sum + d.credits_charged, 0);
+  const generatingCount = drops.filter(d => d.status === 'generating').length;
+  const nextRun = schedules
+    .filter(s => s.active && s.next_run_at)
+    .sort((a, b) => new Date(a.next_run_at!).getTime() - new Date(b.next_run_at!).getTime())[0];
 
-  // Filtered & sorted drops
+  const hasStats = schedules.length > 0 || drops.length > 0;
   const filteredDrops = drops
     .filter(d => dropStatusFilter === 'all' || d.status === dropStatusFilter)
     .sort((a, b) => {
@@ -110,13 +126,17 @@ export default function CreativeDrops() {
   // Schedule name lookup for drops
   const scheduleNameMap = new Map(schedules.map(s => [s.id, s.name]));
 
-  const handleDuplicate = (schedule: CreativeSchedule) => {
+  const extractWfFormats = (schedule: CreativeSchedule) => {
     const sceneConfig = (schedule.scene_config || {}) as Record<string, { aspect_ratio: string }>;
     const wfFormats: Record<string, string> = {};
     for (const [k, v] of Object.entries(sceneConfig)) {
       wfFormats[k] = v.aspect_ratio || '1:1';
     }
+    return wfFormats;
+  };
 
+  const handleDuplicate = (schedule: CreativeSchedule) => {
+    setEditingScheduleId(undefined);
     setWizardInitialData({
       name: `${schedule.name} (Copy)`,
       theme: schedule.theme,
@@ -125,7 +145,27 @@ export default function CreativeDrops() {
       selectedProductIds: schedule.selected_product_ids || [],
       selectedWorkflowIds: schedule.workflow_ids || [],
       selectedModelIds: schedule.model_ids || [],
-      workflowFormats: wfFormats,
+      workflowFormats: extractWfFormats(schedule),
+      deliveryMode: schedule.frequency === 'one-time' ? 'now' : 'scheduled',
+      frequency: schedule.frequency === 'one-time' ? 'monthly' : schedule.frequency,
+      imagesPerDrop: schedule.images_per_drop,
+      includeFreestyle: schedule.include_freestyle || false,
+      freestylePrompts: schedule.freestyle_prompts || [],
+    });
+    setWizardOpen(true);
+  };
+
+  const handleEdit = (schedule: CreativeSchedule) => {
+    setEditingScheduleId(schedule.id);
+    setWizardInitialData({
+      name: schedule.name,
+      theme: schedule.theme,
+      themeNotes: schedule.theme_notes,
+      brandProfileId: schedule.brand_profile_id || '',
+      selectedProductIds: schedule.selected_product_ids || [],
+      selectedWorkflowIds: schedule.workflow_ids || [],
+      selectedModelIds: schedule.model_ids || [],
+      workflowFormats: extractWfFormats(schedule),
       deliveryMode: schedule.frequency === 'one-time' ? 'now' : 'scheduled',
       frequency: schedule.frequency === 'one-time' ? 'monthly' : schedule.frequency,
       imagesPerDrop: schedule.images_per_drop,
@@ -137,12 +177,14 @@ export default function CreativeDrops() {
 
   const openWizard = () => {
     setWizardInitialData(undefined);
+    setEditingScheduleId(undefined);
     setWizardOpen(true);
   };
 
   const closeWizard = () => {
     setWizardOpen(false);
     setWizardInitialData(undefined);
+    setEditingScheduleId(undefined);
   };
 
   return (
@@ -152,32 +194,43 @@ export default function CreativeDrops() {
       backAction={wizardOpen ? { content: 'Back to Schedules', onAction: closeWizard } : undefined}
     >
       {wizardOpen ? (
-        <CreativeDropWizard onClose={closeWizard} initialData={wizardInitialData} />
+        <CreativeDropWizard onClose={closeWizard} initialData={wizardInitialData} editingScheduleId={editingScheduleId} />
       ) : (
         <>
           {/* Stats Summary */}
-          {(schedules.length > 0 || drops.length > 0) && (
-            <div className="flex gap-3 flex-wrap mb-6">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border text-sm">
-                <Calendar className="w-3.5 h-3.5 text-primary" />
-                <span className="font-medium">{activeCount}</span>
-                <span className="text-muted-foreground text-xs">Active Schedules</span>
+          {hasStats && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
+              <div className="rounded-xl bg-card border p-3">
+                <p className="text-2xl font-semibold">{activeCount}</p>
+                <p className="text-xs text-muted-foreground">Active Schedules</p>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border text-sm">
-                <Zap className="w-3.5 h-3.5 text-primary" />
-                <span className="font-medium">{totalDrops}</span>
-                <span className="text-muted-foreground text-xs">Total Drops</span>
+              <div className="rounded-xl bg-card border p-3">
+                <p className="text-2xl font-semibold">{totalDrops}</p>
+                <p className="text-xs text-muted-foreground">Total Drops</p>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border text-sm">
-                <Image className="w-3.5 h-3.5 text-primary" />
-                <span className="font-medium">{totalImages}</span>
-                <span className="text-muted-foreground text-xs">Images Generated</span>
+              <div className="rounded-xl bg-card border p-3">
+                <p className="text-2xl font-semibold">{totalImages}</p>
+                <p className="text-xs text-muted-foreground">Images Generated</p>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border text-sm">
-                <CreditCard className="w-3.5 h-3.5 text-primary" />
-                <span className="font-medium">{totalCredits}</span>
-                <span className="text-muted-foreground text-xs">Credits Used</span>
+              <div className="rounded-xl bg-card border p-3">
+                <p className="text-2xl font-semibold">{totalCredits}</p>
+                <p className="text-xs text-muted-foreground">Credits Used</p>
               </div>
+              {(generatingCount > 0 || nextRun) && (
+                <div className="rounded-xl bg-card border p-3">
+                  {generatingCount > 0 ? (
+                    <>
+                      <p className="text-2xl font-semibold text-amber-500">{generatingCount}</p>
+                      <p className="text-xs text-muted-foreground">Generating Now</p>
+                    </>
+                  ) : nextRun?.next_run_at ? (
+                    <>
+                      <p className="text-sm font-semibold">{new Date(nextRun.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                      <p className="text-xs text-muted-foreground">Next Run</p>
+                    </>
+                  ) : null}
+                </div>
+              )}
             </div>
           )}
 
@@ -221,7 +274,7 @@ export default function CreativeDrops() {
               ) : (
                 <div className="space-y-3">
                   {schedules.map(schedule => (
-                    <DropCard key={schedule.id} type="schedule" schedule={schedule} onDuplicate={handleDuplicate} />
+                    <DropCard key={schedule.id} type="schedule" schedule={schedule} onDuplicate={handleDuplicate} onEdit={handleEdit} workflowNames={schedule.workflow_ids.map(id => workflowNameMap.get(id)).filter(Boolean) as string[]} />
                   ))}
                 </div>
               )}
