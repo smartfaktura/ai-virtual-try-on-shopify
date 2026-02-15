@@ -38,6 +38,41 @@ interface VariationItem {
   category?: string;
 }
 
+// UGC Product Interaction Mapping
+const PRODUCT_INTERACTIONS: Record<string, string> = {
+  'skincare': 'applying to their skin or showing the product texture on the back of their hand',
+  'beauty': 'applying the product or holding it up near their face showing the shade/color',
+  'makeup': 'applying the product or holding it up near their face showing the shade/color',
+  'clothing': 'wearing the item naturally as part of their outfit',
+  'apparel': 'wearing the item naturally as part of their outfit',
+  'shoes': 'showing the shoes on their feet or holding them up excitedly',
+  'bags': 'wearing the bag naturally on their shoulder or holding it',
+  'jewelry': 'wearing the jewelry piece (on finger, wrist, neck, or ear) and showing it off',
+  'rings': 'wearing the ring on their finger and holding their hand up to show it',
+  'watches': 'wearing the watch on their wrist and casually showing it',
+  'food': 'holding the food/drink package or tasting/sipping the product',
+  'drink': 'sipping or holding the drink toward the camera',
+  'tech': 'using or demonstrating the device naturally',
+  'fragrance': 'holding the bottle near their neck/wrist as if just applied',
+  'haircare': 'running fingers through their hair or holding the product near their hair',
+};
+
+const UGC_MOOD_DESCRIPTIONS: Record<string, string> = {
+  'excited': 'Genuine excitement and enthusiasm. Wide natural smile, bright eyes, "OMG I love this" energy. The kind of face you make when showing your best friend something amazing.',
+  'chill': 'Relaxed and casual. Soft natural smile, effortless cool vibe. Everyday comfort energy, as if casually mentioning a product they use daily.',
+  'confident': 'Self-assured and knowing. Subtle confident smile, direct eye contact with the camera. "I know what works for me" energy.',
+  'surprised': 'Genuine surprise and wonder. Slightly raised eyebrows, open expression, "wait this actually works?!" reaction face.',
+  'focused': 'Demonstrating and explaining. Friendly but concentrated expression, tutorial-mode energy. Looking at the product or showing how to use it.',
+};
+
+function getProductInteraction(productType: string): string {
+  const type = productType.toLowerCase().trim();
+  for (const [key, value] of Object.entries(PRODUCT_INTERACTIONS)) {
+    if (type.includes(key)) return value;
+  }
+  return 'holding the product naturally near their face or chest';
+}
+
 interface WorkflowRequest {
   workflow_id: string;
   product: {
@@ -55,6 +90,7 @@ interface WorkflowRequest {
   }>;
   styling_notes?: string;
   prop_style?: 'clean' | 'decorated';
+  ugc_mood?: string;
   model?: {
     name: string;
     gender: string;
@@ -92,7 +128,8 @@ function buildVariationPrompt(
   model?: WorkflowRequest["model"],
   additionalProducts?: WorkflowRequest["additional_products"],
   stylingNotes?: string,
-  propStyle?: 'clean' | 'decorated'
+  propStyle?: 'clean' | 'decorated',
+  ugcMood?: string,
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
@@ -158,14 +195,32 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     propStyleBlock = `\nCOMPOSITION RULE: You may add ONLY abstract/decorative styling elements around the products: natural textures, dried flowers, fabric swatches, paper, abstract shapes, ribbons. NEVER add extra commercial products like watches, cameras, electronics, earbuds, bags, or any item that could be mistaken for the user's own product.\n`;
   }
 
-  const prompt = `${config.prompt_template}
+  // UGC mood and product interaction injection
+  let ugcBlock = "";
+  if (ugcMood) {
+    const moodDesc = UGC_MOOD_DESCRIPTIONS[ugcMood] || UGC_MOOD_DESCRIPTIONS['excited'];
+    const interaction = getProductInteraction(product.productType);
+    ugcBlock = `\nEXPRESSION & ENERGY:\n${moodDesc}\n\nPRODUCT INTERACTION:\nThe subject must be naturally ${interaction} with the EXACT product from [PRODUCT IMAGE]. The product must be clearly visible and recognizable in the frame.\n`;
+  }
+
+  // Replace {PRODUCT_INTERACTION} and {MOOD_DESCRIPTION} placeholders in prompt template
+  let processedTemplate = config.prompt_template;
+  if (ugcMood) {
+    const moodDesc = UGC_MOOD_DESCRIPTIONS[ugcMood] || UGC_MOOD_DESCRIPTIONS['excited'];
+    const interaction = getProductInteraction(product.productType);
+    processedTemplate = processedTemplate
+      .replace('{PRODUCT_INTERACTION}', interaction)
+      .replace('{MOOD_DESCRIPTION}', moodDesc);
+  }
+
+  const prompt = `${processedTemplate}
 
 PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
 ${product.description ? `- Description: ${product.description}` : ""}
-${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}
+${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${variation.instruction}
 
@@ -507,7 +562,8 @@ serve(async (req) => {
             body.model,
             body.additional_products,
             body.styling_notes,
-            body.prop_style
+            body.prop_style,
+            body.ugc_mood
           );
 
           console.log(

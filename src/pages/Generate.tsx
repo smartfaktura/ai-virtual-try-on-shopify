@@ -226,8 +226,22 @@ export default function Generate() {
   const [selectedFlatLayProductIds, setSelectedFlatLayProductIds] = useState<Set<string>>(new Set());
   const [flatLayPropStyle, setFlatLayPropStyle] = useState<'clean' | 'decorated'>('clean');
 
+  // UGC mood selector
+  type UgcMood = 'excited' | 'chill' | 'confident' | 'surprised' | 'focused';
+  const UGC_MOODS: Array<{ id: UgcMood; label: string; desc: string }> = [
+    { id: 'excited', label: '🤩 Excited', desc: '"OMG I love this!" energy' },
+    { id: 'chill', label: '😌 Chill', desc: 'Relaxed, everyday vibe' },
+    { id: 'confident', label: '😎 Confident', desc: '"I know what works" energy' },
+    { id: 'surprised', label: '😲 Surprised', desc: '"Wait, this actually works?!"' },
+    { id: 'focused', label: '🧐 Focused', desc: 'Tutorial / demo mode' },
+  ];
+  const [ugcMood, setUgcMood] = useState<UgcMood>('excited');
+
   // Mirror Selfie detection
   const isMirrorSelfie = activeWorkflow?.name === 'Mirror Selfie Set';
+
+  // Selfie / UGC Set detection
+  const isSelfieUgc = activeWorkflow?.name === 'Selfie / UGC Set';
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
@@ -559,6 +573,7 @@ export default function Generate() {
       styling_notes: flatLayStylingNotes || undefined,
       prop_style: isFlatLay ? flatLayPropStyle : undefined,
       additional_products: additionalProducts,
+      ugc_mood: isSelfieUgc ? ugcMood : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -1961,8 +1976,38 @@ export default function Generate() {
               </>
             )}
 
-            {/* Product Angles — hidden for Mirror Selfie Set and Flat Lay */}
-            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !isFlatLay && (
+            {/* UGC Mood / Expression Selector — only for Selfie/UGC workflow */}
+            {isSelfieUgc && (
+              <Card><CardContent className="p-5 space-y-4">
+                <div>
+                  <h3 className="text-base font-semibold flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    Creator Mood
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Set the expression and energy for your UGC content</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {UGC_MOODS.map(mood => (
+                    <button
+                      key={mood.id}
+                      onClick={() => setUgcMood(mood.id)}
+                      className={cn(
+                        'px-4 py-2 rounded-xl border-2 text-left transition-all',
+                        ugcMood === mood.id
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                          : 'border-border hover:border-primary/40'
+                      )}
+                    >
+                      <p className="text-sm font-semibold">{mood.label}</p>
+                      <p className="text-[11px] text-muted-foreground">{mood.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </CardContent></Card>
+            )}
+
+            {/* Product Angles — hidden for Mirror Selfie Set, Flat Lay, and Selfie/UGC */}
+            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !isFlatLay && !isSelfieUgc && (
               <Card><CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">Product Angles</h3>
