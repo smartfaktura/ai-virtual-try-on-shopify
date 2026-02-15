@@ -79,92 +79,97 @@ export default function CreativeDrops() {
   return (
     <PageHeader
       title="Creative Drops"
-      subtitle="Automate recurring visual creation. Set up schedules and receive fresh assets on autopilot."
+      subtitle={wizardOpen ? undefined : "Automate recurring visual creation. Set up schedules and receive fresh assets on autopilot."}
+      backAction={wizardOpen ? { content: 'Back to Schedules', onAction: () => setWizardOpen(false) } : undefined}
     >
-      <Tabs defaultValue="schedules" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="schedules">
-            <Clock className="w-4 h-4 mr-1.5" />
-            Schedules
-          </TabsTrigger>
-          <TabsTrigger value="drops">
-            <Zap className="w-4 h-4 mr-1.5" />
-            Drops
-          </TabsTrigger>
-          <TabsTrigger value="calendar">
-            <CalendarDays className="w-4 h-4 mr-1.5" />
-            Calendar
-          </TabsTrigger>
-        </TabsList>
+      {wizardOpen ? (
+        <CreativeDropWizard onClose={() => setWizardOpen(false)} />
+      ) : (
+        <>
+          <Tabs defaultValue="schedules" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="schedules">
+                <Clock className="w-4 h-4 mr-1.5" />
+                Schedules
+              </TabsTrigger>
+              <TabsTrigger value="drops">
+                <Zap className="w-4 h-4 mr-1.5" />
+                Drops
+              </TabsTrigger>
+              <TabsTrigger value="calendar">
+                <CalendarDays className="w-4 h-4 mr-1.5" />
+                Calendar
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="schedules" className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={() => setWizardOpen(true)}>
-              <Calendar className="w-4 h-4 mr-2" />
-              Create Schedule
-            </Button>
-          </div>
+            <TabsContent value="schedules" className="space-y-4">
+              <div className="flex justify-end">
+                <Button onClick={() => setWizardOpen(true)}>
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Create Schedule
+                </Button>
+              </div>
 
-          {schedulesLoading ? (
-            <div className="space-y-3">
-              {[1, 2].map(i => (
-                <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
-              ))}
-            </div>
-          ) : schedules.length === 0 ? (
-            <EmptyStateCard
-              heading="No schedules yet"
-              description="Set up your first Creative Drop schedule to automate visual generation for your products."
-              action={{ content: 'Create Schedule', onAction: () => setWizardOpen(true) }}
-              icon={<Calendar className="w-10 h-10 text-muted-foreground" />}
+              {schedulesLoading ? (
+                <div className="space-y-3">
+                  {[1, 2].map(i => (
+                    <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : schedules.length === 0 ? (
+                <EmptyStateCard
+                  heading="No schedules yet"
+                  description="Set up your first Creative Drop schedule to automate visual generation for your products."
+                  action={{ content: 'Create Schedule', onAction: () => setWizardOpen(true) }}
+                  icon={<Calendar className="w-10 h-10 text-muted-foreground" />}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {schedules.map(schedule => (
+                    <DropCard key={schedule.id} type="schedule" schedule={schedule} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="drops" className="space-y-4">
+              {dropsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : drops.length === 0 ? (
+                <EmptyStateCard
+                  heading="No drops yet"
+                  description="Once your schedules run, completed drops will appear here with all generated visuals."
+                  icon={<Zap className="w-10 h-10 text-muted-foreground" />}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {drops.map(drop => (
+                    <DropCard key={drop.id} type="drop" drop={drop} onViewDrop={() => setSelectedDrop(drop)} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="calendar" className="space-y-4">
+              <CalendarView schedules={schedules} drops={drops} />
+            </TabsContent>
+          </Tabs>
+
+          {selectedDrop && (
+            <DropDetailModal
+              open={!!selectedDrop}
+              onClose={() => setSelectedDrop(null)}
+              drop={{
+                ...selectedDrop,
+                images: (selectedDrop.images || []) as { url: string; workflow_name?: string; scene_name?: string; product_title?: string }[],
+              }}
             />
-          ) : (
-            <div className="space-y-3">
-              {schedules.map(schedule => (
-                <DropCard key={schedule.id} type="schedule" schedule={schedule} />
-              ))}
-            </div>
           )}
-        </TabsContent>
-
-        <TabsContent value="drops" className="space-y-4">
-          {dropsLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
-              ))}
-            </div>
-          ) : drops.length === 0 ? (
-            <EmptyStateCard
-              heading="No drops yet"
-              description="Once your schedules run, completed drops will appear here with all generated visuals."
-              icon={<Zap className="w-10 h-10 text-muted-foreground" />}
-            />
-          ) : (
-            <div className="space-y-3">
-              {drops.map(drop => (
-                <DropCard key={drop.id} type="drop" drop={drop} onViewDrop={() => setSelectedDrop(drop)} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="calendar" className="space-y-4">
-          <CalendarView schedules={schedules} drops={drops} />
-        </TabsContent>
-      </Tabs>
-
-      <CreativeDropWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
-
-      {selectedDrop && (
-        <DropDetailModal
-          open={!!selectedDrop}
-          onClose={() => setSelectedDrop(null)}
-          drop={{
-            ...selectedDrop,
-            images: (selectedDrop.images || []) as { url: string; workflow_name?: string; scene_name?: string; product_title?: string }[],
-          }}
-        />
+        </>
       )}
     </PageHeader>
   );
