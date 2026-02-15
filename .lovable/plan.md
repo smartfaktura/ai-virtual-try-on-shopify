@@ -1,61 +1,43 @@
 
-## Fix: Step Numbers Centering and Scroll-to-Bottom Issues
+## Fix: Glitchy Mobile Scrolling in Creative Drop Wizard
 
-### Problems
+### Root Cause
 
-1. **Step numbers not centered on mobile**: Each step item uses `flex-1` which distributes space unevenly. The last step has no connector line after it, so its `flex-1` creates empty space on the right, pushing the whole row left-of-center.
+Two issues are causing the "stuck" scrolling on mobile:
 
-2. **Cannot scroll to the bottom buttons**: The AppShell main content area (`pb-4` on mobile at line 287) combined with the wizard footer (`pt-6 mt-4`) provides barely enough room. The content gets clipped at the bottom, especially on iOS where the browser chrome eats into viewport height.
+1. **`h-screen` (100vh) on iOS is wrong.** On mobile Safari, `100vh` includes the hidden address bar area, making the layout taller than the actual visible viewport. This means the scroll container's height calculation is off, and the bottom content gets clipped behind the browser chrome. The fix is to use `h-dvh` (dynamic viewport height), which adapts to the actual visible area as the address bar shows/hides.
 
----
+2. **Scroll chaining (bounce conflict).** The `main` element has `overflow-y-auto`, creating a nested scroll context inside the page. On iOS, when you reach the top or bottom of this inner scroll container, the browser tries to "chain" the scroll to the outer document body, causing the rubber-band bounce effect to fight with the inner scroll. This creates the glitchy, stuck feeling where it takes multiple swipes to actually scroll. Adding `overscroll-behavior-y: contain` prevents this chaining.
 
 ### Technical Changes
 
-**File: `src/components/app/CreativeDropWizard.tsx`**
+**File: `src/components/app/AppShell.tsx`**
 
-**1. Center step numbers properly on mobile (lines 438-464)**
+**1. Replace `h-screen` with `h-dvh` (line 240)**
 
-Replace the `flex-1` distribution with a `justify-between` layout that centers all 5 circles evenly. Remove `flex-1` from the last step item (which has no connector line and creates the imbalance).
+```
+// Before
+<div className="flex h-screen bg-background">
 
-Change the stepper container from:
-```
-<div className="flex items-center justify-center gap-0">
-  {STEPS.map((s, i) => (
-    <div key={s} className="flex items-center flex-1">
-```
-To:
-```
-<div className="flex items-center justify-center w-full max-w-md mx-auto">
-  {STEPS.map((s, i) => (
-    <div key={s} className={cn("flex items-center", i < STEPS.length - 1 ? "flex-1" : "")}>
+// After
+<div className="flex h-dvh bg-background">
 ```
 
-This ensures the last step (with no trailing connector) doesn't take up extra space, keeping all circles evenly distributed and centered.
+`h-dvh` uses `100dvh` which correctly accounts for iOS Safari's dynamic address bar. Tailwind v3.4+ supports this utility natively.
 
-**2. Add more bottom padding to ensure scroll reaches buttons (line 470)**
+**2. Add `overscroll-behavior-y-contain` to the main scroll container (line 286)**
 
-Change:
 ```
-<div className="py-8 pb-8">
-```
-To:
-```
-<div className="pt-8 pb-4">
-```
+// Before
+<main className="flex-1 overflow-y-auto">
 
-Reduce bottom padding on the content area since the footer already has `pt-6 mt-4`.
-
-**3. Add bottom padding to the footer for mobile breathing room (line 1452)**
-
-Change:
-```
-<div className="pt-6 mt-4 space-y-2 sm:border-t sm:pt-4 sm:mt-0">
-```
-To:
-```
-<div className="pt-6 mt-4 pb-16 space-y-2 sm:border-t sm:pt-4 sm:mt-0 sm:pb-0">
+// After
+<main className="flex-1 overflow-y-auto overscroll-contain">
 ```
 
-The `pb-16` (64px) on mobile ensures the buttons are well above the iOS browser chrome, home indicator, and any floating widgets. On desktop (`sm:pb-0`) it remains clean.
+This tells the browser: "when scroll reaches the boundary of this element, do NOT chain the scroll to the parent." This eliminates the rubber-band bounce conflict that makes scrolling feel stuck.
 
-All changes are in a single file with no new dependencies.
+### Summary
+- 1 file modified: `src/components/app/AppShell.tsx`
+- 2 small class changes, no new dependencies
+- Fixes the glitchy scroll-to-top and scroll-to-bottom behavior on all iOS mobile views, not just the wizard
