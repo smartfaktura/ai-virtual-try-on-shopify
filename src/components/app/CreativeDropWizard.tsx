@@ -743,7 +743,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           )}
 
                           {/* ── Collapsible: Scenes ── */}
-                          {variations.length > 0 && (
+                          {variations.length > 0 && !wf.uses_tryon && (
                             <div className="border-t border-border/50 pt-1">
                               <button
                                 onClick={() => toggleSection(wf.id, 'scenes')}
@@ -818,7 +818,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           )}
 
                           {/* ── Collapsible: Pose / Scene Library ── */}
-                          {showPosePicker && !wf.uses_tryon && (
+                          {showPosePicker && (
                             <div className="border-t border-border/50 pt-1">
                               <button
                                 onClick={() => toggleSection(wf.id, 'poses')}
@@ -1386,10 +1386,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       </div>
                       {/* Detail badges */}
                       <div className="flex flex-wrap gap-1.5 pl-6">
-                        {variations.length > 0 && (
+                        {variations.length > 0 && !wf.uses_tryon && (
                           <Badge variant="secondary" className="text-[10px] rounded-full">{sceneCount}/{variations.length} scenes</Badge>
                         )}
-                        {showPosePicker && !wf.uses_tryon && (
+                        {showPosePicker && (
                           <Badge variant="secondary" className="text-[10px] rounded-full">{poseCount} pose{poseCount !== 1 ? 's' : ''}</Badge>
                         )}
                         {needsModels && (
