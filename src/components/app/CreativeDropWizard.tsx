@@ -236,7 +236,18 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     switch (step) {
       case 0: return name.trim().length > 0;
       case 1: return selectedProductIds.size > 0;
-      case 2: return selectedWorkflowIds.size > 0;
+      case 2: {
+        if (selectedWorkflowIds.size === 0) return false;
+        // Fix #6: Model-required workflows must have at least one model selected
+        for (const wfId of selectedWorkflowIds) {
+          const wf = workflows.find(w => w.id === wfId);
+          const uiConfig = (wf?.generation_config as any)?.ui_config;
+          if (wf?.uses_tryon || uiConfig?.show_model_picker) {
+            if (!workflowModelSelections[wfId]?.length) return false;
+          }
+        }
+        return true;
+      }
       case 3: return imagesPerDrop > 0 && (deliveryMode === 'now' || !!startDate);
       case 4: return true;
       default: return false;
@@ -248,7 +259,19 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     switch (step) {
       case 0: return name.trim().length === 0 ? 'Give your drop a name to continue' : null;
       case 1: return selectedProductIds.size === 0 ? 'Select at least one product' : null;
-      case 2: return selectedWorkflowIds.size === 0 ? 'Select at least one workflow' : null;
+      case 2: {
+        if (selectedWorkflowIds.size === 0) return 'Select at least one workflow';
+        for (const wfId of selectedWorkflowIds) {
+          const wf = workflows.find(w => w.id === wfId);
+          const uiConfig = (wf?.generation_config as any)?.ui_config;
+          if (wf?.uses_tryon || uiConfig?.show_model_picker) {
+            if (!workflowModelSelections[wfId]?.length) {
+              return `"${wf?.name}" requires at least one model`;
+            }
+          }
+        }
+        return null;
+      }
       case 3:
         if (imagesPerDrop <= 0) return 'Choose how many images per drop';
         if (deliveryMode === 'scheduled' && !startDate) return 'Pick a start date';
@@ -277,14 +300,48 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         nextRun = new Date(effectiveStartDate);
       }
 
+      // Known custom_settings -> generate-workflow field mapping
+      const settingsFieldMap: Record<string, string> = {
+        'Mood': 'ugc_mood',
+        'Prop Style': 'prop_style',
+        'Styling': 'styling_notes',
+      };
+
       const sceneConfig: Record<string, any> = {};
       selectedWorkflowIds.forEach(id => {
+        const wf = workflows.find(w => w.id === id);
+        const genConfig = wf?.generation_config as any;
+        const variations: { label: string }[] = genConfig?.variation_strategy?.variations || [];
+
+        // Fix #1: Convert scene labels to numeric variation indices
+        const selectedLabels = Array.from(workflowSceneSelections[id] || []);
+        const selectedVariationIndices = selectedLabels
+          .map(label => variations.findIndex(v => v.label === label))
+          .filter(i => i >= 0);
+
+        // Fix #2: Resolve model IDs to full objects for generation
+        const resolvedModels = (workflowModelSelections[id] || []).map(mId => {
+          const m = allModels.find(am => am.id === mId);
+          return m ? { id: m.id, name: m.name, image_url: m.image_url } : null;
+        }).filter(Boolean);
+
+        // Fix #4: Map custom settings to generate-workflow request field names
+        const rawSettings = workflowCustomSettings[id] || {};
+        const mappedSettings: Record<string, string> = {};
+        for (const [key, value] of Object.entries(rawSettings)) {
+          const mappedKey = settingsFieldMap[key] || key;
+          mappedSettings[mappedKey] = value;
+        }
+
         sceneConfig[id] = {
           aspect_ratio: workflowFormats[id] || '1:1',
-          selected_scenes: Array.from(workflowSceneSelections[id] || []),
-          pose_ids: workflowPoseSelections[id] || [],
-          model_ids: workflowModelSelections[id] || [],
-          custom_settings: workflowCustomSettings[id] || {},
+          selected_scenes: selectedLabels, // keep labels for display
+          selected_variation_indices: selectedVariationIndices, // numeric indices for generation
+          pose_ids: workflowPoseSelections[id] || [], // future: not yet consumed by edge function
+          model_ids: workflowModelSelections[id] || [], // IDs for display
+          models: resolvedModels, // full objects for generation
+          custom_settings: rawSettings, // original for display
+          mapped_settings: mappedSettings, // mapped keys for generation
         };
       });
 
@@ -298,7 +355,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         products_scope: 'selected',
         selected_product_ids: Array.from(selectedProductIds),
         workflow_ids: Array.from(selectedWorkflowIds),
-        model_ids: selectedModelIds,
+        // Fix #5: Aggregate all per-workflow model IDs instead of old empty global array
+        model_ids: Array.from(new Set(
+          Array.from(selectedWorkflowIds).flatMap(id => workflowModelSelections[id] || [])
+        )),
         brand_profile_id: brandProfileId || null,
         images_per_drop: imagesPerDrop,
         estimated_credits: costEstimate.totalCredits,
