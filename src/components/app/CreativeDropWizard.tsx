@@ -37,15 +37,15 @@ interface CreativeDropWizardProps {
 }
 
 const THEMES = [
-  { id: 'spring', label: 'Spring', icon: Flower2, color: 'text-green-600 bg-green-50 border-green-200' },
-  { id: 'summer', label: 'Summer', icon: Sun, color: 'text-amber-600 bg-amber-50 border-amber-200' },
-  { id: 'autumn', label: 'Autumn', icon: Leaf, color: 'text-orange-600 bg-orange-50 border-orange-200' },
-  { id: 'winter', label: 'Winter', icon: Snowflake, color: 'text-blue-600 bg-blue-50 border-blue-200' },
-  { id: 'holiday', label: 'Holiday', icon: Gift, color: 'text-red-600 bg-red-50 border-red-200' },
-  { id: 'black_friday', label: 'Black Friday', icon: ShoppingBag, color: 'text-foreground bg-muted border-border' },
-  { id: 'valentines', label: "Valentine's", icon: Heart, color: 'text-pink-600 bg-pink-50 border-pink-200' },
-  { id: 'back_to_school', label: 'Back to School', icon: GraduationCap, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
-  { id: 'custom', label: 'Custom', icon: Sparkles, color: 'text-primary bg-primary/5 border-primary/20' },
+  { id: 'spring', label: 'Spring', icon: Flower2 },
+  { id: 'summer', label: 'Summer', icon: Sun },
+  { id: 'autumn', label: 'Autumn', icon: Leaf },
+  { id: 'winter', label: 'Winter', icon: Snowflake },
+  { id: 'holiday', label: 'Holiday', icon: Gift },
+  { id: 'black_friday', label: 'Black Friday', icon: ShoppingBag },
+  { id: 'valentines', label: "Valentine's", icon: Heart },
+  { id: 'back_to_school', label: 'Back to School', icon: GraduationCap },
+  { id: 'custom', label: 'Custom', icon: Sparkles },
 ];
 
 const STEPS = ['Theme', 'Products', 'Workflows', 'Schedule', 'Review'];
@@ -269,12 +269,12 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                     const Icon = t.icon;
                     return (
                       <button
-                        key={t.id}
+                         key={t.id}
                         onClick={() => setTheme(t.id)}
                         className={cn(
-                          'flex items-center gap-2.5 px-4 py-3.5 rounded-2xl border text-sm font-medium transition-all',
+                          'flex items-center gap-2.5 px-4 py-3.5 rounded-2xl border-2 text-sm font-medium transition-all',
                           theme === t.id
-                            ? cn(t.color, 'ring-2 ring-offset-2 ring-primary/30 shadow-sm')
+                            ? 'border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm text-foreground'
                             : 'border-border hover:border-primary/30 hover:shadow-sm text-foreground bg-card'
                         )}
                       >
@@ -293,9 +293,16 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                     <SelectValue placeholder="Select brand profile (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    {brandProfiles.map(bp => (
-                      <SelectItem key={bp.id} value={bp.id}>{bp.name}</SelectItem>
-                    ))}
+                    {brandProfiles.length === 0 ? (
+                      <div className="px-3 py-4 text-center">
+                        <p className="text-xs text-muted-foreground mb-1">No profiles yet</p>
+                        <a href="/app/brand-profiles" className="text-xs text-primary hover:underline">Create one →</a>
+                      </div>
+                    ) : (
+                      brandProfiles.map(bp => (
+                        <SelectItem key={bp.id} value={bp.id}>{bp.name}</SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -327,6 +334,28 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
               </div>
               <div className="flex items-center gap-3">
                 <Badge variant="secondary" className="rounded-full px-3 py-1">{selectedProductIds.size} selected</Badge>
+                {filteredProducts.length > 0 && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7 px-2"
+                      onClick={() => setSelectedProductIds(new Set(filteredProducts.map(p => p.id)))}
+                    >
+                      Select All
+                    </Button>
+                    {selectedProductIds.size > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-7 px-2 text-muted-foreground"
+                        onClick={() => setSelectedProductIds(new Set())}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </>
+                )}
               </div>
               <div className="grid grid-cols-3 gap-3 max-h-[320px] overflow-y-auto pr-1">
                 {filteredProducts.map(product => {
@@ -696,6 +725,20 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                     <div>
                       <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Products</p>
                       <p className="font-semibold">{selectedProductIds.size} selected</p>
+                      {products.filter(p => selectedProductIds.has(p.id)).length > 0 && (
+                        <div className="flex gap-1.5 mt-2 flex-wrap">
+                          {products.filter(p => selectedProductIds.has(p.id)).slice(0, 6).map(p => (
+                            <div key={p.id} className="w-8 h-8 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                              <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                          {selectedProductIds.size > 6 && (
+                            <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center flex-shrink-0 text-[10px] font-medium text-muted-foreground">
+                              +{selectedProductIds.size - 6}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Images Per Drop</p>
