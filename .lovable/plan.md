@@ -1,180 +1,155 @@
 
 
-## Comprehensive Audit: Creative Drops Flow -- Issues & Fixes
+## Audit: Creative Drops -- Remaining Issues Before Backend Build
 
-This plan covers security gaps, data integrity problems, missing backend logic, and error handling weaknesses across the full Creative Drops pipeline.
+After tracing the full flow from wizard save to `trigger-creative-drop` to `generate-workflow`, here are the remaining issues that will cause incorrect or broken generation results.
 
 ---
 
-### 1. SECURITY: `creative_drops` has no INSERT policy
+### Issue 1: Theme Does Nothing
 
-The `creative_drops` table has RLS enabled with SELECT and UPDATE policies, but **no INSERT policy**. When the backend trigger service (which doesn't exist yet) tries to create drop records, it will fail unless using the service role key. More critically, if any frontend code ever attempts to insert a drop, it will silently fail.
+The wizard collects a "Theme" (Summer, Winter, Holiday, etc.) and "Special Instructions" (themeNotes) in Step 1. These are saved to `creative_schedules` as `theme` and `theme_notes` columns. However:
 
-**Fix**: Add an INSERT policy for the service role (or for authenticated users if drops can be user-initiated), and also add a DELETE policy for cleanup:
+- `trigger-creative-drop` never reads `schedule.theme` or `schedule.theme_notes`
+- `generate-workflow` has no `theme` or `theme_notes` field in its request interface
+- Neither value is ever injected into any prompt
 
-```sql
-CREATE POLICY "Service role can insert drops"
-  ON public.creative_drops FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = user_id);
+**Result**: The theme selection is purely decorative. Selecting "Summer" vs "Winter" produces identical generation results.
 
-CREATE POLICY "Users can delete their own drops"
-  ON public.creative_drops FOR DELETE
-  USING (auth.uid() = user_id);
+**Fix**: In `trigger-creative-drop`, inject the theme and notes into each job payload. In `generate-workflow`, add a `SEASONAL DIRECTION` block to the prompt when present:
+
+```
+SEASONAL DIRECTION: Summer
+Generate imagery with a warm, sun-drenched summer aesthetic.
+Additional notes: Bright outdoor lighting, tropical vibes
 ```
 
 ---
 
-### 2. SECURITY: `creative_schedules` UPDATE policy has no WITH CHECK
+### Issue 2: Brand Profile ID Is Passed but Never Resolved
 
-The UPDATE policy uses `USING (auth.uid() = user_id)` but has no `WITH CHECK` clause. This means a user could theoretically update the `user_id` column to another user's ID, transferring ownership. This is a data integrity risk.
+The trigger function passes `brand_profile_id` (a UUID string) in each job payload. But `generate-workflow` expects a full `brand_profile` **object** with fields like `tone`, `color_palette`, `brand_keywords`, `do_not_rules`, etc. The function uses these fields to build the `BRAND GUIDELINES` section of the prompt.
 
-**Fix**: Add `WITH CHECK (auth.uid() = user_id)` to the update policy:
+Since the trigger only sends an ID, `generate-workflow` receives no brand data. The `body.brand_profile` will be `undefined`, and all brand styling is silently skipped.
 
-```sql
-DROP POLICY "Users can update their own schedules" ON public.creative_schedules;
-CREATE POLICY "Users can update their own schedules"
-  ON public.creative_schedules FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-```
+**Result**: Selecting a brand profile in the wizard has zero effect on generated images.
 
-Same fix for `creative_drops` UPDATE policy.
-
----
-
-### 3. DATA: "Generate Now" saves schedule but never triggers generation
-
-When `deliveryMode === 'now'`, the wizard saves a `creative_schedules` row with `frequency: 'one-time'` and `start_date: now()`, then shows a success toast saying "Drop created -- generating now!" But **no code actually triggers generation**. There is no edge function that reads the schedule, creates a `creative_drops` record, enqueues generation jobs, or dispatches them. The user sees a success message but nothing happens.
-
-**Fix**: Create a `trigger-creative-drop` edge function that:
-1. Reads the schedule config
-2. Creates a `creative_drops` record
-3. For each product x workflow combination, enqueues generation jobs via `enqueue_generation` RPC
-4. Updates the schedule's `next_run_at` (or marks as completed for one-time)
-
-Wire the wizard to call this function after saving when `deliveryMode === 'now'`.
-
----
-
-### 4. DATA: `model_ids` column is `UUID[]` but wizard saves string mock IDs
-
-The `creative_schedules.model_ids` column is typed as `UUID[]` in the database. But mock model IDs like `"model_1"`, `"model_2"` from `mockModels` are NOT valid UUIDs. Inserting them will cause a database error:
-
-```
-invalid input syntax for type uuid: "model_1"
-```
-
-Custom models from the `custom_models` table have proper UUIDs, but mock models do not.
-
-**Fix**: Either change the column type to `TEXT[]`, or filter out non-UUID mock model IDs before saving. Since mock models are placeholder data, the cleanest fix is to change the column to `TEXT[]` so it accepts both mock IDs (for development) and real UUIDs.
-
----
-
-### 5. DATA: `selected_product_ids` column is `UUID[]` but wizard sends strings
-
-Same issue as above -- the column type is `UUID[]`. If product IDs from the database are proper UUIDs this works, but the type mismatch with the `Set<string>` conversion (`Array.from(selectedProductIds)`) should be verified. This is likely fine since product IDs come from the `user_products` table which uses UUID primary keys, but worth noting.
-
----
-
-### 6. LOGIC: Cost estimate is per-workflow but doesn't account for per-product multiplication
-
-The credit estimate shows `imagesPerDrop x workflows`, but the actual generation will run each workflow for EACH selected product. If a user selects 5 products and 3 workflows with 25 images each, the actual cost is `5 x 3 x 25 x costPerImage`, not `3 x 25 x costPerImage`.
-
-The current estimate dramatically understates the real cost, which will cause credit balance surprises.
-
-**Fix**: Multiply by product count in `calculateDropCredits`, or adjust the wizard to clarify that `imagesPerDrop` means "per product per workflow". Update the calculator:
+**Fix**: In `trigger-creative-drop`, fetch the brand profile from the database and pass the full object:
 
 ```typescript
-export function calculateDropCredits(
-  workflows: WorkflowCostConfig[],
-  imagesPerDrop: number,
-  frequency: string,
-  productCount: number = 1  // NEW parameter
-): DropCostEstimate {
-  // Each workflow runs for each product
-  const breakdown = workflows.map(wf => ({
-    ...wf,
-    imageCount: imagesPerDrop * productCount,
-    subtotal: imagesPerDrop * productCount * getCostPerImage(...),
-  }));
+// Before the job loop
+let brandProfile = null;
+if (schedule.brand_profile_id) {
+  const { data } = await supabase
+    .from('brand_profiles')
+    .select('*')
+    .eq('id', schedule.brand_profile_id)
+    .single();
+  if (data) {
+    brandProfile = {
+      tone: data.tone,
+      color_temperature: data.color_temperature,
+      color_palette: data.color_palette,
+      brand_keywords: data.brand_keywords,
+      do_not_rules: data.do_not_rules,
+      target_audience: data.target_audience,
+    };
+  }
 }
+// Then in each payload:
+payload.brand_profile = brandProfile;
 ```
 
 ---
 
-### 7. LOGIC: `hasCustomScene` is always `false`
+### Issue 3: Product Data Is Not Resolved in Trigger
 
-In the wizard (line 219), `hasCustomScene` is hardcoded to `false` for every workflow. But users can select custom scenes from their scene library. If a user has custom scenes selected, the cost should be 15 credits (model + scene) instead of 12. This undercharges users.
+The trigger sends `product_id` (a UUID) in each job payload. But `generate-workflow` expects a full `product` object with `title`, `productType`, `description`, `dimensions`, and `imageUrl` (as base64). The trigger never fetches product data from `user_products`.
 
-**Fix**: Set `hasCustomScene` based on whether any selected scenes in `workflowSceneSelections[w.id]` come from custom scenes (vs. built-in workflow variations).
+**Result**: `generate-workflow` will reject the request with "Missing required fields: workflow_id and product" because `body.product` is undefined.
 
----
-
-### 8. ERROR: Wizard doesn't handle save errors gracefully
-
-The `saveMutation.onError` callback (line 386) shows a generic "Failed to create schedule" toast. It doesn't show the actual error message, so if the UUID type mismatch (issue #4) causes a DB error, the user has no idea what went wrong.
-
-**Fix**: Pass the error message to the toast:
+**Fix**: Fetch all selected products at the start of the trigger, then build the full product object for each job:
 
 ```typescript
-onError: (error: Error) => toast.error(
-  editingScheduleId 
-    ? `Failed to update: ${error.message}` 
-    : `Failed to create: ${error.message}`
-),
+const { data: productRows } = await supabase
+  .from('user_products')
+  .select('id, title, product_type, description, dimensions, image_url')
+  .in('id', productIds);
+
+// In the loop:
+const productData = productRows.find(p => p.id === productId);
+payload.product = {
+  title: productData.title,
+  productType: productData.product_type,
+  description: productData.description || '',
+  dimensions: productData.dimensions || undefined,
+  imageUrl: productData.image_url, // URL, not base64 -- see Issue 4
+};
 ```
 
 ---
 
-### 9. LOGIC: No validation that 0 scenes = "all scenes"
+### Issue 4: generate-workflow Expects Base64 Image, Trigger Sends URL
 
-When a user selects a workflow but doesn't expand the Scenes section and leaves 0 scenes selected, the `selected_variation_indices` array will be empty (`[]`). In `generate-workflow`, empty `selected_variations` means "generate ALL variations" (line 501-506). This is undocumented behavior -- the user thinks they selected nothing, but will get everything, which costs more credits than expected.
+The individual generation flows (from the Generate page) convert product images to base64 via `convertImageToBase64()` before sending. But the trigger function would send the raw storage URL from `user_products.image_url`.
 
-**Fix**: Either auto-select all scenes when a workflow is first selected (so the UI matches the behavior), or require at least 1 scene to be selected (add to validation in `canNext()`). The clearest UX is to auto-select all scenes on first selection.
+The AI gateway accepts both base64 and URLs in the `image_url` field, so this may work. However, if the storage URL requires authentication or is a private bucket, the AI gateway won't be able to access it.
+
+**Fix**: Use the public URL directly (Supabase storage public URLs work). Add a comment noting this dependency. If the `product-images` bucket is private, the trigger must generate a signed URL or convert to base64 server-side.
 
 ---
 
-### 10. MISSING: No drop trigger/runner edge function exists
+### Issue 5: `imagesPerDrop` Treated as Variation Count, Not Image Count
 
-The entire backend pipeline to execute a Creative Drop is missing:
-- No function reads `creative_schedules` and creates `creative_drops` records
-- No function dispatches per-product, per-workflow generation jobs
-- No function handles scheduled recurring runs
-- No cron job or scheduler triggers drops at `next_run_at`
+The trigger sets `imageCount: imagesPerDrop` (e.g., 25) for each job. But `generate-workflow` has a hard cap of `maxImages = 4` (line 509) and slices variations to that limit. So even if the user requests 25 images per workflow, they get at most 4 (one per variation, max 4 variations).
 
-This needs to be built before Creative Drops actually work.
+The wizard lets users pick 10, 25, 50, or 100 images per workflow, but the backend can only produce up to 4 per call.
+
+**Result**: Users are charged for 25 images but receive 4. The credit calculator also overcharges.
+
+**Fix**: Either:
+- (a) The trigger should split the request into multiple batched calls of 4, or
+- (b) Clarify in the UI that "images per workflow" actually means "variations to generate" (max based on available variations), or
+- (c) Remove the `maxImages = 4` cap in `generate-workflow` and allow generating more (but this increases AI gateway costs and timeout risk).
+
+The most honest fix is (b): change the "Images Per Workflow" selector to show the actual variation count for each workflow, and let users pick which variations, not a raw number. The credit calculator should use the actual variation count, not `imagesPerDrop`.
+
+---
+
+### Issue 6: No `do_not_rules` / Negatives Injection
+
+Even when a brand profile is properly resolved, the `do_not_rules` array (brand negatives like "no neon colors", "no cluttered backgrounds") is available in the brand profile object but is never injected into the generation prompt's negative/avoid section. The `buildVariationPrompt` function only uses `config.negative_prompt_additions` from the workflow config.
+
+**Fix**: Merge brand `do_not_rules` into the negative prompt in `buildVariationPrompt`:
+
+```typescript
+const allNegatives = [
+  config.negative_prompt_additions,
+  ...(brandProfile?.do_not_rules || []),
+].filter(Boolean).join('. ');
+
+// In prompt:
+`AVOID: ${allNegatives}`
+```
 
 ---
 
 ### Summary of Changes
 
-**Database migration:**
-- Add INSERT + DELETE policies on `creative_drops`
-- Add WITH CHECK to UPDATE policies on both tables
-- Change `model_ids` column type from `UUID[]` to `TEXT[]`
+**File: `supabase/functions/trigger-creative-drop/index.ts`**
+- Fetch and resolve brand profile from DB (full object, not just ID)
+- Fetch and resolve product data from DB (title, type, description, image_url)
+- Inject `theme` and `theme_notes` into each job payload
+- Fix `imageCount` to match actual variation count, not `imagesPerDrop`
 
-**File: `src/lib/dropCreditCalculator.ts`**
-- Add `productCount` parameter
-- Multiply image counts by product count
+**File: `supabase/functions/generate-workflow/index.ts`**
+- Add `theme` and `theme_notes` to the `WorkflowRequest` interface
+- Add a `SEASONAL DIRECTION` prompt block when theme is present
+- Merge `brand_profile.do_not_rules` into negative prompts
 
 **File: `src/components/app/CreativeDropWizard.tsx`**
-- Pass `selectedProductIds.size` to `calculateDropCredits`
-- Auto-select all scenes when a workflow is first selected
-- Improve error message in `onError` handler
-- Add post-save trigger call for "Generate Now" mode
+- Update the "Images Per Workflow" UI to clarify it represents variation/scene selections, not a raw image count (or keep as-is and handle batching server-side)
 
-**New edge function: `supabase/functions/trigger-creative-drop/index.ts`**
-- Accept a schedule ID
-- Create a `creative_drops` record
-- For each product x workflow, enqueue generation jobs
-- Handle credit pre-validation
-- Update schedule `next_run_at`
-
-**Priority order:**
-1. Database security fixes (policies, column types) -- critical
-2. Credit calculation fix (product count multiplication) -- high, prevents incorrect charges
-3. Scene auto-selection -- medium, prevents unexpected behavior
-4. Error handling improvements -- medium
-5. Trigger edge function -- high, but this is a separate feature buildout
+**File: `src/lib/dropCreditCalculator.ts`**
+- Align cost calculation with actual generation capacity (variation count, not arbitrary image count)
 
