@@ -1,180 +1,61 @@
 
 
-## Creative Drops Page -- Final UI Polish and Edit Flow
+## Creative Drops -- Rich Onboarding Empty State
 
-### 1. Edit Schedule Flow (Currently Missing)
-
-The "Edit" option in the dropdown is disabled with "(coming soon)". This needs to be fully functional before the engine is built.
-
-**Implementation:**
-- Add an `onEdit` callback prop to `DropCard` alongside `onDuplicate`
-- In `CreativeDrops.tsx`, `handleEdit` opens the wizard with `initialData` from the schedule plus a new `editingScheduleId` field
-- `CreativeDropWizard` accepts an optional `editingScheduleId` prop. When present, the save mutation uses `.update()` instead of `.insert()`, and the final button reads "Save Changes" instead of "Create Schedule"
-- The wizard header changes to "Edit Schedule" when editing
+Replace the plain "No schedules yet" card with an engaging, informative onboarding section that explains what Creative Drops is, why it's valuable, and guides the user to create their first schedule.
 
 ---
 
-### 2. Improved Stats Summary Bar
+### What Changes
 
-Current stats are plain chips that all look the same. Improve with:
-- Better visual hierarchy: larger numbers, smaller labels stacked vertically
-- Add a "generating" count when any drops are in-progress
-- Show next scheduled run time across all active schedules
-- Wrap in a subtle card for visual grouping
+**When user has zero schedules**, instead of the current basic empty state card, show a full onboarding hero section with:
 
----
+1. **Hero headline and subtitle** -- "Automate Your Visual Content" with a short value prop explaining recurring, hands-off image generation.
 
-### 3. Generation Progress -- Time Estimate and ETA
+2. **Three animated step cards** -- Horizontal row (stacks on mobile) showing the 3-step process:
+   - Step 1: "Pick Your Products" -- Select which products get fresh visuals
+   - Step 2: "Choose Workflows" -- Pick generation styles (product listing, lifestyle, UGC, etc.)
+   - Step 3: "Set & Forget" -- Schedule frequency, and images arrive automatically
 
-When a drop has status "generating", users need to know estimated time remaining.
+   Each card has a numbered circle, icon, title, and short description. Cards use a subtle entrance animation (fade-in + slide-up with staggered delay via CSS).
 
-**Implementation:**
-- Calculate estimated time based on `total_images` count (using ~8 seconds per standard image as a rough baseline)
-- Show "~X min remaining" on generating drop cards
-- Show a more detailed progress line: "8 of 25 images -- ~2 min remaining"
-- Use `created_at` timestamp to calculate elapsed time and derive ETA
+3. **Benefit chips** -- A row of 3-4 small benefit badges below the steps: "Save 10+ hours/month", "Always-fresh content", "Multi-platform formats", "Brand-consistent"
 
----
+4. **Primary CTA** -- A prominent "Create Your First Schedule" button that opens the wizard.
 
-### 4. Schedule Card -- Remove Stale Theme Badge
-
-From the screenshot, the card still shows a "summer" theme badge next to the name. This was supposed to be removed in the previous round but appears to still be present. Ensure no theme badge renders on schedule cards.
-
----
-
-### 5. Schedule Card -- Show Workflow Names
-
-Currently shows "1 workflow" as a count. Replace with actual workflow names (truncated) so users know what content types are configured, e.g., "Product Listing Set" instead of "1 workflow".
-
-**Implementation:**
-- Pass workflow data to `DropCard` or resolve workflow names from IDs
-- Show up to 2 workflow names with "+N more" overflow
-
----
-
-### 6. Schedule Card -- Show Next Run as Prominent Info
-
-For scheduled (non-one-time) schedules, the next run time should be more visible -- currently it's a small relative time text that's easy to miss.
-
-**Fix:** Move next run info to the subtitle line as "Next: Mar 15, 2026" with a clock icon.
-
----
-
-### 7. Drop Card -- Elapsed Time for Active Generation
-
-For "generating" status drops, show how long generation has been running: "Started 3 min ago" using `created_at`.
-
----
-
-### 8. Overall Page Header -- Cleaner Layout
-
-- Stats bar should only show when there's meaningful data (not all zeros)
-- Add a subtle description under each stat for context
-- The "Create Schedule" button should be more prominent on the page level, not just inside the Schedules tab
+5. **The stats bar, tabs, and "Create Schedule" button inside the tab are hidden** when there are zero schedules AND zero drops -- the onboarding section replaces the entire tab area to avoid clutter.
 
 ---
 
 ### Technical Details
 
-**Files modified:**
+**File: `src/pages/CreativeDrops.tsx`**
 
-| File | Changes |
-|------|---------|
-| `src/components/app/CreativeDropWizard.tsx` | Accept `editingScheduleId` prop; use update mutation when editing; change header/button text |
-| `src/components/app/DropCard.tsx` | Add `onEdit` callback; remove any remaining theme badges; show workflow names; improve next run display; add time estimate for generating drops |
-| `src/pages/CreativeDrops.tsx` | Add `handleEdit` function; improve stats bar design; pass workflow names to DropCard; better empty/zero state for stats |
+- Add a new inline `CreativeDropsOnboarding` component (or section) rendered conditionally when `schedules.length === 0 && drops.length === 0`
+- When this condition is true, skip rendering the stats bar and Tabs entirely; show only the onboarding section
+- The onboarding section uses existing UI primitives (Card, Button, Badge) with Tailwind animations
+- CTA calls `openWizard()` to open the schedule creation wizard
+- Once the user creates their first schedule, the onboarding disappears and the normal tabs/stats view takes over
 
-**Edit flow -- Wizard changes:**
+**Animation approach:**
+- CSS keyframe animation using Tailwind's `animate-in` utilities already available from `tailwindcss-animate`
+- Each step card gets a staggered `animation-delay` via inline style (0ms, 150ms, 300ms)
+- Uses `fade-in-0 slide-in-from-bottom-4` classes from the existing tailwindcss-animate setup
 
-```typescript
-// New prop
-interface CreativeDropWizardProps {
-  onClose: () => void;
-  initialData?: CreativeDropWizardInitialData;
-  editingScheduleId?: string; // NEW
-}
-
-// Save mutation changes
-const saveMutation = useMutation({
-  mutationFn: async () => {
-    const payload = { /* same fields */ };
-    if (editingScheduleId) {
-      const { error } = await supabase
-        .from('creative_schedules')
-        .update(payload)
-        .eq('id', editingScheduleId);
-      if (error) throw error;
-    } else {
-      const { error } = await supabase
-        .from('creative_schedules')
-        .insert({ ...payload, user_id: user.id });
-      if (error) throw error;
-    }
-  },
-  onSuccess: () => {
-    toast.success(editingScheduleId ? 'Schedule updated' : 'Schedule created');
-    onClose();
-  },
-});
+**Step card structure:**
+```
++---------------------------------------+
+|  (1)  Package icon                    |
+|  Pick Your Products                   |
+|  Select which products get            |
+|  fresh visuals each drop.             |
++---------------------------------------+
 ```
 
-**Edit handler in CreativeDrops.tsx:**
+**Layout:**
+- Full-width section with centered content, max-w-3xl
+- Step cards in a `grid grid-cols-1 sm:grid-cols-3 gap-4`
+- Benefit badges in a `flex flex-wrap justify-center gap-2`
+- CTA button large size, centered
 
-```typescript
-const handleEdit = (schedule: CreativeSchedule) => {
-  setWizardInitialData({
-    name: schedule.name,
-    theme: schedule.theme,
-    themeNotes: schedule.theme_notes,
-    brandProfileId: schedule.brand_profile_id || '',
-    selectedProductIds: schedule.selected_product_ids || [],
-    selectedWorkflowIds: schedule.workflow_ids || [],
-    selectedModelIds: schedule.model_ids || [],
-    workflowFormats: /* extract from scene_config */,
-    deliveryMode: schedule.frequency === 'one-time' ? 'now' : 'scheduled',
-    frequency: schedule.frequency === 'one-time' ? 'monthly' : schedule.frequency,
-    imagesPerDrop: schedule.images_per_drop,
-    includeFreestyle: schedule.include_freestyle || false,
-    freestylePrompts: schedule.freestyle_prompts || [],
-  });
-  setEditingScheduleId(schedule.id);
-  setWizardOpen(true);
-};
-```
-
-**Time estimate for generating drops:**
-
-```typescript
-const SECONDS_PER_IMAGE = 8;
-const elapsedMs = Date.now() - new Date(drop.created_at).getTime();
-const estimatedTotalMs = targetImages * SECONDS_PER_IMAGE * 1000;
-const remainingMs = Math.max(0, estimatedTotalMs - elapsedMs);
-const remainingMin = Math.ceil(remainingMs / 60000);
-// Display: "~2 min remaining" or "Finishing up..."
-```
-
-**Improved stats bar:**
-
-```typescript
-// Only show stats when there's at least one schedule
-// Show "next run" across all schedules
-const nextRun = schedules
-  .filter(s => s.active && s.next_run_at)
-  .sort((a, b) => new Date(a.next_run_at!).getTime() - new Date(b.next_run_at!).getTime())[0];
-
-const generatingCount = drops.filter(d => d.status === 'generating').length;
-```
-
-**DropCard workflow names:**
-
-```typescript
-// New prop on DropCard
-interface ScheduleCardProps {
-  type: 'schedule';
-  schedule: CreativeSchedule;
-  onDuplicate?: (schedule: CreativeSchedule) => void;
-  onEdit?: (schedule: CreativeSchedule) => void; // NEW
-  workflowNames?: string[]; // NEW - resolved names
-}
-```
-
+**No new files created** -- everything is added inline within `CreativeDrops.tsx` since it's page-specific and self-contained.
