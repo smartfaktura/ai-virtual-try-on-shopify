@@ -1439,7 +1439,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       </div>
 
       {/* Footer — pill buttons + branding */}
-      <div className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-8 z-10 sm:static sm:pb-0">
+      <div className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-[env(safe-area-inset-bottom,24px)] z-50 sm:static sm:pb-0 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
         {validationHint && (
           <p className="text-[11px] text-destructive animate-fade-in text-center sm:hidden">{validationHint}</p>
         )}
