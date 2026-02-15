@@ -12,7 +12,7 @@ export function PageHeader({ title, subtitle, backAction, children }: PageHeader
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
           {backAction && (
             <Button variant="ghost" size="sm" onClick={backAction.onAction} className="gap-1.5 self-start">
               <ArrowLeft className="w-4 h-4" />
