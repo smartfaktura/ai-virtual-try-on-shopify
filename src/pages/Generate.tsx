@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
 import { useQuery } from '@tanstack/react-query';
-import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone } from 'lucide-react';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone, Layers } from 'lucide-react';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -69,8 +69,19 @@ import type { BrandProfile } from '@/pages/BrandProfiles';
 import type { Tables } from '@/integrations/supabase/types';
 import { TryOnUploadGuide } from '@/components/app/TryOnUploadGuide';
 import { FramingSelector } from '@/components/app/FramingSelector';
+import { Textarea } from '@/components/ui/textarea';
 import { detectDefaultFraming } from '@/lib/framingUtils';
 type UserProduct = Tables<'user_products'>;
+
+const FLAT_LAY_AESTHETICS = [
+  { id: 'minimal', label: 'Minimal', hint: 'clean, few props, whitespace' },
+  { id: 'botanical', label: 'Botanical', hint: 'dried flowers, eucalyptus, greenery' },
+  { id: 'coffee-books', label: 'Coffee & Books', hint: 'coffee cup, open book, reading glasses' },
+  { id: 'travel', label: 'Travel', hint: 'passport, sunglasses, map, boarding pass' },
+  { id: 'beauty', label: 'Beauty', hint: 'makeup brushes, lipstick, mirror, perfume' },
+  { id: 'cozy', label: 'Cozy', hint: 'knit blanket, candle, warm tones' },
+  { id: 'seasonal', label: 'Seasonal', hint: 'seasonal elements matching current time of year' },
+];
 
 type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
@@ -206,6 +217,13 @@ export default function Generate() {
   const [productAngle, setProductAngle] = useState<'front' | 'front-side' | 'front-back' | 'all'>('front');
   const [sceneFilterCategory, setSceneFilterCategory] = useState<string>('all');
   const [mirrorSettingsPhase, setMirrorSettingsPhase] = useState<'scenes' | 'final'>('scenes');
+
+  // Flat Lay Set detection and state
+  const isFlatLay = activeWorkflow?.name === 'Flat Lay Set';
+  const [flatLayPhase, setFlatLayPhase] = useState<'surfaces' | 'details'>('surfaces');
+  const [stylingNotes, setStylingNotes] = useState('');
+  const [selectedAesthetics, setSelectedAesthetics] = useState<string[]>([]);
+  const [selectedFlatLayProductIds, setSelectedFlatLayProductIds] = useState<Set<string>>(new Set());
 
   // Mirror Selfie detection
   const isMirrorSelfie = activeWorkflow?.name === 'Mirror Selfie Set';
@@ -374,7 +392,10 @@ export default function Generate() {
   };
 
   const handleBrandProfileContinue = () => {
-    if (activeWorkflow?.uses_tryon || uiConfig?.show_model_picker) {
+    if (isFlatLay) {
+      setFlatLayPhase('surfaces');
+      setCurrentStep('settings');
+    } else if (activeWorkflow?.uses_tryon || uiConfig?.show_model_picker) {
       setCurrentStep('model');
     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
       setCurrentStep('settings');
@@ -499,6 +520,19 @@ export default function Generate() {
       needsModel ? convertImageToBase64(selectedModel!.previewUrl) : Promise.resolve(undefined),
     ]);
 
+    // Build styling notes for flat lay
+    const flatLayStylingNotes = isFlatLay ? [
+      ...selectedAesthetics.map(id => FLAT_LAY_AESTHETICS.find(a => a.id === id)?.hint).filter(Boolean),
+      stylingNotes,
+    ].filter(Boolean).join(', ') : undefined;
+
+    // Build additional products array for flat lay multi-product
+    const additionalProducts = isFlatLay && selectedFlatLayProductIds.size > 1
+      ? (userProducts.length > 0 ? userProducts : []).filter(up => selectedFlatLayProductIds.has(up.id) && up.id !== selectedProduct?.id).map(up => ({
+          title: up.title, productType: up.product_type, description: up.description, imageUrl: up.image_url,
+        }))
+      : undefined;
+
     const payload: Record<string, unknown> = {
       workflow_id: activeWorkflow!.id,
       product: { ...productData, imageUrl: base64Image },
@@ -514,6 +548,8 @@ export default function Generate() {
       product_angles: productAngle !== 'front' ? productAngle : undefined,
       quality,
       framing: framing || undefined,
+      styling_notes: flatLayStylingNotes || undefined,
+      additional_products: additionalProducts,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -688,6 +724,12 @@ export default function Generate() {
   const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 
   const getStepNumber = () => {
+    if (isFlatLay) {
+      if (currentStep === 'settings' && flatLayPhase === 'surfaces') return 3;
+      if (currentStep === 'settings' && flatLayPhase === 'details') return 4;
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, generating: 5, results: 5 };
+      return map[currentStep] || 1;
+    }
     if (isMirrorSelfie) {
       if (currentStep === 'settings' && mirrorSettingsPhase === 'scenes') {
         return 2;
@@ -715,6 +757,15 @@ export default function Generate() {
   };
 
   const getSteps = () => {
+    if (isFlatLay) {
+      return [
+        { name: sourceType === 'scratch' ? 'Source' : 'Product(s)' },
+        { name: 'Brand' },
+        { name: 'Surfaces' },
+        { name: 'Details' },
+        { name: 'Results' },
+      ];
+    }
     if (isMirrorSelfie) {
       return [
         { name: sourceType === 'scratch' ? 'Source' : 'Product' },
@@ -935,11 +986,14 @@ export default function Generate() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base font-semibold">
-                   {isMirrorSelfie ? 'Select Product(s) for Mirror Selfie'
+                   {isFlatLay ? 'Select Products for Flat Lay'
+                     : isMirrorSelfie ? 'Select Product(s) for Mirror Selfie'
                      : activeWorkflow?.uses_tryon ? 'Select a Clothing Item' : 'Select Product(s)'}
                  </h2>
                  <p className="text-sm text-muted-foreground">
-                   {isMirrorSelfie
+                   {isFlatLay
+                     ? 'Select 1–5 products to arrange together in your flat lay composition'
+                     : isMirrorSelfie
                      ? 'Choose the product(s) your model will wear or hold in the mirror selfie'
                      : activeWorkflow?.uses_tryon
                      ? 'Choose the clothing item you want to try on a model.'
@@ -1025,6 +1079,20 @@ export default function Generate() {
                     : mockProducts;
                   const selected = mappedProducts.filter(p => selectedProductIds.has(p.id));
                   
+                  // Flat Lay: store all selected products and go to brand/surfaces
+                  if (isFlatLay) {
+                    setSelectedFlatLayProductIds(new Set(selected.map(p => p.id)));
+                    setSelectedProduct(selected[0]);
+                    if (selected[0].images.length > 0) setSelectedSourceImages(new Set([selected[0].images[0].id]));
+                    if (brandProfiles.length > 0) {
+                      setCurrentStep('brand-profile');
+                    } else {
+                      setFlatLayPhase('surfaces');
+                      setCurrentStep('settings');
+                    }
+                    return;
+                  }
+                  
                   // Mirror Selfie: always go to scenes, even with multiple products
                   if (isMirrorSelfie) {
                     setSelectedProduct(selected[0]);
@@ -1054,7 +1122,7 @@ export default function Generate() {
                   } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
                 }
               }}>
-                {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? 'Continue' : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
+                {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? 'Continue' : isFlatLay ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
               </Button>
             </div>
           </CardContent></Card>
@@ -1460,7 +1528,7 @@ export default function Generate() {
         {hasWorkflowConfig && currentStep === 'settings' && generationMode !== 'virtual-try-on' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
             {/* Product summary — hidden in mirror selfie final phase */}
-            {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && (
+            {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
             <Card><CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">{sourceType === 'scratch' ? 'Uploaded Image' : 'Selected Product'}</span>
@@ -1491,15 +1559,21 @@ export default function Generate() {
             )}
 
             {/* Variation Strategy Preview — hidden in mirror selfie final phase */}
-            {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && (
+            {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
             <Card><CardContent className="p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-semibold">
-                      {variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
+                      {isFlatLay ? 'Select Your Surfaces' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
                     </h3>
-                    {variationStrategy?.type === 'scene' && activeWorkflow?.name !== 'Mirror Selfie Set' && (
+                    {isFlatLay && (
+                      <>
+                        <Badge variant="secondary" className="text-[10px]"><Layers className="w-3 h-3 mr-1" />Flat Lay</Badge>
+                        <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Surfaces</Badge>
+                      </>
+                    )}
+                    {variationStrategy?.type === 'scene' && !isFlatLay && activeWorkflow?.name !== 'Mirror Selfie Set' && (
                       <>
                         <Badge variant="secondary" className="text-[10px]"><Ban className="w-3 h-3 mr-1" />No People</Badge>
                         <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
@@ -1513,7 +1587,8 @@ export default function Generate() {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {variationStrategy?.type === 'scene' ? 'Choose scenes for your product — select at least 1' :
+                    {isFlatLay ? 'Choose surfaces for your flat lay — select at least 1' :
+                     variationStrategy?.type === 'scene' ? 'Choose scenes for your product — select at least 1' :
                      variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
                      variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
                      variationStrategy?.type === 'layout' ? 'Different layout compositions' :
@@ -1720,8 +1795,117 @@ export default function Generate() {
               </div>
             )}
 
-            {/* Product Angles — hidden for Mirror Selfie Set */}
-            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !(isMirrorSelfie && mirrorSettingsPhase === 'scenes') && (
+            {/* Flat Lay surfaces phase: Continue to Details */}
+            {isFlatLay && flatLayPhase === 'surfaces' && (
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product')}>Back</Button>
+                <Button disabled={selectedVariationIndices.size === 0} onClick={() => setFlatLayPhase('details')}>
+                  Continue to Details
+                </Button>
+              </div>
+            )}
+
+            {/* Flat Lay details phase: Aesthetics + Styling Notes + Quality */}
+            {isFlatLay && flatLayPhase === 'details' && (
+              <>
+                <Card><CardContent className="p-5 space-y-4">
+                  <div>
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-primary" />
+                      Styling & Aesthetics
+                    </h3>
+                    <p className="text-sm text-muted-foreground">Optional — add props and mood to your flat lay</p>
+                  </div>
+
+                  {/* Aesthetic quick-chips */}
+                  <div className="space-y-2">
+                    <Label>Quick Aesthetics</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {FLAT_LAY_AESTHETICS.map(a => {
+                        const isActive = selectedAesthetics.includes(a.id);
+                        return (
+                          <button
+                            key={a.id}
+                            onClick={() => setSelectedAesthetics(prev =>
+                              isActive ? prev.filter(x => x !== a.id) : [...prev, a.id]
+                            )}
+                            className={cn(
+                              'px-3 py-1.5 rounded-full text-xs font-medium transition-all border',
+                              isActive
+                                ? 'border-primary bg-primary text-primary-foreground'
+                                : 'border-border bg-muted text-muted-foreground hover:border-primary/40'
+                            )}
+                            title={a.hint}
+                          >
+                            {a.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selectedAesthetics.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Props: {selectedAesthetics.map(id => FLAT_LAY_AESTHETICS.find(a => a.id === id)?.hint).filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Free-form styling notes */}
+                  <div className="space-y-2">
+                    <Label>Styling Notes (optional)</Label>
+                    <Textarea
+                      placeholder="e.g. eucalyptus leaves, gold jewelry, coffee cup, warm tones..."
+                      value={stylingNotes}
+                      onChange={e => setStylingNotes(e.target.value)}
+                      className="min-h-[60px]"
+                    />
+                    <p className="text-xs text-muted-foreground">Describe any specific props, colors, or mood you'd like in the composition</p>
+                  </div>
+                </CardContent></Card>
+
+                <Card><CardContent className="p-5 space-y-4">
+                  <h3 className="text-base font-semibold">Generation Settings</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Quality</Label>
+                      <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard (4 credits/img)</SelectItem>
+                          <SelectItem value="high">High (10 credits/img)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Aspect Ratio</Label>
+                      <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
+                    </div>
+                  </div>
+                </CardContent></Card>
+
+                {/* Cost summary */}
+                <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Total: {creditCost} credits</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedVariationIndices.size} surface{selectedVariationIndices.size !== 1 ? 's' : ''}
+                      {' '}× {quality === 'high' ? 10 : 4} credits
+                      {selectedFlatLayProductIds.size > 1 && ` · ${selectedFlatLayProductIds.size} products in composition`}
+                    </p>
+                  </div>
+                  <p className="text-sm">{balance} credits available</p>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setFlatLayPhase('surfaces')}>Back to Surfaces</Button>
+                  <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0}>
+                    Generate {selectedVariationIndices.size} Flat Lay Images
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* Product Angles — hidden for Mirror Selfie Set and Flat Lay */}
+            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !isFlatLay && (
               <Card><CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">Product Angles</h3>
@@ -1753,8 +1937,8 @@ export default function Generate() {
               </CardContent></Card>
             )}
 
-            {/* Quality & Settings — hidden during mirror selfie scenes phase */}
-            {!(isMirrorSelfie && mirrorSettingsPhase === 'scenes') && (
+            {/* Quality & Settings — hidden during mirror selfie scenes phase and flat lay (handled above) */}
+            {!(isMirrorSelfie && mirrorSettingsPhase === 'scenes') && !isFlatLay && (
               <>
                 <Card><CardContent className="p-5 space-y-4">
                   <h3 className="text-base font-semibold">Generation Settings</h3>
