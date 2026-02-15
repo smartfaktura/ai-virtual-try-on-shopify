@@ -287,6 +287,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     }
     setAttempted(false);
     setStep(s => s + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Save
@@ -466,7 +467,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       <Separator />
 
       {/* Content */}
-      <div className="py-8">
+      <div className="py-8 pb-24 sm:pb-8">
         <div className="min-h-[380px]">
 
           {/* ─── Step 1: Theme ─── */}
@@ -590,7 +591,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   {attempted && selectedProductIds.size === 0 && (
                     <p className="text-xs text-destructive">Select at least one product</p>
                   )}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[320px] overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:max-h-[320px] sm:overflow-y-auto pr-1">
                     {filteredProducts.map(product => {
                       const isSelected = selectedProductIds.has(product.id);
                       return (
@@ -1438,14 +1439,14 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       </div>
 
       {/* Footer — pill buttons + branding */}
-      <div className="pt-4 border-t space-y-2">
+      <div className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-6 z-10 sm:static sm:pb-0">
         {validationHint && (
           <p className="text-[11px] text-destructive animate-fade-in text-center sm:hidden">{validationHint}</p>
         )}
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={step === 0 ? onClose : () => setStep(s => s - 1)}
+            onClick={step === 0 ? onClose : () => { setStep(s => s - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className="rounded-full min-h-[44px] h-11 px-5 sm:px-6"
           >
             {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1.5" /> Back</>}
