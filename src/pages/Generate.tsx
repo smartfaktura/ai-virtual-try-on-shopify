@@ -1715,7 +1715,7 @@ export default function Generate() {
               )}
 
               {/* Visual scene cards grid */}
-              <div className={cn("grid gap-3", isMirrorSelfie ? "grid-cols-3 sm:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4")}>
+              <div className={cn("grid gap-3", (isMirrorSelfie || isSelfieUgc) ? "grid-cols-3 sm:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4")}>
                 {variationStrategy?.variations.map((v, i) => {
                   // Filter by category
                   if (sceneFilterCategory !== 'all' && v.category && v.category !== sceneFilterCategory) return null;
@@ -1747,7 +1747,7 @@ export default function Generate() {
                       )}
                     >
                       {/* Image or gradient fallback */}
-                      <div className={cn("relative", isMirrorSelfie ? "aspect-[9/16]" : "aspect-square")}>
+                      <div className={cn("relative", (isMirrorSelfie || isSelfieUgc) ? "aspect-[9/16]" : "aspect-square")}>
                         {hasPreview ? (
                           <img
                             src={getOptimizedUrl(v.preview_url, { quality: 60 })}
