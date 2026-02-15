@@ -1,67 +1,124 @@
 
 
-## Creative Drops Onboarding -- Apple-Inspired Redesign
+## Creative Drops Wizard -- Per-Workflow Scene, Model & Settings Configuration
 
-Rebuild the onboarding section to be clean, minimal, and fit within the viewport without scrolling.
-
----
-
-### Problems to Fix
-
-1. **Broken image**: `showcase/fashion-tee-lifestyle.jpg` does not exist in the asset library -- replace with verified assets
-2. **Too tall**: Current layout requires scrolling to see the CTA on desktop -- everything must fit in one screen
-3. **Too busy**: Glassmorphism cards with accent stripes, rotated image collage, and benefit chips create visual noise instead of elegance
-4. **Mobile not optimized**: Cards stack vertically making it even taller on mobile
+The current wizard Step 3 ("Workflows") only lets users toggle workflows on/off and pick an aspect ratio. But each workflow has its own scenes (up to 30), model requirements, and custom settings that users can't configure. This upgrade adds inline, expandable per-workflow configuration panels.
 
 ---
 
-### New Design -- Apple "Feature Page" Style
+### Current State
 
-**Philosophy**: Remove decoration, increase whitespace, let typography and spacing do the work. Single viewport, no scroll needed.
+| Workflow | Scenes | Models | Custom Settings |
+|----------|--------|--------|-----------------|
+| Virtual Try-On Set | 4 angle variations | Yes (model + pose picker) | None |
+| Product Listing Set | 30 scene variations | No | Product Angles (Front Only / Front+Side / Front+Back / All Angles) |
+| Selfie / UGC Set | 16 situation variations | Yes (model picker) | None |
+| Flat Lay Set | 12 layout variations | No | None |
+| Mirror Selfie Set | 30 environment variations | Yes (model picker) | None |
 
-**Layout (top to bottom, compact):**
+None of this is exposed in the Creative Drops wizard today.
 
-1. **Headline + subtitle** -- Clean, large SF-style headline with normal foreground color (no gradient text). Shorter subtitle, single line on desktop. Remove the Infinity icon -- unnecessary decoration.
+---
 
-2. **Three steps as a single horizontal row of minimal items** -- Not cards. Just icon + title + one-line description in a clean inline layout. No borders, no backgrounds, no accent stripes. Steps separated by subtle vertical dividers on desktop, stacked cleanly on mobile. Each step: a small circular icon container (muted bg) + title (font-medium) + description (text-muted-foreground, text-sm). This is dramatically more compact.
+### What Changes
 
-3. **Preview images strip** -- 5 overlapping circular thumbnails (like avatar stacks), no rotation. Use verified assets: `fashion-blazer-golden`, `skincare-serum-marble`, `food-coffee-artisan`, `skincare-cream-botanical`, `fashion-dress-garden`.
+**Step 3 of the wizard gets expanded.** When a user selects a workflow, the card expands to reveal a collapsible configuration panel with:
 
-4. **CTA button** -- Clean rounded-full button, standard size, no oversized shadow. Trust line stays as subtle text below.
+1. **Scene/Variation Picker** -- A thumbnail grid of the workflow's variation scenes (from `generation_config.variation_strategy.variations`). Users can multi-select which scenes they want included. Each scene shows its preview image and label. "Select All" / "Deselect All" toggles provided. Scenes that have `preview_url` show the image; others show a gradient placeholder with the label.
 
-5. **Remove benefit chips entirely** -- They add clutter without value. The headline and steps already communicate the benefits.
+2. **Model Picker** (only for workflows with `uses_tryon: true` or `show_model_picker: true`) -- The existing model grid but scoped per-workflow. Users pick which models to use for that specific workflow rather than globally. This replaces the current global model picker below all workflows.
+
+3. **Custom Settings** (from `generation_config.ui_config.custom_settings`) -- Rendered dynamically based on `type`:
+   - `select` type: renders a row of pill buttons (same pattern as aspect ratio chips)
+   - Only Product Listing Set currently has this (Product Angles selector)
+
+4. **Aspect Ratio** -- Stays as-is (already per-workflow).
+
+**Layout for expanded workflow card:**
+
+```text
++---------------------------------------------------------------+
+| [thumb] Virtual Try-On Set              [Model badge]  [check]|
+|         Generate try-on images...                             |
+|                                                               |
+|  Format: [1:1] [4:5] [9:16] [16:9]                          |
+|                                                               |
+|  Scenes  (2 of 4 selected)                    [Select All]   |
+|  [Front View] [3/4 Turn] [Back View] [Movement Shot]         |
+|                                                               |
+|  Models  (3 selected)                         [Clear]        |
+|  [avatar] [avatar] [avatar] [avatar] [avatar] ...            |
++---------------------------------------------------------------+
+```
+
+---
+
+### Data Model Changes
+
+**No new database columns needed.** The existing `scene_config` JSONB column and `model_ids` array will be restructured:
+
+- `scene_config` changes from `{ workflowId: { aspect_ratio } }` to `{ workflowId: { aspect_ratio, selected_scenes: string[], custom_settings: Record<string, string> } }`
+- `model_ids` stays as a flat array (global fallback), but `scene_config[workflowId].model_ids` can optionally store per-workflow model selections
+
+Since `scene_config` is JSONB, this is backward-compatible -- no migration needed.
 
 ---
 
 ### Technical Details
 
-**File: `src/pages/CreativeDrops.tsx`**
+**File: `src/components/app/CreativeDropWizard.tsx`**
 
-Replace the `CreativeDropsOnboarding` component (lines 412-509) and supporting data (lines 378-410).
+Changes to Step 3 (lines 483-652):
 
-**New structure:**
+1. **New state**: `workflowSceneSelections: Record<string, Set<string>>` -- tracks selected scene labels per workflow. `workflowModelSelections: Record<string, string[]>` -- tracks selected model IDs per workflow. `workflowCustomSettings: Record<string, Record<string, string>>` -- tracks custom settings per workflow.
 
-```tsx
-const onboardingSteps = [
-  { icon: Package, title: 'Pick Products', desc: 'Choose which products get fresh visuals.' },
-  { icon: Layers, title: 'Choose Workflows', desc: 'Select generation styles and formats.' },
-  { icon: RefreshCw, title: 'Set & Forget', desc: 'Schedule frequency. Images arrive on time.' },
-];
+2. **Fetch variation data**: The `workflows` query already fetches full workflow data including `generation_config`. Extract `variation_strategy.variations` from each workflow to populate the scene picker.
 
-const previewImages = [
-  getLandingAssetUrl('showcase/fashion-blazer-golden.jpg'),
-  getLandingAssetUrl('showcase/skincare-serum-marble.jpg'),
-  getLandingAssetUrl('showcase/food-coffee-artisan.jpg'),
-  getLandingAssetUrl('showcase/skincare-cream-botanical.jpg'),
-  getLandingAssetUrl('showcase/fashion-dress-garden.jpg'),
-];
+3. **Expanded workflow card**: When a workflow is selected (`isSelected === true`), render a collapsible section below the aspect ratio chips containing:
+   - Scene grid: `grid grid-cols-4 sm:grid-cols-5 gap-2` with small thumbnail cards. Each card shows `preview_url` image (or gradient placeholder) + label. Multi-select with checkmark overlay. Header row shows count + "Select All" toggle.
+   - Model grid (conditional): Same as current model grid but only shown inline under workflows that need models. `grid grid-cols-5 sm:grid-cols-8 gap-2` with smaller avatars.
+   - Custom settings: Rendered from `ui_config.custom_settings` array. For `type: 'select'`, render horizontal pill buttons.
+
+4. **Remove global model picker**: The current `needsModelPicker` section (lines 558-596) is removed. Model selection moves inside each workflow's expanded panel.
+
+5. **Save payload update**: When saving, construct `scene_config` as:
+```typescript
+const sceneConfig: Record<string, any> = {};
+selectedWorkflowIds.forEach(id => {
+  sceneConfig[id] = {
+    aspect_ratio: workflowFormats[id] || '1:1',
+    selected_scenes: Array.from(workflowSceneSelections[id] || []),
+    model_ids: workflowModelSelections[id] || [],
+    custom_settings: workflowCustomSettings[id] || {},
+  };
+});
 ```
 
-**Desktop layout**: `max-w-2xl mx-auto`, reduced spacing (`space-y-8` instead of `space-y-12`), compact step row with `flex justify-center gap-10` and dividers.
+6. **Review step update**: Show per-workflow scene count, model count, and custom settings in the summary.
 
-**Mobile layout**: Steps stack with `flex-col sm:flex-row`, smaller text, reduced padding (`py-6` instead of `py-12`). The entire section should fit in the visible area below the page header without scrolling.
+7. **Initial data hydration**: When editing/duplicating, parse `scene_config` to restore `workflowSceneSelections`, `workflowModelSelections`, and `workflowCustomSettings` from the saved JSONB.
 
-**Animations**: Keep subtle `animate-in fade-in-0` on the container only (no per-element staggering -- cleaner).
+**File: `src/pages/CreativeDrops.tsx`**
 
-**Removed elements**: Infinity icon, gradient text, glassmorphism cards, accent stripes, rotated image collage, benefit chips row, oversized CTA shadow.
+- Update `extractWfFormats` to handle the new `scene_config` structure (backward compatible -- check for both old and new format).
+- Update `handleEdit` / `handleDuplicate` to pass `workflowSceneSelections`, `workflowModelSelections`, and `workflowCustomSettings` in `initialData`.
 
+**File: `src/components/app/CreativeDropWizard.tsx` -- `CreativeDropWizardInitialData` interface**
+
+Add new optional fields:
+```typescript
+workflowSceneSelections?: Record<string, string[]>;
+workflowModelSelections?: Record<string, string[]>;
+workflowCustomSettings?: Record<string, Record<string, string>>;
+```
+
+---
+
+### UX Details
+
+- Scene thumbnails are small (64x64 on mobile, 80x80 on desktop) to keep the panel compact
+- Scene grid scrolls vertically if more than 2 rows (`max-h-[200px] overflow-y-auto`)
+- Default behavior: all scenes selected when a workflow is first toggled on (user deselects what they don't want)
+- Model avatars are small circles (40x40) in a dense grid
+- The entire per-workflow config is wrapped in a subtle `bg-muted/30 rounded-xl p-4` container for visual grouping
+- Smooth `animate-fade-in` on expand
