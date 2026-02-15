@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw, Sparkles, Timer, Image, Palette, CheckCircle2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -195,44 +195,44 @@ export default function CreativeDrops() {
     >
       {wizardOpen ? (
         <CreativeDropWizard onClose={closeWizard} initialData={wizardInitialData} editingScheduleId={editingScheduleId} />
+      ) : !hasStats ? (
+        <CreativeDropsOnboarding onCreateSchedule={openWizard} />
       ) : (
         <>
           {/* Stats Summary */}
-          {hasStats && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
-              <div className="rounded-xl bg-card border p-3">
-                <p className="text-2xl font-semibold">{activeCount}</p>
-                <p className="text-xs text-muted-foreground">Active Schedules</p>
-              </div>
-              <div className="rounded-xl bg-card border p-3">
-                <p className="text-2xl font-semibold">{totalDrops}</p>
-                <p className="text-xs text-muted-foreground">Total Drops</p>
-              </div>
-              <div className="rounded-xl bg-card border p-3">
-                <p className="text-2xl font-semibold">{totalImages}</p>
-                <p className="text-xs text-muted-foreground">Images Generated</p>
-              </div>
-              <div className="rounded-xl bg-card border p-3">
-                <p className="text-2xl font-semibold">{totalCredits}</p>
-                <p className="text-xs text-muted-foreground">Credits Used</p>
-              </div>
-              {(generatingCount > 0 || nextRun) && (
-                <div className="rounded-xl bg-card border p-3">
-                  {generatingCount > 0 ? (
-                    <>
-                      <p className="text-2xl font-semibold text-amber-500">{generatingCount}</p>
-                      <p className="text-xs text-muted-foreground">Generating Now</p>
-                    </>
-                  ) : nextRun?.next_run_at ? (
-                    <>
-                      <p className="text-sm font-semibold">{new Date(nextRun.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                      <p className="text-xs text-muted-foreground">Next Run</p>
-                    </>
-                  ) : null}
-                </div>
-              )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
+            <div className="rounded-xl bg-card border p-3">
+              <p className="text-2xl font-semibold">{activeCount}</p>
+              <p className="text-xs text-muted-foreground">Active Schedules</p>
             </div>
-          )}
+            <div className="rounded-xl bg-card border p-3">
+              <p className="text-2xl font-semibold">{totalDrops}</p>
+              <p className="text-xs text-muted-foreground">Total Drops</p>
+            </div>
+            <div className="rounded-xl bg-card border p-3">
+              <p className="text-2xl font-semibold">{totalImages}</p>
+              <p className="text-xs text-muted-foreground">Images Generated</p>
+            </div>
+            <div className="rounded-xl bg-card border p-3">
+              <p className="text-2xl font-semibold">{totalCredits}</p>
+              <p className="text-xs text-muted-foreground">Credits Used</p>
+            </div>
+            {(generatingCount > 0 || nextRun) && (
+              <div className="rounded-xl bg-card border p-3">
+                {generatingCount > 0 ? (
+                  <>
+                    <p className="text-2xl font-semibold text-amber-500">{generatingCount}</p>
+                    <p className="text-xs text-muted-foreground">Generating Now</p>
+                  </>
+                ) : nextRun?.next_run_at ? (
+                  <>
+                    <p className="text-sm font-semibold">{new Date(nextRun.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    <p className="text-xs text-muted-foreground">Next Run</p>
+                  </>
+                ) : null}
+              </div>
+            )}
+          </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList>
@@ -372,6 +372,92 @@ export default function CreativeDrops() {
         </>
       )}
     </PageHeader>
+  );
+}
+
+// Onboarding section for zero-state
+const onboardingSteps = [
+  {
+    icon: Package,
+    title: 'Pick Your Products',
+    description: 'Select which products get fresh visuals each drop.',
+  },
+  {
+    icon: Layers,
+    title: 'Choose Workflows',
+    description: 'Pick generation styles — product listing, lifestyle, UGC, and more.',
+  },
+  {
+    icon: RefreshCw,
+    title: 'Set & Forget',
+    description: 'Schedule the frequency. Images arrive automatically on time.',
+  },
+];
+
+const onboardingBenefits = [
+  { icon: Timer, label: 'Save 10+ hours/month' },
+  { icon: Sparkles, label: 'Always-fresh content' },
+  { icon: Image, label: 'Multi-platform formats' },
+  { icon: Palette, label: 'Brand-consistent' },
+];
+
+function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () => void }) {
+  return (
+    <div className="max-w-3xl mx-auto text-center space-y-10 py-8">
+      {/* Hero */}
+      <div className="space-y-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
+        <h2 className="text-3xl font-bold tracking-tight">
+          Automate Your Visual Content
+        </h2>
+        <p className="text-muted-foreground text-base max-w-lg mx-auto">
+          Set up a schedule once. Receive fresh, on-brand product visuals delivered automatically — no manual work needed.
+        </p>
+      </div>
+
+      {/* 3 Step Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {onboardingSteps.map((step, i) => {
+          const StepIcon = step.icon;
+          return (
+            <div
+              key={step.title}
+              className="rounded-2xl border bg-card p-6 text-left space-y-3 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-both"
+              style={{ animationDelay: `${i * 150}ms` }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {i + 1}
+                </div>
+                <StepIcon className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold text-sm">{step.title}</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Benefit chips */}
+      <div className="flex flex-wrap justify-center gap-2 animate-in fade-in-0 slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: '450ms' }}>
+        {onboardingBenefits.map(b => {
+          const BIcon = b.icon;
+          return (
+            <Badge key={b.label} variant="secondary" className="gap-1.5 px-3 py-1 text-xs font-medium">
+              <BIcon className="w-3.5 h-3.5" />
+              {b.label}
+            </Badge>
+          );
+        })}
+      </div>
+
+      {/* CTA */}
+      <div className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: '600ms' }}>
+        <Button size="lg" onClick={onCreateSchedule} className="rounded-full px-8 gap-2">
+          <Calendar className="w-4 h-4" />
+          Create Your First Schedule
+        </Button>
+      </div>
+    </div>
   );
 }
 
