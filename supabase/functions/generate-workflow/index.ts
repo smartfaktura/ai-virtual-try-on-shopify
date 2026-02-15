@@ -116,6 +116,9 @@ interface WorkflowRequest {
   product_angles?: 'front' | 'front-side' | 'front-back' | 'all';
   quality?: string;
   image_count?: number;
+  // Creative Drops fields
+  theme?: string;
+  theme_notes?: string;
 }
 
 function buildVariationPrompt(
@@ -130,6 +133,8 @@ function buildVariationPrompt(
   stylingNotes?: string,
   propStyle?: 'clean' | 'decorated',
   ugcMood?: string,
+  theme?: string,
+  themeNotes?: string,
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
@@ -213,8 +218,23 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       .replace('{MOOD_DESCRIPTION}', moodDesc);
   }
 
-  const prompt = `${processedTemplate}
+  // Issue 1: Seasonal/theme direction block
+  const themeBlock = theme && theme !== 'custom'
+    ? `\nSEASONAL DIRECTION: ${theme}
+Generate imagery with a ${theme} aesthetic and mood.
+${themeNotes ? `Additional direction: ${themeNotes}` : ""}\n`
+    : themeNotes
+      ? `\nCREATIVE DIRECTION:\n${themeNotes}\n`
+      : "";
 
+  // Issue 6: Merge brand do_not_rules into negative prompts
+  const allNegatives = [
+    config.negative_prompt_additions,
+    ...(brandProfile?.do_not_rules || []),
+  ].filter(Boolean).join('. ');
+
+  const prompt = `${processedTemplate}
+${themeBlock}
 PRODUCT DETAILS:
 - Product: ${product.title}
 - Type: ${product.productType}
@@ -235,7 +255,7 @@ CRITICAL REQUIREMENTS:
 4. This specific variation must clearly match the "${variation.label}" direction described above.
 ${model ? `5. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
 
-${config.negative_prompt_additions ? `AVOID: ${config.negative_prompt_additions}` : ""}`;
+${allNegatives ? `AVOID: ${allNegatives}` : ""}`;
 
   return prompt;
 }
@@ -563,7 +583,9 @@ serve(async (req) => {
             body.additional_products,
             body.styling_notes,
             body.prop_style,
-            body.ugc_mood
+            body.ugc_mood,
+            body.theme,
+            body.theme_notes,
           );
 
           console.log(
