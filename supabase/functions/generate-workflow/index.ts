@@ -45,15 +45,22 @@ interface WorkflowRequest {
     productType: string;
     description: string;
     dimensions?: string;
-    imageUrl: string; // base64 or URL
+    imageUrl: string;
   };
+  additional_products?: Array<{
+    title: string;
+    productType: string;
+    description: string;
+    imageUrl: string;
+  }>;
+  styling_notes?: string;
   model?: {
     name: string;
     gender: string;
     ethnicity: string;
     bodyType: string;
     ageRange: string;
-    imageUrl: string; // base64 or URL of the model reference image
+    imageUrl: string;
   };
   brand_profile?: {
     tone?: string;
@@ -68,7 +75,7 @@ interface WorkflowRequest {
     preferred_scenes?: string[];
     photography_reference?: string;
   };
-  selected_variations?: number[]; // indices of which variations to generate
+  selected_variations?: number[];
   product_angles?: 'front' | 'front-side' | 'front-back' | 'all';
   quality?: string;
   image_count?: number;
@@ -81,7 +88,9 @@ function buildVariationPrompt(
   brandProfile: WorkflowRequest["brand_profile"],
   variationIndex: number,
   totalVariations: number,
-  model?: WorkflowRequest["model"]
+  model?: WorkflowRequest["model"],
+  additionalProducts?: WorkflowRequest["additional_products"],
+  stylingNotes?: string
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
@@ -127,6 +136,18 @@ The person in this image MUST be the EXACT same person shown in [MODEL IMAGE].
 - Do NOT alter, idealize, or change any facial features from the reference\n`
     : "";
 
+  // Additional products block for flat lay multi-product
+  const additionalProductsBlock = (additionalProducts && additionalProducts.length > 0)
+    ? `\nADDITIONAL PRODUCTS IN COMPOSITION:
+${additionalProducts.map((p, idx) => `- Product ${idx + 2}: ${p.title} (${p.productType})${p.description ? ` — ${p.description}` : ''}`).join('\n')}
+Arrange ALL products together in a cohesive flat lay composition. Each product should be clearly visible and identifiable.\n`
+    : "";
+
+  // Styling notes for flat lay aesthetics
+  const stylingBlock = stylingNotes
+    ? `\nSTYLING & PROPS: ${stylingNotes}\nIncorporate these styling elements naturally into the flat lay composition.\n`
+    : "";
+
   const prompt = `${config.prompt_template}
 
 PRODUCT DETAILS:
@@ -134,7 +155,7 @@ PRODUCT DETAILS:
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
 ${product.description ? `- Description: ${product.description}` : ""}
-${modelBlock}
+${modelBlock}${additionalProductsBlock}${stylingBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${variation.instruction}
 
@@ -473,7 +494,9 @@ serve(async (req) => {
             body.brand_profile,
             i,
             variationsToGenerate.length,
-            body.model
+            body.model,
+            body.additional_products,
+            body.styling_notes
           );
 
           console.log(
