@@ -122,8 +122,8 @@ export const workflowScenes: Record<string, WorkflowScene> = {
         position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
       {
-        type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
-        position: { top: '40%', left: '38%' }, enterDelay: 0.9, animation: 'pop',
+        type: 'action', label: '', icon: <Plus className="w-5 h-5" />,
+        position: { top: '48%', left: '42%' }, enterDelay: 0.9, animation: 'pop',
       },
       {
         type: 'model', image: mirrorSelfieModel, label: 'Model',

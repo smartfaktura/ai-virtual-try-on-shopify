@@ -51,17 +51,17 @@ function FloatingEl({ element }: { element: SceneElement }) {
           <div className="wf-card bg-white rounded-xl overflow-hidden flex items-center gap-2.5 pr-3">
             <img
               src={element.image}
-              className="w-12 h-14 object-cover"
+              className="w-14 h-16 object-cover"
               alt=""
               style={{ imageRendering: 'auto' }}
             />
             <div className="min-w-0 py-1">
               {element.sublabel && (
-                <div className="text-[7px] text-neutral-400 uppercase tracking-[0.08em] leading-none mb-0.5 font-medium">
+                <div className="text-[9px] text-neutral-400 uppercase tracking-[0.08em] leading-none mb-0.5 font-medium">
                   {element.sublabel}
                 </div>
               )}
-              <div className="text-[11px] font-semibold leading-tight whitespace-nowrap text-neutral-800">
+              <div className="text-[13px] font-semibold leading-tight whitespace-nowrap text-neutral-800">
                 {element.label}
               </div>
             </div>
@@ -75,12 +75,12 @@ function FloatingEl({ element }: { element: SceneElement }) {
           <div className="wf-card-circle rounded-full p-[3px] bg-white">
             <img
               src={element.image}
-              className="w-[52px] h-[52px] rounded-full object-cover"
+              className="w-[60px] h-[60px] rounded-full object-cover"
               alt=""
               style={{ imageRendering: 'auto' }}
             />
           </div>
-          <span className="text-[9px] font-semibold bg-white/95 text-neutral-700 px-2.5 py-[3px] rounded-full wf-card-shadow">
+          <span className="text-[11px] font-semibold bg-white/95 text-neutral-700 px-2.5 py-[3px] rounded-full wf-card-shadow">
             {element.label}
           </span>
         </div>
@@ -89,7 +89,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
     case 'action':
       return (
         <div className="absolute" style={style}>
-          <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center wf-card-shadow">
+          <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center wf-card-shadow">
             {element.icon}
           </div>
         </div>
@@ -100,7 +100,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
         <div className="absolute" style={style}>
           <div className="bg-white rounded-full px-3 py-1.5 wf-card-shadow flex items-center gap-1.5">
             <span className="text-primary">{element.icon}</span>
-            <span className="text-[10px] font-semibold text-neutral-700">{element.label}</span>
+            <span className="text-[12px] font-semibold text-neutral-700">{element.label}</span>
           </div>
         </div>
       );
