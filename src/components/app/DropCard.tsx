@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { Calendar, Clock, Pause, Play, Zap, CheckCircle, AlertCircle, Loader2, Download, MoreVertical, Trash2, Pencil, Copy, RocketIcon, ArrowRight, Coins } from 'lucide-react';
+import { Calendar, Clock, Pause, Play, Zap, CheckCircle, AlertCircle, Loader2, Download, MoreVertical, Trash2, Pencil, Copy, RocketIcon, ArrowRight, Coins, Image, Package } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -46,6 +45,23 @@ const statusConfig: Record<string, { icon: React.ElementType; color: string }> =
 export function DropCard(props: Props) {
   const queryClient = useQueryClient();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Fetch products for schedule cards (lightweight query, cached)
+  const productIds = props.type === 'schedule' ? (props.schedule.selected_product_ids || []) : [];
+  const { data: scheduleProducts = [] } = useQuery({
+    queryKey: ['schedule-products', productIds.join(',')],
+    queryFn: async () => {
+      if (productIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from('user_products')
+        .select('id, title, image_url')
+        .in('id', productIds.slice(0, 6));
+      if (error) throw error;
+      return data as { id: string; title: string; image_url: string }[];
+    },
+    enabled: props.type === 'schedule' && productIds.length > 0,
+    staleTime: 60_000,
+  });
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
@@ -99,59 +115,60 @@ export function DropCard(props: Props) {
   if (props.type === 'schedule') {
     const { schedule, onDuplicate, onEdit, workflowNames } = props;
     const isPaused = !schedule.active;
+    const isOneTime = schedule.frequency === 'one-time';
+    const productCount = schedule.selected_product_ids?.length || 0;
+
+    const getFrequencyLabel = (freq: string) => {
+      switch (freq) {
+        case 'one-time': return 'One-time';
+        case 'weekly': return 'Weekly';
+        case 'biweekly': return 'Every 2 weeks';
+        case 'monthly': return 'Monthly';
+        default: return freq;
+      }
+    };
 
     return (
       <>
-        <Card className={cn(isPaused && 'opacity-60 border-muted')}>
-          <CardContent className="p-4 space-y-1">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Calendar className="w-4 h-4 text-primary" />
+        <Card className={cn(
+          'rounded-2xl transition-all',
+          isPaused && 'opacity-50'
+        )}>
+          <CardContent className="p-5 space-y-4">
+            {/* Top row: name + status + actions */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2.5">
+                  <h3 className="text-base font-semibold truncate">{schedule.name}</h3>
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      'text-[10px] rounded-full px-2 py-0.5 flex-shrink-0',
+                      schedule.active
+                        ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                        : 'bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {schedule.active ? 'Active' : 'Paused'}
+                  </Badge>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{schedule.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {schedule.frequency} · {schedule.images_per_drop} images per drop · {schedule.selected_product_ids?.length || 0} product{(schedule.selected_product_ids?.length || 0) !== 1 ? 's' : ''}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {workflowNames && workflowNames.length > 0
-                      ? workflowNames.slice(0, 2).join(', ') + (workflowNames.length > 2 ? ` +${workflowNames.length - 2} more` : '')
-                      : `${schedule.workflow_ids.length} workflow${schedule.workflow_ids.length !== 1 ? 's' : ''}`}
-                  </p>
-                  {schedule.next_run_at && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <Clock className="w-3 h-3" />
-                      Next: {new Date(schedule.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </p>
-                  )}
-                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getFrequencyLabel(schedule.frequency)} · {schedule.images_per_drop} images per drop · ~{schedule.estimated_credits} credits
+                </p>
               </div>
 
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Credit cost chip */}
-                <span className="hidden sm:flex items-center gap-1 text-xs border rounded-full px-2 py-0.5 text-muted-foreground">
-                  <Coins className="w-3 h-3" />
-                  ~{schedule.estimated_credits} cr
-                </span>
-
-                {/* Active/Paused dot indicator */}
-                <span className="flex items-center gap-1.5 text-xs font-medium">
-                  <span className={cn(
-                    "w-2 h-2 rounded-full",
-                    schedule.active ? "bg-green-500 animate-pulse" : "bg-muted-foreground/40"
-                  )} />
-                  {schedule.active ? 'Active' : 'Paused'}
-                </span>
-
-
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-lg text-xs gap-1.5"
                   onClick={() => toggleMutation.mutate({ id: schedule.id, active: !schedule.active })}
                 >
-                  {schedule.active ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                  {schedule.active ? (
+                    <><Pause className="w-3 h-3" /> Pause</>
+                  ) : (
+                    <><Play className="w-3 h-3" /> Resume</>
+                  )}
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -159,29 +176,93 @@ export function DropCard(props: Props) {
                       <MoreVertical className="w-3.5 h-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="bg-popover">
+                    <DropdownMenuItem onClick={() => onEdit?.(schedule)}>
+                      <Pencil className="w-3.5 h-3.5 mr-2" /> Edit
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onDuplicate?.(schedule)}>
-                      <Copy className="w-3.5 h-3.5 mr-2" />
-                      Duplicate
+                      <Copy className="w-3.5 h-3.5 mr-2" /> Duplicate
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => runNowMutation.mutate(schedule)}>
-                      <RocketIcon className="w-3.5 h-3.5 mr-2" />
-                      Run Now
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit?.(schedule)}>
-                      <Pencil className="w-3.5 h-3.5 mr-2" />
-                      Edit
+                      <RocketIcon className="w-3.5 h-3.5 mr-2" /> Run Now
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
                       onClick={() => setDeleteDialogOpen(true)}
                     >
-                      <Trash2 className="w-3.5 h-3.5 mr-2" />
-                      Delete
+                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </div>
+            </div>
+
+            {/* Info grid: Products, Workflows, Next Generation */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Products */}
+              <div className="rounded-xl bg-muted/40 p-3 space-y-2">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
+                  <Package className="w-3 h-3" /> Products
+                </p>
+                {scheduleProducts.length > 0 ? (
+                  <div className="flex items-center gap-1.5">
+                    {scheduleProducts.slice(0, 4).map(p => (
+                      <div key={p.id} className="w-8 h-8 rounded-lg overflow-hidden bg-muted flex-shrink-0 border border-border/50">
+                        <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                    {productCount > 4 && (
+                      <span className="text-[11px] text-muted-foreground ml-0.5">+{productCount - 4}</span>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">{productCount} product{productCount !== 1 ? 's' : ''}</p>
+                )}
+              </div>
+
+              {/* Workflows */}
+              <div className="rounded-xl bg-muted/40 p-3 space-y-2">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
+                  <Zap className="w-3 h-3" /> Workflows
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {workflowNames && workflowNames.length > 0 ? (
+                    workflowNames.slice(0, 3).map(name => (
+                      <Badge key={name} variant="secondary" className="text-[10px] rounded-full px-2 py-0">
+                        {name.replace(' Set', '')}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground">{schedule.workflow_ids.length} workflow{schedule.workflow_ids.length !== 1 ? 's' : ''}</p>
+                  )}
+                  {workflowNames && workflowNames.length > 3 && (
+                    <Badge variant="secondary" className="text-[10px] rounded-full px-2 py-0">
+                      +{workflowNames.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Next Generation */}
+              <div className="rounded-xl bg-muted/40 p-3 space-y-2">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
+                  <Clock className="w-3 h-3" /> {isOneTime ? 'Generation' : 'Next Drop'}
+                </p>
+                {isOneTime ? (
+                  <p className="text-xs font-medium text-foreground">One-time run</p>
+                ) : schedule.next_run_at ? (
+                  <div>
+                    <p className="text-xs font-medium text-foreground">
+                      {new Date(schedule.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {formatDistanceToNow(new Date(schedule.next_run_at), { addSuffix: true })}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">{isPaused ? 'Paused' : 'Not scheduled'}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -221,7 +302,7 @@ export function DropCard(props: Props) {
   const progressPct = targetImages > 0 ? Math.round((completedImages / targetImages) * 100) : 0;
 
   return (
-    <Card className={cn(drop.status === 'ready' && 'cursor-pointer hover:border-primary/30 transition-colors')} onClick={drop.status === 'ready' ? onViewDrop : undefined}>
+    <Card className={cn('rounded-2xl', drop.status === 'ready' && 'cursor-pointer hover:border-primary/30 transition-colors')} onClick={drop.status === 'ready' ? onViewDrop : undefined}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
