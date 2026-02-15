@@ -506,6 +506,14 @@ serve(async (req) => {
           const referenceImages: Array<{ url: string; label: string }> = [
             { url: body.product.imageUrl, label: "product" },
           ];
+          // Add additional product images as AI references for flat lay multi-product
+          if (body.additional_products?.length) {
+            for (const [idx, ap] of body.additional_products.entries()) {
+              if (ap.imageUrl) {
+                referenceImages.push({ url: ap.imageUrl, label: `product_${idx + 2}` });
+              }
+            }
+          }
           if (body.model?.imageUrl) {
             referenceImages.push({ url: body.model.imageUrl, label: "model" });
           }

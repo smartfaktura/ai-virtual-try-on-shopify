@@ -526,11 +526,18 @@ export default function Generate() {
       stylingNotes,
     ].filter(Boolean).join(', ') : undefined;
 
-    // Build additional products array for flat lay multi-product
+    // Build additional products array for flat lay multi-product (convert images to base64)
     const additionalProducts = isFlatLay && selectedFlatLayProductIds.size > 1
-      ? (userProducts.length > 0 ? userProducts : []).filter(up => selectedFlatLayProductIds.has(up.id) && up.id !== selectedProduct?.id).map(up => ({
-          title: up.title, productType: up.product_type, description: up.description, imageUrl: up.image_url,
-        }))
+      ? await Promise.all(
+          (userProducts.length > 0 ? userProducts : [])
+            .filter(up => selectedFlatLayProductIds.has(up.id) && up.id !== selectedProduct?.id)
+            .map(async up => ({
+              title: up.title,
+              productType: up.product_type,
+              description: up.description,
+              imageUrl: await convertImageToBase64(up.image_url),
+            }))
+        )
       : undefined;
 
     const payload: Record<string, unknown> = {
@@ -572,6 +579,7 @@ export default function Generate() {
         payload,
         imageCount: workflowImageCount,
         quality,
+        additionalProductCount: extraProductCount,
       }, {
         imageCount: workflowImageCount,
         quality,
@@ -793,7 +801,9 @@ export default function Generate() {
 
   const angleMultiplier = productAngle === 'all' ? 3 : productAngle === 'front' ? 1 : 2;
   const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier : parseInt(imageCount);
-  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 10 : 4) : parseInt(imageCount) * (quality === 'high' ? 10 : 4));
+  const extraProductCount = isFlatLay && selectedFlatLayProductIds.size > 1 ? selectedFlatLayProductIds.size - 1 : 0;
+  const extraProductCredits = extraProductCount * 2 * workflowImageCount;
+  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 10 : 4) + extraProductCredits : parseInt(imageCount) * (quality === 'high' ? 10 : 4));
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 
@@ -2132,16 +2142,29 @@ export default function Generate() {
         {currentStep === 'results' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
             <Card><CardContent className="p-5 space-y-3">
-              <Badge variant="secondary">{sourceType === 'scratch' ? 'Generated from uploaded image' : 'Publishing to'}</Badge>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
-                  <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+              <Badge variant="secondary">{sourceType === 'scratch' ? 'Generated from uploaded image' : (isFlatLay && selectedFlatLayProductIds.size > 1 ? `Publishing to · ${selectedFlatLayProductIds.size} products` : 'Publishing to')}</Badge>
+              {isFlatLay && selectedFlatLayProductIds.size > 1 ? (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
+                    <div key={up.id} className="flex-shrink-0 w-[72px]">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
+                        <img src={up.image_url || '/placeholder.svg'} alt={up.title} className="w-full h-full object-cover" />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{up.title}</p>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
-                  <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? scratchUpload?.productInfo.productType : selectedProduct?.vendor}</p>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                    <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
+                    <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? scratchUpload?.productInfo.productType : selectedProduct?.vendor}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent></Card>
 
             <Card><CardContent className="p-5 space-y-4">
