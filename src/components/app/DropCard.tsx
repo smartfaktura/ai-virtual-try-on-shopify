@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Calendar, Clock, Pause, Play, Zap, CheckCircle, AlertCircle, Loader2, Download, MoreVertical, Trash2, Pencil, Sun, Snowflake, Leaf, Flower2, Gift, ShoppingBag, Heart, GraduationCap, Sparkles, Copy, RocketIcon } from 'lucide-react';
+import { Calendar, Clock, Pause, Play, Zap, CheckCircle, AlertCircle, Loader2, Download, MoreVertical, Trash2, Pencil, Copy, RocketIcon, ArrowRight, Coins } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -39,14 +40,6 @@ const statusConfig: Record<string, { icon: React.ElementType; color: string }> =
   ready: { icon: CheckCircle, color: 'bg-green-100 text-green-800' },
   failed: { icon: AlertCircle, color: 'bg-red-100 text-red-800' },
 };
-
-const themeIcons: Record<string, React.ElementType> = {
-  spring: Flower2, summer: Sun, autumn: Leaf, winter: Snowflake,
-  holiday: Gift, black_friday: ShoppingBag, valentines: Heart,
-  back_to_school: GraduationCap, custom: Sparkles,
-};
-
-const BRAND_THEME_STYLE = 'bg-primary/5 text-foreground border-primary/20';
 
 export function DropCard(props: Props) {
   const queryClient = useQueryClient();
@@ -100,9 +93,9 @@ export function DropCard(props: Props) {
     onError: () => toast.error('Failed to queue drop'),
   });
 
+  // ── Schedule Card ──
   if (props.type === 'schedule') {
     const { schedule, onDuplicate } = props;
-    const ThemeIcon = themeIcons[schedule.theme] || Sparkles;
     const isPaused = !schedule.active;
 
     return (
@@ -115,27 +108,32 @@ export function DropCard(props: Props) {
                   <Calendar className="w-4 h-4 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium truncate">{schedule.name}</p>
-                    <Badge variant="outline" className={cn('text-[10px] border', BRAND_THEME_STYLE)}>
-                      <ThemeIcon className="w-3 h-3 mr-0.5" />
-                      {schedule.theme?.replace('_', ' ')}
-                    </Badge>
-                  </div>
+                  <p className="text-sm font-medium truncate">{schedule.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {schedule.frequency} · {schedule.workflow_ids.length} workflow{schedule.workflow_ids.length !== 1 ? 's' : ''} ·{' '}
-                    {schedule.images_per_drop} imgs · ~{schedule.estimated_credits} cr/drop
+                    {schedule.frequency} · {schedule.images_per_drop} images per drop
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {schedule.selected_product_ids?.length || 0} product{(schedule.selected_product_ids?.length || 0) !== 1 ? 's' : ''}
+                  <p className="text-xs text-muted-foreground">
+                    {schedule.selected_product_ids?.length || 0} product{(schedule.selected_product_ids?.length || 0) !== 1 ? 's' : ''} · {schedule.workflow_ids.length} workflow{schedule.workflow_ids.length !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0">
-                <Badge variant={schedule.active ? 'default' : 'secondary'}>
+                {/* Credit cost chip */}
+                <span className="hidden sm:flex items-center gap-1 text-xs border rounded-full px-2 py-0.5 text-muted-foreground">
+                  <Coins className="w-3 h-3" />
+                  ~{schedule.estimated_credits} cr
+                </span>
+
+                {/* Active/Paused dot indicator */}
+                <span className="flex items-center gap-1.5 text-xs font-medium">
+                  <span className={cn(
+                    "w-2 h-2 rounded-full",
+                    schedule.active ? "bg-green-500 animate-pulse" : "bg-muted-foreground/40"
+                  )} />
                   {schedule.active ? 'Active' : 'Paused'}
-                </Badge>
+                </span>
+
                 {schedule.next_run_at && (
                   <TooltipProvider>
                     <Tooltip>
@@ -150,6 +148,7 @@ export function DropCard(props: Props) {
                     </Tooltip>
                   </TooltipProvider>
                 )}
+
                 <Button
                   variant="ghost"
                   size="icon"
@@ -215,10 +214,15 @@ export function DropCard(props: Props) {
     );
   }
 
+  // ── Drop Card ──
   const { drop, onViewDrop, scheduleName } = props;
   const config = statusConfig[drop.status] || statusConfig.scheduled;
   const StatusIcon = config.icon;
   const dropImages = (drop.images || []) as { url: string }[];
+
+  const completedImages = dropImages.length;
+  const targetImages = drop.total_images || 0;
+  const progressPct = targetImages > 0 ? Math.round((completedImages / targetImages) * 100) : 0;
 
   return (
     <Card className={cn(drop.status === 'ready' && 'cursor-pointer hover:border-primary/30 transition-colors')} onClick={drop.status === 'ready' ? onViewDrop : undefined}>
@@ -233,7 +237,11 @@ export function DropCard(props: Props) {
                 Drop — {new Date(drop.run_date).toLocaleDateString()}
               </p>
               <p className="text-xs text-muted-foreground">
-                {drop.total_images > 0 ? `${drop.total_images} images` : `${drop.generation_job_ids.length} job${drop.generation_job_ids.length !== 1 ? 's' : ''}`}
+                {drop.status === 'generating'
+                  ? `${completedImages} of ${targetImages} images`
+                  : drop.total_images > 0
+                    ? `${drop.total_images} images`
+                    : `${drop.generation_job_ids.length} job${drop.generation_job_ids.length !== 1 ? 's' : ''}`}
                 {drop.credits_charged > 0 && ` · ${drop.credits_charged} credits`}
               </p>
               {scheduleName && (
@@ -254,19 +262,32 @@ export function DropCard(props: Props) {
           </div>
         </div>
 
-        {/* Thumbnail previews for ready drops */}
+        {/* Generation progress bar */}
+        {drop.status === 'generating' && targetImages > 0 && (
+          <div className="mt-3">
+            <Progress value={progressPct} className="h-1.5" />
+            <p className="text-[11px] text-muted-foreground mt-1">{progressPct}% complete</p>
+          </div>
+        )}
+
+        {/* Thumbnail previews + View Drop CTA for ready drops */}
         {drop.status === 'ready' && dropImages.length > 0 && (
-          <div className="flex gap-1.5 mt-3 overflow-hidden">
-            {dropImages.slice(0, 4).map((img, i) => (
-              <div key={i} className="w-14 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                <img src={img.url} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
-            {dropImages.length > 4 && (
-              <div className="w-14 h-14 rounded-md bg-muted flex items-center justify-center flex-shrink-0 text-xs font-medium text-muted-foreground">
-                +{dropImages.length - 4}
-              </div>
-            )}
+          <div className="mt-3">
+            <div className="flex items-center gap-1.5">
+              {dropImages.slice(0, 4).map((img, i) => (
+                <div key={i} className="w-14 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+              {dropImages.length > 4 && (
+                <div className="w-14 h-14 rounded-md bg-muted flex items-center justify-center flex-shrink-0 text-xs font-medium text-muted-foreground">
+                  +{dropImages.length - 4}
+                </div>
+              )}
+              <Button variant="ghost" size="sm" className="ml-auto text-xs text-primary h-7 gap-1" onClick={e => { e.stopPropagation(); onViewDrop?.(); }}>
+                View Drop <ArrowRight className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
