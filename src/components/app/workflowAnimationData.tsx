@@ -114,10 +114,10 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   },
 
   'Mirror Selfie Set': {
-    background: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_1771106949688.png',
+    background: 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/7a203c7e-0367-4fc3-8eb2-2e4d181fa158_mirror_selfie_v2.png',
     elements: [
       {
-        type: 'product', image: mirrorSelfieProduct, label: 'Crop Top', sublabel: 'Product',
+        type: 'product', image: mirrorSelfieProduct, label: 'Sweater', sublabel: 'Product',
         icon: <Plus className="w-3 h-3" />,
         position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
