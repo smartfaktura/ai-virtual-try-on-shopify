@@ -1,29 +1,75 @@
 
-## Fix: Flat Lay Loading Message Shows All Products
+
+## Control Extra Items in Flat Lay Generation
 
 ### Problem
-The loading message says `Generating 1 variations of "DAVID JONES kuprine CM8309"` -- it only shows the count from `selectedVariationIndices.size` (which may be 1 if only 1 surface was picked) and only the first product's title, ignoring the other selected flat lay products.
+The AI adds extra products (watches, cameras, earbuds, etc.) to the flat lay that weren't selected by the user. This is misleading -- users expect ONLY their selected products, optionally with abstract/decorative styling elements (textures, flowers, fabrics) but never additional commercial products that could be confused with the user's own inventory.
 
 ### Solution
-Update line 2107 in `src/pages/Generate.tsx` to show a flat-lay-specific message when multiple products are selected.
+Two changes:
+1. **Add a "Prop Style" toggle** in the Flat Lay details step (last wizard page) with options: "Products Only" (no extra items at all) vs "Add Decorative Props" (abstract decorations, no extra commercial products)
+2. **Update the prompt engineering** to explicitly forbid adding extra commercial products and only allow abstract/decorative elements when the user opts in
 
 ### Changes
 
-**File: `src/pages/Generate.tsx` (line ~2105-2109)**
+#### 1. Add Prop Style Toggle (UI)
+**File: `src/pages/Generate.tsx`**
 
-Replace the workflow subtitle with flat-lay-aware text:
-- If `isFlatLay` and multiple products selected: show "Arranging X products on Y surfaces" (e.g., "Arranging 3 products on 2 surfaces")
-- Otherwise: keep existing message
+Add a new state variable `flatLayPropStyle` with values `'clean'` (default) or `'decorated'`.
 
-The updated logic:
+In the Flat Lay details phase (lines ~1836-1888), add a toggle/radio group BEFORE the Quick Aesthetics section:
 
 ```text
-isFlatLay && selectedFlatLayProductIds.size > 1
-  ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}`
-  : hasWorkflowConfig
-    ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"`
-    : `Creating ${imageCount} images of "${selectedProduct?.title}"`
+Composition Style
+- [x] Products Only -- Clean layout with just your products, no extra items
+- [ ] Add Styling Props -- Include decorative elements (leaves, fabric, abstract shapes) around your products
 ```
 
-### Single file change
-Only `src/pages/Generate.tsx` needs updating -- one line change in the generating step subtitle.
+When "Products Only" is selected:
+- Hide the Quick Aesthetics chips entirely
+- Hide the Styling Notes textarea
+- The prompt will instruct: "ONLY the selected products, absolutely nothing else"
+
+When "Add Styling Props" is selected:
+- Show aesthetics and styling notes as today
+- But update the aesthetics hints to be clearly decorative (not commercial products)
+
+#### 2. Update FLAT_LAY_AESTHETICS
+**File: `src/pages/Generate.tsx` (lines 76-84)**
+
+Revise hints to explicitly be non-product decorations:
+- `botanical` -> "dried flowers, eucalyptus leaves, greenery accents"
+- `coffee-books` -> "coffee cup, open book pages" (remove "reading glasses" -- too product-like)
+- `travel` -> rename to "Textured" -> "linen fabric, kraft paper, washi tape"
+- `beauty` -> rename to "Soft Glam" -> "silk ribbon, dried petals, soft fabric swatches"
+- Keep `minimal`, `cozy`, `seasonal`
+
+#### 3. Pass Prop Style to Edge Function
+**File: `src/pages/Generate.tsx`**
+
+Include `prop_style: flatLayPropStyle` in the generation payload alongside `styling_notes`.
+
+#### 4. Update Prompt in Edge Function
+**File: `supabase/functions/generate-workflow/index.ts`**
+
+When `prop_style === 'clean'` (or not set), add to the prompt:
+```text
+CRITICAL: Show ONLY the selected products. Do NOT add any extra items, props, accessories, 
+or commercial products. The surface should contain ONLY the products provided -- nothing else.
+```
+
+When `prop_style === 'decorated'`, add:
+```text
+You may add ONLY abstract/decorative styling elements around the products: natural textures, 
+dried flowers, fabric swatches, paper, abstract shapes. 
+NEVER add extra commercial products like watches, cameras, electronics, bags, or any item 
+that could be mistaken for the user's own product.
+```
+
+#### 5. Update Database Prompt Template
+Update the workflow's `generation_config.negative_prompt_additions` to include: "extra commercial products, additional merchandise, unrelated accessories, random products"
+
+### Summary of Files Changed
+1. `src/pages/Generate.tsx` -- Add prop style toggle, update aesthetics, pass to payload
+2. `supabase/functions/generate-workflow/index.ts` -- Handle `prop_style` in prompt construction
+3. Database update -- Strengthen negative prompt for flat lay workflow
