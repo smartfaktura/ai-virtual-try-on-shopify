@@ -435,9 +435,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           {editingScheduleId ? 'Edit Schedule' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
         </h2>
         <p className="text-sm text-muted-foreground mb-6">{editingScheduleId ? 'Update your schedule settings' : 'Design and schedule your creative content generation'}</p>
-        <div className="flex items-center justify-center gap-0">
+        <div className="flex items-center justify-center w-full max-w-md mx-auto">
           {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center flex-1">
+            <div key={s} className={cn("flex items-center", i < STEPS.length - 1 ? "flex-1" : "")}>
               <button
                 onClick={() => i < step && setStep(i)}
                 className={cn(
@@ -467,7 +467,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       <Separator />
 
       {/* Content */}
-      <div className="py-8 pb-8">
+      <div className="pt-8 pb-4">
         <div className="min-h-[380px]">
 
           {/* ─── Step 1: Theme ─── */}
@@ -1449,7 +1449,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       </div>
 
       {/* Footer — pill buttons + branding */}
-      <div className="pt-6 mt-4 space-y-2 sm:border-t sm:pt-4 sm:mt-0">
+      <div className="pt-6 mt-4 pb-16 space-y-2 sm:border-t sm:pt-4 sm:mt-0 sm:pb-0">
         {validationHint && (
           <p className="text-[11px] text-destructive animate-fade-in text-center sm:hidden">{validationHint}</p>
         )}
