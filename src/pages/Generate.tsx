@@ -1562,7 +1562,7 @@ export default function Generate() {
         )}
 
         {/* Workflow-Specific Settings */}
-        {hasWorkflowConfig && currentStep === 'settings' && generationMode !== 'virtual-try-on' && (selectedProduct || scratchUpload) && (
+        {hasWorkflowConfig && currentStep === 'settings' && (generationMode !== 'virtual-try-on' || isSelfieUgc) && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
             {/* Product summary — hidden in mirror selfie final phase */}
             {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
