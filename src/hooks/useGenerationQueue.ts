@@ -147,6 +147,23 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
         }
       }
 
+      // Stuck detection for processing jobs: if processing > 5 minutes, trigger cleanup
+      if (job.status === 'processing' && job.started_at) {
+        const processingDuration = Date.now() - new Date(job.started_at).getTime();
+        if (processingDuration > 5 * 60 * 1000 && !retriggeredRef.current) {
+          retriggeredRef.current = true;
+          console.warn(`[queue] Job ${job.id} processing for ${Math.round(processingDuration / 1000)}s, triggering cleanup`);
+          fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ trigger: 'stuck-processing-retry' }),
+          }).catch(() => {});
+        }
+      }
+
       setActiveJob(job);
 
       // Stop polling on terminal states

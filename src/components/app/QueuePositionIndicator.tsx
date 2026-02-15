@@ -82,6 +82,7 @@ function ProcessingState({ job }: { job: QueueJob }) {
   const currentMember = TEAM_MEMBERS[teamIndex];
   const overtimeMsg = getOvertimeMessage(ratio);
   const complexityHint = getComplexityHint(job.generationMeta);
+  const isStuck = elapsed > 300; // 5 minutes
 
   return (
     <div className="flex flex-col gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
@@ -89,7 +90,9 @@ function ProcessingState({ job }: { job: QueueJob }) {
         <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
-            {overtimeMsg || 'Generating your images…'}
+            {isStuck
+              ? 'This is taking unusually long — retrying automatically…'
+              : (overtimeMsg || 'Generating your images…')}
           </p>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-muted-foreground">
