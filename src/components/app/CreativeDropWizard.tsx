@@ -54,6 +54,7 @@ export interface CreativeDropWizardInitialData {
 interface CreativeDropWizardProps {
   onClose: () => void;
   initialData?: CreativeDropWizardInitialData;
+  editingScheduleId?: string;
 }
 
 const THEMES = [
@@ -84,7 +85,7 @@ interface UserProduct {
   product_type: string;
 }
 
-export function CreativeDropWizard({ onClose, initialData }: CreativeDropWizardProps) {
+export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: CreativeDropWizardProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -226,8 +227,7 @@ export function CreativeDropWizard({ onClose, initialData }: CreativeDropWizardP
 
       const cleanPrompts = freestylePrompts.filter(p => p.trim().length > 0);
 
-      const { error } = await supabase.from('creative_schedules').insert({
-        user_id: user.id,
+      const payload = {
         name,
         theme,
         theme_notes: themeNotes,
@@ -245,15 +245,22 @@ export function CreativeDropWizard({ onClose, initialData }: CreativeDropWizardP
         scene_config: sceneConfig,
         include_freestyle: includeFreestyle,
         freestyle_prompts: cleanPrompts,
-      });
-      if (error) throw error;
+      };
+
+      if (editingScheduleId) {
+        const { error } = await supabase.from('creative_schedules').update(payload).eq('id', editingScheduleId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('creative_schedules').insert({ ...payload, user_id: user.id });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creative-schedules'] });
-      toast.success(deliveryMode === 'now' ? 'Drop created — generating now!' : 'Schedule created successfully!');
+      toast.success(editingScheduleId ? 'Schedule updated!' : deliveryMode === 'now' ? 'Drop created — generating now!' : 'Schedule created successfully!');
       onClose();
     },
-    onError: () => toast.error('Failed to create schedule'),
+    onError: () => toast.error(editingScheduleId ? 'Failed to update schedule' : 'Failed to create schedule'),
   });
 
   const filteredProducts = products.filter(p =>
@@ -273,9 +280,9 @@ export function CreativeDropWizard({ onClose, initialData }: CreativeDropWizardP
       {/* Header — elegant step indicator */}
       <div className="pb-6">
         <h2 className="text-xl font-semibold tracking-tight mb-1">
-          {initialData ? 'Duplicate Drop' : 'Create Your Drop'}
+          {editingScheduleId ? 'Edit Schedule' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
         </h2>
-        <p className="text-sm text-muted-foreground mb-6">Design and schedule your creative content generation</p>
+        <p className="text-sm text-muted-foreground mb-6">{editingScheduleId ? 'Update your schedule settings' : 'Design and schedule your creative content generation'}</p>
         <div className="flex items-center gap-0">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center flex-1">
@@ -979,8 +986,8 @@ export function CreativeDropWizard({ onClose, initialData }: CreativeDropWizardP
             className="rounded-full h-11 px-6 gap-1.5"
           >
             {saveMutation.isPending
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</>
-              : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> {editingScheduleId ? 'Saving...' : 'Creating...'}</>
+              : editingScheduleId ? 'Save Changes' : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
             }
           </Button>
         )}
