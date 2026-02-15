@@ -1,77 +1,48 @@
 
 
-## Mirror Selfie Scenes: Vertical Format + New Scenes + Diverse Models
+## Fix Mirror Selfie Previews: Hide Phone Screen + Regenerate All
 
-### Overview
-Transform the Mirror Selfie scene selection grid from square cards to vertical 9:16 "story" format, add 6 new environment scenes, update all preview generation prompts to feature diverse supermodels, and regenerate all previews.
+### Problem
+1. Only 11 of 30 scene previews were generated -- 19 remain blank
+2. In generated previews (e.g., Pool / Resort), the phone screen is visible facing the viewer, which looks unnatural. The phone's back should face the camera/viewer, with only the screen visible in the mirror reflection.
 
 ### Changes
 
-#### 1. Vertical Story Cards for Mirror Selfie Scenes
-**File: `src/pages/Generate.tsx`** (line ~1591-1665)
-
-- For Mirror Selfie workflow only, change the scene card aspect ratio from `aspect-square` to `aspect-[9/16]`
-- Adjust the grid from `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` to `grid-cols-3 sm:grid-cols-4 lg:grid-cols-5` to fit the narrower vertical cards
-- Keep square cards for other workflows (Product Listing Set, etc.)
-
-#### 2. Add 6 New Scene Variations to Database
-**Database update** to the `workflows.generation_config` JSONB for the Mirror Selfie Set workflow, appending 6 new variations:
-
-**Fitness (3):**
-- **Pilates Studio** -- Full-length mirror in a bright Pilates reformer studio, natural wood reformers, bright clean space
-- **Yoga Studio** -- Wall mirror in a serene yoga studio, bamboo floors, warm ambient lighting, plants
-- **Gym Locker Room** -- Full-length mirror in a modern gym locker room, clean tiled walls, bright overhead lighting
-
-**Hotel Lobby (3):**
-- **Hotel Lobby Grand** -- Ornate full-length mirror in a grand hotel lobby, marble floors, chandelier, luxury aesthetic
-- **Hotel Lobby Modern** -- Sleek reflective glass in a contemporary boutique hotel lobby, modern furniture, moody lighting
-- **Hotel Lobby Boutique** -- Decorative mirror in a boutique hotel entrance with plants, warm tones, eclectic decor
-
-This brings the total from 24 to 30 environments.
-
-#### 3. Update Preview Generation Prompts for Diversity + Vertical
+#### 1. Fix All Mirror Selfie Prompts to Hide Phone Screen
 **File: `supabase/functions/generate-scene-previews/index.ts`**
 
-- Add 6 new scene preview prompts for the new scenes
-- Update ALL existing Mirror Selfie prompts:
-  - Change "a young woman" to diverse descriptions rotating through: "a blonde supermodel", "a brunette supermodel", "a dark-skinned supermodel", "a tan-skinned supermodel with dark hair", etc.
-  - Change aspect ratio references from "4:5 portrait" to "9:16 vertical story format, full body visible"
-  - Keep the natural, authentic mirror selfie aesthetic
+Add a critical constraint to every mirror selfie prompt. Replace the current phrasing pattern:
+- OLD: `"holding smartphone at chest level capturing reflection"`
+- NEW: `"holding smartphone with the back of the phone facing the viewer and the screen facing the mirror, phone screen is NOT visible to the camera"`
 
-#### 4. Regenerate All Previews
-After deploying the edge function changes and updating the database:
-- Clear all existing preview URLs by triggering the "Regenerate Previews" admin button
-- The edge function processes in batches of 3, so multiple clicks will be needed to regenerate all 30 scenes
-- Each preview will now feature diverse models in vertical 9:16 format
-
-### Technical Details
-
-**Grid layout conditional (Generate.tsx):**
+Additionally, append a universal negative instruction to the `MIRROR_FORMAT` constant:
 ```text
-isMirrorSelfie ? "grid-cols-3 sm:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+// Current
+const MIRROR_FORMAT = "9:16 vertical story format, full body visible from head to shoes";
+
+// Updated  
+const MIRROR_FORMAT = "9:16 vertical story format, full body visible from head to shoes, the phone screen must face the mirror NOT the camera, only the back of the phone is visible to the viewer, no phone screen showing";
 ```
 
-**Aspect ratio conditional (Generate.tsx):**
-```text
-isMirrorSelfie ? "aspect-[9/16]" : "aspect-square"
-```
+This single change propagates to all 30 mirror selfie prompts automatically since they all reference `MIRROR_FORMAT`.
 
-**Diverse model rotation in prompts (edge function):**
-Cycle through descriptors per scene index:
-- 0: "a stunning blonde European supermodel"
-- 1: "a gorgeous brunette Latina supermodel with tan skin"
-- 2: "a beautiful dark-skinned African supermodel"
-- 3: "a striking East Asian supermodel with black hair"
-- 4: "a radiant redhead supermodel with fair skin"
-- 5: (repeat cycle)
+Also update each individual prompt to reinforce this by changing "holding smartphone capturing reflection" to "holding smartphone with back of phone toward camera, screen facing the mirror, capturing reflection".
 
-**New database variations structure:**
-Each new variation follows the existing pattern with `label`, `instruction`, `category`, `aspect_ratio: "9:16"`.
+#### 2. Force Regenerate All 30 Previews
+**After deploying the edge function:**
+- Call the `generate-scene-previews` function with `force_regenerate: true` and `batch_size: 3`
+- This clears all existing preview URLs first, then generates in batches of 3
+- Will need approximately 10 sequential calls to complete all 30 scenes (each call takes ~60s)
+- Each batch saves progress, so if a call times out the next call picks up where it left off
 
-### Sequence
-1. Update Generate.tsx for vertical card layout
-2. Add new scene prompts to edge function + update existing prompts for diversity and vertical format
-3. Deploy edge function
-4. Update database with 6 new variations (+ change all existing aspect_ratios from "4:5" to "9:16")
-5. Trigger preview regeneration via admin button
+#### 3. Also Update the Main Prompt Template in Database
+**Database update** to the `generation_config` for the Mirror Selfie Set workflow:
+- Update the `prompt_template` field to reinforce: "screen facing the mirror, NOT the camera" and "only the back of the smartphone is visible to the viewer"
+- This ensures actual user generations (not just previews) also follow this rule
+
+### Execution Sequence
+1. Update `MIRROR_FORMAT` constant and all individual mirror selfie prompts in edge function
+2. Deploy edge function
+3. Update database prompt template
+4. Call edge function with `force_regenerate: true` repeatedly until all 30 are done (auto-batches of 3)
 
