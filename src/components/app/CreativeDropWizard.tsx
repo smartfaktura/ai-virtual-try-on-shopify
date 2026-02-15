@@ -163,7 +163,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [customImageCount, setCustomImageCount] = useState('');
 
   // Queries
-  const { data: brandProfiles = [] } = useQuery({
+  const { data: brandProfiles = [], isLoading: brandProfilesLoading } = useQuery({
     queryKey: ['brand-profiles'],
     queryFn: async () => {
       const { data, error } = await supabase.from('brand_profiles').select('*').order('name');
@@ -172,7 +172,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     },
   });
 
-  const { data: products = [] } = useQuery({
+  const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['user-products-wizard'],
     queryFn: async () => {
       const { data, error } = await supabase.from('user_products').select('id, title, image_url, product_type').order('title');
@@ -181,7 +181,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     },
   });
 
-  const { data: workflows = [] } = useQuery({
+  const { data: workflows = [], isLoading: workflowsLoading } = useQuery({
     queryKey: ['workflows'],
     queryFn: async () => {
       const { data, error } = await supabase.from('workflows').select('*').order('sort_order');
@@ -440,6 +440,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             <div key={s} className={cn("flex items-center", i < STEPS.length - 1 ? "flex-1" : "")}>
               <button
                 onClick={() => i < step && setStep(i)}
+                title={s}
+                aria-label={`Step ${i + 1}: ${s}`}
                 className={cn(
                   'flex items-center gap-2 text-xs font-medium transition-all',
                   i <= step ? 'text-foreground' : 'text-muted-foreground/50',
@@ -512,23 +514,27 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
               <div className="space-y-2">
                 <p className="section-label">Brand Profile</p>
-                <Select value={brandProfileId} onValueChange={setBrandProfileId}>
-                  <SelectTrigger className="h-12 rounded-xl">
-                    <SelectValue placeholder="Select brand profile (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {brandProfiles.length === 0 ? (
-                      <div className="px-3 py-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">No profiles yet</p>
-                        <a href="/app/brand-profiles" className="text-xs text-primary hover:underline">Create one →</a>
-                      </div>
-                    ) : (
-                      brandProfiles.map(bp => (
-                        <SelectItem key={bp.id} value={bp.id}>{bp.name}</SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                {brandProfilesLoading ? (
+                  <div className="h-12 rounded-xl bg-muted animate-pulse" />
+                ) : (
+                  <Select value={brandProfileId} onValueChange={setBrandProfileId}>
+                    <SelectTrigger className="h-12 rounded-xl">
+                      <SelectValue placeholder="Select brand profile (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brandProfiles.length === 0 ? (
+                        <div className="px-3 py-4 text-center">
+                          <p className="text-xs text-muted-foreground mb-1">No profiles yet</p>
+                          <a href="/app/brand-profiles" className="text-xs text-primary hover:underline">Create one →</a>
+                        </div>
+                      ) : (
+                        brandProfiles.map(bp => (
+                          <SelectItem key={bp.id} value={bp.id}>{bp.name}</SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -547,7 +553,16 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           {/* ─── Step 2: Products ─── */}
           {step === 1 && (
             <div className="space-y-6 animate-fade-in">
-              {products.length === 0 ? (
+              {productsLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <div key={i} className="rounded-2xl border-2 border-border p-2">
+                      <div className="aspect-square rounded-xl bg-muted animate-pulse mb-2" />
+                      <div className="h-3 bg-muted animate-pulse rounded w-2/3" />
+                    </div>
+                  ))}
+                </div>
+              ) : products.length === 0 ? (
                 <div className="text-center py-12 rounded-2xl border-2 border-dashed border-border">
                   <Package className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm font-medium mb-1">No products yet</p>
@@ -591,7 +606,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   {attempted && selectedProductIds.size === 0 && (
                     <p className="text-xs text-destructive">Select at least one product</p>
                   )}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:max-h-[320px] sm:overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[50vh] overflow-y-auto overscroll-contain pr-1">
                     {filteredProducts.map(product => {
                       const isSelected = selectedProductIds.has(product.id);
                       return (
@@ -615,7 +630,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             </div>
                           )}
                           <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2">
-                            <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
+                            <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                           </div>
                           <p className="text-xs font-medium truncate px-0.5">{product.title}</p>
                         </button>
@@ -639,6 +654,19 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
               {attempted && selectedWorkflowIds.size === 0 && (
                 <p className="text-xs text-destructive">Select at least one workflow</p>
               )}
+              {workflowsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border-2 border-border">
+                      <div className="w-14 h-14 rounded-xl bg-muted animate-pulse flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-muted animate-pulse rounded w-1/3" />
+                        <div className="h-3 bg-muted animate-pulse rounded w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
               <div className="space-y-3">
                 {workflows.map(wf => {
                   const isSelected = selectedWorkflowIds.has(wf.id);
@@ -782,7 +810,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                       {sceneSelections.size === variations.length ? 'Deselect All' : 'Select All'}
                                     </button>
                                   </div>
-                                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:max-h-[200px] sm:overflow-y-auto pr-1">
+                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-[40vh] sm:max-h-[200px] overflow-y-auto overscroll-contain pr-1">
                                     {variations.map(v => {
                                       const isSceneSelected = sceneSelections.has(v.label);
                                       return (
@@ -853,7 +881,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                       </button>
                                     </div>
                                   )}
-                                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:max-h-[200px] sm:overflow-y-auto pr-1">
+                                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-[40vh] sm:max-h-[200px] overflow-y-auto overscroll-contain pr-1">
                                     {fashionPoses.map(pose => {
                                       const isPoseSelected = wfPoses.includes(pose.poseId);
                                       return (
@@ -927,7 +955,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                       </button>
                                     </div>
                                   )}
-                                  <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:max-h-[200px] sm:overflow-y-auto pr-1">
+                                  <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-[40vh] sm:max-h-[200px] overflow-y-auto overscroll-contain pr-1">
                                     {allModels.map(m => {
                                       const isModelSelected = wfModels.includes(m.id);
                                       return (
@@ -1020,10 +1048,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   );
                 })}
               </div>
+              )}
 
               {/* Sticky credit calculator */}
               {selectedWorkflowIds.size > 0 && (
-                <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border pt-3 pb-1 -mx-1 px-1 z-10">
+                <div className="bg-background/95 sm:sticky sm:bottom-0 backdrop-blur-sm border-t border-border pt-3 pb-1 z-10">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <Zap className="w-4 h-4 text-primary" />
@@ -1323,7 +1352,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         <div className="flex gap-1.5 mt-2 flex-wrap">
                           {products.filter(p => selectedProductIds.has(p.id)).slice(0, 6).map(p => (
                             <div key={p.id} className="w-8 h-8 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                              <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
+                              <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                             </div>
                           ))}
                           {selectedProductIds.size > 6 && (
@@ -1428,7 +1457,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             const model = allModels.find(m => m.id === mId);
                             return model ? (
                               <div key={mId} className="w-6 h-6 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                                <img src={model.image_url} alt={model.name} className="w-full h-full object-cover" />
+                                <img src={model.image_url} alt={model.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                               </div>
                             ) : null;
                           })}

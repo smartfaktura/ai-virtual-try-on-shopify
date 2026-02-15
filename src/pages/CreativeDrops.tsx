@@ -310,18 +310,21 @@ export default function CreativeDrops() {
               {/* Filter & Sort bar */}
               {drops.length > 0 && (
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-                    {DROP_STATUSES.map(s => (
-                      <Button
-                        key={s}
-                        variant={dropStatusFilter === s ? 'default' : 'outline'}
-                        size="sm"
-                        className="text-xs capitalize rounded-full h-7"
-                        onClick={() => setDropStatusFilter(s)}
-                      >
-                        {s}
-                      </Button>
-                    ))}
+                  <div className="relative flex-1 overflow-hidden">
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pr-4">
+                      {DROP_STATUSES.map(s => (
+                        <Button
+                          key={s}
+                          variant={dropStatusFilter === s ? 'default' : 'outline'}
+                          size="sm"
+                          className="text-xs capitalize rounded-full h-7"
+                          onClick={() => setDropStatusFilter(s)}
+                        >
+                          {s}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
                   </div>
                   <Button
                     variant="ghost"
@@ -455,7 +458,7 @@ function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () =>
             className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-background shadow-sm"
             style={{ zIndex: previewImages.length - i }}
           >
-            <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+            <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
           </div>
         ))}
       </div>
@@ -551,7 +554,7 @@ function CalendarView({
             <div
               key={i}
               className={cn(
-                'aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors',
+                'aspect-square flex flex-col items-center justify-center rounded-lg text-sm min-h-[40px] transition-colors',
                 day && isToday(day) && 'bg-primary/10 font-semibold',
                 day && isInteractive && 'cursor-pointer hover:bg-muted',
                 day && !isInteractive && 'cursor-default',
