@@ -1,29 +1,40 @@
 
+## Optimize Creative Drop Wizard Mobile Experience
 
-## Fix: Hide Variation Scenes (not Scene Library) for Virtual Try-On
+Three issues identified from the screenshot and user feedback:
 
-The previous change hid the wrong section. The user wants to keep the "Scene Library" (poses) but hide the **"Scenes" variation strategy grid** (Front View, 3/4 Turn, Back View, etc.) for try-on workflows.
+### 1. Scroll-to-top after clicking Next
+When navigating between steps, the page doesn't scroll back to the top, making it hard to see the new step content and find the Next button. The `handleNext` function will be updated to scroll to the top of the wizard after changing steps.
 
-### Changes in `src/components/app/CreativeDropWizard.tsx`
+### 2. Next button overlapping with customer support icon
+The footer with Back/Next buttons sits at the bottom of the content flow. On mobile, it can overlap with floating support widgets. The footer will be made sticky on mobile with proper bottom padding to clear any floating icons.
 
-**1. Revert Scene Library visibility (line 821)** -- Remove `!wf.uses_tryon` so Scene Library shows for all workflows again:
+### 3. Product selection grid has inner scroll on mobile
+The product grid (Step 2) uses `max-h-[320px] overflow-y-auto` which creates a nested scrollable area -- awkward on mobile. On mobile, this constraint will be removed so products flow naturally within the page scroll.
+
+---
+
+### Technical Details
+
+**File: `src/components/app/CreativeDropWizard.tsx`**
+
+**Change 1 -- Scroll to top on step change (line 283-290):**
+Add `window.scrollTo({ top: 0, behavior: 'smooth' })` inside `handleNext` after `setStep`, and also in the Back button's `onClick`.
+
+**Change 2 -- Sticky footer on mobile (line 1441):**
+Update the footer div to use sticky positioning on mobile:
 ```
-{showPosePicker && (
+className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-safe z-10 sm:static sm:pb-0"
 ```
 
-**2. Revert pose badge in summary (line 1392)** -- Same revert:
+**Change 3 -- Remove inner scroll on product grid for mobile (line 593):**
+Change `max-h-[320px] overflow-y-auto` to only apply on desktop:
 ```
-{showPosePicker && (
-```
-
-**3. Hide the Scenes variation grid for try-on (line 746)** -- Add `!wf.uses_tryon` to the Scenes collapsible:
-```
-{variations.length > 0 && !wf.uses_tryon && (
+className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:max-h-[320px] sm:overflow-y-auto pr-1"
 ```
 
-**4. Hide scenes badge in summary (line 1389)** -- Same condition:
+**Change 4 -- Add bottom padding to content area for sticky footer (line 469):**
+Add mobile bottom padding to content container so the sticky footer doesn't cover content:
 ```
-{variations.length > 0 && !wf.uses_tryon && (
+className="py-8 pb-24 sm:pb-8"
 ```
-
-Four single-line condition changes. The Scene Library stays visible for try-on; the redundant variation scenes (Front View, 3/4 Turn, etc.) get hidden.
