@@ -49,6 +49,9 @@ export interface CreativeDropWizardInitialData {
   imagesPerDrop: number;
   includeFreestyle: boolean;
   freestylePrompts: string[];
+  workflowSceneSelections?: Record<string, string[]>;
+  workflowModelSelections?: Record<string, string[]>;
+  workflowCustomSettings?: Record<string, Record<string, string>>;
 }
 
 interface CreativeDropWizardProps {
@@ -110,6 +113,23 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   );
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>(initialData?.selectedModelIds || []);
   const [workflowFormats, setWorkflowFormats] = useState<Record<string, string>>(initialData?.workflowFormats || {});
+
+  // Per-workflow scene, model, and custom settings
+  const [workflowSceneSelections, setWorkflowSceneSelections] = useState<Record<string, Set<string>>>(() => {
+    const init: Record<string, Set<string>> = {};
+    if (initialData?.workflowSceneSelections) {
+      for (const [wfId, scenes] of Object.entries(initialData.workflowSceneSelections)) {
+        init[wfId] = new Set(scenes);
+      }
+    }
+    return init;
+  });
+  const [workflowModelSelections, setWorkflowModelSelections] = useState<Record<string, string[]>>(
+    initialData?.workflowModelSelections || {}
+  );
+  const [workflowCustomSettings, setWorkflowCustomSettings] = useState<Record<string, Record<string, string>>>(
+    initialData?.workflowCustomSettings || {}
+  );
 
   // Step 3b: Freestyle prompts
   const [includeFreestyle, setIncludeFreestyle] = useState(initialData?.includeFreestyle || false);
@@ -220,9 +240,14 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         nextRun = new Date(effectiveStartDate);
       }
 
-      const sceneConfig: Record<string, { aspect_ratio: string }> = {};
+      const sceneConfig: Record<string, any> = {};
       selectedWorkflowIds.forEach(id => {
-        sceneConfig[id] = { aspect_ratio: workflowFormats[id] || '1:1' };
+        sceneConfig[id] = {
+          aspect_ratio: workflowFormats[id] || '1:1',
+          selected_scenes: Array.from(workflowSceneSelections[id] || []),
+          model_ids: workflowModelSelections[id] || [],
+          custom_settings: workflowCustomSettings[id] || {},
+        };
       });
 
       const cleanPrompts = freestylePrompts.filter(p => p.trim().length > 0);
@@ -268,7 +293,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   );
 
   const selectedWorkflows = workflows.filter(w => selectedWorkflowIds.has(w.id));
-  const needsModelPicker = selectedWorkflows.some(w => w.uses_tryon);
+  const needsModelPicker = selectedWorkflows.some(w => w.uses_tryon); // kept for cost calc
   const themeConfig = THEMES.find(t => t.id === theme);
 
   const getWorkflowFormat = (id: string) => workflowFormats[id] || '1:1';
@@ -483,19 +508,38 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           {/* ─── Step 3: Workflows + Format ─── */}
           {step === 2 && (
             <div className="space-y-6 animate-fade-in">
-              <p className="text-sm text-muted-foreground">Select visual styles and choose image orientation for each.</p>
+              <p className="text-sm text-muted-foreground">Select visual styles, then configure scenes, models & settings for each.</p>
               {attempted && selectedWorkflowIds.size === 0 && (
                 <p className="text-xs text-destructive">Select at least one workflow</p>
               )}
               <div className="space-y-3">
                 {workflows.map(wf => {
                   const isSelected = selectedWorkflowIds.has(wf.id);
+                  const genConfig = wf.generation_config;
+                  const variations = genConfig?.variation_strategy?.variations || [];
+                  const uiConfig = genConfig?.ui_config;
+                  const needsModels = wf.uses_tryon || uiConfig?.show_model_picker;
+                  const customSettings = uiConfig?.custom_settings || [];
+                  const sceneSelections = workflowSceneSelections[wf.id] || new Set<string>();
+                  const wfModels = workflowModelSelections[wf.id] || [];
+                  const wfSettings = workflowCustomSettings[wf.id] || {};
+
                   return (
                     <div key={wf.id} className="space-y-0">
                       <button
                         onClick={() => {
                           const next = new Set(selectedWorkflowIds);
-                          isSelected ? next.delete(wf.id) : next.add(wf.id);
+                          if (isSelected) {
+                            next.delete(wf.id);
+                          } else {
+                            next.add(wf.id);
+                            if (variations.length > 0 && !workflowSceneSelections[wf.id]) {
+                              setWorkflowSceneSelections(prev => ({
+                                ...prev,
+                                [wf.id]: new Set(variations.map(v => v.label)),
+                              }));
+                            }
+                          }
                           setSelectedWorkflowIds(next);
                         }}
                         className={cn(
@@ -513,7 +557,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           <p className="text-xs text-muted-foreground truncate mt-0.5">{wf.description}</p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          {wf.uses_tryon && <Badge variant="secondary" className="text-xs rounded-full">Model</Badge>}
+                          {needsModels && <Badge variant="secondary" className="text-xs rounded-full">Model</Badge>}
                           <div className={cn(
                             'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
                             isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
@@ -523,30 +567,180 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         </div>
                       </button>
 
-                      {/* Aspect ratio chips — show when selected */}
+                      {/* ── Expanded per-workflow config ── */}
                       {isSelected && (
-                        <div className="flex items-center gap-2 pl-[4.5rem] pt-2 pb-1 animate-fade-in">
-                          <span className="text-xs text-muted-foreground mr-1">Format:</span>
-                          {ASPECT_RATIOS.map(ar => (
-                            <button
-                              key={ar.id}
-                              onClick={() => setWorkflowFormats(prev => ({ ...prev, [wf.id]: ar.id }))}
-                              className={cn(
-                                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all',
-                                getWorkflowFormat(wf.id) === ar.id
-                                  ? 'border-primary bg-primary/10 text-primary'
-                                  : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
-                              )}
-                            >
-                              <div
+                        <div className="bg-muted/30 rounded-xl p-4 mt-2 space-y-4 animate-fade-in">
+                          {/* Aspect ratio */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground mr-1">Format:</span>
+                            {ASPECT_RATIOS.map(ar => (
+                              <button
+                                key={ar.id}
+                                onClick={() => setWorkflowFormats(prev => ({ ...prev, [wf.id]: ar.id }))}
                                 className={cn(
-                                  'rounded-[2px] border',
-                                  getWorkflowFormat(wf.id) === ar.id ? 'border-primary' : 'border-muted-foreground/40',
+                                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all',
+                                  getWorkflowFormat(wf.id) === ar.id
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
                                 )}
-                                style={{ width: `${Math.round(ar.w / Math.max(ar.w, ar.h) * 12)}px`, height: `${Math.round(ar.h / Math.max(ar.w, ar.h) * 12)}px` }}
-                              />
-                              {ar.label}
-                            </button>
+                              >
+                                <div
+                                  className={cn(
+                                    'rounded-[2px] border',
+                                    getWorkflowFormat(wf.id) === ar.id ? 'border-primary' : 'border-muted-foreground/40',
+                                  )}
+                                  style={{ width: `${Math.round(ar.w / Math.max(ar.w, ar.h) * 12)}px`, height: `${Math.round(ar.h / Math.max(ar.w, ar.h) * 12)}px` }}
+                                />
+                                {ar.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Scene / Variation Picker */}
+                          {variations.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-medium text-foreground">
+                                  Scenes <span className="text-muted-foreground font-normal">({sceneSelections.size} of {variations.length})</span>
+                                </p>
+                                <button
+                                  className="text-xs text-primary hover:underline"
+                                  onClick={() => {
+                                    const allSelected = sceneSelections.size === variations.length;
+                                    setWorkflowSceneSelections(prev => ({
+                                      ...prev,
+                                      [wf.id]: allSelected ? new Set<string>() : new Set(variations.map(v => v.label)),
+                                    }));
+                                  }}
+                                >
+                                  {sceneSelections.size === variations.length ? 'Deselect All' : 'Select All'}
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                {variations.map(v => {
+                                  const isSceneSelected = sceneSelections.has(v.label);
+                                  return (
+                                    <button
+                                      key={v.label}
+                                      onClick={() => {
+                                        setWorkflowSceneSelections(prev => {
+                                          const current = new Set(prev[wf.id] || []);
+                                          isSceneSelected ? current.delete(v.label) : current.add(v.label);
+                                          return { ...prev, [wf.id]: current };
+                                        });
+                                      }}
+                                      className={cn(
+                                        'relative rounded-lg overflow-hidden border-2 transition-all',
+                                        isSceneSelected
+                                          ? 'border-primary ring-1 ring-primary/20'
+                                          : 'border-border hover:border-primary/30'
+                                      )}
+                                    >
+                                      <div className="aspect-square w-full bg-muted overflow-hidden">
+                                        {v.preview_url ? (
+                                          <img src={v.preview_url} alt={v.label} className="w-full h-full object-cover" />
+                                        ) : (
+                                          <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
+                                            <span className="text-[9px] text-muted-foreground/60 text-center px-1 leading-tight">{v.label}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {isSceneSelected && (
+                                        <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                                          <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                                        </div>
+                                      )}
+                                      <div className="px-1 py-1">
+                                        <p className="text-[10px] text-foreground truncate text-center">{v.label}</p>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Model Picker (per-workflow) */}
+                          {needsModels && models.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-medium text-foreground">
+                                  Models <span className="text-muted-foreground font-normal">({wfModels.length} selected)</span>
+                                </p>
+                                {wfModels.length > 0 && (
+                                  <button
+                                    className="text-xs text-muted-foreground hover:text-foreground"
+                                    onClick={() => setWorkflowModelSelections(prev => ({ ...prev, [wf.id]: [] }))}
+                                  >
+                                    Clear
+                                  </button>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-5 sm:grid-cols-8 gap-2 max-h-[160px] overflow-y-auto pr-1">
+                                {models.map(m => {
+                                  const isModelSelected = wfModels.includes(m.id);
+                                  return (
+                                    <button
+                                      key={m.id}
+                                      onClick={() => {
+                                        setWorkflowModelSelections(prev => {
+                                          const current = prev[wf.id] || [];
+                                          return {
+                                            ...prev,
+                                            [wf.id]: isModelSelected
+                                              ? current.filter(id => id !== m.id)
+                                              : [...current, m.id],
+                                          };
+                                        });
+                                      }}
+                                      className={cn(
+                                        'relative rounded-full overflow-hidden border-2 transition-all',
+                                        isModelSelected ? 'border-primary ring-1 ring-primary/20' : 'border-border hover:border-primary/30'
+                                      )}
+                                    >
+                                      <div className="w-10 h-10 rounded-full overflow-hidden bg-muted">
+                                        <img src={m.image_url} alt={m.name} className="w-full h-full object-cover" />
+                                      </div>
+                                      {isModelSelected && (
+                                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                          <Check className="w-3.5 h-3.5 text-primary" />
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Custom Settings */}
+                          {customSettings.length > 0 && customSettings.map(setting => (
+                            <div key={setting.label} className="space-y-2">
+                              <p className="text-xs font-medium text-foreground">{setting.label}</p>
+                              {setting.type === 'select' && setting.options && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {setting.options.map(opt => (
+                                    <button
+                                      key={opt}
+                                      onClick={() => {
+                                        setWorkflowCustomSettings(prev => ({
+                                          ...prev,
+                                          [wf.id]: { ...(prev[wf.id] || {}), [setting.label]: opt },
+                                        }));
+                                      }}
+                                      className={cn(
+                                        'px-3 py-1.5 rounded-full border text-xs font-medium transition-all',
+                                        (wfSettings[setting.label] || setting.options?.[0]) === opt
+                                          ? 'border-primary bg-primary/10 text-primary'
+                                          : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
+                                      )}
+                                    >
+                                      {opt}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       )}
@@ -554,46 +748,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   );
                 })}
               </div>
-
-              {/* Model picker when needed */}
-              {needsModelPicker && models.length > 0 && (
-                <>
-                  <Separator />
-                  <div className="space-y-3">
-                    <p className="section-label">Preferred Models</p>
-                    <p className="text-xs text-muted-foreground">Select which AI models to use for try-on/UGC workflows.</p>
-                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                      {models.map(m => {
-                        const isSelected = selectedModelIds.includes(m.id);
-                        return (
-                          <button
-                            key={m.id}
-                            onClick={() => {
-                              setSelectedModelIds(prev =>
-                                isSelected ? prev.filter(id => id !== m.id) : [...prev, m.id]
-                              );
-                            }}
-                            className={cn(
-                              'relative rounded-xl border-2 p-1.5 transition-all',
-                              isSelected ? 'border-primary shadow-sm' : 'border-border hover:border-primary/40 bg-card'
-                            )}
-                          >
-                            {isSelected && (
-                              <div className="absolute -top-1.5 -right-1.5 z-10 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                                <Check className="w-3 h-3 text-primary-foreground" />
-                              </div>
-                            )}
-                            <div className="aspect-[3/4] rounded-lg overflow-hidden bg-muted">
-                              <img src={m.image_url} alt={m.name} className="w-full h-full object-cover" />
-                            </div>
-                            <p className="text-xs text-center mt-1.5 truncate font-medium">{m.name}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </>
-              )}
 
               {/* Freestyle Prompts Section */}
               <Separator />
@@ -933,19 +1087,41 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 </CardContent>
               </Card>
 
-              {/* Selected workflows with format */}
+              {/* Selected workflows with per-workflow details */}
               <div className="space-y-2">
                 <p className="section-label">Workflows</p>
-                {selectedWorkflows.map(wf => (
-                  <div key={wf.id} className="flex items-center gap-3 text-sm p-3 rounded-xl bg-card border">
-                    <Zap className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                    <span className="font-medium flex-1">{wf.name}</span>
-                    <Badge variant="outline" className="text-xs rounded-full">{getWorkflowFormat(wf.id)}</Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {costEstimate.breakdown.find(b => b.workflowId === wf.id)?.imageCount ?? 0} imgs
-                    </span>
-                  </div>
-                ))}
+                {selectedWorkflows.map(wf => {
+                  const sceneCount = (workflowSceneSelections[wf.id] || new Set()).size;
+                  const variations = wf.generation_config?.variation_strategy?.variations || [];
+                  const modelCount = (workflowModelSelections[wf.id] || []).length;
+                  const needsModels = wf.uses_tryon || wf.generation_config?.ui_config?.show_model_picker;
+                  const wfSettings = workflowCustomSettings[wf.id] || {};
+                  const settingEntries = Object.entries(wfSettings);
+
+                  return (
+                    <div key={wf.id} className="p-3 rounded-xl bg-card border space-y-1.5">
+                      <div className="flex items-center gap-3 text-sm">
+                        <Zap className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <span className="font-medium flex-1">{wf.name}</span>
+                        <Badge variant="outline" className="text-xs rounded-full">{getWorkflowFormat(wf.id)}</Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {costEstimate.breakdown.find(b => b.workflowId === wf.id)?.imageCount ?? 0} imgs
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pl-6">
+                        {variations.length > 0 && (
+                          <span className="text-[11px] text-muted-foreground">{sceneCount}/{variations.length} scenes</span>
+                        )}
+                        {needsModels && (
+                          <span className="text-[11px] text-muted-foreground">{modelCount} model{modelCount !== 1 ? 's' : ''}</span>
+                        )}
+                        {settingEntries.map(([k, v]) => (
+                          <span key={k} className="text-[11px] text-muted-foreground">{k}: {v}</span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
