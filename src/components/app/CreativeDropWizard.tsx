@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import {
   ArrowLeft, ArrowRight, Check, Calendar, Sun, Snowflake, Leaf, Flower2,
   Gift, ShoppingBag, Heart, GraduationCap, Sparkles, Search, Image, Loader2,
@@ -24,7 +24,6 @@ import { calculateDropCredits, type WorkflowCostConfig } from '@/lib/dropCreditC
 import type { Workflow } from '@/types/workflow';
 
 interface CreativeDropWizardProps {
-  open: boolean;
   onClose: () => void;
 }
 
@@ -50,7 +49,7 @@ interface UserProduct {
   product_type: string;
 }
 
-export function CreativeDropWizard({ open, onClose }: CreativeDropWizardProps) {
+export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
@@ -83,7 +82,6 @@ export function CreativeDropWizard({ open, onClose }: CreativeDropWizardProps) {
       if (error) throw error;
       return data;
     },
-    enabled: open,
   });
 
   const { data: products = [] } = useQuery({
@@ -93,7 +91,6 @@ export function CreativeDropWizard({ open, onClose }: CreativeDropWizardProps) {
       if (error) throw error;
       return data as UserProduct[];
     },
-    enabled: open,
   });
 
   const { data: workflows = [] } = useQuery({
@@ -103,7 +100,6 @@ export function CreativeDropWizard({ open, onClose }: CreativeDropWizardProps) {
       if (error) throw error;
       return data as unknown as Workflow[];
     },
-    enabled: open,
   });
 
   const { data: models = [] } = useQuery({
@@ -113,27 +109,9 @@ export function CreativeDropWizard({ open, onClose }: CreativeDropWizardProps) {
       if (error) throw error;
       return data;
     },
-    enabled: open,
   });
 
-  // Reset on open
-  useEffect(() => {
-    if (open) {
-      setStep(0);
-      setName('');
-      setTheme('custom');
-      setThemeNotes('');
-      setBrandProfileId('');
-      setProductsScope('all');
-      setSelectedProductIds(new Set());
-      setProductSearch('');
-      setSelectedWorkflowIds(new Set());
-      setSelectedModelIds([]);
-      setFrequency('monthly');
-      setImagesPerDrop(25);
-      setCustomImageCount('');
-    }
-  }, [open]);
+  // State is initialized fresh on mount (no reset needed)
 
   // Credit calculation
   const workflowConfigs: WorkflowCostConfig[] = workflows
@@ -205,10 +183,9 @@ export function CreativeDropWizard({ open, onClose }: CreativeDropWizardProps) {
   const themeConfig = THEMES.find(t => t.id === theme);
 
   return (
-    <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
-        {/* Header with steps */}
-        <div className="px-6 pt-6 pb-4 border-b">
+    <div className="space-y-0">
+      {/* Header with steps */}
+      <div className="pb-4 border-b">
           <h2 className="text-lg font-semibold mb-4">Create Creative Drop Schedule</h2>
           <div className="flex items-center gap-1">
             {STEPS.map((s, i) => (
@@ -234,9 +211,9 @@ export function CreativeDropWizard({ open, onClose }: CreativeDropWizardProps) {
           </div>
         </div>
 
-        {/* Content */}
-        <ScrollArea className="flex-1 px-6 py-5">
-          <div className="min-h-[350px]">
+      {/* Content */}
+      <div className="py-5">
+        <div className="min-h-[350px]">
             {/* Step 1: Theme */}
             {step === 0 && (
               <div className="space-y-5">
@@ -627,11 +604,11 @@ export function CreativeDropWizard({ open, onClose }: CreativeDropWizardProps) {
                 </div>
               </div>
             )}
-          </div>
-        </ScrollArea>
+        </div>
+      </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t flex justify-between">
+      {/* Footer */}
+      <div className="py-4 border-t flex justify-between">
           <Button variant="outline" onClick={step === 0 ? onClose : () => setStep(s => s - 1)}>
             {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1" /> Back</>}
           </Button>
@@ -644,8 +621,7 @@ export function CreativeDropWizard({ open, onClose }: CreativeDropWizardProps) {
               {saveMutation.isPending ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Creating...</> : 'Create Schedule'}
             </Button>
           )}
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
