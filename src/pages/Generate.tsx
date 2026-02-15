@@ -765,6 +765,10 @@ export default function Generate() {
       const map: Record<string, number> = { source: 1, product: 1, upload: 1, model: 3, generating: 5, results: 5 };
       return map[currentStep] || 1;
     }
+    if (isSelfieUgc) {
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, settings: 4, generating: 5, results: 5 };
+      return map[currentStep] || 1;
+    }
     if (generationMode === 'virtual-try-on') {
       const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, pose: 4, settings: 5, generating: 6, results: 6 };
       return map[currentStep] || 1;
@@ -798,6 +802,12 @@ export default function Generate() {
         { name: 'Model' },
         { name: 'Settings' },
         { name: 'Results' },
+      ];
+    }
+    if (isSelfieUgc) {
+      return [
+        { name: sourceType === 'scratch' ? 'Source' : 'Product' },
+        { name: 'Brand' }, { name: 'Model' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
     if (generationMode === 'virtual-try-on') {
@@ -1269,7 +1279,7 @@ export default function Generate() {
                 }}>Back</Button>
                 {isMirrorSelfie ? (
                   <Button disabled={!selectedModel} onClick={() => { setMirrorSettingsPhase('final'); setCurrentStep('settings'); }}>Continue to Settings</Button>
-                ) : uiConfig?.show_model_picker && !activeWorkflow?.uses_tryon ? (
+                ) : isSelfieUgc || (uiConfig?.show_model_picker && !activeWorkflow?.uses_tryon) ? (
                   <Button disabled={!selectedModel} onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
                 ) : (
                   <Button disabled={!selectedModel} onClick={() => setCurrentStep('pose')}>Continue to Scene</Button>
