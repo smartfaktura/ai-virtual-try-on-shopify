@@ -220,7 +220,16 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     }));
 
   const effectiveFrequency = deliveryMode === 'now' ? 'one-time' : frequency;
-  const costEstimate = calculateDropCredits(workflowConfigs, imagesPerDrop, selectedModelIds, effectiveFrequency);
+  const costEstimate = calculateDropCredits(workflowConfigs, imagesPerDrop, effectiveFrequency);
+
+  // Collapsible section state — tracks which section is open per workflow
+  const [expandedSection, setExpandedSection] = useState<Record<string, string | null>>({});
+  const toggleSection = (wfId: string, section: string) => {
+    setExpandedSection(prev => ({
+      ...prev,
+      [wfId]: prev[wfId] === section ? null : section,
+    }));
+  };
 
   // Validation per step
   const canNext = (): boolean => {
@@ -599,10 +608,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         </div>
                       </button>
 
-                      {/* ── Expanded per-workflow config ── */}
+                      {/* ── Expanded per-workflow config — collapsible sections ── */}
                       {isSelected && (
-                        <div className="bg-muted/30 rounded-xl p-4 mt-2 space-y-4 animate-fade-in">
-                          {/* Aspect ratio — hide if locked */}
+                        <div className="bg-muted/30 rounded-xl p-4 mt-2 space-y-2 animate-fade-in">
+                          {/* Aspect ratio — always visible, hide if locked */}
                           {lockAspectRatio ? (
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-muted-foreground">Format:</span>
@@ -635,7 +644,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             </div>
                           )}
 
-                          {/* Flat Lay clarification */}
+                          {/* Flat Lay clarification — always visible */}
                           {wf.name === 'Flat Lay Set' && (
                             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2.5">
                               <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
@@ -643,214 +652,267 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             </div>
                           )}
 
-                          {/* Scene / Variation Picker */}
+                          {/* ── Collapsible: Scenes ── */}
                           {variations.length > 0 && (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-medium text-foreground">
-                                  Scenes <span className="text-muted-foreground font-normal">({sceneSelections.size} of {variations.length})</span>
-                                </p>
-                                <button
-                                  className="text-xs text-primary hover:underline"
-                                  onClick={() => {
-                                    const allSelected = sceneSelections.size === variations.length;
-                                    setWorkflowSceneSelections(prev => ({
-                                      ...prev,
-                                      [wf.id]: allSelected ? new Set<string>() : new Set(variations.map(v => v.label)),
-                                    }));
-                                  }}
-                                >
-                                  {sceneSelections.size === variations.length ? 'Deselect All' : 'Select All'}
-                                </button>
-                              </div>
-                              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto pr-1">
-                                {variations.map(v => {
-                                  const isSceneSelected = sceneSelections.has(v.label);
-                                  return (
+                            <div className="border-t border-border/50 pt-1">
+                              <button
+                                onClick={() => toggleSection(wf.id, 'scenes')}
+                                className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
+                              >
+                                <span className="font-medium text-foreground">Scenes</span>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{sceneSelections.size} of {variations.length}</Badge>
+                                  <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform', expandedSection[wf.id] === 'scenes' && 'rotate-180')} />
+                                </div>
+                              </button>
+                              {expandedSection[wf.id] === 'scenes' && (
+                                <div className="space-y-2 pb-2 animate-fade-in">
+                                  <div className="flex justify-end">
                                     <button
-                                      key={v.label}
+                                      className="text-xs text-primary hover:underline"
                                       onClick={() => {
-                                        setWorkflowSceneSelections(prev => {
-                                          const current = new Set(prev[wf.id] || []);
-                                          isSceneSelected ? current.delete(v.label) : current.add(v.label);
-                                          return { ...prev, [wf.id]: current };
-                                        });
-                                      }}
-                                      className={cn(
-                                        'relative rounded-lg overflow-hidden border-2 transition-all',
-                                        isSceneSelected
-                                          ? 'border-primary ring-1 ring-primary/20'
-                                          : 'border-border hover:border-primary/30'
-                                      )}
-                                    >
-                                      <div className="aspect-square w-full bg-muted overflow-hidden">
-                                        {v.preview_url ? (
-                                          <ShimmerImage src={v.preview_url} alt={v.label} className="w-full h-full object-cover" aspectRatio="1/1" />
-                                        ) : (
-                                          <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
-                                            <span className="text-[9px] text-muted-foreground/60 text-center px-1 leading-tight">{v.label}</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                      {isSceneSelected && (
-                                        <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                          <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                                        </div>
-                                      )}
-                                      <div className="px-1 py-1">
-                                        <p className="text-[10px] text-foreground truncate text-center">{v.label}</p>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Pose / Scene Library Picker for Virtual Try-On */}
-                          {showPosePicker && (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-medium text-foreground">
-                                  Scene Library <span className="text-muted-foreground font-normal">({wfPoses.length} selected)</span>
-                                </p>
-                                {wfPoses.length > 0 && (
-                                  <button
-                                    className="text-xs text-muted-foreground hover:text-foreground"
-                                    onClick={() => setWorkflowPoseSelections(prev => ({ ...prev, [wf.id]: [] }))}
-                                  >
-                                    Clear
-                                  </button>
-                                )}
-                              </div>
-                              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto pr-1">
-                                {fashionPoses.map(pose => {
-                                  const isPoseSelected = wfPoses.includes(pose.poseId);
-                                  return (
-                                    <button
-                                      key={pose.poseId}
-                                      onClick={() => {
-                                        setWorkflowPoseSelections(prev => {
-                                          const current = prev[wf.id] || [];
-                                          return {
-                                            ...prev,
-                                            [wf.id]: isPoseSelected
-                                              ? current.filter(id => id !== pose.poseId)
-                                              : [...current, pose.poseId],
-                                          };
-                                        });
-                                      }}
-                                      className={cn(
-                                        'relative rounded-lg overflow-hidden border-2 transition-all',
-                                        isPoseSelected
-                                          ? 'border-primary ring-1 ring-primary/20'
-                                          : 'border-border hover:border-primary/30'
-                                      )}
-                                    >
-                                      <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
-                                        <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
-                                      </div>
-                                      {isPoseSelected && (
-                                        <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                          <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                                        </div>
-                                      )}
-                                      <div className="absolute top-1 left-1">
-                                        <Badge className="text-[7px] px-1 py-0 bg-foreground/70 text-background border-0 backdrop-blur-sm">
-                                          {poseCategoryLabels[pose.category] || pose.category}
-                                        </Badge>
-                                      </div>
-                                      <div className="px-1 py-1">
-                                        <p className="text-[10px] text-foreground truncate text-center">{pose.name}</p>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Model Picker (per-workflow) — uses merged allModels */}
-                          {needsModels && (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-medium text-foreground">
-                                  Models <span className="text-muted-foreground font-normal">({wfModels.length} selected)</span>
-                                </p>
-                                {wfModels.length > 0 && (
-                                  <button
-                                    className="text-xs text-muted-foreground hover:text-foreground"
-                                    onClick={() => setWorkflowModelSelections(prev => ({ ...prev, [wf.id]: [] }))}
-                                  >
-                                    Clear
-                                  </button>
-                                )}
-                              </div>
-                              <div className="grid grid-cols-5 sm:grid-cols-8 gap-2 max-h-[200px] overflow-y-auto pr-1">
-                                {allModels.map(m => {
-                                  const isModelSelected = wfModels.includes(m.id);
-                                  return (
-                                    <button
-                                      key={m.id}
-                                      onClick={() => {
-                                        setWorkflowModelSelections(prev => {
-                                          const current = prev[wf.id] || [];
-                                          return {
-                                            ...prev,
-                                            [wf.id]: isModelSelected
-                                              ? current.filter(id => id !== m.id)
-                                              : [...current, m.id],
-                                          };
-                                        });
-                                      }}
-                                      className="flex flex-col items-center gap-1"
-                                    >
-                                      <div className={cn(
-                                        'w-10 h-10 rounded-full overflow-hidden border-2 transition-all',
-                                        isModelSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
-                                      )}>
-                                        <ShimmerImage src={m.image_url} alt={m.name} className="w-full h-full object-cover" aspectRatio="1/1" />
-                                      </div>
-                                      <p className={cn(
-                                        'text-[9px] truncate w-full text-center',
-                                        isModelSelected ? 'text-primary font-semibold' : 'text-muted-foreground'
-                                      )}>{m.name}</p>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Custom Settings */}
-                          {customSettings.length > 0 && customSettings.map(setting => (
-                            <div key={setting.label} className="space-y-2">
-                              <p className="text-xs font-medium text-foreground">{setting.label}</p>
-                              {setting.type === 'select' && setting.options && (
-                                <div className="flex flex-wrap gap-1.5">
-                                  {setting.options.map(opt => (
-                                    <button
-                                      key={opt}
-                                      onClick={() => {
-                                        setWorkflowCustomSettings(prev => ({
+                                        const allSelected = sceneSelections.size === variations.length;
+                                        setWorkflowSceneSelections(prev => ({
                                           ...prev,
-                                          [wf.id]: { ...(prev[wf.id] || {}), [setting.label]: opt },
+                                          [wf.id]: allSelected ? new Set<string>() : new Set(variations.map(v => v.label)),
                                         }));
                                       }}
-                                      className={cn(
-                                        'px-3 py-1.5 rounded-full border text-xs font-medium transition-all',
-                                        (wfSettings[setting.label] || setting.options?.[0]) === opt
-                                          ? 'border-primary bg-primary/10 text-primary'
-                                          : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
-                                      )}
                                     >
-                                      {opt}
+                                      {sceneSelections.size === variations.length ? 'Deselect All' : 'Select All'}
                                     </button>
+                                  </div>
+                                  <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                    {variations.map(v => {
+                                      const isSceneSelected = sceneSelections.has(v.label);
+                                      return (
+                                        <button
+                                          key={v.label}
+                                          onClick={() => {
+                                            setWorkflowSceneSelections(prev => {
+                                              const current = new Set(prev[wf.id] || []);
+                                              isSceneSelected ? current.delete(v.label) : current.add(v.label);
+                                              return { ...prev, [wf.id]: current };
+                                            });
+                                          }}
+                                          className={cn(
+                                            'relative rounded-lg overflow-hidden border-2 transition-all',
+                                            isSceneSelected
+                                              ? 'border-primary ring-1 ring-primary/20'
+                                              : 'border-border hover:border-primary/30'
+                                          )}
+                                        >
+                                          <div className="aspect-square w-full bg-muted overflow-hidden">
+                                            {v.preview_url ? (
+                                              <ShimmerImage src={v.preview_url} alt={v.label} className="w-full h-full object-cover" aspectRatio="1/1" />
+                                            ) : (
+                                              <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
+                                                <span className="text-[9px] text-muted-foreground/60 text-center px-1 leading-tight">{v.label}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                          {isSceneSelected && (
+                                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                                              <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                                            </div>
+                                          )}
+                                          <div className="px-1 py-1">
+                                            <p className="text-[10px] text-foreground truncate text-center">{v.label}</p>
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* ── Collapsible: Pose / Scene Library ── */}
+                          {showPosePicker && (
+                            <div className="border-t border-border/50 pt-1">
+                              <button
+                                onClick={() => toggleSection(wf.id, 'poses')}
+                                className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
+                              >
+                                <span className="font-medium text-foreground">Scene Library</span>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{wfPoses.length} selected</Badge>
+                                  <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform', expandedSection[wf.id] === 'poses' && 'rotate-180')} />
+                                </div>
+                              </button>
+                              {expandedSection[wf.id] === 'poses' && (
+                                <div className="space-y-2 pb-2 animate-fade-in">
+                                  {wfPoses.length > 0 && (
+                                    <div className="flex justify-end">
+                                      <button
+                                        className="text-xs text-muted-foreground hover:text-foreground"
+                                        onClick={() => setWorkflowPoseSelections(prev => ({ ...prev, [wf.id]: [] }))}
+                                      >
+                                        Clear
+                                      </button>
+                                    </div>
+                                  )}
+                                  <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                    {fashionPoses.map(pose => {
+                                      const isPoseSelected = wfPoses.includes(pose.poseId);
+                                      return (
+                                        <button
+                                          key={pose.poseId}
+                                          onClick={() => {
+                                            setWorkflowPoseSelections(prev => {
+                                              const current = prev[wf.id] || [];
+                                              return {
+                                                ...prev,
+                                                [wf.id]: isPoseSelected
+                                                  ? current.filter(id => id !== pose.poseId)
+                                                  : [...current, pose.poseId],
+                                              };
+                                            });
+                                          }}
+                                          className={cn(
+                                            'relative rounded-lg overflow-hidden border-2 transition-all',
+                                            isPoseSelected
+                                              ? 'border-primary ring-1 ring-primary/20'
+                                              : 'border-border hover:border-primary/30'
+                                          )}
+                                        >
+                                          <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
+                                            <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
+                                          </div>
+                                          {isPoseSelected && (
+                                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                                              <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                                            </div>
+                                          )}
+                                          <div className="absolute top-1 left-1">
+                                            <Badge className="text-[7px] px-1 py-0 bg-foreground/70 text-background border-0 backdrop-blur-sm">
+                                              {poseCategoryLabels[pose.category] || pose.category}
+                                            </Badge>
+                                          </div>
+                                          <div className="px-1 py-1">
+                                            <p className="text-[10px] text-foreground truncate text-center">{pose.name}</p>
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* ── Collapsible: Models ── */}
+                          {needsModels && (
+                            <div className="border-t border-border/50 pt-1">
+                              <button
+                                onClick={() => toggleSection(wf.id, 'models')}
+                                className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
+                              >
+                                <span className="font-medium text-foreground">Models</span>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{wfModels.length} selected</Badge>
+                                  <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform', expandedSection[wf.id] === 'models' && 'rotate-180')} />
+                                </div>
+                              </button>
+                              {expandedSection[wf.id] === 'models' && (
+                                <div className="space-y-2 pb-2 animate-fade-in">
+                                  {wfModels.length > 0 && (
+                                    <div className="flex justify-end">
+                                      <button
+                                        className="text-xs text-muted-foreground hover:text-foreground"
+                                        onClick={() => setWorkflowModelSelections(prev => ({ ...prev, [wf.id]: [] }))}
+                                      >
+                                        Clear
+                                      </button>
+                                    </div>
+                                  )}
+                                  <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                    {allModels.map(m => {
+                                      const isModelSelected = wfModels.includes(m.id);
+                                      return (
+                                        <button
+                                          key={m.id}
+                                          onClick={() => {
+                                            setWorkflowModelSelections(prev => {
+                                              const current = prev[wf.id] || [];
+                                              return {
+                                                ...prev,
+                                                [wf.id]: isModelSelected
+                                                  ? current.filter(id => id !== m.id)
+                                                  : [...current, m.id],
+                                              };
+                                            });
+                                          }}
+                                          className="flex flex-col items-center gap-1"
+                                        >
+                                          <div className={cn(
+                                            'w-10 h-10 rounded-full overflow-hidden border-2 transition-all',
+                                            isModelSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
+                                          )}>
+                                            <ShimmerImage src={m.image_url} alt={m.name} className="w-full h-full object-cover" aspectRatio="1/1" />
+                                          </div>
+                                          <p className={cn(
+                                            'text-[9px] truncate w-full text-center',
+                                            isModelSelected ? 'text-primary font-semibold' : 'text-muted-foreground'
+                                          )}>{m.name}</p>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* ── Collapsible: Custom Settings ── */}
+                          {customSettings.length > 0 && (
+                            <div className="border-t border-border/50 pt-1">
+                              <button
+                                onClick={() => toggleSection(wf.id, 'settings')}
+                                className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
+                              >
+                                <span className="font-medium text-foreground">Settings</span>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                    {Object.keys(wfSettings).length}/{customSettings.length}
+                                  </Badge>
+                                  <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform', expandedSection[wf.id] === 'settings' && 'rotate-180')} />
+                                </div>
+                              </button>
+                              {expandedSection[wf.id] === 'settings' && (
+                                <div className="space-y-3 pb-2 animate-fade-in">
+                                  {customSettings.map(setting => (
+                                    <div key={setting.label} className="space-y-2">
+                                      <p className="text-xs font-medium text-foreground">{setting.label}</p>
+                                      {setting.type === 'select' && setting.options && (
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {setting.options.map(opt => (
+                                            <button
+                                              key={opt}
+                                              onClick={() => {
+                                                setWorkflowCustomSettings(prev => ({
+                                                  ...prev,
+                                                  [wf.id]: { ...(prev[wf.id] || {}), [setting.label]: opt },
+                                                }));
+                                              }}
+                                              className={cn(
+                                                'px-3 py-1.5 rounded-full border text-xs font-medium transition-all',
+                                                (wfSettings[setting.label] || setting.options?.[0]) === opt
+                                                  ? 'border-primary bg-primary/10 text-primary'
+                                                  : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
+                                              )}
+                                            >
+                                              {opt}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
                                   ))}
                                 </div>
                               )}
                             </div>
-                          ))}
+                          )}
                         </div>
                       )}
                     </div>
@@ -860,7 +922,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
               {/* Sticky credit calculator */}
               {selectedWorkflowIds.size > 0 && (
-                <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border pt-3 pb-1 -mx-1 px-1 z-10">
+                <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border pt-3 pb-1 -mx-1 px-1 pr-14 z-10">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <Zap className="w-4 h-4 text-primary" />
