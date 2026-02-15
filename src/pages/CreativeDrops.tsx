@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw, Sparkles, Timer, Image, Palette, CheckCircle2, Infinity } from 'lucide-react';
+import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -378,131 +378,75 @@ export default function CreativeDrops() {
 
 // Onboarding section for zero-state
 const onboardingSteps = [
-  {
-    icon: Package,
-    title: 'Pick Your Products',
-    description: 'Select which products get fresh visuals each drop.',
-  },
-  {
-    icon: Layers,
-    title: 'Choose Workflows',
-    description: 'Pick generation styles — product listing, lifestyle, UGC, and more.',
-  },
-  {
-    icon: RefreshCw,
-    title: 'Set & Forget',
-    description: 'Schedule the frequency. Images arrive automatically on time.',
-  },
-];
-
-const onboardingBenefits = [
-  { icon: Timer, label: 'Save 10+ hours/month' },
-  { icon: Sparkles, label: 'Always-fresh content' },
-  { icon: Image, label: 'Multi-platform formats' },
-  { icon: Palette, label: 'Brand-consistent' },
+  { icon: Package, title: 'Pick Products', desc: 'Choose which products get fresh visuals.' },
+  { icon: Layers, title: 'Choose Workflows', desc: 'Select generation styles and formats.' },
+  { icon: RefreshCw, title: 'Set & Forget', desc: 'Schedule frequency. Images arrive on time.' },
 ];
 
 const previewImages = [
   getLandingAssetUrl('showcase/fashion-blazer-golden.jpg'),
   getLandingAssetUrl('showcase/skincare-serum-marble.jpg'),
   getLandingAssetUrl('showcase/food-coffee-artisan.jpg'),
-  getLandingAssetUrl('showcase/fashion-tee-lifestyle.jpg'),
+  getLandingAssetUrl('showcase/skincare-cream-botanical.jpg'),
+  getLandingAssetUrl('showcase/fashion-dress-garden.jpg'),
 ];
 
 function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () => void }) {
   return (
-    <div className="max-w-3xl mx-auto text-center space-y-12 py-12">
-      {/* Hero */}
-      <div className="space-y-5 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
-        <div className="flex justify-center">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <Infinity className="w-6 h-6 text-primary" />
-          </div>
-        </div>
-        <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground/80 to-foreground/60 bg-clip-text text-transparent">
+    <div className="max-w-2xl mx-auto text-center space-y-8 py-8 sm:py-10 animate-in fade-in-0 duration-700">
+      {/* Headline */}
+      <div className="space-y-3">
+        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
           Automate Your Visual Content
         </h2>
-        <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
-          Set up a schedule once. Receive fresh, on-brand product visuals delivered automatically — no manual work needed.
+        <p className="text-muted-foreground text-base max-w-md mx-auto">
+          Fresh, on-brand product visuals — delivered on schedule.
         </p>
       </div>
 
-      {/* 3 Step Cards — Glassmorphism */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        {onboardingSteps.map((step, i) => {
+      {/* Three steps — inline row */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-6 sm:gap-0 sm:divide-x sm:divide-border">
+        {onboardingSteps.map((step) => {
           const StepIcon = step.icon;
-          const accentOpacity = [0.6, 0.4, 0.25][i];
           return (
-            <div
-              key={step.title}
-              className={cn(
-                "relative rounded-2xl p-7 text-left space-y-4",
-                "bg-gradient-to-br from-background/95 to-muted/40",
-                "backdrop-blur-sm border border-border/60 shadow-md",
-                "hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
-                "animate-in fade-in-0 slide-in-from-bottom-6 duration-500 fill-mode-both"
-              )}
-              style={{ animationDelay: `${i * 150}ms` }}
-            >
-              {/* Left accent stripe */}
-              <div
-                className="absolute left-0 top-4 bottom-4 w-1 rounded-full bg-primary"
-                style={{ opacity: accentOpacity }}
-              />
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm">
-                  {i + 1}
-                </div>
-                <StepIcon className="w-5 h-5 text-primary/70" />
+            <div key={step.title} className="flex items-start gap-3 sm:px-8 first:sm:pl-0 last:sm:pr-0">
+              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <StepIcon className="w-4 h-4 text-foreground/70" />
               </div>
-              <h3 className="text-base font-semibold">{step.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground">{step.title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Product preview strip */}
-      <div className="flex justify-center -space-x-3 animate-in fade-in-0 duration-700 fill-mode-both" style={{ animationDelay: '400ms' }}>
+      {/* Preview images — avatar stack */}
+      <div className="flex justify-center -space-x-2.5">
         {previewImages.map((img, i) => (
           <div
             key={i}
-            className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-background shadow-md"
-            style={{ transform: `rotate(${(i - 1.5) * 4}deg)`, zIndex: 4 - i }}
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-background shadow-sm"
+            style={{ zIndex: previewImages.length - i }}
           >
-            <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+            <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
           </div>
         ))}
       </div>
 
-      {/* Benefit chips */}
-      <div className="flex flex-wrap justify-center gap-2.5 animate-in fade-in-0 slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: '500ms' }}>
-        {onboardingBenefits.map(b => {
-          const BIcon = b.icon;
-          return (
-            <span
-              key={b.label}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border border-border/80 bg-background shadow-sm text-foreground/80 hover:border-primary/30 hover:text-foreground transition-colors"
-            >
-              <BIcon className="w-3.5 h-3.5 text-primary/60" />
-              {b.label}
-            </span>
-          );
-        })}
-      </div>
-
       {/* CTA */}
-      <div className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: '650ms' }}>
+      <div>
         <Button
           size="lg"
           onClick={onCreateSchedule}
-          className="rounded-full px-10 py-6 text-base gap-2 shadow-lg hover:shadow-xl transition-shadow"
+          className="rounded-full px-8 gap-2"
         >
           <Calendar className="w-4 h-4" />
           Create Your First Schedule
         </Button>
-        <p className="text-xs text-muted-foreground mt-3">
-          Set up in under 2 minutes. Pause or cancel anytime.
+        <p className="text-xs text-muted-foreground mt-2.5">
+          Set up in under 2 minutes · Pause or cancel anytime
         </p>
       </div>
     </div>
