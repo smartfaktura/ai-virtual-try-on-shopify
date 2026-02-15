@@ -54,6 +54,7 @@ interface WorkflowRequest {
     imageUrl: string;
   }>;
   styling_notes?: string;
+  prop_style?: 'clean' | 'decorated';
   model?: {
     name: string;
     gender: string;
@@ -90,7 +91,8 @@ function buildVariationPrompt(
   totalVariations: number,
   model?: WorkflowRequest["model"],
   additionalProducts?: WorkflowRequest["additional_products"],
-  stylingNotes?: string
+  stylingNotes?: string,
+  propStyle?: 'clean' | 'decorated'
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
@@ -148,6 +150,14 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     ? `\nSTYLING & PROPS: ${stylingNotes}\nIncorporate these styling elements naturally into the flat lay composition.\n`
     : "";
 
+  // Prop style control for flat lay — prevents AI from adding extra commercial products
+  let propStyleBlock = "";
+  if (propStyle === 'clean' || (!propStyle && additionalProducts !== undefined)) {
+    propStyleBlock = `\nCRITICAL COMPOSITION RULE: Show ONLY the selected products on the surface. Do NOT add any extra items, props, accessories, or commercial products. The surface should contain ONLY the products provided — nothing else. No watches, cameras, electronics, bags, or any item not explicitly listed above.\n`;
+  } else if (propStyle === 'decorated') {
+    propStyleBlock = `\nCOMPOSITION RULE: You may add ONLY abstract/decorative styling elements around the products: natural textures, dried flowers, fabric swatches, paper, abstract shapes, ribbons. NEVER add extra commercial products like watches, cameras, electronics, earbuds, bags, or any item that could be mistaken for the user's own product.\n`;
+  }
+
   const prompt = `${config.prompt_template}
 
 PRODUCT DETAILS:
@@ -155,7 +165,7 @@ PRODUCT DETAILS:
 - Type: ${product.productType}
 ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realistic scale` : ""}
 ${product.description ? `- Description: ${product.description}` : ""}
-${modelBlock}${additionalProductsBlock}${stylingBlock}
+${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
 ${variation.instruction}
 
@@ -496,7 +506,8 @@ serve(async (req) => {
             variationsToGenerate.length,
             body.model,
             body.additional_products,
-            body.styling_notes
+            body.styling_notes,
+            body.prop_style
           );
 
           console.log(
