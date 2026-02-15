@@ -17,9 +17,11 @@ const HOURLY_LIMITS: Record<string, number> = {
 };
 
 // Credit cost calculation
-function calculateCreditCost(jobType: string, imageCount: number, quality: string): number {
+function calculateCreditCost(jobType: string, imageCount: number, quality: string, additionalProductCount: number = 0): number {
   if (jobType === "tryon") return imageCount * 8;
-  return imageCount * (quality === "high" ? 10 : 4);
+  const baseCost = imageCount * (quality === "high" ? 10 : 4);
+  const extraProductCost = additionalProductCount * 2 * imageCount;
+  return baseCost + extraProductCost;
 }
 
 function getUserIdFromJwt(authHeader: string | null): string | null {
@@ -52,7 +54,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { jobType, payload, imageCount = 1, quality = "standard" } = body;
+    const { jobType, payload, imageCount = 1, quality = "standard", additionalProductCount = 0 } = body;
 
     if (!jobType || !payload) {
       return new Response(
@@ -70,7 +72,7 @@ serve(async (req) => {
     }
 
     // Calculate credit cost
-    const creditsCost = calculateCreditCost(jobType, imageCount, quality);
+    const creditsCost = calculateCreditCost(jobType, imageCount, quality, additionalProductCount);
 
     // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, serviceRoleKey, {

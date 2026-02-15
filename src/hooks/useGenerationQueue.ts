@@ -31,6 +31,7 @@ interface EnqueueParams {
   payload: Record<string, unknown>;
   imageCount: number;
   quality: string;
+  additionalProductCount?: number;
 }
 
 interface EnqueueResult {
@@ -239,6 +240,7 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
           payload: params.payload,
           imageCount: params.imageCount,
           quality: params.quality,
+          additionalProductCount: params.additionalProductCount || 0,
         }),
       });
 
