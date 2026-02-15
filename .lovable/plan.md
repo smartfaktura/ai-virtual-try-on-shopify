@@ -1,29 +1,38 @@
 
 
-## Creative Drops -- Rich Onboarding Empty State
+## Creative Drops Onboarding -- Premium Visual Upgrade
 
-Replace the plain "No schedules yet" card with an engaging, informative onboarding section that explains what Creative Drops is, why it's valuable, and guides the user to create their first schedule.
+The current onboarding is functional but visually flat: plain white cards, small icons, and basic badges. For B2B clients, we need a section that feels premium, editorial, and confidence-inspiring.
 
 ---
 
 ### What Changes
 
-**When user has zero schedules**, instead of the current basic empty state card, show a full onboarding hero section with:
+**1. Hero Section -- Gradient headline with editorial feel**
+- Replace the plain `text-3xl font-bold` headline with a larger, tracked headline using a subtle gradient text effect (dark-to-medium tone, not flashy)
+- Add a decorative sparkle/infinity icon above the headline as a visual anchor
+- Increase subtitle font size and add more breathing room
 
-1. **Hero headline and subtitle** -- "Automate Your Visual Content" with a short value prop explaining recurring, hands-off image generation.
+**2. Step Cards -- Glassmorphism with hover elevation**
+- Replace flat `border bg-card` cards with a frosted-glass aesthetic: `bg-gradient-to-br from-white/80 to-white/40 backdrop-blur-sm border border-white/60 shadow-lg`
+- Add a colored accent stripe on the left edge of each card (using primary color, fading opacity per card)
+- Increase card padding and add hover effect: `hover:shadow-xl hover:-translate-y-1 transition-all duration-300`
+- Make the step number circle larger (w-10 h-10) with a subtle gradient background
+- Increase icon size and use primary color tint instead of muted
+- Bump title to `text-base font-semibold` and description to `text-sm`
 
-2. **Three animated step cards** -- Horizontal row (stacks on mobile) showing the 3-step process:
-   - Step 1: "Pick Your Products" -- Select which products get fresh visuals
-   - Step 2: "Choose Workflows" -- Pick generation styles (product listing, lifestyle, UGC, etc.)
-   - Step 3: "Set & Forget" -- Schedule frequency, and images arrive automatically
+**3. Benefit Chips -- Pill-style with subtle glow**
+- Replace plain secondary badges with outlined pills that have a subtle inner shadow and slight primary tint on hover
+- Add a faint background gradient behind the entire benefits row
 
-   Each card has a numbered circle, icon, title, and short description. Cards use a subtle entrance animation (fade-in + slide-up with staggered delay via CSS).
+**4. CTA Button -- Premium styling**
+- Make the CTA larger with a subtle shadow and gradient background
+- Add a secondary text line below: "No credit card required. Cancel anytime." in muted small text for trust
 
-3. **Benefit chips** -- A row of 3-4 small benefit badges below the steps: "Save 10+ hours/month", "Always-fresh content", "Multi-platform formats", "Brand-consistent"
-
-4. **Primary CTA** -- A prominent "Create Your First Schedule" button that opens the wizard.
-
-5. **The stats bar, tabs, and "Create Schedule" button inside the tab are hidden** when there are zero schedules AND zero drops -- the onboarding section replaces the entire tab area to avoid clutter.
+**5. Visual Collage -- Product showcase strip**
+- Add a horizontal strip of 4-5 small product/lifestyle preview thumbnails between the steps and benefits, using the existing `getLandingAssetUrl` showcase images
+- Images shown in rounded pill-shaped containers with slight overlap and rotation for depth
+- This gives users a visual preview of what their drops could look like
 
 ---
 
@@ -31,31 +40,57 @@ Replace the plain "No schedules yet" card with an engaging, informative onboardi
 
 **File: `src/pages/CreativeDrops.tsx`**
 
-- Add a new inline `CreativeDropsOnboarding` component (or section) rendered conditionally when `schedules.length === 0 && drops.length === 0`
-- When this condition is true, skip rendering the stats bar and Tabs entirely; show only the onboarding section
-- The onboarding section uses existing UI primitives (Card, Button, Badge) with Tailwind animations
-- CTA calls `openWizard()` to open the schedule creation wizard
-- Once the user creates their first schedule, the onboarding disappears and the normal tabs/stats view takes over
+Only the `CreativeDropsOnboarding` component is modified (lines 404-461). No new files.
 
-**Animation approach:**
-- CSS keyframe animation using Tailwind's `animate-in` utilities already available from `tailwindcss-animate`
-- Each step card gets a staggered `animation-delay` via inline style (0ms, 150ms, 300ms)
-- Uses `fade-in-0 slide-in-from-bottom-4` classes from the existing tailwindcss-animate setup
-
-**Step card structure:**
-```
-+---------------------------------------+
-|  (1)  Package icon                    |
-|  Pick Your Products                   |
-|  Select which products get            |
-|  fresh visuals each drop.             |
-+---------------------------------------+
+**Step card styling (after):**
+```tsx
+<div
+  className={cn(
+    "relative rounded-2xl p-7 text-left space-y-4",
+    "bg-gradient-to-br from-white/90 to-stone-50/80",
+    "border border-stone-200/60 shadow-md",
+    "hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+    "animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-both"
+  )}
+>
+  {/* Left accent stripe */}
+  <div className="absolute left-0 top-4 bottom-4 w-1 rounded-full bg-primary/[opacity]" />
+  ...
+</div>
 ```
 
-**Layout:**
-- Full-width section with centered content, max-w-3xl
-- Step cards in a `grid grid-cols-1 sm:grid-cols-3 gap-4`
-- Benefit badges in a `flex flex-wrap justify-center gap-2`
-- CTA button large size, centered
+**Gradient headline:**
+```tsx
+<h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground/80 to-foreground/60 bg-clip-text text-transparent">
+```
 
-**No new files created** -- everything is added inline within `CreativeDrops.tsx` since it's page-specific and self-contained.
+**Product preview strip (using existing assets):**
+```tsx
+const previewImages = [
+  getLandingAssetUrl('showcase/fashion-blazer-golden.jpg'),
+  getLandingAssetUrl('showcase/skincare-serum-marble.jpg'),
+  getLandingAssetUrl('showcase/food-coffee-artisan.jpg'),
+  getLandingAssetUrl('showcase/fashion-tee-lifestyle.jpg'),
+];
+
+<div className="flex justify-center -space-x-3">
+  {previewImages.map((img, i) => (
+    <div
+      key={i}
+      className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-background shadow-md"
+      style={{ transform: `rotate(${(i - 1.5) * 4}deg)`, zIndex: 4 - i }}
+    >
+      <img src={img} className="w-full h-full object-cover" />
+    </div>
+  ))}
+</div>
+```
+
+**Trust line under CTA:**
+```tsx
+<p className="text-xs text-muted-foreground mt-3">
+  Set up in under 2 minutes. Pause or cancel anytime.
+</p>
+```
+
+**Layout:** Same max-w-3xl centered container, increased vertical spacing (space-y-12 instead of space-y-10), and slightly more padding (py-12 instead of py-8).
