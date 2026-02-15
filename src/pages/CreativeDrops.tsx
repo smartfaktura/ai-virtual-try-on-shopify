@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw, Sparkles, Timer, Image, Palette, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw, Sparkles, Timer, Image, Palette, CheckCircle2, Infinity } from 'lucide-react';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -401,61 +402,108 @@ const onboardingBenefits = [
   { icon: Palette, label: 'Brand-consistent' },
 ];
 
+const previewImages = [
+  getLandingAssetUrl('showcase/fashion-blazer-golden.jpg'),
+  getLandingAssetUrl('showcase/skincare-serum-marble.jpg'),
+  getLandingAssetUrl('showcase/food-coffee-artisan.jpg'),
+  getLandingAssetUrl('showcase/fashion-tee-lifestyle.jpg'),
+];
+
 function CreativeDropsOnboarding({ onCreateSchedule }: { onCreateSchedule: () => void }) {
   return (
-    <div className="max-w-3xl mx-auto text-center space-y-10 py-8">
+    <div className="max-w-3xl mx-auto text-center space-y-12 py-12">
       {/* Hero */}
-      <div className="space-y-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
-        <h2 className="text-3xl font-bold tracking-tight">
+      <div className="space-y-5 animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+        <div className="flex justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+            <Infinity className="w-6 h-6 text-primary" />
+          </div>
+        </div>
+        <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground/80 to-foreground/60 bg-clip-text text-transparent">
           Automate Your Visual Content
         </h2>
-        <p className="text-muted-foreground text-base max-w-lg mx-auto">
+        <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
           Set up a schedule once. Receive fresh, on-brand product visuals delivered automatically — no manual work needed.
         </p>
       </div>
 
-      {/* 3 Step Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* 3 Step Cards — Glassmorphism */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {onboardingSteps.map((step, i) => {
           const StepIcon = step.icon;
+          const accentOpacity = [0.6, 0.4, 0.25][i];
           return (
             <div
               key={step.title}
-              className="rounded-2xl border bg-card p-6 text-left space-y-3 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 fill-mode-both"
+              className={cn(
+                "relative rounded-2xl p-7 text-left space-y-4",
+                "bg-gradient-to-br from-background/95 to-muted/40",
+                "backdrop-blur-sm border border-border/60 shadow-md",
+                "hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+                "animate-in fade-in-0 slide-in-from-bottom-6 duration-500 fill-mode-both"
+              )}
               style={{ animationDelay: `${i * 150}ms` }}
             >
+              {/* Left accent stripe */}
+              <div
+                className="absolute left-0 top-4 bottom-4 w-1 rounded-full bg-primary"
+                style={{ opacity: accentOpacity }}
+              />
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm">
                   {i + 1}
                 </div>
-                <StepIcon className="w-5 h-5 text-muted-foreground" />
+                <StepIcon className="w-5 h-5 text-primary/70" />
               </div>
-              <h3 className="font-semibold text-sm">{step.title}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
+              <h3 className="text-base font-semibold">{step.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
             </div>
           );
         })}
       </div>
 
+      {/* Product preview strip */}
+      <div className="flex justify-center -space-x-3 animate-in fade-in-0 duration-700 fill-mode-both" style={{ animationDelay: '400ms' }}>
+        {previewImages.map((img, i) => (
+          <div
+            key={i}
+            className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-background shadow-md"
+            style={{ transform: `rotate(${(i - 1.5) * 4}deg)`, zIndex: 4 - i }}
+          >
+            <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+          </div>
+        ))}
+      </div>
+
       {/* Benefit chips */}
-      <div className="flex flex-wrap justify-center gap-2 animate-in fade-in-0 slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: '450ms' }}>
+      <div className="flex flex-wrap justify-center gap-2.5 animate-in fade-in-0 slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: '500ms' }}>
         {onboardingBenefits.map(b => {
           const BIcon = b.icon;
           return (
-            <Badge key={b.label} variant="secondary" className="gap-1.5 px-3 py-1 text-xs font-medium">
-              <BIcon className="w-3.5 h-3.5" />
+            <span
+              key={b.label}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border border-border/80 bg-background shadow-sm text-foreground/80 hover:border-primary/30 hover:text-foreground transition-colors"
+            >
+              <BIcon className="w-3.5 h-3.5 text-primary/60" />
               {b.label}
-            </Badge>
+            </span>
           );
         })}
       </div>
 
       {/* CTA */}
-      <div className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: '600ms' }}>
-        <Button size="lg" onClick={onCreateSchedule} className="rounded-full px-8 gap-2">
+      <div className="animate-in fade-in-0 slide-in-from-bottom-3 duration-500 fill-mode-both" style={{ animationDelay: '650ms' }}>
+        <Button
+          size="lg"
+          onClick={onCreateSchedule}
+          className="rounded-full px-10 py-6 text-base gap-2 shadow-lg hover:shadow-xl transition-shadow"
+        >
           <Calendar className="w-4 h-4" />
           Create Your First Schedule
         </Button>
+        <p className="text-xs text-muted-foreground mt-3">
+          Set up in under 2 minutes. Pause or cancel anytime.
+        </p>
       </div>
     </div>
   );
