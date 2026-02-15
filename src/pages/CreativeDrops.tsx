@@ -140,17 +140,19 @@ export default function CreativeDrops() {
     const sceneConfig = (schedule.scene_config || {}) as Record<string, any>;
     const sceneSelections: Record<string, string[]> = {};
     const modelSelections: Record<string, string[]> = {};
+    const poseSelections: Record<string, string[]> = {};
     const customSettings: Record<string, Record<string, string>> = {};
     for (const [k, v] of Object.entries(sceneConfig)) {
       if (v?.selected_scenes) sceneSelections[k] = v.selected_scenes;
       if (v?.model_ids) modelSelections[k] = v.model_ids;
+      if (v?.pose_ids) poseSelections[k] = v.pose_ids;
       if (v?.custom_settings) customSettings[k] = v.custom_settings;
     }
-    return { sceneSelections, modelSelections, customSettings };
+    return { sceneSelections, modelSelections, poseSelections, customSettings };
   };
 
   const handleDuplicate = (schedule: CreativeSchedule) => {
-    const { sceneSelections, modelSelections, customSettings } = extractPerWorkflowData(schedule);
+    const { sceneSelections, modelSelections, poseSelections, customSettings } = extractPerWorkflowData(schedule);
     setEditingScheduleId(undefined);
     setWizardInitialData({
       name: `${schedule.name} (Copy)`,
@@ -168,13 +170,14 @@ export default function CreativeDrops() {
       freestylePrompts: schedule.freestyle_prompts || [],
       workflowSceneSelections: sceneSelections,
       workflowModelSelections: modelSelections,
+      workflowPoseSelections: poseSelections,
       workflowCustomSettings: customSettings,
     });
     setWizardOpen(true);
   };
 
   const handleEdit = (schedule: CreativeSchedule) => {
-    const { sceneSelections, modelSelections, customSettings } = extractPerWorkflowData(schedule);
+    const { sceneSelections, modelSelections, poseSelections, customSettings } = extractPerWorkflowData(schedule);
     setEditingScheduleId(schedule.id);
     setWizardInitialData({
       name: schedule.name,
@@ -192,6 +195,7 @@ export default function CreativeDrops() {
       freestylePrompts: schedule.freestyle_prompts || [],
       workflowSceneSelections: sceneSelections,
       workflowModelSelections: modelSelections,
+      workflowPoseSelections: poseSelections,
       workflowCustomSettings: customSettings,
     });
     setWizardOpen(true);
