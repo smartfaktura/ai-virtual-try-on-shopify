@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, BarChart3, Image, CreditCard } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PageHeader } from '@/components/app/PageHeader';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
-import { CreativeDropWizard } from '@/components/app/CreativeDropWizard';
+import { CreativeDropWizard, type CreativeDropWizardInitialData } from '@/components/app/CreativeDropWizard';
 import { DropCard } from '@/components/app/DropCard';
 import { DropDetailModal } from '@/components/app/DropDetailModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 export interface CreativeSchedule {
   id: string;
@@ -29,6 +32,9 @@ export interface CreativeSchedule {
   images_per_drop: number;
   model_ids: string[];
   estimated_credits: number;
+  include_freestyle?: boolean;
+  freestyle_prompts?: string[];
+  scene_config?: Record<string, { aspect_ratio: string }>;
 }
 
 export interface CreativeDrop {
@@ -43,12 +49,19 @@ export interface CreativeDrop {
   credits_charged: number;
   total_images: number;
   images: unknown[];
+  schedule_name?: string;
 }
+
+const DROP_STATUSES = ['all', 'scheduled', 'generating', 'ready', 'failed'] as const;
 
 export default function CreativeDrops() {
   const { user } = useAuth();
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardInitialData, setWizardInitialData] = useState<CreativeDropWizardInitialData | undefined>(undefined);
   const [selectedDrop, setSelectedDrop] = useState<CreativeDrop | null>(null);
+  const [activeTab, setActiveTab] = useState('schedules');
+  const [dropStatusFilter, setDropStatusFilter] = useState<string>('all');
+  const [dropSortAsc, setDropSortAsc] = useState(false);
 
   const { data: schedules = [], isLoading: schedulesLoading } = useQuery({
     queryKey: ['creative-schedules'],
@@ -68,25 +81,107 @@ export default function CreativeDrops() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('creative_drops')
-        .select('*')
+        .select('*, creative_schedules(name)')
         .order('run_date', { ascending: false });
       if (error) throw error;
-      return data as unknown as CreativeDrop[];
+      return (data || []).map((d: any) => ({
+        ...d,
+        schedule_name: d.creative_schedules?.name || null,
+      })) as CreativeDrop[];
     },
     enabled: !!user,
   });
+
+  // Stats
+  const activeCount = schedules.filter(s => s.active).length;
+  const totalDrops = drops.length;
+  const totalImages = drops.reduce((sum, d) => sum + d.total_images, 0);
+  const totalCredits = drops.reduce((sum, d) => sum + d.credits_charged, 0);
+
+  // Filtered & sorted drops
+  const filteredDrops = drops
+    .filter(d => dropStatusFilter === 'all' || d.status === dropStatusFilter)
+    .sort((a, b) => {
+      const dateA = new Date(a.run_date).getTime();
+      const dateB = new Date(b.run_date).getTime();
+      return dropSortAsc ? dateA - dateB : dateB - dateA;
+    });
+
+  // Schedule name lookup for drops
+  const scheduleNameMap = new Map(schedules.map(s => [s.id, s.name]));
+
+  const handleDuplicate = (schedule: CreativeSchedule) => {
+    const sceneConfig = (schedule.scene_config || {}) as Record<string, { aspect_ratio: string }>;
+    const wfFormats: Record<string, string> = {};
+    for (const [k, v] of Object.entries(sceneConfig)) {
+      wfFormats[k] = v.aspect_ratio || '1:1';
+    }
+
+    setWizardInitialData({
+      name: `${schedule.name} (Copy)`,
+      theme: schedule.theme,
+      themeNotes: schedule.theme_notes,
+      brandProfileId: schedule.brand_profile_id || '',
+      selectedProductIds: schedule.selected_product_ids || [],
+      selectedWorkflowIds: schedule.workflow_ids || [],
+      selectedModelIds: schedule.model_ids || [],
+      workflowFormats: wfFormats,
+      deliveryMode: schedule.frequency === 'one-time' ? 'now' : 'scheduled',
+      frequency: schedule.frequency === 'one-time' ? 'monthly' : schedule.frequency,
+      imagesPerDrop: schedule.images_per_drop,
+      includeFreestyle: schedule.include_freestyle || false,
+      freestylePrompts: schedule.freestyle_prompts || [],
+    });
+    setWizardOpen(true);
+  };
+
+  const openWizard = () => {
+    setWizardInitialData(undefined);
+    setWizardOpen(true);
+  };
+
+  const closeWizard = () => {
+    setWizardOpen(false);
+    setWizardInitialData(undefined);
+  };
 
   return (
     <PageHeader
       title="Creative Drops"
       subtitle={wizardOpen ? undefined : "Automate recurring visual creation. Set up schedules and receive fresh assets on autopilot."}
-      backAction={wizardOpen ? { content: 'Back to Schedules', onAction: () => setWizardOpen(false) } : undefined}
+      backAction={wizardOpen ? { content: 'Back to Schedules', onAction: closeWizard } : undefined}
     >
       {wizardOpen ? (
-        <CreativeDropWizard onClose={() => setWizardOpen(false)} />
+        <CreativeDropWizard onClose={closeWizard} initialData={wizardInitialData} />
       ) : (
         <>
-          <Tabs defaultValue="schedules" className="space-y-6">
+          {/* Stats Summary */}
+          {(schedules.length > 0 || drops.length > 0) && (
+            <div className="flex gap-3 flex-wrap mb-6">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border text-sm">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                <span className="font-medium">{activeCount}</span>
+                <span className="text-muted-foreground text-xs">Active Schedules</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border text-sm">
+                <Zap className="w-3.5 h-3.5 text-primary" />
+                <span className="font-medium">{totalDrops}</span>
+                <span className="text-muted-foreground text-xs">Total Drops</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border text-sm">
+                <Image className="w-3.5 h-3.5 text-primary" />
+                <span className="font-medium">{totalImages}</span>
+                <span className="text-muted-foreground text-xs">Images Generated</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border text-sm">
+                <CreditCard className="w-3.5 h-3.5 text-primary" />
+                <span className="font-medium">{totalCredits}</span>
+                <span className="text-muted-foreground text-xs">Credits Used</span>
+              </div>
+            </div>
+          )}
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList>
               <TabsTrigger value="schedules">
                 <Clock className="w-4 h-4 mr-1.5" />
@@ -104,7 +199,7 @@ export default function CreativeDrops() {
 
             <TabsContent value="schedules" className="space-y-4">
               <div className="flex justify-end">
-                <Button onClick={() => setWizardOpen(true)}>
+                <Button onClick={openWizard}>
                   <Calendar className="w-4 h-4 mr-2" />
                   Create Schedule
                 </Button>
@@ -120,42 +215,94 @@ export default function CreativeDrops() {
                 <EmptyStateCard
                   heading="No schedules yet"
                   description="Set up your first Creative Drop schedule to automate visual generation for your products."
-                  action={{ content: 'Create Schedule', onAction: () => setWizardOpen(true) }}
+                  action={{ content: 'Create Schedule', onAction: openWizard }}
                   icon={<Calendar className="w-10 h-10 text-muted-foreground" />}
                 />
               ) : (
                 <div className="space-y-3">
                   {schedules.map(schedule => (
-                    <DropCard key={schedule.id} type="schedule" schedule={schedule} />
+                    <DropCard key={schedule.id} type="schedule" schedule={schedule} onDuplicate={handleDuplicate} />
                   ))}
                 </div>
               )}
             </TabsContent>
 
             <TabsContent value="drops" className="space-y-4">
+              {/* Filter & Sort bar */}
+              {drops.length > 0 && (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex gap-1.5 overflow-x-auto">
+                    {DROP_STATUSES.map(s => (
+                      <Button
+                        key={s}
+                        variant={dropStatusFilter === s ? 'default' : 'outline'}
+                        size="sm"
+                        className="text-xs capitalize rounded-full h-7"
+                        onClick={() => setDropStatusFilter(s)}
+                      >
+                        {s}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => setDropSortAsc(prev => !prev)}
+                  >
+                    {dropSortAsc ? 'Oldest first' : 'Newest first'}
+                  </Button>
+                </div>
+              )}
+
               {dropsLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map(i => (
                     <div key={i} className="h-20 rounded-lg bg-muted animate-pulse" />
                   ))}
                 </div>
-              ) : drops.length === 0 ? (
+              ) : filteredDrops.length === 0 && drops.length === 0 ? (
                 <EmptyStateCard
                   heading="No drops yet"
-                  description="Once your schedules run, completed drops will appear here with all generated visuals."
+                  description="Create your first schedule to start generating creative assets automatically."
+                  action={{
+                    content: 'Create your first schedule',
+                    onAction: () => {
+                      setActiveTab('schedules');
+                      setTimeout(() => openWizard(), 100);
+                    },
+                  }}
                   icon={<Zap className="w-10 h-10 text-muted-foreground" />}
                 />
+              ) : filteredDrops.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  No drops matching "{dropStatusFilter}" status
+                </div>
               ) : (
                 <div className="space-y-3">
-                  {drops.map(drop => (
-                    <DropCard key={drop.id} type="drop" drop={drop} onViewDrop={() => setSelectedDrop(drop)} />
+                  {filteredDrops.map(drop => (
+                    <DropCard
+                      key={drop.id}
+                      type="drop"
+                      drop={drop}
+                      onViewDrop={() => setSelectedDrop(drop)}
+                      scheduleName={drop.schedule_name || (drop.schedule_id ? scheduleNameMap.get(drop.schedule_id) : undefined) || undefined}
+                    />
                   ))}
                 </div>
               )}
             </TabsContent>
 
             <TabsContent value="calendar" className="space-y-4">
-              <CalendarView schedules={schedules} drops={drops} />
+              <CalendarView
+                schedules={schedules}
+                drops={drops}
+                onDayClick={(day, type) => {
+                  if (type === 'drop') {
+                    setActiveTab('drops');
+                  }
+                }}
+              />
             </TabsContent>
           </Tabs>
 
@@ -175,8 +322,16 @@ export default function CreativeDrops() {
   );
 }
 
-// Simple calendar view
-function CalendarView({ schedules, drops }: { schedules: CreativeSchedule[]; drops: CreativeDrop[] }) {
+// Calendar view with interactive days
+function CalendarView({
+  schedules,
+  drops,
+  onDayClick,
+}: {
+  schedules: CreativeSchedule[];
+  drops: CreativeDrop[];
+  onDayClick?: (day: number, type: 'drop' | 'scheduled') => void;
+}) {
   const now = new Date();
   const [monthOffset, setMonthOffset] = useState(0);
   const viewDate = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
@@ -197,12 +352,14 @@ function CalendarView({ schedules, drops }: { schedules: CreativeSchedule[]; dro
     }
   });
 
-  const scheduledDays = new Set<number>();
+  const scheduledDayMap = new Map<number, CreativeSchedule[]>();
   schedules.forEach(s => {
     if (s.next_run_at) {
       const date = new Date(s.next_run_at);
       if (date.getFullYear() === year && date.getMonth() === month) {
-        scheduledDays.add(date.getDate());
+        const day = date.getDate();
+        if (!scheduledDayMap.has(day)) scheduledDayMap.set(day, []);
+        scheduledDayMap.get(day)!.push(s);
       }
     }
   });
@@ -228,24 +385,56 @@ function CalendarView({ schedules, drops }: { schedules: CreativeSchedule[]; dro
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
           <div key={d} className="text-xs text-muted-foreground py-1 font-medium">{d}</div>
         ))}
-        {cells.map((day, i) => (
-          <div
-            key={i}
-            className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm ${
-              day && isToday(day) ? 'bg-primary/10 font-semibold' : ''
-            } ${day ? 'hover:bg-muted cursor-default' : ''}`}
-          >
-            {day && (
-              <>
-                <span>{day}</span>
-                <div className="flex gap-0.5 mt-0.5">
-                  {dropDays.has(day) && <div className="w-1.5 h-1.5 rounded-full bg-status-success" />}
-                  {scheduledDays.has(day) && <div className="w-1.5 h-1.5 rounded-full bg-status-info" />}
-                </div>
-              </>
-            )}
-          </div>
-        ))}
+        {cells.map((day, i) => {
+          const hasDrop = day ? dropDays.has(day) : false;
+          const hasScheduled = day ? scheduledDayMap.has(day) : false;
+          const isInteractive = hasDrop || hasScheduled;
+          const schedulesForDay = day ? scheduledDayMap.get(day) || [] : [];
+
+          const dayContent = (
+            <div
+              key={i}
+              className={cn(
+                'aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors',
+                day && isToday(day) && 'bg-primary/10 font-semibold',
+                day && isInteractive && 'cursor-pointer hover:bg-muted',
+                day && !isInteractive && 'cursor-default',
+              )}
+              onClick={() => {
+                if (!day) return;
+                if (hasDrop) onDayClick?.(day, 'drop');
+                else if (hasScheduled) onDayClick?.(day, 'scheduled');
+              }}
+            >
+              {day && (
+                <>
+                  <span>{day}</span>
+                  <div className="flex gap-0.5 mt-0.5">
+                    {hasDrop && <div className="w-1.5 h-1.5 rounded-full bg-status-success" />}
+                    {hasScheduled && <div className="w-1.5 h-1.5 rounded-full bg-status-info" />}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+
+          // Wrap scheduled days with a popover
+          if (day && hasScheduled && schedulesForDay.length > 0) {
+            return (
+              <Popover key={i}>
+                <PopoverTrigger asChild>{dayContent}</PopoverTrigger>
+                <PopoverContent className="w-56 p-3" side="top">
+                  <p className="text-xs font-medium mb-2">Scheduled for {monthName.split(' ')[0]} {day}</p>
+                  {schedulesForDay.map(s => (
+                    <div key={s.id} className="text-xs text-muted-foreground py-0.5">• {s.name}</div>
+                  ))}
+                </PopoverContent>
+              </Popover>
+            );
+          }
+
+          return dayContent;
+        })}
       </div>
       <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">

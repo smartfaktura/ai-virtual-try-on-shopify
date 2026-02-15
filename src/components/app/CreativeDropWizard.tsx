@@ -12,11 +12,13 @@ import { Separator } from '@/components/ui/separator';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 import {
   ArrowLeft, ArrowRight, Check, CalendarIcon, Sun, Snowflake, Leaf, Flower2,
   Gift, ShoppingBag, Heart, GraduationCap, Sparkles, Search, Loader2,
-  Zap, CreditCard, Clock, RocketIcon, Repeat,
+  Zap, CreditCard, Clock, RocketIcon, Repeat, Plus, Trash2, ChevronDown, Package,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { calculateDropCredits, type WorkflowCostConfig } from '@/lib/dropCreditCalculator';
 import type { Workflow } from '@/types/workflow';
+import { useNavigate } from 'react-router-dom';
 
 const WORKFLOW_FALLBACK_IMAGES: Record<string, string> = {
   'Product Listing Set': getLandingAssetUrl('workflows/workflow-product-listing.jpg'),
@@ -32,8 +35,25 @@ const WORKFLOW_FALLBACK_IMAGES: Record<string, string> = {
   'Flat Lay Set': getLandingAssetUrl('workflows/workflow-flat-lay.jpg'),
 };
 
+export interface CreativeDropWizardInitialData {
+  name: string;
+  theme: string;
+  themeNotes: string;
+  brandProfileId: string;
+  selectedProductIds: string[];
+  selectedWorkflowIds: string[];
+  selectedModelIds: string[];
+  workflowFormats: Record<string, string>;
+  deliveryMode: 'now' | 'scheduled';
+  frequency: string;
+  imagesPerDrop: number;
+  includeFreestyle: boolean;
+  freestylePrompts: string[];
+}
+
 interface CreativeDropWizardProps {
   onClose: () => void;
+  initialData?: CreativeDropWizardInitialData;
 }
 
 const THEMES = [
@@ -64,31 +84,43 @@ interface UserProduct {
   product_type: string;
 }
 
-export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
+export function CreativeDropWizard({ onClose, initialData }: CreativeDropWizardProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [attempted, setAttempted] = useState(false);
 
   // Step 1: Theme
-  const [name, setName] = useState('');
-  const [theme, setTheme] = useState('custom');
-  const [themeNotes, setThemeNotes] = useState('');
-  const [brandProfileId, setBrandProfileId] = useState('');
+  const [name, setName] = useState(initialData?.name || '');
+  const [theme, setTheme] = useState(initialData?.theme || 'custom');
+  const [themeNotes, setThemeNotes] = useState(initialData?.themeNotes || '');
+  const [brandProfileId, setBrandProfileId] = useState(initialData?.brandProfileId || '');
 
   // Step 2: Products
-  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(
+    new Set(initialData?.selectedProductIds || [])
+  );
   const [productSearch, setProductSearch] = useState('');
 
   // Step 3: Workflows + format
-  const [selectedWorkflowIds, setSelectedWorkflowIds] = useState<Set<string>>(new Set());
-  const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
-  const [workflowFormats, setWorkflowFormats] = useState<Record<string, string>>({});
+  const [selectedWorkflowIds, setSelectedWorkflowIds] = useState<Set<string>>(
+    new Set(initialData?.selectedWorkflowIds || [])
+  );
+  const [selectedModelIds, setSelectedModelIds] = useState<string[]>(initialData?.selectedModelIds || []);
+  const [workflowFormats, setWorkflowFormats] = useState<Record<string, string>>(initialData?.workflowFormats || {});
+
+  // Step 3b: Freestyle prompts
+  const [includeFreestyle, setIncludeFreestyle] = useState(initialData?.includeFreestyle || false);
+  const [freestylePrompts, setFreestylePrompts] = useState<string[]>(
+    initialData?.freestylePrompts?.length ? initialData.freestylePrompts : ['']
+  );
 
   // Step 4: Delivery & Volume
-  const [deliveryMode, setDeliveryMode] = useState<'now' | 'scheduled'>('now');
+  const [deliveryMode, setDeliveryMode] = useState<'now' | 'scheduled'>(initialData?.deliveryMode || 'now');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [frequency, setFrequency] = useState('monthly');
-  const [imagesPerDrop, setImagesPerDrop] = useState(25);
+  const [frequency, setFrequency] = useState(initialData?.frequency || 'monthly');
+  const [imagesPerDrop, setImagesPerDrop] = useState(initialData?.imagesPerDrop || 25);
   const [customImageCount, setCustomImageCount] = useState('');
 
   // Queries
@@ -153,6 +185,29 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
     }
   };
 
+  const getValidationHint = (): string | null => {
+    if (!attempted) return null;
+    switch (step) {
+      case 0: return name.trim().length === 0 ? 'Give your drop a name to continue' : null;
+      case 1: return selectedProductIds.size === 0 ? 'Select at least one product' : null;
+      case 2: return selectedWorkflowIds.size === 0 ? 'Select at least one workflow' : null;
+      case 3:
+        if (imagesPerDrop <= 0) return 'Choose how many images per drop';
+        if (deliveryMode === 'scheduled' && !startDate) return 'Pick a start date';
+        return null;
+      default: return null;
+    }
+  };
+
+  const handleNext = () => {
+    if (!canNext()) {
+      setAttempted(true);
+      return;
+    }
+    setAttempted(false);
+    setStep(s => s + 1);
+  };
+
   // Save
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -164,11 +219,12 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
         nextRun = new Date(effectiveStartDate);
       }
 
-      // Build scene_config with per-workflow aspect ratios
       const sceneConfig: Record<string, { aspect_ratio: string }> = {};
       selectedWorkflowIds.forEach(id => {
         sceneConfig[id] = { aspect_ratio: workflowFormats[id] || '1:1' };
       });
+
+      const cleanPrompts = freestylePrompts.filter(p => p.trim().length > 0);
 
       const { error } = await supabase.from('creative_schedules').insert({
         user_id: user.id,
@@ -187,6 +243,8 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
         start_date: effectiveStartDate.toISOString(),
         next_run_at: nextRun ? nextRun.toISOString() : null,
         scene_config: sceneConfig,
+        include_freestyle: includeFreestyle,
+        freestyle_prompts: cleanPrompts,
       });
       if (error) throw error;
     },
@@ -208,11 +266,15 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
 
   const getWorkflowFormat = (id: string) => workflowFormats[id] || '1:1';
 
+  const validationHint = getValidationHint();
+
   return (
     <div className="space-y-0">
       {/* Header — elegant step indicator */}
       <div className="pb-6">
-        <h2 className="text-xl font-semibold tracking-tight mb-1">Create Your Drop</h2>
+        <h2 className="text-xl font-semibold tracking-tight mb-1">
+          {initialData ? 'Duplicate Drop' : 'Create Your Drop'}
+        </h2>
         <p className="text-sm text-muted-foreground mb-6">Design and schedule your creative content generation</p>
         <div className="flex items-center gap-0">
           {STEPS.map((s, i) => (
@@ -258,8 +320,11 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                   placeholder="e.g. Summer 2026 Collection"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="h-12 rounded-xl text-sm"
+                  className={cn('h-12 rounded-xl text-sm', attempted && !name.trim() && 'border-destructive')}
                 />
+                {attempted && !name.trim() && (
+                  <p className="text-xs text-destructive">Give your drop a name to continue</p>
+                )}
               </div>
 
               <div className="space-y-3">
@@ -323,19 +388,28 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
           {/* ─── Step 2: Products ─── */}
           {step === 1 && (
             <div className="space-y-6 animate-fade-in">
-              <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  value={productSearch}
-                  onChange={e => setProductSearch(e.target.value)}
-                  className="pl-10 h-12 rounded-xl"
-                />
-              </div>
-              <div className="flex items-center gap-3">
-                <Badge variant="secondary" className="rounded-full px-3 py-1">{selectedProductIds.size} selected</Badge>
-                {filteredProducts.length > 0 && (
-                  <>
+              {products.length === 0 ? (
+                <div className="text-center py-12 rounded-2xl border-2 border-dashed border-border">
+                  <Package className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm font-medium mb-1">No products yet</p>
+                  <p className="text-xs text-muted-foreground mb-4">Add products first, then come back to create your drop.</p>
+                  <Button variant="outline" onClick={() => navigate('/app/products')}>
+                    Go to Products
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search products..."
+                      value={productSearch}
+                      onChange={e => setProductSearch(e.target.value)}
+                      className="pl-10 h-12 rounded-xl"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="secondary" className="rounded-full px-3 py-1">{selectedProductIds.size} selected</Badge>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -354,44 +428,47 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                         Clear
                       </Button>
                     )}
-                  </>
-                )}
-              </div>
-              <div className="grid grid-cols-3 gap-3 max-h-[320px] overflow-y-auto pr-1">
-                {filteredProducts.map(product => {
-                  const isSelected = selectedProductIds.has(product.id);
-                  return (
-                    <button
-                      key={product.id}
-                      onClick={() => {
-                        const next = new Set(selectedProductIds);
-                        isSelected ? next.delete(product.id) : next.add(product.id);
-                        setSelectedProductIds(next);
-                      }}
-                      className={cn(
-                        'relative rounded-2xl border-2 p-2 transition-all text-left group',
-                        isSelected
-                          ? 'border-primary bg-primary/5 shadow-sm'
-                          : 'border-border hover:border-primary/40 hover:shadow-sm bg-card'
-                      )}
-                    >
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                          <Check className="w-3 h-3 text-primary-foreground" />
-                        </div>
-                      )}
-                      <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2">
-                        <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
-                      </div>
-                      <p className="text-xs font-medium truncate px-0.5">{product.title}</p>
-                    </button>
-                  );
-                })}
-              </div>
-              {filteredProducts.length === 0 && (
-                <div className="text-center py-8 rounded-2xl bg-muted/30">
-                  <p className="text-sm text-muted-foreground">No products found.</p>
-                </div>
+                  </div>
+                  {attempted && selectedProductIds.size === 0 && (
+                    <p className="text-xs text-destructive">Select at least one product</p>
+                  )}
+                  <div className="grid grid-cols-3 gap-3 max-h-[320px] overflow-y-auto pr-1">
+                    {filteredProducts.map(product => {
+                      const isSelected = selectedProductIds.has(product.id);
+                      return (
+                        <button
+                          key={product.id}
+                          onClick={() => {
+                            const next = new Set(selectedProductIds);
+                            isSelected ? next.delete(product.id) : next.add(product.id);
+                            setSelectedProductIds(next);
+                          }}
+                          className={cn(
+                            'relative rounded-2xl border-2 p-2 transition-all text-left group',
+                            isSelected
+                              ? 'border-primary bg-primary/5 shadow-sm'
+                              : 'border-border hover:border-primary/40 hover:shadow-sm bg-card'
+                          )}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                              <Check className="w-3 h-3 text-primary-foreground" />
+                            </div>
+                          )}
+                          <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-2">
+                            <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
+                          </div>
+                          <p className="text-xs font-medium truncate px-0.5">{product.title}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {filteredProducts.length === 0 && productSearch && (
+                    <div className="text-center py-8 rounded-2xl bg-muted/30">
+                      <p className="text-sm text-muted-foreground">No products match "{productSearch}"</p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -400,6 +477,9 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
           {step === 2 && (
             <div className="space-y-6 animate-fade-in">
               <p className="text-sm text-muted-foreground">Select visual styles and choose image orientation for each.</p>
+              {attempted && selectedWorkflowIds.size === 0 && (
+                <p className="text-xs text-destructive">Select at least one workflow</p>
+              )}
               <div className="space-y-3">
                 {workflows.map(wf => {
                   const isSelected = selectedWorkflowIds.has(wf.id);
@@ -507,6 +587,61 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                   </div>
                 </>
               )}
+
+              {/* Freestyle Prompts Section */}
+              <Separator />
+              <Collapsible open={includeFreestyle} onOpenChange={setIncludeFreestyle}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Switch checked={includeFreestyle} onCheckedChange={setIncludeFreestyle} />
+                    <div>
+                      <p className="text-sm font-medium">Freestyle Prompts</p>
+                      <p className="text-xs text-muted-foreground">Add custom text prompts alongside workflows</p>
+                    </div>
+                  </div>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <ChevronDown className={cn('w-4 h-4 transition-transform', includeFreestyle && 'rotate-180')} />
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent className="pt-4 space-y-3">
+                  {freestylePrompts.map((prompt, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <Input
+                        placeholder={`Prompt ${idx + 1}, e.g. "Model wearing product in a modern kitchen"`}
+                        value={prompt}
+                        onChange={e => {
+                          const next = [...freestylePrompts];
+                          next[idx] = e.target.value;
+                          setFreestylePrompts(next);
+                        }}
+                        className="h-10 rounded-xl text-sm flex-1"
+                      />
+                      {freestylePrompts.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 flex-shrink-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => setFreestylePrompts(prev => prev.filter((_, i) => i !== idx))}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  {freestylePrompts.length < 5 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs rounded-full"
+                      onClick={() => setFreestylePrompts(prev => [...prev, ''])}
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Add Prompt
+                    </Button>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           )}
 
@@ -558,7 +693,8 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                           variant="outline"
                           className={cn(
                             'w-full h-12 rounded-xl justify-start text-left font-normal',
-                            !startDate && 'text-muted-foreground'
+                            !startDate && 'text-muted-foreground',
+                            attempted && !startDate && 'border-destructive'
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -576,6 +712,9 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                         />
                       </PopoverContent>
                     </Popover>
+                    {attempted && deliveryMode === 'scheduled' && !startDate && (
+                      <p className="text-xs text-destructive">Pick a start date to continue</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -755,6 +894,16 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                       </div>
                     </div>
                   )}
+                  {includeFreestyle && freestylePrompts.filter(p => p.trim()).length > 0 && (
+                    <div>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1.5">Freestyle Prompts</p>
+                      <div className="space-y-1">
+                        {freestylePrompts.filter(p => p.trim()).map((p, i) => (
+                          <p key={i} className="text-xs text-muted-foreground">• {p}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {themeNotes && (
                     <div>
                       <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Instructions</p>
@@ -806,14 +955,19 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
           {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1.5" /> Back</>}
         </Button>
 
-        <span className="text-[10px] text-muted-foreground/40 tracking-widest uppercase hidden sm:inline">
-          Powered by VOVV.AI
-        </span>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-[10px] text-muted-foreground/40 tracking-widest uppercase hidden sm:inline">
+            Powered by VOVV.AI
+          </span>
+          {validationHint && (
+            <p className="text-[11px] text-destructive animate-fade-in">{validationHint}</p>
+          )}
+        </div>
 
         {step < 4 ? (
           <Button
-            onClick={() => setStep(s => s + 1)}
-            disabled={!canNext()}
+            onClick={handleNext}
+            disabled={false}
             className="rounded-full h-11 px-6 gap-1.5"
           >
             Next <ArrowRight className="w-4 h-4" />
