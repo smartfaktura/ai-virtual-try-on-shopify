@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Calendar, Clock, Pause, Play, Zap, CheckCircle, AlertCircle, Loader2, Download, MoreVertical, Trash2, Pencil, Sun, Snowflake, Leaf, Flower2, Gift, ShoppingBag, Heart, GraduationCap, Sparkles } from 'lucide-react';
+import { Calendar, Clock, Pause, Play, Zap, CheckCircle, AlertCircle, Loader2, Download, MoreVertical, Trash2, Pencil, Sun, Snowflake, Leaf, Flower2, Gift, ShoppingBag, Heart, GraduationCap, Sparkles, Copy, RocketIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 import type { CreativeSchedule, CreativeDrop } from '@/pages/CreativeDrops';
 
 interface ScheduleCardProps {
@@ -16,6 +18,8 @@ interface ScheduleCardProps {
   schedule: CreativeSchedule;
   drop?: never;
   onViewDrop?: never;
+  onDuplicate?: (schedule: CreativeSchedule) => void;
+  scheduleName?: never;
 }
 
 interface DropCardProps {
@@ -23,6 +27,8 @@ interface DropCardProps {
   drop: CreativeDrop;
   schedule?: never;
   onViewDrop?: () => void;
+  onDuplicate?: never;
+  scheduleName?: string;
 }
 
 type Props = ScheduleCardProps | DropCardProps;
@@ -72,70 +78,116 @@ export function DropCard(props: Props) {
     onError: () => toast.error('Failed to delete schedule'),
   });
 
+  const runNowMutation = useMutation({
+    mutationFn: async (schedule: CreativeSchedule) => {
+      const { error } = await supabase.from('creative_drops').insert({
+        user_id: schedule.user_id,
+        schedule_id: schedule.id,
+        run_date: new Date().toISOString(),
+        status: 'scheduled',
+        generation_job_ids: [],
+        images: [],
+        summary: {},
+        credits_charged: schedule.estimated_credits,
+        total_images: 0,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
+      toast.success('Drop queued — will generate shortly');
+    },
+    onError: () => toast.error('Failed to queue drop'),
+  });
+
   if (props.type === 'schedule') {
-    const { schedule } = props;
+    const { schedule, onDuplicate } = props;
     const ThemeIcon = themeIcons[schedule.theme] || Sparkles;
+    const isPaused = !schedule.active;
 
     return (
       <>
-        <Card>
-          <CardContent className="p-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-4 h-4 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{schedule.name}</p>
-                  <Badge variant="outline" className={cn('text-[10px] border', BRAND_THEME_STYLE)}>
-                    <ThemeIcon className="w-3 h-3 mr-0.5" />
-                    {schedule.theme?.replace('_', ' ')}
-                  </Badge>
+        <Card className={cn(isPaused && 'opacity-60 border-muted')}>
+          <CardContent className="p-4 space-y-1">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Calendar className="w-4 h-4 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {schedule.frequency} · {schedule.workflow_ids.length} workflow{schedule.workflow_ids.length !== 1 ? 's' : ''} ·{' '}
-                  {schedule.images_per_drop} imgs · ~{schedule.estimated_credits} cr/drop
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate">{schedule.name}</p>
+                    <Badge variant="outline" className={cn('text-[10px] border', BRAND_THEME_STYLE)}>
+                      <ThemeIcon className="w-3 h-3 mr-0.5" />
+                      {schedule.theme?.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {schedule.frequency} · {schedule.workflow_ids.length} workflow{schedule.workflow_ids.length !== 1 ? 's' : ''} ·{' '}
+                    {schedule.images_per_drop} imgs · ~{schedule.estimated_credits} cr/drop
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {schedule.selected_product_ids?.length || 0} product{(schedule.selected_product_ids?.length || 0) !== 1 ? 's' : ''}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Badge variant={schedule.active ? 'default' : 'secondary'}>
-                {schedule.active ? 'Active' : 'Paused'}
-              </Badge>
-              {schedule.next_run_at && (
-                <span className="text-xs text-muted-foreground hidden sm:block">
-                  Next: {new Date(schedule.next_run_at).toLocaleDateString()}
-                </span>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => toggleMutation.mutate({ id: schedule.id, active: !schedule.active })}
-              >
-                {schedule.active ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreVertical className="w-3.5 h-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem disabled>
-                    <Pencil className="w-3.5 h-3.5 mr-2" />
-                    Edit (coming soon)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => setDeleteDialogOpen(true)}
-                  >
-                    <Trash2 className="w-3.5 h-3.5 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Badge variant={schedule.active ? 'default' : 'secondary'}>
+                  {schedule.active ? 'Active' : 'Paused'}
+                </Badge>
+                {schedule.next_run_at && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs text-muted-foreground hidden sm:block cursor-default">
+                          {formatDistanceToNow(new Date(schedule.next_run_at), { addSuffix: true })}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {new Date(schedule.next_run_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => toggleMutation.mutate({ id: schedule.id, active: !schedule.active })}
+                >
+                  {schedule.active ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreVertical className="w-3.5 h-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onDuplicate?.(schedule)}>
+                      <Copy className="w-3.5 h-3.5 mr-2" />
+                      Duplicate
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => runNowMutation.mutate(schedule)}>
+                      <RocketIcon className="w-3.5 h-3.5 mr-2" />
+                      Run Now
+                    </DropdownMenuItem>
+                    <DropdownMenuItem disabled>
+                      <Pencil className="w-3.5 h-3.5 mr-2" />
+                      Edit (coming soon)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => setDeleteDialogOpen(true)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -163,7 +215,7 @@ export function DropCard(props: Props) {
     );
   }
 
-  const { drop, onViewDrop } = props;
+  const { drop, onViewDrop, scheduleName } = props;
   const config = statusConfig[drop.status] || statusConfig.scheduled;
   const StatusIcon = config.icon;
   const dropImages = (drop.images || []) as { url: string }[];
@@ -184,6 +236,9 @@ export function DropCard(props: Props) {
                 {drop.total_images > 0 ? `${drop.total_images} images` : `${drop.generation_job_ids.length} job${drop.generation_job_ids.length !== 1 ? 's' : ''}`}
                 {drop.credits_charged > 0 && ` · ${drop.credits_charged} credits`}
               </p>
+              {scheduleName && (
+                <p className="text-[11px] text-muted-foreground/70 mt-0.5">From: {scheduleName}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
