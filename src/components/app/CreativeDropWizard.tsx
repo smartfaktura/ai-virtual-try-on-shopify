@@ -538,7 +538,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   value={themeNotes}
                   onChange={e => setThemeNotes(e.target.value)}
                   rows={3}
-                  className="rounded-xl"
+                  className="rounded-xl text-base sm:text-sm"
                 />
               </div>
             </div>
@@ -709,7 +709,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                               <Badge variant="outline" className="text-xs rounded-full">1:1 (fixed)</Badge>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <span className="text-xs text-muted-foreground mr-1">Format:</span>
                               {ASPECT_RATIOS.map(ar => (
                                 <button
@@ -772,7 +772,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                       {sceneSelections.size === variations.length ? 'Deselect All' : 'Select All'}
                                     </button>
                                   </div>
-                                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:max-h-[200px] sm:overflow-y-auto pr-1">
                                     {variations.map(v => {
                                       const isSceneSelected = sceneSelections.has(v.label);
                                       return (
@@ -843,7 +843,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                       </button>
                                     </div>
                                   )}
-                                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:max-h-[200px] sm:overflow-y-auto pr-1">
                                     {fashionPoses.map(pose => {
                                       const isPoseSelected = wfPoses.includes(pose.poseId);
                                       return (
@@ -917,7 +917,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                       </button>
                                     </div>
                                   )}
-                                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                  <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:max-h-[200px] sm:overflow-y-auto pr-1">
                                     {allModels.map(m => {
                                       const isModelSelected = wfModels.includes(m.id);
                                       return (
@@ -1059,7 +1059,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           next[idx] = e.target.value;
                           setFreestylePrompts(next);
                         }}
-                        className="h-10 rounded-xl text-sm flex-1"
+                        className="h-10 rounded-xl text-base sm:text-sm flex-1"
                       />
                       {freestylePrompts.length > 1 && (
                         <Button
@@ -1439,7 +1439,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       </div>
 
       {/* Footer — pill buttons + branding */}
-      <div className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-6 z-10 sm:static sm:pb-0">
+      <div className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-8 z-10 sm:static sm:pb-0">
         {validationHint && (
           <p className="text-[11px] text-destructive animate-fade-in text-center sm:hidden">{validationHint}</p>
         )}
