@@ -35,7 +35,7 @@ export interface CreativeSchedule {
   estimated_credits: number;
   include_freestyle?: boolean;
   freestyle_prompts?: string[];
-  scene_config?: Record<string, { aspect_ratio: string }>;
+  scene_config?: Record<string, any>;
 }
 
 export interface CreativeDrop {
@@ -128,15 +128,29 @@ export default function CreativeDrops() {
   const scheduleNameMap = new Map(schedules.map(s => [s.id, s.name]));
 
   const extractWfFormats = (schedule: CreativeSchedule) => {
-    const sceneConfig = (schedule.scene_config || {}) as Record<string, { aspect_ratio: string }>;
+    const sceneConfig = (schedule.scene_config || {}) as Record<string, any>;
     const wfFormats: Record<string, string> = {};
     for (const [k, v] of Object.entries(sceneConfig)) {
-      wfFormats[k] = v.aspect_ratio || '1:1';
+      wfFormats[k] = v?.aspect_ratio || '1:1';
     }
     return wfFormats;
   };
 
+  const extractPerWorkflowData = (schedule: CreativeSchedule) => {
+    const sceneConfig = (schedule.scene_config || {}) as Record<string, any>;
+    const sceneSelections: Record<string, string[]> = {};
+    const modelSelections: Record<string, string[]> = {};
+    const customSettings: Record<string, Record<string, string>> = {};
+    for (const [k, v] of Object.entries(sceneConfig)) {
+      if (v?.selected_scenes) sceneSelections[k] = v.selected_scenes;
+      if (v?.model_ids) modelSelections[k] = v.model_ids;
+      if (v?.custom_settings) customSettings[k] = v.custom_settings;
+    }
+    return { sceneSelections, modelSelections, customSettings };
+  };
+
   const handleDuplicate = (schedule: CreativeSchedule) => {
+    const { sceneSelections, modelSelections, customSettings } = extractPerWorkflowData(schedule);
     setEditingScheduleId(undefined);
     setWizardInitialData({
       name: `${schedule.name} (Copy)`,
@@ -152,11 +166,15 @@ export default function CreativeDrops() {
       imagesPerDrop: schedule.images_per_drop,
       includeFreestyle: schedule.include_freestyle || false,
       freestylePrompts: schedule.freestyle_prompts || [],
+      workflowSceneSelections: sceneSelections,
+      workflowModelSelections: modelSelections,
+      workflowCustomSettings: customSettings,
     });
     setWizardOpen(true);
   };
 
   const handleEdit = (schedule: CreativeSchedule) => {
+    const { sceneSelections, modelSelections, customSettings } = extractPerWorkflowData(schedule);
     setEditingScheduleId(schedule.id);
     setWizardInitialData({
       name: schedule.name,
@@ -172,6 +190,9 @@ export default function CreativeDrops() {
       imagesPerDrop: schedule.images_per_drop,
       includeFreestyle: schedule.include_freestyle || false,
       freestylePrompts: schedule.freestyle_prompts || [],
+      workflowSceneSelections: sceneSelections,
+      workflowModelSelections: modelSelections,
+      workflowCustomSettings: customSettings,
     });
     setWizardOpen(true);
   };
