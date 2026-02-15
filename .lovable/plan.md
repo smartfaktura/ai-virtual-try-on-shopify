@@ -1,65 +1,76 @@
 
 
-## Creative Drops Schedule Cards and Drop List -- UI Polish
+## Creative Drops Page -- Final UI Polish and Edit Flow
 
-Based on the screenshot and your feedback, here are the specific improvements:
+### 1. Edit Schedule Flow (Currently Missing)
 
----
+The "Edit" option in the dropdown is disabled with "(coming soon)". This needs to be fully functional before the engine is built.
 
-### 1. Remove Theme Badge from Schedule Cards
-
-The "summer" badge next to the schedule name adds visual noise without value. The theme is an internal setting, not something users need to see at-a-glance on every card.
-
-**Fix:** Remove the theme badge entirely from the schedule card. Theme info stays visible only inside the wizard/edit view.
-
----
-
-### 2. Clearer "Active" Status Label
-
-The Active badge is there but blends in. Make it more prominent with a green dot indicator (like a live status dot) so users instantly see which schedules are running.
-
-**Fix:** Replace the plain Active/Paused badge with a dot-prefixed label: a green pulsing dot for Active, a grey dot for Paused. Styled as a subtle chip, not a heavy badge.
+**Implementation:**
+- Add an `onEdit` callback prop to `DropCard` alongside `onDuplicate`
+- In `CreativeDrops.tsx`, `handleEdit` opens the wizard with `initialData` from the schedule plus a new `editingScheduleId` field
+- `CreativeDropWizard` accepts an optional `editingScheduleId` prop. When present, the save mutation uses `.update()` instead of `.insert()`, and the final button reads "Save Changes" instead of "Create Schedule"
+- The wizard header changes to "Edit Schedule" when editing
 
 ---
 
-### 3. Prominent Credit Cost Display
+### 2. Improved Stats Summary Bar
 
-The current format buries credits in a dense info line: "one-time . 1 workflow . 25 imgs . ~100 cr/drop". The credit cost needs its own visual weight.
-
-**Fix:** Pull the credit cost out of the info line and display it as a standalone styled chip on the right side of the card (next to the Active indicator), e.g., "~100 cr" in a subtle bordered chip with a credit icon.
-
----
-
-### 4. Generation Progress on In-Progress Drops
-
-When a drop is generating, there is no indication of progress (e.g., "8 of 25 images generated"). The card just shows "generating" with a spinner.
-
-**Fix:** For drops with status "generating":
-- Show a progress line: "X of Y images" with a small inline progress bar
-- The `total_images` field has the target count, and `images.length` has the current count
-- This gives users confidence the system is working
+Current stats are plain chips that all look the same. Improve with:
+- Better visual hierarchy: larger numbers, smaller labels stacked vertically
+- Add a "generating" count when any drops are in-progress
+- Show next scheduled run time across all active schedules
+- Wrap in a subtle card for visual grouping
 
 ---
 
-### 5. Ready Drop Cards -- Thumbnail Preview Row with "View Drop" CTA
+### 3. Generation Progress -- Time Estimate and ETA
 
-Currently ready drops show small thumbnails but the interaction isn't obvious. Users should see a clear "View Drop" button to open the detail modal.
+When a drop has status "generating", users need to know estimated time remaining.
 
-**Fix:** For ready drops:
-- Keep the thumbnail preview row (already exists)
-- Add a subtle "View Drop" text link or button below the thumbnails so the click target is explicit
-- The entire card is already clickable but adding a visible CTA makes it discoverable
+**Implementation:**
+- Calculate estimated time based on `total_images` count (using ~8 seconds per standard image as a rough baseline)
+- Show "~X min remaining" on generating drop cards
+- Show a more detailed progress line: "8 of 25 images -- ~2 min remaining"
+- Use `created_at` timestamp to calculate elapsed time and derive ETA
 
 ---
 
-### 6. Schedule Card -- Clean Info Layout
+### 4. Schedule Card -- Remove Stale Theme Badge
 
-The info line is too dense. Restructure it into two clear lines with better hierarchy.
+From the screenshot, the card still shows a "summer" theme badge next to the name. This was supposed to be removed in the previous round but appears to still be present. Ensure no theme badge renders on schedule cards.
 
-**Fix:** Restructure the schedule card subtitle into:
-- Line 1: Frequency and image count -- "One-time . 25 images per drop"
-- Line 2: Product and workflow count -- "1 product . 1 workflow"
-- Remove redundant data from the info line
+---
+
+### 5. Schedule Card -- Show Workflow Names
+
+Currently shows "1 workflow" as a count. Replace with actual workflow names (truncated) so users know what content types are configured, e.g., "Product Listing Set" instead of "1 workflow".
+
+**Implementation:**
+- Pass workflow data to `DropCard` or resolve workflow names from IDs
+- Show up to 2 workflow names with "+N more" overflow
+
+---
+
+### 6. Schedule Card -- Show Next Run as Prominent Info
+
+For scheduled (non-one-time) schedules, the next run time should be more visible -- currently it's a small relative time text that's easy to miss.
+
+**Fix:** Move next run info to the subtitle line as "Next: Mar 15, 2026" with a clock icon.
+
+---
+
+### 7. Drop Card -- Elapsed Time for Active Generation
+
+For "generating" status drops, show how long generation has been running: "Started 3 min ago" using `created_at`.
+
+---
+
+### 8. Overall Page Header -- Cleaner Layout
+
+- Stats bar should only show when there's meaningful data (not all zeros)
+- Add a subtle description under each stat for context
+- The "Create Schedule" button should be more prominent on the page level, not just inside the Schedules tab
 
 ---
 
@@ -69,59 +80,101 @@ The info line is too dense. Restructure it into two clear lines with better hier
 
 | File | Changes |
 |------|---------|
-| `src/components/app/DropCard.tsx` | Remove theme badge; restructure info lines; move credit cost to standalone chip; add green dot for Active; add progress bar for generating drops; add "View Drop" CTA for ready drops |
+| `src/components/app/CreativeDropWizard.tsx` | Accept `editingScheduleId` prop; use update mutation when editing; change header/button text |
+| `src/components/app/DropCard.tsx` | Add `onEdit` callback; remove any remaining theme badges; show workflow names; improve next run display; add time estimate for generating drops |
+| `src/pages/CreativeDrops.tsx` | Add `handleEdit` function; improve stats bar design; pass workflow names to DropCard; better empty/zero state for stats |
 
-**Schedule card layout (after):**
-```text
-+------------------------------------------------------------------+
-| [icon]  Summer                              ~100 cr  * Active  : |
-|         One-time . 25 images per drop                            |
-|         1 product . 1 workflow                                   |
-+------------------------------------------------------------------+
+**Edit flow -- Wizard changes:**
+
+```typescript
+// New prop
+interface CreativeDropWizardProps {
+  onClose: () => void;
+  initialData?: CreativeDropWizardInitialData;
+  editingScheduleId?: string; // NEW
+}
+
+// Save mutation changes
+const saveMutation = useMutation({
+  mutationFn: async () => {
+    const payload = { /* same fields */ };
+    if (editingScheduleId) {
+      const { error } = await supabase
+        .from('creative_schedules')
+        .update(payload)
+        .eq('id', editingScheduleId);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('creative_schedules')
+        .insert({ ...payload, user_id: user.id });
+      if (error) throw error;
+    }
+  },
+  onSuccess: () => {
+    toast.success(editingScheduleId ? 'Schedule updated' : 'Schedule created');
+    onClose();
+  },
+});
 ```
 
-**Generating drop card layout (after):**
-```text
-+------------------------------------------------------------------+
-| [icon]  Drop -- Feb 15, 2026                     [generating]    |
-|         8 of 25 images . 100 credits                             |
-|         [====------] 32%                                         |
-+------------------------------------------------------------------+
+**Edit handler in CreativeDrops.tsx:**
+
+```typescript
+const handleEdit = (schedule: CreativeSchedule) => {
+  setWizardInitialData({
+    name: schedule.name,
+    theme: schedule.theme,
+    themeNotes: schedule.theme_notes,
+    brandProfileId: schedule.brand_profile_id || '',
+    selectedProductIds: schedule.selected_product_ids || [],
+    selectedWorkflowIds: schedule.workflow_ids || [],
+    selectedModelIds: schedule.model_ids || [],
+    workflowFormats: /* extract from scene_config */,
+    deliveryMode: schedule.frequency === 'one-time' ? 'now' : 'scheduled',
+    frequency: schedule.frequency === 'one-time' ? 'monthly' : schedule.frequency,
+    imagesPerDrop: schedule.images_per_drop,
+    includeFreestyle: schedule.include_freestyle || false,
+    freestylePrompts: schedule.freestyle_prompts || [],
+  });
+  setEditingScheduleId(schedule.id);
+  setWizardOpen(true);
+};
 ```
 
-**Ready drop card layout (after):**
-```text
-+------------------------------------------------------------------+
-| [icon]  Drop -- Feb 15, 2026                        [ready]      |
-|         25 images . 100 credits                                  |
-|         [thumb][thumb][thumb][thumb] +21    View Drop ->         |
-+------------------------------------------------------------------+
+**Time estimate for generating drops:**
+
+```typescript
+const SECONDS_PER_IMAGE = 8;
+const elapsedMs = Date.now() - new Date(drop.created_at).getTime();
+const estimatedTotalMs = targetImages * SECONDS_PER_IMAGE * 1000;
+const remainingMs = Math.max(0, estimatedTotalMs - elapsedMs);
+const remainingMin = Math.ceil(remainingMs / 60000);
+// Display: "~2 min remaining" or "Finishing up..."
 ```
 
-**Active/Paused indicator:**
-```tsx
-// Green pulsing dot for active
-<span className="flex items-center gap-1.5 text-xs">
-  <span className={cn(
-    "w-2 h-2 rounded-full",
-    schedule.active ? "bg-green-500 animate-pulse" : "bg-muted-foreground/40"
-  )} />
-  {schedule.active ? 'Active' : 'Paused'}
-</span>
+**Improved stats bar:**
+
+```typescript
+// Only show stats when there's at least one schedule
+// Show "next run" across all schedules
+const nextRun = schedules
+  .filter(s => s.active && s.next_run_at)
+  .sort((a, b) => new Date(a.next_run_at!).getTime() - new Date(b.next_run_at!).getTime())[0];
+
+const generatingCount = drops.filter(d => d.status === 'generating').length;
 ```
 
-**Generation progress (for "generating" status drops):**
-```tsx
-const completedImages = (drop.images || []).length;
-const targetImages = drop.total_images || 0;
-const progressPct = targetImages > 0 ? Math.round((completedImages / targetImages) * 100) : 0;
+**DropCard workflow names:**
 
-// Show inline:
-<div className="mt-2">
-  <p className="text-xs text-muted-foreground mb-1">
-    {completedImages} of {targetImages} images
-  </p>
-  <Progress value={progressPct} className="h-1.5" />
-</div>
+```typescript
+// New prop on DropCard
+interface ScheduleCardProps {
+  type: 'schedule';
+  schedule: CreativeSchedule;
+  onDuplicate?: (schedule: CreativeSchedule) => void;
+  onEdit?: (schedule: CreativeSchedule) => void; // NEW
+  workflowNames?: string[]; // NEW - resolved names
+}
 ```
 
