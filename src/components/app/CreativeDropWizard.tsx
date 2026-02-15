@@ -434,7 +434,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           {editingScheduleId ? 'Edit Schedule' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
         </h2>
         <p className="text-sm text-muted-foreground mb-6">{editingScheduleId ? 'Update your schedule settings' : 'Design and schedule your creative content generation'}</p>
-        <div className="flex items-center gap-0">
+        <div className="flex items-center justify-center gap-0">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center flex-1">
               <button
