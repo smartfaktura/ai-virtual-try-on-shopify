@@ -1,73 +1,80 @@
 
 
-## Fix Creative Drop Wizard Mobile Experience
+## Fix: Restore Full Workflow Settings Visibility for Virtual Try-On and Mirror Selfie Set
 
-Comprehensive mobile fixes across all 5 wizard steps to eliminate zoom issues, remove nested scroll areas, and improve touch targets.
+### Problem
+The Scene Library, Models, and Scenes sections in Step 3 of the Creative Drop Wizard are rendering as **collapsed headers** that are nearly invisible on the muted background. Users expect to see these settings expanded when a workflow is selected. The thin `border-t` header buttons blend into the `bg-muted/30` container, making it look like "everything was deleted."
 
-### Problems Identified
+### Root Cause
+All collapsible sections (Scenes, Scene Library, Models) start collapsed by default. The `expandedSection` state initializes as `{}`, so no sections are open. On mobile, the thin header buttons are easy to miss.
 
-1. **iOS auto-zoom on text inputs** -- Input fields use font-size 14px (`text-sm`), which triggers Safari to zoom in when focused. Users can't easily zoom back out.
-2. **Nested scroll areas** -- Scenes, Models, and Poses grids all have `max-h-[200px] overflow-y-auto`, creating awkward scroll-within-scroll on mobile.
-3. **Aspect ratio buttons cramped** -- 4 buttons in a single row overflow on small screens.
-4. **Model avatar grid too dense** -- `grid-cols-4` makes touch targets too small on mobile.
-5. **Sticky footer missing safe-area inset** -- Bottom of footer can be hidden behind iOS home indicator bar.
-
----
+### Solution
+Auto-expand the first relevant section when a workflow is selected, and make collapsed headers more prominent.
 
 ### Technical Changes
 
 **File: `src/components/app/CreativeDropWizard.tsx`**
 
-**1. Fix iOS zoom -- ensure all inputs use 16px font on mobile**
+**1. Auto-expand sections when a workflow is selected (line 660-675)**
 
-- Line 482 (Schedule Name input): Add `text-base` class (already has it implicitly via Input component which uses `text-base md:text-sm` -- verify this is working)
-- Line 537 (Special Instructions textarea): Ensure `text-base` is added
-- Line 564 (Product search input): Already uses Input component -- OK
-- Line 1055 (Freestyle prompt input): Change `text-sm` to `text-base sm:text-sm`
-- Line 1213 (Custom amount input): Ensure base sizing
-- Line 1219 (Custom amount input): Already uses Input -- OK
+When a workflow is added to `selectedWorkflowIds`, also set its first relevant section as expanded in `expandedSection`:
 
-**2. Remove inner scroll on Scenes grid for mobile (line 775)**
+```typescript
+// Inside the onClick handler where workflow is selected:
+if (!isSelected) {
+  next.add(wf.id);
+  // Auto-select scenes
+  if (variations.length > 0 && !workflowSceneSelections[wf.id]) {
+    setWorkflowSceneSelections(prev => ({
+      ...prev,
+      [wf.id]: new Set(variations.map((v: { label: string }) => v.label)),
+    }));
+  }
+  // Auto-expand first relevant section
+  const firstSection = (variations.length > 0 && !wf.uses_tryon)
+    ? 'scenes'
+    : showPosePicker
+      ? 'poses'
+      : needsModels
+        ? 'models'
+        : null;
+  if (firstSection) {
+    setExpandedSection(prev => ({ ...prev, [wf.id]: firstSection }));
+  }
+}
+```
 
-Change:
-```
-className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto pr-1"
-```
-To:
-```
-className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:max-h-[200px] sm:overflow-y-auto pr-1"
+This ensures that when you select Virtual Try-On, the "Scene Library" section auto-opens. When you select Mirror Selfie, the "Scenes" section auto-opens.
+
+**2. Make collapsed section headers more visually prominent (lines 748-752, 823-827, 897-901, 960-964)**
+
+Update all four collapsible header buttons from the nearly-invisible style to a more prominent card-like style:
+
+```typescript
+// Before (all 4 section headers):
+className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
+
+// After:
+className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
 ```
 
-**3. Remove inner scroll on Poses grid for mobile (line 846)**
+And update the border separator from barely-visible to clearer:
 
-Same pattern -- change `max-h-[200px] overflow-y-auto` to `sm:max-h-[200px] sm:overflow-y-auto`.
+```typescript
+// Before:
+className="border-t border-border/50 pt-1"
 
-**4. Remove inner scroll on Models grid for mobile (line 920)**
+// After:
+className="border-t border-border pt-2"
+```
 
-Change:
-```
-className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-[200px] overflow-y-auto pr-1"
-```
-To:
-```
-className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:max-h-[200px] sm:overflow-y-auto pr-1"
-```
-Also reduce from `grid-cols-4` to `grid-cols-3` on mobile for larger touch targets.
+This makes all four collapsible section headers (Scenes, Scene Library, Models, Settings) more visible with:
+- Stronger border separator (full opacity instead of 50%)
+- More padding for better touch targets
+- Clearer visual separation from the Format row above
 
-**5. Make aspect ratio buttons wrap on mobile (line 712-735)**
-
-Wrap the format buttons container in a `flex flex-wrap gap-2` instead of inline `flex items-center gap-2` so they wrap on narrow screens.
-
-**6. Add safe-area bottom padding to sticky footer (line 1442)**
-
-Change:
-```
-className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-6 z-10 sm:static sm:pb-0"
-```
-To:
-```
-className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-8 z-10 sm:static sm:pb-0"
-```
-Increase `pb-6` to `pb-8` for more clearance from iOS browser chrome and support icon.
-
-All changes are in a single file with no new dependencies.
+### Summary of Changes
+- 1 file modified: `src/components/app/CreativeDropWizard.tsx`
+- Auto-expand first relevant section when workflow is selected
+- Improve visibility of collapsed section headers with stronger borders and padding
+- No new dependencies
