@@ -1,80 +1,36 @@
 
-
-## Fix: Restore Full Workflow Settings Visibility for Virtual Try-On and Mirror Selfie Set
+## Fix: Clean Mobile Footer for Creative Drop Wizard
 
 ### Problem
-The Scene Library, Models, and Scenes sections in Step 3 of the Creative Drop Wizard are rendering as **collapsed headers** that are nearly invisible on the muted background. Users expect to see these settings expanded when a workflow is selected. The thin `border-t` header buttons blend into the `bg-muted/30` container, making it look like "everything was deleted."
+The sticky footer with Cancel/Next buttons looks bad on mobile -- it has a shadow, border, and sticky positioning that conflicts with the browser chrome and the Lovable preview badge (customer support icon). The "Next" button gets partially covered.
 
-### Root Cause
-All collapsible sections (Scenes, Scene Library, Models) start collapsed by default. The `expandedSection` state initializes as `{}`, so no sections are open. On mobile, the thin header buttons are easy to miss.
+### Note on Customer Support Icon
+The green chat bubble visible in the screenshot is the **Lovable preview badge** -- it's injected by the preview environment and is not part of your codebase. It won't appear on your published site (vovvai.lovable.app). No code changes can hide it in preview mode.
 
 ### Solution
-Auto-expand the first relevant section when a workflow is selected, and make collapsed headers more prominent.
+Remove the sticky footer behavior on mobile entirely. Instead, render the buttons as simple inline content at the bottom of the scrollable area with clean spacing -- no shadow, no sticky, no border on mobile.
+
+---
 
 ### Technical Changes
 
 **File: `src/components/app/CreativeDropWizard.tsx`**
 
-**1. Auto-expand sections when a workflow is selected (line 660-675)**
+**1. Replace sticky footer with clean inline buttons on mobile (line 1452)**
 
-When a workflow is added to `selectedWorkflowIds`, also set its first relevant section as expanded in `expandedSection`:
-
-```typescript
-// Inside the onClick handler where workflow is selected:
-if (!isSelected) {
-  next.add(wf.id);
-  // Auto-select scenes
-  if (variations.length > 0 && !workflowSceneSelections[wf.id]) {
-    setWorkflowSceneSelections(prev => ({
-      ...prev,
-      [wf.id]: new Set(variations.map((v: { label: string }) => v.label)),
-    }));
-  }
-  // Auto-expand first relevant section
-  const firstSection = (variations.length > 0 && !wf.uses_tryon)
-    ? 'scenes'
-    : showPosePicker
-      ? 'poses'
-      : needsModels
-        ? 'models'
-        : null;
-  if (firstSection) {
-    setExpandedSection(prev => ({ ...prev, [wf.id]: firstSection }));
-  }
-}
+Change the footer container from:
+```
+className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-[env(safe-area-inset-bottom,24px)] z-50 sm:static sm:pb-0 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
+```
+To:
+```
+className="pt-6 mt-4 space-y-2 sm:border-t sm:pt-4 sm:mt-0"
 ```
 
-This ensures that when you select Virtual Try-On, the "Scene Library" section auto-opens. When you select Mirror Selfie, the "Scenes" section auto-opens.
+This removes all sticky behavior, shadow, z-index, and the iOS safe-area padding. On mobile the buttons simply sit at the end of the content with generous top spacing. On desktop (`sm:`), the border-top separator is preserved.
 
-**2. Make collapsed section headers more visually prominent (lines 748-752, 823-827, 897-901, 960-964)**
+**2. Add bottom margin to the content area to ensure breathing room**
 
-Update all four collapsible header buttons from the nearly-invisible style to a more prominent card-like style:
+Update the main content bottom padding (around line 469) from `pb-24 sm:pb-8` to `pb-8` since the footer is no longer sticky and doesn't need extra clearance.
 
-```typescript
-// Before (all 4 section headers):
-className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
-
-// After:
-className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
-```
-
-And update the border separator from barely-visible to clearer:
-
-```typescript
-// Before:
-className="border-t border-border/50 pt-1"
-
-// After:
-className="border-t border-border pt-2"
-```
-
-This makes all four collapsible section headers (Scenes, Scene Library, Models, Settings) more visible with:
-- Stronger border separator (full opacity instead of 50%)
-- More padding for better touch targets
-- Clearer visual separation from the Format row above
-
-### Summary of Changes
-- 1 file modified: `src/components/app/CreativeDropWizard.tsx`
-- Auto-expand first relevant section when workflow is selected
-- Improve visibility of collapsed section headers with stronger borders and padding
-- No new dependencies
+This gives a clean, simple layout: users scroll through content and the Back/Next buttons are right there at the bottom -- no overlapping, no fighting with floating icons, no awkward slide-up behavior.
