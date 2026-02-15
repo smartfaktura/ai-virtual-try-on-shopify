@@ -20,8 +20,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { calculateDropCredits, type WorkflowCostConfig } from '@/lib/dropCreditCalculator';
 import type { Workflow } from '@/types/workflow';
+
+const WORKFLOW_FALLBACK_IMAGES: Record<string, string> = {
+  'Product Listing Set': getLandingAssetUrl('workflows/workflow-product-listing.jpg'),
+  'Selfie / UGC Set': getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg'),
+  'Flat Lay Set': getLandingAssetUrl('workflows/workflow-flat-lay.jpg'),
+};
 
 interface CreativeDropWizardProps {
   onClose: () => void;
@@ -343,9 +350,7 @@ export function CreativeDropWizard({ onClose }: CreativeDropWizardProps) {
                         )}
                       >
                         <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                          {wf.preview_image_url && (
-                            <img src={wf.preview_image_url} alt={wf.name} className="w-full h-full object-cover" />
-                          )}
+                          <img src={wf.preview_image_url || WORKFLOW_FALLBACK_IMAGES[wf.name] || ''} alt={wf.name} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium">{wf.name}</p>
