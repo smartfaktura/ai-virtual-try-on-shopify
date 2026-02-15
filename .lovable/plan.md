@@ -1,124 +1,186 @@
 
 
-## Creative Drops Wizard -- Per-Workflow Scene, Model & Settings Configuration
+## Creative Drops Wizard -- Fix Per-Workflow Configuration
 
-The current wizard Step 3 ("Workflows") only lets users toggle workflows on/off and pick an aspect ratio. But each workflow has its own scenes (up to 30), model requirements, and custom settings that users can't configure. This upgrade adds inline, expandable per-workflow configuration panels.
+Multiple issues need fixing in Step 3 of the wizard. Here is the full breakdown and the plan.
 
 ---
 
-### Current State
+### Issues Found
 
-| Workflow | Scenes | Models | Custom Settings |
-|----------|--------|--------|-----------------|
-| Virtual Try-On Set | 4 angle variations | Yes (model + pose picker) | None |
-| Product Listing Set | 30 scene variations | No | Product Angles (Front Only / Front+Side / Front+Back / All Angles) |
-| Selfie / UGC Set | 16 situation variations | Yes (model picker) | None |
-| Flat Lay Set | 12 layout variations | No | None |
-| Mirror Selfie Set | 30 environment variations | Yes (model picker) | None |
+1. **Auto-selects all scenes**: When a workflow is toggled on, all scenes are pre-selected (line 539). Users should start with none selected and choose what they want.
 
-None of this is exposed in the Creative Drops wizard today.
+2. **No model picker showing for model workflows**: The model grid only queries `custom_models` table (which is likely empty). It needs to also include the 40+ mock models from `mockModels` so users always have models to pick from.
+
+3. **Virtual Try-On missing pose/scene picker**: The Virtual Try-On workflow has `show_pose_picker: true` in its config, meaning it should show the fashion scene library (from `mockTryOnPoses`), but the wizard only shows its 4 angle variations. It needs a scene selector from the pose library.
+
+4. **Flat Lay Set unclear**: Has `lock_aspect_ratio: true` but no UI indication about whether props are combined with the product. Needs a clarifying note.
+
+5. **Mirror Selfie Set missing model picker**: Has `show_model_picker: true` but `uses_tryon: false`, so the `needsModels` check may pass but the empty `custom_models` query returns nothing useful.
+
+6. **Laggy loading**: Scene images load without shimmer placeholders, causing visual jank.
+
+7. **No credit calculator visible in Step 3**: Credit cost only shows in Step 4. It should appear as a sticky bar in Step 3 that updates as scenes/models are selected.
+
+8. **Review step missing per-workflow details**: Doesn't show which specific scenes or models were picked per workflow.
 
 ---
 
 ### What Changes
 
-**Step 3 of the wizard gets expanded.** When a user selects a workflow, the card expands to reveal a collapsible configuration panel with:
+**File: `src/components/app/CreativeDropWizard.tsx`**
 
-1. **Scene/Variation Picker** -- A thumbnail grid of the workflow's variation scenes (from `generation_config.variation_strategy.variations`). Users can multi-select which scenes they want included. Each scene shows its preview image and label. "Select All" / "Deselect All" toggles provided. Scenes that have `preview_url` show the image; others show a gradient placeholder with the label.
+**A. Fix scene auto-selection (line 536-540)**
 
-2. **Model Picker** (only for workflows with `uses_tryon: true` or `show_model_picker: true`) -- The existing model grid but scoped per-workflow. Users pick which models to use for that specific workflow rather than globally. This replaces the current global model picker below all workflows.
+When a workflow is first selected, initialize with an empty Set instead of all variations:
 
-3. **Custom Settings** (from `generation_config.ui_config.custom_settings`) -- Rendered dynamically based on `type`:
-   - `select` type: renders a row of pill buttons (same pattern as aspect ratio chips)
-   - Only Product Listing Set currently has this (Product Angles selector)
-
-4. **Aspect Ratio** -- Stays as-is (already per-workflow).
-
-**Layout for expanded workflow card:**
-
-```text
-+---------------------------------------------------------------+
-| [thumb] Virtual Try-On Set              [Model badge]  [check]|
-|         Generate try-on images...                             |
-|                                                               |
-|  Format: [1:1] [4:5] [9:16] [16:9]                          |
-|                                                               |
-|  Scenes  (2 of 4 selected)                    [Select All]   |
-|  [Front View] [3/4 Turn] [Back View] [Movement Shot]         |
-|                                                               |
-|  Models  (3 selected)                         [Clear]        |
-|  [avatar] [avatar] [avatar] [avatar] [avatar] ...            |
-+---------------------------------------------------------------+
+```typescript
+// Before: new Set(variations.map(v => v.label))
+// After: new Set<string>()
 ```
 
----
+**B. Add mock models to the model picker**
 
-### Data Model Changes
+Import `mockModels` from `@/data/mockData` and merge with custom models from the database:
 
-**No new database columns needed.** The existing `scene_config` JSONB column and `model_ids` array will be restructured:
+```typescript
+import { mockModels } from '@/data/mockData';
 
-- `scene_config` changes from `{ workflowId: { aspect_ratio } }` to `{ workflowId: { aspect_ratio, selected_scenes: string[], custom_settings: Record<string, string> } }`
-- `model_ids` stays as a flat array (global fallback), but `scene_config[workflowId].model_ids` can optionally store per-workflow model selections
+// In the model grid, use:
+const allModels = [...mockModels.map(m => ({
+  id: m.modelId,
+  name: m.name,
+  image_url: m.previewUrl,
+})), ...models];
+```
 
-Since `scene_config` is JSONB, this is backward-compatible -- no migration needed.
+This ensures the model grid always has 40+ models available even when no custom models exist.
+
+**C. Add pose/scene picker for Virtual Try-On**
+
+Import `mockTryOnPoses` and filter to fashion-relevant categories. When `show_pose_picker` is true, render a scene grid from the pose library (in addition to the 4 angle variations which stay as-is):
+
+```typescript
+import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
+
+// Inside the expanded workflow config, after the angle variations:
+{uiConfig?.show_pose_picker && (
+  <div className="space-y-2">
+    <p className="text-xs font-medium">Scene / Environment</p>
+    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto">
+      {fashionPoses.map(pose => (
+        // Same selection UI as scene cards
+      ))}
+    </div>
+  </div>
+)}
+```
+
+This stores selected pose IDs in a new `workflowPoseSelections` state map, included in `scene_config` when saving.
+
+**D. Add Flat Lay clarification note**
+
+When Flat Lay is expanded, show a small info note:
+
+```tsx
+{wf.name === 'Flat Lay Set' && (
+  <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+    Each layout includes curated styling props arranged around your product.
+    The AI selects contextual props based on your product type.
+  </p>
+)}
+```
+
+Also, since `lock_aspect_ratio` is true for Flat Lay, hide the aspect ratio selector and show a fixed "1:1" badge instead.
+
+**E. Add sticky credit calculator bar to Step 3**
+
+Add a compact credit summary bar at the bottom of the Step 3 content area that updates live:
+
+```tsx
+{step === 2 && selectedWorkflowIds.size > 0 && (
+  <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t pt-3 pb-1 -mx-1 px-1">
+    <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center gap-2">
+        <Zap className="w-4 h-4 text-primary" />
+        <span className="font-medium">Estimated Cost</span>
+      </div>
+      <span className="font-semibold">{costEstimate.totalCredits} credits / drop</span>
+    </div>
+    <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+      {costEstimate.breakdown.map(b => (
+        <span key={b.workflowId}>{b.workflowName}: {b.subtotal}cr</span>
+      ))}
+    </div>
+  </div>
+)}
+```
+
+**F. Fix credit calculation to use per-workflow model selections**
+
+Currently `workflowConfigs` only checks global `selectedModelIds` for `hasModel`. Update to check `workflowModelSelections[wf.id]` instead:
+
+```typescript
+const workflowConfigs: WorkflowCostConfig[] = workflows
+  .filter(w => selectedWorkflowIds.has(w.id))
+  .map(w => ({
+    workflowId: w.id,
+    workflowName: w.name,
+    hasModel: w.uses_tryon || (workflowModelSelections[w.id]?.length > 0),
+    hasCustomScene: false,
+  }));
+```
+
+**G. Add shimmer loading for scene thumbnails**
+
+Import `ShimmerImage` and use it for scene preview images instead of raw `<img>` tags to prevent laggy loading:
+
+```tsx
+import { ShimmerImage } from '@/components/ui/shimmer-image';
+
+// Replace <img src={v.preview_url}> with:
+<ShimmerImage src={v.preview_url} alt={v.label} className="w-full h-full object-cover" />
+```
+
+**H. Update Review step to show per-workflow details**
+
+Show the specific selected scenes and models per workflow:
+
+- List selected scene names as small badges under each workflow
+- Show model thumbnails for workflows with models selected
+- Show custom settings values
+
+**I. Update save payload**
+
+Include `pose_ids` in `scene_config` for Virtual Try-On:
+
+```typescript
+sceneConfig[id] = {
+  aspect_ratio: workflowFormats[id] || '1:1',
+  selected_scenes: Array.from(workflowSceneSelections[id] || []),
+  pose_ids: workflowPoseSelections[id] || [],
+  model_ids: workflowModelSelections[id] || [],
+  custom_settings: workflowCustomSettings[id] || {},
+};
+```
 
 ---
 
 ### Technical Details
 
-**File: `src/components/app/CreativeDropWizard.tsx`**
+**New imports needed:**
+- `mockModels`, `mockTryOnPoses`, `poseCategoryLabels` from `@/data/mockData`
+- `ShimmerImage` from `@/components/ui/shimmer-image`
 
-Changes to Step 3 (lines 483-652):
+**New state:**
+- `workflowPoseSelections: Record<string, string[]>` -- pose IDs for Virtual Try-On
 
-1. **New state**: `workflowSceneSelections: Record<string, Set<string>>` -- tracks selected scene labels per workflow. `workflowModelSelections: Record<string, string[]>` -- tracks selected model IDs per workflow. `workflowCustomSettings: Record<string, Record<string, string>>` -- tracks custom settings per workflow.
+**Files modified:**
+- `src/components/app/CreativeDropWizard.tsx` -- all changes above
+- `src/pages/CreativeDrops.tsx` -- update `extractPerWorkflowData` to handle `pose_ids`
 
-2. **Fetch variation data**: The `workflows` query already fetches full workflow data including `generation_config`. Extract `variation_strategy.variations` from each workflow to populate the scene picker.
+**Aspect ratio handling per workflow:**
+- Flat Lay: hide selector, show fixed "1:1" badge (lock_aspect_ratio is true)
+- All others: show selector as-is
 
-3. **Expanded workflow card**: When a workflow is selected (`isSelected === true`), render a collapsible section below the aspect ratio chips containing:
-   - Scene grid: `grid grid-cols-4 sm:grid-cols-5 gap-2` with small thumbnail cards. Each card shows `preview_url` image (or gradient placeholder) + label. Multi-select with checkmark overlay. Header row shows count + "Select All" toggle.
-   - Model grid (conditional): Same as current model grid but only shown inline under workflows that need models. `grid grid-cols-5 sm:grid-cols-8 gap-2` with smaller avatars.
-   - Custom settings: Rendered from `ui_config.custom_settings` array. For `type: 'select'`, render horizontal pill buttons.
-
-4. **Remove global model picker**: The current `needsModelPicker` section (lines 558-596) is removed. Model selection moves inside each workflow's expanded panel.
-
-5. **Save payload update**: When saving, construct `scene_config` as:
-```typescript
-const sceneConfig: Record<string, any> = {};
-selectedWorkflowIds.forEach(id => {
-  sceneConfig[id] = {
-    aspect_ratio: workflowFormats[id] || '1:1',
-    selected_scenes: Array.from(workflowSceneSelections[id] || []),
-    model_ids: workflowModelSelections[id] || [],
-    custom_settings: workflowCustomSettings[id] || {},
-  };
-});
-```
-
-6. **Review step update**: Show per-workflow scene count, model count, and custom settings in the summary.
-
-7. **Initial data hydration**: When editing/duplicating, parse `scene_config` to restore `workflowSceneSelections`, `workflowModelSelections`, and `workflowCustomSettings` from the saved JSONB.
-
-**File: `src/pages/CreativeDrops.tsx`**
-
-- Update `extractWfFormats` to handle the new `scene_config` structure (backward compatible -- check for both old and new format).
-- Update `handleEdit` / `handleDuplicate` to pass `workflowSceneSelections`, `workflowModelSelections`, and `workflowCustomSettings` in `initialData`.
-
-**File: `src/components/app/CreativeDropWizard.tsx` -- `CreativeDropWizardInitialData` interface**
-
-Add new optional fields:
-```typescript
-workflowSceneSelections?: Record<string, string[]>;
-workflowModelSelections?: Record<string, string[]>;
-workflowCustomSettings?: Record<string, Record<string, string>>;
-```
-
----
-
-### UX Details
-
-- Scene thumbnails are small (64x64 on mobile, 80x80 on desktop) to keep the panel compact
-- Scene grid scrolls vertically if more than 2 rows (`max-h-[200px] overflow-y-auto`)
-- Default behavior: all scenes selected when a workflow is first toggled on (user deselects what they don't want)
-- Model avatars are small circles (40x40) in a dense grid
-- The entire per-workflow config is wrapped in a subtle `bg-muted/30 rounded-xl p-4` container for visual grouping
-- Smooth `animate-fade-in` on expand
+**Model picker UI:** Grid of 40+ model avatars with name labels below each. Uses the same compact circle layout but with names visible (per user feedback about identification).
