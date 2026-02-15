@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { MessageCircle, X, Send, RotateCcw } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useStudioChat } from '@/hooks/useStudioChat';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { ChatMessageBubble } from './ChatMessageBubble';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -23,6 +25,8 @@ const WELCOME_MESSAGE =
 export function StudioChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
+  const location = useLocation();
+  const isMobile = useIsMobile();
   const { messages, isLoading, sendMessage, clearChat } = useStudioChat();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -40,6 +44,10 @@ export function StudioChat() {
       setTimeout(() => inputRef.current?.focus(), 200);
     }
   }, [isOpen]);
+
+  const hideOnMobile = isMobile && location.pathname === '/app/creative-drops';
+
+  if (hideOnMobile) return null;
 
   const handleSend = () => {
     const trimmed = input.trim();
