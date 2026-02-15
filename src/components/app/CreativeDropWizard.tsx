@@ -467,7 +467,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       <Separator />
 
       {/* Content */}
-      <div className="py-8 pb-24 sm:pb-8">
+      <div className="py-8 pb-8">
         <div className="min-h-[380px]">
 
           {/* ─── Step 1: Theme ─── */}
@@ -1449,7 +1449,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       </div>
 
       {/* Footer — pill buttons + branding */}
-      <div className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-[env(safe-area-inset-bottom,24px)] z-50 sm:static sm:pb-0 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      <div className="pt-6 mt-4 space-y-2 sm:border-t sm:pt-4 sm:mt-0">
         {validationHint && (
           <p className="text-[11px] text-destructive animate-fade-in text-center sm:hidden">{validationHint}</p>
         )}
