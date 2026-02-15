@@ -38,20 +38,18 @@ function getCostPerImage(workflowId: string, hasModel: boolean, hasCustomScene: 
 export function calculateDropCredits(
   workflows: WorkflowCostConfig[],
   imagesPerDrop: number,
-  modelIds: string[],
   frequency: string
 ): DropCostEstimate {
   if (workflows.length === 0) {
     return { breakdown: [], totalCredits: 0, totalImages: 0, monthlyProjection: 0 };
   }
 
-  const hasModel = modelIds.length > 0;
   const basePerWorkflow = Math.floor(imagesPerDrop / workflows.length);
   const remainder = imagesPerDrop % workflows.length;
 
   const breakdown: CreditBreakdown[] = workflows.map((wf, i) => {
     const imageCount = basePerWorkflow + (i < remainder ? 1 : 0);
-    const costPerImage = getCostPerImage(wf.workflowId, hasModel || wf.hasModel, wf.hasCustomScene);
+    const costPerImage = getCostPerImage(wf.workflowId, wf.hasModel, wf.hasCustomScene);
     return {
       workflowId: wf.workflowId,
       workflowName: wf.workflowName,
