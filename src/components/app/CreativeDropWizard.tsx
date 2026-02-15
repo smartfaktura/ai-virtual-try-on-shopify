@@ -487,7 +487,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
               <div className="space-y-3">
                 <p className="section-label">Theme</p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {THEMES.map(t => {
                     const Icon = t.icon;
                     return (
@@ -590,7 +590,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   {attempted && selectedProductIds.size === 0 && (
                     <p className="text-xs text-destructive">Select at least one product</p>
                   )}
-                  <div className="grid grid-cols-3 gap-3 max-h-[320px] overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[320px] overflow-y-auto pr-1">
                     {filteredProducts.map(product => {
                       const isSelected = selectedProductIds.has(product.id);
                       return (
@@ -771,7 +771,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                       {sceneSelections.size === variations.length ? 'Deselect All' : 'Select All'}
                                     </button>
                                   </div>
-                                  <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto pr-1">
                                     {variations.map(v => {
                                       const isSceneSelected = sceneSelections.has(v.label);
                                       return (
@@ -842,7 +842,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                       </button>
                                     </div>
                                   )}
-                                  <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-[200px] overflow-y-auto pr-1">
                                     {fashionPoses.map(pose => {
                                       const isPoseSelected = wfPoses.includes(pose.poseId);
                                       return (
@@ -916,7 +916,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                                       </button>
                                     </div>
                                   )}
-                                  <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-[200px] overflow-y-auto pr-1">
                                     {allModels.map(m => {
                                       const isModelSelected = wfModels.includes(m.id);
                                       return (
@@ -1012,7 +1012,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
               {/* Sticky credit calculator */}
               {selectedWorkflowIds.size > 0 && (
-                <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border pt-3 pb-1 -mx-1 px-1 pr-14 z-10">
+                <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border pt-3 pb-1 -mx-1 px-1 z-10">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <Zap className="w-4 h-4 text-primary" />
@@ -1193,27 +1193,29 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
               {/* Images per drop */}
               <div className="space-y-3">
                 <p className="section-label">Images Per Workflow</p>
-                <div className="flex gap-2">
-                  {IMAGE_PRESETS.map(n => (
-                    <Button
-                      key={n}
-                      variant={imagesPerDrop === n && !customImageCount ? 'default' : 'outline'}
-                      onClick={() => { setImagesPerDrop(n); setCustomImageCount(''); }}
-                      className="h-11 rounded-xl flex-1"
-                    >
-                      {n}
-                    </Button>
-                  ))}
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {IMAGE_PRESETS.map(n => (
+                      <Button
+                        key={n}
+                        variant={imagesPerDrop === n && !customImageCount ? 'default' : 'outline'}
+                        onClick={() => { setImagesPerDrop(n); setCustomImageCount(''); }}
+                        className="h-11 rounded-xl"
+                      >
+                        {n}
+                      </Button>
+                    ))}
+                  </div>
                   <Input
                     type="number"
-                    placeholder="Custom"
+                    placeholder="Custom amount"
                     value={customImageCount}
                     onChange={e => {
                       setCustomImageCount(e.target.value);
                       const val = parseInt(e.target.value);
                       if (val > 0) setImagesPerDrop(val);
                     }}
-                    className="w-24 h-11 rounded-xl"
+                    className="h-11 rounded-xl"
                   />
                 </div>
               </div>
@@ -1436,44 +1438,49 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       </div>
 
       {/* Footer — pill buttons + branding */}
-      <div className="pt-4 border-t flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={step === 0 ? onClose : () => setStep(s => s - 1)}
-          className="rounded-full h-11 px-6"
-        >
-          {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1.5" /> Back</>}
-        </Button>
+      <div className="pt-4 border-t space-y-2">
+        {validationHint && (
+          <p className="text-[11px] text-destructive animate-fade-in text-center sm:hidden">{validationHint}</p>
+        )}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            onClick={step === 0 ? onClose : () => setStep(s => s - 1)}
+            className="rounded-full min-h-[44px] h-11 px-5 sm:px-6"
+          >
+            {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1.5" /> Back</>}
+          </Button>
 
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] text-muted-foreground/40 tracking-widest uppercase hidden sm:inline">
-            Powered by VOVV.AI
-          </span>
-          {validationHint && (
-            <p className="text-[11px] text-destructive animate-fade-in">{validationHint}</p>
+          <div className="hidden sm:flex flex-col items-center gap-1">
+            <span className="text-[10px] text-muted-foreground/40 tracking-widest uppercase">
+              Powered by VOVV.AI
+            </span>
+            {validationHint && (
+              <p className="text-[11px] text-destructive animate-fade-in">{validationHint}</p>
+            )}
+          </div>
+
+          {step < 4 ? (
+            <Button
+              onClick={handleNext}
+              disabled={false}
+              className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
+            >
+              Next <ArrowRight className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={() => saveMutation.mutate()}
+              disabled={saveMutation.isPending}
+              className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
+            >
+              {saveMutation.isPending
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> {editingScheduleId ? 'Saving...' : 'Creating...'}</>
+                : editingScheduleId ? 'Save Changes' : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
+              }
+            </Button>
           )}
         </div>
-
-        {step < 4 ? (
-          <Button
-            onClick={handleNext}
-            disabled={false}
-            className="rounded-full h-11 px-6 gap-1.5"
-          >
-            Next <ArrowRight className="w-4 h-4" />
-          </Button>
-        ) : (
-          <Button
-            onClick={() => saveMutation.mutate()}
-            disabled={saveMutation.isPending}
-            className="rounded-full h-11 px-6 gap-1.5"
-          >
-            {saveMutation.isPending
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> {editingScheduleId ? 'Saving...' : 'Creating...'}</>
-              : editingScheduleId ? 'Save Changes' : deliveryMode === 'now' ? 'Generate Now' : 'Create Schedule'
-            }
-          </Button>
-        )}
       </div>
     </div>
   );

@@ -226,7 +226,7 @@ export default function CreativeDrops() {
       ) : (
         <>
           {/* Stats Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
             <div className="rounded-xl bg-card border p-3">
               <p className="text-2xl font-semibold">{activeCount}</p>
               <p className="text-xs text-muted-foreground">Active Schedules</p>
@@ -310,7 +310,7 @@ export default function CreativeDrops() {
               {/* Filter & Sort bar */}
               {drops.length > 0 && (
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex gap-1.5 overflow-x-auto">
+                  <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
                     {DROP_STATUSES.map(s => (
                       <Button
                         key={s}

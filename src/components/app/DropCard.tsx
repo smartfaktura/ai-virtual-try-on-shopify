@@ -165,9 +165,9 @@ export function DropCard(props: Props) {
                   onClick={() => toggleMutation.mutate({ id: schedule.id, active: !schedule.active })}
                 >
                   {schedule.active ? (
-                    <><Pause className="w-3 h-3" /> Pause</>
+                    <><Pause className="w-3 h-3" /> <span className="hidden sm:inline">Pause</span></>
                   ) : (
-                    <><Play className="w-3 h-3" /> Resume</>
+                    <><Play className="w-3 h-3" /> <span className="hidden sm:inline">Resume</span></>
                   )}
                 </Button>
                 <DropdownMenu>
