@@ -1,59 +1,163 @@
 
 
-## Fix: Hide Studio Chat on Creative Drop Wizard + Improve Mobile Scroll
+## Fix All Creative Drops UI Issues
 
-### Problems
+### Overview
 
-1. **Studio Chat floating button blocks scrolling** -- The StudioChat component renders a `fixed bottom-4 right-4 z-50` button that sits on top of the wizard content. On mobile, this 48x48px touch target intercepts swipe gestures near the bottom-right of the screen, making it hard to scroll smoothly. This is the "customer support icon" you want hidden.
-
-2. **Scroll still feels restricted** -- The combination of the fixed mobile header (80px from top) and the floating chat button creates a constrained scroll zone. Removing the chat button during wizard mode will free up the full scroll area.
-
-### Solution
-
-**Hide the StudioChat component when the Creative Drop wizard is open.** The wizard state (`wizardOpen`) lives in the `CreativeDrops.tsx` page, but StudioChat is rendered in `AppShell.tsx` (the global shell). The cleanest approach: use the current route + a simple CSS/conditional approach.
-
-Since the wizard is shown inline on the `/app/creative-drops` page (not a separate route), we need to pass context from the page to the shell. The simplest way: use `useLocation` state or a body data attribute that the StudioChat can read.
-
-Even simpler: **hide StudioChat on mobile when on the creative-drops route entirely**, since the chat is not essential during wizard creation and can still be accessed on desktop.
+A comprehensive pass across the Creative Drops page, wizard, and supporting components to address mobile usability, missing loading states, scroll conflicts, and general polish.
 
 ---
 
-### Technical Changes
+### Changes by File
 
-**File: `src/components/app/StudioChat.tsx`**
+#### 1. `src/components/app/CreativeDropWizard.tsx`
 
-1. Import `useLocation` from react-router-dom and `useIsMobile` hook
-2. Add a check: if on mobile AND the current route is `/app/creative-drops`, hide the floating button entirely (return null or hide with a class)
+**A. Sticky credit calculator causes scroll conflict on mobile (Step 3, line 1026)**
+
+The `sticky bottom-0` calculator with `-mx-1` negative margins intercepts touch events and creates a scroll boundary conflict on iOS. Fix: remove `sticky` on mobile, keep it on desktop only.
 
 ```
-// At the top of StudioChat component:
-const location = useLocation();
-const isMobile = useIsMobile();
-const hideOnMobile = isMobile && location.pathname === '/app/creative-drops';
+// Before
+<div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border pt-3 pb-1 -mx-1 px-1 z-10">
 
-// Wrap the floating button:
-if (hideOnMobile) return null;
+// After
+<div className="bg-background/95 sm:sticky sm:bottom-0 backdrop-blur-sm border-t border-border pt-3 pb-1 z-10">
 ```
 
-This hides both the chat panel and the floating button on mobile when viewing Creative Drops (which includes the wizard). On desktop it remains visible since it doesn't cause scroll issues there.
+Remove the `-mx-1 px-1` negative margin hack entirely -- it causes clipping on narrow screens.
 
-**File: `src/components/app/CreativeDropWizard.tsx`**
+**B. Product grid needs max-height on mobile (Step 2, line 594)**
 
-3. Add `-webkit-overflow-scrolling: touch` to improve iOS scroll momentum. Add the Tailwind utility class `touch-auto` to the wizard's root container to ensure touch events are properly handled.
+Currently `sm:max-h-[320px] sm:overflow-y-auto` only kicks in at 640px+, so on phones the grid is unbounded and makes the page very long.
 
-Change line 431:
 ```
-<div className="space-y-0">
-```
-To:
-```
-<div className="space-y-0 touch-auto">
+// Before
+<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:max-h-[320px] sm:overflow-y-auto pr-1">
+
+// After
+<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[50vh] overflow-y-auto overscroll-contain pr-1">
 ```
 
-This is a minor addition but ensures the wizard content area doesn't have any touch-action restrictions that could interfere with smooth scrolling.
+Using `max-h-[50vh]` ensures it works on all screen sizes and the user can always see the footer buttons. Adding `overscroll-contain` prevents scroll chaining within the grid.
+
+**C. Scene and pose grids also need mobile max-height (lines 785, 856, 930)**
+
+Same pattern -- these grids only have `sm:max-h-[200px]` which means they're unbounded on mobile.
+
+```
+// Before (3 locations)
+sm:max-h-[200px] sm:overflow-y-auto
+
+// After
+max-h-[40vh] sm:max-h-[200px] overflow-y-auto overscroll-contain
+```
+
+**D. Add step label tooltips on mobile (line 457)**
+
+Step labels are `hidden sm:inline` with no fallback. Add a `title` attribute so mobile users can long-press to see the label, and also add `aria-label` for accessibility.
+
+```
+// Before
+<span className="hidden sm:inline">{s}</span>
+
+// After  
+<span className="hidden sm:inline">{s}</span>
+// Also add title={s} and aria-label={`Step ${i+1}: ${s}`} to the parent button
+```
+
+**E. Loading states for data queries**
+
+The wizard shows no loading indication while brand profiles, products, and workflows are fetching. Add simple loading skeletons:
+
+- Step 1: Show skeleton for brand profile selector while loading
+- Step 2: Show skeleton grid while products are loading
+- Step 3: Show skeleton list while workflows are loading
+
+Use the existing `isLoading` states from the `useQuery` hooks (add destructuring for `isLoading` on the existing queries at lines 166, 175, 184).
+
+**F. Image error fallbacks**
+
+Product images and workflow preview images can fail to load. Add `onError` handlers to `<img>` tags in the product grid (line 618) and review step (line 1326) that set a placeholder:
+
+```tsx
+onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
+```
+
+---
+
+#### 2. `src/pages/CreativeDrops.tsx`
+
+**G. Calendar touch targets too small on mobile (line 540)**
+
+The 7-column grid creates cells that are roughly 40px on a 320px phone. Add minimum sizing:
+
+```
+// Before
+<div className="grid grid-cols-7 gap-1 text-center">
+
+// After
+<div className="grid grid-cols-7 gap-1 text-center min-w-0">
+```
+
+And on each cell (line 554), increase the minimum tap target:
+
+```
+// Before
+'aspect-square flex flex-col items-center justify-center rounded-lg text-sm'
+
+// After
+'aspect-square flex flex-col items-center justify-center rounded-lg text-sm min-h-[40px]'
+```
+
+**H. Filter bar scroll indicator (line 313)**
+
+The `scrollbar-hide` on the filter buttons removes all indication that more filters exist. Add a subtle gradient fade on the right edge and keep `scrollbar-hide`:
+
+```
+// Before
+<div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+
+// After
+<div className="flex gap-1.5 overflow-x-auto scrollbar-hide relative">
+```
+
+Wrap in a container with a right-edge gradient mask using CSS:
+
+```
+<div className="relative flex-1 overflow-hidden">
+  <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pr-4">
+    ...buttons...
+  </div>
+  <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
+</div>
+```
+
+**I. Onboarding image error fallback (line 458)**
+
+Add `onError` handler to preview images in the onboarding section.
+
+---
+
+#### 3. `src/components/app/PageHeader.tsx`
+
+**J. Mobile back button + title stacking gap (line 15)**
+
+The gap between back button and title on mobile is only `gap-1` which looks cramped.
+
+```
+// Before
+<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+
+// After
+<div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+```
+
+---
 
 ### Summary
-- 2 files modified
-- StudioChat hidden on mobile during Creative Drops (covers wizard creation)
+
+- 3 files modified
 - No new dependencies
-- Chat remains fully accessible on desktop and on all other mobile pages
+- Fixes: sticky credit bar scroll conflict, unbounded grids on mobile, missing loading states, missing image fallbacks, small calendar tap targets, cramped PageHeader, missing scroll indicators
+- All changes are mobile-first improvements that preserve existing desktop behavior
+
