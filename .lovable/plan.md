@@ -1,25 +1,43 @@
 
-## Fix: Empty Settings Step for Selfie / UGC Set
 
-### Problem
-The Settings step for Selfie / UGC Set shows a completely blank page. This happens because:
+## Improve Creator Mood UI + Generate UGC Scene Previews
 
-1. The **workflow-specific settings block** (line 1565) is gated by `generationMode !== 'virtual-try-on'` -- but UGC has `uses_tryon: true`, so its mode IS `virtual-try-on`, blocking the entire section (variation grid, mood selector, quality settings, generate button)
-2. The **try-on settings block** (line 2117) requires `selectedPose` -- but UGC skips the pose/scene step, so there's no pose selected, blocking this section too
+### 1. Enhance Creator Mood Selector
 
-The result: both settings sections are excluded and the user sees an empty page.
+The current mood selector uses small text-based chips. We'll upgrade to a more visual, engaging grid layout with larger cards, bigger emojis, and better descriptions that help creators understand each mood's impact on their content.
 
-### Fix (single file: `src/pages/Generate.tsx`)
+**Changes to `src/pages/Generate.tsx`:**
 
-**Line 1565** -- Add `isSelfieUgc` as an exception to the `virtual-try-on` exclusion:
+- Update the `UGC_MOODS` array to include richer descriptions and a larger emoji display
+- Switch from `flex-wrap` chip layout to a proper 2-3 column grid with taller cards
+- Add a subtle "recommended" badge on "Excited" (most popular UGC vibe)
+- Include a brief example of what the expression looks like (e.g., "Wide smile, bright eyes")
+- Updated mood options:
+  - Excited: "Wide smile, bright eyes. 'OMG I love this!' energy"
+  - Chill: "Soft smile, relaxed gaze. Everyday casual vibe"
+  - Confident: "Subtle smile, direct eye contact. 'I know what works' energy"
+  - Surprised: "Raised eyebrows, open mouth. 'Wait, this actually works?!' reaction"
+  - Focused: "Concentrated, friendly. Tutorial/demo mode"
 
-Change:
-```
-generationMode !== 'virtual-try-on'
-```
-To:
-```
-(generationMode !== 'virtual-try-on' || isSelfieUgc)
-```
+### 2. Add UGC Scene Preview Prompts
 
-This allows the UGC workflow to render through the workflow-specific settings path (which contains the variation grid, UGC mood selector, quality/aspect-ratio settings, cost summary, and generate button) instead of the try-on path that requires a selected pose.
+Add all 16 Selfie/UGC variations to the `scenePreviewPrompts` dictionary in the `generate-scene-previews` edge function, so clicking "Regenerate Previews" generates proper preview images for each scene.
+
+**Changes to `supabase/functions/generate-scene-previews/index.ts`:**
+
+Add 16 new entries matching the variation labels:
+- Golden Hour Selfie, Coffee Shop / Brunch, Car Selfie, Walking Street Style, Gym / Workout
+- Morning Routine / GRWM, Bedroom Outfit Check, Couch / Netflix Chill, Kitchen Counter
+- Unboxing Excitement, Haul / You Need This, Before / After Moment, POV Discovery, Testimonial / Review
+- In-Use Close-up, Hands-Only Demo
+
+Each prompt will describe the UGC scene with a diverse model (using existing `getModelDesc` cycling), iPhone front-camera selfie aesthetic, and the specific setting/mood of that variation -- without any product, since previews are product-agnostic showcases.
+
+### Technical Details
+
+**Files to modify:**
+1. `src/pages/Generate.tsx` -- Lines 231-236 (mood data) and lines 1989-2017 (mood UI)
+2. `supabase/functions/generate-scene-previews/index.ts` -- Add 16 UGC scene prompts to `scenePreviewPrompts` dictionary
+
+**Deployment:** Edge function will be redeployed automatically. After deployment, an admin can click "Regenerate Previews" on the Selfie/UGC workflow settings step to generate all 16 scene preview images.
+
