@@ -44,18 +44,14 @@ export function calculateDropCredits(
     return { breakdown: [], totalCredits: 0, totalImages: 0, monthlyProjection: 0 };
   }
 
-  const basePerWorkflow = Math.floor(imagesPerDrop / workflows.length);
-  const remainder = imagesPerDrop % workflows.length;
-
-  const breakdown: CreditBreakdown[] = workflows.map((wf, i) => {
-    const imageCount = basePerWorkflow + (i < remainder ? 1 : 0);
+  const breakdown: CreditBreakdown[] = workflows.map((wf) => {
     const costPerImage = getCostPerImage(wf.workflowId, wf.hasModel, wf.hasCustomScene);
     return {
       workflowId: wf.workflowId,
       workflowName: wf.workflowName,
-      imageCount,
+      imageCount: imagesPerDrop,
       costPerImage,
-      subtotal: imageCount * costPerImage,
+      subtotal: imagesPerDrop * costPerImage,
     };
   });
 

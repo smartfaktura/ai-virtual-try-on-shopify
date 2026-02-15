@@ -1102,7 +1102,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
               {/* Images per drop */}
               <div className="space-y-3">
-                <p className="section-label">Images Per Drop</p>
+                <p className="section-label">Images Per Workflow</p>
                 <div className="flex gap-2">
                   {IMAGE_PRESETS.map(n => (
                     <Button
@@ -1232,8 +1232,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                       )}
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Images Per Drop</p>
-                      <p className="font-semibold">{imagesPerDrop}</p>
+                      <p className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Images Per Workflow</p>
+                      <p className="font-semibold">{imagesPerDrop} × {selectedWorkflowIds.size} workflows</p>
                     </div>
                   </div>
                   {includeFreestyle && freestylePrompts.filter(p => p.trim()).length > 0 && (
