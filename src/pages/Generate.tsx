@@ -1531,18 +1531,33 @@ export default function Generate() {
             {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
             <Card><CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{sourceType === 'scratch' ? 'Uploaded Image' : 'Selected Product'}</span>
+                <span className="text-sm text-muted-foreground">
+                  {sourceType === 'scratch' ? 'Uploaded Image' : isFlatLay && selectedFlatLayProductIds.size > 1 ? `Selected Products (${selectedFlatLayProductIds.size})` : 'Selected Product'}
+                </span>
                 <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
-                  <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+              {isFlatLay && selectedFlatLayProductIds.size > 1 ? (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
+                    <div key={up.id} className="flex-shrink-0 w-[72px]">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
+                        <img src={up.image_url || '/placeholder.svg'} alt={up.title} className="w-full h-full object-cover" />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{up.title}</p>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
-                  <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? scratchUpload?.productInfo.productType : `${selectedProduct?.vendor} • ${selectedProduct?.productType}`}</p>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                    <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
+                    <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? scratchUpload?.productInfo.productType : `${selectedProduct?.vendor} • ${selectedProduct?.productType}`}</p>
+                  </div>
                 </div>
-              </div>
+              )}
               {selectedBrandProfile && (
                 <div className="pt-2 border-t border-border">
                   <div className="flex items-center justify-between">
