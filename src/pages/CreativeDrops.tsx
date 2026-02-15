@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, Zap, CalendarDays } from 'lucide-react';
+import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader';
@@ -178,14 +178,15 @@ export default function CreativeDrops() {
 // Simple calendar view
 function CalendarView({ schedules, drops }: { schedules: CreativeSchedule[]; drops: CreativeDrop[] }) {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const [monthOffset, setMonthOffset] = useState(0);
+  const viewDate = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const monthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthName = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-  // Map drops to day numbers
   const dropDays = new Map<number, CreativeDrop[]>();
   drops.forEach(d => {
     const date = new Date(d.run_date);
@@ -196,7 +197,6 @@ function CalendarView({ schedules, drops }: { schedules: CreativeSchedule[]; dro
     }
   });
 
-  // Map scheduled next runs
   const scheduledDays = new Set<number>();
   schedules.forEach(s => {
     if (s.next_run_at) {
@@ -211,9 +211,19 @@ function CalendarView({ schedules, drops }: { schedules: CreativeSchedule[]; dro
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
+  const isToday = (day: number) => day === now.getDate() && month === now.getMonth() && year === now.getFullYear();
+
   return (
     <div>
-      <h3 className="text-sm font-medium mb-3">{monthName}</h3>
+      <div className="flex items-center justify-between mb-3">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthOffset(o => o - 1)}>
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+        <h3 className="text-sm font-medium">{monthName}</h3>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthOffset(o => o + 1)}>
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
       <div className="grid grid-cols-7 gap-1 text-center">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
           <div key={d} className="text-xs text-muted-foreground py-1 font-medium">{d}</div>
@@ -222,15 +232,15 @@ function CalendarView({ schedules, drops }: { schedules: CreativeSchedule[]; dro
           <div
             key={i}
             className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm ${
-              day === now.getDate() ? 'bg-primary/10 font-semibold' : ''
+              day && isToday(day) ? 'bg-primary/10 font-semibold' : ''
             } ${day ? 'hover:bg-muted cursor-default' : ''}`}
           >
             {day && (
               <>
                 <span>{day}</span>
                 <div className="flex gap-0.5 mt-0.5">
-                  {dropDays.has(day) && <div className="w-1.5 h-1.5 rounded-full bg-green-500" />}
-                  {scheduledDays.has(day) && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                  {dropDays.has(day) && <div className="w-1.5 h-1.5 rounded-full bg-status-success" />}
+                  {scheduledDays.has(day) && <div className="w-1.5 h-1.5 rounded-full bg-status-info" />}
                 </div>
               </>
             )}
@@ -239,11 +249,11 @@ function CalendarView({ schedules, drops }: { schedules: CreativeSchedule[]; dro
       </div>
       <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-green-500" />
+          <div className="w-2 h-2 rounded-full bg-status-success" />
           Completed drop
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-blue-500" />
+          <div className="w-2 h-2 rounded-full bg-status-info" />
           Scheduled
         </div>
       </div>

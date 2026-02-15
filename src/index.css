@@ -152,7 +152,7 @@
 
   /* Section label — whisper-level uppercase heading */
   .section-label {
-    @apply text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground;
+    @apply text-xs font-semibold uppercase tracking-widest text-muted-foreground;
   }
 
   /* Section divider — label with extending line */
