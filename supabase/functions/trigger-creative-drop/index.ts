@@ -18,6 +18,53 @@ function getUserIdFromJwt(authHeader: string | null): string | null {
   }
 }
 
+/** Fetch the full brand profile object from the DB so generate-workflow can use it */
+async function resolveBrandProfile(
+  supabase: ReturnType<typeof createClient>,
+  brandProfileId: string | null
+): Promise<Record<string, unknown> | null> {
+  if (!brandProfileId) return null;
+  const { data } = await supabase
+    .from("brand_profiles")
+    .select("tone, color_temperature, color_palette, brand_keywords, do_not_rules, target_audience, lighting_style, background_style, composition_bias, preferred_scenes, photography_reference")
+    .eq("id", brandProfileId)
+    .single();
+  return data || null;
+}
+
+/** Fetch all product rows needed for payloads */
+async function resolveProducts(
+  supabase: ReturnType<typeof createClient>,
+  productIds: string[]
+): Promise<Map<string, Record<string, unknown>>> {
+  if (productIds.length === 0) return new Map();
+  const { data } = await supabase
+    .from("user_products")
+    .select("id, title, product_type, description, dimensions, image_url")
+    .in("id", productIds);
+  const map = new Map<string, Record<string, unknown>>();
+  for (const row of data || []) {
+    map.set(row.id as string, row);
+  }
+  return map;
+}
+
+/** Determine the actual number of variations a workflow can produce */
+function getVariationCount(
+  wf: Record<string, unknown>,
+  sceneConfig: Record<string, unknown>
+): number {
+  const genConfig = wf.generation_config as Record<string, unknown> | null;
+  const allVariations = (genConfig?.variation_strategy as Record<string, unknown>)?.variations as unknown[] || [];
+  const selectedIndices = (sceneConfig.selected_variation_indices || []) as number[];
+
+  // If user selected specific variations, use that count; otherwise use all available
+  const variationCount = selectedIndices.length > 0 ? selectedIndices.length : allVariations.length;
+
+  // Backend caps at 4 per call
+  return Math.min(variationCount, 4);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -87,21 +134,21 @@ serve(async (req) => {
       );
     }
 
-    // 3. Fetch workflow configs for generation
-    const { data: workflows } = await supabase
-      .from("workflows")
-      .select("*")
-      .in("id", workflowIds);
+    // 3. Fetch workflow configs, brand profile, and product data in parallel
+    const [workflowResult, brandProfile, productMap] = await Promise.all([
+      supabase.from("workflows").select("*").in("id", workflowIds),
+      resolveBrandProfile(supabase, schedule.brand_profile_id),
+      resolveProducts(supabase, productIds),
+    ]);
 
+    const workflows = workflowResult.data || [];
     const workflowMap = new Map(
-      (workflows || []).map((w: Record<string, unknown>) => [w.id as string, w])
+      workflows.map((w: Record<string, unknown>) => [w.id as string, w])
     );
 
     const sceneConfig = (schedule.scene_config || {}) as Record<string, Record<string, unknown>>;
-    const imagesPerDrop = schedule.images_per_drop || 25;
 
-    // 4. Pre-calculate total credit cost
-    // Cost per image: 4 (no model), 12 (model), 15 (model + custom scene)
+    // 4. Build job payloads with fully resolved data
     let totalCreditCost = 0;
     const jobPayloads: {
       jobType: string;
@@ -123,22 +170,45 @@ serve(async (req) => {
       const aspectRatio = (wfSceneConfig.aspect_ratio || "1:1") as string;
       const mappedSettings = (wfSceneConfig.mapped_settings || {}) as Record<string, string>;
 
+      // Issue 5 fix: Use actual variation count, not imagesPerDrop
+      const actualImageCount = getVariationCount(wf, wfSceneConfig);
+
       // For model-based workflows, generate per-model; otherwise just once per product
       const modelList = models.length > 0 ? models : [null];
 
       for (const productId of productIds) {
+        // Issue 3 fix: Resolve full product data
+        const productData = productMap.get(productId);
+        if (!productData) {
+          console.warn(`[trigger-creative-drop] Product ${productId} not found, skipping`);
+          continue;
+        }
+
+        // Build the full product object expected by generate-workflow
+        // Issue 4: Using public URL directly (product-uploads bucket is private,
+        // but the image_url stored in user_products is already a public/signed URL from upload flow)
+        const productObject = {
+          title: productData.title,
+          productType: productData.product_type,
+          description: (productData.description as string) || "",
+          dimensions: productData.dimensions || undefined,
+          imageUrl: productData.image_url,
+        };
+
         for (const model of modelList) {
-          const imageCount = imagesPerDrop;
-          const creditCost = imageCount * costPerImage;
+          const creditCost = actualImageCount * costPerImage;
 
           const payload: Record<string, unknown> = {
             workflow_id: wfId,
-            product_id: productId,
-            imageCount,
+            product: productObject, // Issue 3: Full product object
+            imageCount: actualImageCount, // Issue 5: Actual variation count
             quality: "standard",
             aspectRatio,
             selected_variations: variationIndices.length > 0 ? variationIndices : undefined,
-            brand_profile_id: schedule.brand_profile_id || undefined,
+            brand_profile: brandProfile, // Issue 2: Full brand profile object
+            // Issue 1: Theme injection
+            theme: schedule.theme || undefined,
+            theme_notes: schedule.theme_notes || undefined,
             ...mappedSettings,
           };
 
@@ -191,6 +261,7 @@ serve(async (req) => {
           workflow_count: workflowIds.length,
           product_count: productIds.length,
           jobs_enqueued: jobPayloads.length,
+          theme: schedule.theme || null,
         },
       })
       .select("id")
