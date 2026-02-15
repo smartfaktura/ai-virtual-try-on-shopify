@@ -1,14 +1,11 @@
 
-## Fix: Clean Mobile Footer for Creative Drop Wizard
+## Fix: Step Numbers Centering and Scroll-to-Bottom Issues
 
-### Problem
-The sticky footer with Cancel/Next buttons looks bad on mobile -- it has a shadow, border, and sticky positioning that conflicts with the browser chrome and the Lovable preview badge (customer support icon). The "Next" button gets partially covered.
+### Problems
 
-### Note on Customer Support Icon
-The green chat bubble visible in the screenshot is the **Lovable preview badge** -- it's injected by the preview environment and is not part of your codebase. It won't appear on your published site (vovvai.lovable.app). No code changes can hide it in preview mode.
+1. **Step numbers not centered on mobile**: Each step item uses `flex-1` which distributes space unevenly. The last step has no connector line after it, so its `flex-1` creates empty space on the right, pushing the whole row left-of-center.
 
-### Solution
-Remove the sticky footer behavior on mobile entirely. Instead, render the buttons as simple inline content at the bottom of the scrollable area with clean spacing -- no shadow, no sticky, no border on mobile.
+2. **Cannot scroll to the bottom buttons**: The AppShell main content area (`pb-4` on mobile at line 287) combined with the wizard footer (`pt-6 mt-4`) provides barely enough room. The content gets clipped at the bottom, especially on iOS where the browser chrome eats into viewport height.
 
 ---
 
@@ -16,21 +13,49 @@ Remove the sticky footer behavior on mobile entirely. Instead, render the button
 
 **File: `src/components/app/CreativeDropWizard.tsx`**
 
-**1. Replace sticky footer with clean inline buttons on mobile (line 1452)**
+**1. Center step numbers properly on mobile (lines 438-464)**
 
-Change the footer container from:
+Replace the `flex-1` distribution with a `justify-between` layout that centers all 5 circles evenly. Remove `flex-1` from the last step item (which has no connector line and creates the imbalance).
+
+Change the stepper container from:
 ```
-className="pt-4 border-t space-y-2 sticky bottom-0 bg-background pb-[env(safe-area-inset-bottom,24px)] z-50 sm:static sm:pb-0 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
+<div className="flex items-center justify-center gap-0">
+  {STEPS.map((s, i) => (
+    <div key={s} className="flex items-center flex-1">
 ```
 To:
 ```
-className="pt-6 mt-4 space-y-2 sm:border-t sm:pt-4 sm:mt-0"
+<div className="flex items-center justify-center w-full max-w-md mx-auto">
+  {STEPS.map((s, i) => (
+    <div key={s} className={cn("flex items-center", i < STEPS.length - 1 ? "flex-1" : "")}>
 ```
 
-This removes all sticky behavior, shadow, z-index, and the iOS safe-area padding. On mobile the buttons simply sit at the end of the content with generous top spacing. On desktop (`sm:`), the border-top separator is preserved.
+This ensures the last step (with no trailing connector) doesn't take up extra space, keeping all circles evenly distributed and centered.
 
-**2. Add bottom margin to the content area to ensure breathing room**
+**2. Add more bottom padding to ensure scroll reaches buttons (line 470)**
 
-Update the main content bottom padding (around line 469) from `pb-24 sm:pb-8` to `pb-8` since the footer is no longer sticky and doesn't need extra clearance.
+Change:
+```
+<div className="py-8 pb-8">
+```
+To:
+```
+<div className="pt-8 pb-4">
+```
 
-This gives a clean, simple layout: users scroll through content and the Back/Next buttons are right there at the bottom -- no overlapping, no fighting with floating icons, no awkward slide-up behavior.
+Reduce bottom padding on the content area since the footer already has `pt-6 mt-4`.
+
+**3. Add bottom padding to the footer for mobile breathing room (line 1452)**
+
+Change:
+```
+<div className="pt-6 mt-4 space-y-2 sm:border-t sm:pt-4 sm:mt-0">
+```
+To:
+```
+<div className="pt-6 mt-4 pb-16 space-y-2 sm:border-t sm:pt-4 sm:mt-0 sm:pb-0">
+```
+
+The `pb-16` (64px) on mobile ensures the buttons are well above the iOS browser chrome, home indicator, and any floating widgets. On desktop (`sm:pb-0`) it remains clean.
+
+All changes are in a single file with no new dependencies.
