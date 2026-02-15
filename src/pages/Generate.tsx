@@ -228,12 +228,12 @@ export default function Generate() {
 
   // UGC mood selector
   type UgcMood = 'excited' | 'chill' | 'confident' | 'surprised' | 'focused';
-  const UGC_MOODS: Array<{ id: UgcMood; label: string; desc: string }> = [
-    { id: 'excited', label: '🤩 Excited', desc: '"OMG I love this!" energy' },
-    { id: 'chill', label: '😌 Chill', desc: 'Relaxed, everyday vibe' },
-    { id: 'confident', label: '😎 Confident', desc: '"I know what works" energy' },
-    { id: 'surprised', label: '😲 Surprised', desc: '"Wait, this actually works?!"' },
-    { id: 'focused', label: '🧐 Focused', desc: 'Tutorial / demo mode' },
+  const UGC_MOODS: Array<{ id: UgcMood; label: string; emoji: string; desc: string; example: string; recommended?: boolean }> = [
+    { id: 'excited', emoji: '🤩', label: 'Excited', desc: '"OMG I love this!" energy', example: 'Wide smile, bright eyes', recommended: true },
+    { id: 'chill', emoji: '😌', label: 'Chill', desc: 'Everyday casual vibe', example: 'Soft smile, relaxed gaze' },
+    { id: 'confident', emoji: '😎', label: 'Confident', desc: '"I know what works" energy', example: 'Subtle smile, direct eye contact' },
+    { id: 'surprised', emoji: '😲', label: 'Surprised', desc: '"Wait, this actually works?!"', example: 'Raised eyebrows, open mouth' },
+    { id: 'focused', emoji: '🧐', label: 'Focused', desc: 'Tutorial / demo mode', example: 'Concentrated, friendly' },
   ];
   const [ugcMood, setUgcMood] = useState<UgcMood>('excited');
 
@@ -1996,20 +1996,27 @@ export default function Generate() {
                   </h3>
                   <p className="text-sm text-muted-foreground">Set the expression and energy for your UGC content</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {UGC_MOODS.map(mood => (
                     <button
                       key={mood.id}
                       onClick={() => setUgcMood(mood.id)}
                       className={cn(
-                        'px-4 py-2 rounded-xl border-2 text-left transition-all',
+                        'relative p-4 rounded-xl border-2 text-left transition-all flex flex-col gap-1',
                         ugcMood === mood.id
                           ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
                           : 'border-border hover:border-primary/40'
                       )}
                     >
+                      {mood.recommended && (
+                        <span className="absolute -top-2.5 right-3 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-primary text-primary-foreground rounded-full">
+                          Popular
+                        </span>
+                      )}
+                      <span className="text-2xl">{mood.emoji}</span>
                       <p className="text-sm font-semibold">{mood.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{mood.desc}</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">{mood.desc}</p>
+                      <p className="text-[10px] text-muted-foreground/70 italic">{mood.example}</p>
                     </button>
                   ))}
                 </div>
