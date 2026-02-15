@@ -1,163 +1,81 @@
 
 
-## Fix All Creative Drops UI Issues
+## Fix: Stuck Processing Jobs Never Get Cleaned Up
 
-### Overview
+### Root Cause
 
-A comprehensive pass across the Creative Drops page, wizard, and supporting components to address mobile usability, missing loading states, scroll conflicts, and general polish.
+The cleanup mechanism has a gap:
 
----
+- `cleanup_stale_jobs` (DB function) correctly fails timed-out processing jobs and refunds credits
+- But it only runs inside `process-queue`, which only triggers when new jobs are enqueued
+- The client-side stuck detection in `useGenerationQueue` only watches for `queued` jobs stuck > 30s -- it ignores `processing` jobs
+- Result: if a processing job times out and no new jobs come in, it sits in `processing` forever
 
-### Changes by File
+### Immediate Fix: Clean Up the 4 Stuck Jobs Now
 
-#### 1. `src/components/app/CreativeDropWizard.tsx`
+Run `cleanup_stale_jobs` to fail the 4 stuck jobs and refund credits immediately. This will be done by calling the retry-queue function which triggers process-queue.
 
-**A. Sticky credit calculator causes scroll conflict on mobile (Step 3, line 1026)**
+### Permanent Fix: Client-Side Timeout Detection for Processing Jobs
 
-The `sticky bottom-0` calculator with `-mx-1` negative margins intercepts touch events and creates a scroll boundary conflict on iOS. Fix: remove `sticky` on mobile, keep it on desktop only.
+**File: `src/hooks/useGenerationQueue.ts`**
 
-```
-// Before
-<div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border pt-3 pb-1 -mx-1 px-1 z-10">
+Add a check in the polling loop: if a job has been in `processing` status for longer than 5 minutes (matching the server-side timeout), trigger `retry-queue` to invoke `cleanup_stale_jobs`.
 
-// After
-<div className="bg-background/95 sm:sticky sm:bottom-0 backdrop-blur-sm border-t border-border pt-3 pb-1 z-10">
-```
+In the `pollJobStatus` callback, after the existing queued-stuck detection block (around line 117-131), add a parallel check for processing jobs:
 
-Remove the `-mx-1 px-1` negative margin hack entirely -- it causes clipping on narrow screens.
+```typescript
+// Existing: stuck detection for queued jobs
+if (job.status === 'queued') {
+  // ... existing code ...
+}
 
-**B. Product grid needs max-height on mobile (Step 2, line 594)**
-
-Currently `sm:max-h-[320px] sm:overflow-y-auto` only kicks in at 640px+, so on phones the grid is unbounded and makes the page very long.
-
-```
-// Before
-<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:max-h-[320px] sm:overflow-y-auto pr-1">
-
-// After
-<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[50vh] overflow-y-auto overscroll-contain pr-1">
-```
-
-Using `max-h-[50vh]` ensures it works on all screen sizes and the user can always see the footer buttons. Adding `overscroll-contain` prevents scroll chaining within the grid.
-
-**C. Scene and pose grids also need mobile max-height (lines 785, 856, 930)**
-
-Same pattern -- these grids only have `sm:max-h-[200px]` which means they're unbounded on mobile.
-
-```
-// Before (3 locations)
-sm:max-h-[200px] sm:overflow-y-auto
-
-// After
-max-h-[40vh] sm:max-h-[200px] overflow-y-auto overscroll-contain
+// NEW: stuck detection for processing jobs
+if (job.status === 'processing' && job.started_at) {
+  const processingDuration = Date.now() - new Date(job.started_at).getTime();
+  // 5 minutes = server-side timeout_at threshold
+  if (processingDuration > 5 * 60 * 1000 && !retriggeredRef.current) {
+    retriggeredRef.current = true;
+    console.warn(`[queue] Job ${job.id} processing for ${Math.round(processingDuration / 1000)}s, triggering cleanup`);
+    fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ trigger: 'stuck-processing-retry' }),
+    }).catch(() => {});
+  }
+}
 ```
 
-**D. Add step label tooltips on mobile (line 457)**
+This ensures that even if no new jobs are enqueued, a client viewing a stuck processing job will trigger the cleanup within ~5 minutes + one poll cycle (3s).
 
-Step labels are `hidden sm:inline` with no fallback. Add a `title` attribute so mobile users can long-press to see the label, and also add `aria-label` for accessibility.
+**File: `src/components/app/QueuePositionIndicator.tsx`**
 
+Add a "stuck" state to the processing UI. If elapsed exceeds 5 minutes, show a message like "This is taking unusually long -- retrying..." instead of the normal overtime message, so the user knows the system is aware and acting.
+
+In the `ProcessingState` component, add after the overtime message logic:
+
+```typescript
+const isStuck = elapsed > 300; // 5 minutes
+
+// In the render:
+{isStuck ? (
+  <p className="text-sm font-medium text-foreground">
+    This is taking unusually long -- retrying automatically...
+  </p>
+) : (
+  <p className="text-sm font-medium text-foreground">
+    {overtimeMsg || 'Generating your images...'}
+  </p>
+)}
 ```
-// Before
-<span className="hidden sm:inline">{s}</span>
-
-// After  
-<span className="hidden sm:inline">{s}</span>
-// Also add title={s} and aria-label={`Step ${i+1}: ${s}`} to the parent button
-```
-
-**E. Loading states for data queries**
-
-The wizard shows no loading indication while brand profiles, products, and workflows are fetching. Add simple loading skeletons:
-
-- Step 1: Show skeleton for brand profile selector while loading
-- Step 2: Show skeleton grid while products are loading
-- Step 3: Show skeleton list while workflows are loading
-
-Use the existing `isLoading` states from the `useQuery` hooks (add destructuring for `isLoading` on the existing queries at lines 166, 175, 184).
-
-**F. Image error fallbacks**
-
-Product images and workflow preview images can fail to load. Add `onError` handlers to `<img>` tags in the product grid (line 618) and review step (line 1326) that set a placeholder:
-
-```tsx
-onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
-```
-
----
-
-#### 2. `src/pages/CreativeDrops.tsx`
-
-**G. Calendar touch targets too small on mobile (line 540)**
-
-The 7-column grid creates cells that are roughly 40px on a 320px phone. Add minimum sizing:
-
-```
-// Before
-<div className="grid grid-cols-7 gap-1 text-center">
-
-// After
-<div className="grid grid-cols-7 gap-1 text-center min-w-0">
-```
-
-And on each cell (line 554), increase the minimum tap target:
-
-```
-// Before
-'aspect-square flex flex-col items-center justify-center rounded-lg text-sm'
-
-// After
-'aspect-square flex flex-col items-center justify-center rounded-lg text-sm min-h-[40px]'
-```
-
-**H. Filter bar scroll indicator (line 313)**
-
-The `scrollbar-hide` on the filter buttons removes all indication that more filters exist. Add a subtle gradient fade on the right edge and keep `scrollbar-hide`:
-
-```
-// Before
-<div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
-
-// After
-<div className="flex gap-1.5 overflow-x-auto scrollbar-hide relative">
-```
-
-Wrap in a container with a right-edge gradient mask using CSS:
-
-```
-<div className="relative flex-1 overflow-hidden">
-  <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pr-4">
-    ...buttons...
-  </div>
-  <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
-</div>
-```
-
-**I. Onboarding image error fallback (line 458)**
-
-Add `onError` handler to preview images in the onboarding section.
-
----
-
-#### 3. `src/components/app/PageHeader.tsx`
-
-**J. Mobile back button + title stacking gap (line 15)**
-
-The gap between back button and title on mobile is only `gap-1` which looks cramped.
-
-```
-// Before
-<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-
-// After
-<div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-```
-
----
 
 ### Summary
 
-- 3 files modified
+- 2 files modified
 - No new dependencies
-- Fixes: sticky credit bar scroll conflict, unbounded grids on mobile, missing loading states, missing image fallbacks, small calendar tap targets, cramped PageHeader, missing scroll indicators
-- All changes are mobile-first improvements that preserve existing desktop behavior
-
+- Adds client-side timeout detection for `processing` jobs (mirrors existing `queued` stuck detection)
+- Triggers server-side cleanup via `retry-queue` when a processing job exceeds 5 minutes
+- Shows user-facing "retrying" message so users know the system is handling it
+- Prevents jobs from being stuck indefinitely regardless of whether new jobs are enqueued
