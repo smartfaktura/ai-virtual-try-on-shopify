@@ -664,12 +664,22 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           } else {
                             next.add(wf.id);
                             // Fix #9: Auto-select ALL scenes so cost estimate matches behavior
-                            // (empty selection = generate all in generate-workflow, which is confusing)
                             if (variations.length > 0 && !workflowSceneSelections[wf.id]) {
                               setWorkflowSceneSelections(prev => ({
                                 ...prev,
                                 [wf.id]: new Set(variations.map((v: { label: string }) => v.label)),
                               }));
+                            }
+                            // Auto-expand first relevant section
+                            const firstSection = (variations.length > 0 && !wf.uses_tryon)
+                              ? 'scenes'
+                              : showPosePicker
+                                ? 'poses'
+                                : needsModels
+                                  ? 'models'
+                                  : null;
+                            if (firstSection) {
+                              setExpandedSection(prev => ({ ...prev, [wf.id]: firstSection }));
                             }
                           }
                           setSelectedWorkflowIds(next);
@@ -745,10 +755,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
                           {/* ── Collapsible: Scenes ── */}
                           {variations.length > 0 && !wf.uses_tryon && (
-                            <div className="border-t border-border/50 pt-1">
+                            <div className="border-t border-border pt-2">
                               <button
                                 onClick={() => toggleSection(wf.id, 'scenes')}
-                                className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
+                                className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
                               >
                                 <span className="font-medium text-foreground">Scenes</span>
                                 <div className="flex items-center gap-2">
@@ -820,10 +830,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
                           {/* ── Collapsible: Pose / Scene Library ── */}
                           {showPosePicker && (
-                            <div className="border-t border-border/50 pt-1">
+                            <div className="border-t border-border pt-2">
                               <button
                                 onClick={() => toggleSection(wf.id, 'poses')}
-                                className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
+                                className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
                               >
                                 <span className="font-medium text-foreground">Scene Library</span>
                                 <div className="flex items-center gap-2">
@@ -894,10 +904,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
                           {/* ── Collapsible: Models ── */}
                           {needsModels && (
-                            <div className="border-t border-border/50 pt-1">
+                            <div className="border-t border-border pt-2">
                               <button
                                 onClick={() => toggleSection(wf.id, 'models')}
-                                className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
+                                className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
                               >
                                 <span className="font-medium text-foreground">Models</span>
                                 <div className="flex items-center gap-2">
@@ -957,10 +967,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
                           {/* ── Collapsible: Custom Settings ── */}
                           {customSettings.length > 0 && (
-                            <div className="border-t border-border/50 pt-1">
+                            <div className="border-t border-border pt-2">
                               <button
                                 onClick={() => toggleSection(wf.id, 'settings')}
-                                className="w-full flex items-center justify-between py-2 text-xs hover:bg-muted/50 rounded-lg px-1 transition-colors"
+                                className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
                               >
                                 <span className="font-medium text-foreground">Settings</span>
                                 <div className="flex items-center gap-2">
