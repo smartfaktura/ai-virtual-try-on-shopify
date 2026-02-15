@@ -1,34 +1,19 @@
 
+## Improve Mirror Selfie Set Animation Elements
 
-## Update Mirror Selfie Set Workflow Preview Assets
+### Problem
+1. The floating "ingredient" cards (Product, Model, Scene) and their text labels are too small
+2. The "+" action icon overlaps with the model's face in the background image
 
-Replace all three animation "ingredient" images and the background result image for the Mirror Selfie Set with the new pictures you provided.
+### Changes
 
-### Steps
+**File: `src/components/app/WorkflowAnimatedThumbnail.tsx`** -- Scale up all floating element sizes:
 
-1. **Upload 3 ingredient images** to the `landing-assets` storage bucket, replacing the existing ones:
-   - `user-uploads://model.png` --> `models/model-mirror-selfie-blonde.jpg` (brunette model portrait)
-   - `user-uploads://bedroomscene.png` --> `scenes/scene-cozy-bedroom.jpg` (mirror reflection of bedroom)
-   - `user-uploads://product.png` --> `products/crop-top-white.jpg` (beige knit sweater)
+- **Product/Scene cards**: Increase thumbnail from `w-12 h-14` to `w-14 h-16`, increase sublabel from `text-[7px]` to `text-[9px]`, increase label from `text-[11px]` to `text-[13px]`, add more padding
+- **Model circle**: Increase avatar from `w-[52px] h-[52px]` to `w-[60px] h-[60px]`, increase label from `text-[9px]` to `text-[11px]`
+- **Action button (+ icon)**: Increase from `w-10 h-10` to `w-12 h-12`, increase icon size from `w-4 h-4` to `w-5 h-5`
+- **Badge**: Increase text from `text-[10px]` to `text-[12px]`
 
-2. **Upload the generated result image** to the `workflow-previews` bucket:
-   - `user-uploads://generatedresult.png` --> replaces the current Mirror Selfie Set preview
+**File: `src/components/app/workflowAnimationData.tsx`** -- Reposition the "+" action icon:
 
-3. **Update the workflow database row** with the new preview URL
-
-4. **Update `workflowAnimationData.tsx`** to point the background to the new result image URL, and update labels to match the new visuals (e.g., "Sweater" instead of "Crop Top")
-
-### Technical Details
-
-**Files modified:**
-- `src/components/app/workflowAnimationData.tsx` -- update the `background` URL for `'Mirror Selfie Set'` to the newly uploaded result image, and update product label from "Crop Top" to "Sweater"
-
-**Storage uploads (4 files):**
-- `landing-assets/models/model-mirror-selfie-blonde.jpg` (upsert)
-- `landing-assets/scenes/scene-cozy-bedroom.jpg` (upsert)
-- `landing-assets/products/crop-top-white.jpg` (upsert)
-- `workflow-previews/<workflow_id>_<timestamp>.png` (new result image)
-
-**Database update:**
-- Update `workflows` table `preview_image_url` for the Mirror Selfie Set row with the new result image public URL
-
+- Move the action icon position from `{ top: '40%', left: '38%' }` to approximately `{ top: '48%', left: '42%' }` so it sits lower and avoids overlapping the model's face in the mirror reflection
