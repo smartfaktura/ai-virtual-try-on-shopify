@@ -1,42 +1,37 @@
 
 
-## Fix Selfie / UGC Set Workflow + Content Updates
+## Fix: Allow Deleting Creative Drops + Show Empty State Correctly
 
-### Problem 1: "Please select a model and scene first" Error
+### What's Happening
 
-The Selfie / UGC workflow has `uses_tryon: true`, which sets `generationMode` to `'virtual-try-on'`. When the user clicks "Generate", line 458 checks `generationMode === 'virtual-try-on'` and requires both `selectedModel` AND `selectedPose`. But UGC uses workflow variations (scenes grid), not poses from the pose picker -- so `selectedPose` is always null, blocking generation.
+The drop record (status: `generating`, 40 images, 400 credits) still exists in the database. Only schedules have a delete action in the UI -- drops do not. So when you deleted schedules, the orphaned drop remained, keeping the stats ribbon visible with stale data.
 
-**Fix in `src/pages/Generate.tsx` (line 458):** Add `isSelfieUgc` check to skip the try-on validation and fall through to the `hasWorkflowConfig` path instead:
+### Changes
 
-```tsx
-if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
-  if (!selectedModel || !selectedPose) { toast.error('Please select a model and scene first'); return; }
-  handleTryOnConfirmGenerate(); return;
-}
-```
+#### 1. `src/components/app/DropCard.tsx` -- Add delete action for drop cards
 
-### Problem 2: Update Workflow Variations in Database
+Add a delete mutation for drops (similar to the existing schedule delete) and a dropdown menu with a "Delete" option on each drop card. This includes:
 
-Three variation changes via SQL migration:
+- A `deleteDropMutation` that calls `supabase.from('creative_drops').delete().eq('id', dropId)` and invalidates `['creative-drops']`
+- A three-dot menu (MoreVertical) on drop cards with a "Delete" option
+- A confirmation dialog before deleting
 
-1. **"Before / After Moment"** (index 11, Content Creator) -- Change label to "Product Holding in Hand" and update instruction to describe a natural hand-held product shot
-2. **"Testimonial / Review"** (index 13, Content Creator) -- Remove entirely
-3. **"In-Use Close-up"** (index 14, Close-up) -- Update instruction for better product-in-use close-up framing
+#### 2. `src/pages/CreativeDrops.tsx` -- Invalidate drops when schedules change
 
-This requires a SQL migration to update the `generation_config` JSONB in the `workflows` table.
+When a schedule is deleted, any associated drops become orphaned. The `creative-drops` query should also be invalidated after schedule deletion to keep stats in sync. However, this is already handled because both queries refetch on mount. The real fix is just enabling drop deletion.
 
-### Problem 3: Add Framing Section for Selfie Workflow
+### Technical Details
 
-Add the existing `FramingSelector` component to the Selfie / UGC settings step (alongside the mood selector and generation settings). This lets users choose selfie framing like close-up, upper body, full body etc.
+**DropCard.tsx changes (drop card section, around line 276-367):**
 
-**Fix in `src/pages/Generate.tsx`:** Add `<FramingSelector>` in the selfie settings section (after the UGC Mood card, before Generation Settings). The `framing` state already exists and is already passed to the workflow payload.
+- Add `deleteDropMutation` using `useMutation` targeting `creative_drops` table
+- Add `deleteDropDialogOpen` state
+- Add a dropdown menu button next to the status badge with "Delete" option
+- Add `AlertDialog` for delete confirmation
+- On success: invalidate `['creative-drops']` and show toast
 
----
+**No database changes needed** -- the `creative_drops` table already has an RLS policy allowing users to delete their own drops.
 
-### Technical Summary
+### Result
 
-- **1 file modified:** `src/pages/Generate.tsx` (2 small changes: fix validation gate + add FramingSelector)
-- **1 SQL migration:** Update `generation_config` variations in the `workflows` table for Selfie / UGC Set
-- No new dependencies
-- No new components needed (reuses existing `FramingSelector`)
-
+After this change, you can delete the orphaned drop from the Drops tab. Once deleted, `drops.length` becomes 0 and `schedules.length` is already 0, so `hasStats` becomes false and the onboarding/first-time empty state will display instead of the stats ribbon.
