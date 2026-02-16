@@ -1,84 +1,70 @@
 
 
-## Clean & Spacious Buy Credits Modal Redesign
+## Polish Buy Credits Modal — Premium VOVV.AI Design
 
-### Problems in Current Design
-1. Too many visual elements competing: shimmer borders, dark Pro card, green chips, crossed-out prices, image estimate boxes -- all fighting for attention
-2. Cards are cramped with dense information stacking (price + strikethrough + savings + image box + credit chip + features + CTA)
-3. The dark Pro card and shimmer Growth card create visual chaos instead of elegant hierarchy
-4. Per-credit cost chips, image estimate boxes, and feature lists create 3 redundant value layers
-5. Modal requires scrolling despite being designed to avoid it
-6. Doesn't match the VOVV.AI luxury restraint aesthetic (warm stone, minimal, Apple-inspired)
+### Current Issues
+1. Plan cards feel cramped — too much information packed into small columns
+2. "MOST POPULAR" badge overlaps card content awkwardly
+3. "Current" badge + "Cancel" text crowd the Growth header
+4. Credits line "1,500 credits — ~375 images" is hard to scan — too many numbers on one line
+5. Feature checkmarks all look identical — no visual hierarchy
+6. Free plan takes equal visual weight as paid plans (wastes space)
+7. Image estimate uses credits/4 but user confirmed 500 credits = ~100 images (credits/5 ratio, not /4)
+8. Top-up tab description text is plain and forgettable
 
-### Design Philosophy
-Strip everything back to the VOVV.AI brand: warm stone palette, generous whitespace, single clear value metric per card, no visual gimmicks. Let the content breathe.
+### Design Direction
+Clean, airy, branded. Inspired by the warm stone palette and luxury restraint of the rest of VOVV.AI. Focus on making the recommended plan (Growth) feel like the obvious choice without gimmicks.
 
 ### Changes
 
-#### A. Modal Container
-- Keep `max-w-4xl` but remove `rounded-3xl` (use standard `rounded-2xl` matching the brand)
-- Remove the shimmer CSS animation entirely from `index.css`
-- Simplify padding and remove unnecessary gaps
+#### 1. Fix Image Estimate Ratio
+- Change from `credits / 4` to `credits / 5` to match user's confirmed ratio (500 credits = ~100 images)
+- Free: 20 credits = ~4 images
+- Starter: 500 credits = ~100 images
+- Growth: 1,500 credits = ~300 images
+- Pro: 4,500 credits = ~900 images
 
-#### B. Balance Header -- Simplify
-- Remove the gradient background -- use a clean flat header
-- Remove the progress bar entirely (it's confusing with bonus credits)
-- Simple layout: credit count left, plan badge right, single line
+#### 2. Plan Cards — Cleaner Layout
+- Increase card padding from `p-4` to `p-5`
+- Plan name: `text-base font-semibold` (larger, clearer)
+- Price: `text-3xl font-bold` with `/mo` in smaller muted text
+- Credits line simplified: just "~100 images/mo" as the hero metric (drop the raw credit count from the visible line — it's noise)
+- Below price, show credits in subtle small text: "500 credits/mo"
+- Features: max 3 items (not 4), with slightly more spacing (`space-y-2`)
+- Remove the dashed border style on current plan — use a subtle solid border with a "Current" text label instead
 
-#### C. Plans Tab -- Complete Simplification
-- **Remove the dark Pro card** -- all cards share the same clean white/card background
-- **Remove shimmer animation** from Growth
-- **Remove per-credit cost chips** -- too much noise
-- **Remove the separate image estimate box** -- integrate into a single clean line
-- **Remove crossed-out prices** -- just show the active price cleanly
-- **Growth card** gets only: `ring-1 ring-primary` and the "Most Popular" badge -- subtle, not screaming
-- Each card shows: Plan name, price, one key value line (e.g., "500 credits -- ~100 images"), 3-4 features as simple text, CTA button
-- Update image estimate to use standard mode calculation: credits / 4 = images (not / 10)
-  - Free: 20 credits = ~5 images
-  - Starter: 500 credits = ~100 images  
-  - Growth: 1,500 credits = ~375 images
-  - Pro: 4,500 credits = ~1,125 images
+#### 3. Growth Card — Subtle Emphasis
+- Keep `border-primary ring-1 ring-primary/10` but remove `shadow-md` (too heavy)
+- Move "Most Popular" badge inside the card as a small inline badge next to the plan name (not floating above — avoids overlap)
+- This eliminates the awkward floating badge positioning entirely
 
-#### D. Billing Toggle -- Keep Clean
-- Keep centered toggle, keep "SAVE 17%" badge
-- Remove the dynamic savings text below (clutters)
-- Just the toggle, nothing else
+#### 4. CTA Buttons — Cleaner
+- All buttons: `rounded-xl min-h-[44px]` (premium touch target)
+- Growth: `variant="default"` (filled primary)
+- Pro: `variant="default"` (filled primary)  
+- Free/Starter below current plan: `variant="outline"`
+- Current plan button: show as `variant="secondary"` with "Current Plan" text, disabled
 
-#### E. Top Up Tab -- Simplify
-- Remove the subscription nudge banner (too pushy)
-- Clean cards with credits, price, and a single "~X images" line
-- Update image estimates: pack credits / 4 (standard mode)
-  - 200 credits = ~50 images
-  - 500 credits = ~125 images
-  - 1,500 credits = ~375 images
+#### 5. Top-Up Tab — Refined
+- Remove the `≈ X images · X.X¢/credit` dense line
+- Replace with clean two lines: price prominent, then "~X images" below
+- Simpler CTA: "Buy" instead of "Purchase"
 
-#### F. Features -- Simplify
-- Remove all custom icons (featureIcon mapping) -- use simple bullet/check marks
-- Remove "Pro exclusive" sparkle treatment -- just list features plainly
-- Show max 4 features, clean small text
+#### 6. Billing Toggle — Tighten
+- Keep centered, keep SAVE 17% badge
+- Make the toggle slightly larger for easier clicking: `px-6 py-2 text-sm`
 
-### Technical Changes
+#### 7. Bottom Row — Simplify
+- Remove "Need more? Contact Sales" icon clutter — just plain text link
+- Keep "Compare all plans" link
 
-**File: `src/components/app/BuyCreditsModal.tsx`**
+#### 8. Update mockData Features
+Trim features to 3 per plan for the modal (keeping data at 5 for settings page):
+- The modal will `.slice(0, 3)` instead of `.slice(0, 4)`
 
-Complete rewrite focusing on:
-- Flat, clean card design for all plans (no dark/inverted cards)
-- Single value line per card: "500 credits -- ~100 images" (using /4 for standard mode)
-- Growth card: just `ring-1 ring-primary` border
-- Simple check icons for features (no icon mapping)
-- Remove image estimate boxes, per-credit chips, crossed-out prices
-- Compact balance header without progress bar
-- Clean billing toggle without dynamic savings text
-- Top-up cards without nudge banner
-- No scrolling needed -- everything fits in viewport
-
-**File: `src/index.css`**
-
-Remove the `plan-card-shimmer` keyframe animation and class.
-
-### Files Modified
+### Technical Summary
 
 | File | Changes |
 |---|---|
-| `src/components/app/BuyCreditsModal.tsx` | Complete cleanup: flat cards, single value metric, no visual gimmicks, spacious layout, standard-mode image estimates (/4) |
-| `src/index.css` | Remove shimmer animation CSS |
+| `src/components/app/BuyCreditsModal.tsx` | Fix image ratio to /5, move "Most Popular" badge inline, increase card padding, simplify credits display to "~X images/mo" hero line, show raw credits as subtle subtitle, 3 features max, cleaner CTAs with 44px height, remove dashed current-plan border, tighten top-up cards |
+| `src/data/mockData.ts` | Update feature text: change "~50 images/mo" to remove from features (now shown programmatically), keep remaining features clean |
