@@ -226,34 +226,44 @@ export default function CreativeDrops() {
       ) : (
         <>
           {/* Stats Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-            <div className="rounded-xl bg-card border p-3">
-              <p className="text-2xl font-semibold">{activeCount}</p>
-              <p className="text-xs text-muted-foreground">Active Schedules</p>
-            </div>
-            <div className="rounded-xl bg-card border p-3">
-              <p className="text-2xl font-semibold">{totalDrops}</p>
-              <p className="text-xs text-muted-foreground">Total Drops</p>
-            </div>
-            <div className="rounded-xl bg-card border p-3">
-              <p className="text-2xl font-semibold">{totalImages}</p>
-              <p className="text-xs text-muted-foreground">Images Generated</p>
-            </div>
-            <div className="rounded-xl bg-card border p-3">
-              <p className="text-2xl font-semibold">{totalCredits}</p>
-              <p className="text-xs text-muted-foreground">Credits Used</p>
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+            {[
+              { value: activeCount, label: 'Active Schedules', icon: Clock },
+              { value: totalDrops, label: 'Total Drops', icon: Zap },
+              { value: totalImages, label: 'Images Generated', icon: CheckCircle2 },
+              { value: totalCredits, label: 'Credits Used', icon: Package },
+            ].map(stat => {
+              const StatIcon = stat.icon;
+              return (
+                <div key={stat.label} className="rounded-2xl bg-card shadow-sm p-4 relative overflow-hidden">
+                  <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-accent flex items-center justify-center">
+                    <StatIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                  <p className="text-3xl font-semibold tracking-tight">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+                </div>
+              );
+            })}
             {(generatingCount > 0 || nextRun) && (
-              <div className="rounded-xl bg-card border p-3">
+              <div className="rounded-2xl bg-card shadow-sm p-4 relative overflow-hidden">
+                <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-accent flex items-center justify-center">
+                  <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
+                </div>
                 {generatingCount > 0 ? (
                   <>
-                    <p className="text-2xl font-semibold text-amber-500">{generatingCount}</p>
-                    <p className="text-xs text-muted-foreground">Generating Now</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-3xl font-semibold tracking-tight">{generatingCount}</p>
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Generating Now</p>
                   </>
                 ) : nextRun?.next_run_at ? (
                   <>
-                    <p className="text-sm font-semibold">{new Date(nextRun.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                    <p className="text-xs text-muted-foreground">Next Run</p>
+                    <p className="text-lg font-semibold">{new Date(nextRun.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Next Run</p>
                   </>
                 ) : null}
               </div>
@@ -261,28 +271,30 @@ export default function CreativeDrops() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="schedules">
-                <Clock className="w-4 h-4 mr-1.5" />
-                Schedules
-              </TabsTrigger>
-              <TabsTrigger value="drops">
-                <Zap className="w-4 h-4 mr-1.5" />
-                Drops
-              </TabsTrigger>
-              <TabsTrigger value="calendar">
-                <CalendarDays className="w-4 h-4 mr-1.5" />
-                Calendar
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="schedules" className="space-y-4">
-              <div className="flex justify-end">
-                <Button onClick={openWizard}>
-                  <Calendar className="w-4 h-4 mr-2" />
+            <div className="flex items-center justify-between gap-3">
+              <TabsList>
+                <TabsTrigger value="schedules">
+                  <Clock className="w-4 h-4 mr-1.5" />
+                  Schedules
+                </TabsTrigger>
+                <TabsTrigger value="drops">
+                  <Zap className="w-4 h-4 mr-1.5" />
+                  Drops
+                </TabsTrigger>
+                <TabsTrigger value="calendar">
+                  <CalendarDays className="w-4 h-4 mr-1.5" />
+                  Calendar
+                </TabsTrigger>
+              </TabsList>
+              {activeTab === 'schedules' && (
+                <Button onClick={openWizard} className="rounded-xl gap-2">
+                  <Calendar className="w-4 h-4" />
                   Create Schedule
                 </Button>
-              </div>
+              )}
+            </div>
+
+            <TabsContent value="schedules" className="space-y-4">
 
               {schedulesLoading ? (
                 <div className="space-y-3">
@@ -376,15 +388,17 @@ export default function CreativeDrops() {
             </TabsContent>
 
             <TabsContent value="calendar" className="space-y-4">
-              <CalendarView
-                schedules={schedules}
-                drops={drops}
-                onDayClick={(day, type) => {
-                  if (type === 'drop') {
-                    setActiveTab('drops');
-                  }
-                }}
-              />
+              <div className="rounded-2xl bg-card shadow-sm p-5">
+                <CalendarView
+                  schedules={schedules}
+                  drops={drops}
+                  onDayClick={(day, type) => {
+                    if (type === 'drop') {
+                      setActiveTab('drops');
+                    }
+                  }}
+                />
+              </div>
             </TabsContent>
           </Tabs>
 
@@ -554,9 +568,9 @@ function CalendarView({
             <div
               key={i}
               className={cn(
-                'aspect-square flex flex-col items-center justify-center rounded-lg text-sm min-h-[40px] transition-colors',
+        'aspect-square flex flex-col items-center justify-center rounded-xl text-sm min-h-[44px] transition-colors',
                 day && isToday(day) && 'bg-primary/10 font-semibold',
-                day && isInteractive && 'cursor-pointer hover:bg-muted',
+                day && isInteractive && 'cursor-pointer hover:bg-accent',
                 day && !isInteractive && 'cursor-default',
               )}
               onClick={() => {
@@ -569,8 +583,8 @@ function CalendarView({
                 <>
                   <span>{day}</span>
                   <div className="flex gap-0.5 mt-0.5">
-                    {hasDrop && <div className="w-1.5 h-1.5 rounded-full bg-status-success" />}
-                    {hasScheduled && <div className="w-1.5 h-1.5 rounded-full bg-status-info" />}
+                    {hasDrop && <div className="w-2 h-2 rounded-full bg-status-success" />}
+                    {hasScheduled && <div className="w-2 h-2 rounded-full bg-status-info" />}
                   </div>
                 </>
               )}
@@ -595,13 +609,13 @@ function CalendarView({
           return dayContent;
         })}
       </div>
-      <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
+      <div className="flex gap-5 mt-4 pt-3 border-t text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-status-success" />
+          <div className="w-2.5 h-2.5 rounded-full bg-status-success" />
           Completed drop
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-status-info" />
+          <div className="w-2.5 h-2.5 rounded-full bg-status-info" />
           Scheduled
         </div>
       </div>

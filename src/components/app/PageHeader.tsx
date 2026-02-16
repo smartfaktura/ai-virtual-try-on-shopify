@@ -22,7 +22,7 @@ export function PageHeader({ title, subtitle, backAction, children }: PageHeader
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h1>
         </div>
         {subtitle && (
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-1.5 max-w-xl">{subtitle}</p>
         )}
       </div>
       {children}
