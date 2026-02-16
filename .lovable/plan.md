@@ -1,65 +1,133 @@
 
 
-## Update Credit Tiers, Top-Up Packs, and Image Estimates
+## Redesign Buy Credits Modal with CRO Best Practices
 
 ### Overview
 
-Revise subscription credit amounts, reprice top-up packs to incentivize subscriptions over one-time purchases, and fix the misleading "approx images" estimate across the app.
+Redesign the Buy Credits modal to maximize annual subscription conversions, show clear value per plan, update feature lists to match the agreed gating strategy, and apply conversion rate optimization techniques.
 
-### Final Pricing Scheme
+### Agreed Feature Gating
 
-**Subscriptions:**
-- Free: 20 credits (unchanged)
-- Starter: 500 credits/mo at $39/mo (was 1,000)
-- Growth: 1,500 credits/mo at $79/mo (was 2,500)
-- Pro: 4,500 credits/mo at $179/mo (was 6,000)
+| Feature | Free | Starter | Growth | Pro |
+|---|---|---|---|---|
+| All generation workflows | Yes | Yes | Yes | Yes |
+| Freestyle Studio | Yes | Yes | Yes | Yes |
+| Virtual Try-On | Yes | Yes | Yes | Yes |
+| Bulk Generation | Yes | Yes | Yes | Yes |
+| High Quality (Pro Model) | Yes | Yes | Yes | Yes |
+| Video Generation | -- | -- | -- | Yes |
+| Creative Drops | -- | -- | -- | Yes |
+| Brand Profiles | 1 | 3 | 10 | Unlimited |
+| Product Library | 5 | 25 | 100 | Unlimited |
+| Priority Queue | -- | -- | Yes | Yes |
+| API Access | -- | -- | -- | -- |
 
-**Top-Up Packs (priced higher per credit than subs):**
-- Small: 200 credits for $15 (7.5 cents/credit)
-- Medium: 500 credits for $29 (5.8 cents/credit, "Best Value" badge)
-- Large: 1,500 credits for $69 (4.6 cents/credit)
+### CRO Changes to BuyCreditsModal
 
-**Image estimate fix:** Change from credits/4 to credits/10 everywhere.
+**1. Default to Annual billing**
+- Change initial state from `'monthly'` to `'annual'`
+- Users see the cheaper price first; those who want monthly will switch
 
----
+**2. Savings anchoring**
+- When annual is selected, show crossed-out monthly price: `~~$39~~ $31/mo`
+- Add a savings callout line under the toggle: "You're saving up to 17% with annual billing" in primary color
+- When monthly is selected, show nudge: "Switch to annual and save up to 17%"
 
-### Changes by File
+**3. Per-credit cost on plan cards**
+- Show `X.X cents/credit` below the price to make subscription value obvious vs top-up packs (which are 4.6-7.5 cents/credit)
+- Starter annual: 6.2 cents/credit, Growth annual: 4.2 cents/credit, Pro annual: 3.2 cents/credit -- clearly better than any top-up
 
-#### 1. src/contexts/CreditContext.tsx
-Update PLAN_CONFIG monthly credit quotas:
-- starter: 1000 to 500
-- growth: 2500 to 1500
-- pro: 6000 to 4500
+**4. Value-oriented features**
+- Replace redundant "X credits/month" first feature with concrete image estimate: "~50 images/mo"
+- Replace generic feature lists with what differentiates each tier (see data changes below)
 
-#### 2. src/data/mockData.ts
+**5. Improved CTAs**
+- "Get Starter", "Get Growth", "Get Pro" instead of generic "Upgrade"/"Downgrade"
+- Current plan still shows "Current Plan" (disabled)
 
-**pricingPlans array** -- update credits and feature strings:
-- Starter: credits 1000 to 500, feature "1,000 credits/month" to "500 credits/month"
-- Growth: credits 2500 to 1500, feature "2,500 credits/month" to "1,500 credits/month"
-- Pro: credits 6000 to 4500, feature "6,000 credits/month" to "4,500 credits/month"
-
-**creditPacks array** -- replace all three packs:
-- pack_200: 200 credits, $15, pricePerCredit 0.075
-- pack_500: 500 credits, $29, pricePerCredit 0.058, popular: true
-- pack_1500: 1,500 credits, $69, pricePerCredit 0.046
-
-#### 3. src/components/app/CreditPackCard.tsx (line 21)
-Change image estimate from `pack.credits / 4` to `pack.credits / 10`.
-
-#### 4. src/components/landing/LandingPricing.tsx (line 82)
-Change image estimate from `plan.credits / 4` to `plan.credits / 10`.
-
-#### 5. src/components/app/BuyCreditsModal.tsx
-Search for any `/4` image estimate calculations and update to `/10`. Also verify top-up pack rendering works with new data.
-
-#### 6. src/components/app/NoCreditsModal.tsx
-Same -- verify image estimate if present, update `/4` to `/10`.
+**6. Top Up tab nudge**
+- Add a subtle banner above packs: "Subscriptions start at 6.2 cents/credit -- lower than any top-up" with a "View Plans" link that switches tab
+- Change pack CTA from "Purchase" to "Add 200 Credits", "Add 500 Credits", etc.
 
 ---
 
-### Technical Notes
+### Data Changes (src/data/mockData.ts)
 
-- No database changes needed. Credit quotas are frontend config; actual balances live in the profiles table.
-- The PLAN_CONFIG in CreditContext drives the low/critical warning thresholds (20% and 5% of monthly quota), so those will automatically adjust to the new amounts.
-- Stripe product/price objects will need to be updated separately when Stripe integration is finalized.
+Update feature arrays to reflect agreed gating and lead with value:
+
+**Free:**
+```
+- '20 credits (one-time bonus)'
+- 'All workflows'
+- '1 Brand Profile'
+- '5 products'
+- 'Community support'
+```
+
+**Starter ($39/mo):**
+```
+- '~50 images/mo'
+- 'All workflows'
+- '3 Brand Profiles'
+- '25 products'
+- 'Email support'
+```
+
+**Growth ($79/mo):**
+```
+- '~150 images/mo'
+- 'Priority queue'
+- '10 Brand Profiles'
+- '100 products'
+- 'Priority support'
+```
+
+**Pro ($179/mo):**
+```
+- '~450 images/mo'
+- 'Video Generation'
+- 'Creative Drops'
+- 'Priority queue'
+- 'Unlimited Brand Profiles and products'
+- 'Dedicated support'
+```
+
+---
+
+### Modal UI Changes (src/components/app/BuyCreditsModal.tsx)
+
+**Balance header**: Keep as-is (already clean).
+
+**Billing toggle**: 
+- Default to annual
+- Add dynamic savings text below toggle
+
+**Plan cards**: 
+- Add crossed-out monthly price when annual selected
+- Add per-credit cost line
+- Replace first feature with image estimate
+- Update CTA labels to "Get [PlanName]"
+
+**Top Up tab**:
+- Add subscription nudge banner at top
+- Change CTA text to "Add X Credits"
+
+---
+
+### Files Modified
+
+| File | Changes |
+|---|---|
+| `src/data/mockData.ts` | Update feature arrays for all plans to match agreed gating |
+| `src/components/app/BuyCreditsModal.tsx` | Default annual, savings anchor, crossed-out prices, per-credit cost, improved CTAs, top-up nudge banner |
+
+### CRO Principles Applied
+
+- **Anchoring**: Annual is the default; monthly is the "expensive" option shown with strikethrough
+- **Loss aversion**: "Save $X/yr" makes switching to monthly feel costly
+- **Value framing**: "~50 images/mo" is more tangible than "500 credits/mo"
+- **Social proof**: "Most Popular" badge on Growth stays
+- **Specificity**: Per-credit cost comparison makes subscriptions clearly superior to top-ups
+- **Action-oriented CTAs**: "Get Growth" is more decisive than "Upgrade"
+- **Cross-sell**: Top-up tab nudges toward subscriptions with concrete cost comparison
 
