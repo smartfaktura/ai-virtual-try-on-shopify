@@ -1,133 +1,79 @@
 
 
-## Redesign Buy Credits Modal with CRO Best Practices
+## Redesign Buy Credits Modal -- Visual & UX Overhaul
 
-### Overview
+### Problems in Current Design
 
-Redesign the Buy Credits modal to maximize annual subscription conversions, show clear value per plan, update feature lists to match the agreed gating strategy, and apply conversion rate optimization techniques.
+1. **Plan cards are flat and cramped** -- all four plans look identical with thin borders, no visual weight difference
+2. **Credits block is just plain text** -- "1,500 credits/mo" as a single line has no presence
+3. **Per-credit cost is tiny and lost** -- "4.2c/credit" in 11px primary text doesn't pop
+4. **No visual hierarchy between plans** -- Growth (Most Popular) barely stands out from Starter
+5. **Features are all identical style** -- no differentiation between "included" vs "exclusive to this tier"
+6. **Billing toggle is small** -- the annual savings message competes with the toggle for attention
+7. **Top-up cards are plain** -- no gradient or visual interest
+8. **Balance header feels disconnected** -- progress bar is thin and forgettable
 
-### Agreed Feature Gating
+### Design Improvements
 
-| Feature | Free | Starter | Growth | Pro |
-|---|---|---|---|---|
-| All generation workflows | Yes | Yes | Yes | Yes |
-| Freestyle Studio | Yes | Yes | Yes | Yes |
-| Virtual Try-On | Yes | Yes | Yes | Yes |
-| Bulk Generation | Yes | Yes | Yes | Yes |
-| High Quality (Pro Model) | Yes | Yes | Yes | Yes |
-| Video Generation | -- | -- | -- | Yes |
-| Creative Drops | -- | -- | -- | Yes |
-| Brand Profiles | 1 | 3 | 10 | Unlimited |
-| Product Library | 5 | 25 | 100 | Unlimited |
-| Priority Queue | -- | -- | Yes | Yes |
-| API Access | -- | -- | -- | -- |
+**A. Balance Header**
+- Make the credit count larger (3xl) with a subtle gradient text effect
+- Thicken progress bar to 2px with a glow effect when bonus credits exist
+- Add a mini "upgrade" nudge if user is on Free
 
-### CRO Changes to BuyCreditsModal
+**B. Billing Toggle Area**
+- Center the toggle with the savings message directly beneath it
+- Make the annual pill more prominent with a green/emerald savings badge instead of just "-17%" text
+- When monthly is selected, show a dismissible "Save up to $432/yr" amber nudge bar
 
-**1. Default to Annual billing**
-- Change initial state from `'monthly'` to `'annual'`
-- Users see the cheaper price first; those who want monthly will switch
+**C. Plan Cards -- Complete Visual Redesign**
+- **Distinct card backgrounds**: Free = plain, Starter = subtle warm gradient top border, Growth = primary gradient top border + light primary wash background, Pro = dark card (inverted colors)
+- **Credits section as a pill/badge**: Instead of plain text, show credits in a rounded pill with a subtle background: "500 credits/mo" centered with icon
+- **Image estimate as hero metric**: Show "~50 images" in large bold text as the primary value anchor, with "per month" below it in small text
+- **Per-credit cost in a comparison chip**: Small green chip showing "6.2c/credit" with a subtle "vs 7.5c top-up" comparison on hover
+- **Feature list with icons**: Replace plain checkmarks with category-specific mini icons (workflow icon, profile icon, product icon) for visual scanning
+- **Pro card gets "Pro exclusive" labels**: Video Generation and Creative Drops features get a small sparkle icon and slightly different text color to highlight exclusivity
+- **Growth card gets a subtle animated shimmer** on the border to draw the eye (CSS only)
 
-**2. Savings anchoring**
-- When annual is selected, show crossed-out monthly price: `~~$39~~ $31/mo`
-- Add a savings callout line under the toggle: "You're saving up to 17% with annual billing" in primary color
-- When monthly is selected, show nudge: "Switch to annual and save up to 17%"
+**D. Top-Up Tab**
+- Give pack cards a subtle gradient background (light to transparent)
+- Make the "Best Value" pack visually larger (scale slightly)
+- Nudge banner gets an icon and slightly more padding for breathing room
 
-**3. Per-credit cost on plan cards**
-- Show `X.X cents/credit` below the price to make subscription value obvious vs top-up packs (which are 4.6-7.5 cents/credit)
-- Starter annual: 6.2 cents/credit, Growth annual: 4.2 cents/credit, Pro annual: 3.2 cents/credit -- clearly better than any top-up
+**E. Overall Modal Polish**
+- Increase `max-w` from `3xl` to `4xl` for more breathing room between 4 plan cards
+- Add subtle rounded-3xl to the modal for a more premium feel
+- Slightly increase gap between plan cards from `gap-3` to `gap-4`
+- Use `backdrop-blur` on the overlay for a frosted glass effect
 
-**4. Value-oriented features**
-- Replace redundant "X credits/month" first feature with concrete image estimate: "~50 images/mo"
-- Replace generic feature lists with what differentiates each tier (see data changes below)
+### Technical Changes
 
-**5. Improved CTAs**
-- "Get Starter", "Get Growth", "Get Pro" instead of generic "Upgrade"/"Downgrade"
-- Current plan still shows "Current Plan" (disabled)
+#### File: `src/components/app/BuyCreditsModal.tsx`
 
-**6. Top Up tab nudge**
-- Add a subtle banner above packs: "Subscriptions start at 6.2 cents/credit -- lower than any top-up" with a "View Plans" link that switches tab
-- Change pack CTA from "Purchase" to "Add 200 Credits", "Add 500 Credits", etc.
+Full redesign of the modal content layout:
 
----
+**Balance header**: Larger credit number, thicker progress bar, plan badge with color coding
 
-### Data Changes (src/data/mockData.ts)
+**Billing toggle**: Centered layout, savings badge in emerald/green, monthly nudge bar
 
-Update feature arrays to reflect agreed gating and lead with value:
+**Plan cards** (inline, not using PlanCard component since the modal uses its own card rendering):
+- Each plan card gets a unique visual treatment based on tier
+- Credits shown as a centered hero metric: large number with "images/mo" estimate
+- Per-credit cost in a subtle chip
+- Feature list limited to 4 items max with better spacing
+- Pro card uses `bg-foreground text-background` (dark inverted) style
+- Growth card gets `ring-2 ring-primary shadow-xl` for emphasis
+- CTA buttons: Growth and Pro get `default` variant; Free and Starter get `outline`
 
-**Free:**
-```
-- '20 credits (one-time bonus)'
-- 'All workflows'
-- '1 Brand Profile'
-- '5 products'
-- 'Community support'
-```
+**Top-up tab**: Better card styling, larger "Best Value" card, improved nudge banner
 
-**Starter ($39/mo):**
-```
-- '~50 images/mo'
-- 'All workflows'
-- '3 Brand Profiles'
-- '25 products'
-- 'Email support'
-```
+#### File: `src/data/mockData.ts`
 
-**Growth ($79/mo):**
-```
-- '~150 images/mo'
-- 'Priority queue'
-- '10 Brand Profiles'
-- '100 products'
-- 'Priority support'
-```
+No data changes needed -- features and credits are already correct from the previous update. This is purely a visual/layout change.
 
-**Pro ($179/mo):**
-```
-- '~450 images/mo'
-- 'Video Generation'
-- 'Creative Drops'
-- 'Priority queue'
-- 'Unlimited Brand Profiles and products'
-- 'Dedicated support'
-```
-
----
-
-### Modal UI Changes (src/components/app/BuyCreditsModal.tsx)
-
-**Balance header**: Keep as-is (already clean).
-
-**Billing toggle**: 
-- Default to annual
-- Add dynamic savings text below toggle
-
-**Plan cards**: 
-- Add crossed-out monthly price when annual selected
-- Add per-credit cost line
-- Replace first feature with image estimate
-- Update CTA labels to "Get [PlanName]"
-
-**Top Up tab**:
-- Add subscription nudge banner at top
-- Change CTA text to "Add X Credits"
-
----
-
-### Files Modified
+### Summary
 
 | File | Changes |
 |---|---|
-| `src/data/mockData.ts` | Update feature arrays for all plans to match agreed gating |
-| `src/components/app/BuyCreditsModal.tsx` | Default annual, savings anchor, crossed-out prices, per-credit cost, improved CTAs, top-up nudge banner |
+| `src/components/app/BuyCreditsModal.tsx` | Complete visual redesign: wider modal, distinct plan card tiers with unique backgrounds/borders, hero image-estimate metrics, centered billing toggle with savings badge, improved top-up cards, Pro card dark theme, Growth card emphasized with ring+shadow |
 
-### CRO Principles Applied
-
-- **Anchoring**: Annual is the default; monthly is the "expensive" option shown with strikethrough
-- **Loss aversion**: "Save $X/yr" makes switching to monthly feel costly
-- **Value framing**: "~50 images/mo" is more tangible than "500 credits/mo"
-- **Social proof**: "Most Popular" badge on Growth stays
-- **Specificity**: Per-credit cost comparison makes subscriptions clearly superior to top-ups
-- **Action-oriented CTAs**: "Get Growth" is more decisive than "Upgrade"
-- **Cross-sell**: Top-up tab nudges toward subscriptions with concrete cost comparison
-
+This is a UI-only change with no data model modifications.
