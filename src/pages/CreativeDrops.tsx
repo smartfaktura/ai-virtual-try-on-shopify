@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, Zap, CalendarDays, ChevronLeft, ChevronRight, Package, Layers, RefreshCw } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -226,72 +226,53 @@ export default function CreativeDrops() {
       ) : (
         <>
           {/* Stats Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
-            {[
-              { value: activeCount, label: 'Active Schedules', icon: Clock },
-              { value: totalDrops, label: 'Total Drops', icon: Zap },
-              { value: totalImages, label: 'Images Generated', icon: CheckCircle2 },
-              { value: totalCredits, label: 'Credits Used', icon: Package },
-            ].map(stat => {
-              const StatIcon = stat.icon;
-              return (
-                <div key={stat.label} className="rounded-2xl bg-card shadow-sm p-4 relative overflow-hidden">
-                  <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-accent flex items-center justify-center">
-                    <StatIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                  </div>
-                  <p className="text-3xl font-semibold tracking-tight">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
-                </div>
-              );
-            })}
-            {(generatingCount > 0 || nextRun) && (
-              <div className="rounded-2xl bg-card shadow-sm p-4 relative overflow-hidden">
-                <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-accent flex items-center justify-center">
-                  <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-                {generatingCount > 0 ? (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <p className="text-3xl font-semibold tracking-tight">{generatingCount}</p>
-                      <span className="relative flex h-2.5 w-2.5">
+          {/* Stats Ribbon */}
+          <div className="rounded-2xl bg-card shadow-sm overflow-hidden mb-8">
+            <div className="flex overflow-x-auto scrollbar-hide divide-x divide-border">
+              {[
+                { value: activeCount, label: 'Active Schedules' },
+                { value: totalDrops, label: 'Total Drops' },
+                { value: totalImages, label: 'Images Generated' },
+                { value: totalCredits, label: 'Credits Used' },
+                ...(generatingCount > 0 ? [{ value: generatingCount, label: 'Generating Now', generating: true }] :
+                  nextRun?.next_run_at ? [{ value: new Date(nextRun.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), label: 'Next Run' }] : []),
+              ].map((stat: any) => (
+                <div key={stat.label} className="flex-1 min-w-[110px] px-5 py-4 text-center">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <p className="text-2xl font-semibold tracking-tight">{stat.value}</p>
+                    {stat.generating && (
+                      <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
                       </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Generating Now</p>
-                  </>
-                ) : nextRun?.next_run_at ? (
-                  <>
-                    <p className="text-lg font-semibold">{new Date(nextRun.next_run_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Next Run</p>
-                  </>
-                ) : null}
-              </div>
-            )}
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="flex items-center justify-between gap-3">
-              <TabsList>
-                <TabsTrigger value="schedules">
-                  <Clock className="w-4 h-4 mr-1.5" />
+              <TabsList className="bg-muted/50 rounded-xl p-1 h-auto">
+                <TabsTrigger value="schedules" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Schedules
                 </TabsTrigger>
-                <TabsTrigger value="drops">
-                  <Zap className="w-4 h-4 mr-1.5" />
+                <TabsTrigger value="drops" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Drops
                 </TabsTrigger>
-                <TabsTrigger value="calendar">
-                  <CalendarDays className="w-4 h-4 mr-1.5" />
+                <TabsTrigger value="calendar" className="rounded-lg px-4 sm:px-5 py-2 text-sm data-[state=active]:shadow-sm">
                   Calendar
                 </TabsTrigger>
               </TabsList>
-              {activeTab === 'schedules' && (
-                <Button onClick={openWizard} className="rounded-xl gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Create Schedule
-                </Button>
-              )}
+              <Button onClick={openWizard} className="rounded-xl gap-2 hidden sm:inline-flex">
+                <Calendar className="w-4 h-4" />
+                Create Schedule
+              </Button>
+              <Button onClick={openWizard} size="icon" className="rounded-xl sm:hidden">
+                <Calendar className="w-4 h-4" />
+              </Button>
             </div>
 
             <TabsContent value="schedules" className="space-y-4">
@@ -327,9 +308,14 @@ export default function CreativeDrops() {
                       {DROP_STATUSES.map(s => (
                         <Button
                           key={s}
-                          variant={dropStatusFilter === s ? 'default' : 'outline'}
+                          variant="ghost"
                           size="sm"
-                          className="text-xs capitalize rounded-full h-7"
+                          className={cn(
+                            'text-xs capitalize rounded-full h-7 px-3',
+                            dropStatusFilter === s
+                              ? 'bg-foreground text-background hover:bg-foreground/90 hover:text-background'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
                           onClick={() => setDropStatusFilter(s)}
                         >
                           {s}
@@ -388,17 +374,15 @@ export default function CreativeDrops() {
             </TabsContent>
 
             <TabsContent value="calendar" className="space-y-4">
-              <div className="rounded-2xl bg-card shadow-sm p-5">
-                <CalendarView
-                  schedules={schedules}
-                  drops={drops}
-                  onDayClick={(day, type) => {
-                    if (type === 'drop') {
-                      setActiveTab('drops');
-                    }
-                  }}
-                />
-              </div>
+              <CalendarView
+                schedules={schedules}
+                drops={drops}
+                onDayClick={(day, type) => {
+                  if (type === 'drop') {
+                    setActiveTab('drops');
+                  }
+                }}
+              />
             </TabsContent>
           </Tabs>
 
@@ -545,18 +529,21 @@ function CalendarView({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthOffset(o => o - 1)}>
+      {/* Month navigation */}
+      <div className="flex items-center justify-center gap-4 mb-5">
+        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => setMonthOffset(o => o - 1)}>
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <h3 className="text-sm font-medium">{monthName}</h3>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthOffset(o => o + 1)}>
+        <h3 className="text-lg font-semibold tracking-tight min-w-[180px] text-center">{monthName}</h3>
+        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => setMonthOffset(o => o + 1)}>
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-          <div key={d} className="text-xs text-muted-foreground py-1 font-medium">{d}</div>
+
+      {/* Day grid */}
+      <div className="grid grid-cols-7 gap-1.5 text-center">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+          <div key={`${d}-${i}`} className="text-[11px] text-muted-foreground/70 py-1.5 font-medium">{d}</div>
         ))}
         {cells.map((day, i) => {
           const hasDrop = day ? dropDays.has(day) : false;
@@ -568,10 +555,11 @@ function CalendarView({
             <div
               key={i}
               className={cn(
-        'aspect-square flex flex-col items-center justify-center rounded-xl text-sm min-h-[44px] transition-colors',
-                day && isToday(day) && 'bg-primary/10 font-semibold',
-                day && isInteractive && 'cursor-pointer hover:bg-accent',
-                day && !isInteractive && 'cursor-default',
+                'aspect-square flex flex-col items-center justify-center rounded-2xl text-sm min-h-[44px] transition-all',
+                day && isToday(day) && 'bg-primary/10 font-semibold text-primary',
+                day && isInteractive && 'cursor-pointer hover:bg-muted/50',
+                day && !isInteractive && 'cursor-default hover:bg-muted/30',
+                !day && 'pointer-events-none',
               )}
               onClick={() => {
                 if (!day) return;
@@ -581,22 +569,23 @@ function CalendarView({
             >
               {day && (
                 <>
-                  <span>{day}</span>
-                  <div className="flex gap-0.5 mt-0.5">
-                    {hasDrop && <div className="w-2 h-2 rounded-full bg-status-success" />}
-                    {hasScheduled && <div className="w-2 h-2 rounded-full bg-status-info" />}
-                  </div>
+                  <span className="text-[13px]">{day}</span>
+                  {(hasDrop || hasScheduled) && (
+                    <div className="flex gap-0.5 mt-1">
+                      {hasDrop && <div className="w-4 h-[3px] rounded-full bg-primary" />}
+                      {hasScheduled && <div className="w-4 h-[3px] rounded-full bg-muted-foreground/40" />}
+                    </div>
+                  )}
                 </>
               )}
             </div>
           );
 
-          // Wrap scheduled days with a popover
           if (day && hasScheduled && schedulesForDay.length > 0) {
             return (
               <Popover key={i}>
                 <PopoverTrigger asChild>{dayContent}</PopoverTrigger>
-                <PopoverContent className="w-56 p-3" side="top">
+                <PopoverContent className="w-56 p-3 rounded-xl" side="top">
                   <p className="text-xs font-medium mb-2">Scheduled for {monthName.split(' ')[0]} {day}</p>
                   {schedulesForDay.map(s => (
                     <div key={s.id} className="text-xs text-muted-foreground py-0.5">• {s.name}</div>
@@ -609,13 +598,15 @@ function CalendarView({
           return dayContent;
         })}
       </div>
-      <div className="flex gap-5 mt-4 pt-3 border-t text-xs text-muted-foreground">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-status-success" />
-          Completed drop
+
+      {/* Legend */}
+      <div className="flex gap-6 mt-5 pt-4 border-t border-border/50 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-[3px] rounded-full bg-primary" />
+          Completed
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-status-info" />
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-[3px] rounded-full bg-muted-foreground/40" />
           Scheduled
         </div>
       </div>
