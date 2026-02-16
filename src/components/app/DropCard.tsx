@@ -201,14 +201,14 @@ export function DropCard(props: Props) {
             {/* Info grid: Products, Workflows, Next Generation */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Products */}
-              <div className="rounded-xl bg-muted/40 p-3 space-y-2">
+              <div className="rounded-xl bg-accent/50 p-3 space-y-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
                   <Package className="w-3 h-3" /> Products
                 </p>
                 {scheduleProducts.length > 0 ? (
                   <div className="flex items-center gap-1.5">
                     {scheduleProducts.slice(0, 4).map(p => (
-                      <div key={p.id} className="w-8 h-8 rounded-lg overflow-hidden bg-muted flex-shrink-0 border border-border/50">
+                      <div key={p.id} className="w-9 h-9 rounded-lg overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/30">
                         <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
                       </div>
                     ))}
@@ -222,7 +222,7 @@ export function DropCard(props: Props) {
               </div>
 
               {/* Workflows */}
-              <div className="rounded-xl bg-muted/40 p-3 space-y-2">
+              <div className="rounded-xl bg-accent/50 p-3 space-y-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
                   <Zap className="w-3 h-3" /> Workflows
                 </p>
@@ -245,7 +245,7 @@ export function DropCard(props: Props) {
               </div>
 
               {/* Next Generation */}
-              <div className="rounded-xl bg-muted/40 p-3 space-y-2">
+              <div className="rounded-xl bg-accent/50 p-3 space-y-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
                   <Clock className="w-3 h-3" /> {isOneTime ? 'Generation' : 'Next Drop'}
                 </p>
@@ -365,12 +365,12 @@ export function DropCard(props: Props) {
           <div className="mt-3">
             <div className="flex items-center gap-1.5">
               {dropImages.slice(0, 4).map((img, i) => (
-                <div key={i} className="w-14 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                  <img src={img.url} alt="" className="w-full h-full object-cover" />
-                </div>
-              ))}
-              {dropImages.length > 4 && (
-                <div className="w-14 h-14 rounded-md bg-muted flex items-center justify-center flex-shrink-0 text-xs font-medium text-muted-foreground">
+                 <div key={i} className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/20">
+                   <img src={img.url} alt="" className="w-full h-full object-cover" />
+                 </div>
+               ))}
+               {dropImages.length > 4 && (
+                 <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 text-xs font-medium text-muted-foreground ring-1 ring-border/20">
                   +{dropImages.length - 4}
                 </div>
               )}
