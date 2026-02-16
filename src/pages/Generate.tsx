@@ -455,7 +455,7 @@ export default function Generate() {
     }
     const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode, hasModel: !!selectedModel });
     if (balance < cost) { setNoCreditsModalOpen(true); return; }
-    if (generationMode === 'virtual-try-on') {
+    if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
       if (!selectedModel || !selectedPose) { toast.error('Please select a model and scene first'); return; }
       handleTryOnConfirmGenerate(); return;
     }
@@ -2020,6 +2020,13 @@ export default function Generate() {
                     </button>
                   ))}
                 </div>
+              </CardContent></Card>
+            )}
+
+            {/* Framing Selector — only for Selfie/UGC workflow */}
+            {isSelfieUgc && (
+              <Card><CardContent className="p-5">
+                <FramingSelector framing={framing} onFramingChange={setFraming} />
               </CardContent></Card>
             )}
 
