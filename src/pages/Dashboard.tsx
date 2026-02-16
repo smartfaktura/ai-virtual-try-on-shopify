@@ -334,11 +334,11 @@ export default function Dashboard() {
                     <TableRow key={job.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                          <div className="w-12 h-10 rounded-md overflow-hidden border border-border flex-shrink-0 bg-muted/30">
                             <img
                               src={displayUrl}
                               alt={job.user_products?.title || job.workflows?.name || 'Generation'}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                           </div>
                           <span className="font-medium text-sm">
