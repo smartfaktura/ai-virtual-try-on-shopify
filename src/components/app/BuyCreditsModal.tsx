@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, ArrowUpRight, Check, Building2 } from 'lucide-react';
+import { Wallet, Check, ArrowUpRight } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
@@ -24,7 +24,6 @@ export function BuyCreditsModal() {
 
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
-  const enterprisePlan = pricingPlans.find(p => p.isEnterprise);
 
   const handlePurchase = (credits: number) => {
     addCredits(credits);
@@ -74,7 +73,7 @@ export function BuyCreditsModal() {
       <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
         <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl">
 
-          {/* Compact balance header */}
+          {/* Balance header */}
           <div className="px-6 pt-5 pb-4 border-b border-border/40 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-muted">
@@ -121,44 +120,42 @@ export function BuyCreditsModal() {
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {creditPacks.map((pack) => (
-                    <div
-                      key={pack.packId}
-                      className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-md ${
-                        pack.popular
-                          ? 'border-2 border-primary bg-card shadow-sm'
-                          : 'border border-border bg-card hover:border-border/80'
-                      }`}
-                    >
-                      {pack.popular && (
-                        <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2 z-10">
-                          <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-3 py-0.5">
-                            Best Value
-                          </Badge>
+                  {creditPacks.map((pack) => {
+                    const imageEstimate = Math.round(pack.credits / 5);
+                    return (
+                      <div
+                        key={pack.packId}
+                        className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-md ${
+                          pack.popular
+                            ? 'border-2 border-primary bg-card'
+                            : 'border border-border bg-card hover:border-border/80'
+                        }`}
+                      >
+                        {pack.popular && (
+                          <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2 z-10">
+                            <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-3 py-0.5">
+                              Best Value
+                            </Badge>
+                          </div>
+                        )}
+                        <div className="p-5 space-y-3">
+                          <p className="text-2xl font-bold tracking-tight">${pack.price}</p>
+                          <div className="h-px bg-border/50 mx-4" />
+                          <div>
+                            <p className="text-base font-semibold">{pack.credits.toLocaleString()} credits</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">~{imageEstimate} images</p>
+                          </div>
+                          <Button
+                            variant={pack.popular ? 'default' : 'outline'}
+                            className="w-full min-h-[44px] rounded-xl text-sm font-medium"
+                            onClick={() => handlePurchase(pack.credits)}
+                          >
+                            Buy
+                          </Button>
                         </div>
-                      )}
-                      <div className="p-5 space-y-3">
-                        <div>
-                          <p className="text-2xl font-bold tracking-tight">{pack.credits.toLocaleString()}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-medium mt-0.5">credits</p>
-                        </div>
-                        <div className="h-px bg-border/50 mx-4" />
-                        <div>
-                          <p className="text-lg font-semibold">${pack.price}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            ≈ {Math.round(pack.credits / 4)} images · {(pack.pricePerCredit * 100).toFixed(1)}¢/credit
-                          </p>
-                        </div>
-                        <Button
-                          variant={pack.popular ? 'default' : 'outline'}
-                          className="w-full min-h-[40px] rounded-xl text-sm font-medium"
-                          onClick={() => handlePurchase(pack.credits)}
-                        >
-                          Purchase
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <button
@@ -177,7 +174,7 @@ export function BuyCreditsModal() {
                 <div className="flex justify-center">
                   <div className="flex rounded-full border border-border p-0.5 bg-muted/40">
                     <button
-                      className={`px-5 py-1.5 text-xs font-medium rounded-full transition-all ${
+                      className={`px-6 py-2 text-sm font-medium rounded-full transition-all ${
                         billingPeriod === 'monthly'
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -187,7 +184,7 @@ export function BuyCreditsModal() {
                       Monthly
                     </button>
                     <button
-                      className={`px-5 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-1.5 ${
+                      className={`px-6 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
                         billingPeriod === 'annual'
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -210,7 +207,7 @@ export function BuyCreditsModal() {
                     const targetIdx = PLAN_ORDER.indexOf(p.planId);
                     const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
                     const credits = typeof p.credits === 'number' ? p.credits : 0;
-                    const imageEstimate = credits > 0 ? Math.round(credits / 4) : null;
+                    const imageEstimate = credits > 0 ? Math.round(credits / 5) : null;
 
                     let ctaLabel = targetIdx > currentIdx ? `Get ${p.name}` : 'Downgrade';
                     if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
@@ -220,25 +217,22 @@ export function BuyCreditsModal() {
                     return (
                       <div
                         key={p.planId}
-                        className={`relative rounded-2xl p-4 flex flex-col transition-all duration-200 ${
+                        className={`relative rounded-2xl p-5 flex flex-col transition-all duration-200 ${
                           p.highlighted
-                            ? 'border-2 border-primary ring-1 ring-primary/10 bg-card shadow-md'
+                            ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
                             : isCurrent
-                              ? 'border border-dashed border-primary/30 bg-card'
+                              ? 'border border-primary/30 bg-card'
                               : 'border border-border bg-card hover:shadow-sm'
                         }`}
                       >
-                        {p.badge && (
-                          <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2 z-10">
-                            <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-3 py-0.5">
+                        {/* Name + badges inline */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <h4 className="text-base font-semibold">{p.name}</h4>
+                          {p.badge && (
+                            <Badge className="bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-2 py-0.5">
                               {p.badge}
                             </Badge>
-                          </div>
-                        )}
-
-                        {/* Name + current badge */}
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-sm">{p.name}</h4>
+                          )}
                           {isCurrent && (
                             <Badge variant="secondary" className="text-[9px] tracking-wider uppercase">Current</Badge>
                           )}
@@ -246,23 +240,27 @@ export function BuyCreditsModal() {
 
                         {/* Price */}
                         <div className="flex items-baseline gap-1 mb-1">
-                          <span className="text-2xl font-bold tracking-tight">${displayPrice}</span>
+                          <span className="text-3xl font-bold tracking-tight">${displayPrice}</span>
                           <span className="text-xs text-muted-foreground">/mo</span>
                         </div>
 
-                        {/* Credits + image estimate as single line */}
-                        <p className="text-xs text-muted-foreground mb-4">
-                          {credits > 0
-                            ? `${credits.toLocaleString()} credits — ~${imageEstimate} images`
-                            : `${p.credits} credits`
-                          }
-                        </p>
+                        {/* Image estimate as hero metric + credits subtitle */}
+                        <div className="mb-4">
+                          {imageEstimate ? (
+                            <>
+                              <p className="text-sm font-medium text-foreground">~{imageEstimate} images/mo</p>
+                              <p className="text-[11px] text-muted-foreground">{credits.toLocaleString()} credits/mo</p>
+                            </>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">{p.credits} credits</p>
+                          )}
+                        </div>
 
-                        {/* Features — simple checks */}
-                        <div className="space-y-1.5 flex-1 mb-4">
-                          {p.features.slice(0, 4).map((f, i) => (
+                        {/* Features — 3 max */}
+                        <div className="space-y-2 flex-1 mb-4">
+                          {p.features.slice(0, 3).map((f, i) => (
                             <div key={i} className="flex items-start gap-2">
-                              <Check className="w-3 h-3 mt-0.5 flex-shrink-0 text-primary/60" />
+                              <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
                               <span className="text-[11px] text-muted-foreground leading-snug">{f}</span>
                             </div>
                           ))}
@@ -270,8 +268,8 @@ export function BuyCreditsModal() {
 
                         {/* CTA */}
                         <Button
-                          variant={p.highlighted ? 'default' : 'outline'}
-                          className="w-full min-h-[38px] rounded-xl text-xs font-medium mt-auto"
+                          variant={isDisabled ? 'secondary' : (p.highlighted || targetIdx > currentIdx) ? 'default' : 'outline'}
+                          className="w-full min-h-[44px] rounded-xl text-sm font-medium mt-auto"
                           onClick={() => handlePlanSelect(p.planId)}
                           disabled={isDisabled}
                         >
@@ -282,21 +280,18 @@ export function BuyCreditsModal() {
                   })}
                 </div>
 
-                {/* Enterprise + Compare */}
+                {/* Bottom links */}
                 <div className="flex items-center justify-between">
-                  {enterprisePlan && (
-                    <button
-                      onClick={() => handlePlanSelect('enterprise')}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                    >
-                      <Building2 className="w-3 h-3" />
-                      Need more? Contact Sales
-                      <ArrowUpRight className="w-3 h-3" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handlePlanSelect('enterprise')}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                  >
+                    Need more? Contact Sales
+                    <ArrowUpRight className="w-3 h-3" />
+                  </button>
                   <button
                     onClick={handleViewAllPlans}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4 ml-auto"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
                   >
                     Compare all plans
                   </button>
