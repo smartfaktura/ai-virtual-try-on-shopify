@@ -1,73 +1,42 @@
 
-## Fix Recent Jobs Images + Enrich Upcoming Drops Card
 
-### Problem 1: Recent Jobs -- Broken Thumbnails
+## Fix Selfie / UGC Set Workflow + Content Updates
 
-Most jobs have `product_id: null` (workflow-only jobs). The current thumbnail logic:
+### Problem 1: "Please select a model and scene first" Error
+
+The Selfie / UGC workflow has `uses_tryon: true`, which sets `generationMode` to `'virtual-try-on'`. When the user clicks "Generate", line 458 checks `generationMode === 'virtual-try-on'` and requires both `selectedModel` AND `selectedPose`. But UGC uses workflow variations (scenes grid), not poses from the pose picker -- so `selectedPose` is always null, blocking generation.
+
+**Fix in `src/pages/Generate.tsx` (line 458):** Add `isSelfieUgc` check to skip the try-on validation and fall through to the `hasWorkflowConfig` path instead:
+
 ```tsx
-getOptimizedUrl(job.user_products?.image_url, ...) 
-|| (Array.isArray(job.results) && (job.results as any[])[0]?.url)
-|| '/placeholder.svg'
+if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
+  if (!selectedModel || !selectedPose) { toast.error('Please select a model and scene first'); return; }
+  handleTryOnConfirmGenerate(); return;
+}
 ```
 
-`getOptimizedUrl(null)` returns `''` (empty string), which is falsy -- good. But the fallback tries `.url` on results items. The `results` column stores plain string URLs like `["https://...png"]`, not objects like `[{url: "..."}]`. So `.url` is always `undefined`, and we get `placeholder.svg`.
+### Problem 2: Update Workflow Variations in Database
 
-**Fix**: Change the fallback to access `job.results[0]` directly (it's already a URL string), then optimize it.
+Three variation changes via SQL migration:
 
-### Problem 2: Recent Jobs -- Missing "View Results" Action
+1. **"Before / After Moment"** (index 11, Content Creator) -- Change label to "Product Holding in Hand" and update instruction to describe a natural hand-held product shot
+2. **"Testimonial / Review"** (index 13, Content Creator) -- Remove entirely
+3. **"In-Use Close-up"** (index 14, Close-up) -- Update instruction for better product-in-use close-up framing
 
-Completed jobs have no action button -- the Actions column is empty unless the job failed. Add a "View" button that navigates to the results page.
+This requires a SQL migration to update the `generation_config` JSONB in the `workflows` table.
 
-### Problem 3: Upcoming Drops -- Too Little Info
+### Problem 3: Add Framing Section for Selfie Workflow
 
-Currently shows only schedule name, frequency, and "Next run: Pending". The user wants to know about actual drops -- are they done, can they be downloaded, what's the status.
+Add the existing `FramingSelector` component to the Selfie / UGC settings step (alongside the mood selector and generation settings). This lets users choose selfie framing like close-up, upper body, full body etc.
 
-**Fix**: Instead of showing the next schedule, fetch the most recent `creative_drops` record and show:
-- Drop status (generating, ready, failed)
-- Image count and credits used
-- Download availability (if `download_url` exists or status is `ready`)
-- If generating, show progress indicator
-
-Also keep the schedule info but enrich it.
+**Fix in `src/pages/Generate.tsx`:** Add `<FramingSelector>` in the selfie settings section (after the UGC Mood card, before Generation Settings). The `framing` state already exists and is already passed to the workflow payload.
 
 ---
 
-### Technical Changes
+### Technical Summary
 
-**File: `src/pages/Dashboard.tsx`** (Recent Jobs section, lines 329-370)
-
-Fix the thumbnail fallback logic:
-```tsx
-// Before:
-getOptimizedUrl(job.user_products?.image_url, { width: 80, quality: 50 })
-|| (Array.isArray(job.results) && (job.results as any[])[0]?.url)
-|| '/placeholder.svg'
-
-// After:
-const firstResult = Array.isArray(job.results) ? (job.results as string[])[0] : null;
-const thumbUrl = job.user_products?.image_url || firstResult;
-// Then use getOptimizedUrl(thumbUrl, { width: 80, quality: 50 }) || '/placeholder.svg'
-```
-
-Add a "View" button for completed jobs in the Actions column that navigates to the generate page with the job's workflow.
-
-**File: `src/components/app/UpcomingDropsCard.tsx`**
-
-Expand the query to also fetch the most recent `creative_drop` alongside the next schedule. Show:
-- If a drop exists and is `generating`: pulsing dot + "Generating 40 images..." with schedule name
-- If a drop exists and is `ready`/`completed`: "Ready to download" with image count and a Download button (if `download_url` exists)
-- If a drop exists and is `failed`: "Drop failed" with retry info
-- Below the drop info, still show the next scheduled run date
-- If no drops exist, show the current empty-state setup prompt
-
-The card will query both `creative_drops` (latest 1) and `creative_schedules` (next active) to provide a complete picture.
-
----
-
-### Summary
-
-- 2 files modified: `Dashboard.tsx`, `UpcomingDropsCard.tsx`
+- **1 file modified:** `src/pages/Generate.tsx` (2 small changes: fix validation gate + add FramingSelector)
+- **1 SQL migration:** Update `generation_config` variations in the `workflows` table for Selfie / UGC Set
 - No new dependencies
-- No database changes
-- Fixes broken thumbnail rendering by correctly accessing string array results
-- Adds actionable info to the Upcoming Drops card (status, download availability, image counts)
+- No new components needed (reuses existing `FramingSelector`)
+
