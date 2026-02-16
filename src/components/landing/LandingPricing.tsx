@@ -79,7 +79,7 @@ export function LandingPricing() {
                   </p>
                   {typeof plan.credits === 'number' && (
                     <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                      ≈ {Math.round(plan.credits / 4)} images
+                      ≈ {Math.round(plan.credits / 10)} images
                     </p>
                   )}
                 </div>

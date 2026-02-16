@@ -30,7 +30,7 @@ export function CreditPackCard({ pack, onPurchase }: CreditPackCardProps) {
             <p className="text-xl font-semibold">${pack.price}</p>
             <p className="text-xs text-muted-foreground">{pricePerCredit}¢ per credit</p>
           </div>
-          <p className="text-xs text-muted-foreground">≈ {Math.round(pack.credits / 4)} images</p>
+          <p className="text-xs text-muted-foreground">≈ {Math.round(pack.credits / 10)} images</p>
           <Button
             variant={pack.popular ? 'default' : 'outline'}
             className="w-full min-h-[44px]"
