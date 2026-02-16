@@ -45,6 +45,19 @@ const statusConfig: Record<string, { icon: React.ElementType; color: string }> =
 export function DropCard(props: Props) {
   const queryClient = useQueryClient();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteDropDialogOpen, setDeleteDropDialogOpen] = useState(false);
+
+  const deleteDropMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('creative_drops').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['creative-drops'] });
+      toast.success('Drop deleted');
+    },
+    onError: () => toast.error('Failed to delete drop'),
+  });
 
   // Fetch products for schedule cards (lightweight query, cached)
   const productIds = props.type === 'schedule' ? (props.schedule.selected_product_ids || []) : [];
@@ -284,6 +297,7 @@ export function DropCard(props: Props) {
   const progressPct = targetImages > 0 ? Math.round((completedImages / targetImages) * 100) : 0;
 
   return (
+    <>
     <Card className={cn('rounded-2xl', drop.status === 'ready' && 'cursor-pointer hover:border-primary/30 transition-colors')} onClick={drop.status === 'ready' ? onViewDrop : undefined}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between gap-4">
@@ -331,6 +345,21 @@ export function DropCard(props: Props) {
                 <Download className="w-3.5 h-3.5" />
               </Button>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => e.stopPropagation()}>
+                  <MoreVertical className="w-3.5 h-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover">
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={e => { e.stopPropagation(); setDeleteDropDialogOpen(true); }}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -364,5 +393,26 @@ export function DropCard(props: Props) {
         )}
       </CardContent>
     </Card>
+
+    <AlertDialog open={deleteDropDialogOpen} onOpenChange={setDeleteDropDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete drop</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this drop? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => deleteDropMutation.mutate(drop.id)}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
