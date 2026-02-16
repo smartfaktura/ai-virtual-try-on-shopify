@@ -15,9 +15,9 @@ export interface PlanConfig {
 
 export const PLAN_CONFIG: Record<string, PlanConfig> = {
   free: { name: 'Free', monthlyCredits: 20, nextPlanId: 'starter' },
-  starter: { name: 'Starter', monthlyCredits: 1000, nextPlanId: 'growth' },
-  growth: { name: 'Growth', monthlyCredits: 2500, nextPlanId: 'pro' },
-  pro: { name: 'Pro', monthlyCredits: 6000, nextPlanId: 'enterprise' },
+  starter: { name: 'Starter', monthlyCredits: 500, nextPlanId: 'growth' },
+  growth: { name: 'Growth', monthlyCredits: 1500, nextPlanId: 'pro' },
+  pro: { name: 'Pro', monthlyCredits: 4500, nextPlanId: 'enterprise' },
   enterprise: { name: 'Enterprise', monthlyCredits: Infinity, nextPlanId: null },
 };
 

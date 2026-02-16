@@ -1375,9 +1375,9 @@ export const pricingPlans: PricingPlan[] = [
     name: 'Starter',
     monthlyPrice: 39,
     annualPrice: 372,
-    credits: 1000,
+    credits: 500,
     features: [
-      '1,000 credits/month',
+      '500 credits/month',
       'All workflows',
       'Freestyle Studio',
       '3 Brand Profiles',
@@ -1391,9 +1391,9 @@ export const pricingPlans: PricingPlan[] = [
     name: 'Growth',
     monthlyPrice: 79,
     annualPrice: 756,
-    credits: 2500,
+    credits: 1500,
     features: [
-      '2,500 credits/month',
+      '1,500 credits/month',
       'All Starter features',
       'Virtual Try-On',
       'Video generation',
@@ -1411,9 +1411,9 @@ export const pricingPlans: PricingPlan[] = [
     name: 'Pro',
     monthlyPrice: 179,
     annualPrice: 1716,
-    credits: 6000,
+    credits: 4500,
     features: [
-      '6,000 credits/month',
+      '4,500 credits/month',
       'All Growth features',
       'API access',
       'Weekly Creative Drops',
@@ -1444,22 +1444,22 @@ export const pricingPlans: PricingPlan[] = [
 // Credit Top-up Packs
 export const creditPacks: CreditPack[] = [
   {
+    packId: 'pack_200',
+    credits: 200,
+    price: 15,
+    pricePerCredit: 0.075,
+  },
+  {
     packId: 'pack_500',
     credits: 500,
-    price: 15,
-    pricePerCredit: 0.030,
+    price: 29,
+    pricePerCredit: 0.058,
+    popular: true,
   },
   {
     packId: 'pack_1500',
     credits: 1500,
-    price: 39,
-    pricePerCredit: 0.026,
-    popular: true,
-  },
-  {
-    packId: 'pack_4000',
-    credits: 4000,
-    price: 89,
-    pricePerCredit: 0.022,
+    price: 69,
+    pricePerCredit: 0.046,
   },
 ];

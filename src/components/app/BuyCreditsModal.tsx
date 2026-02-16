@@ -200,7 +200,7 @@ export function BuyCreditsModal() {
                           <p className="text-xs text-muted-foreground">{(pack.pricePerCredit * 100).toFixed(1)}¢ per credit</p>
                         </div>
                         
-                        <p className="text-[11px] text-muted-foreground">≈ {Math.round(pack.credits / 4)} images</p>
+                        <p className="text-[11px] text-muted-foreground">≈ {Math.round(pack.credits / 10)} images</p>
 
                         <Button
                           variant={pack.popular ? 'default' : 'outline'}
