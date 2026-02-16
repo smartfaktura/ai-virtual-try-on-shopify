@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, ArrowUpRight, Check, Building2, Sparkles, Zap } from 'lucide-react';
+import { Wallet, ArrowUpRight, Check, Building2, Sparkles, Zap, Crown, Images, Layers, User, Package, Video, CalendarDays } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
@@ -11,6 +11,43 @@ import { toast } from 'sonner';
 import type { PricingPlan } from '@/types';
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
+
+// Feature icons mapping for visual scanning
+const featureIcon = (feature: string) => {
+  const f = feature.toLowerCase();
+  if (f.includes('image') || f.includes('credit')) return Images;
+  if (f.includes('workflow') || f.includes('bulk')) return Layers;
+  if (f.includes('brand') || f.includes('profile')) return User;
+  if (f.includes('product')) return Package;
+  if (f.includes('video')) return Video;
+  if (f.includes('creative') || f.includes('drop')) return CalendarDays;
+  if (f.includes('priority') || f.includes('queue')) return Zap;
+  return Check;
+};
+
+// Pro-exclusive features
+const isProExclusive = (feature: string) => {
+  const f = feature.toLowerCase();
+  return f.includes('video generation') || f.includes('creative drops');
+};
+
+// Plan card style tiers
+const getPlanCardStyle = (planId: string, highlighted: boolean, isCurrent: boolean) => {
+  if (planId === 'pro') {
+    return 'border-2 border-foreground/20 bg-foreground text-background shadow-2xl';
+  }
+  if (highlighted) {
+    return 'border-2 border-primary ring-2 ring-primary/20 bg-primary/[0.04] shadow-xl';
+  }
+  if (isCurrent) {
+    return 'border-2 border-dashed border-primary/30 bg-muted/20';
+  }
+  if (planId === 'starter') {
+    return 'border-2 border-border/50 hover:border-primary/20 hover:shadow-md bg-background border-t-amber-400/60';
+  }
+  // free
+  return 'border-2 border-border/50 hover:border-primary/20 hover:shadow-md bg-background';
+};
 
 export function BuyCreditsModal() {
   const { balance, plan, planConfig, buyModalOpen, closeBuyModal, addCredits, subscriptionStatus } = useCredits();
@@ -82,7 +119,6 @@ export function BuyCreditsModal() {
     navigate('/app/settings');
   };
 
-  // Calculate per-credit cost for a plan
   const getPerCreditCost = (p: PricingPlan) => {
     const credits = typeof p.credits === 'number' ? p.credits : 0;
     if (credits === 0) return null;
@@ -90,21 +126,28 @@ export function BuyCreditsModal() {
     return ((price / credits) * 100).toFixed(1);
   };
 
+  // Image estimate from credits
+  const getImageEstimate = (p: PricingPlan) => {
+    const credits = typeof p.credits === 'number' ? p.credits : 0;
+    if (credits === 0) return null;
+    return Math.round(credits / 10);
+  };
+
   return (
     <>
       <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
-        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-border/50 shadow-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden rounded-3xl border-border/50 shadow-2xl backdrop-blur-sm">
           
           {/* Premium Balance Header */}
-          <div className="px-6 pt-5 pb-3 bg-gradient-to-b from-muted/60 to-background border-b border-border/50">
+          <div className="px-6 pt-5 pb-4 bg-gradient-to-b from-muted/60 to-background border-b border-border/50">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-primary/10">
-                  <Wallet className="w-4 h-4 text-primary" />
+                <div className="p-2.5 rounded-xl bg-primary/10">
+                  <Wallet className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold tracking-tight">{balance.toLocaleString()}</span>
+                    <span className="text-3xl font-bold tracking-tight">{balance.toLocaleString()}</span>
                     <span className="text-xs text-muted-foreground font-medium">credits available</span>
                   </div>
                 </div>
@@ -113,26 +156,36 @@ export function BuyCreditsModal() {
                 {planConfig.name}
               </Badge>
             </div>
-            <div className="h-1 w-full rounded-full bg-secondary/80 overflow-hidden">
+            <div className="h-1.5 w-full rounded-full bg-secondary/80 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ease-out ${
-                  hasBonus ? 'bg-accent-foreground/50' : 'bg-primary/80'
+                  hasBonus ? 'bg-accent-foreground/50 shadow-[0_0_8px_rgba(0,0,0,0.15)]' : 'bg-primary/80'
                 }`}
                 style={{ width: `${usagePercent}%` }}
               />
             </div>
-            <div className="flex items-center justify-between mt-1.5">
+            <div className="flex items-center justify-between mt-2">
               <span className="text-xs text-muted-foreground">
                 {hasBonus
                   ? `${balance.toLocaleString()} available (includes bonus)`
                   : `${balance.toLocaleString()} / ${monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()}`
                 }
               </span>
-              {hasBonus && (
-                <span className="text-xs text-primary font-medium flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Bonus credits
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {hasBonus && (
+                  <span className="text-xs text-primary font-medium flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Bonus credits
+                  </span>
+                )}
+                {plan === 'free' && (
+                  <button
+                    onClick={() => setActiveTab('upgrade')}
+                    className="text-[10px] font-semibold text-primary hover:underline underline-offset-2 flex items-center gap-0.5"
+                  >
+                    <ArrowUpRight className="w-3 h-3" /> Upgrade
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -141,7 +194,7 @@ export function BuyCreditsModal() {
             <div className="flex gap-1 border-b border-border/50">
               <button
                 onClick={() => setActiveTab('topup')}
-                className={`px-6 py-2 text-sm font-medium transition-all relative ${
+                className={`px-6 py-2.5 text-sm font-medium transition-all relative ${
                   activeTab === 'topup'
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground/70'
@@ -154,7 +207,7 @@ export function BuyCreditsModal() {
               </button>
               <button
                 onClick={() => setActiveTab('upgrade')}
-                className={`px-6 py-2 text-sm font-medium transition-all relative ${
+                className={`px-6 py-2.5 text-sm font-medium transition-all relative ${
                   activeTab === 'upgrade'
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground/70'
@@ -169,14 +222,16 @@ export function BuyCreditsModal() {
           </div>
 
           {/* Tab Content */}
-          <div className="px-6 pb-4 pt-3 flex-1 overflow-y-auto">
+          <div className="px-6 pb-5 pt-4 flex-1 overflow-y-auto">
             
             {/* Top Up Tab */}
             {activeTab === 'topup' && (
               <div className="space-y-4">
                 {/* Subscription nudge banner */}
-                <div className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/10 px-4 py-2.5">
-                  <Zap className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                <div className="flex items-center gap-3 rounded-2xl bg-primary/5 border border-primary/10 px-5 py-3">
+                  <div className="p-1.5 rounded-lg bg-primary/10">
+                    <Zap className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Subscriptions start at <span className="font-semibold text-foreground">6.2¢/credit</span> — lower than any top-up.{' '}
                     <button
@@ -192,14 +247,14 @@ export function BuyCreditsModal() {
                   One-time credit packs · Never expire · Use across all modes
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {creditPacks.map((pack) => (
                     <div
                       key={pack.packId}
-                      className={`relative rounded-2xl border-2 text-center transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                      className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-lg ${
                         pack.popular
-                          ? 'border-primary bg-primary/[0.03] shadow-md shadow-primary/5'
-                          : 'border-border/60 hover:border-primary/30 bg-background'
+                          ? 'border-2 border-primary bg-gradient-to-b from-primary/[0.06] to-background shadow-lg shadow-primary/5 scale-[1.03]'
+                          : 'border-2 border-border/60 hover:border-primary/30 bg-gradient-to-b from-muted/30 to-background hover:scale-[1.02]'
                       }`}
                     >
                       {pack.popular && (
@@ -209,7 +264,7 @@ export function BuyCreditsModal() {
                           </Badge>
                         </div>
                       )}
-                      <div className="p-4 sm:p-5 space-y-3">
+                      <div className="p-5 sm:p-6 space-y-3">
                         <div className="space-y-1">
                           <p className="text-3xl font-bold tracking-tight">{pack.credits.toLocaleString()}</p>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-semibold">credits</p>
@@ -248,18 +303,11 @@ export function BuyCreditsModal() {
             {/* Upgrade Plan Tab */}
             {activeTab === 'upgrade' && (
               <div className="space-y-4">
-                {/* Billing toggle */}
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    {isAnnual ? (
-                      <span className="text-primary font-medium">You're saving up to 17% with annual billing</span>
-                    ) : (
-                      <span>Switch to annual and <span className="text-primary font-medium">save up to 17%</span></span>
-                    )}
-                  </p>
+                {/* Billing toggle - centered */}
+                <div className="flex flex-col items-center gap-2">
                   <div className="flex rounded-full border border-border/60 p-0.5 bg-muted/40">
                     <button
-                      className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
+                      className={`px-5 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
                         billingPeriod === 'monthly'
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -269,7 +317,7 @@ export function BuyCreditsModal() {
                       Monthly
                     </button>
                     <button
-                      className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
+                      className={`px-5 py-1.5 text-xs font-medium rounded-full transition-all duration-200 flex items-center gap-1.5 ${
                         billingPeriod === 'annual'
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -277,13 +325,22 @@ export function BuyCreditsModal() {
                       onClick={() => setBillingPeriod('annual')}
                     >
                       Annual
-                      <span className="ml-1 text-[10px] opacity-80">-17%</span>
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 leading-none">
+                        SAVE 17%
+                      </span>
                     </button>
                   </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {isAnnual ? (
+                      <span className="text-emerald-600 font-medium">✓ You're saving up to 17% with annual billing</span>
+                    ) : (
+                      <span>Switch to annual and <span className="text-primary font-medium">save up to $432/yr</span></span>
+                    )}
+                  </p>
                 </div>
 
                 {/* Plan columns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {mainPlans.map((p) => {
                     const isCurrent = p.planId === plan;
                     const currentIdx = PLAN_ORDER.indexOf(plan);
@@ -291,6 +348,9 @@ export function BuyCreditsModal() {
                     const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
                     const monthlySavings = p.monthlyPrice * 12 - p.annualPrice;
                     const perCreditCost = getPerCreditCost(p);
+                    const imageEstimate = getImageEstimate(p);
+                    const isPro = p.planId === 'pro';
+                    const isGrowth = p.highlighted;
 
                     let ctaLabel = targetIdx > currentIdx ? `Get ${p.name}` : 'Downgrade';
                     if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
@@ -300,71 +360,104 @@ export function BuyCreditsModal() {
                     return (
                       <div
                         key={p.planId}
-                        className={`relative rounded-2xl p-3 space-y-2 transition-all duration-200 ${
-                          p.highlighted
-                            ? 'border-2 border-primary bg-primary/[0.03] shadow-lg shadow-primary/5'
-                            : isCurrent
-                              ? 'border-2 border-dashed border-primary/30 bg-muted/20'
-                              : 'border-2 border-border/50 hover:border-primary/20 hover:shadow-md bg-background'
+                        className={`relative rounded-2xl p-4 flex flex-col transition-all duration-200 ${getPlanCardStyle(p.planId, !!p.highlighted, isCurrent)} ${
+                          isGrowth ? 'plan-card-shimmer' : ''
                         }`}
                       >
                         {p.badge && (
                           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                            <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg shadow-primary/20">
+                            <Badge className={`text-[10px] tracking-widest uppercase px-4 py-0.5 shadow-lg ${
+                              isPro
+                                ? 'bg-background text-foreground shadow-foreground/10'
+                                : 'bg-primary text-primary-foreground shadow-primary/20'
+                            }`}>
                               {p.badge}
                             </Badge>
                           </div>
                         )}
 
-                        {/* Header */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-bold text-sm tracking-tight">{p.name}</h4>
-                            {isCurrent && (
-                              <Badge variant="secondary" className="text-[9px] tracking-wider uppercase">Current</Badge>
-                            )}
+                        {/* Plan name */}
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            {isPro && <Crown className={`w-3.5 h-3.5 ${isPro ? 'text-amber-400' : 'text-primary'}`} />}
+                            <h4 className={`font-bold text-sm tracking-tight ${isPro ? 'text-background' : ''}`}>{p.name}</h4>
                           </div>
-                          <div className="flex items-baseline gap-1.5">
-                            {isAnnual && p.monthlyPrice > 0 && (
-                              <span className="text-sm text-muted-foreground line-through">${p.monthlyPrice}</span>
-                            )}
-                            <span className="text-2xl font-bold tracking-tight">${displayPrice}</span>
-                            <span className="text-xs text-muted-foreground font-medium">/mo</span>
-                          </div>
-                          {isAnnual && monthlySavings > 0 && (
-                            <p className="text-[10px] text-primary font-semibold tracking-wide">
-                              Save ${monthlySavings}/yr
-                            </p>
+                          {isCurrent && (
+                            <Badge variant="secondary" className="text-[9px] tracking-wider uppercase">Current</Badge>
                           )}
                         </div>
 
-                        {/* Per-credit cost */}
-                        {perCreditCost && (
-                          <p className="text-[11px] font-medium text-primary/80">
-                            {perCreditCost}¢/credit
+                        {/* Price */}
+                        <div className="flex items-baseline gap-1.5 mb-0.5">
+                          {isAnnual && p.monthlyPrice > 0 && (
+                            <span className={`text-sm line-through ${isPro ? 'text-background/40' : 'text-muted-foreground'}`}>${p.monthlyPrice}</span>
+                          )}
+                          <span className={`text-2xl font-bold tracking-tight ${isPro ? 'text-background' : ''}`}>${displayPrice}</span>
+                          <span className={`text-xs font-medium ${isPro ? 'text-background/60' : 'text-muted-foreground'}`}>/mo</span>
+                        </div>
+                        {isAnnual && monthlySavings > 0 && (
+                          <p className={`text-[10px] font-semibold tracking-wide mb-2 ${isPro ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                            Save ${monthlySavings}/yr
                           </p>
                         )}
+                        {p.monthlyPrice === 0 && <div className="mb-2" />}
 
-                        {/* Credits inline */}
-                        <p className="text-xs font-semibold text-foreground">
-                          {typeof p.credits === 'number' ? p.credits.toLocaleString() : p.credits}
-                          <span className="text-muted-foreground font-medium"> credits/mo</span>
-                        </p>
+                        {/* Hero metric: image estimate */}
+                        {imageEstimate ? (
+                          <div className={`rounded-xl py-2.5 px-3 text-center mb-3 ${
+                            isPro ? 'bg-background/10' : 'bg-muted/60'
+                          }`}>
+                            <p className={`text-xl font-bold tracking-tight ${isPro ? 'text-background' : 'text-foreground'}`}>
+                              ~{imageEstimate} images
+                            </p>
+                            <p className={`text-[10px] font-medium ${isPro ? 'text-background/50' : 'text-muted-foreground'}`}>per month</p>
+                          </div>
+                        ) : (
+                          <div className={`rounded-xl py-2.5 px-3 text-center mb-3 ${isPro ? 'bg-background/10' : 'bg-muted/60'}`}>
+                            <p className={`text-lg font-bold tracking-tight ${isPro ? 'text-background' : 'text-foreground'}`}>
+                              {typeof p.credits === 'number' ? p.credits : p.credits}
+                            </p>
+                            <p className={`text-[10px] font-medium ${isPro ? 'text-background/50' : 'text-muted-foreground'}`}>one-time credits</p>
+                          </div>
+                        )}
 
-                        {/* Features */}
-                        <div className="space-y-1.5">
-                          {p.features.slice(0, 4).map((f, i) => (
-                            <div key={i} className="flex items-start gap-2">
-                              <Check className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
-                              <span className="text-[11px] text-muted-foreground leading-snug">{f}</span>
-                            </div>
-                          ))}
+                        {/* Per-credit cost chip */}
+                        {perCreditCost && (
+                          <div className={`inline-flex items-center gap-1 self-center rounded-full px-2.5 py-1 text-[10px] font-semibold mb-3 ${
+                            isPro ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                          }`}>
+                            {perCreditCost}¢/credit
+                          </div>
+                        )}
+
+                        {/* Features with icons */}
+                        <div className="space-y-2 flex-1 mb-3">
+                          {p.features.slice(0, 4).map((f, i) => {
+                            const Icon = featureIcon(f);
+                            const exclusive = isProExclusive(f);
+                            return (
+                              <div key={i} className="flex items-start gap-2">
+                                {exclusive ? (
+                                  <Sparkles className={`w-3 h-3 mt-0.5 flex-shrink-0 ${isPro ? 'text-amber-400' : 'text-primary'}`} />
+                                ) : (
+                                  <Icon className={`w-3 h-3 mt-0.5 flex-shrink-0 ${isPro ? 'text-background/50' : 'text-primary/70'}`} />
+                                )}
+                                <span className={`text-[11px] leading-snug ${
+                                  exclusive
+                                    ? isPro ? 'text-amber-300 font-medium' : 'text-primary font-medium'
+                                    : isPro ? 'text-background/70' : 'text-muted-foreground'
+                                }`}>{f}</span>
+                              </div>
+                            );
+                          })}
                         </div>
 
                         {/* CTA */}
                         <Button
-                          variant={p.highlighted ? 'default' : 'outline'}
-                          className="w-full min-h-[36px] rounded-xl text-xs font-medium"
+                          variant={isPro || isGrowth ? 'default' : 'outline'}
+                          className={`w-full min-h-[40px] rounded-xl text-xs font-medium mt-auto ${
+                            isPro ? 'bg-background text-foreground hover:bg-background/90' : ''
+                          }`}
                           onClick={() => handlePlanSelect(p.planId)}
                           disabled={isDisabled}
                         >
