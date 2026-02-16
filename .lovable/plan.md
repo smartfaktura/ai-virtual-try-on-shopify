@@ -1,37 +1,51 @@
 
 
-## Fix: Allow Deleting Creative Drops + Show Empty State Correctly
+## Fix Creative Drops Loading State (Flipping Screen)
 
-### What's Happening
+### Root Cause
 
-The drop record (status: `generating`, 40 images, 400 credits) still exists in the database. Only schedules have a delete action in the UI -- drops do not. So when you deleted schedules, the orphaned drop remained, keeping the stats ribbon visible with stale data.
+The Creative Drops page has no loading guard before rendering. When the page loads:
 
-### Changes
+1. Queries start with `schedulesLoading = true` and `dropsLoading = true`
+2. But `hasStats` is evaluated as `schedules.length > 0 || drops.length > 0` which uses the default empty arrays, so it evaluates to `false`
+3. The onboarding screen flashes briefly
+4. Then if cached/stale data exists (React Query cache), `hasStats` flips to `true` and shows the stats ribbon
+5. Then fresh data arrives (empty), `hasStats` flips back to `false`, showing onboarding again
 
-#### 1. `src/components/app/DropCard.tsx` -- Add delete action for drop cards
+This creates a visible "flip" between states.
 
-Add a delete mutation for drops (similar to the existing schedule delete) and a dropdown menu with a "Delete" option on each drop card. This includes:
+### Fix
 
-- A `deleteDropMutation` that calls `supabase.from('creative_drops').delete().eq('id', dropId)` and invalidates `['creative-drops']`
-- A three-dot menu (MoreVertical) on drop cards with a "Delete" option
-- A confirmation dialog before deleting
+**File: `src/pages/CreativeDrops.tsx`** (around line 216-226)
 
-#### 2. `src/pages/CreativeDrops.tsx` -- Invalidate drops when schedules change
+Add a loading guard before the `hasStats` conditional. While either query is still loading (and we're not in the wizard), show a lightweight skeleton instead of immediately choosing between onboarding and stats views.
 
-When a schedule is deleted, any associated drops become orphaned. The `creative-drops` query should also be invalidated after schedule deletion to keep stats in sync. However, this is already handled because both queries refetch on mount. The real fix is just enabling drop deletion.
+```tsx
+// Before the hasStats conditional (line ~222-226), add:
+{wizardOpen ? (
+  <CreativeDropWizard ... />
+) : (schedulesLoading || dropsLoading) ? (
+  // Gentle loading skeleton - no jarring flicker
+  <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="h-20 rounded-2xl bg-muted/50 animate-pulse" />
+    <div className="h-10 w-64 rounded-xl bg-muted/50 animate-pulse" />
+    <div className="space-y-3">
+      <div className="h-24 rounded-2xl bg-muted/30 animate-pulse" />
+      <div className="h-24 rounded-2xl bg-muted/30 animate-pulse" />
+    </div>
+  </div>
+) : !hasStats ? (
+  <CreativeDropsOnboarding ... />
+) : (
+  // existing stats + tabs UI
+)}
+```
 
-### Technical Details
+This ensures the page waits for data before deciding which view to show, eliminating the flip entirely. The skeleton is subtle (low opacity, fade-in) so it doesn't draw attention.
 
-**DropCard.tsx changes (drop card section, around line 276-367):**
+### Summary
 
-- Add `deleteDropMutation` using `useMutation` targeting `creative_drops` table
-- Add `deleteDropDialogOpen` state
-- Add a dropdown menu button next to the status badge with "Delete" option
-- Add `AlertDialog` for delete confirmation
-- On success: invalidate `['creative-drops']` and show toast
-
-**No database changes needed** -- the `creative_drops` table already has an RLS policy allowing users to delete their own drops.
-
-### Result
-
-After this change, you can delete the orphaned drop from the Drops tab. Once deleted, `drops.length` becomes 0 and `schedules.length` is already 0, so `hasStats` becomes false and the onboarding/first-time empty state will display instead of the stats ribbon.
+- **1 file modified**: `src/pages/CreativeDrops.tsx`
+- Single change: add loading skeleton guard before the onboarding vs stats conditional
+- No database changes needed (drops are already deleted)
+- Prevents the flipping/flashing between onboarding and stats views during data load
