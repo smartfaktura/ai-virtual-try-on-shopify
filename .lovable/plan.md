@@ -1,81 +1,112 @@
 
 
-## Fix: Stuck Processing Jobs Never Get Cleaned Up
+## Creative Drops Page -- Luxury UI/UX Overhaul
 
-### Root Cause
+### Problems Identified
 
-The cleanup mechanism has a gap:
+1. **"Generating Now" stat uses amber color** -- breaks the monochromatic luxury aesthetic; should match other stats
+2. **Stats grid is plain** -- simple bordered boxes with no visual hierarchy or icon accents
+3. **Tabs look default/generic** -- standard shadcn TabsList without premium feel
+4. **"Create Schedule" button floats awkwardly** -- right-aligned below tabs with no visual anchor
+5. **Schedule cards lack refinement** -- the info grid (Products/Workflows/Generation) uses `bg-muted/40` which looks flat
+6. **Calendar view is bare** -- no card wrapper, no visual polish, tiny dots for events
+7. **Overall page lacks the "luxury restraint" aesthetic** used elsewhere in the app
 
-- `cleanup_stale_jobs` (DB function) correctly fails timed-out processing jobs and refunds credits
-- But it only runs inside `process-queue`, which only triggers when new jobs are enqueued
-- The client-side stuck detection in `useGenerationQueue` only watches for `queued` jobs stuck > 30s -- it ignores `processing` jobs
-- Result: if a processing job times out and no new jobs come in, it sits in `processing` forever
+---
 
-### Immediate Fix: Clean Up the 4 Stuck Jobs Now
+### Design Direction
 
-Run `cleanup_stale_jobs` to fail the 4 stuck jobs and refund credits immediately. This will be done by calling the retry-queue function which triggers process-queue.
+Elevate the page to match the Apple-inspired studio aesthetic already established in the design system: subtle shadows instead of hard borders, tonal depth, icon accents on stats, refined spacing, and a card-wrapped calendar.
 
-### Permanent Fix: Client-Side Timeout Detection for Processing Jobs
+---
 
-**File: `src/hooks/useGenerationQueue.ts`**
+### Changes by File
 
-Add a check in the polling loop: if a job has been in `processing` status for longer than 5 minutes (matching the server-side timeout), trigger `retry-queue` to invoke `cleanup_stale_jobs`.
+#### 1. `src/pages/CreativeDrops.tsx`
 
-In the `pollJobStatus` callback, after the existing queued-stuck detection block (around line 117-131), add a parallel check for processing jobs:
+**A. Stats grid -- use MetricCard component or upgrade inline stats**
 
-```typescript
-// Existing: stuck detection for queued jobs
-if (job.status === 'queued') {
-  // ... existing code ...
-}
+Replace the plain `div` stat boxes (lines 229-261) with properly styled metric cards that include:
+- Icon accent (small colored icon circle in top-right)
+- Larger typography hierarchy (3xl value, sm label)
+- Subtle shadow (`shadow-sm`) instead of just border
+- Remove the amber color from "Generating Now" -- use the same foreground color as other stats
+- Add a subtle pulse animation dot next to "Generating Now" instead of coloring the number
 
-// NEW: stuck detection for processing jobs
-if (job.status === 'processing' && job.started_at) {
-  const processingDuration = Date.now() - new Date(job.started_at).getTime();
-  // 5 minutes = server-side timeout_at threshold
-  if (processingDuration > 5 * 60 * 1000 && !retriggeredRef.current) {
-    retriggeredRef.current = true;
-    console.warn(`[queue] Job ${job.id} processing for ${Math.round(processingDuration / 1000)}s, triggering cleanup`);
-    fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ trigger: 'stuck-processing-retry' }),
-    }).catch(() => {});
-  }
-}
+```tsx
+// Before: <p className="text-2xl font-semibold text-amber-500">{generatingCount}</p>
+// After:  <p className="text-2xl font-semibold">{generatingCount}</p> with a small pulsing dot
 ```
 
-This ensures that even if no new jobs are enqueued, a client viewing a stuck processing job will trigger the cleanup within ~5 minutes + one poll cycle (3s).
+**B. Tabs -- refined styling**
 
-**File: `src/components/app/QueuePositionIndicator.tsx`**
+Wrap tabs in a cleaner layout. Move "Create Schedule" button to sit inline with the TabsList on desktop (right-aligned in the same row), creating a unified toolbar feel instead of a floating button.
 
-Add a "stuck" state to the processing UI. If elapsed exceeds 5 minutes, show a message like "This is taking unusually long -- retrying..." instead of the normal overtime message, so the user knows the system is aware and acting.
-
-In the `ProcessingState` component, add after the overtime message logic:
-
-```typescript
-const isStuck = elapsed > 300; // 5 minutes
-
-// In the render:
-{isStuck ? (
-  <p className="text-sm font-medium text-foreground">
-    This is taking unusually long -- retrying automatically...
-  </p>
-) : (
-  <p className="text-sm font-medium text-foreground">
-    {overtimeMsg || 'Generating your images...'}
-  </p>
-)}
+```tsx
+// Before: TabsList then a separate div with Create Schedule below
+// After:
+<div className="flex items-center justify-between">
+  <TabsList className="...">...</TabsList>
+  <Button>Create Schedule</Button>
+</div>
 ```
 
-### Summary
+Remove the separate `<div className="flex justify-end">` wrapper for the button inside the Schedules tab.
 
-- 2 files modified
+**C. Calendar view -- wrap in a card**
+
+Wrap the CalendarView in a `Card` with proper padding for a contained, polished feel. Add a subtle header with month navigation styled as a proper toolbar.
+
+```tsx
+<Card className="rounded-2xl">
+  <CardContent className="p-5">
+    <CalendarView ... />
+  </CardContent>
+</Card>
+```
+
+Inside CalendarView:
+- Style the month navigation bar with a centered month name and ghost icon buttons
+- Give day cells a slightly larger size with `rounded-xl` instead of `rounded-lg`
+- Make event dots slightly larger (w-1.5 h-1.5 to w-2 h-2) for better visibility
+- Add a subtle hover state with `hover:bg-accent` transition
+- Style the legend at the bottom with better spacing
+
+**D. Empty states -- refine spacing**
+
+Add `rounded-2xl` and shadow to the empty state cards for consistency.
+
+#### 2. `src/components/app/DropCard.tsx`
+
+**E. Schedule card info grid polish**
+
+- Change `bg-muted/40` to `bg-accent/50` for the info sections (Products, Workflows, Generation) for slightly more warmth
+- Add `shadow-sm` to the inner info boxes for subtle depth
+- Product thumbnails: increase from `w-8 h-8` to `w-9 h-9` with `rounded-lg` and a ring (`ring-1 ring-border/30`)
+
+**F. Status badge refinement**
+
+- The Active badge uses `bg-green-500/10 text-green-600` which is fine but inconsistent with the muted palette. Change to use the design system's `--status-success` token for consistency.
+
+**G. Drop card thumbnail strip**
+
+- Increase thumbnail size from `w-14 h-14` to `w-16 h-16` for better visual impact
+- Add `ring-1 ring-border/20` for subtle framing
+
+#### 3. `src/components/app/PageHeader.tsx`
+
+**H. Subtitle styling**
+
+- Increase subtitle max-width and add slightly more top margin for breathing room
+
+---
+
+### Technical Summary
+
+- 3 files modified: `CreativeDrops.tsx`, `DropCard.tsx`, `PageHeader.tsx`
 - No new dependencies
-- Adds client-side timeout detection for `processing` jobs (mirrors existing `queued` stuck detection)
-- Triggers server-side cleanup via `retry-queue` when a processing job exceeds 5 minutes
-- Shows user-facing "retrying" message so users know the system is handling it
-- Prevents jobs from being stuck indefinitely regardless of whether new jobs are enqueued
+- No database changes
+- All changes are visual/CSS -- no logic changes
+- Maintains existing responsive behavior while elevating the aesthetic
+- Removes the amber "Generating Now" color in favor of a subtle pulsing dot indicator
+
