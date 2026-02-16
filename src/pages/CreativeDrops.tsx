@@ -221,6 +221,15 @@ export default function CreativeDrops() {
     >
       {wizardOpen ? (
         <CreativeDropWizard onClose={closeWizard} initialData={wizardInitialData} editingScheduleId={editingScheduleId} />
+      ) : (schedulesLoading || dropsLoading) ? (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="h-20 rounded-2xl bg-muted/50 animate-pulse" />
+          <div className="h-10 w-64 rounded-xl bg-muted/50 animate-pulse" />
+          <div className="space-y-3">
+            <div className="h-24 rounded-2xl bg-muted/30 animate-pulse" />
+            <div className="h-24 rounded-2xl bg-muted/30 animate-pulse" />
+          </div>
+        </div>
       ) : !hasStats ? (
         <CreativeDropsOnboarding onCreateSchedule={openWizard} />
       ) : (
