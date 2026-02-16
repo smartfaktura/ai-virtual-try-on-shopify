@@ -1,51 +1,22 @@
 
 
-## Fix Creative Drops Loading State (Flipping Screen)
+## Fix Recent Jobs Thumbnails: Show Original Aspect Ratio
 
-### Root Cause
+### Problem
 
-The Creative Drops page has no loading guard before rendering. When the page loads:
+The Recent Jobs table thumbnails are rendered in a fixed `w-10 h-10` (40x40px) square container with `object-cover`. This crops and zooms into images that aren't square (e.g., portrait 3:4 product photos, landscape flat lay shots), making them look zoomed-in and losing important visual context.
 
-1. Queries start with `schedulesLoading = true` and `dropsLoading = true`
-2. But `hasStats` is evaluated as `schedules.length > 0 || drops.length > 0` which uses the default empty arrays, so it evaluates to `false`
-3. The onboarding screen flashes briefly
-4. Then if cached/stale data exists (React Query cache), `hasStats` flips to `true` and shows the stats ribbon
-5. Then fresh data arrives (empty), `hasStats` flips back to `false`, showing onboarding again
+### Solution
 
-This creates a visible "flip" between states.
+Change the thumbnail container from a fixed square to a fixed-height rectangle that uses `object-contain` instead of `object-cover`. This preserves the original aspect ratio of each image without cropping.
 
-### Fix
+### Technical Details
 
-**File: `src/pages/CreativeDrops.tsx`** (around line 216-226)
+**File: `src/pages/Dashboard.tsx`** (lines 337-343)
 
-Add a loading guard before the `hasStats` conditional. While either query is still loading (and we're not in the wizard), show a lightweight skeleton instead of immediately choosing between onboarding and stats views.
+Change the thumbnail container and image styling:
+- Container: from `w-10 h-10` to `w-12 h-10` (slightly wider to accommodate landscape images)
+- Image: from `object-cover` to `object-contain` so images are fully visible without cropping
+- Add a subtle `bg-muted/30` background so the letterbox area blends in
 
-```tsx
-// Before the hasStats conditional (line ~222-226), add:
-{wizardOpen ? (
-  <CreativeDropWizard ... />
-) : (schedulesLoading || dropsLoading) ? (
-  // Gentle loading skeleton - no jarring flicker
-  <div className="space-y-6 animate-in fade-in duration-300">
-    <div className="h-20 rounded-2xl bg-muted/50 animate-pulse" />
-    <div className="h-10 w-64 rounded-xl bg-muted/50 animate-pulse" />
-    <div className="space-y-3">
-      <div className="h-24 rounded-2xl bg-muted/30 animate-pulse" />
-      <div className="h-24 rounded-2xl bg-muted/30 animate-pulse" />
-    </div>
-  </div>
-) : !hasStats ? (
-  <CreativeDropsOnboarding ... />
-) : (
-  // existing stats + tabs UI
-)}
-```
-
-This ensures the page waits for data before deciding which view to show, eliminating the flip entirely. The skeleton is subtle (low opacity, fade-in) so it doesn't draw attention.
-
-### Summary
-
-- **1 file modified**: `src/pages/CreativeDrops.tsx`
-- Single change: add loading skeleton guard before the onboarding vs stats conditional
-- No database changes needed (drops are already deleted)
-- Prevents the flipping/flashing between onboarding and stats views during data load
+This ensures portrait, square, and landscape product images all render at their natural proportions within the table row.
