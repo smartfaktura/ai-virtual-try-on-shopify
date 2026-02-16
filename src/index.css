@@ -309,3 +309,17 @@
     animation: pulse-slide 1.5s ease-in-out infinite;
   }
 }
+
+/* Growth plan card shimmer */
+@keyframes shimmer-border {
+  0%, 100% {
+    border-color: hsl(var(--primary));
+  }
+  50% {
+    border-color: hsl(var(--primary) / 0.4);
+  }
+}
+
+.plan-card-shimmer {
+  animation: shimmer-border 2.5s ease-in-out infinite;
+}
