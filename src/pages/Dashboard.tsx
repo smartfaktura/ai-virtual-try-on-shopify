@@ -326,17 +326,17 @@ export default function Dashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentJobs.map(job => (
+                  {recentJobs.map(job => {
+                    const firstResult = Array.isArray(job.results) ? (job.results as string[])[0] : null;
+                    const thumbUrl = job.user_products?.image_url || firstResult;
+                    const displayUrl = getOptimizedUrl(thumbUrl, { width: 80, quality: 50 }) || '/placeholder.svg';
+                    return (
                     <TableRow key={job.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg overflow-hidden border border-border flex-shrink-0">
                             <img
-                              src={
-                                getOptimizedUrl(job.user_products?.image_url, { width: 80, quality: 50 })
-                                || (Array.isArray(job.results) && (job.results as any[])[0]?.url)
-                                || '/placeholder.svg'
-                              }
+                              src={displayUrl}
                               alt={job.user_products?.title || job.workflows?.name || 'Generation'}
                               className="w-full h-full object-cover"
                             />
@@ -360,6 +360,11 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
+                          {job.status === 'completed' && (
+                            <Button size="sm" variant="outline" className="rounded-full" onClick={() => navigate(job.workflow_id ? `/app/generate?workflow=${job.workflow_id}` : '/app/library')}>
+                              View
+                            </Button>
+                          )}
                           {job.status === 'failed' && (
                             <Button size="sm" className="rounded-full" onClick={() => navigate('/app/generate')}>
                               Retry
@@ -368,7 +373,8 @@ export default function Dashboard() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
