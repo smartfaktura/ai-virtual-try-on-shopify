@@ -1,22 +1,20 @@
 
 
-## Fix Recent Jobs Thumbnails: Show Original Aspect Ratio
+## Fix Recent Jobs Thumbnails
 
 ### Problem
 
-The Recent Jobs table thumbnails are rendered in a fixed `w-10 h-10` (40x40px) square container with `object-cover`. This crops and zooms into images that aren't square (e.g., portrait 3:4 product photos, landscape flat lay shots), making them look zoomed-in and losing important visual context.
+The thumbnails appear as tiny vertical slivers. The recent change to `object-contain` backfired for portrait images — fitting a tall image into a 48x40px box makes it paper-thin. Thumbnails need cropping to look good at small sizes.
 
 ### Solution
 
-Change the thumbnail container from a fixed square to a fixed-height rectangle that uses `object-contain` instead of `object-cover`. This preserves the original aspect ratio of each image without cropping.
+**File: `src/pages/Dashboard.tsx`** (line 337-342)
 
-### Technical Details
+Switch back to `object-cover` (the standard for thumbnails) but make the container a proper square so the crop looks natural:
 
-**File: `src/pages/Dashboard.tsx`** (lines 337-343)
+- Container: change from `w-12 h-10` to `w-10 h-10` (square, 40x40px)
+- Image: change from `object-contain` back to `object-cover`
+- Keep `rounded-md`, `bg-muted/30`, and `border`
 
-Change the thumbnail container and image styling:
-- Container: from `w-10 h-10` to `w-12 h-10` (slightly wider to accommodate landscape images)
-- Image: from `object-cover` to `object-contain` so images are fully visible without cropping
-- Add a subtle `bg-muted/30` background so the letterbox area blends in
+`object-cover` is the correct choice for small thumbnails — it center-crops the image to fill the container, giving a clean preview regardless of the source aspect ratio. `object-contain` only works well when the container is large enough to show the image meaningfully.
 
-This ensures portrait, square, and landscape product images all render at their natural proportions within the table row.
