@@ -9,6 +9,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
+import { toast } from '@/hooks/use-toast';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -23,7 +24,7 @@ const navItems = [
   { label: 'Workflows', icon: Layers, path: '/app/workflows' },
   { label: 'Creative Drops', icon: Calendar, path: '/app/creative-drops' },
   { label: 'Discover', icon: Compass, path: '/app/discover' },
-  { label: 'Video', icon: Film, path: '/app/video' },
+  { label: 'Video', icon: Film, path: '/app/video', comingSoon: true },
   { label: 'Freestyle', icon: Wand2, path: '/app/freestyle' },
   { label: 'Library', icon: Image, path: '/app/library' },
 ];
@@ -39,7 +40,7 @@ export function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const { isRealAdmin } = useIsAdmin();
+  const { isAdmin, isRealAdmin } = useIsAdmin();
   const { isAdminView, toggleAdminView } = useAdminView();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
@@ -70,26 +71,47 @@ export function AppShell({ children }: AppShellProps) {
     setSidebarOpen(false);
   };
 
-  const NavItemButton = ({ item }: { item: typeof navItems[0] }) => (
-    <button
-      onClick={() => handleNav(item.path)}
-      className={cn(
-        'w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 relative group',
-        collapsed ? 'justify-center px-0 py-3' : 'px-3 py-3',
-        isActive(item.path)
-          ? 'bg-white/[0.08] text-white'
-          : 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
-      )}
-      title={collapsed ? item.label : undefined}
-    >
-      {/* Active accent bar */}
-      {isActive(item.path) && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
-      )}
-      <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-      {!collapsed && <span>{item.label}</span>}
-    </button>
-  );
+  const NavItemButton = ({ item }: { item: typeof navItems[0] }) => {
+    const isComingSoon = item.comingSoon && !isAdmin;
+
+    return (
+      <button
+        onClick={() => {
+          if (isComingSoon) {
+            toast({ title: 'Coming soon!', description: 'Video generation will be available soon.' });
+            return;
+          }
+          handleNav(item.path);
+        }}
+        className={cn(
+          'w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 relative group',
+          collapsed ? 'justify-center px-0 py-3' : 'px-3 py-3',
+          isComingSoon
+            ? 'text-white/30 cursor-default'
+            : isActive(item.path)
+              ? 'bg-white/[0.08] text-white'
+              : 'text-white/50 hover:bg-white/[0.04] hover:text-white/75'
+        )}
+        title={collapsed ? item.label : undefined}
+      >
+        {/* Active accent bar */}
+        {!isComingSoon && isActive(item.path) && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
+        )}
+        <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+        {!collapsed && (
+          <span className="flex items-center gap-2">
+            {item.label}
+            {isComingSoon && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wide bg-white/[0.08] text-white/40">
+                Soon
+              </span>
+            )}
+          </span>
+        )}
+      </button>
+    );
+  };
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => {
     const isCollapsed = isMobile ? false : collapsed;
