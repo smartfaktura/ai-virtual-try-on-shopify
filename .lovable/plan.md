@@ -1,36 +1,43 @@
 
 
-## Fix: Library Image Cards Loading Appearance
+## Add Shimmer Loading to Library Detail Modal
 
 ### Problem
-Library image cards load progressively (top-to-bottom) instead of appearing smoothly. Although `ShimmerImage` is already used, the shimmer placeholder isn't visible because the card container lacks an explicit aspect ratio -- the shimmer collapses to zero height until the image loads.
+The Library detail modal (the split-panel popup shown when clicking a library image) uses a plain `<img>` tag, causing the image to load progressively (top-to-bottom) instead of appearing smoothly.
 
 ### Solution
-Apply the existing `getAspectClass` function (already defined but unused) to the card's outer container. This gives the card a fixed aspect ratio before the image loads, allowing the shimmer animation to display at the correct size. Once the image loads, it fills the container and fades in smoothly.
+Replace the plain `<img>` in `LibraryDetailModal` with the existing `ShimmerImage` component, matching the pattern already used in the lightbox and library cards.
 
 ### Changes
 
-**File: `src/components/app/LibraryImageCard.tsx`**
+**File: `src/components/app/LibraryDetailModal.tsx`**
 
-1. Add the aspect ratio class from `getAspectClass(item.aspectRatio)` to the outer card `div`. This ensures the card has the correct dimensions even before the image loads, making the shimmer visible.
+1. Import `ShimmerImage` from `@/components/ui/shimmer-image`.
+
+2. Replace the `<img>` element (around line 97) with `ShimmerImage`:
 
 ```tsx
 // Before:
-<div className={cn(
-  "group relative rounded-lg overflow-hidden cursor-pointer bg-muted transition-all",
-  selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-)} ...>
+<img
+  src={item.imageUrl}
+  alt={item.label}
+  className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
+/>
 
 // After:
-<div className={cn(
-  "group relative rounded-lg overflow-hidden cursor-pointer bg-muted transition-all",
-  getAspectClass(item.aspectRatio),
-  selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-)} ...>
+<ShimmerImage
+  src={item.imageUrl}
+  alt={item.label}
+  className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
+  wrapperClassName="flex items-center justify-center max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
+/>
 ```
 
-This one-line change makes the shimmer animation visible at the correct card dimensions, and images fade in cleanly over 300ms instead of loading part by part.
+The ShimmerImage component handles:
+- Animated shimmer gradient placeholder while loading
+- 300ms crossfade once the image is fully loaded
+- No progressive top-to-bottom rendering
 
 ### Files Modified
-- `src/components/app/LibraryImageCard.tsx` -- apply aspect ratio class to card container
+- `src/components/app/LibraryDetailModal.tsx` -- replace `<img>` with `ShimmerImage`
 
