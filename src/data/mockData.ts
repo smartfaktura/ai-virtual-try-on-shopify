@@ -1376,7 +1376,7 @@ export const pricingPlans: PricingPlan[] = [
     annualPrice: 372,
     credits: 500,
     features: [
-      '~50 images/mo',
+      'Standard quality',
       'All workflows & Try-On',
       '3 Brand Profiles',
       '25 products',
@@ -1391,7 +1391,7 @@ export const pricingPlans: PricingPlan[] = [
     annualPrice: 756,
     credits: 1500,
     features: [
-      '~150 images/mo',
+      'High quality default',
       'Priority queue',
       '10 Brand Profiles',
       '100 products',
@@ -1408,7 +1408,7 @@ export const pricingPlans: PricingPlan[] = [
     annualPrice: 1716,
     credits: 4500,
     features: [
-      '~450 images/mo',
+      'Highest quality default',
       'Video Generation',
       'Creative Drops',
       'Priority queue',

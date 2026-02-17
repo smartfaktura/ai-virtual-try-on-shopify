@@ -192,7 +192,9 @@ export function BuyCreditsModal() {
                       onClick={() => setBillingPeriod('annual')}
                     >
                       Annual
-                      <span className="inline-flex rounded-full bg-emerald-500/20 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 leading-none">
+                      <span className={`inline-flex rounded-full text-[9px] font-bold px-1.5 py-0.5 leading-none ${
+                        billingPeriod === 'annual' ? 'bg-white/25 text-white' : 'bg-emerald-500/20 text-emerald-700'
+                      }`}>
                         SAVE 17%
                       </span>
                     </button>
@@ -226,7 +228,7 @@ export function BuyCreditsModal() {
                         }`}
                       >
                         {/* Name + badges inline */}
-                        <div className="flex items-center gap-2 mb-3">
+                        <div className="flex items-center gap-2 mb-3 flex-wrap">
                           <h4 className="text-base font-semibold">{p.name}</h4>
                           {p.badge && (
                             <Badge className="bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-2 py-0.5">
