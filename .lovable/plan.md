@@ -1,64 +1,73 @@
 
 
-## Fix Product Category Showcase Image Stacking
+## Fix Library Loading Performance with Pagination
 
 ### Problem
-The "All products look better here" section shows blank cards because of a CSS stacking conflict with the `ShimmerImage` component. The images are loading fine (all return HTTP 200), but they aren't visually displayed.
-
-The `ProductCategoryShowcase` stacks multiple images absolutely inside each card, toggling opacity to crossfade between them. However, `ShimmerImage` wraps each `<img>` in an extra `<div class="relative overflow-hidden w-full h-full">`. This means:
-
-- The `absolute inset-0` class ends up on the `<img>` inside the wrapper, positioning it relative to the wrapper -- not the card
-- The wrapper divs themselves are in normal document flow and not absolutely positioned, so they don't stack properly
-- ShimmerImage also has its own internal `opacity-0 / opacity-100` logic that conflicts with the external opacity style used for crossfading
+The Library page loads slowly because:
+1. It fetches 100 generation jobs + 100 freestyle items upfront
+2. Each image URL is signed **sequentially** with `await toSignedUrl(url)` -- if you have 50 images, that's 50 sequential network calls before anything renders
+3. All images render at once with no pagination
 
 ### Solution
-Use the `wrapperClassName` prop on `ShimmerImage` to make the wrapper itself absolutely positioned, and move the opacity/transition styles to the wrapper level so both the shimmer placeholder and the image fade together correctly.
+Implement cursor-based pagination with a "Load More" button, reduce the initial fetch size, and sign URLs in parallel batches.
 
-### Technical Changes
+### Changes
 
-**File: `src/components/landing/ProductCategoryShowcase.tsx`** (lines 47-59)
+**File: `src/hooks/useLibraryItems.ts`**
+- Change from `useQuery` to `useInfiniteQuery` with a page size of 20
+- Accept a `page` parameter and use Supabase `.range()` for pagination
+- Sign URLs in parallel using `Promise.all` instead of sequential `await` in a loop
+- Return `{ items, hasMore }` per page so the UI knows when to show "Load More"
 
-Replace the current ShimmerImage usage with wrapper-level absolute positioning:
+**File: `src/pages/Jobs.tsx`**
+- Consume the infinite query: flatten pages into a single items array
+- Add a "Load More" button at the bottom of the masonry grid
+- Show a count indicator (e.g., "Showing 20 of 85 images")
+- Keep all existing functionality (search, sort, select, delete, bulk download)
 
-```tsx
-{images.map((img, i) => (
-  <ShimmerImage
-    key={i}
-    src={img}
-    alt={`${label} AI-generated product shot`}
-    decoding="async"
-    wrapperClassName="absolute inset-0"
-    wrapperStyle={{
-      opacity: i === currentIndex ? 1 : 0,
-      transition: 'opacity 1.2s ease-in-out',
-    }}
-    className="w-full h-full object-cover"
-  />
-))}
-```
+### Technical Details
 
-**File: `src/components/ui/shimmer-image.tsx`**
+**useLibraryItems.ts** -- switch to `useInfiniteQuery`:
+```typescript
+const PAGE_SIZE = 20;
 
-Add `wrapperStyle` to the props interface so the parent can pass transition styles to the wrapper div:
-
-```tsx
-interface ShimmerImageProps extends ImgHTMLAttributes<HTMLImageElement> {
-  aspectRatio?: string;
-  wrapperClassName?: string;
-  wrapperStyle?: React.CSSProperties;  // NEW
+export function useLibraryItems(sortBy, searchQuery) {
+  return useInfiniteQuery({
+    queryKey: ['library', sortBy, searchQuery, user?.id],
+    queryFn: async ({ pageParam = 0 }) => {
+      // Fetch with .range(from, to) instead of .limit(100)
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      
+      // ... fetch jobs and freestyle with .range(from, to)
+      // ... sign URLs in parallel: await Promise.all(items.map(...))
+      
+      return { items, hasMore: items.length === PAGE_SIZE };
+    },
+    getNextPageParam: (lastPage, allPages) => 
+      lastPage.hasMore ? allPages.length : undefined,
+    initialPageParam: 0,
+  });
 }
 ```
 
-Then apply it to the wrapper div:
+**Jobs.tsx** -- flatten pages + Load More button:
+```typescript
+const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } 
+  = useLibraryItems(sortBy, searchQuery);
 
-```tsx
-<div
-  className={cn('relative overflow-hidden w-full h-full', wrapperClassName)}
-  style={{
-    ...(aspectRatio && !loaded ? { aspectRatio } : undefined),
-    ...wrapperStyle,
-  }}
->
+const items = data?.pages.flatMap(p => p.items) ?? [];
+
+// At bottom of masonry grid:
+{hasNextPage && (
+  <Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+    {isFetchingNextPage ? <Loader2 /> : 'Load More'}
+  </Button>
+)}
 ```
 
-This ensures each ShimmerImage wrapper is absolutely positioned inside the card, stacking correctly, and the crossfade opacity is controlled at the wrapper level rather than conflicting with ShimmerImage's internal load-state opacity.
+### Performance Impact
+- Initial load: ~20 images instead of ~200 (10x fewer signed URL calls)
+- Signed URLs fetched in parallel instead of sequentially
+- Users see content almost immediately, can load more on demand
+
