@@ -13,6 +13,7 @@ const footerLinks = {
     { label: 'Blog', to: '/blog' },
     { label: 'Careers', to: '/careers' },
     { label: 'Press', to: '/press' },
+    { label: 'Team', to: '/team' },
   ],
   Support: [
     { label: 'Help Center', to: '/help' },

@@ -38,6 +38,7 @@ import Changelog from '@/pages/Changelog';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import CookiePolicy from '@/pages/CookiePolicy';
+import Team from '@/pages/Team';
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/blog" element={<Blog />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/press" element={<Press />} />
+            <Route path="/team" element={<Team />} />
 
             {/* Support pages */}
             <Route path="/help" element={<HelpCenter />} />
