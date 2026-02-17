@@ -157,7 +157,7 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
     <div className="relative">
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-none"
+        className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none"
       >
         {isLoading && jobs.length === 0
           ? Array.from({ length: 3 }).map((_, i) => (
@@ -181,18 +181,14 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
             ))}
       </div>
 
-      {/* Edge fade gradients */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-background to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-background to-transparent" />
-
-      {/* Mobile dot indicators */}
+      {/* Apple-style pill indicators */}
       {jobs.length > 1 && (
-        <div className="flex justify-center gap-1.5 pt-3 md:hidden">
+        <div className="flex justify-center items-center gap-1.5 pt-3 md:hidden">
           {jobs.map((_, i) => (
             <div
               key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
-                i === activeIndex ? 'bg-primary' : 'bg-muted-foreground/20'
+              className={`rounded-full transition-all duration-300 ease-in-out ${
+                i === activeIndex ? 'w-6 h-1 bg-primary' : 'w-1.5 h-1.5 bg-muted-foreground/20'
               }`}
             />
           ))}
