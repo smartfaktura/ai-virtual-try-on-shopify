@@ -1,74 +1,76 @@
 
 
-## Fix: Virtual Try-On Aspect Ratio, Ring Duplication, and Framing Conflicts
+## Redesign: Split-Screen Preview Modal (No Nested Modals)
 
-### Problem 1: Aspect Ratio Not Applied (Story Format Ignored)
+### Problem
 
-The `generate-tryon` edge function receives `aspectRatio` (e.g., `"9:16"`) in the payload but never uses it. The AI model receives no instruction about image orientation, so it defaults to roughly square compositions regardless of what the user selected.
+Clicking a thumbnail in `WorkflowPreviewModal` opens `ImageLightbox` as a second full-screen overlay stacked on top of the Dialog. Both are z-50, causing visual glitching and a confusing UX with two overlapping modals.
 
-**Fix:** Inject an explicit aspect ratio / orientation instruction into the prompt so the AI generates the correct shape. Add a line like:
+### Solution
+
+Replace the current grid-only modal + separate lightbox with a single split-screen Dialog:
+
+```text
+Desktop (>= 640px):
++-------------------------------------------+
+| Virtual Try-On Set              [X]       |
+| 4 images - 2 minutes ago                  |
++-------------------------------------------+
+|                        |                  |
+|                        | [thumb] [thumb]  |
+|   Large Preview        | [thumb] [thumb]  |
+|   (selected image)     |                  |
+|                        |                  |
++-------------------------------------------+
+| [View All in Library]     [Download All]  |
++-------------------------------------------+
+
+Mobile (< 640px):
++---------------------------+
+| Virtual Try-On Set   [X]  |
+| 4 images - 2 min ago      |
++---------------------------+
+|                           |
+|     Large Preview         |
+|     (selected image)      |
+|                           |
++---------------------------+
+| [t1] [t2] [t3] [t4]      |
++---------------------------+
+| [Library]  [Download All] |
++---------------------------+
 ```
-IMAGE FORMAT: Portrait orientation (9:16 aspect ratio). The image must be taller than it is wide, formatted for Instagram/TikTok Stories.
-```
 
-Mapping:
-- `9:16` -> "Portrait orientation (9:16), tall and narrow, Stories format"
-- `4:5` -> "Portrait orientation (4:5), slightly taller than wide, Instagram feed format"
-- `1:1` -> "Square format (1:1), equal width and height"
-- `16:9` -> "Landscape orientation (16:9), wider than tall, cinematic format"
+### Key Changes
 
-### Problem 2: Ring Duplicated on Both Hands
+**`src/components/app/WorkflowPreviewModal.tsx`** -- Full rewrite of the layout:
 
-When framing is "Auto" (null) and the product is a ring, the prompt gives no guidance about which hand to show it on. The AI sees a ring product image and places one on each hand.
-
-**Fix:** When framing is Auto and the product type contains jewelry-related keywords (ring, bracelet, watch, etc.), auto-detect the appropriate framing and inject a targeted instruction:
-- For rings: "The ring must appear on ONE hand only, exactly matching the product from [PRODUCT IMAGE]. Do NOT place rings on both hands."
-- Add this as a product-specific instruction within the prompt.
-
-### Problem 3: Framing Conflicts with Identity Preservation
-
-The `buildFramingInstruction` function has a fundamental conflict. For framings where the face is not visible (`hand_wrist`, `lower_body`, `back_view`, `side_profile`), it still includes `modelRef` which says "Match the exact skin tone, age, and body characteristics" -- but the main prompt section 1 simultaneously demands "Keep the EXACT same face, facial features". The AI tries to reconcile both, leading to distortions or safety blocks.
-
-**Fix:** Apply conditional identity logic (already documented in memory) inside the edge function:
-- For face-visible framings (`full_body`, `upper_body`, `close_up`): Keep full identity preservation (face + body).
-- For faceless framings (`hand_wrist`, `neck_shoulders`, `side_profile`, `lower_body`, `back_view`): Replace step 1 identity block with a skin-tone-only instruction and explicitly state "The face is not visible in this framing."
-
-### Technical Changes
-
-**`supabase/functions/generate-tryon/index.ts`**
-
-1. Add `buildAspectRatioInstruction(aspectRatio)` function that returns orientation text
-2. Refactor `buildFramingInstruction` to support conditional identity:
-   - Accept the full request, not just framing + model
-   - For faceless framings: return framing instruction + "Match skin tone and body type only. The face is NOT visible."
-   - For face-visible framings: return framing instruction + full identity ref
-3. Modify `buildPrompt`:
-   - Inject aspect ratio instruction after the quality requirements section
-   - For faceless framings, replace the "MUST look exactly like the model" block (step 1) with a softer "match skin tone, body proportions" version
-   - Add jewelry-specific guard: when product type matches ring/bracelet/watch keywords and no explicit framing is set, inject "Product worn on ONE hand/wrist only"
-4. Add `side_profile` to the framing instructions map (currently missing)
+1. Remove `ImageLightbox` entirely -- no nested modal
+2. Add `selectedIndex` state (default 0) to track which image is shown large
+3. Layout becomes a split-screen:
+   - **Desktop**: Left side = large preview image (flex-1), Right side = scrollable thumbnail grid (fixed width ~200px)
+   - **Mobile**: Top = large preview, Bottom = horizontal scrollable thumbnail strip
+4. Clicking a thumbnail sets `selectedIndex` -- no new modal opens
+5. Selected thumbnail gets a ring highlight
+6. Footer stays the same: "View All in Library" + "Download" buttons
+7. Dialog max-width increases to `max-w-4xl` for the split layout
+8. Single image download button changes to download just the previewed image, "Download All" for the full set
 
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| `supabase/functions/generate-tryon/index.ts` | Add aspect ratio prompt injection, fix framing identity conflicts, add jewelry guard |
+| `src/components/app/WorkflowPreviewModal.tsx` | Replace grid+lightbox with split-screen layout |
 
-### Prompt Structure After Fix
+### Technical Details
 
-```text
-Create a professional fashion photograph...
-
-IMAGE FORMAT: Portrait 9:16 (Stories). The image must be significantly taller than wide.
-
-CRITICAL REQUIREMENTS:
-1. [Full identity block OR skin-tone-only block depending on framing]
-2. The clothing MUST look exactly like [PRODUCT IMAGE]...
-   [+ jewelry guard if applicable: "Wear on ONE hand only"]
-3. Photography style...
-4. Quality requirements...
-5. FRAMING: [specific framing instruction if selected]
-
-Remember: ...
-```
+- Remove all `lightboxIndex` state and `ImageLightbox` import
+- Add `selectedIndex` state (number, default 0)
+- Desktop: `flex flex-row` with large image on left, thumbnail column on right
+- Mobile: `flex flex-col` with large image on top, horizontal thumbnail row below
+- Thumbnails use `button` with `ring-2 ring-primary` when selected
+- Large preview uses `ShimmerImage` with `object-contain` for proper aspect ratio display
+- Keep lazy URL signing unchanged
+- Keep download logic unchanged
+- Add keyboard navigation (left/right arrows) for browsing images within the modal
 
