@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Square, RectangleHorizontal, ChevronDown,
   Minus, Plus, Wand2, Image as ImageIcon,
-  Smartphone, Camera, Lock, Palette, SlidersHorizontal,
+  Smartphone, Camera, Lock, Palette, SlidersHorizontal, Sparkles,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -298,12 +298,12 @@ export function FreestyleSettingsChips({
     <Popover open={presetsPopoverOpen} onOpenChange={setPresetsPopoverOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
-          'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors',
+          'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
           stylePresets.length > 0
-            ? 'border-primary/40 bg-primary/10 text-primary'
-            : 'border-border/60 bg-muted/30 text-muted-foreground/60'
+            ? 'border-primary/30 bg-primary/10 text-primary'
+            : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
-          <Palette className="w-3 h-3" />
+          <Sparkles className="w-3.5 h-3.5" />
           Presets{stylePresets.length > 0 ? ` (${stylePresets.length})` : ''}
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
