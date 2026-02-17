@@ -12,7 +12,7 @@ interface QueuePositionIndicatorProps {
 }
 
 function estimateSeconds(meta?: GenerationMeta): number {
-  if (!meta) return 45; // default fallback
+  if (!meta) return 90; // Pro model default
   let estimate = 20; // base
   estimate += meta.imageCount * 12;
   if (meta.quality === 'high') estimate += 20;
@@ -29,6 +29,11 @@ function getComplexityHint(meta?: GenerationMeta): string | null {
   const refCount = [meta.hasModel, meta.hasScene, meta.hasProduct].filter(Boolean).length;
   if (refCount >= 2) return 'Multiple references increase complexity';
   if (meta.hasModel) return 'Model reference adds processing time';
+  return null;
+}
+
+function getProModelHint(meta?: GenerationMeta): string | null {
+  if (!meta) return 'Using Pro model for best quality — ~60-120s per image';
   return null;
 }
 
@@ -82,6 +87,7 @@ function ProcessingState({ job }: { job: QueueJob }) {
   const currentMember = TEAM_MEMBERS[teamIndex];
   const overtimeMsg = getOvertimeMessage(ratio);
   const complexityHint = getComplexityHint(job.generationMeta);
+  const proModelHint = getProModelHint(job.generationMeta);
   const isStuck = elapsed > 300; // 5 minutes
 
   return (
@@ -101,8 +107,8 @@ function ProcessingState({ job }: { job: QueueJob }) {
             <span className="text-xs text-muted-foreground/60">·</span>
             <span className="text-xs font-mono text-muted-foreground">{elapsed}s elapsed</span>
           </div>
-          {complexityHint && (
-            <p className="text-[11px] text-muted-foreground/70 mt-0.5">{complexityHint}</p>
+          {(complexityHint || proModelHint) && (
+            <p className="text-[11px] text-muted-foreground/70 mt-0.5">{complexityHint || proModelHint}</p>
           )}
         </div>
       </div>
