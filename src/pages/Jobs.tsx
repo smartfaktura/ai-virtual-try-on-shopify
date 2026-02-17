@@ -52,7 +52,8 @@ export default function Jobs() {
   const [deleteTarget, setDeleteTarget] = useState<LibraryItem | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: items = [], isLoading } = useLibraryItems(sortBy, searchQuery);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery);
+  const items = data?.pages.flatMap(p => p.items) ?? [];
   const { lastCompletedAt } = useGenerationQueue();
   const columnCount = useColumnCount();
 
@@ -243,28 +244,43 @@ export default function Jobs() {
             )}
           </div>
         ) : (
-          <div className="flex gap-1">
-            {columns.map((col, i) => (
-              <div key={i} className="flex-1 flex flex-col gap-1">
-                {col.map(item => (
-                  <LibraryImageCard
-                    key={item.id}
-                    item={item}
-                    selectMode={selectMode}
-                    selected={selectedIds.has(item.id)}
-                    onDelete={() => handleDeleteItem(item)}
-                    onClick={() => {
-                      if (selectMode) {
-                        toggleSelect(item.id);
-                      } else {
-                        setSelectedItem(item);
-                      }
-                    }}
-                  />
-                ))}
+          <>
+            <div className="flex gap-1">
+              {columns.map((col, i) => (
+                <div key={i} className="flex-1 flex flex-col gap-1">
+                  {col.map(item => (
+                    <LibraryImageCard
+                      key={item.id}
+                      item={item}
+                      selectMode={selectMode}
+                      selected={selectedIds.has(item.id)}
+                      onDelete={() => handleDeleteItem(item)}
+                      onClick={() => {
+                        if (selectMode) {
+                          toggleSelect(item.id);
+                        } else {
+                          setSelectedItem(item);
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+            {hasNextPage && (
+              <div className="flex justify-center pt-6 pb-2">
+                <Button
+                  variant="outline"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="rounded-full px-6"
+                >
+                  {isFetchingNextPage ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  {isFetchingNextPage ? 'Loading...' : 'Load More'}
+                </Button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
 
