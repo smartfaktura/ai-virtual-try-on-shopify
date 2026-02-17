@@ -194,20 +194,81 @@ export default function Freestyle() {
     if (detected) setFraming(detected);
   }, [productSourced]);
 
+  // Helper: upload a base64 image to generation-inputs bucket, return public URL
+  const uploadImageToStorage = useCallback(async (base64Data: string, prefix: string): Promise<string> => {
+    if (!user) throw new Error('Not authenticated');
+    // If it's already a URL (not base64), return as-is
+    if (!base64Data.startsWith('data:')) return base64Data;
+
+    // Convert base64 to blob
+    const [header, raw] = base64Data.split(',');
+    const mime = header.match(/:(.*?);/)?.[1] || 'image/png';
+    const byteString = atob(raw);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+    const blob = new Blob([ab], { type: mime });
+
+    const ext = mime.split('/')[1] || 'png';
+    const fileName = `${user.id}/${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+    const { data, error } = await supabase.storage
+      .from('generation-inputs')
+      .upload(fileName, blob, { cacheControl: '3600', upsert: false });
+
+    if (error) throw new Error(`Upload failed: ${error.message}`);
+
+    const { data: urlData } = supabase.storage
+      .from('generation-inputs')
+      .getPublicUrl(data.path);
+
+    return urlData.publicUrl;
+  }, [user]);
+
   const handleGenerate = useCallback(async () => {
     if (!canGenerate) {
       if (balance < creditCost) openBuyModal();
       return;
     }
 
-    let modelImageBase64: string | undefined;
-    if (selectedModel) {
-      modelImageBase64 = await convertImageToBase64(selectedModel.previewUrl);
+    // Upload images to storage instead of embedding base64 in payload
+    let sourceImageUrl: string | undefined;
+    if (sourceImage) {
+      try {
+        sourceImageUrl = await uploadImageToStorage(sourceImage, 'source');
+      } catch (err) {
+        console.error('Failed to upload source image:', err);
+        const { toast } = await import('sonner');
+        toast.error('Failed to upload source image. Please try again.');
+        return;
+      }
     }
 
-    let sceneImageBase64: string | undefined;
+    let modelImageUrl: string | undefined;
+    if (selectedModel) {
+      try {
+        const modelImg = await convertImageToBase64(selectedModel.previewUrl);
+        modelImageUrl = await uploadImageToStorage(modelImg, 'model');
+      } catch (err) {
+        console.error('Failed to upload model image:', err);
+        // Fall back to URL if it's already https
+        if (selectedModel.previewUrl.startsWith('https://')) {
+          modelImageUrl = selectedModel.previewUrl;
+        }
+      }
+    }
+
+    let sceneImageUrl: string | undefined;
     if (selectedScene) {
-      sceneImageBase64 = await convertImageToBase64(selectedScene.previewUrl);
+      try {
+        const sceneImg = await convertImageToBase64(selectedScene.previewUrl);
+        sceneImageUrl = await uploadImageToStorage(sceneImg, 'scene');
+      } catch (err) {
+        console.error('Failed to upload scene image:', err);
+        if (selectedScene.previewUrl.startsWith('https://')) {
+          sceneImageUrl = selectedScene.previewUrl;
+        }
+      }
     }
 
     // Auto-build prompt from assets if user left it empty
@@ -279,12 +340,12 @@ export default function Freestyle() {
       targetAudience: (selectedBrandProfile as any).target_audience || '',
     } : undefined;
 
-    // Build the payload for the queue
+    // Build the payload for the queue — URLs instead of base64
     const queuePayload = {
       prompt: finalPrompt,
-      sourceImage: sourceImage || undefined,
-      modelImage: modelImageBase64,
-      sceneImage: sceneImageBase64,
+      sourceImage: sourceImageUrl,
+      modelImage: modelImageUrl,
+      sceneImage: sceneImageUrl,
       aspectRatio,
       imageCount,
       quality,
@@ -316,7 +377,7 @@ export default function Freestyle() {
       // Update balance from server response
       setBalanceFromServer(enqueueResult.newBalance);
     }
-  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets]);
+  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
 
   // Watch for queue job completion to save images
   const prevJobStatusRef = useRef<string | null>(null);
