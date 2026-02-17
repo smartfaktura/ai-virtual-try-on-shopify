@@ -525,14 +525,14 @@ export default function Freestyle() {
   };
 
   return (
-    <div className="freestyle-root relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 lg:-mt-8 bg-muted/30 overflow-hidden" style={{ minHeight: '100%' }}>
+    <div className="freestyle-root relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-24 lg:-mt-8 bg-muted/30 overflow-hidden" style={{ minHeight: '100%' }}>
       {/* On lg+ the sidebar is beside content so we reclaim the full height */}
       <style>{`@media (min-width: 1024px) { .freestyle-root { height: 100dvh !important; margin-top: -2rem; } }`}</style>
-      <style>{`@media (max-width: 1023px) { .freestyle-root { height: calc(100dvh - 5rem) !important; } }`}</style>
+      <style>{`@media (max-width: 1023px) { .freestyle-root { height: 100dvh !important; } }`}</style>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
       {/* Scrollable content area */}
-      <div className="h-full overflow-y-auto pt-1 lg:pt-0 pb-72">
+      <div className="h-full overflow-y-auto pt-[5rem] lg:pt-0 pb-72">
         {showLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
