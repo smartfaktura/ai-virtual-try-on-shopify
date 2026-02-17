@@ -1,24 +1,22 @@
 
 
-## Restore Desktop Top Gap in Freestyle
+## Match Freestyle Grid Side Gaps to Floating Header on Mobile/Tablet
 
 ### Problem
 
-The recent mobile fixes changed the desktop scroll area padding to `lg:pt-0`, removing all top spacing. Images now start flush at the very top of the content area on desktop, with no breathing room matching the sidebar header.
+The floating mobile header has `p-3` (12px) padding from the viewport edges, giving it a nice inset. But the freestyle image grid only has `px-1` (4px) side padding, making images appear wider than the header. The user wants the grid to have the same left/right inset as the header.
 
-### Fix
+### Changes
 
-**File: `src/pages/Freestyle.tsx` (line 535)**
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
 
-Change `lg:pt-0` to `lg:pt-1` on the scrollable container. This restores a 4px top gap on desktop that visually aligns the first row of images with the top of the sidebar content area, matching the grid's internal `gap-1` spacing.
+1. **Line 426** (generating-only view): Change `px-1` to `px-3 lg:px-1` -- adds 12px side padding on mobile/tablet, keeps 4px on desktop.
 
-```
-// Before
-<div className="h-full overflow-y-auto pt-[5rem] lg:pt-0 pb-72">
+2. **Line 452** (masonry layout): Change `px-1` to `px-3 lg:px-1` -- same adjustment for the main gallery grid.
 
-// After
-<div className="h-full overflow-y-auto pt-[5rem] lg:pt-1 pb-72">
-```
+This ensures the grid edges align perfectly with the floating header edges on mobile and tablet, while desktop (which has a sidebar, not a floating header) stays unchanged.
 
-This is a single-line change. Mobile layout remains unaffected.
+### No other files affected
+
+The container in `Freestyle.tsx` uses `-mx-4` to stretch edge-to-edge, which is correct. The padding adjustment belongs inside the gallery component where the columns are rendered.
 
