@@ -69,6 +69,17 @@ function detectSelfieIntent(prompt: string): boolean {
   return SELFIE_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
+// ── Full-body intent detection ────────────────────────────────────────────
+const FULL_BODY_KEYWORDS = [
+  'full body', 'full height', 'head to toe', 'full figure',
+  'full length', 'entire body', 'whole body', 'from head',
+];
+
+function detectFullBodyIntent(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  return FULL_BODY_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 // ── Photography DNA (Pro camera style) ────────────────────────────────────
 function buildPhotographyDNA(): string {
   return `Shot on 85mm f/1.4 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Natural skin texture, ultra high resolution. Subtle film grain, elegant highlight roll-off.`;
@@ -149,7 +160,8 @@ function polishUserPrompt(
     }
 
     // Framing override (condensed path)
-    if (framing) {
+    const effectiveFramingCondensed = framing || (detectFullBodyIntent(rawPrompt) ? 'full_body' : null);
+    if (effectiveFramingCondensed) {
       const framingPrompts: Record<string, string> = {
         full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
         upper_body: `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
@@ -160,8 +172,8 @@ function polishUserPrompt(
         back_view: `FRAMING: Back view showing the product from behind. The subject should be facing away from the camera.${context.hasModel ? ' Match the body of [MODEL IMAGE].' : ''}`,
         side_profile: `FRAMING: Side profile view focusing on the ear and jawline area. Show the side of the head from temple to jawline. The product should be clearly visible on or near the ear.${context.hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
       };
-      if (framingPrompts[framing]) {
-        parts.push(framingPrompts[framing]);
+      if (framingPrompts[effectiveFramingCondensed]) {
+        parts.push(framingPrompts[effectiveFramingCondensed]);
       }
     }
 
@@ -277,9 +289,15 @@ function polishUserPrompt(
       );
       // Framing for standard portrait/model shots (only if no explicit framing override)
       if (!framing) {
-        layers.push(
-          "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head — do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
-        );
+        if (detectFullBodyIntent(rawPrompt)) {
+          layers.push(
+            `FRAMING: Full body shot, head to toe. Show the complete figure from head to feet with natural spacing. The entire body must be visible — do NOT crop at knees, waist, or shins.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`
+          );
+        } else {
+          layers.push(
+            "FRAMING: Ensure the subject's full head, hair, and upper body are fully visible within the frame. Leave natural headroom above the head — do NOT crop the top of the head. Position the subject using the rule of thirds. The face and eyes should be in the upper third of the composition."
+          );
+        }
       }
     }
   }
