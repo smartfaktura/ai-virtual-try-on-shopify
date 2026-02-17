@@ -1,32 +1,39 @@
 
 
-## Fix: Collapsed Prompt Panel Not Clickable on Mobile
+## Fix: Glitchy Corners on Mobile/Tablet Prompt Panel
 
-### Root Cause
+### Problem
 
-The `Freestyle.tsx` layout uses `flex flex-col` with `height: 100dvh` and `overflow-hidden` on mobile. The gallery div has `flex-1` which consumes all available vertical space. After the recent merge, the prompt panel container sits after the gallery in normal document flow on mobile but has no `flex-shrink-0`, so it gets pushed below the visible area or compressed to zero height.
-
-Previously, the mobile panel had its own `lg:hidden overflow-visible` container that was a proper flex child. That was removed during the merge.
+On mobile and tablet, the rounded top corners of the prompt panel show visual artifacts because:
+1. **Semi-transparent background** (`bg-background/80`) lets gallery content bleed through at the curved edges
+2. **Custom shadow** (`shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.08)]`) spreads beyond the rounded corners, creating a visible edge
+3. **Tablets** (768px+) get the desktop styling with a visible `border` and `shadow-lg`, which looks wrong since the panel is docked like mobile
 
 ### Fix
 
-**File: `src/pages/Freestyle.tsx` (line 583)**
+**File: `src/components/app/freestyle/FreestylePromptPanel.tsx` (line 169)**
 
-Add `flex-shrink-0` to the prompt panel wrapper so it always retains its natural height on mobile, and add `relative z-20` for mobile stacking:
+- Change `bg-background/80` to `bg-background` -- fully opaque so no content bleeds through at corners
+- Soften the mobile shadow to a tighter, subtler spread: `shadow-[0_-2px_12px_-4px_rgba(0,0,0,0.06)]`
+- These two changes eliminate the visible edge artifacts at the rounded corners
 
 ```tsx
-// Before:
-<div className="lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:z-20">
+// Before (line 169-171):
+'relative bg-background/80 backdrop-blur-xl transition-colors duration-200',
+isMobile
+  ? 'rounded-t-3xl border-0 shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.08)]'
 
 // After:
-<div className="flex-shrink-0 relative z-20 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
+'relative bg-background backdrop-blur-xl transition-colors duration-200',
+isMobile
+  ? 'rounded-t-3xl border-0 shadow-[0_-2px_12px_-4px_rgba(0,0,0,0.06)]'
 ```
 
-This ensures:
-- **Mobile**: The panel is a non-collapsible flex child at the bottom of the column, always visible and clickable (collapsed or expanded)
-- **Desktop**: `lg:absolute` overrides the flex behavior, keeping the floating bar positioned at the bottom as before
+### Result
+- Opaque background prevents content from showing through the curved edges
+- Tighter shadow eliminates the visible spread artifacts at the corners
+- Desktop styling unchanged (keeps its own border/shadow)
 
-### Single line change
-
-Only one line in one file needs to change. The `flex-shrink-0` prevents the flex container from compressing the panel, and `relative z-20` ensures it stacks above the gallery on mobile (replacing the `lg:z-20` which only applied on desktop).
+### Files
+- `src/components/app/freestyle/FreestylePromptPanel.tsx` -- 2 small value changes on lines 169 and 171
 
