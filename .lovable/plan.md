@@ -1,63 +1,48 @@
 
 
-## Fix Freestyle Mobile Layout
+## Fix Freestyle Mobile Layout Issues
 
-### Issues Identified
+### Problems Found
 
-1. **Images overlap the mobile header**: The Freestyle page uses negative margins (`-mt-4 sm:-mt-6 lg:-mt-8`) and `height: calc(100dvh)` to break out of the AppShell padding. But on mobile, the header is a fixed floating bar with `pt-24` offset in AppShell. The negative top margin causes the gallery to slide behind the header.
+1. **Gallery scrolls under floating header**: The scroll area inside the Freestyle container has no top padding, so images start directly behind the floating mobile header (which sits at ~80px height).
 
-2. **Prompt bar cut off / requires scrolling**: The prompt panel is positioned `absolute bottom-0` inside a div with `height: calc(100dvh)`. However, on mobile, this 100dvh container sits inside the AppShell's scrollable `main` element with its own padding. The absolute positioning doesn't reliably pin to the actual viewport bottom on mobile.
+2. **Prompt bar not at viewport bottom**: The prompt bar and gradient use `bottom-16` (64px offset) on mobile, but there is no bottom tab bar in the app -- so the prompt bar floats 64px above the actual bottom, cut off or mispositioned.
 
-3. **Images off-center with gap on right side**: The negative horizontal margins (`-mx-4 sm:-mx-6`) combined with `px-1` on the masonry grid create asymmetric spacing. The scrollbar on the left side also shifts perception.
+3. **Images not centered / gap on right**: The `-mx-4` negative margin breaks out of AppShell padding, but combined with the scrollable container, creates asymmetric spacing.
 
-4. **Style presets (Cinematic, Editorial, etc.) take too much space on mobile**: All 6 presets are shown as individual chips, eating vertical space on the prompt panel.
+4. **Gap between header and first image too large**: The scroll area top padding doesn't match the tight `gap-1` (4px) spacing used in the masonry grid.
+
+5. **Customer support chat icon visible on mobile freestyle**: The `StudioChat` component only hides on the Creative Drops route, not on Freestyle.
 
 ### Changes
 
 **File: `src/pages/Freestyle.tsx`**
 
-- On mobile (below `lg`), remove the negative top margin override so content starts below the mobile header naturally
-- Adjust the container height calculation to account for mobile header: use `calc(100dvh - 6rem)` on mobile (header height + padding) vs full `100dvh` on desktop
-- Ensure the scrollable area has proper bottom padding (`pb-80` on mobile) to clear the prompt panel
-- Center the gallery content by ensuring symmetric horizontal padding
+- Add `pt-20` to the scrollable `div` on mobile (matches the `pt-24` minus the `-mt-4` offset, clearing the 80px floating header). Use `lg:pt-0` so desktop is unaffected.
+- Change prompt bar and gradient positioning from `bottom-16 lg:bottom-0` to just `bottom-0` everywhere -- there is no bottom tab bar.
+- Reduce the mobile bottom padding on the scroll area from `pb-80` to `pb-72` since the prompt bar is now at the true bottom.
 
-**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
+**File: `src/components/app/StudioChat.tsx`**
 
-- On mobile, replace the inline `StylePresetChips` row with a "Presets" dropdown button that opens a popover containing the preset options
-- On desktop, keep the current inline chips as they are
-- Use `useIsMobile()` hook to conditionally render
+- Extend the mobile hide logic to also hide on `/app/freestyle`:
+  ```
+  const hideOnMobile = isMobile && (
+    location.pathname === '/app/creative-drops' ||
+    location.pathname === '/app/freestyle'
+  );
+  ```
 
 **File: `src/components/app/freestyle/FreestyleGallery.tsx`**
 
-- Add symmetric horizontal padding to the masonry grid container to center images properly on mobile
-- Ensure the gap between the first image row and the top of the gallery matches the gap between images (`gap-1`)
+- Remove `pt-3` from the masonry grid container (line 452) so the first row of images sits flush against whatever top padding the parent provides, avoiding double spacing.
+- In the few-items layout (line 426), also remove `pt-3` for the same reason.
 
-### Technical Details
+**File: `src/pages/Freestyle.tsx` (continued)**
 
-**Freestyle.tsx container fix (line 528)**:
-```text
-BEFORE: className="relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8 ..."
-         style={{ height: 'calc(100dvh)' }}
+- On the `QueuePositionIndicator` wrapper (line 542), change `pt-3` to `pt-1` so the gap between header and queue bar matches the `gap-1` of the grid.
+- For the scrollable area, ensure `pt-20 lg:pt-1` so on mobile content clears the floating header and has a minimal gap matching the grid, while desktop has the tight spacing.
 
-AFTER:  className="relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8 ..."
-         style on mobile accounts for header offset
-```
+### Summary of Visual Effect
 
-The key fix: on mobile, the container should use `height: calc(100dvh - 5.5rem)` to account for the fixed mobile header (56px + 24px padding = ~5.5rem). On `lg+` screens it stays at `100dvh` since the sidebar is beside, not above.
-
-**Prompt bar positioning (line 580)**:
-Increase mobile bottom padding on the scroll area from `pb-72` to `pb-80` and ensure the prompt bar itself uses safe bottom insets.
-
-**Style presets mobile optimization (FreestyleSettingsChips.tsx, line 347-348)**:
-```text
-BEFORE: <StylePresetChips selected={stylePresets} onChange={onStylePresetsChange} />
-
-AFTER:  On mobile -> a single "Presets" chip button that opens a Popover
-        On desktop -> same inline StylePresetChips as before
-```
-
-The Presets popover will show all 6 options as toggleable items in a compact vertical list, matching the existing dropdown pattern used by Quality, Camera Style, etc.
-
-**Gallery centering (FreestyleGallery.tsx)**:
-Ensure the masonry grid uses equal `px-1` padding on both sides and the container itself is not offset by any parent negative margins. The content wrapper will center properly within whatever space is available.
-
+- On mobile: content starts just below the floating header with a small gap matching the image grid spacing. The prompt bar sits flush at the bottom of the screen. No customer support icon blocking the view.
+- On desktop: no changes.
