@@ -1,51 +1,51 @@
 
 
-## Fix: Prompt Panel Looks "Clipped" Instead of Floating on Mobile/Tablet
+## Fix: Presets Chip Mismatched Design and Duplicate Icon
 
 ### Problem
 
-The prompt panel has `rounded-t-3xl` corners on mobile, but it sits flush against the gallery container above it. The gallery's bottom edge creates a hard horizontal line exactly where the panel's rounded corners curve inward. Combined with the panel's shadow, this makes the corners look "clipped into" the layout rather than floating above it.
+1. **Different sizing**: The Presets chip on mobile uses `h-7 px-2.5 text-[11px]` while every other chip uses `h-8 px-3 text-xs` -- making it visually smaller and inconsistent.
+2. **Different border/bg**: Uses `border-border/60 bg-muted/30 text-muted-foreground/60` instead of the standard `border-border bg-muted/50 text-foreground/70`.
+3. **Duplicate icon**: Both Brand and Presets use the `Palette` icon from Lucide, making them look identical.
 
-### Solution
+### Fix
 
-Add a small negative margin-top on the prompt panel wrapper (mobile only) so the panel overlaps the gallery slightly. This lets the rounded corners float over the gallery content, eliminating the hard line. Also ensure the panel's shadow is visible above the gallery.
+**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
 
-### Changes
+1. **Match chip sizing and colors** (lines 300-305): Change the Presets popover trigger to use the same `h-8 px-3 text-xs` sizing and `border-border bg-muted/50 text-foreground/70` default colors as all other chips.
 
-**File: `src/pages/Freestyle.tsx` (line 583)**
+2. **Change Presets icon** (line 306): Replace `Palette` with `Sparkles` from Lucide -- this better represents style presets and is visually distinct from the Brand chip's `Palette` icon.
 
-Update the prompt panel wrapper to pull it up slightly on mobile so it overlaps the gallery edge:
+### Technical Details
 
+Line 2 -- add `Sparkles` to imports (replace or add alongside existing icons):
 ```tsx
-// Before:
-<div className="flex-shrink-0 relative z-20 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
-
-// After:
-<div className="flex-shrink-0 relative z-20 -mt-4 lg:mt-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
+import { ..., Sparkles, ... } from 'lucide-react';
 ```
 
-The `-mt-4` pulls the panel 16px upward on mobile/tablet, so its rounded corners sit over the gallery content. `lg:mt-0` resets this on desktop where the panel is absolutely positioned.
-
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx` (line 171)**
-
-Slightly increase the shadow so the floating effect is more obvious now that the panel overlaps content:
-
+Lines 300-308 -- update the Presets trigger button:
 ```tsx
 // Before:
-? 'rounded-t-3xl border-0 shadow-[0_-2px_12px_-4px_rgba(0,0,0,0.06)]'
+<button className={cn(
+  'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors',
+  stylePresets.length > 0
+    ? 'border-primary/40 bg-primary/10 text-primary'
+    : 'border-border/60 bg-muted/30 text-muted-foreground/60'
+)}>
+  <Palette className="w-3 h-3" />
 
 // After:
-? 'rounded-t-3xl border-0 shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]'
+<button className={cn(
+  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+  stylePresets.length > 0
+    ? 'border-primary/30 bg-primary/10 text-primary'
+    : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+)}>
+  <Sparkles className="w-3.5 h-3.5" />
 ```
 
 ### Result
-
-- The prompt panel's rounded corners visually float over the gallery below
-- No hard line or "clipped" edge visible at the corners
-- The soft upward shadow reinforces the floating appearance
-- Desktop layout unchanged (absolute positioning ignores margins)
-
-### Files Modified
-- `src/pages/Freestyle.tsx` -- add `-mt-4 lg:mt-0` to panel wrapper
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` -- slightly larger shadow for floating effect
+- Presets chip matches the exact size, colors, and hover behavior of Model, Scene, Brand, etc.
+- Unique `Sparkles` icon distinguishes Presets from Brand at a glance
+- No other files affected
 
