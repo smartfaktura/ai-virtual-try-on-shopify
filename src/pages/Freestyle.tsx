@@ -579,11 +579,12 @@ export default function Freestyle() {
         )}
       </div>
 
-      {/* Desktop: Gradient fade + floating prompt bar */}
-      <div className="hidden lg:block">
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
-        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-3 sm:pb-5 pt-2 pointer-events-none z-20">
-          <div className="max-w-3xl mx-auto pointer-events-auto relative">
+      {/* Prompt panel - single instance for all screen sizes */}
+      <div className="lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:z-20">
+        {/* Desktop gradient fade */}
+        <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
+        <div className="lg:px-4 lg:sm:px-8 lg:pb-3 lg:sm:pb-5 lg:pt-2 lg:pointer-events-none">
+          <div className="lg:max-w-3xl lg:mx-auto lg:pointer-events-auto relative">
             {showSceneHint && selectedScene && (
               <div className="absolute -top-14 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg">
@@ -607,31 +608,6 @@ export default function Freestyle() {
             <FreestylePromptPanel {...panelProps} />
           </div>
         </div>
-      </div>
-
-      {/* Mobile: Docked bottom prompt panel */}
-      <div className="lg:hidden overflow-visible">
-        {showSceneHint && selectedScene && (
-          <div className="flex justify-center py-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg">
-              <Camera className="w-3.5 h-3.5" />
-              Scene applied: {selectedScene.name}
-              <button
-                onClick={() => {
-                  localStorage.setItem('hideSceneAppliedHint', 'true');
-                  setShowSceneHint(false);
-                }}
-                className="ml-1 opacity-70 hover:opacity-100 text-[10px] underline underline-offset-2"
-              >
-                Don't show again
-              </button>
-              <button onClick={() => setShowSceneHint(false)} className="ml-0.5 opacity-70 hover:opacity-100">
-                <XIcon className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        )}
-        <FreestylePromptPanel {...panelProps} />
       </div>
 
       {savedImages.length > 0 && (
