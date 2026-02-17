@@ -44,7 +44,7 @@ export default function Dashboard() {
   });
 
   // Fetch product count
-  const { data: productCount = 0 } = useQuery({
+  const { data: productCount = 0, isLoading: productsLoading } = useQuery({
     queryKey: ['dashboard-product-count', user?.id],
     queryFn: async () => {
       const { count, error } = await supabase
@@ -85,7 +85,7 @@ export default function Dashboard() {
   });
 
   // Fetch 30-day generation count
-  const { data: generatedCount = 0 } = useQuery({
+  const { data: generatedCount = 0, isLoading: generatedLoading } = useQuery({
     queryKey: ['dashboard-generated-30d', user?.id],
     queryFn: async () => {
       const thirtyDaysAgo = new Date();
@@ -102,7 +102,7 @@ export default function Dashboard() {
   });
 
   // Fetch active schedule count
-  const { data: scheduleCount = 0 } = useQuery({
+  const { data: scheduleCount = 0, isLoading: schedulesLoading } = useQuery({
     queryKey: ['dashboard-schedule-count', user?.id],
     queryFn: async () => {
       const { count, error } = await supabase
@@ -234,6 +234,7 @@ export default function Dashboard() {
           value={generatedCount}
           suffix="last 30 days"
           icon={Image}
+          loading={generatedLoading}
           progress={Math.min(100, Math.round((generatedCount / 300) * 100))}
         />
         <MetricCard
@@ -250,12 +251,14 @@ export default function Dashboard() {
           value={productCount}
           suffix="in library"
           icon={Package}
+          loading={productsLoading}
         />
         <MetricCard
           title="Active Schedules"
           value={scheduleCount}
           suffix="creative drops"
           icon={CalendarClock}
+          loading={schedulesLoading}
         />
       </div>
 
