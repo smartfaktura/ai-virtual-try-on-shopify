@@ -1,71 +1,67 @@
 
-## Fix: New Freestyle Images Not Appearing After Generation
 
-### Root Cause
+## Fix: Eliminate Image Flash on Freestyle Page Load
 
-The `refreshImages()` function calls `queryClient.invalidateQueries()`, which for infinite queries can be unreliable -- it marks the query as stale but the background refetch may silently fail or get cancelled (e.g., if the auth session refreshed during the ~30-60s generation window). Meanwhile, `resetQueue()` is called immediately after, removing the "generating" placeholder cards before the refetch completes.
+### Problem
+
+Every time the Freestyle page loads (or the query refetches in the background), all images briefly flash. This happens because:
+
+1. Every refetch generates **new signed URLs** for the same images (signed URLs contain unique tokens/timestamps)
+2. When React receives new URL strings, the browser treats them as new images and re-downloads them
+3. The `ImageCard` component starts with `loaded = false` and uses `opacity-0` until `onLoad` fires, causing a visible flash during re-download
 
 ### Solution
 
-Two changes to make the refresh robust:
+Two changes to eliminate the flash:
 
-**1. Use `refetchQueries` instead of `invalidateQueries` in `useFreestyleImages.ts`**
+**1. Make `ImageCard` resilient to URL changes (`FreestyleGallery.tsx`)**
 
-`refetchQueries` forces an immediate, active refetch rather than just marking the query as stale. This is more reliable for ensuring fresh data loads.
+Track the previous `src` in a ref. When `src` changes but the component was already loaded (same image, just a new signed URL), keep `loaded = true` so there's no opacity flash. Only reset `loaded` to `false` when the image is truly new (component mounts fresh).
 
-**2. Add a small delay before refreshing in the completion effect (`Freestyle.tsx`)**
+**2. Prevent unnecessary refetches (`useFreestyleImages.ts`)**
 
-Add a 500ms delay between the queue job completing and the refetch call. This ensures the database write from the edge function has fully propagated before the client queries for new data. Also, call `resetQueue` AFTER the refetch completes, not before, so the generating placeholder stays visible until the new image actually loads.
+Add `staleTime` and `refetchOnWindowFocus: false` to the infinite query options. Signed URLs are valid for 1 hour, so there's no need to refetch (and re-sign) on every window focus or mount. This prevents the entire flash scenario from occurring in the first place.
 
 ### Changes
 
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+
+In the `ImageCard` component (line 196), replace the simple `loaded` state with logic that preserves the loaded state across URL changes:
+
+```typescript
+// BEFORE (line 196):
+const [loaded, setLoaded] = useState(false);
+
+// AFTER:
+const [loaded, setLoaded] = useState(false);
+const prevSrcRef = useRef(img.url);
+
+// When src changes (e.g. new signed URL for same image), keep loaded=true
+useEffect(() => {
+  if (prevSrcRef.current !== img.url) {
+    prevSrcRef.current = img.url;
+    // Don't reset loaded — same image, just a new signed URL
+  }
+}, [img.url]);
+```
+
+This means once an image has loaded, it stays visible even if the URL token changes on refetch.
+
 **File: `src/hooks/useFreestyleImages.ts`**
 
-Update `refreshImages` to use `refetchQueries` for a forced refetch:
+Add query options to prevent unnecessary background refetches:
 
 ```typescript
-const refreshImages = useCallback(() => {
-  queryClient.refetchQueries({ queryKey: [QUERY_KEY] });
-}, [queryClient]);
+// Add to the useInfiniteQuery options (after line 75):
+staleTime: 5 * 60 * 1000,        // 5 minutes — signed URLs last 1 hour
+refetchOnWindowFocus: false,       // Don't refetch when user tabs back
 ```
 
-**File: `src/pages/Freestyle.tsx`**
-
-Update the completion effect to:
-- Add a 500ms delay before refreshing to ensure DB propagation
-- Call `resetQueue` only after the refetch is triggered, not simultaneously
-- Use `await` to sequence operations properly
-
-```typescript
-useEffect(() => {
-  if (!activeJob) return;
-  const prevStatus = prevJobStatusRef.current;
-  prevJobStatusRef.current = activeJob.status;
-
-  if (activeJob.status === 'completed' && prevStatus !== 'completed') {
-    const result = activeJob.result as { ... } | null;
-    if (result?.contentBlocked) {
-      setBlockedEntries(prev => [{ ... }, ...prev]);
-      resetQueueRef.current();
-    } else {
-      // Delay to ensure DB write has propagated, then refetch
-      setTimeout(() => {
-        refreshImagesRef.current();
-        refreshBalanceRef.current();
-        resetQueueRef.current();
-      }, 800);
-    }
-  }
-
-  if (activeJob.status === 'failed' && prevStatus !== 'failed') {
-    refreshBalanceRef.current();
-    resetQueueRef.current();
-  }
-}, [activeJob]);
-```
+This prevents the query from re-running (and generating new signed URLs) just because the user switched tabs or the component re-rendered.
 
 ### Why This Works
 
-1. `refetchQueries` actively re-runs the query function instead of just marking it stale, ensuring the DB is re-queried and URLs are re-signed.
-2. The 800ms delay ensures the edge function's `freestyle_generations` INSERT has fully committed before the client queries.
-3. The generating placeholder cards stay visible during the delay, providing a smooth visual transition to the loaded image.
+- `staleTime` + `refetchOnWindowFocus: false` prevents the refetch from happening in the first place during normal browsing
+- The `ImageCard` resilience ensures that even when a deliberate refetch occurs (like after generation), already-loaded images don't flash
+- New images from a generation will still load normally with the shimmer-to-visible transition since they mount fresh
+
