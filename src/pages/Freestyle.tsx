@@ -537,7 +537,7 @@ export default function Freestyle() {
         ) : hasImages || isLoading || isProcessing || hasBlocked ? (
           <>
             {activeJob && isProcessing && (
-              <div className="px-4 sm:px-6 pt-4">
+              <div className="px-1 pt-3">
                 <QueuePositionIndicator job={activeJob} onCancel={() => resetQueue()} />
               </div>
             )}
