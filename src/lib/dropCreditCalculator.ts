@@ -30,9 +30,9 @@ const MODEL_WORKFLOW_IDS = new Set([
 ]);
 
 function getCostPerImage(workflowId: string, hasModel: boolean, hasCustomScene: boolean): number {
-  if (hasModel && hasCustomScene) return 15;
-  if (hasModel || MODEL_WORKFLOW_IDS.has(workflowId)) return 12;
-  return 4; // Product Listing, Flat Lay
+  if (hasModel && hasCustomScene) return 20;
+  if (hasModel || MODEL_WORKFLOW_IDS.has(workflowId)) return 16;
+  return 8; // Product Listing, Flat Lay
 }
 
 export function calculateDropCredits(

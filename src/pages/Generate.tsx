@@ -830,7 +830,7 @@ export default function Generate() {
   const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier : parseInt(imageCount);
   const extraProductCount = isFlatLay && selectedFlatLayProductIds.size > 1 ? selectedFlatLayProductIds.size - 1 : 0;
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
-  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * 8 : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 10 : 4) + extraProductCredits : parseInt(imageCount) * (quality === 'high' ? 10 : 4));
+  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * (quality === 'high' ? 16 : 8) : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 16 : 8) + extraProductCredits : parseInt(imageCount) * (quality === 'high' ? 16 : 8));
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 
@@ -1487,8 +1487,8 @@ export default function Generate() {
                       <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="standard">Standard (1 credit/img)</SelectItem>
-                          <SelectItem value="high">High (2 credits/img)</SelectItem>
+                          <SelectItem value="standard">Standard — Fast generation, good quality (8 credits/img)</SelectItem>
+                          <SelectItem value="high">High (Pro Model) — Best quality, ~60-120s per image (16 credits/img)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -2171,7 +2171,16 @@ export default function Generate() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div><Label>Quality</Label><p className="text-sm text-muted-foreground mt-1">Virtual Try-On uses High quality by default</p></div>
+                <div className="space-y-2">
+                  <Label>Quality</Label>
+                  <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard — Fast generation, good quality (8 credits/img)</SelectItem>
+                      <SelectItem value="high">High (Pro Model) — Best quality, ~60-120s per image (16 credits/img)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <FramingSelector framing={framing} onFramingChange={setFraming} />
               <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
@@ -2181,7 +2190,7 @@ export default function Generate() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold">Virtual Try-On uses {creditCost} credits</p>
-                  <p className="text-xs text-muted-foreground">{parseInt(imageCount)} images × 8 credits each</p>
+                  <p className="text-xs text-muted-foreground">{parseInt(imageCount)} image{parseInt(imageCount) > 1 ? 's' : ''} × {quality === 'high' ? 16 : 8} credits each</p>
                 </div>
                 <p className="font-semibold">{balance} credits available</p>
               </div>
