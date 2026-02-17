@@ -532,7 +532,7 @@ export default function Freestyle() {
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
       {/* Scrollable content area */}
-      <div className="h-full overflow-y-auto pt-[5rem] lg:pt-0 pb-72">
+      <div className="h-full overflow-y-auto pt-[5rem] lg:pt-1 pb-72">
         {showLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
