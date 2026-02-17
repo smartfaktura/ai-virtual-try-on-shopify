@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Square, RectangleHorizontal, ChevronDown,
   Minus, Plus, Wand2, Image as ImageIcon,
-  Smartphone, Camera, Lock,
+  Smartphone, Camera, Lock, Palette,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -10,12 +10,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 const avatarLuna = getLandingAssetUrl('team/avatar-luna.jpg');
 import { ModelSelectorChip } from './ModelSelectorChip';
 import { SceneSelectorChip } from './SceneSelectorChip';
 import { ProductSelectorChip } from './ProductSelectorChip';
-import { StylePresetChips } from './StylePresetChips';
+import { StylePresetChips, STYLE_PRESETS } from './StylePresetChips';
 import { BrandProfileChip } from './BrandProfileChip';
 import { NegativesChip } from './NegativesChip';
 import { FramingSelectorChip } from '@/components/app/FramingSelectorChip';
@@ -113,9 +114,11 @@ export function FreestyleSettingsChips({
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   hasModelSelected = false,
 }: FreestyleSettingsChipsProps) {
+  const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
   const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
+  const [presetsPopoverOpen, setPresetsPopoverOpen] = React.useState(false);
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -344,8 +347,45 @@ export function FreestyleSettingsChips({
           </div>
         </div>
 
-        {/* Row 2: Style Presets */}
-        <StylePresetChips selected={stylePresets} onChange={onStylePresetsChange} />
+        {/* Row 2: Style Presets — compact popover on mobile, inline chips on desktop */}
+        {isMobile ? (
+          <Popover open={presetsPopoverOpen} onOpenChange={setPresetsPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button className={cn(
+                'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors',
+                stylePresets.length > 0
+                  ? 'border-primary/40 bg-primary/10 text-primary'
+                  : 'border-border/60 bg-muted/30 text-muted-foreground/60'
+              )}>
+                <Palette className="w-3 h-3" />
+                Presets{stylePresets.length > 0 ? ` (${stylePresets.length})` : ''}
+                <ChevronDown className="w-3 h-3 opacity-40" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1.5" align="start">
+              {STYLE_PRESETS.map(preset => (
+                <button
+                  key={preset.id}
+                  onClick={() => {
+                    const next = stylePresets.includes(preset.id)
+                      ? stylePresets.filter(s => s !== preset.id)
+                      : [...stylePresets, preset.id];
+                    onStylePresetsChange(next);
+                  }}
+                  className={cn(
+                    'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between',
+                    stylePresets.includes(preset.id) ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                  )}
+                >
+                  {preset.label}
+                  {stylePresets.includes(preset.id) && <span className="text-primary">✓</span>}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+        ) : (
+          <StylePresetChips selected={stylePresets} onChange={onStylePresetsChange} />
+        )}
       </div>
     </TooltipProvider>
   );

@@ -525,11 +525,13 @@ export default function Freestyle() {
   };
 
   return (
-    <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-4 sm:-mt-6 lg:-mt-8 bg-muted/30 overflow-hidden" style={{ height: 'calc(100dvh)', minHeight: '100%' }}>
+    <div className="freestyle-root relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 lg:-mt-8 bg-muted/30 overflow-hidden" style={{ height: 'calc(100dvh - 5.5rem)', minHeight: '100%' }}>
+      {/* On lg+ the sidebar is beside content so we reclaim the full height */}
+      <style>{`@media (min-width: 1024px) { .freestyle-root { height: 100dvh !important; margin-top: -2rem; } }`}</style>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
       {/* Scrollable content area */}
-      <div className="h-full overflow-y-auto pb-72">
+      <div className="h-full overflow-y-auto pb-80 lg:pb-72">
         {showLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
@@ -574,10 +576,10 @@ export default function Freestyle() {
       </div>
 
       {/* Gradient fade above prompt bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
+      <div className="absolute bottom-16 lg:bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
 
       {/* Always-pinned Prompt Bar */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 pb-4 sm:pb-5 pt-2 pointer-events-none z-20">
+      <div className="absolute bottom-16 lg:bottom-0 left-0 right-0 px-3 sm:px-6 pb-3 sm:pb-5 pt-2 pointer-events-none z-20">
         <div className="max-w-3xl mx-auto pointer-events-auto relative">
           {/* Scene applied hint */}
           {showSceneHint && selectedScene && (
