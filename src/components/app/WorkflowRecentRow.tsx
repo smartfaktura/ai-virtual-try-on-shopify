@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ImageIcon, Eye } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
@@ -108,7 +108,6 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
   const [signedUrlMap, setSignedUrlMap] = useState<Record<string, string>>({});
   const [urlsReady, setUrlsReady] = useState(false);
   const [selectedJob, setSelectedJob] = useState<RecentJob | null>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -135,21 +134,7 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
     });
   }, [jobs]);
 
-  // Track scroll position for dot indicators
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el || jobs.length === 0) return;
-    const cardWidth = 130 + 12; // mobile card width + gap
-    const idx = Math.round(el.scrollLeft / cardWidth);
-    setActiveIndex(Math.min(idx, jobs.length - 1));
-  }, [jobs.length]);
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', handleScroll, { passive: true });
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
 
   if (!isLoading && jobs.length === 0) return null;
 
