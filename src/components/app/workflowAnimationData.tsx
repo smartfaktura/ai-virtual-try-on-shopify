@@ -81,26 +81,27 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   },
 
   'Selfie / UGC Set': {
+    mode: 'carousel',
     background: ugcResult1,
     backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
     elements: [
       {
         type: 'product', image: ugcProduct, label: 'Ice Roller', sublabel: 'Product',
         icon: <Plus className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
       },
       {
         type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
-        position: { top: '40%', left: '38%' }, enterDelay: 0.9, animation: 'pop',
+        position: { top: '40%', left: '38%' }, enterDelay: 0, animation: 'pop',
       },
       {
         type: 'model', image: ugcModel, label: 'Creator',
         icon: <User className="w-3 h-3" />,
-        position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
+        position: { top: '22%', right: '6%' }, enterDelay: 0, animation: 'slide-right',
       },
       {
         type: 'badge', label: 'UGC Style', icon: <Camera className="w-3 h-3" />,
-        position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
+        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
