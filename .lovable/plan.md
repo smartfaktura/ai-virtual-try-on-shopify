@@ -1,75 +1,43 @@
 
-
-## Mobile Prompt Bar: Swipe Gesture + Collapsed Message
+## Fix Mobile Prompt Bar: Corners + Clean Collapsed State
 
 ### Problem
 
-1. The prompt bar only responds to taps on the pill handle -- there's no swipe-down gesture, which feels unnatural on mobile (users expect to swipe a bottom sheet down to dismiss it)
-2. When collapsed, there's no hint about what the bar does -- just a tiny pill with no context
-3. The pill handle alone doesn't feel interactive enough for a premium app experience
+1. **Corners clipped**: The parent wrapper `<div className="lg:hidden">` has no overflow or border-radius settings, so the `rounded-t-3xl` corners of the prompt panel get visually cut off
+2. **Collapsed state too busy**: Currently shows "Describe what you want..." text and a ChevronUp icon -- user wants ONLY the pill handle when collapsed, nothing else
 
 ### Changes
 
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
+**File: `src/pages/Freestyle.tsx`** (line 613)
 
-1. **Add touch swipe gesture** for collapse/expand:
-   - Track `touchStart` Y position on the handle area
-   - On `touchEnd`, if user swiped down more than 40px while expanded, collapse; if swiped up more than 40px while collapsed, expand
-   - Add `onTouchStart` and `onTouchEnd` handlers to the outer container (not just the pill button)
-   - This gives the native iOS bottom-sheet feel
+Add `overflow-visible` and matching rounded corners to the mobile wrapper so the panel's rounded corners render properly:
 
-2. **Show a compact collapsed row** when collapsed:
-   - Instead of just a bare pill, show: pill handle + a single line like "Tap to create" or "Describe what you want..." in muted small text + a small chevron-up icon
-   - This gives users a clear hint that the bar is interactive and what it does
-   - Keep height compact (~52px) so it doesn't eat into the grid
-
-3. **Subtle visual refinements to the pill**:
-   - Slightly wider pill when collapsed (`w-10`) to be more visible
-   - Add a gentle scale animation on touch (`active:scale-95`) for tactile feedback
-
-**Collapsed state layout:**
-```text
-+--------------------------------------------------+
-|              ───── (pill handle) ─────            |
-|   "Describe what you want..."        ChevronUp   |
-+--------------------------------------------------+
+```
+<div className="lg:hidden overflow-visible">
 ```
 
-### Technical Details
+**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`** (lines 200-217)
 
-**Touch gesture implementation** (added to FreestylePromptPanel):
+Remove the collapsed text row entirely. When collapsed, show only the pill handle centered in a generous touch target -- clean, minimal, Apple-style:
 
+Replace the entire collapse handle block with:
 ```tsx
-const touchStartY = useRef<number | null>(null);
-
-const handleTouchStart = (e: React.TouchEvent) => {
-  touchStartY.current = e.touches[0].clientY;
-};
-
-const handleTouchEnd = (e: React.TouchEvent) => {
-  if (touchStartY.current === null || !onToggleCollapse) return;
-  const delta = e.changedTouches[0].clientY - touchStartY.current;
-  // Swipe down while expanded -> collapse
-  if (delta > 40 && !isCollapsed) onToggleCollapse();
-  // Swipe up while collapsed -> expand
-  if (delta < -40 && isCollapsed) onToggleCollapse();
-  touchStartY.current = null;
-};
+{isMobile && onToggleCollapse && (
+  <button
+    onClick={onToggleCollapse}
+    className="w-full flex items-center justify-center py-3 active:scale-[0.98] transition-transform"
+    aria-label={isCollapsed ? 'Expand prompt' : 'Collapse prompt'}
+  >
+    <div className={cn(
+      'h-[5px] rounded-full transition-all',
+      isCollapsed ? 'w-10 bg-muted-foreground/30' : 'w-9 bg-border/50'
+    )} />
+  </button>
+)}
 ```
 
-Attach `onTouchStart={handleTouchStart}` and `onTouchEnd={handleTouchEnd}` to the outer mobile container div.
-
-**Collapsed row** (replaces current collapsed state):
-
-When `isCollapsed` is true, instead of only showing the pill button, show:
-- The pill handle (slightly larger)
-- A row below with muted placeholder text "Describe what you want..." and a ChevronUp icon on the right
-- The whole area is tappable to expand
-
-**Updated pill button section** (lines 186-197):
-
-The pill handle remains but gets `active:scale-95` for feedback. When collapsed, an additional hint row appears below the pill with the placeholder text and chevron.
+This removes the "Describe what you want..." text and ChevronUp icon from the collapsed state, leaving only the clean pill indicator.
 
 ### Files Modified
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` -- swipe gesture, collapsed hint row, pill refinements
-
+- `src/pages/Freestyle.tsx` -- add overflow-visible to mobile wrapper
+- `src/components/app/freestyle/FreestylePromptPanel.tsx` -- remove text from collapsed state, pill-only handle
