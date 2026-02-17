@@ -332,7 +332,7 @@ export default function Dashboard() {
                   {recentJobs.map(job => {
                     const firstResult = Array.isArray(job.results) ? (job.results as string[])[0] : null;
                     const thumbUrl = job.user_products?.image_url || firstResult;
-                    const displayUrl = getOptimizedUrl(thumbUrl, { width: 80, quality: 50 }) || '/placeholder.svg';
+                    const displayUrl = getOptimizedUrl(thumbUrl, { quality: 50 }) || '/placeholder.svg';
                     return (
                     <TableRow key={job.id}>
                       <TableCell>
@@ -341,7 +341,7 @@ export default function Dashboard() {
                             <img
                               src={displayUrl}
                               alt={job.user_products?.title || job.workflows?.name || 'Generation'}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                           </div>
                           <span className="font-medium text-sm">
