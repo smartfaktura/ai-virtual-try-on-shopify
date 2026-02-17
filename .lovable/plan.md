@@ -1,53 +1,32 @@
 
 
-## Fix: Dual-Mounted Prompt Panels Causing Duplicate Popovers
+## Fix: Collapsed Prompt Panel Not Clickable on Mobile
 
 ### Root Cause
 
-The `Freestyle.tsx` page renders `FreestylePromptPanel` **twice** simultaneously -- once for desktop (line 607, inside `hidden lg:block`) and once for mobile (line 634, inside `lg:hidden`). Both are always mounted in the DOM; only CSS visibility differs.
+The `Freestyle.tsx` layout uses `flex flex-col` with `height: 100dvh` and `overflow-hidden` on mobile. The gallery div has `flex-1` which consumes all available vertical space. After the recent merge, the prompt panel container sits after the gallery in normal document flow on mobile but has no `flex-shrink-0`, so it gets pushed below the visible area or compressed to zero height.
 
-Both instances share the **same popover state** (e.g. `modelPopoverOpen`). When you click "Model":
-1. State becomes `true`
-2. **Both** mounted `Popover` components open
-3. `PopoverContent` uses a **Portal**, which renders outside the hidden parent, bypassing the CSS `display:none`
-4. Result: two identical popover panels appear, and Radix's outside-click detection from one immediately closes both
+Previously, the mobile panel had its own `lg:hidden overflow-visible` container that was a proper flex child. That was removed during the merge.
 
-This explains both symptoms: **doubled panels** and **instant disappearance**.
+### Fix
 
-### Solution
+**File: `src/pages/Freestyle.tsx` (line 583)**
 
-Render only ONE `FreestylePromptPanel` instead of two. The panel already adapts its layout based on `useIsMobile()` internally, so there is no need for two separate mount points.
-
-### Changes
-
-**File: `src/pages/Freestyle.tsx`**
-
-1. Remove the duplicate mobile rendering (lines 612-635) of `FreestylePromptPanel`
-2. In the desktop container (lines 582-610), remove the `hidden lg:block` restriction so the single panel renders on all screen sizes
-3. Adjust the container styling to work for both mobile and desktop:
-   - Desktop: keep the absolute-positioned floating bar with gradient fade
-   - Mobile: switch to a simpler docked layout
-
-The key change is to use a single responsive container:
+Add `flex-shrink-0` to the prompt panel wrapper so it always retains its natural height on mobile, and add `relative z-20` for mobile stacking:
 
 ```tsx
-{/* Prompt panel - single instance for all screen sizes */}
+// Before:
 <div className="lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:z-20">
-  {/* Desktop gradient fade */}
-  <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none" />
-  
-  <div className="lg:px-4 lg:sm:px-8 lg:pb-3 lg:sm:pb-5 lg:pt-2">
-    <div className="lg:max-w-3xl lg:mx-auto lg:pointer-events-auto relative">
-      {/* Scene hint (shown on both) */}
-      ...
-      <FreestylePromptPanel {...panelProps} />
-    </div>
-  </div>
-</div>
+
+// After:
+<div className="flex-shrink-0 relative z-20 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
 ```
 
-This eliminates the dual-mount entirely, fixing both the duplicate popover and flash-close issues without needing any `modal` prop workarounds.
+This ensures:
+- **Mobile**: The panel is a non-collapsible flex child at the bottom of the column, always visible and clickable (collapsed or expanded)
+- **Desktop**: `lg:absolute` overrides the flex behavior, keeping the floating bar positioned at the bottom as before
 
-### Files Modified
-- `src/pages/Freestyle.tsx` -- merge desktop and mobile panel containers into a single mount point
+### Single line change
+
+Only one line in one file needs to change. The `flex-shrink-0` prevents the flex container from compressing the panel, and `relative z-20` ensures it stacks above the gallery on mobile (replacing the `lg:z-20` which only applied on desktop).
 
