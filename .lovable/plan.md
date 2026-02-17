@@ -1,67 +1,26 @@
 
 
-## Fix: Eliminate Image Flash on Freestyle Page Load
+## Align Queue Bar and Generating Cards with the Freestyle Grid
 
-### Problem
+### What's Happening
 
-Every time the Freestyle page loads (or the query refetches in the background), all images briefly flash. This happens because:
+The queue status bar (showing generation progress, time estimates, team messages) and the generating placeholder cards don't align horizontally with the image grid. The grid uses very tight padding (`px-1`), while the queue bar sits in a wider wrapper (`px-4 sm:px-6`). This makes them look like separate elements rather than part of the same canvas.
 
-1. Every refetch generates **new signed URLs** for the same images (signed URLs contain unique tokens/timestamps)
-2. When React receives new URL strings, the browser treats them as new images and re-downloads them
-3. The `ImageCard` component starts with `loaded = false` and uses `opacity-0` until `onLoad` fires, causing a visible flash during re-download
+### What Will Change
 
-### Solution
+1. **Queue bar padding** -- Change the wrapper around the QueuePositionIndicator from `px-4 sm:px-6 pt-4` to `px-1 pt-3` so it starts and ends at the exact same edges as the masonry grid columns below it.
 
-Two changes to eliminate the flash:
+2. **Generating card wrappers (few-items layout)** -- When there are 3 or fewer items, the centered layout uses `px-6 pt-6`. This will be updated to `px-1 pt-3` to match the grid padding.
 
-**1. Make `ImageCard` resilient to URL changes (`FreestyleGallery.tsx`)**
+3. **Generating card min-width** -- Remove the `min-w-[280px]` constraint on generating and blocked card wrappers so they size naturally within the grid rather than forcing their own width.
 
-Track the previous `src` in a ref. When `src` changes but the component was already loaded (same image, just a new signed URL), keep `loaded = true` so there's no opacity flash. Only reset `loaded` to `false` when the image is truly new (component mounts fresh).
+### Technical Details
 
-**2. Prevent unnecessary refetches (`useFreestyleImages.ts`)**
-
-Add `staleTime` and `refetchOnWindowFocus: false` to the infinite query options. Signed URLs are valid for 1 hour, so there's no need to refetch (and re-sign) on every window focus or mount. This prevents the entire flash scenario from occurring in the first place.
-
-### Changes
+**File: `src/pages/Freestyle.tsx`** (line 540)
+- Change the QueuePositionIndicator wrapper from `className="px-4 sm:px-6 pt-4"` to `className="px-1 pt-3"` to match the masonry grid's `px-1 pt-3`
 
 **File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+- Line 426: Change `"flex items-stretch justify-center gap-3 px-6 pt-6"` to `"flex items-stretch justify-center gap-1 px-1 pt-3"` (matching grid gap and padding)
+- Lines 428, 431: Remove `min-w-[280px]` from generating and blocked card wrappers
 
-In the `ImageCard` component (line 196), replace the simple `loaded` state with logic that preserves the loaded state across URL changes:
-
-```typescript
-// BEFORE (line 196):
-const [loaded, setLoaded] = useState(false);
-
-// AFTER:
-const [loaded, setLoaded] = useState(false);
-const prevSrcRef = useRef(img.url);
-
-// When src changes (e.g. new signed URL for same image), keep loaded=true
-useEffect(() => {
-  if (prevSrcRef.current !== img.url) {
-    prevSrcRef.current = img.url;
-    // Don't reset loaded — same image, just a new signed URL
-  }
-}, [img.url]);
-```
-
-This means once an image has loaded, it stays visible even if the URL token changes on refetch.
-
-**File: `src/hooks/useFreestyleImages.ts`**
-
-Add query options to prevent unnecessary background refetches:
-
-```typescript
-// Add to the useInfiniteQuery options (after line 75):
-staleTime: 5 * 60 * 1000,        // 5 minutes — signed URLs last 1 hour
-refetchOnWindowFocus: false,       // Don't refetch when user tabs back
-```
-
-This prevents the query from re-running (and generating new signed URLs) just because the user switched tabs or the component re-rendered.
-
-### Why This Works
-
-- `staleTime` + `refetchOnWindowFocus: false` prevents the refetch from happening in the first place during normal browsing
-- The `ImageCard` resilience ensures that even when a deliberate refetch occurs (like after generation), already-loaded images don't flash
-- New images from a generation will still load normally with the shimmer-to-visible transition since they mount fresh
-
+This ensures the queue bar, generating placeholders, and image grid all share the same left edge, right edge, gap, and top spacing.
