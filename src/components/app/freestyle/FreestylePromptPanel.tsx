@@ -95,6 +95,19 @@ export function FreestylePromptPanel({
   const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartY.current === null || !onToggleCollapse) return;
+    const delta = e.changedTouches[0].clientY - touchStartY.current;
+    if (delta > 40 && !isCollapsed) onToggleCollapse();
+    if (delta < -40 && isCollapsed) onToggleCollapse();
+    touchStartY.current = null;
+  }, [onToggleCollapse, isCollapsed]);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -165,6 +178,8 @@ export function FreestylePromptPanel({
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onTouchStart={isMobile && onToggleCollapse ? handleTouchStart : undefined}
+      onTouchEnd={isMobile && onToggleCollapse ? handleTouchEnd : undefined}
     >
       {/* Drag overlay */}
       {isDragOver && (
@@ -186,13 +201,19 @@ export function FreestylePromptPanel({
       {isMobile && onToggleCollapse && (
         <button
           onClick={onToggleCollapse}
-          className="w-full flex items-center justify-center min-h-[44px] active:bg-muted/20 transition-colors"
+          className="w-full flex flex-col items-center pt-2.5 pb-1 active:scale-[0.98] transition-transform"
           aria-label={isCollapsed ? 'Expand prompt' : 'Collapse prompt'}
         >
           <div className={cn(
-            'w-9 h-[5px] rounded-full transition-colors',
-            isCollapsed ? 'bg-muted-foreground/30' : 'bg-border/50'
+            'h-[5px] rounded-full transition-all',
+            isCollapsed ? 'w-10 bg-muted-foreground/30' : 'w-9 bg-border/50'
           )} />
+          {isCollapsed && (
+            <div className="flex items-center justify-between w-full px-5 pt-2 pb-1">
+              <span className="text-sm text-muted-foreground/60">Describe what you want...</span>
+              <ChevronUp className="w-4 h-4 text-muted-foreground/40" />
+            </div>
+          )}
         </button>
       )}
 
