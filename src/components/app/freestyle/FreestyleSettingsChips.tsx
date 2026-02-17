@@ -337,40 +337,40 @@ export function FreestyleSettingsChips({
   if (isMobile) {
     return (
       <TooltipProvider delayDuration={300}>
-        <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-          <div className="space-y-2">
-            {/* Row 1: Assets + Creative */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {uploadButton}
-              <ProductSelectorChip
-                selectedProduct={selectedProduct}
-                open={productPopoverOpen}
-                onOpenChange={onProductPopoverChange}
-                onSelect={onProductSelect}
-                products={products}
-                isLoading={isLoadingProducts}
-              />
-              <ModelSelectorChip
-                selectedModel={selectedModel}
-                open={modelPopoverOpen}
-                onOpenChange={onModelPopoverChange}
-                onSelect={onModelSelect}
-              />
-              <SceneSelectorChip
-                selectedScene={selectedScene}
-                open={scenePopoverOpen}
-                onOpenChange={onScenePopoverChange}
-                onSelect={onSceneSelect}
-              />
-              <FramingSelectorChip
-                framing={framing}
-                onFramingChange={onFramingChange}
-                open={framingPopoverOpen}
-                onOpenChange={onFramingPopoverChange}
-              />
-            </div>
+        <div className="space-y-2">
+          {/* Row 1: Assets + Creative — OUTSIDE Collapsible */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {uploadButton}
+            <ProductSelectorChip
+              selectedProduct={selectedProduct}
+              open={productPopoverOpen}
+              onOpenChange={onProductPopoverChange}
+              onSelect={onProductSelect}
+              products={products}
+              isLoading={isLoadingProducts}
+            />
+            <ModelSelectorChip
+              selectedModel={selectedModel}
+              open={modelPopoverOpen}
+              onOpenChange={onModelPopoverChange}
+              onSelect={onModelSelect}
+            />
+            <SceneSelectorChip
+              selectedScene={selectedScene}
+              open={scenePopoverOpen}
+              onOpenChange={onScenePopoverChange}
+              onSelect={onSceneSelect}
+            />
+            <FramingSelectorChip
+              framing={framing}
+              onFramingChange={onFramingChange}
+              open={framingPopoverOpen}
+              onOpenChange={onFramingPopoverChange}
+            />
+          </div>
 
-            {/* Row 2: Output + Style trigger */}
+          {/* Row 2 + Style — wrapped in Collapsible */}
+          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <div className="flex items-center gap-2 flex-wrap">
               {aspectRatioChip}
               {qualityChip}
@@ -395,8 +395,7 @@ export function FreestyleSettingsChips({
               </CollapsibleTrigger>
             </div>
 
-            {/* Collapsible Style content */}
-            <CollapsibleContent className="pt-0.5">
+            <CollapsibleContent className="pt-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <BrandProfileChip
                   selectedProfile={selectedBrandProfile}
@@ -416,8 +415,8 @@ export function FreestyleSettingsChips({
                 {presetsSection}
               </div>
             </CollapsibleContent>
-          </div>
-        </Collapsible>
+          </Collapsible>
+        </div>
       </TooltipProvider>
     );
   }
