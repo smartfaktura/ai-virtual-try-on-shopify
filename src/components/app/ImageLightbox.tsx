@@ -1,7 +1,6 @@
 import { useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 interface ImageLightboxProps {
   images: string[];
@@ -12,6 +11,8 @@ interface ImageLightboxProps {
   onSelect?: (index: number) => void;
   onRegenerate?: (index: number) => void;
   onDownload?: (index: number) => void;
+  onDelete?: (index: number) => void;
+  onCopyPrompt?: (index: number) => void;
   selectedIndices?: Set<number>;
   productName?: string;
 }
@@ -25,6 +26,8 @@ export function ImageLightbox({
   onSelect,
   onRegenerate,
   onDownload,
+  onDelete,
+  onCopyPrompt,
   selectedIndices = new Set(),
   productName,
 }: ImageLightboxProps) {
@@ -142,28 +145,26 @@ export function ImageLightbox({
               Regenerate
             </button>
           )}
+          {onCopyPrompt && (
+            <button
+              onClick={() => onCopyPrompt(currentIndex)}
+              className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+            >
+              <ClipboardCopy className="w-4 h-4" />
+              Copy Prompt
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(currentIndex)}
+              className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors backdrop-blur-md"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+          )}
         </div>
       </div>
-
-      {/* Thumbnail strip */}
-      {images.length > 1 && (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-50 flex gap-2 px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md overflow-x-auto max-w-[80vw]">
-          {images.map((img, idx) => (
-            <button
-              key={idx}
-              onClick={() => onNavigate(idx)}
-              className={cn(
-                'w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-200 ring-2',
-                idx === currentIndex
-                  ? 'ring-white scale-105'
-                  : 'ring-transparent opacity-50 hover:opacity-80'
-              )}
-            >
-              <img src={getOptimizedUrl(img, { width: 100, quality: 50 })} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
