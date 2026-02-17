@@ -13,6 +13,7 @@ interface ActiveJob {
   workflow_name: string | null;
   workflow_id: string | null;
   error_message: string | null;
+  product_name?: string | null;
 }
 
 
@@ -73,6 +74,7 @@ export function WorkflowActivityCard({ jobs, failedJobs = [] }: WorkflowActivity
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
                   {job.workflow_name ?? 'Workflow generation'}
+                  {job.product_name ? ` — ${job.product_name}` : ''}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {isProcessing ? <>Generating… {elapsed}</> : <>Queued · waiting {elapsed}</>}
@@ -81,15 +83,6 @@ export function WorkflowActivityCard({ jobs, failedJobs = [] }: WorkflowActivity
               <Badge variant="secondary" className="shrink-0 text-[10px] uppercase tracking-wider font-semibold">
                 {isProcessing ? 'Processing' : 'Queued'}
               </Badge>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="shrink-0 gap-1.5"
-                onClick={() => navigate(`/app/generate${job.workflow_id ? `?workflow=${job.workflow_id}` : ''}`)}
-              >
-                View
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
             </CardContent>
           </Card>
         );

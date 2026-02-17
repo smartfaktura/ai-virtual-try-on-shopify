@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
@@ -14,7 +15,9 @@ export type { Workflow } from '@/types/workflow';
 
 export default function Workflows() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
+  const prevActiveCountRef = useRef(0);
 
   // ── Workflow catalog ──
   const { data: workflows = [], isLoading } = useQuery({
@@ -57,11 +60,12 @@ export default function Workflows() {
             error_message: j.error_message,
             workflow_id: (p?.workflow_id as string) ?? null,
             workflow_name: (p?.workflow_name as string) ?? null,
+            product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
           };
         });
     },
     enabled: !!user,
-    refetchInterval: 15_000,
+    refetchInterval: 5_000,
   });
 
 
@@ -119,6 +123,15 @@ export default function Workflows() {
     enabled: !!user,
     staleTime: 30_000,
   });
+
+  // Auto-refresh recent jobs when active jobs complete
+  useEffect(() => {
+    if (prevActiveCountRef.current > 0 && activeJobs.length === 0) {
+      queryClient.invalidateQueries({ queryKey: ['workflow-recent-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-failed-jobs'] });
+    }
+    prevActiveCountRef.current = activeJobs.length;
+  }, [activeJobs.length, queryClient]);
 
   const hasActivity = activeJobs.length > 0 || failedJobs.length > 0 || recentJobs.length > 0;
 
