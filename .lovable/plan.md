@@ -1,141 +1,77 @@
 
 
-## Redesign Mobile Settings Layout — Clean, Organized, Premium
+## Optimize Mobile Prompt Bar: Compact Layout + Visible Style Toggle
 
-### Current Problem
+### Problem
 
-The mobile settings area is a jumble of mixed-purpose chips all thrown into one `flex-wrap` row. Upload Image, Add Product, Model, Scene, Aspect Ratio, and Image Count all compete for space on the same line, wrapping unpredictably. Then a separate "More settings" collapsible adds another layer of visual noise. There's no grouping, no visual hierarchy — it reads as a wall of small buttons.
+1. The prompt bar with all labeled sections (Assets, Creative, Output, Style) takes up too much vertical space on mobile, leaving little room for the image gallery
+2. The "Style" collapsible trigger is barely visible -- just tiny text that doesn't look tappable or like it contains more settings
 
-### Design Approach
+### Changes
 
-Reorganize the settings into **clearly labeled sections** with a grid-based layout instead of a single `flex-wrap` soup. Group related controls together so users can scan and find what they need instantly.
+**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`** (mobile section, lines 337-436)
 
-### New Mobile Layout
+#### 1. Remove section labels
+
+The uppercase "CREATIVE", "OUTPUT" labels add visual noise and vertical height. Remove all three section labels. The chips are self-explanatory (they say "Model", "Scene", "1:1", etc.). This saves ~36px of vertical space.
+
+#### 2. Merge Assets + Creative into one row
+
+Combine Upload Image, Add Product, Model, Scene, and Framing into a single scrollable row. This eliminates one entire section gap (~12px saved).
+
+#### 3. Keep Output as a compact single row
+
+Aspect ratio, quality, camera style, and image count stay together but without the "OUTPUT" label above them.
+
+#### 4. Restyle the Style trigger as a proper chip button
+
+Instead of tiny uppercase text, make it look like the other chips -- a rounded-full button with an icon, border, and background. When active settings exist, highlight it. This makes it instantly recognizable as tappable.
+
+### New compact layout
 
 ```text
 +--------------------------------------------------+
 |  Describe what you want to create...              |
-|                                                   |
 +--------------------------------------------------+
-|  [Upload Image]  [Add Product]                    |
-+--------------------------------------------------+
-|  CREATIVE                                         |
-|  [Model v]   [Scene v]   [Framing v]             |
-+--------------------------------------------------+
-|  OUTPUT                                           |
-|  [1:1 v]  [Standard v]  [Pro v]  [- 1 + img]    |
-+--------------------------------------------------+
-|  STYLE  (collapsible, hidden by default)          |
-|  [Brand v]  [Negatives v]  [Polish ○]  [Presets] |
+|  [Upload] [Product] [Model] [Scene] [Framing]    |
+|  [1:1] [Standard] [Pro] [- 1 +]  [Style ▾]      |
 +--------------------------------------------------+
 |              [ Generate (4) ]                     |
 +--------------------------------------------------+
 ```
 
-### Changes
-
-**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`** (mobile section, lines 340-422)
-
-Replace the current mobile layout with organized sections:
-
-1. **Assets row** — Upload Image + Add Product side by side (these are the primary inputs)
-2. **Creative section** — labeled "Creative" in tiny muted text, contains Model, Scene, and Framing chips in a row
-3. **Output section** — labeled "Output", contains Aspect Ratio, Quality, Camera Style, and Image Count stepper in a row
-4. **Style section** — collapsible (replaces "More settings"), labeled "Style", contains Brand Profile, Negatives, Polish toggle, and Style Presets
-
-Each section gets:
-- A tiny uppercase label (`text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium`) above the chips
-- Consistent `gap-2` between chips within each section
-- `gap-3` vertical spacing between sections
-- Clean visual separation without heavy dividers
-
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`** (lines 234-266)
-
-Move the upload button OUT of `FreestyleSettingsChips` and into its own row directly in the prompt panel, between the textarea and the settings. This separates "inputs" (prompt text + reference image + product) from "settings" (model, scene, output options).
-
-The upload button and product selector become a dedicated row:
-- Sits right below the prompt textarea
-- Uses the full width with a subtle divider above/below
-- Feels like a natural "attach" area (similar to chat apps)
-
 ### Technical Details
 
-**FreestyleSettingsChips mobile return (replacing lines 340-422):**
+**Replace mobile return (lines 337-436) with:**
+
+- **Row 1**: `flex-wrap gap-2` containing `uploadButton`, `ProductSelectorChip`, `ModelSelectorChip`, `SceneSelectorChip`, `FramingSelectorChip` -- all in one flow
+- **Row 2**: `flex-wrap gap-2` containing `aspectRatioChip`, `qualityChip`, `cameraStyleChip`, `imageCountStepper`, and the **Style trigger chip**
+- **Style trigger**: Rendered as a proper chip button (`h-8 px-3 rounded-full border`) with `SlidersHorizontal` icon, showing badge count when settings are active. Opens the same `Collapsible` content below.
+- Vertical spacing between the two rows: `space-y-2` (8px instead of current 12px between sections)
+- Collapsible Style content renders below row 2 with `pt-2`
+
+**Style chip button styling:**
 
 ```tsx
-if (isMobile) {
-  return (
-    <TooltipProvider delayDuration={300}>
-      <div className="space-y-3">
-        {/* Assets row */}
-        <div className="flex items-center gap-2">
-          {uploadButton}
-          <ProductSelectorChip ... />
-        </div>
-
-        {/* Creative section */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium px-0.5">
-            Creative
-          </span>
-          <div className="flex items-center gap-2 flex-wrap">
-            <ModelSelectorChip ... />
-            <SceneSelectorChip ... />
-            <FramingSelectorChip ... />
-          </div>
-        </div>
-
-        {/* Output section */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium px-0.5">
-            Output
-          </span>
-          <div className="flex items-center gap-2 flex-wrap">
-            {aspectRatioChip}
-            {qualityChip}
-            {cameraStyleChip}
-            <div className="flex-1" />
-            {imageCountStepper}
-          </div>
-        </div>
-
-        {/* Style section — collapsible */}
-        <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-          <CollapsibleTrigger asChild>
-            <button className={cn(
-              'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[10px] uppercase tracking-wider font-medium transition-colors',
-              advancedActiveCount > 0
-                ? 'text-primary'
-                : 'text-muted-foreground/50 hover:text-muted-foreground/70'
-            )}>
-              Style
-              {advancedActiveCount > 0 && <badge />}
-              <ChevronDown />
-            </button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pt-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <BrandProfileChip ... />
-              <NegativesChip ... />
-              {polishChip}
-              {presetsSection}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
-    </TooltipProvider>
-  );
-}
+<CollapsibleTrigger asChild>
+  <button className={cn(
+    'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+    advancedActiveCount > 0
+      ? 'border-primary/30 bg-primary/10 text-primary'
+      : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+  )}>
+    <SlidersHorizontal className="w-3.5 h-3.5" />
+    Style
+    {advancedActiveCount > 0 && (
+      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+        {advancedActiveCount}
+      </span>
+    )}
+    <ChevronDown className={cn('w-3 h-3 opacity-40 transition-transform', advancedOpen && 'rotate-180')} />
+  </button>
+</CollapsibleTrigger>
 ```
 
-### Summary
-
-- **3 clear sections**: Creative (who/where), Output (format), Style (fine-tuning) — each with a tiny label
-- **Assets at top**: Upload + Product get their own row, visually separated from settings
-- **Framing promoted**: Moved from "More settings" into the Creative section since it's commonly used
-- **No more "More settings" label**: Renamed to "Style" which is more descriptive
-- **Consistent spacing**: `gap-2` within rows, `gap-3` between sections
-- **Same chips, better organization**: No functionality changes, just layout
-
 ### Files Modified
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — reorganized mobile layout into labeled sections
+- `src/components/app/freestyle/FreestyleSettingsChips.tsx` -- compact 2-row mobile layout, style chip button
+
