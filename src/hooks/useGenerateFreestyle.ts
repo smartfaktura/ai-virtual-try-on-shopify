@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 
 interface BrandProfileContext {
@@ -45,6 +46,7 @@ interface UseGenerateFreestyleReturn {
 }
 
 export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +141,9 @@ export function useGenerateFreestyle(): UseGenerateFreestyleReturn {
       if (result.partialSuccess) {
         toast.warning(`Generated ${result.generatedCount} of ${result.requestedCount} images.`);
       }
+
+      queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
 
       return result;
     } catch (err) {
