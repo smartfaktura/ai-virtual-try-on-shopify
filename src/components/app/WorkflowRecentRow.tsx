@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ImageIcon } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { ImageIcon, Eye } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -28,18 +28,38 @@ function firstImageUrl(results: unknown): string | null {
   return null;
 }
 
+const SWIPE_THRESHOLD = 8;
+
 function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl: string | null | undefined; onSelect: (job: RecentJob) => void }) {
   const [errored, setErrored] = useState(false);
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
 
   const optimizedUrl = signedUrl ? getOptimizedUrl(signedUrl, { quality: 60 }) : null;
   const isLoading = signedUrl === undefined;
 
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStart.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (pointerStart.current) {
+      const dx = Math.abs(e.clientX - pointerStart.current.x);
+      const dy = Math.abs(e.clientY - pointerStart.current.y);
+      if (dx > SWIPE_THRESHOLD || dy > SWIPE_THRESHOLD) {
+        e.preventDefault();
+        return;
+      }
+    }
+    onSelect(job);
+  };
+
   return (
     <button
-      onClick={() => onSelect(job)}
-      className="group/thumb flex flex-col gap-2 shrink-0 w-[130px] sm:w-[140px] snap-start text-left"
+      onPointerDown={handlePointerDown}
+      onClick={handleClick}
+      className="group/thumb flex flex-col gap-2 shrink-0 w-[130px] sm:w-[140px] snap-start text-left touch-pan-x"
     >
-      <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border transition-shadow group-hover/thumb:shadow-md snap-start">
+      <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border transition-shadow group-hover/thumb:shadow-md">
         {errored || (!isLoading && !optimizedUrl) ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-1">
             <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
@@ -56,6 +76,20 @@ function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl
         ) : (
           <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
         )}
+
+        {/* Desktop hover overlay */}
+        <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/30 transition-colors duration-200 hidden md:flex items-center justify-center">
+          <div className="flex items-center gap-1.5 opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-200">
+            <Eye className="w-4 h-4 text-white" />
+            <span className="text-xs font-medium text-white">View</span>
+          </div>
+        </div>
+
+        {/* Mobile permanent eye badge */}
+        <div className="absolute bottom-1.5 left-1.5 bg-background/70 backdrop-blur rounded-full p-1 md:hidden">
+          <Eye className="w-3 h-3 text-foreground/60" />
+        </div>
+
         <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur text-[10px] font-semibold px-1.5 py-0.5 rounded">
           {job.requested_count} imgs
         </span>
@@ -74,6 +108,8 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
   const [signedUrlMap, setSignedUrlMap] = useState<Record<string, string>>({});
   const [urlsReady, setUrlsReady] = useState(false);
   const [selectedJob, setSelectedJob] = useState<RecentJob | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (jobs.length === 0) { setUrlsReady(true); return; }
@@ -99,11 +135,30 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
     });
   }, [jobs]);
 
+  // Track scroll position for dot indicators
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || jobs.length === 0) return;
+    const cardWidth = 140 + 12; // card width + gap
+    const idx = Math.round(el.scrollLeft / cardWidth);
+    setActiveIndex(Math.min(idx, jobs.length - 1));
+  }, [jobs.length]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
   if (!isLoading && jobs.length === 0) return null;
 
   return (
     <div className="relative">
-      <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-none">
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-none"
+      >
         {isLoading && jobs.length === 0
           ? Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex flex-col gap-2 shrink-0 w-[140px]">
@@ -125,9 +180,24 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
               />
             ))}
       </div>
+
       {/* Edge fade gradients */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-background to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-background to-transparent" />
+
+      {/* Mobile dot indicators */}
+      {jobs.length > 1 && (
+        <div className="flex justify-center gap-1.5 pt-3 md:hidden">
+          {jobs.map((_, i) => (
+            <div
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
+                i === activeIndex ? 'bg-primary' : 'bg-muted-foreground/20'
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
       <WorkflowPreviewModal
         open={selectedJob !== null}
