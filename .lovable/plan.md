@@ -1,45 +1,30 @@
 
 
-## Align Freestyle Grid Edges with Floating Header on Mobile/Tablet
+## Pixel-Perfect Grid + Prompt Bar Alignment (Mobile/Tablet Only)
 
 ### Problem
 
-On mobile and tablet, the freestyle image grid does not perfectly align with the floating header bar. The header is `fixed` with `left-0 right-0 p-3` (12px inset from viewport edges). The grid's effective inset should also be 12px, but due to how the scrollable `main` container and negative margins interact, there's a slight pixel mismatch.
+Two issues on mobile and tablet:
 
-### Root Cause
+1. **Grid side padding mismatch**: The freestyle image grid uses `px-[15px]` (15px) while the floating header bar uses `p-3` (12px). This creates a 3px mismatch on each side -- the grid is slightly narrower than the header bar.
 
-The floating header is `position: fixed` and spans the true viewport width (`left-0 right-0`), so its `p-3` gives exactly 12px from the viewport edge. However, the grid content sits inside `main` which has `overflow-y-auto` -- this can introduce a scrollbar gutter that shifts the content area, meaning the negative-margin-plus-padding math doesn't perfectly resolve to the same 12px viewport inset as the fixed header.
+2. **Prompt bar too wide**: The prompt bar container uses `px-3` (12px) on mobile and `px-6` (24px) on tablet, making it stretch close to the viewport edges with little visible breathing room.
 
-### Fix
-
-**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
-
-Two changes -- increase grid side padding on mobile/tablet to match the floating header bar's visual position:
-
-1. **Line ~426** (small count layout): Change `px-3 lg:px-1` to `px-4 lg:px-1` (16px to account for the content wrapper's 16px base padding offset)
-2. **Line ~452** (masonry layout): Change `px-3 lg:px-1` to `px-4 lg:px-1`
-
-Additionally, in `src/pages/Freestyle.tsx`, the container's negative margins need to be slightly larger on mobile to compensate, OR we match by adjusting only the inner padding.
-
-**Alternative simpler approach**: Since the content wrapper uses `px-4` (16px) on mobile and Freestyle uses `-mx-4` to cancel it, then adds `px-3` (12px) to the grid, the grid is at 12px. The header bar is also at 12px. If they still don't match visually, the more precise fix is to ensure both use the same reference. We can set the grid padding to `px-[12px] sm:px-[12px] lg:px-1` to be explicit, or adjust the negative margins.
-
-Given the visual evidence, the most likely fix is to slightly increase the grid padding from `px-3` (12px) to `px-[15px] sm:px-3 lg:px-1` to account for any scrollbar gutter or rounding differences. But the cleanest approach is:
-
-**File: `src/pages/Freestyle.tsx` (line 528)**
-- On mobile only, remove the negative horizontal margins and instead use viewport-relative positioning, OR adjust the padding calculation.
-
-**Recommended approach -- explicit viewport-relative padding in the gallery:**
+### Changes
 
 **File: `src/components/app/freestyle/FreestyleGallery.tsx`**
-- Line ~426: Change `px-3 lg:px-1` to `px-[15px] lg:px-1`
-- Line ~452: Change `px-3 lg:px-1` to `px-[15px] lg:px-1`
 
-This adds 3px more padding (15px instead of 12px) on mobile/tablet to visually match the floating header bar's rounded edge position. The `rounded-2xl` (16px border-radius) on the header makes the bar's visible content area start approximately 3px inward from its geometric edge, so 15px on the grid aligns with the bar's visual starting point.
+1. **Line ~426** (small count layout): Change `px-[15px] lg:px-1` to `px-3 lg:px-1` -- matches the floating header's `p-3` (12px) exactly.
 
-Desktop remains at `px-1` (4px), unaffected.
+2. **Line ~452** (masonry layout): Same change -- `px-[15px] lg:px-1` to `px-3 lg:px-1`.
+
+**File: `src/pages/Freestyle.tsx`**
+
+3. **Line ~583** (prompt bar wrapper): Change `px-3 sm:px-6` to `px-4 sm:px-8` -- adds 4px more breathing room on mobile (16px vs 12px) and 8px more on tablet (32px vs 24px), making the prompt bar visibly narrower and more inset from the edges.
 
 ### Summary
 
-- Two lines changed in `FreestyleGallery.tsx`
-- Grid side padding adjusted from 12px to 15px on mobile/tablet
-- Desktop layout unchanged
+- Grid now matches the floating header edges pixel-for-pixel (both use 12px from viewport)
+- Prompt bar gains extra side padding so it floats with more visual breathing room above the grid
+- Desktop layout is completely unaffected
+
