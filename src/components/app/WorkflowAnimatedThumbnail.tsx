@@ -21,6 +21,7 @@ export interface WorkflowScene {
   background: string;
   backgrounds?: string[];
   elements: SceneElement[];
+  mode?: 'recipe' | 'carousel';
 }
 
 interface Props {
@@ -113,24 +114,145 @@ function FloatingEl({ element }: { element: SceneElement }) {
 
 /* ── Main component ── */
 
+/* ── Carousel mode component ── */
+
+function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
+  const backgrounds = scene.backgrounds ?? [scene.background];
+  const INTERVAL = 3000;
+  const [index, setIndex] = useState(0);
+  const [progressKey, setProgressKey] = useState(0);
+
+  useEffect(() => {
+    if (!isActive || backgrounds.length <= 1) return;
+    const t = setInterval(() => {
+      setIndex((i) => (i + 1) % backgrounds.length);
+      setProgressKey((k) => k + 1);
+    }, INTERVAL);
+    return () => clearInterval(t);
+  }, [isActive, backgrounds.length]);
+
+  const prev = (index - 1 + backgrounds.length) % backgrounds.length;
+
+  return (
+    <div className="relative w-full h-full overflow-hidden bg-muted">
+      {/* Previous image (underneath) */}
+      <img
+        src={backgrounds[prev]}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover object-top"
+      />
+      {/* Current image (crossfade in) */}
+      <img
+        key={index}
+        src={backgrounds[index]}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover object-top"
+        style={{
+          animation: `wf-carousel-fade 0.6s ease-in-out forwards`,
+        }}
+      />
+
+      {/* Gradient overlay */}
+      <div
+        className="absolute inset-0 z-[1]"
+        style={{
+          background: 'linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.15))',
+        }}
+      />
+
+      {/* Persistent overlay elements */}
+      {isActive && (
+        <div className="absolute inset-0 z-10" style={{ animation: 'wf-fade-in 0.4s ease-out forwards' }}>
+          {scene.elements.map((el, i) => (
+            <FloatingEl key={i} element={{ ...el, enterDelay: 0, animation: 'pop' }} />
+          ))}
+        </div>
+      )}
+
+      {/* "Generated" badge — always visible */}
+      {isActive && (
+        <div
+          className="absolute bottom-7 right-4 z-20"
+          style={{ animation: 'wf-fade-in 0.4s ease-out 0.2s forwards', opacity: 0 }}
+        >
+          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full wf-card-shadow">
+            <Sparkles className="w-3 h-3 text-primary" />
+            <span className="text-[11px] font-bold text-primary tracking-wide">Generated</span>
+          </div>
+        </div>
+      )}
+
+      {/* Progress bar */}
+      {isActive && backgrounds.length > 1 && (
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/10 z-20">
+          <div
+            key={progressKey}
+            className="h-full bg-white/50 rounded-r-full"
+            style={{
+              animation: `wf-progress-fill ${INTERVAL}ms linear forwards`,
+            }}
+          />
+        </div>
+      )}
+
+      <style>{`
+        .wf-card {
+          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.6);
+        }
+        .wf-card-circle {
+          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.15), 0 0 0 2px rgba(255,255,255,0.8);
+        }
+        .wf-card-shadow {
+          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
+        }
+        @keyframes wf-carousel-fade {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes wf-progress-fill {
+          from { width: 0%; }
+          to   { width: 100%; }
+        }
+        @keyframes wf-fade-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes wf-pop-in {
+          0%  { opacity: 0; transform: scale(0.3); }
+          70% { opacity: 1; transform: scale(1.1); }
+          100%{ opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* ── Main component ── */
+
 export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
+  const isCarousel = scene.mode === 'carousel';
   const [iteration, setIteration] = useState(0);
 
-  // Compute timing from element delays
-  const maxDelay = Math.max(...scene.elements.map((e) => e.enterDelay));
+  // Compute timing from element delays (only used for recipe mode)
+  const maxDelay = isCarousel ? 0 : Math.max(...scene.elements.map((e) => e.enterDelay));
   const elementsExitAt = maxDelay + 1.8;
   const badgeAt = elementsExitAt + 0.35;
   const totalDuration = badgeAt + 1.6;
 
-  // Loop the animation
+  // Loop the animation (recipe mode only)
   useEffect(() => {
-    if (!isActive) {
+    if (isCarousel || !isActive) {
       setIteration(0);
       return;
     }
     const timer = setInterval(() => setIteration((i) => i + 1), totalDuration * 1000);
     return () => clearInterval(timer);
-  }, [isActive, totalDuration]);
+  }, [isActive, totalDuration, isCarousel]);
+
+  // For carousel mode, delegate to dedicated component
+  if (isCarousel) {
+    return <CarouselThumbnail scene={scene} isActive={isActive} />;
+  }
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted" key={isActive ? iteration : 'static'}>
@@ -151,7 +273,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
 
       {isActive && (
         <>
-          {/* Light gradient overlay — fades in, then lifts at result time */}
+          {/* Light gradient overlay */}
           <div
             className="absolute inset-0 z-[1]"
             style={{
@@ -161,7 +283,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
             }}
           />
 
-          {/* Floating elements container — exits together */}
+          {/* Floating elements container */}
           <div
             className="absolute inset-0 z-10"
             style={{
@@ -173,7 +295,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
             ))}
           </div>
 
-          {/* Shimmer sweep — processing indicator */}
+          {/* Shimmer sweep */}
           <div
             className="absolute inset-0 z-[5] pointer-events-none overflow-hidden"
             style={{
@@ -190,7 +312,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
             />
           </div>
 
-          {/* "Generated" badge — pops in after elements exit */}
+          {/* "Generated" badge */}
           <div
             className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
             style={{
