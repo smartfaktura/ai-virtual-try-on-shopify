@@ -2,7 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/app/PageHeader';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
+import { WorkflowActivityCard } from '@/components/app/WorkflowActivityCard';
+import { WorkflowRecentRow } from '@/components/app/WorkflowRecentRow';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Workflow } from '@/types/workflow';
@@ -13,6 +16,7 @@ export default function Workflows() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // ── Workflow catalog ──
   const { data: workflows = [], isLoading } = useQuery({
     queryKey: ['workflows'],
     queryFn: async () => {
@@ -27,6 +31,66 @@ export default function Workflows() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // ── Active jobs (queued / processing) ──
+  const { data: activeJobs = [] } = useQuery({
+    queryKey: ['workflow-active-jobs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('generation_queue')
+        .select('id, status, created_at, started_at, payload, error_message, job_type')
+        .in('status', ['queued', 'processing'])
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      // Extract workflow info from payload
+      return (data ?? [])
+        .filter((j) => j.job_type === 'workflow')
+        .map((j) => {
+          const p = j.payload as Record<string, unknown> | null;
+          return {
+            id: j.id,
+            status: j.status,
+            created_at: j.created_at,
+            started_at: j.started_at,
+            error_message: j.error_message,
+            workflow_id: (p?.workflow_id as string) ?? null,
+            workflow_name: (p?.workflow_name as string) ?? null,
+          };
+        });
+    },
+    enabled: !!user,
+    refetchInterval: (query) =>
+      (query.state.data?.length ?? 0) > 0 ? 5000 : false,
+  });
+
+  // ── Recent completed workflow jobs ──
+  const { data: recentJobs = [] } = useQuery({
+    queryKey: ['workflow-recent-jobs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('generation_jobs')
+        .select('id, workflow_id, created_at, results, requested_count, workflows(name)')
+        .not('workflow_id', 'is', null)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (error) throw error;
+
+      return (data ?? []).map((j) => ({
+        id: j.id,
+        workflow_id: j.workflow_id,
+        workflow_name: (j.workflows as unknown as { name: string } | null)?.name ?? null,
+        created_at: j.created_at,
+        results: j.results,
+        requested_count: j.requested_count,
+      }));
+    },
+    enabled: !!user,
+    staleTime: 30_000,
+  });
+
+  const hasActivity = activeJobs.length > 0 || recentJobs.length > 0;
+
   const handleCreateVisualSet = (workflow: Workflow) => {
     navigate(`/app/generate?workflow=${workflow.id}`);
   };
@@ -36,6 +100,19 @@ export default function Workflows() {
       title="Workflows"
       subtitle="Choose an outcome-driven workflow to generate professional visual sets."
     >
+      {/* ── Activity section ── */}
+      {hasActivity && (
+        <div className="space-y-6">
+          {activeJobs.length > 0 && <WorkflowActivityCard jobs={activeJobs} />}
+          {recentJobs.length > 0 && <WorkflowRecentRow jobs={recentJobs} />}
+
+          <div className="section-divider">
+            <span className="section-label">Create a New Set</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Workflow catalog ── */}
       {isLoading ? (
         <div className="space-y-6">
           {[1, 2, 3, 4].map((i) => (
