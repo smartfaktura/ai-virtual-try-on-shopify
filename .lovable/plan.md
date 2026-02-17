@@ -1,38 +1,57 @@
 
 
-## Add Separator for Recent Creations and Improve Mobile Carousel
+## Fix: Virtual Try-On Aspect Ratio Not Being Enforced
 
-### Changes
+### Root Cause
 
-**1. `src/pages/Workflows.tsx`** -- Add a section divider before Recent Creations
+The `generate-freestyle` edge function correctly passes `image_config: { aspect_ratio: "9:16" }` as an API parameter to the AI gateway, which forces the output image dimensions. However, the `generate-tryon` edge function only mentions the aspect ratio in the **prompt text** (e.g., "IMAGE FORMAT: Portrait orientation (9:16 aspect ratio)"). The AI model ignores text-based size instructions and defaults to 1:1 square output.
 
-Move the "Recent Creations" label out of `WorkflowRecentRow` and into Workflows.tsx as a `section-divider` (same style as "Create a New Set"), with the "View All" button placed on the right. The divider line will extend between the label and the button.
+This is confirmed by the edge function logs: job `beac4b26` has `aspectRatio: "9:16"` in its payload and the prompt says "Portrait orientation (9:16)", but the generated images came out square.
 
-**2. `src/components/app/WorkflowRecentRow.tsx`** -- Remove header row, improve mobile carousel
+### Fix
 
-- Remove the internal header (lines 109-115) with "Recent Creations" label and "View All" button since the parent now handles it
-- Make thumbnail cards fill the viewport on mobile: change card width from fixed `w-[140px]` to responsive `w-[130px] sm:w-[140px]` and add `snap-x snap-mandatory` scroll snapping for a proper carousel feel
-- Add edge fade gradients (left/right) for visual polish matching the `RecentCreationsGallery` pattern
-- Ensure the horizontal scroll container has no clipping issues on mobile
+**`supabase/functions/generate-tryon/index.ts`** -- Add `image_config` parameter to the AI API call
 
-### Layout After Fix
+In the `generateImage` function (around line 227), add the `image_config` parameter with the aspect ratio, matching the pattern already used in `generate-freestyle`:
+
+```typescript
+// Current (broken):
+body: JSON.stringify({
+  model: "google/gemini-2.5-flash-image",
+  messages: [...],
+  modalities: ["image", "text"],
+})
+
+// Fixed:
+body: JSON.stringify({
+  model: "google/gemini-2.5-flash-image",
+  messages: [...],
+  modalities: ["image", "text"],
+  image_config: { aspect_ratio: aspectRatio },
+})
+```
+
+This requires passing the `aspectRatio` string into the `generateImage` function. The function signature changes from:
 
 ```text
-ACTIVITY
-[Processing card...]
-
----- RECENT CREATIONS -------- View All ->
-[thumb] [thumb] [thumb] [thumb] [thumb]
-
----- CREATE A NEW SET -------------------------
-[Workflow Card 1]
-[Workflow Card 2]
+generateImage(prompt, productImageUrl, modelImageUrl, apiKey)
 ```
+
+to:
+
+```text
+generateImage(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio)
+```
+
+And the call site (line 401) passes `body.aspectRatio || "1:1"` as the new argument.
 
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/pages/Workflows.tsx` | Add section-divider with "Recent Creations" label before WorkflowRecentRow, move "View All" button there |
-| `src/components/app/WorkflowRecentRow.tsx` | Remove internal header, improve mobile carousel with snap scrolling and edge gradients |
+| `supabase/functions/generate-tryon/index.ts` | Add `aspectRatio` parameter to `generateImage` function and include `image_config: { aspect_ratio }` in the API request body |
+
+### Why This Will Work
+
+The `generate-freestyle` function already uses this exact pattern successfully. The `image_config` parameter is a native API feature that forces the AI model to output images in the requested dimensions, rather than relying on prompt-text instructions which models often ignore.
 
