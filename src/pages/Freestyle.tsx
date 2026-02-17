@@ -97,7 +97,7 @@ export default function Freestyle() {
       setSearchParams({}, { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const { images: savedImages, isLoading: isLoadingImages, saveImages, deleteImage, refreshImages } = useFreestyleImages();
+  const { images: savedImages, isLoading: isLoadingImages, saveImages, deleteImage, refreshImages, fetchNextPage, hasNextPage, isFetchingNextPage } = useFreestyleImages();
   const [isSaving, setIsSaving] = useState(false);
 
   // Auto-dismiss scene hint
@@ -541,6 +541,9 @@ export default function Freestyle() {
               blockedEntries={blockedEntries}
               onDismissBlocked={handleDismissBlocked}
               onEditBlockedPrompt={handleEditBlockedPrompt}
+              onLoadMore={hasNextPage ? fetchNextPage : undefined}
+              hasMore={hasNextPage}
+              isFetchingMore={isFetchingNextPage}
             />
           </>
         ) : (
