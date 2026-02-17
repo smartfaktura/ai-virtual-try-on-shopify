@@ -1,68 +1,55 @@
 
 
-## Redesign Workflow Preview Modal and Fix Section Divider Layout
+## Rewrite WorkflowPreviewModal to Match Library Modal Style
 
-### 1. Fix "View All" button position in section divider
+The previous edit failed to update `WorkflowPreviewModal.tsx` — it still uses the old Dialog-based layout. This plan fully rewrites it to match the `LibraryDetailModal` design pattern.
 
-Currently the "Recent Creations" divider shows: `RECENT CREATIONS [View All ->] ──────`. The user wants the "View All" button on the far right, after the separator line: `RECENT CREATIONS ────────── [View All ->]`.
+### Changes
 
-**File: `src/pages/Workflows.tsx`**
-- Restructure the section-divider for "Recent Creations" so the line appears between the label and the button. Since `::after` pseudo-element creates the line, we need to wrap the label in a custom layout: use a flex container with the label, a `flex-1 h-px bg-border` div (manual line), and the button -- instead of relying on the `section-divider` class.
+**`src/components/app/WorkflowPreviewModal.tsx`** -- Complete rewrite
 
-### 2. Redesign WorkflowPreviewModal to match Library modal style
+Replace the entire file with a fullscreen split-layout modal matching `LibraryDetailModal`:
 
-Replace the current Dialog-based modal (which looks like a standard card popup) with a fullscreen split-layout modal matching `LibraryDetailModal`:
+| Aspect | Old (broken) | New |
+|--------|-------------|-----|
+| Container | `<Dialog>` / `<DialogContent>` | Fixed overlay `z-[200]` with `bg-black/90` backdrop |
+| Layout | Single card popup | 60/40 split: image left, info panel right |
+| Close | Dialog default X | Custom X button in info panel |
+| Thumbnails | Side column with border | 2-column grid in info panel |
+| Actions | Footer bar | Stacked buttons in info panel |
+| Download errors | No feedback | `toast.error()` on failure |
+| Body scroll | Not locked | `document.body.style.overflow = 'hidden'` |
 
-**File: `src/components/app/WorkflowPreviewModal.tsx`** -- Full rewrite of the modal:
+**Structure:**
+```text
+[Fixed overlay z-200]
+  [bg-black/90 backdrop, click to close]
+  [flex md:flex-row, stopPropagation]
+    [Left 60% - bg transparent]
+      [Image centered with padding]
+      [Left/Right nav arrows if multiple images]
+    [Right 40% - bg-background/95 backdrop-blur-xl border-l]
+      [X close button - top right]
+      [Source label: "WORKFLOW" - uppercase tracking]
+      [Title: workflow name - 2xl/3xl font]
+      [Metadata: "4 images . 10 minutes ago"]
+      [Thumbnail grid - 2 cols, clickable, ring on selected]
+      [Download Image button - primary, full-width, h-12]
+      [Download All (N) button - secondary, muted style]
+      [View in Library link - ghost text]
+```
 
-- **Dark fullscreen overlay** (`bg-black/90`) instead of Dialog
-- **Split layout**: Left side = large image preview (60% on desktop), Right side = info panel with actions (40% on desktop)
-- **Info panel** contains:
-  - Source label ("Workflow" in uppercase tracking)
-  - Title (workflow name)
-  - Metadata (image count, time ago)
-  - Thumbnail grid for multi-image navigation
-  - Download current image button (primary, full-width)
-  - Download All as ZIP button (secondary)
-  - View in Library link
-- **Navigation**: Left/Right arrows on the image for multi-image sets
-- **Close**: X button in top-right of info panel
-- **Mobile**: Stack vertically (image top 45vh, panel bottom 55vh)
-- **Keyboard navigation**: Arrow keys to switch images, Escape to close
-- **Fix download**: Add try/catch with toast error feedback on download failures
-
-### 3. Fix download error handling
-
-The current `handleDownloadAll` has no error feedback. Add try/catch with `toast.error('Download failed')` for both single and zip downloads.
+**Key implementation details:**
+- Body scroll lock via `useEffect` (same pattern as `LibraryDetailModal`)
+- Escape key closes modal
+- Arrow keys navigate images
+- Download uses try/catch with `toast.error('Download failed')` and `toast.success('Image downloaded')`
+- Signed URL loading shows shimmer placeholder
+- No `Dialog` import needed -- pure div-based overlay
 
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/pages/Workflows.tsx` | Replace section-divider for Recent Creations with manual flex layout so View All sits at end of line |
-| `src/components/app/WorkflowPreviewModal.tsx` | Redesign as fullscreen split-layout modal matching LibraryDetailModal style, fix download error handling |
+| `src/components/app/WorkflowPreviewModal.tsx` | Full rewrite to match LibraryDetailModal split-layout pattern |
 
-### Technical Details
-
-**WorkflowPreviewModal new structure:**
-```text
-[Fixed overlay z-200]
-  [bg-black/90 backdrop]
-  [flex md:flex-row]
-    [Left 60% - Image with nav arrows]
-    [Right 40% - bg-background/95 panel]
-      [X close button]
-      [Source label: "WORKFLOW"]
-      [Title: workflow name]
-      [Metadata: count + time]
-      [Thumbnail grid (2 cols)]
-      [Download Image button - primary]
-      [Download All (N) button - secondary]
-      [View in Library link]
-```
-
-**Section divider fix:**
-```text
-Before: RECENT CREATIONS  View All ->  ──────────
-After:  RECENT CREATIONS  ──────────  View All ->
-```
