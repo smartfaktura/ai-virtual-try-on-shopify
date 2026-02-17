@@ -1,23 +1,25 @@
 
 
-## Fix Freestyle Activity Avatars in Recent Activity
-
-### Problem
-Freestyle activities in the Recent Activity feed show no avatar because they reference `avatar-liam.jpg`, which does not exist. The actual team avatars are: sophia, amara, luna, kenji, yuki, omar, sienna, max, zara, and leo.
-
-### Solution
-Replace the single non-existent "Liam" avatar with a rotation of real team avatars for freestyle activities, giving visual variety similar to how other activity types show different team members.
+## Clean Up Selfie / UGC Set Workflow Card
 
 ### Changes
 
-**File: `src/components/app/ActivityFeed.tsx`**
+**1. Remove "Try-On" badge from the title (WorkflowCard.tsx)**
 
-1. Create an array of team avatars designated for freestyle activities (e.g., Yuki, Luna, Amara, Kenji)
-2. Update the `getTeamAvatar` function so that when the activity ID starts with `freestyle-`, it picks an avatar from this array based on a simple hash of the activity ID -- this ensures the same freestyle item always gets the same avatar, but different items get different ones
-3. Remove the non-existent "Liam" reference
+The "Try-On" badge appears because the workflow has `uses_tryon: true` in the database. Rather than changing the database flag (which controls generation logic), we will hide the badge specifically for "Selfie / UGC Set" in the WorkflowCard component.
 
-The avatar selection logic will use a deterministic approach (character code sum of the ID modulo array length) so avatars stay consistent across re-renders without randomness.
+**2. Remove Creator circle and Plus icon from carousel overlay (workflowAnimationData.tsx)**
 
-### Result
-Each freestyle generation in the Activity Feed will display a real team member avatar (rotating between several members), matching the polished look of workflow and product activities.
+Remove two elements from the `'Selfie / UGC Set'` scene definition:
+- The `type: 'model'` element (Creator avatar circle)
+- The `type: 'action'` element (Plus icon)
+
+This leaves only the Product chip ("Ice Roller") and the "UGC Style" badge as persistent overlays, alongside the "Generated" badge that the carousel component adds automatically.
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `src/components/app/WorkflowCard.tsx` | Hide "Try-On" badge for Selfie / UGC Set |
+| `src/components/app/workflowAnimationData.tsx` | Remove Creator and Plus icon elements from UGC scene |
 
