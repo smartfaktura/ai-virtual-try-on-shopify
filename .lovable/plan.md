@@ -1,27 +1,24 @@
 
 
-## Make Freestyle Grid Scroll Behind Floating Header on Mobile
+## Restore Desktop Top Gap in Freestyle
 
-### Desired Behavior
+### Problem
 
-- **At rest**: Images start just below the floating header with a small gap matching the grid spacing
-- **When scrolling**: Images slide up and disappear behind the floating header (the header stays on top, content scrolls underneath it)
+The recent mobile fixes changed the desktop scroll area padding to `lg:pt-0`, removing all top spacing. Images now start flush at the very top of the content area on desktop, with no breathing room matching the sidebar header.
 
-### How It Works
+### Fix
 
-The floating mobile header is `fixed` with `z-40`. Currently the freestyle container starts exactly below it. To get the overlap-on-scroll effect, the container needs to extend up into the header zone so its scrollable content can travel behind the header.
+**File: `src/pages/Freestyle.tsx` (line 535)**
 
-### Changes in `src/pages/Freestyle.tsx`
+Change `lg:pt-0` to `lg:pt-1` on the scrollable container. This restores a 4px top gap on desktop that visually aligns the first row of images with the top of the sidebar content area, matching the grid's internal `gap-1` spacing.
 
-1. **Pull container up behind the header on mobile**: Change `-mt-4` to `-mt-24` on mobile (matching the AppShell's `pt-24`). This makes the freestyle container start at the very top of the viewport, behind the header.
+```
+// Before
+<div className="h-full overflow-y-auto pt-[5rem] lg:pt-0 pb-72">
 
-2. **Set height to full viewport on mobile**: Change from `calc(100dvh - 5rem)` to `100dvh` since the container now starts at viewport top.
+// After
+<div className="h-full overflow-y-auto pt-[5rem] lg:pt-1 pb-72">
+```
 
-3. **Add top padding to scroll area**: Change `pt-1` to `pt-[5rem]` on mobile (80px, matching the header height). This ensures images initially appear just below the header. As you scroll, they travel up and behind the z-40 header.
-
-### Result
-
-- Initial view: images start right below the floating header with the grid gap
-- Scrolling: images smoothly slide behind the semi-opaque header bar
-- Desktop: no changes (sidebar layout is unaffected)
+This is a single-line change. Mobile layout remains unaffected.
 
