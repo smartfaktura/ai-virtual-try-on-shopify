@@ -11,6 +11,7 @@ interface ModelSelectorChipProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (model: ModelProfile | null) => void;
+  modal?: boolean;
 }
 
 type GenderFilter = 'all' | 'female' | 'male';
@@ -30,7 +31,7 @@ const BODY_FILTERS: { value: BodyFilter; label: string }[] = [
   { value: 'plus-size', label: 'Plus' },
 ];
 
-export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect }: ModelSelectorChipProps) {
+export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect, modal }: ModelSelectorChipProps) {
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [bodyFilter, setBodyFilter] = useState<BodyFilter>('all');
   const { asProfiles: customModels } = useCustomModels();
@@ -44,7 +45,7 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect 
   });
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange} modal>
+    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
       <PopoverTrigger asChild>
         <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
           {selectedModel ? (

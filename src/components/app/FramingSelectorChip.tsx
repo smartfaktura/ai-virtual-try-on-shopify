@@ -24,13 +24,14 @@ interface FramingSelectorChipProps {
   onFramingChange: (framing: FramingOption | null) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  modal?: boolean;
 }
 
-export function FramingSelectorChip({ framing, onFramingChange, open, onOpenChange }: FramingSelectorChipProps) {
+export function FramingSelectorChip({ framing, onFramingChange, open, onOpenChange, modal }: FramingSelectorChipProps) {
   const selectedOption = FRAMING_OPTIONS.find(o => o.value === framing);
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange} modal>
+    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
       <PopoverTrigger asChild>
         <button className={cn(
           'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',

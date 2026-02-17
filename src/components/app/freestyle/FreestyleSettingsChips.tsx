@@ -348,24 +348,28 @@ export function FreestyleSettingsChips({
               onSelect={onProductSelect}
               products={products}
               isLoading={isLoadingProducts}
+              modal={isMobile}
             />
             <ModelSelectorChip
               selectedModel={selectedModel}
               open={modelPopoverOpen}
               onOpenChange={onModelPopoverChange}
               onSelect={onModelSelect}
+              modal={isMobile}
             />
             <SceneSelectorChip
               selectedScene={selectedScene}
               open={scenePopoverOpen}
               onOpenChange={onScenePopoverChange}
               onSelect={onSceneSelect}
+              modal={isMobile}
             />
             <FramingSelectorChip
               framing={framing}
               onFramingChange={onFramingChange}
               open={framingPopoverOpen}
               onOpenChange={onFramingPopoverChange}
+              modal={isMobile}
             />
           </div>
 
@@ -434,24 +438,28 @@ export function FreestyleSettingsChips({
             onSelect={onProductSelect}
             products={products}
             isLoading={isLoadingProducts}
+            modal={isMobile}
           />
           <ModelSelectorChip
             selectedModel={selectedModel}
             open={modelPopoverOpen}
             onOpenChange={onModelPopoverChange}
             onSelect={onModelSelect}
+            modal={isMobile}
           />
           <SceneSelectorChip
             selectedScene={selectedScene}
             open={scenePopoverOpen}
             onOpenChange={onScenePopoverChange}
             onSelect={onSceneSelect}
+            modal={isMobile}
           />
           <FramingSelectorChip
             framing={framing}
             onFramingChange={onFramingChange}
             open={framingPopoverOpen}
             onOpenChange={onFramingPopoverChange}
+            modal={isMobile}
           />
           <BrandProfileChip
             selectedProfile={selectedBrandProfile}
