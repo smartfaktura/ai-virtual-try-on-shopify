@@ -1,57 +1,68 @@
 
 
-## Fix: Virtual Try-On Aspect Ratio Not Being Enforced
+## Redesign Workflow Preview Modal and Fix Section Divider Layout
 
-### Root Cause
+### 1. Fix "View All" button position in section divider
 
-The `generate-freestyle` edge function correctly passes `image_config: { aspect_ratio: "9:16" }` as an API parameter to the AI gateway, which forces the output image dimensions. However, the `generate-tryon` edge function only mentions the aspect ratio in the **prompt text** (e.g., "IMAGE FORMAT: Portrait orientation (9:16 aspect ratio)"). The AI model ignores text-based size instructions and defaults to 1:1 square output.
+Currently the "Recent Creations" divider shows: `RECENT CREATIONS [View All ->] ──────`. The user wants the "View All" button on the far right, after the separator line: `RECENT CREATIONS ────────── [View All ->]`.
 
-This is confirmed by the edge function logs: job `beac4b26` has `aspectRatio: "9:16"` in its payload and the prompt says "Portrait orientation (9:16)", but the generated images came out square.
+**File: `src/pages/Workflows.tsx`**
+- Restructure the section-divider for "Recent Creations" so the line appears between the label and the button. Since `::after` pseudo-element creates the line, we need to wrap the label in a custom layout: use a flex container with the label, a `flex-1 h-px bg-border` div (manual line), and the button -- instead of relying on the `section-divider` class.
 
-### Fix
+### 2. Redesign WorkflowPreviewModal to match Library modal style
 
-**`supabase/functions/generate-tryon/index.ts`** -- Add `image_config` parameter to the AI API call
+Replace the current Dialog-based modal (which looks like a standard card popup) with a fullscreen split-layout modal matching `LibraryDetailModal`:
 
-In the `generateImage` function (around line 227), add the `image_config` parameter with the aspect ratio, matching the pattern already used in `generate-freestyle`:
+**File: `src/components/app/WorkflowPreviewModal.tsx`** -- Full rewrite of the modal:
 
-```typescript
-// Current (broken):
-body: JSON.stringify({
-  model: "google/gemini-2.5-flash-image",
-  messages: [...],
-  modalities: ["image", "text"],
-})
+- **Dark fullscreen overlay** (`bg-black/90`) instead of Dialog
+- **Split layout**: Left side = large image preview (60% on desktop), Right side = info panel with actions (40% on desktop)
+- **Info panel** contains:
+  - Source label ("Workflow" in uppercase tracking)
+  - Title (workflow name)
+  - Metadata (image count, time ago)
+  - Thumbnail grid for multi-image navigation
+  - Download current image button (primary, full-width)
+  - Download All as ZIP button (secondary)
+  - View in Library link
+- **Navigation**: Left/Right arrows on the image for multi-image sets
+- **Close**: X button in top-right of info panel
+- **Mobile**: Stack vertically (image top 45vh, panel bottom 55vh)
+- **Keyboard navigation**: Arrow keys to switch images, Escape to close
+- **Fix download**: Add try/catch with toast error feedback on download failures
 
-// Fixed:
-body: JSON.stringify({
-  model: "google/gemini-2.5-flash-image",
-  messages: [...],
-  modalities: ["image", "text"],
-  image_config: { aspect_ratio: aspectRatio },
-})
-```
+### 3. Fix download error handling
 
-This requires passing the `aspectRatio` string into the `generateImage` function. The function signature changes from:
-
-```text
-generateImage(prompt, productImageUrl, modelImageUrl, apiKey)
-```
-
-to:
-
-```text
-generateImage(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio)
-```
-
-And the call site (line 401) passes `body.aspectRatio || "1:1"` as the new argument.
+The current `handleDownloadAll` has no error feedback. Add try/catch with `toast.error('Download failed')` for both single and zip downloads.
 
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| `supabase/functions/generate-tryon/index.ts` | Add `aspectRatio` parameter to `generateImage` function and include `image_config: { aspect_ratio }` in the API request body |
+| `src/pages/Workflows.tsx` | Replace section-divider for Recent Creations with manual flex layout so View All sits at end of line |
+| `src/components/app/WorkflowPreviewModal.tsx` | Redesign as fullscreen split-layout modal matching LibraryDetailModal style, fix download error handling |
 
-### Why This Will Work
+### Technical Details
 
-The `generate-freestyle` function already uses this exact pattern successfully. The `image_config` parameter is a native API feature that forces the AI model to output images in the requested dimensions, rather than relying on prompt-text instructions which models often ignore.
+**WorkflowPreviewModal new structure:**
+```text
+[Fixed overlay z-200]
+  [bg-black/90 backdrop]
+  [flex md:flex-row]
+    [Left 60% - Image with nav arrows]
+    [Right 40% - bg-background/95 panel]
+      [X close button]
+      [Source label: "WORKFLOW"]
+      [Title: workflow name]
+      [Metadata: count + time]
+      [Thumbnail grid (2 cols)]
+      [Download Image button - primary]
+      [Download All (N) button - secondary]
+      [View in Library link]
+```
 
+**Section divider fix:**
+```text
+Before: RECENT CREATIONS  View All ->  ──────────
+After:  RECENT CREATIONS  ──────────  View All ->
+```
