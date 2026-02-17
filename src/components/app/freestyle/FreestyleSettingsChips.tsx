@@ -373,7 +373,7 @@ export function FreestyleSettingsChips({
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <CollapsibleTrigger asChild>
               <button className={cn(
-                'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors',
+                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
                 advancedActiveCount > 0
                   ? 'border-primary/40 bg-primary/10 text-primary'
                   : 'border-border/60 bg-muted/30 text-muted-foreground/60 hover:bg-muted/60'
