@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Plus, X, Sparkles, Loader2, ImagePlus, ChevronUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -185,9 +186,13 @@ export function FreestylePromptPanel({
       {isMobile && onToggleCollapse && (
         <button
           onClick={onToggleCollapse}
-          className="w-full flex items-center justify-center py-2 hover:bg-muted/30 transition-colors"
+          className="w-full flex flex-col items-center gap-0.5 py-1.5 hover:bg-muted/30 transition-colors"
         >
-          <div className="w-10 h-1 rounded-full bg-border" />
+          <div className="w-8 h-1 rounded-full bg-border/60" />
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground/60">
+            <ChevronUp className={cn('w-3 h-3 transition-transform', isCollapsed && 'rotate-180')} />
+            <span>{isCollapsed ? 'Show prompt' : 'Hide'}</span>
+          </div>
         </button>
       )}
 
