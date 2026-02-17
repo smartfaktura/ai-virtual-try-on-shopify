@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ArrowRight, AlertCircle } from 'lucide-react';
+import { Loader2, ArrowRight, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { formatDistanceToNow } from 'date-fns';
 
 interface ActiveJob {
   id: string;
@@ -15,8 +16,25 @@ interface ActiveJob {
   error_message: string | null;
 }
 
+interface CompletedJob {
+  id: string;
+  workflow_id: string | null;
+  workflow_name: string | null;
+  completed_at: string | null;
+}
+
+interface FailedJob {
+  id: string;
+  workflow_id: string | null;
+  workflow_name: string | null;
+  created_at: string;
+  error_message: string | null;
+}
+
 interface WorkflowActivityCardProps {
   jobs: ActiveJob[];
+  completedJobs?: CompletedJob[];
+  failedJobs?: FailedJob[];
 }
 
 function elapsedLabel(dateStr: string): string {
@@ -27,21 +45,24 @@ function elapsedLabel(dateStr: string): string {
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
 
-export function WorkflowActivityCard({ jobs }: WorkflowActivityCardProps) {
+export function WorkflowActivityCard({ jobs, completedJobs = [], failedJobs = [] }: WorkflowActivityCardProps) {
   const navigate = useNavigate();
   const [, tick] = useState(0);
 
-  // Re-render every second to update elapsed time
   useEffect(() => {
+    if (jobs.length === 0) return;
     const id = setInterval(() => tick((t) => t + 1), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [jobs.length]);
 
-  if (jobs.length === 0) return null;
+  const hasContent = jobs.length > 0 || completedJobs.length > 0 || failedJobs.length > 0;
+  if (!hasContent) return null;
 
   return (
     <div className="space-y-3">
-      <p className="section-label">Active Generations</p>
+      <p className="section-label">Activity</p>
+
+      {/* Active / processing jobs */}
       {jobs.map((job) => {
         const isProcessing = job.status === 'processing';
         const elapsed = elapsedLabel(job.started_at || job.created_at);
@@ -56,36 +77,22 @@ export function WorkflowActivityCard({ jobs }: WorkflowActivityCardProps) {
                   <AlertCircle className="w-4.5 h-4.5 text-muted-foreground" />
                 )}
               </div>
-
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
                   {job.workflow_name ?? 'Workflow generation'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {isProcessing ? (
-                    <>Generating… {elapsed}</>
-                  ) : (
-                    <>Queued · waiting {elapsed}</>
-                  )}
+                  {isProcessing ? <>Generating… {elapsed}</> : <>Queued · waiting {elapsed}</>}
                 </p>
               </div>
-
-              <Badge
-                variant="secondary"
-                className="shrink-0 text-[10px] uppercase tracking-wider font-semibold"
-              >
+              <Badge variant="secondary" className="shrink-0 text-[10px] uppercase tracking-wider font-semibold">
                 {isProcessing ? 'Processing' : 'Queued'}
               </Badge>
-
               <Button
                 size="sm"
                 variant="ghost"
                 className="shrink-0 gap-1.5"
-                onClick={() =>
-                  navigate(
-                    `/app/generate${job.workflow_id ? `?workflow=${job.workflow_id}` : ''}`,
-                  )
-                }
+                onClick={() => navigate(`/app/generate${job.workflow_id ? `?workflow=${job.workflow_id}` : ''}`)}
               >
                 View
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -94,6 +101,69 @@ export function WorkflowActivityCard({ jobs }: WorkflowActivityCardProps) {
           </Card>
         );
       })}
+
+      {/* Just-completed jobs (green) */}
+      {completedJobs.map((job) => (
+        <Card key={job.id} className="border-emerald-500/20 bg-emerald-500/[0.04]">
+          <CardContent className="flex items-center gap-4 py-4 px-5">
+            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-emerald-500/10 shrink-0">
+              <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">
+                {job.workflow_name ?? 'Workflow generation'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Completed {job.completed_at ? formatDistanceToNow(new Date(job.completed_at), { addSuffix: true }) : 'just now'}
+              </p>
+            </div>
+            <Badge className="shrink-0 text-[10px] uppercase tracking-wider font-semibold bg-emerald-500/15 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20">
+              Completed
+            </Badge>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="shrink-0 gap-1.5"
+              onClick={() => navigate('/app/library')}
+            >
+              View
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* Failed jobs (red) */}
+      {failedJobs.map((job) => (
+        <Card key={job.id} className="border-destructive/20 bg-destructive/[0.04]">
+          <CardContent className="flex items-center gap-4 py-4 px-5">
+            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-destructive/10 shrink-0">
+              <XCircle className="w-4.5 h-4.5 text-destructive" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">
+                {job.workflow_name ?? 'Workflow generation'}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                Failed {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
+                {job.error_message ? ` · ${job.error_message.slice(0, 60)}` : ''}
+              </p>
+            </div>
+            <Badge variant="destructive" className="shrink-0 text-[10px] uppercase tracking-wider font-semibold">
+              Failed
+            </Badge>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="shrink-0 gap-1.5"
+              onClick={() => navigate(`/app/generate${job.workflow_id ? `?workflow=${job.workflow_id}` : ''}`)}
+            >
+              Retry
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

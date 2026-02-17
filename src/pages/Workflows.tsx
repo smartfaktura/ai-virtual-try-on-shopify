@@ -42,7 +42,6 @@ export default function Workflows() {
         .order('created_at', { ascending: false });
       if (error) throw error;
 
-      // Extract workflow info from payload
       return (data ?? [])
         .filter((j) => j.job_type === 'workflow')
         .map((j) => {
@@ -63,8 +62,61 @@ export default function Workflows() {
       (query.state.data?.length ?? 0) > 0 ? 5000 : false,
   });
 
+  // ── Just-completed workflow jobs (last 5 min) ──
+  const { data: justCompletedJobs = [] } = useQuery({
+    queryKey: ['workflow-just-completed'],
+    queryFn: async () => {
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('generation_jobs')
+        .select('id, workflow_id, created_at, completed_at, workflows(name)')
+        .not('workflow_id', 'is', null)
+        .eq('status', 'completed')
+        .gte('completed_at', fiveMinAgo)
+        .order('completed_at', { ascending: false })
+        .limit(3);
+      if (error) throw error;
+
+      return (data ?? []).map((j) => ({
+        id: j.id,
+        workflow_id: j.workflow_id,
+        workflow_name: (j.workflows as unknown as { name: string } | null)?.name ?? null,
+        completed_at: j.completed_at,
+      }));
+    },
+    enabled: !!user,
+    refetchInterval: 30_000,
+  });
+
+  // ── Recently failed workflow jobs (last 24h) ──
+  const { data: failedJobs = [] } = useQuery({
+    queryKey: ['workflow-failed-jobs'],
+    queryFn: async () => {
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('generation_jobs')
+        .select('id, workflow_id, created_at, error_message, workflows(name)')
+        .not('workflow_id', 'is', null)
+        .eq('status', 'failed')
+        .gte('created_at', oneDayAgo)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      if (error) throw error;
+
+      return (data ?? []).map((j) => ({
+        id: j.id,
+        workflow_id: j.workflow_id,
+        workflow_name: (j.workflows as unknown as { name: string } | null)?.name ?? null,
+        created_at: j.created_at,
+        error_message: j.error_message,
+      }));
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
   // ── Recent completed workflow jobs ──
-  const { data: recentJobs = [] } = useQuery({
+  const { data: recentJobs = [], isLoading: isLoadingRecent } = useQuery({
     queryKey: ['workflow-recent-jobs'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -89,7 +141,7 @@ export default function Workflows() {
     staleTime: 30_000,
   });
 
-  const hasActivity = activeJobs.length > 0 || recentJobs.length > 0;
+  const hasActivity = activeJobs.length > 0 || justCompletedJobs.length > 0 || failedJobs.length > 0 || recentJobs.length > 0;
 
   const handleCreateVisualSet = (workflow: Workflow) => {
     navigate(`/app/generate?workflow=${workflow.id}`);
@@ -103,8 +155,14 @@ export default function Workflows() {
       {/* ── Activity section ── */}
       {hasActivity && (
         <div className="space-y-6">
-          {activeJobs.length > 0 && <WorkflowActivityCard jobs={activeJobs} />}
-          {recentJobs.length > 0 && <WorkflowRecentRow jobs={recentJobs} />}
+          {(activeJobs.length > 0 || justCompletedJobs.length > 0 || failedJobs.length > 0) && (
+            <WorkflowActivityCard
+              jobs={activeJobs}
+              completedJobs={justCompletedJobs}
+              failedJobs={failedJobs}
+            />
+          )}
+          <WorkflowRecentRow jobs={recentJobs} isLoading={isLoadingRecent} />
 
           <div className="section-divider">
             <span className="section-label">Create a New Set</span>

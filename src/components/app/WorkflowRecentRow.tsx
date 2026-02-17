@@ -18,6 +18,7 @@ interface RecentJob {
 
 interface WorkflowRecentRowProps {
   jobs: RecentJob[];
+  isLoading?: boolean;
 }
 
 function firstImageUrl(results: unknown): string | null {
@@ -73,7 +74,7 @@ function ThumbnailCard({ job, signedUrl }: { job: RecentJob; signedUrl: string |
   );
 }
 
-export function WorkflowRecentRow({ jobs }: WorkflowRecentRowProps) {
+export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRowProps) {
   const navigate = useNavigate();
   const [signedUrlMap, setSignedUrlMap] = useState<Record<string, string>>({});
   const [urlsReady, setUrlsReady] = useState(false);
@@ -102,7 +103,7 @@ export function WorkflowRecentRow({ jobs }: WorkflowRecentRowProps) {
     });
   }, [jobs]);
 
-  if (jobs.length === 0) return null;
+  if (!isLoading && jobs.length === 0) return null;
 
   return (
     <div className="space-y-3">
@@ -114,13 +115,25 @@ export function WorkflowRecentRow({ jobs }: WorkflowRecentRowProps) {
         </Button>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
-        {jobs.map((job) => (
-          <ThumbnailCard
-            key={job.id}
-            job={job}
-            signedUrl={urlsReady ? (signedUrlMap[job.id] ?? null) : undefined}
-          />
-        ))}
+        {isLoading && jobs.length === 0
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-2 shrink-0 w-[140px]">
+                <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border">
+                  <div className="w-full h-full bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
+                </div>
+                <div className="space-y-1 px-0.5">
+                  <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+                  <div className="h-2.5 w-14 rounded bg-muted/60 animate-pulse" />
+                </div>
+              </div>
+            ))
+          : jobs.map((job) => (
+              <ThumbnailCard
+                key={job.id}
+                job={job}
+                signedUrl={urlsReady ? (signedUrlMap[job.id] ?? null) : undefined}
+              />
+            ))}
       </div>
     </div>
   );
