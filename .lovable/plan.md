@@ -1,44 +1,73 @@
 
 
-## Branded Discover Loading State with Team Avatars
+## Prevent Duplicate Kling Charges on Video Recovery
 
-### Problem
-The Discover page loading state is a plain spinning icon -- minimal and forgettable. It doesn't reinforce the VOVV.AI brand or the Studio Team concept.
+### How Kling Billing Works
+- Kling charges credits only when a **new task is created** (POST to `/videos/image2video`)
+- Status polling (GET) is completely free -- unlimited calls at no cost
+- The proposed `recover` action only polls status, so it costs nothing on Kling's side
 
-### Solution
-Replace the generic spinner with an immersive, branded loading experience featuring the Studio Team avatars and rotating status messages -- matching the generation loading pattern already used elsewhere in the app.
+### The Real Risk
+When client-side polling times out (after ~400 seconds), the UI shows an error state. The user may click "Generate" again with the same image, creating a **duplicate Kling task** and getting charged twice. The original task may still be processing successfully on Kling's side.
 
-### Design
+### Safeguards to Implement
 
-The loading state will show:
-1. A row of 5 randomly-selected team member avatars in small circles, with a subtle staggered fade-in animation
-2. A rotating status message from the currently "active" team member (e.g., "Sophia is curating your feed...")
-3. A subtle shimmer bar underneath to indicate progress
-4. The whole block is centered vertically and horizontally in the content area
+**1. Block duplicate generation while a task is in-flight**
 
-### Changes
+In `src/hooks/useGenerateVideo.ts`:
+- Before calling `action: 'create'`, check the `history` array for any video with `status === 'processing'`
+- If one exists, show a toast warning: "You already have a video processing. Please wait for it to finish." and abort
+- This prevents duplicate Kling charges entirely
 
-**File: `src/pages/Discover.tsx`**
+**2. On timeout, recover instead of giving up**
 
-1. Import `TEAM_MEMBERS` from `@/data/teamData`
-2. Add a `useMemo` to pick 5 random team members (stable per mount)
-3. Add a `useState` + `useEffect` to cycle through the 5 members every 2.5 seconds, showing their status message
-4. Replace the current loading block (lines 359-362) with the new branded loading component:
+In `src/hooks/useGenerateVideo.ts`:
+- When `MAX_POLLS` is exceeded, instead of setting status to "error", call `action: 'status'` one final time
+- If Kling says "succeed", update DB and show the video
+- If Kling says still "processing", set a gentler UI message: "Still processing on our end. We'll update your history when it's ready." (no error state that tempts a re-click)
+- Only show "error" if Kling explicitly returns "failed"
 
+**3. Add `recover` action to edge function**
+
+In `supabase/functions/generate-video/index.ts`:
+- Add a `recover` action that finds all `processing` videos for the user older than 10 minutes
+- For each, poll Kling's status endpoint (free) and update the DB accordingly
+- Call this on page load from the hook to auto-fix any stuck records
+
+**4. Increase poll window**
+
+In `src/hooks/useGenerateVideo.ts`:
+- Change `MAX_POLLS` from 50 to 75 (8s x 75 = 10 minutes) to cover longer Kling processing times
+- This reduces the chance of premature timeout
+
+### Technical Details
+
+**Files modified:**
+- `src/hooks/useGenerateVideo.ts` -- duplicate guard, longer polling, graceful timeout, auto-recover on mount
+- `supabase/functions/generate-video/index.ts` -- add `recover` action (status-only, zero Kling cost)
+
+**Key logic for duplicate prevention:**
+```text
+startGeneration() {
+  // Check for in-flight video
+  const hasProcessing = history.some(v => v.status === 'processing');
+  if (hasProcessing) {
+    toast.warning("A video is already processing. Please wait.");
+    return;
+  }
+  // ... proceed with create
+}
 ```
-Before:
-  <Loader2 spinning icon>
 
-After:
-  <div centered>
-    <row of 5 circular avatars, active one highlighted with ring>
-    <"Sophia is curating your feed..." rotating text>
-    <shimmer progress bar>
-  </div>
+**Key logic for recover action:**
+```text
+action: 'recover'
+  -> SELECT * FROM generated_videos WHERE user_id = X AND status = 'processing'
+     AND created_at < now() - interval '10 minutes'
+  -> For each: GET Kling status (free)
+  -> Update DB with actual status (complete/failed)
+  -> Return count of recovered videos
 ```
 
-The avatar images are already optimized and hosted. Status messages come from `teamData.ts` (e.g., "Setting up the lighting...") -- we'll adapt them to discovery context like "[Name] is curating your feed...".
-
-### Files Modified
-- `src/pages/Discover.tsx` -- replace loading spinner with branded team avatar loading state
+No new Kling tasks are ever created during recovery. Status checks are free and unlimited.
 
