@@ -6,6 +6,8 @@ interface ShimmerImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   aspectRatio?: string;
   /** Additional wrapper className */
   wrapperClassName?: string;
+  /** Additional wrapper inline styles */
+  wrapperStyle?: React.CSSProperties;
 }
 
 /**
@@ -19,6 +21,7 @@ export function ShimmerImage({
   className,
   aspectRatio,
   wrapperClassName,
+  wrapperStyle,
   onLoad,
   onError,
   style,
@@ -30,7 +33,10 @@ export function ShimmerImage({
   return (
     <div
       className={cn('relative overflow-hidden w-full h-full', wrapperClassName)}
-      style={aspectRatio && !loaded ? { aspectRatio } : undefined}
+      style={{
+        ...(aspectRatio && !loaded ? { aspectRatio } : undefined),
+        ...wrapperStyle,
+      }}
     >
       {/* Shimmer placeholder */}
       {!loaded && !errored && (
