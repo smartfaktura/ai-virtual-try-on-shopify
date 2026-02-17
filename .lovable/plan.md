@@ -1,73 +1,30 @@
 
+## Fix: Generated Images Not Loading (Bucket Access Issue)
 
-## Prevent Duplicate Kling Charges on Video Recovery
+### Root Cause
 
-### How Kling Billing Works
-- Kling charges credits only when a **new task is created** (POST to `/videos/image2video`)
-- Status polling (GET) is completely free -- unlimited calls at no cost
-- The proposed `recover` action only polls status, so it costs nothing on Kling's side
+The storage buckets `tryon-images` and `freestyle-images` are set to **private**, but the edge functions use `getPublicUrl()` to generate image URLs. Private buckets reject requests to the `/object/public/` path, returning a 404 "Bucket not found" error. Since `<img>` tags in the browser cannot send authentication headers, the images never load.
 
-### The Real Risk
-When client-side polling times out (after ~400 seconds), the UI shows an error state. The user may click "Generate" again with the same image, creating a **duplicate Kling task** and getting charged twice. The original task may still be processing successfully on Kling's side.
+The `workflow-previews` bucket works because it is already public.
 
-### Safeguards to Implement
+### Fix
 
-**1. Block duplicate generation while a task is in-flight**
+Run a database migration to update both buckets to **public** access. This is the same approach already used for `workflow-previews` and `scratch-uploads`.
 
-In `src/hooks/useGenerateVideo.ts`:
-- Before calling `action: 'create'`, check the `history` array for any video with `status === 'processing'`
-- If one exists, show a toast warning: "You already have a video processing. Please wait for it to finish." and abort
-- This prevents duplicate Kling charges entirely
-
-**2. On timeout, recover instead of giving up**
-
-In `src/hooks/useGenerateVideo.ts`:
-- When `MAX_POLLS` is exceeded, instead of setting status to "error", call `action: 'status'` one final time
-- If Kling says "succeed", update DB and show the video
-- If Kling says still "processing", set a gentler UI message: "Still processing on our end. We'll update your history when it's ready." (no error state that tempts a re-click)
-- Only show "error" if Kling explicitly returns "failed"
-
-**3. Add `recover` action to edge function**
-
-In `supabase/functions/generate-video/index.ts`:
-- Add a `recover` action that finds all `processing` videos for the user older than 10 minutes
-- For each, poll Kling's status endpoint (free) and update the DB accordingly
-- Call this on page load from the hook to auto-fix any stuck records
-
-**4. Increase poll window**
-
-In `src/hooks/useGenerateVideo.ts`:
-- Change `MAX_POLLS` from 50 to 75 (8s x 75 = 10 minutes) to cover longer Kling processing times
-- This reduces the chance of premature timeout
-
-### Technical Details
-
-**Files modified:**
-- `src/hooks/useGenerateVideo.ts` -- duplicate guard, longer polling, graceful timeout, auto-recover on mount
-- `supabase/functions/generate-video/index.ts` -- add `recover` action (status-only, zero Kling cost)
-
-**Key logic for duplicate prevention:**
-```text
-startGeneration() {
-  // Check for in-flight video
-  const hasProcessing = history.some(v => v.status === 'processing');
-  if (hasProcessing) {
-    toast.warning("A video is already processing. Please wait.");
-    return;
-  }
-  // ... proceed with create
-}
+```sql
+UPDATE storage.buckets SET public = true WHERE id IN ('tryon-images', 'freestyle-images');
 ```
 
-**Key logic for recover action:**
-```text
-action: 'recover'
-  -> SELECT * FROM generated_videos WHERE user_id = X AND status = 'processing'
-     AND created_at < now() - interval '10 minutes'
-  -> For each: GET Kling status (free)
-  -> Update DB with actual status (complete/failed)
-  -> Return count of recovered videos
-```
+This single SQL statement will make both buckets publicly accessible, allowing the existing `getPublicUrl()` URLs to work correctly.
 
-No new Kling tasks are ever created during recovery. Status checks are free and unlimited.
+### Why Public Is Safe Here
 
+- The file paths already include the user's ID as a folder prefix (e.g., `fe45fd27-.../image.png`), so URLs are not guessable
+- These are AI-generated images, not sensitive user data
+- The same pattern is already used for `workflow-previews` and `scratch-uploads`
+
+### Files Modified
+- Database migration only -- no code changes needed
+
+### Result
+All previously generated images (try-on, freestyle) will immediately start loading. No regeneration required.
