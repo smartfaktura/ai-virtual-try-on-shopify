@@ -1,30 +1,19 @@
 
 
-## Add Dismiss "X" Buttons to Activity Cards
-
-### What Changes
-
-Add a small "X" close button to **completed** and **failed** activity cards in the Workflows page, so you can dismiss notifications you've already seen.
-
-Dismissed items are stored in browser local storage so they stay hidden even after page refresh.
+## Change Image Count Options: Default to 1, Max 4, Remove "recommended"
 
 ### Changes
 
-| File | What |
-|------|------|
-| `src/components/app/WorkflowActivityCard.tsx` | Add an `onDismiss` callback prop. Render a small X button on each completed and failed card row. |
-| `src/pages/Workflows.tsx` | Track dismissed job IDs in state backed by `localStorage`. Filter out dismissed IDs from `completedGroups` and `failedGroups` before passing to `WorkflowActivityCard`. Provide the dismiss handler. |
+**`src/pages/Generate.tsx`**
+
+1. Change default `imageCount` state from `'4'` to `'1'`
+2. Update the type from `'1' | '4' | '8'` to `'1' | '2' | '3' | '4'`
+3. Update both "Number of Images" Select dropdowns (workflow and try-on) to show options: 1, 2, 3, 4 -- without any "(recommended)" labels
+4. Update credit calculation references that use `parseInt(imageCount)` (these will work as-is since they parse the string value)
 
 ### Technical Details
 
-**WorkflowActivityCard.tsx**
-- New optional prop: `onDismiss?: (groupKey: string) => void`
-- On completed and failed cards, add an icon-only ghost button with an `X` icon at the far right
-- Clicking it calls `onDismiss(group.key)`
-
-**Workflows.tsx**
-- On mount, load `dismissed-activity` from localStorage into a `Set<string>` state
-- `handleDismiss(key)` adds the key to the set and persists to localStorage
-- Filter `completedGroups` and `failedGroups` to exclude dismissed keys before rendering
-- Active/processing groups are never dismissible (they need attention)
+- Line 191: Change `useState<'1' | '4' | '8'>('4')` to `useState<'1' | '2' | '3' | '4'>('1')`
+- Lines 1475-1481 and 2163-2169: Replace select options with plain "1 image", "2 images", "3 images", "4 images"
+- The `setImageCount` cast on lines 1475 and 2163 updated to match new type
 
