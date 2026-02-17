@@ -1,36 +1,52 @@
 
+## Fix "Failed to start generation" — Source Image Too Large for Queue Payload
 
-## Fix Anatomy Issues in Freestyle Generation
+### Root Cause
 
-### Problem
-People are being generated with 3 arms, extra legs, unnatural poses, and duplicate fingers -- especially when prompted to hold products or sit.
+When a user uploads a product image (or selects one from the library), it gets converted to base64 (~2MB+) and stored in React state. When Generate is clicked, that entire base64 blob is embedded in the JSON body sent to `enqueue-generation`, which then stores it in the database `payload` JSONB column.
 
-### What We WON'T Do
-- We will NOT touch the "No text, watermarks, logos" line yet since that's a separate issue worth discussing (it can strip legitimate product branding). That deserves its own focused fix.
-- We will NOT make the prompt longer than necessary.
+This fails because the edge function request body limit is ~2MB. A single high-res product image can exceed this, causing a network-level "Failed to fetch" error.
 
-### Change
+The backend logs confirm: all successful recent jobs had `hasSourceImage: false` — it's specifically jobs with a product source image that fail.
 
-**File: `supabase/functions/generate-freestyle/index.ts`** -- line 86
+### Solution: Upload Image to Storage First, Pass URL in Payload
 
-Replace the weak single line:
+Instead of embedding raw base64 in the queue payload, upload the source image to a storage bucket before enqueueing, then pass only the public URL.
+
+### Step 1: Create a storage bucket for temporary generation inputs
+
+Create a `generation-inputs` bucket (if not already existing) for temporary image uploads used during generation.
+
+### Step 2: Update `Freestyle.tsx` — upload source image before enqueue
+
+Before calling `enqueue()`, upload the base64 source image to the `generation-inputs` bucket using the Supabase storage client. Replace the base64 blob in the payload with the resulting public URL.
+
 ```
-- No distorted or extra fingers, hands, or limbs
+// Pseudocode for the change:
+// 1. If sourceImage is base64, upload to storage
+// 2. Get public URL
+// 3. Pass URL (not base64) in queuePayload.sourceImage
 ```
 
-With a focused 3-line anatomy block:
-```
-- Exactly 2 arms, 2 hands (5 fingers each), 2 legs per person — no extra, missing, or merged limbs
-- Natural joint articulation only — no impossible bends, twisted spines, or backward limbs
-- No duplicated or phantom body parts
-```
+This keeps the payload small (a URL string instead of 2MB+ base64).
 
-That's it -- 3 short, specific lines replacing 1 vague line. Stays within prompt budget and targets exactly the problem.
+### Step 3: Update `generate-freestyle/index.ts` — handle URL source images
+
+The generate-freestyle function already handles URLs (the `convertImageToBase64` utility returns URLs as-is if they're HTTPS). No changes should be needed here, but we'll verify the image fetch logic handles storage URLs correctly.
+
+### Step 4: Apply same fix to model/scene images if needed
+
+Check if `modelImage` and `sceneImage` have the same issue. Model images from the library may already be URLs, but we should ensure consistency.
 
 ### Technical Detail
 
-| File | Lines | Change |
-|---|---|---|
-| `supabase/functions/generate-freestyle/index.ts` | 86 | Replace single anatomy line with 3 focused rules |
+| File | Change |
+|---|---|
+| Database migration | Create `generation-inputs` storage bucket with appropriate policies |
+| `src/pages/Freestyle.tsx` | Upload source image to storage before enqueue; pass URL in payload instead of base64 |
+| `supabase/functions/generate-freestyle/index.ts` | Verify storage URLs are handled correctly (likely no changes needed) |
 
-After editing, the function will be redeployed automatically.
+### What This Fixes
+- Eliminates "Failed to start generation" errors when a product image is attached
+- Reduces database bloat (no more 2MB+ JSONB payloads)
+- Makes the queue system more reliable for all image-heavy generations
