@@ -34,7 +34,7 @@ async function createKlingJWT(accessKey: string, secretKey: string): Promise<str
   return `${data}.${sig}`;
 }
 
-// --- Supabase service client (for DB + storage writes) ---
+// --- Supabase service client ---
 function getServiceClient() {
   return createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -57,6 +57,72 @@ async function getUserId(req: Request): Promise<string> {
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data?.user) throw new Error("Unauthorized");
   return data.user.id;
+}
+
+// --- Helper: check Kling status and update DB for a single task ---
+async function checkAndUpdateTask(
+  serviceClient: ReturnType<typeof getServiceClient>,
+  taskId: string,
+  userId: string,
+  headers: Record<string, string>
+): Promise<"succeed" | "failed" | "processing"> {
+  const res = await fetch(`${KLING_API_BASE}/videos/image2video/${taskId}`, {
+    method: "GET",
+    headers,
+  });
+
+  const result = await res.json();
+  if (!res.ok || result.code !== 0) {
+    console.error(`[generate-video] Kling status error for ${taskId}:`, result.message);
+    return "processing"; // treat API errors as still processing
+  }
+
+  const taskData = result.data;
+
+  if (taskData.task_status === "succeed" && taskData.task_result?.videos?.length > 0) {
+    const tempVideoUrl = taskData.task_result.videos[0].url;
+    let permanentUrl = tempVideoUrl;
+
+    try {
+      const videoRes = await fetch(tempVideoUrl);
+      if (videoRes.ok) {
+        const videoBytes = new Uint8Array(await videoRes.arrayBuffer());
+        const storagePath = `${userId}/${taskId}.mp4`;
+
+        const { error: uploadError } = await serviceClient.storage
+          .from("generated-videos")
+          .upload(storagePath, videoBytes, { contentType: "video/mp4", upsert: true });
+
+        if (!uploadError) {
+          const { data: publicUrlData } = serviceClient.storage
+            .from("generated-videos")
+            .getPublicUrl(storagePath);
+          permanentUrl = publicUrlData.publicUrl;
+        }
+      }
+    } catch (saveErr) {
+      console.error(`[generate-video] Error saving video for ${taskId}:`, saveErr);
+    }
+
+    await serviceClient
+      .from("generated_videos")
+      .update({ video_url: permanentUrl, status: "complete", completed_at: new Date().toISOString() })
+      .eq("kling_task_id", taskId);
+
+    return "succeed";
+  }
+
+  if (taskData.task_status === "failed") {
+    const errorMsg = taskData.task_status_msg || "Video generation failed";
+    await serviceClient
+      .from("generated_videos")
+      .update({ status: "failed", error_message: errorMsg, completed_at: new Date().toISOString() })
+      .eq("kling_task_id", taskId);
+
+    return "failed";
+  }
+
+  return "processing";
 }
 
 serve(async (req) => {
@@ -116,7 +182,6 @@ serve(async (req) => {
 
       const taskId = result.data.task_id;
 
-      // Insert a record into generated_videos table
       const serviceClient = getServiceClient();
       const { error: dbError } = await serviceClient.from("generated_videos").insert({
         user_id: userId,
@@ -131,7 +196,6 @@ serve(async (req) => {
 
       if (dbError) {
         console.error("[generate-video] DB insert error:", dbError);
-        // Don't fail the request — the video task was already created
       }
 
       return new Response(
@@ -163,54 +227,41 @@ serve(async (req) => {
         task_id: taskData.task_id,
       };
 
-      // When video is complete, download and persist it
       if (taskData.task_status === "succeed" && taskData.task_result?.videos?.length > 0) {
         const tempVideoUrl = taskData.task_result.videos[0].url;
         const videoDuration = taskData.task_result.videos[0].duration;
 
-        let permanentUrl = tempVideoUrl; // fallback to temp URL
+        let permanentUrl = tempVideoUrl;
 
         try {
-          // Download the MP4 from Kling's temporary URL
           console.log(`[generate-video] Downloading MP4 from Kling for task ${task_id}...`);
           const videoRes = await fetch(tempVideoUrl);
           if (!videoRes.ok) throw new Error(`Failed to download video: ${videoRes.status}`);
-          
+
           const videoBuffer = await videoRes.arrayBuffer();
           const videoBytes = new Uint8Array(videoBuffer);
           console.log(`[generate-video] Downloaded ${videoBytes.length} bytes`);
 
-          // Upload to generated-videos bucket
           const serviceClient = getServiceClient();
           const storagePath = `${userId}/${task_id}.mp4`;
-          
+
           const { error: uploadError } = await serviceClient.storage
             .from("generated-videos")
-            .upload(storagePath, videoBytes, {
-              contentType: "video/mp4",
-              upsert: true,
-            });
+            .upload(storagePath, videoBytes, { contentType: "video/mp4", upsert: true });
 
           if (uploadError) {
             console.error("[generate-video] Storage upload error:", uploadError);
           } else {
-            // Get the public URL
             const { data: publicUrlData } = serviceClient.storage
               .from("generated-videos")
               .getPublicUrl(storagePath);
-            
             permanentUrl = publicUrlData.publicUrl;
             console.log(`[generate-video] Video stored permanently at: ${permanentUrl}`);
           }
 
-          // Update DB record
           const { error: dbUpdateError } = await serviceClient
             .from("generated_videos")
-            .update({
-              video_url: permanentUrl,
-              status: "complete",
-              completed_at: new Date().toISOString(),
-            })
+            .update({ video_url: permanentUrl, status: "complete", completed_at: new Date().toISOString() })
             .eq("kling_task_id", task_id);
 
           if (dbUpdateError) {
@@ -218,7 +269,6 @@ serve(async (req) => {
           }
         } catch (saveErr) {
           console.error("[generate-video] Error saving video permanently:", saveErr);
-          // Still return the temp URL so the user can see the video
         }
 
         response.video_url = permanentUrl;
@@ -228,16 +278,11 @@ serve(async (req) => {
       if (taskData.task_status === "failed") {
         response.error = taskData.task_status_msg || "Video generation failed";
 
-        // Update DB record to failed
         try {
           const serviceClient = getServiceClient();
           await serviceClient
             .from("generated_videos")
-            .update({
-              status: "failed",
-              error_message: response.error as string,
-              completed_at: new Date().toISOString(),
-            })
+            .update({ status: "failed", error_message: response.error as string, completed_at: new Date().toISOString() })
             .eq("kling_task_id", task_id);
         } catch (dbErr) {
           console.error("[generate-video] DB update (failed) error:", dbErr);
@@ -245,6 +290,54 @@ serve(async (req) => {
       }
 
       return new Response(JSON.stringify(response), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ---- RECOVER stuck videos (status-only, zero Kling cost) ----
+    if (action === "recover") {
+      const serviceClient = getServiceClient();
+
+      // Find all processing videos for this user older than 10 minutes
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { data: stuckVideos, error: queryError } = await serviceClient
+        .from("generated_videos")
+        .select("kling_task_id")
+        .eq("user_id", userId)
+        .eq("status", "processing")
+        .lt("created_at", tenMinutesAgo)
+        .not("kling_task_id", "is", null);
+
+      if (queryError) {
+        console.error("[generate-video] Recovery query error:", queryError);
+        return new Response(JSON.stringify({ recovered: 0, error: queryError.message }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!stuckVideos || stuckVideos.length === 0) {
+        return new Response(JSON.stringify({ recovered: 0 }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`[generate-video] Recovering ${stuckVideos.length} stuck video(s) for user ${userId}`);
+
+      let recovered = 0;
+      for (const video of stuckVideos) {
+        if (!video.kling_task_id) continue;
+        try {
+          const result = await checkAndUpdateTask(serviceClient, video.kling_task_id, userId, headers);
+          if (result !== "processing") {
+            recovered++;
+            console.log(`[generate-video] Recovered task ${video.kling_task_id} -> ${result}`);
+          }
+        } catch (err) {
+          console.error(`[generate-video] Error recovering task ${video.kling_task_id}:`, err);
+        }
+      }
+
+      return new Response(JSON.stringify({ recovered, checked: stuckVideos.length }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
