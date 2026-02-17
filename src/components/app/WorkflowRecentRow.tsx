@@ -57,7 +57,7 @@ function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl
     <button
       onPointerDown={handlePointerDown}
       onClick={handleClick}
-      className="group/thumb flex flex-col gap-2 shrink-0 w-[130px] sm:w-[140px] snap-start text-left touch-pan-x"
+      className="group/thumb flex flex-col gap-2 shrink-0 w-[130px] sm:w-[140px] text-left touch-pan-x"
     >
       <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border transition-shadow group-hover/thumb:shadow-md">
         {errored || (!isLoading && !optimizedUrl) ? (
@@ -139,7 +139,7 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el || jobs.length === 0) return;
-    const cardWidth = 140 + 12; // card width + gap
+    const cardWidth = 130 + 12; // mobile card width + gap
     const idx = Math.round(el.scrollLeft / cardWidth);
     setActiveIndex(Math.min(idx, jobs.length - 1));
   }, [jobs.length]);
@@ -181,17 +181,23 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
             ))}
       </div>
 
-      {/* Apple-style pill indicators */}
-      {jobs.length > 1 && (
-        <div className="flex justify-center items-center gap-1.5 pt-3 md:hidden">
-          {jobs.map((_, i) => (
-            <div
-              key={i}
-              className={`rounded-full transition-all duration-300 ease-in-out ${
-                i === activeIndex ? 'w-6 h-1 bg-primary' : 'w-1.5 h-1.5 bg-muted-foreground/20'
-              }`}
-            />
-          ))}
+      {/* Compact iOS-style indicators */}
+      {jobs.length > 2 && (
+        <div className="flex justify-center items-center gap-1 pt-3 md:hidden">
+          {jobs.map((_, i) => {
+            const dist = Math.abs(i - activeIndex);
+            let sizeClass: string;
+            if (dist === 0) sizeClass = 'w-5 h-1.5 bg-primary';
+            else if (dist === 1) sizeClass = 'w-1.5 h-1.5 bg-muted-foreground/30';
+            else if (dist === 2) sizeClass = 'w-1 h-1 bg-muted-foreground/15';
+            else return null; // hide dots beyond distance 2
+            return (
+              <div
+                key={i}
+                className={`rounded-full transition-all duration-300 ease-in-out ${sizeClass}`}
+              />
+            );
+          })}
         </div>
       )}
 
