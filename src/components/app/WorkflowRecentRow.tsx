@@ -6,6 +6,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { formatDistanceToNow } from 'date-fns';
+import { WorkflowPreviewModal } from '@/components/app/WorkflowPreviewModal';
 
 interface RecentJob {
   id: string;
@@ -29,17 +30,15 @@ function firstImageUrl(results: unknown): string | null {
   return null;
 }
 
-function ThumbnailCard({ job, signedUrl }: { job: RecentJob; signedUrl: string | null | undefined }) {
-  const navigate = useNavigate();
+function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl: string | null | undefined; onSelect: (job: RecentJob) => void }) {
   const [errored, setErrored] = useState(false);
 
   const optimizedUrl = signedUrl ? getOptimizedUrl(signedUrl, { quality: 60 }) : null;
-  // undefined = still loading, null = no image
   const isLoading = signedUrl === undefined;
 
   return (
     <button
-      onClick={() => navigate('/app/library')}
+      onClick={() => onSelect(job)}
       className="group/thumb flex flex-col gap-2 shrink-0 w-[140px] text-left"
     >
       <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border transition-shadow group-hover/thumb:shadow-md">
@@ -57,7 +56,6 @@ function ThumbnailCard({ job, signedUrl }: { job: RecentJob; signedUrl: string |
             onError={() => setErrored(true)}
           />
         ) : (
-          /* Still fetching signed URL — show shimmer */
           <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
         )}
         <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur text-[10px] font-semibold px-1.5 py-0.5 rounded">
@@ -78,6 +76,7 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
   const navigate = useNavigate();
   const [signedUrlMap, setSignedUrlMap] = useState<Record<string, string>>({});
   const [urlsReady, setUrlsReady] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<RecentJob | null>(null);
 
   useEffect(() => {
     if (jobs.length === 0) { setUrlsReady(true); return; }
@@ -132,9 +131,16 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
                 key={job.id}
                 job={job}
                 signedUrl={urlsReady ? (signedUrlMap[job.id] ?? null) : undefined}
+                onSelect={setSelectedJob}
               />
             ))}
       </div>
+
+      <WorkflowPreviewModal
+        open={selectedJob !== null}
+        onOpenChange={(open) => { if (!open) setSelectedJob(null); }}
+        job={selectedJob}
+      />
     </div>
   );
 }
