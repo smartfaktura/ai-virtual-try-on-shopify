@@ -152,15 +152,15 @@ export function FreestylePromptPanel({
 
   return (
     <div
-      className={`relative bg-background/80 backdrop-blur-xl border overflow-hidden transition-colors duration-200 ${
+      className={cn(
+        'relative bg-background/80 backdrop-blur-xl transition-colors duration-200',
         isMobile
-          ? 'rounded-t-2xl border-b-0 shadow-none'
-          : 'rounded-2xl shadow-lg'
-      } ${
+          ? 'rounded-t-3xl border-0 shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.08)]'
+          : 'rounded-2xl border shadow-lg',
         isDragOver
           ? 'border-primary border-2 ring-2 ring-primary/20'
-          : 'border-border/60'
-      }`}
+          : !isMobile && 'border-border/60'
+      )}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
@@ -186,13 +186,13 @@ export function FreestylePromptPanel({
       {isMobile && onToggleCollapse && (
         <button
           onClick={onToggleCollapse}
-          className="w-full flex flex-col items-center gap-0.5 py-1.5 hover:bg-muted/30 transition-colors"
+          className="w-full flex items-center justify-center min-h-[44px] active:bg-muted/20 transition-colors"
+          aria-label={isCollapsed ? 'Expand prompt' : 'Collapse prompt'}
         >
-          <div className="w-8 h-1 rounded-full bg-border/60" />
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground/60">
-            <ChevronUp className={cn('w-3 h-3 transition-transform', isCollapsed && 'rotate-180')} />
-            <span>{isCollapsed ? 'Show prompt' : 'Hide'}</span>
-          </div>
+          <div className={cn(
+            'w-9 h-[5px] rounded-full transition-colors',
+            isCollapsed ? 'bg-muted-foreground/30' : 'bg-border/50'
+          )} />
         </button>
       )}
 

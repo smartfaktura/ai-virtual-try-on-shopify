@@ -610,7 +610,7 @@ export default function Freestyle() {
       </div>
 
       {/* Mobile: Docked bottom prompt panel */}
-      <div className="lg:hidden border-t border-border/60 bg-background/80 backdrop-blur-xl">
+      <div className="lg:hidden">
         {showSceneHint && selectedScene && (
           <div className="flex justify-center py-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg">
