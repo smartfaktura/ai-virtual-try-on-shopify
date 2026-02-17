@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Image, Package, Palette, Calendar } from 'lucide-react';
+import { Image, Package, Palette, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -14,6 +14,7 @@ const getTeamAvatar = (activityId: string) => {
   if (activityId.startsWith('job-')) return { src: teamAvatar('avatar-sophia.jpg'), name: 'Sophia' };
   if (activityId.startsWith('product-')) return { src: teamAvatar('avatar-max.jpg'), name: 'Max' };
   if (activityId.startsWith('brand-')) return { src: teamAvatar('avatar-sienna.jpg'), name: 'Sienna' };
+  if (activityId.startsWith('freestyle-')) return { src: teamAvatar('avatar-liam.jpg'), name: 'Liam' };
   return null;
 };
 
@@ -86,9 +87,27 @@ export function ActivityFeed() {
         });
       }
 
+      // Recent freestyle generations
+      const { data: freestyles } = await supabase
+        .from('freestyle_generations')
+        .select('id, prompt, created_at')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      for (const f of freestyles ?? []) {
+        const truncated = f.prompt.length > 30 ? f.prompt.slice(0, 30) + '…' : f.prompt;
+        items.push({
+          id: `freestyle-${f.id}`,
+          icon: Sparkles,
+          text: `Freestyle "${truncated}" generated`,
+          time: formatDistanceToNow(new Date(f.created_at), { addSuffix: true }),
+          sortDate: new Date(f.created_at),
+        });
+      }
+
       // Sort by date descending
       items.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
-      return items.slice(0, 6);
+      return items.slice(0, 8);
     },
     enabled: !!user,
   });
