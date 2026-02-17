@@ -1,67 +1,74 @@
 
 
-## Recent Creations Preview Modal
+## Fix: Virtual Try-On Aspect Ratio, Ring Duplication, and Framing Conflicts
 
-When clicking a thumbnail in the Recent Creations row, instead of navigating to the Library, a dialog opens showing all generated images from that specific workflow job. Images are loaded lazily (only after the modal opens), with shimmer placeholders. A download button offers single-image download or ZIP for multiple images.
+### Problem 1: Aspect Ratio Not Applied (Story Format Ignored)
 
-### UX Flow
+The `generate-tryon` edge function receives `aspectRatio` (e.g., `"9:16"`) in the payload but never uses it. The AI model receives no instruction about image orientation, so it defaults to roughly square compositions regardless of what the user selected.
 
-```text
-User clicks thumbnail card
-       |
-       v
-+--------------------------------------+
-| "Virtual Try-On Set"     [X]         |
-| 4 images - 2 minutes ago             |
-|                                      |
-| [shimmer] [shimmer] [shimmer] [shim] |
-|   (signs URLs + loads images)        |
-|   ...becomes...                      |
-| [img1]   [img2]   [img3]   [img4]   |
-|                                      |
-| Clicking any image opens lightbox    |
-|                                      |
-| [View All in Library]  [Download]    |
-+--------------------------------------+
+**Fix:** Inject an explicit aspect ratio / orientation instruction into the prompt so the AI generates the correct shape. Add a line like:
+```
+IMAGE FORMAT: Portrait orientation (9:16 aspect ratio). The image must be taller than it is wide, formatted for Instagram/TikTok Stories.
 ```
 
-- 1 image: "Download" button downloads directly
-- 2+ images: "Download All" button downloads as .zip
+Mapping:
+- `9:16` -> "Portrait orientation (9:16), tall and narrow, Stories format"
+- `4:5` -> "Portrait orientation (4:5), slightly taller than wide, Instagram feed format"
+- `1:1` -> "Square format (1:1), equal width and height"
+- `16:9` -> "Landscape orientation (16:9), wider than tall, cinematic format"
+
+### Problem 2: Ring Duplicated on Both Hands
+
+When framing is "Auto" (null) and the product is a ring, the prompt gives no guidance about which hand to show it on. The AI sees a ring product image and places one on each hand.
+
+**Fix:** When framing is Auto and the product type contains jewelry-related keywords (ring, bracelet, watch, etc.), auto-detect the appropriate framing and inject a targeted instruction:
+- For rings: "The ring must appear on ONE hand only, exactly matching the product from [PRODUCT IMAGE]. Do NOT place rings on both hands."
+- Add this as a product-specific instruction within the prompt.
+
+### Problem 3: Framing Conflicts with Identity Preservation
+
+The `buildFramingInstruction` function has a fundamental conflict. For framings where the face is not visible (`hand_wrist`, `lower_body`, `back_view`, `side_profile`), it still includes `modelRef` which says "Match the exact skin tone, age, and body characteristics" -- but the main prompt section 1 simultaneously demands "Keep the EXACT same face, facial features". The AI tries to reconcile both, leading to distortions or safety blocks.
+
+**Fix:** Apply conditional identity logic (already documented in memory) inside the edge function:
+- For face-visible framings (`full_body`, `upper_body`, `close_up`): Keep full identity preservation (face + body).
+- For faceless framings (`hand_wrist`, `neck_shoulders`, `side_profile`, `lower_body`, `back_view`): Replace step 1 identity block with a skin-tone-only instruction and explicitly state "The face is not visible in this framing."
 
 ### Technical Changes
 
-**New file: `src/components/app/WorkflowPreviewModal.tsx`**
+**`supabase/functions/generate-tryon/index.ts`**
 
-A dialog component that receives the job data (id, workflow_name, created_at, results, requested_count). On open:
-1. Extracts all URLs from `results` (flat string array)
-2. Calls `toSignedUrls()` once to batch-sign them
-3. Renders a grid of `ShimmerImage` components with shimmer while signing
-4. Click on any image opens the existing `ImageLightbox`
-5. Footer has two buttons:
-   - "View All in Library" -- navigates to `/app/library`
-   - "Download" (1 image) or "Download All (N)" (2+ images)
-     - Single: calls `downloadSingleImage` from `dropDownload.ts`
-     - Multiple: calls `downloadDropAsZip` with progress indicator
-6. Download button shows a spinner/progress while downloading
+1. Add `buildAspectRatioInstruction(aspectRatio)` function that returns orientation text
+2. Refactor `buildFramingInstruction` to support conditional identity:
+   - Accept the full request, not just framing + model
+   - For faceless framings: return framing instruction + "Match skin tone and body type only. The face is NOT visible."
+   - For face-visible framings: return framing instruction + full identity ref
+3. Modify `buildPrompt`:
+   - Inject aspect ratio instruction after the quality requirements section
+   - For faceless framings, replace the "MUST look exactly like the model" block (step 1) with a softer "match skin tone, body proportions" version
+   - Add jewelry-specific guard: when product type matches ring/bracelet/watch keywords and no explicit framing is set, inject "Product worn on ONE hand/wrist only"
+4. Add `side_profile` to the framing instructions map (currently missing)
 
-**Modified file: `src/components/app/WorkflowRecentRow.tsx`**
+### Files to Modify
 
-- Add state: `selectedJob: RecentJob | null`
-- Change `ThumbnailCard` onClick from `navigate('/app/library')` to `onSelect(job)`
-- Render `WorkflowPreviewModal` at the bottom of the component, controlled by `selectedJob`
-
-### Files
-
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/components/app/WorkflowPreviewModal.tsx` | Create |
-| `src/components/app/WorkflowRecentRow.tsx` | Modify (add modal trigger) |
+| `supabase/functions/generate-tryon/index.ts` | Add aspect ratio prompt injection, fix framing identity conflicts, add jewelry guard |
 
-### Key Details
+### Prompt Structure After Fix
 
-- No images are loaded until the modal opens -- the `toSignedUrls` call only fires inside the modal's `useEffect` when `open` becomes true
-- Uses existing `ShimmerImage` for consistent loading UX
-- Uses existing `ImageLightbox` for full-screen viewing with arrow navigation
-- Uses existing `downloadDropAsZip` and `downloadSingleImage` from `dropDownload.ts`
-- Uses existing `toSignedUrls` for batch URL signing
-- Download progress shown via a percentage on the button text for ZIP downloads
+```text
+Create a professional fashion photograph...
+
+IMAGE FORMAT: Portrait 9:16 (Stories). The image must be significantly taller than wide.
+
+CRITICAL REQUIREMENTS:
+1. [Full identity block OR skin-tone-only block depending on framing]
+2. The clothing MUST look exactly like [PRODUCT IMAGE]...
+   [+ jewelry guard if applicable: "Wear on ONE hand only"]
+3. Photography style...
+4. Quality requirements...
+5. FRAMING: [specific framing instruction if selected]
+
+Remember: ...
+```
+
