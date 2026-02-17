@@ -73,8 +73,12 @@ function FloatingEl({ element }: { element: SceneElement }) {
     animation: `${animName} 0.55s cubic-bezier(.22,1,.36,1) ${element.enterDelay}s forwards`,
   };
 
-  // Optimize element images to small thumbnails
-  const optimizedImage = element.image ? getOptimizedUrl(element.image, { width: 200 }) : undefined;
+  // Optimize element images — model circles use quality-only to preserve face crop
+  const optimizedImage = element.image
+    ? element.type === 'model'
+      ? getOptimizedUrl(element.image, { quality: 60 })
+      : getOptimizedUrl(element.image, { width: 200 })
+    : undefined;
 
   switch (element.type) {
     case 'product':
@@ -154,7 +158,9 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
 
   // Preload only the element images (small chips)
   const elementUrls = useMemo(
-    () => scene.elements.filter((el) => el.image).map((el) => getOptimizedUrl(el.image!, { width: 120 })),
+    () => scene.elements.filter((el) => el.image).map((el) =>
+      el.type === 'model' ? getOptimizedUrl(el.image!, { quality: 60 }) : getOptimizedUrl(el.image!, { width: 200 })
+    ),
     [scene.elements],
   );
   const elementsReady = usePreloadImages(elementUrls);
@@ -181,14 +187,14 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
       <img
         src={backgrounds[prev]}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-center"
+        className="absolute inset-0 w-full h-full object-cover object-top"
       />
       {/* Current image (crossfade in) */}
       <img
         key={index}
         src={backgrounds[index]}
         alt=""
-        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-300 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-300 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
           ...(bgLoaded ? { animation: `wf-carousel-fade 0.6s ease-in-out forwards` } : {}),
         }}
@@ -279,7 +285,9 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
 
   // Only preload the small element images (not backgrounds)
   const elementUrls = useMemo(
-    () => scene.elements.filter((el) => el.image).map((el) => getOptimizedUrl(el.image!, { width: 120 })),
+    () => scene.elements.filter((el) => el.image).map((el) =>
+      el.type === 'model' ? getOptimizedUrl(el.image!, { quality: 60 }) : getOptimizedUrl(el.image!, { width: 200 })
+    ),
     [scene.elements],
   );
   const elementsReady = usePreloadImages(elementUrls);
@@ -320,7 +328,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
         alt=""
         loading="eager"
         decoding="async"
-        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
           transform: 'translateZ(0)',
         }}
