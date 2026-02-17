@@ -10,6 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { useGenerateVideo, VideoGenStatus, GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useCredits } from '@/contexts/CreditContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -106,7 +108,30 @@ function VideoHistoryCard({ video }: { video: GeneratedVideo }) {
   );
 }
 
+function VideoComingSoon() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+        <Film className="w-8 h-8 text-primary" />
+      </div>
+      <h1 className="text-2xl font-bold">Video Generation</h1>
+      <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+      <p className="text-muted-foreground max-w-md">
+        Turn any product image into a stunning animated video clip. This feature is currently under development and will be available soon.
+      </p>
+    </div>
+  );
+}
+
 export default function VideoGenerate() {
+  const { isAdmin } = useIsAdmin();
+
+  if (!isAdmin) return <VideoComingSoon />;
+
+  return <VideoGenerateInner />;
+}
+
+function VideoGenerateInner() {
   const [imageSource, setImageSource] = useState<ImageSource>('upload');
   const [imageUrl, setImageUrl] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

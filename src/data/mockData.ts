@@ -1376,7 +1376,7 @@ export const pricingPlans: PricingPlan[] = [
     credits: 500,
     features: [
       'Try-On mode',
-      'Video Generation',
+      'Video Generation (coming soon)',
       '3 Brand Profiles',
       'Up to 10 products',
       'High quality images',
@@ -1391,7 +1391,7 @@ export const pricingPlans: PricingPlan[] = [
     credits: 1500,
     features: [
       'Priority queue',
-      'Video Generation',
+      'Video Generation (coming soon)',
       '10 Brand Profiles',
       'Up to 100 products',
       'All workflows',
@@ -1407,7 +1407,7 @@ export const pricingPlans: PricingPlan[] = [
     annualPrice: 1716,
     credits: 4500,
     features: [
-      'Video Generation',
+      'Video Generation (coming soon)',
       'Creative Drops',
       'Unlimited profiles',
       'Unlimited products',
