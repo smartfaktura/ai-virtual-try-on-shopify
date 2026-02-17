@@ -113,59 +113,74 @@ export function BuyCreditsModal() {
           <div className="px-6 pb-6 pt-5">
 
             {/* === TOP UP TAB === */}
-            {activeTab === 'topup' && (
-              <div className="space-y-5">
-                <p className="text-sm text-muted-foreground">
-                  One-time credit packs · Never expire · Use across all modes
-                </p>
+            {activeTab === 'topup' && (() => {
+              const basePPC = creditPacks[0].pricePerCredit;
+              return (
+                <div className="space-y-5">
+                  <p className="text-sm text-muted-foreground">
+                    One-time credit packs · Never expire · Use across all modes
+                  </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {creditPacks.map((pack) => {
-                    const imageEstimate = Math.round(pack.credits / 5);
-                    return (
-                      <div
-                        key={pack.packId}
-                        className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-md ${
-                          pack.popular
-                            ? 'border-2 border-primary bg-card'
-                            : 'border border-border bg-card hover:border-border/80'
-                        }`}
-                      >
-                        {pack.popular && (
-                          <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2 z-10">
-                            <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-3 py-0.5">
-                              Best Value
-                            </Badge>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {creditPacks.map((pack) => {
+                      const imageEstimate = Math.round(pack.credits / 5);
+                      const centsPerCredit = (pack.price / pack.credits * 100).toFixed(1);
+                      const savePct = basePPC > pack.pricePerCredit
+                        ? Math.round((1 - pack.pricePerCredit / basePPC) * 100)
+                        : 0;
+                      return (
+                        <div
+                          key={pack.packId}
+                          className={`relative rounded-2xl text-center transition-all duration-200 hover:shadow-md ${
+                            pack.popular
+                              ? 'border-2 border-primary bg-card'
+                              : 'border border-border bg-card hover:border-border/80'
+                          }`}
+                        >
+                          {pack.popular && (
+                            <div className="absolute -top-2.5 left-1/2 transform -translate-x-1/2 z-10">
+                              <Badge className="bg-primary text-primary-foreground text-[10px] tracking-widest uppercase px-3 py-0.5">
+                                Best Value
+                              </Badge>
+                            </div>
+                          )}
+                          <div className="p-5 space-y-3">
+                            <p className="text-2xl font-bold tracking-tight">${pack.price}</p>
+                            <div className="h-px bg-border/50 mx-4" />
+                            <div>
+                              <p className="text-base font-semibold">{pack.credits.toLocaleString()} credits</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">~{imageEstimate} images · {centsPerCredit}¢/credit</p>
+                            </div>
+                            {savePct > 0 && (
+                              <span className="inline-flex rounded-full text-[10px] font-bold px-2 py-0.5 bg-emerald-500/15 text-emerald-700">
+                                Save {savePct}%
+                              </span>
+                            )}
+                            {pack.popular && (
+                              <p className="text-[10px] text-muted-foreground">Most popular with creators</p>
+                            )}
+                            <Button
+                              variant={pack.popular ? 'default' : 'outline'}
+                              className="w-full min-h-[44px] rounded-xl text-sm font-medium"
+                              onClick={() => handlePurchase(pack.credits)}
+                            >
+                              Buy {pack.credits.toLocaleString()} credits
+                            </Button>
                           </div>
-                        )}
-                        <div className="p-5 space-y-3">
-                          <p className="text-2xl font-bold tracking-tight">${pack.price}</p>
-                          <div className="h-px bg-border/50 mx-4" />
-                          <div>
-                            <p className="text-base font-semibold">{pack.credits.toLocaleString()} credits</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">~{imageEstimate} images</p>
-                          </div>
-                          <Button
-                            variant={pack.popular ? 'default' : 'outline'}
-                            className="w-full min-h-[44px] rounded-xl text-sm font-medium"
-                            onClick={() => handlePurchase(pack.credits)}
-                          >
-                            Buy
-                          </Button>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
 
-                <button
-                  onClick={() => setActiveTab('upgrade')}
-                  className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
-                >
-                  Or upgrade your plan for monthly credits →
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={() => setActiveTab('upgrade')}
+                    className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
+                  >
+                    Or upgrade your plan for monthly credits →
+                  </button>
+                </div>
+              );
+            })()}
 
             {/* === PLANS TAB === */}
             {activeTab === 'upgrade' && (
@@ -208,10 +223,11 @@ export function BuyCreditsModal() {
                     const currentIdx = PLAN_ORDER.indexOf(plan);
                     const targetIdx = PLAN_ORDER.indexOf(p.planId);
                     const displayPrice = isAnnual ? Math.round(p.annualPrice / 12) : p.monthlyPrice;
+                    const isFree = p.planId === 'free';
                     const credits = typeof p.credits === 'number' ? p.credits : 0;
                     const imageEstimate = credits > 0 ? Math.round(credits / 5) : null;
 
-                    let ctaLabel = targetIdx > currentIdx ? `Get ${p.name}` : 'Downgrade';
+                    let ctaLabel = targetIdx > currentIdx ? `Get ${p.name}` : `Get ${p.name}`;
                     if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
                     else if (isCurrent) ctaLabel = 'Current Plan';
                     const isDisabled = isCurrent && subscriptionStatus !== 'canceling';
@@ -241,12 +257,28 @@ export function BuyCreditsModal() {
                         </div>
 
                         {/* Price */}
-                        <div className="flex items-baseline gap-1 mb-1">
-                          <span className="text-3xl font-bold tracking-tight">${displayPrice}</span>
-                          <span className="text-xs text-muted-foreground">/mo</span>
+                        <div className="mb-1">
+                          {isFree ? (
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-3xl font-bold tracking-tight">Free</span>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-baseline gap-1">
+                                {isAnnual && p.monthlyPrice > displayPrice && (
+                                  <span className="text-sm text-muted-foreground line-through">${p.monthlyPrice}</span>
+                                )}
+                                <span className="text-3xl font-bold tracking-tight">${displayPrice}</span>
+                                <span className="text-xs text-muted-foreground">/mo</span>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {isAnnual ? 'billed annually' : 'billed monthly'}
+                              </p>
+                            </>
+                          )}
                         </div>
 
-                        {/* Image estimate as hero metric + credits subtitle */}
+                        {/* Image estimate */}
                         <div className="mb-4">
                           {imageEstimate ? (
                             <>
@@ -258,7 +290,7 @@ export function BuyCreditsModal() {
                           )}
                         </div>
 
-                        {/* Features — 3 max */}
+                        {/* Features */}
                         <div className="space-y-2 flex-1 mb-4">
                           {p.features.slice(0, 4).map((f, i) => (
                             <div key={i} className="flex items-start gap-2">
