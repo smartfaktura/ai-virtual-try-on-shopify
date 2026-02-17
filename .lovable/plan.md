@@ -1,39 +1,51 @@
 
 
-## Fix: Glitchy Corners on Mobile/Tablet Prompt Panel
+## Fix: Prompt Panel Looks "Clipped" Instead of Floating on Mobile/Tablet
 
 ### Problem
 
-On mobile and tablet, the rounded top corners of the prompt panel show visual artifacts because:
-1. **Semi-transparent background** (`bg-background/80`) lets gallery content bleed through at the curved edges
-2. **Custom shadow** (`shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.08)]`) spreads beyond the rounded corners, creating a visible edge
-3. **Tablets** (768px+) get the desktop styling with a visible `border` and `shadow-lg`, which looks wrong since the panel is docked like mobile
+The prompt panel has `rounded-t-3xl` corners on mobile, but it sits flush against the gallery container above it. The gallery's bottom edge creates a hard horizontal line exactly where the panel's rounded corners curve inward. Combined with the panel's shadow, this makes the corners look "clipped into" the layout rather than floating above it.
 
-### Fix
+### Solution
 
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx` (line 169)**
+Add a small negative margin-top on the prompt panel wrapper (mobile only) so the panel overlaps the gallery slightly. This lets the rounded corners float over the gallery content, eliminating the hard line. Also ensure the panel's shadow is visible above the gallery.
 
-- Change `bg-background/80` to `bg-background` -- fully opaque so no content bleeds through at corners
-- Soften the mobile shadow to a tighter, subtler spread: `shadow-[0_-2px_12px_-4px_rgba(0,0,0,0.06)]`
-- These two changes eliminate the visible edge artifacts at the rounded corners
+### Changes
+
+**File: `src/pages/Freestyle.tsx` (line 583)**
+
+Update the prompt panel wrapper to pull it up slightly on mobile so it overlaps the gallery edge:
 
 ```tsx
-// Before (line 169-171):
-'relative bg-background/80 backdrop-blur-xl transition-colors duration-200',
-isMobile
-  ? 'rounded-t-3xl border-0 shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.08)]'
+// Before:
+<div className="flex-shrink-0 relative z-20 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
 
 // After:
-'relative bg-background backdrop-blur-xl transition-colors duration-200',
-isMobile
-  ? 'rounded-t-3xl border-0 shadow-[0_-2px_12px_-4px_rgba(0,0,0,0.06)]'
+<div className="flex-shrink-0 relative z-20 -mt-4 lg:mt-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
+```
+
+The `-mt-4` pulls the panel 16px upward on mobile/tablet, so its rounded corners sit over the gallery content. `lg:mt-0` resets this on desktop where the panel is absolutely positioned.
+
+**File: `src/components/app/freestyle/FreestylePromptPanel.tsx` (line 171)**
+
+Slightly increase the shadow so the floating effect is more obvious now that the panel overlaps content:
+
+```tsx
+// Before:
+? 'rounded-t-3xl border-0 shadow-[0_-2px_12px_-4px_rgba(0,0,0,0.06)]'
+
+// After:
+? 'rounded-t-3xl border-0 shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]'
 ```
 
 ### Result
-- Opaque background prevents content from showing through the curved edges
-- Tighter shadow eliminates the visible spread artifacts at the corners
-- Desktop styling unchanged (keeps its own border/shadow)
 
-### Files
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` -- 2 small value changes on lines 169 and 171
+- The prompt panel's rounded corners visually float over the gallery below
+- No hard line or "clipped" edge visible at the corners
+- The soft upward shadow reinforces the floating appearance
+- Desktop layout unchanged (absolute positioning ignores margins)
+
+### Files Modified
+- `src/pages/Freestyle.tsx` -- add `-mt-4 lg:mt-0` to panel wrapper
+- `src/components/app/freestyle/FreestylePromptPanel.tsx` -- slightly larger shadow for floating effect
 
