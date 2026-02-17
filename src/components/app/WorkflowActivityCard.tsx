@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ArrowRight, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, ArrowRight, AlertCircle, XCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
-
 interface ActiveJob {
   id: string;
   status: string;
@@ -16,12 +15,7 @@ interface ActiveJob {
   error_message: string | null;
 }
 
-interface CompletedJob {
-  id: string;
-  workflow_id: string | null;
-  workflow_name: string | null;
-  completed_at: string | null;
-}
+
 
 interface FailedJob {
   id: string;
@@ -33,7 +27,6 @@ interface FailedJob {
 
 interface WorkflowActivityCardProps {
   jobs: ActiveJob[];
-  completedJobs?: CompletedJob[];
   failedJobs?: FailedJob[];
 }
 
@@ -45,7 +38,7 @@ function elapsedLabel(dateStr: string): string {
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
 
-export function WorkflowActivityCard({ jobs, completedJobs = [], failedJobs = [] }: WorkflowActivityCardProps) {
+export function WorkflowActivityCard({ jobs, failedJobs = [] }: WorkflowActivityCardProps) {
   const navigate = useNavigate();
   const [, tick] = useState(0);
 
@@ -55,7 +48,7 @@ export function WorkflowActivityCard({ jobs, completedJobs = [], failedJobs = []
     return () => clearInterval(id);
   }, [jobs.length]);
 
-  const hasContent = jobs.length > 0 || completedJobs.length > 0 || failedJobs.length > 0;
+  const hasContent = jobs.length > 0 || failedJobs.length > 0;
   if (!hasContent) return null;
 
   return (
@@ -102,36 +95,7 @@ export function WorkflowActivityCard({ jobs, completedJobs = [], failedJobs = []
         );
       })}
 
-      {/* Just-completed jobs (green) */}
-      {completedJobs.map((job) => (
-        <Card key={job.id} className="border-emerald-500/20 bg-emerald-500/[0.04]">
-          <CardContent className="flex items-center gap-4 py-4 px-5">
-            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-emerald-500/10 shrink-0">
-              <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {job.workflow_name ?? 'Workflow generation'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Completed {job.completed_at ? formatDistanceToNow(new Date(job.completed_at), { addSuffix: true }) : 'just now'}
-              </p>
-            </div>
-            <Badge className="shrink-0 text-[10px] uppercase tracking-wider font-semibold bg-emerald-500/15 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20">
-              Completed
-            </Badge>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="shrink-0 gap-1.5"
-              onClick={() => navigate('/app/library')}
-            >
-              View
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+
 
       {/* Failed jobs (red) */}
       {failedJobs.map((job) => (
