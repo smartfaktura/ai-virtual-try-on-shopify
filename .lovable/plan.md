@@ -1,33 +1,29 @@
 
 
-## Fix Zoomed-In / Mis-Cropped Workflow Preview Images
+## Fix Zoomed-In Product and Scene Chip Images
 
 ### Problem
+Product and scene chip thumbnails in workflow previews appear zoomed in and cropped because `getOptimizedUrl({ width: 200 })` resizes them server-side to 200px wide. The browser then applies `object-cover` on a 56x64px container, causing the crop to look distorted. This is the same issue that was already fixed for model circle images.
 
-Two issues causing the "zoomed in" and wrongly-cropped appearance:
-
-1. **Model circle portraits** (e.g. Charlotte shows just chin/lips): The `getOptimizedUrl({ width: 200 })` resizes the source image server-side to 200px wide. When the browser then applies `object-cover` on a 60x60 circle, the crop focal point shifts — showing torso/chin instead of the face. The project's own convention (documented in memory) states that tiny circular avatars should use quality-only optimization without width constraints.
-
-2. **Background images** (showing mid-body instead of face): Changing from `object-top` to `object-center` moved the crop anchor. These are portrait photos of models where the face is in the upper portion. With `object-center` on a 3:4 container, the crop centers on the torso.
+### Solution
+Apply the same quality-only optimization to ALL element types (product, scene, model) -- no server-side width resizing. This lets the browser handle the crop on the full-resolution image, preserving the natural look.
 
 ### Changes
 
 **`src/components/app/WorkflowAnimatedThumbnail.tsx`**
 
-1. **Model circle images (FloatingEl, line 77):** Split optimization by element type. For `model` type elements, use quality-only optimization (no width param) so the browser handles the circular crop on the full-resolution image. For `product`/`scene` chips, keep `width: 200` since they display at 56px and work fine.
+1. **Element image optimization (line 77-81):** Remove the type-based split and use quality-only optimization for all element types: `getOptimizedUrl(element.image, { quality: 60 })`. No more `width: 200` for any element.
 
-2. **Background images in recipe mode (line 323):** Revert from `object-center` back to `object-top`. Portrait photos of people have the face at the top — `object-top` preserves head and face visibility in the 3:4 crop.
+2. **Carousel preloader URLs (line 160-163):** Same change -- all elements use `getOptimizedUrl(el.image!, { quality: 60 })`.
 
-3. **Background images in carousel mode (lines 184, 191):** Also revert to `object-top` for consistency.
-
-4. **Element preloader URLs (lines 157, 282):** Match the same split — model images use quality-only, product/scene use width: 200.
+3. **Recipe preloader URLs (line 287-290):** Same change -- all elements use `getOptimizedUrl(el.image!, { quality: 60 })`.
 
 ### What this fixes
-- Charlotte's circle will show her face instead of just chin
-- Background photos will show the model's head/face instead of being anchored to the center of the body
-- Product and scene chips remain correctly sized thumbnails
+- Product chip thumbnails will show the full product image without cropping
+- Scene chip thumbnails will show the full scene without cropping
+- Model circles remain correctly showing faces (already quality-only)
 
 ### What stays the same
 - All animations, transitions, shimmer placeholders
-- The tiered loading approach (backgrounds render immediately, overlays wait for element images)
-- The carousel crossfade behavior
+- Background image positioning (`object-top`)
+- The `object-cover` fit mode on chip images (correct for filling the frame)
