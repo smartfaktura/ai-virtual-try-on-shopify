@@ -45,7 +45,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
             for (let i = 0; i < results.length; i++) {
               const r = results[i];
               const url = typeof r === 'string' ? r : r?.url || r?.image_url;
-              if (!url) continue;
+              if (!url || url.startsWith('data:')) continue;
 
               const workflowName = (job.workflows as any)?.name || '';
               const productTitle = (job.user_products as any)?.title || '';
@@ -117,6 +117,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
       lastPage.hasMore ? allPages.length : undefined,
     initialPageParam: 0,
     enabled: !!user,
+    staleTime: 60_000,
     refetchOnWindowFocus: true,
   });
 }
