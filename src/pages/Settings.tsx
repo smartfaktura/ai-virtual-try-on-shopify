@@ -53,7 +53,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   negatives: 'text overlays, busy backgrounds, watermarks',
   consistencyEnabled: true,
   defaultAspectRatio: '1:1',
-  defaultImageCount: '4',
+  defaultImageCount: '1',
   defaultQuality: 'standard',
   publishMode: 'add',
   autoPublish: false,
@@ -259,8 +259,9 @@ export default function Settings() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">1 image</SelectItem>
+                      <SelectItem value="2">2 images</SelectItem>
+                      <SelectItem value="3">3 images</SelectItem>
                       <SelectItem value="4">4 images</SelectItem>
-                      <SelectItem value="8">8 images</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -495,18 +496,25 @@ export default function Settings() {
                 <h2 className="text-base font-semibold">AI Model Settings</h2>
                 <p className="text-sm text-muted-foreground">Configure the AI image generation model</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm">Model:</span>
-                <Badge variant="secondary">vovv-v1</Badge>
-                <span className="text-xs text-muted-foreground">(Latest stable version)</span>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Standard:</span>
+                  <Badge variant="secondary">Gemini 2.5 Flash</Badge>
+                  <span className="text-xs text-muted-foreground">Fast, good quality</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">High:</span>
+                  <Badge className="bg-primary/10 text-primary hover:bg-primary/10">Gemini 3 Pro</Badge>
+                  <span className="text-xs text-muted-foreground">Best quality, slower</span>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Default Quality Mode</Label>
                 <Select value={settings.defaultQuality} onValueChange={v => updateSetting('defaultQuality', v as 'standard' | 'high')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="standard">Standard (4 credits/image)</SelectItem>
-                    <SelectItem value="high">High (10 credits/image)</SelectItem>
+                    <SelectItem value="standard">Standard — 8 credits/img</SelectItem>
+                    <SelectItem value="high">High (Pro Model) — 16 credits/img</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -538,13 +546,13 @@ export default function Settings() {
                 <p className="text-sm text-muted-foreground">Get help and learn more about the app</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button variant="outline" className="w-full" onClick={() => window.open('https://brandframe.ai/docs', '_blank')}>
+                <Button variant="outline" className="w-full" onClick={() => window.open('https://vovv.ai/docs', '_blank')}>
                   <HelpCircle className="w-4 h-4 mr-2" /> Documentation
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.open('mailto:support@brandframe.ai', '_blank')}>
+                <Button variant="outline" className="w-full" onClick={() => window.open('mailto:support@vovv.ai', '_blank')}>
                   <MessageSquare className="w-4 h-4 mr-2" /> Contact Support
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.open('https://brandframe.ai/faq', '_blank')}>
+                <Button variant="outline" className="w-full" onClick={() => window.open('https://vovv.ai/faq', '_blank')}>
                   <HelpCircle className="w-4 h-4 mr-2" /> FAQ
                 </Button>
               </div>
