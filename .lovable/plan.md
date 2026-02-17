@@ -1,65 +1,44 @@
 
 
-## Fix Stuck Jobs + Prevent Future Stuck States
+## Show Pro Model Indicator + Realistic Time Estimates for Workflow Generations
 
-### Immediate Problem
+### Problem
 
-Two "Ziedas su deimantais" jobs are stuck in PROCESSING with expired timeouts. The `cleanup_stale_jobs` DB function exists and correctly refunds credits, but it only runs when `process-queue` is triggered. Nothing is triggering it right now because:
+The WorkflowActivityCard on the Workflows page only shows raw elapsed time (e.g., "Generating... 30s") with no context about expected duration. Since workflow generations use the Pro model (which takes 60-120 seconds per image), users see "30s" and think something is wrong when the generation hasn't finished yet.
 
-1. The Workflows page polls the queue table directly but never calls `cleanup_stale_jobs`
-2. The `useGenerationQueue` hook's 5-minute watchdog only works for jobs it is actively tracking (from the Generate page)
-3. There is no periodic/cron trigger for `process-queue`
+### Solution
 
-### Solution: Two-Part Fix
+Add a "Pro Model" badge and a realistic time estimate to the WorkflowActivityCard so users know longer times are expected.
 
-**Part 1: Add a "Cancel" button to stuck activity rows**
+### Changes
 
-Give the user a way to manually cancel stuck processing jobs from the Workflows page. When clicked, it will call the cleanup function and refund credits.
+**1. `src/components/app/WorkflowActivityCard.tsx`**
 
-| File | Change |
-|------|--------|
-| `src/components/app/WorkflowActivityCard.tsx` | Add a "Cancel" button on processing jobs that have been running for more than 3 minutes. When clicked, call a new cancel handler. |
-| `src/pages/Workflows.tsx` | Add a cancel handler that updates the job status to `failed` with message "Cancelled by user", refunds credits via `refund_credits` RPC, and invalidates queries. |
+- Add a "Pro Model" badge (small purple/violet badge) next to the "Processing" status badge for processing jobs
+- Add a subtitle line under the elapsed timer: "Pro model -- estimated ~60-120s per image"
+- The estimate scales with the number of jobs in the batch group (e.g., 4 jobs = "~4-8 min total")
 
-**Part 2: Auto-cleanup on Workflows page poll cycle**
+**2. `src/components/app/QueuePositionIndicator.tsx`**
 
-When the Workflows page detects processing jobs past their `timeout_at`, trigger the `retry-queue` edge function to force a `process-queue` run (which calls `cleanup_stale_jobs`). This mirrors the existing watchdog in `useGenerationQueue` but works for the Workflows page context.
+- Update the `estimateSeconds` default fallback from `45` to `90` (better reflects Pro model reality)
+- When `meta` is absent (workflow jobs don't pass meta), use 90s as baseline instead of 45s
+- Add a complexity hint for when no meta is available: "Using Pro model for best quality"
 
-| File | Change |
-|------|--------|
-| `src/pages/Workflows.tsx` | In the active jobs query callback, if any processing job has `started_at` older than 5 minutes, auto-trigger `retry-queue` once. This forces `cleanup_stale_jobs` to run and mark them as failed with credits refunded. |
-
-### How Credits Get Refunded
-
-The existing `cleanup_stale_jobs` function already handles refunds:
-1. Finds all PROCESSING jobs where `timeout_at < now()`
-2. Sets status to `failed` with error message "Timed out after 5 minutes"
-3. Adds `credits_reserved` back to the user's `credits_balance`
-
-The cancel button will do the same thing inline for immediate feedback.
-
-### User Experience Flow
+### Visual Result
 
 ```text
-Job processing > 3 min:
-  [Workflow generation -- Ziedas su deimantais]  PROCESSING  [Cancel]
-  
-User clicks Cancel:
-  -> Job marked failed, credits refunded immediately
-  -> Toast: "Generation cancelled. 32 credits refunded."
-  -> Row moves to failed section
+Before:
+  [Spinner] Workflow generation -- Ring        PROCESSING
+            Generating... 34s
 
-Auto-cleanup (no user action needed):
-  -> Workflows page detects job past timeout
-  -> Triggers cleanup automatically  
-  -> Job appears as FAILED with "Timed out" message
-  -> Credits already refunded by DB function
+After:
+  [Spinner] Workflow generation -- Ring        PRO MODEL  PROCESSING
+            1 of 4 batches complete -- ~60-120s per image
 ```
 
-### Technical Details
+### Technical Notes
 
-- Cancel button appears only on PROCESSING jobs older than 3 minutes (not on QUEUED jobs, which already have cancel support in useGenerationQueue)
-- The cancel uses the existing REST API pattern (PATCH to generation_queue) plus the `refund_credits` RPC
-- Auto-cleanup trigger fires at most once per page session to avoid spamming
-- The `timeout_at` column is already queried but not selected in the current Workflows query -- we need to add it to the select
+- The "Pro Model" badge uses the existing Badge component with a custom violet color class
+- Time estimate is hardcoded to ~60-120s per image since all workflow generations use the Pro model
+- No database or edge function changes needed
 
