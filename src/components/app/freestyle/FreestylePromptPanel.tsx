@@ -178,8 +178,6 @@ export function FreestylePromptPanel({
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      onTouchStart={isMobile && onToggleCollapse ? handleTouchStart : undefined}
-      onTouchEnd={isMobile && onToggleCollapse ? handleTouchEnd : undefined}
     >
       {/* Drag overlay */}
       {isDragOver && (
@@ -199,16 +197,22 @@ export function FreestylePromptPanel({
 
       {/* Mobile collapse handle */}
       {isMobile && onToggleCollapse && (
-        <button
-          onClick={onToggleCollapse}
-          className="w-full flex items-center justify-center py-3 active:scale-[0.98] transition-transform"
-          aria-label={isCollapsed ? 'Expand prompt' : 'Collapse prompt'}
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="w-full flex items-center justify-center py-3 cursor-grab"
         >
-          <div className={cn(
-            'h-[5px] rounded-full transition-all',
-            isCollapsed ? 'w-10 bg-muted-foreground/30' : 'w-9 bg-border/50'
-          )} />
-        </button>
+          <button
+            onClick={onToggleCollapse}
+            className="active:scale-[0.98] transition-transform"
+            aria-label={isCollapsed ? 'Expand prompt' : 'Collapse prompt'}
+          >
+            <div className={cn(
+              'h-[5px] rounded-full transition-all',
+              isCollapsed ? 'w-10 bg-muted-foreground/30' : 'w-9 bg-border/50'
+            )} />
+          </button>
+        </div>
       )}
 
       {/* Collapsible content */}
