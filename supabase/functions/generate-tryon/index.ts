@@ -32,18 +32,81 @@ interface TryOnRequest {
   framing?: string;
 }
 
-function buildFramingInstruction(framing: string, model: TryOnRequest['model']): string {
-  const modelRef = `Match the exact skin tone, age, and body characteristics of ${model.name} from [MODEL IMAGE].`;
-  const instructions: Record<string, string> = {
-    full_body: `5. FRAMING: Full body shot, head to toe. Show the complete outfit.\n\n`,
-    upper_body: `5. FRAMING: Upper body shot, waist up. ${modelRef}\n\n`,
-    close_up: `5. FRAMING: Close-up from shoulders up. Emphasize product detail. ${modelRef}\n\n`,
-    hand_wrist: `5. FRAMING: Show only the hand and wrist area. Product naturally worn on wrist/hand. Do NOT include the face. ${modelRef}\n\n`,
-    neck_shoulders: `5. FRAMING: Close-up of neck, shoulders, and upper chest. Product visible on/near neck. ${modelRef}\n\n`,
-    lower_body: `5. FRAMING: Lower body from hips to feet. Focus on legs and footwear. ${modelRef}\n\n`,
-    back_view: `5. FRAMING: Back view, subject facing away. ${modelRef}\n\n`,
+// --- Aspect ratio instruction ---
+function buildAspectRatioInstruction(ratio: string): string {
+  const map: Record<string, string> = {
+    "9:16": "IMAGE FORMAT: Portrait orientation (9:16 aspect ratio). The image MUST be significantly taller than it is wide, formatted for Instagram/TikTok Stories. Compose vertically.",
+    "4:5": "IMAGE FORMAT: Portrait orientation (4:5 aspect ratio). The image must be slightly taller than wide, formatted for Instagram feed posts.",
+    "1:1": "IMAGE FORMAT: Square format (1:1 aspect ratio). Equal width and height.",
+    "16:9": "IMAGE FORMAT: Landscape orientation (16:9 aspect ratio). The image must be wider than tall, cinematic widescreen format. Compose horizontally.",
   };
-  return instructions[framing] || '';
+  return map[ratio] || map["1:1"];
+}
+
+// --- Faceless framing detection ---
+const FACELESS_FRAMINGS = new Set(["hand_wrist", "neck_shoulders", "side_profile", "lower_body", "back_view"]);
+
+function isFacelessFraming(framing: string | undefined): boolean {
+  return !!framing && FACELESS_FRAMINGS.has(framing);
+}
+
+// --- Jewelry guard ---
+const JEWELRY_KEYWORDS = ["ring", "bracelet", "bangle", "watch", "wristband", "anklet", "earring", "ear cuff", "necklace", "pendant", "chain"];
+const SINGLE_ITEM_KEYWORDS = ["ring", "bracelet", "bangle", "watch", "wristband"];
+
+function buildJewelryGuard(product: TryOnRequest["product"]): string {
+  const text = `${product.title} ${product.description} ${product.productType}`.toLowerCase();
+  const isSingleItem = SINGLE_ITEM_KEYWORDS.some(k => text.includes(k));
+  if (!isSingleItem) return "";
+
+  if (text.includes("ring")) {
+    return "\n   - IMPORTANT: The ring must appear on ONE hand only, exactly matching [PRODUCT IMAGE]. Do NOT place rings on both hands. Show only ONE ring.";
+  }
+  if (text.includes("watch") || text.includes("bracelet") || text.includes("bangle") || text.includes("wristband")) {
+    return "\n   - IMPORTANT: The product must appear on ONE wrist only, exactly matching [PRODUCT IMAGE]. Do NOT duplicate on both wrists.";
+  }
+  return "";
+}
+
+// --- Framing instructions (with conditional identity) ---
+function buildFramingInstruction(framing: string | undefined): string {
+  if (!framing) return "";
+  const instructions: Record<string, string> = {
+    full_body: "5. FRAMING: Full body shot, head to toe. Show the complete outfit.\n\n",
+    upper_body: "5. FRAMING: Upper body shot, waist up. Show face and upper body clearly.\n\n",
+    close_up: "5. FRAMING: Close-up from shoulders up. Tight beauty headshot emphasizing product detail.\n\n",
+    hand_wrist: "5. FRAMING: Show only the hand and wrist area. Product naturally worn on wrist/hand. Do NOT include the face. Focus on the hand, wrist, and forearm only.\n\n",
+    neck_shoulders: "5. FRAMING: Close-up of the collarbone, neck, and upper chest area. Product visible on/near neck. Do NOT include the full face — show jawline at most.\n\n",
+    lower_body: "5. FRAMING: Lower body from hips to feet. Focus on legs and footwear. The face is NOT visible in this shot.\n\n",
+    back_view: "5. FRAMING: Back view, subject facing away from camera. The face is NOT visible.\n\n",
+    side_profile: "5. FRAMING: Side profile focusing on the ear and jawline area. Ideal for earrings and ear cuffs. Show one side of the face only.\n\n",
+  };
+  return instructions[framing] || "";
+}
+
+// --- Identity block (conditional on framing) ---
+function buildIdentityBlock(req: TryOnRequest): string {
+  const ageDescMap: Record<string, string> = {
+    "young-adult": "early 20s",
+    adult: "late 20s to mid 30s",
+    mature: "40s to 50s",
+  };
+  const ageDesc = ageDescMap[req.model.ageRange] || "adult";
+
+  if (isFacelessFraming(req.framing)) {
+    // Faceless: match skin tone and body only, no face requirements
+    return `1. BODY REFERENCE from [MODEL IMAGE]:
+   - Match the exact skin tone, body proportions, and ${req.model.bodyType} build
+   - This is a ${req.model.gender} ${req.model.ethnicity} model in their ${ageDesc}
+   - The face is NOT visible in this framing — do NOT attempt to show or reconstruct the face
+   - Focus on matching skin color, body shape, and natural proportions only`;
+  }
+
+  // Face-visible: full identity preservation
+  return `1. The person MUST look exactly like the model in [MODEL IMAGE]:
+   - Keep the EXACT same face, facial features, skin tone, and hair
+   - Maintain their body type and proportions (${req.model.bodyType} build)
+   - This is ${req.model.name}, a ${req.model.gender} ${req.model.ethnicity} model in their ${ageDesc}`;
 }
 
 function buildPrompt(req: TryOnRequest): string {
@@ -55,26 +118,23 @@ function buildPrompt(req: TryOnRequest): string {
   };
   const background = backgroundMap[req.pose.category] || backgroundMap.studio;
 
-  const ageDescMap: Record<string, string> = {
-    "young-adult": "early 20s",
-    adult: "late 20s to mid 30s",
-    mature: "40s to 50s",
-  };
-  const ageDesc = ageDescMap[req.model.ageRange] || "adult";
+  const aspectInstruction = buildAspectRatioInstruction(req.aspectRatio);
+  const identityBlock = buildIdentityBlock(req);
+  const jewelryGuard = buildJewelryGuard(req.product);
+  const framingInstruction = buildFramingInstruction(req.framing);
 
   return `Create a professional fashion photograph combining the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE].
 
+${aspectInstruction}
+
 CRITICAL REQUIREMENTS:
-1. The person MUST look exactly like the model in [MODEL IMAGE]:
-   - Keep the EXACT same face, facial features, skin tone, and hair
-   - Maintain their body type and proportions (${req.model.bodyType} build)
-   - This is ${req.model.name}, a ${req.model.gender} ${req.model.ethnicity} model in their ${ageDesc}
+${identityBlock}
 
 2. The clothing MUST look exactly like the garment in [PRODUCT IMAGE]:
    - Preserve 100% accurate colors, patterns, logos, and textures
    - Show natural fabric draping on the model's body
    - Product: ${req.product.title}
-   - Details: ${req.product.description || req.product.productType}
+   - Details: ${req.product.description || req.product.productType}${jewelryGuard}
 
 3. Photography style:
    - Pose: ${req.pose.name} - ${req.pose.description}
@@ -88,7 +148,7 @@ CRITICAL REQUIREMENTS:
    - No AI artifacts or distortions
    - Ultra high resolution
 
-${req.framing ? buildFramingInstruction(req.framing, req.model) : ''}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].`;
+${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].`;
 }
 
 const negativePrompt =
@@ -111,12 +171,10 @@ async function uploadBase64ToStorage(
   supabaseUrl: string,
   serviceRoleKey: string
 ): Promise<string> {
-  // Extract raw base64 data
   const base64Data = base64Url.includes(",")
     ? base64Url.split(",")[1]
     : base64Url;
 
-  // Decode to binary
   const binaryStr = atob(base64Data);
   const bytes = new Uint8Array(binaryStr.length);
   for (let i = 0; i < binaryStr.length; i++) {
@@ -216,7 +274,6 @@ async function generateImage(
   return null;
 }
 
-/** Helper: update generation_queue and handle credits when called from the queue */
 async function completeQueueJob(
   jobId: string,
   userId: string,
@@ -328,7 +385,7 @@ serve(async (req) => {
     }
 
     const prompt = buildPrompt(body);
-    console.log("Generating with prompt:", prompt.slice(0, 200) + "...");
+    console.log("Generating with prompt:", prompt.slice(0, 300) + "...");
 
     const imageCount = Math.min(body.imageCount || 4, 8);
     const images: string[] = [];
@@ -369,7 +426,6 @@ serve(async (req) => {
       }
     }
 
-    // Queue self-completion
     if (isQueueInternal && body.job_id) {
       await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, images, imageCount, errors, body as unknown as Record<string, unknown>);
     }
