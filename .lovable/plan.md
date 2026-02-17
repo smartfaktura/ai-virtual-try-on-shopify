@@ -1,52 +1,55 @@
 
 
-## Fix: Freestyle Images Not Loading in Dashboard & Library
+## Fix: "Full Height" Prompt Being Overridden by Default Upper-Body Framing
 
-### Root Cause
+### Problem
+When a model reference is selected and framing is left on "Auto", the edge function injects a default framing instruction that says "upper body + head visible". This overrides the user's explicit "full height" request in the prompt text, causing the AI to crop at the knees instead of showing the full figure.
 
-The `freestyle-images` storage bucket is **private**, requiring signed URLs to access images. In the **Recent Creations gallery** on the dashboard, freestyle image URLs are used directly without signing, causing broken images (the first two cards in your screenshot showing broken "Freestyle" placeholders).
-
-The **Library** hook (`useLibraryItems.ts`) already batch-signs all URLs correctly, so if there's an issue there it may be related to cache staleness after new generations.
+### Solution
+Add keyword detection in the edge function so that when the user's prompt contains full-body intent words, the system either auto-injects the `full_body` framing or skips the restrictive default upper-body framing entirely.
 
 ### Changes
 
-**File: `src/components/app/RecentCreationsGallery.tsx`**
+**File: `supabase/functions/generate-freestyle/index.ts`**
 
-1. Sign freestyle image URLs before displaying them -- add `await toSignedUrl(f.image_url)` when building freestyle items (around line 101), matching how generation job URLs are already signed on line 67.
+1. Add a helper function `detectFullBodyIntent(prompt)` that checks for keywords like "full body", "full height", "head to toe", "full figure", "full length", "entire body".
 
-2. Additionally, invalidate the `recent-creations` query cache after new freestyle generations complete, to ensure new images appear promptly without waiting for the 15-second polling interval.
+2. Modify the default framing logic (around line 279) so that when `!framing` but `detectFullBodyIntent(prompt)` is true, inject the `full_body` framing instruction instead of the upper-body default:
 
-**File: `src/hooks/useGenerateFreestyle.ts`** (if not already invalidating)
+```text
+Before (line 278-284):
+  if (!framing) {
+    layers.push("FRAMING: Ensure the subject's full head, hair, and upper body...");
+  }
 
-3. After a successful freestyle generation, invalidate both `recent-creations` and `library` query keys so the dashboard and library update immediately.
+After:
+  if (!framing) {
+    if (detectFullBodyIntent(rawPrompt)) {
+      // User explicitly wants full body — inject full_body framing
+      layers.push("FRAMING: Full body shot, head to toe...");
+    } else {
+      layers.push("FRAMING: Ensure the subject's full head, hair, and upper body...");
+    }
+  }
+```
+
+3. Apply the same logic in the condensed multi-reference path (lines 151-166) — if no explicit framing is set but the prompt contains full-body keywords, auto-inject the full_body framing instruction there too.
 
 ### Technical Detail
 
-```tsx
-// RecentCreationsGallery.tsx, line 98-106 — before:
-for (const f of freestyleResult.data ?? []) {
-  items.push({
-    id: f.id,
-    imageUrl: f.image_url,  // <-- raw public URL, 403 on private bucket
-    ...
-  });
-}
+New helper (added near the top of the file, after `detectSelfieIntent`):
 
-// After:
-for (const f of freestyleResult.data ?? []) {
-  const signedUrl = await toSignedUrl(f.image_url);
-  items.push({
-    id: f.id,
-    imageUrl: signedUrl,  // <-- now properly signed
-    ...
-  });
+```typescript
+const FULL_BODY_KEYWORDS = [
+  'full body', 'full height', 'head to toe', 'full figure',
+  'full length', 'entire body', 'whole body', 'from head',
+];
+
+function detectFullBodyIntent(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  return FULL_BODY_KEYWORDS.some(kw => lower.includes(kw));
 }
 ```
 
-For the generation hook, add cache invalidation:
-```tsx
-// In useGenerateFreestyle.ts onSuccess callback:
-queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-queryClient.invalidateQueries({ queryKey: ['library'] });
-```
+This ensures the user's natural language intent ("full height") is respected instead of being silently overridden by the system's default upper-body framing.
 
