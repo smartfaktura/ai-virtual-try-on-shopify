@@ -19,13 +19,13 @@ export async function downloadDropAsZip(
     const img = images[i];
     try {
       const response = await fetch(img.url);
-      const blob = await response.blob();
+      const arrayBuffer = await response.arrayBuffer();
       const folder = img.workflow_name || 'General';
       const ext = img.url.split('.').pop()?.split('?')[0] || 'jpg';
       const fileName = img.scene_name
         ? `${img.scene_name}_${i + 1}.${ext}`
         : `image_${i + 1}.${ext}`;
-      zip.file(`${folder}/${fileName}`, blob);
+      zip.file(`${folder}/${fileName}`, arrayBuffer, { binary: true });
     } catch {
       // skip failed downloads
     }
