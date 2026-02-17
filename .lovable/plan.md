@@ -1,75 +1,54 @@
 
 
-## Fix Library Loading: Batch URL Signing
+## Fix Freestyle Gallery Loading Performance
 
 ### Problem
-The Library page fires **one HTTP POST per image** to sign URLs. With 20 generation jobs (some having multiple results) plus 20 freestyle items, that's 40-60+ individual signing requests. Even though they run in parallel via `Promise.all`, the browser's connection limit (~6 concurrent requests per domain) turns this into a waterfall of network calls, causing a long spinner.
+The `useFreestyleImages` hook fetches **all** freestyle generations at once (no limit) and signs each URL individually via `toSignedUrl()` inside `Promise.all`. With 30+ generations, this creates dozens of sequential HTTP requests due to browser connection limits, causing long load times.
+
+The same issue also exists in `refreshImages()` which re-fetches everything after each generation completes.
 
 ### Solution
-Replace individual `createSignedUrl()` calls with Supabase's batch `createSignedUrls()` API, which signs multiple files from the same bucket in a **single HTTP request**.
+Apply the same optimizations that fixed the Library:
 
-### Technical Changes
+1. **Paginate with `useInfiniteQuery`** -- load 20 images initially, "Load More" for the rest
+2. **Batch URL signing** -- use `toSignedUrls()` (already built) instead of individual `toSignedUrl()` calls
+3. **Keep save/delete/refresh working** by invalidating the infinite query cache
 
-**File: `src/lib/signedUrl.ts`**
+### Changes
 
-Rewrite `toSignedUrls()` to group URLs by bucket and use the batch API:
+**File: `src/hooks/useFreestyleImages.ts`**
 
-```typescript
-export async function toSignedUrls(urls: string[]): Promise<string[]> {
-  // Parse all URLs and group by bucket
-  const parsed = urls.map(u => ({ original: u, parsed: parseStorageUrl(u) }));
+- Replace manual `useState` + `useEffect` data loading with `useInfiniteQuery` (page size 20)
+- Use Supabase `.range(from, to)` for pagination
+- Replace individual `toSignedUrl` calls with batch `toSignedUrls`
+- Keep `saveImage`, `saveImages`, `deleteImage` functions -- they will invalidate the query cache instead of manually updating local state
+- Replace `refreshImages` with a simple query invalidation
 
-  // Group private-bucket URLs by bucket name
-  const bucketGroups: Record<string, { index: number; path: string }[]> = {};
-  for (let i = 0; i < parsed.length; i++) {
-    const p = parsed[i].parsed;
-    if (!p) continue;
-    if (!bucketGroups[p.bucket]) bucketGroups[p.bucket] = [];
-    bucketGroups[p.bucket].push({ index: i, path: p.path });
-  }
+**File: `src/pages/Freestyle.tsx`**
 
-  // Start with original URLs as defaults
-  const results = urls.slice();
+- Update to consume the infinite query: flatten `data.pages` into a single array
+- Pass `fetchNextPage` and `hasNextPage` to the gallery
 
-  // Batch-sign each bucket in parallel (1 request per bucket)
-  await Promise.all(
-    Object.entries(bucketGroups).map(async ([bucket, entries]) => {
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .createSignedUrls(entries.map(e => e.path), 3600);
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
 
-      if (error || !data) {
-        console.warn('[signedUrl] Batch sign failed for bucket:', bucket, error);
-        return;
-      }
-      for (let j = 0; j < data.length; j++) {
-        if (data[j].signedUrl) {
-          results[entries[j].index] = data[j].signedUrl;
-        }
-      }
-    })
-  );
+- Accept optional `onLoadMore` and `hasMore` props
+- Render a "Load More" button at the bottom of the masonry grid when more pages are available
+- Add `isFetchingMore` prop for loading state on the button
 
-  return results;
-}
-```
+### Technical Detail
 
-This turns ~40-60 HTTP requests into **2-3 requests** (one per private bucket that has URLs).
+```text
+useFreestyleImages (before):
+  useEffect -> fetch ALL -> sign each URL one by one -> setState
 
-**File: `src/hooks/useLibraryItems.ts`**
-
-Update the signing call to use the batch function instead of mapping individual calls:
-
-```typescript
-// Before (line 103):
-const signedUrls = await Promise.all(rawItems.map(r => toSignedUrl(r.url)));
-
-// After:
-const signedUrls = await toSignedUrls(rawItems.map(r => r.url));
+useFreestyleImages (after):
+  useInfiniteQuery -> fetch 20 per page with .range() -> batch sign with toSignedUrls()
+  saveImage/deleteImage -> invalidateQueries(['freestyle-images'])
+  refreshImages -> invalidateQueries(['freestyle-images'])
 ```
 
 ### Performance Impact
-- Before: ~40-60 individual POST requests to sign URLs (waterfall due to browser connection limit)
-- After: 2-3 POST requests total (one per private bucket)
-- Expected improvement: Library loads in under 1 second instead of 5-10+ seconds
+- Initial load: 20 images instead of all (could be 100+)
+- URL signing: 1-2 batch requests instead of 20+ individual requests
+- Users see images almost immediately, can load more on demand
 
