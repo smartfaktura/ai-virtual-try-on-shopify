@@ -381,6 +381,16 @@ export default function Freestyle() {
     }
   }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
 
+  // Stable refs for callbacks so completion effect doesn't depend on form state
+  const refreshImagesRef = useRef(refreshImages);
+  const refreshBalanceRef = useRef(refreshBalance);
+  const resetQueueRef = useRef(resetQueue);
+  const promptRef = useRef(prompt);
+  useEffect(() => { refreshImagesRef.current = refreshImages; }, [refreshImages]);
+  useEffect(() => { refreshBalanceRef.current = refreshBalance; }, [refreshBalance]);
+  useEffect(() => { resetQueueRef.current = resetQueue; }, [resetQueue]);
+  useEffect(() => { promptRef.current = prompt; }, [prompt]);
+
   // Watch for queue job completion to save images
   const prevJobStatusRef = useRef<string | null>(null);
   useEffect(() => {
@@ -393,23 +403,23 @@ export default function Freestyle() {
       if (result?.contentBlocked) {
         setBlockedEntries(prev => [{
           id: crypto.randomUUID(),
-          prompt: prompt,
+          prompt: promptRef.current,
           reason: result.blockReason || 'This prompt was flagged by our content safety system.',
         }, ...prev]);
-        resetQueue();
+        resetQueueRef.current();
       } else {
         // Images are saved server-side by process-queue, just refresh the list
-        refreshImages();
-        refreshBalance();
-        resetQueue();
+        refreshImagesRef.current();
+        refreshBalanceRef.current();
+        resetQueueRef.current();
       }
     }
 
     if (activeJob.status === 'failed' && prevStatus !== 'failed') {
-      refreshBalance(); // Credits were refunded server-side
-      resetQueue();
+      refreshBalanceRef.current(); // Credits were refunded server-side
+      resetQueueRef.current();
     }
-  }, [activeJob, prompt, aspectRatio, quality, selectedModel, selectedScene, selectedProduct, saveImages, refreshBalance, resetQueue]);
+  }, [activeJob]);
 
   const handleDownload = useCallback(async (imageUrl: string, index: number) => {
     try {

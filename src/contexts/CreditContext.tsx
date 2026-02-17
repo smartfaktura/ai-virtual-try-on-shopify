@@ -88,7 +88,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
       setIsLoading(false);
       return;
     }
-    setIsLoading(true);
+    // Silent refresh — no setIsLoading(true) to avoid re-render flash
     const { data, error } = await supabase
       .from('profiles')
       .select('credits_balance, plan')
@@ -99,7 +99,6 @@ export function CreditProvider({ children }: CreditProviderProps) {
       setBalance(data.credits_balance);
       setPlan(data.plan || 'free');
     }
-    setIsLoading(false);
   }, [user]);
   
   // Fetch real credits and plan from profiles table
