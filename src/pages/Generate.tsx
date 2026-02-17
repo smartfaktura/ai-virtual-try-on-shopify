@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AddProductModal } from '@/components/app/AddProductModal';
 import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone, Layers } from 'lucide-react';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -203,6 +204,8 @@ export default function Generate() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [noCreditsModalOpen, setNoCreditsModalOpen] = useState(false);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const queryClient = useQueryClient();
 
 
   // Workflow generation config shortcuts
@@ -1052,9 +1055,7 @@ export default function Generate() {
                   <p className="text-sm text-muted-foreground">No products in your library yet.</p>
                   <p className="text-xs text-muted-foreground">Add clothing items to your product library, or upload a photo directly.</p>
                   <div className="flex items-center justify-center gap-3">
-                    <Link to="/app/products">
-                      <Button variant="outline" size="sm">Add Products</Button>
-                    </Link>
+                    <Button variant="outline" size="sm" onClick={() => setShowAddProduct(true)}>Add Products</Button>
                     <Button variant="secondary" size="sm" onClick={() => { setSourceType('scratch'); setCurrentStep('upload'); }}>
                       Upload Instead
                     </Button>
@@ -1088,15 +1089,30 @@ export default function Generate() {
                     </button>
                   );
                 })}
+                {/* Add New Product card */}
+                <button
+                  type="button"
+                  onClick={() => setShowAddProduct(true)}
+                  className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground"
+                >
+                  <Package className="w-6 h-6 mb-1 opacity-50" />
+                  <span className="text-[10px] font-medium">Add New</span>
+                </button>
               </div>
             ) : (
-              <ProductMultiSelect
-                products={userProducts.map(up => mapUserProductToProduct(up))}
-                selectedIds={selectedProductIds}
-                onSelectionChange={setSelectedProductIds}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-              />
+              <div className="space-y-3">
+                <ProductMultiSelect
+                  products={userProducts.map(up => mapUserProductToProduct(up))}
+                  selectedIds={selectedProductIds}
+                  onSelectionChange={setSelectedProductIds}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                />
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowAddProduct(true)}>
+                  <Package className="w-3.5 h-3.5" />
+                  Add New Product
+                </Button>
+              </div>
             )}
 
             <div className="flex justify-between">
@@ -2382,6 +2398,11 @@ export default function Generate() {
         onNavigate={setLightboxIndex} onSelect={toggleImageSelection} onDownload={handleDownloadImage}
         onRegenerate={handleRegenerate} selectedIndices={selectedForPublish} productName={selectedProduct?.title || scratchUpload?.productInfo.title} />
       <NoCreditsModal open={noCreditsModalOpen} onClose={() => setNoCreditsModalOpen(false)} />
+      <AddProductModal
+        open={showAddProduct}
+        onOpenChange={setShowAddProduct}
+        onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
+      />
     </PageHeader>
   );
 }
