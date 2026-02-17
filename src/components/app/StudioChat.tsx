@@ -79,7 +79,7 @@ export function StudioChat() {
       {/* Chat Panel */}
       <div
         className={cn(
-          'fixed bottom-20 left-4 sm:left-auto sm:right-4 z-50 w-[360px] sm:w-[380px] bg-popover border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out',
+          'fixed bottom-20 left-4 sm:left-auto sm:right-4 z-40 w-[360px] sm:w-[380px] bg-popover border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out',
           isOpen
             ? 'opacity-100 translate-y-0 pointer-events-auto h-[500px]'
             : 'opacity-0 translate-y-4 pointer-events-none h-0'
@@ -214,7 +214,7 @@ export function StudioChat() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'fixed bottom-4 left-4 sm:left-auto sm:right-4 z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105',
+          'fixed bottom-4 left-4 sm:left-auto sm:right-4 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105',
           isOpen
             ? 'bg-muted text-muted-foreground hover:bg-muted/80'
             : 'bg-primary text-primary-foreground hover:bg-primary/90'
