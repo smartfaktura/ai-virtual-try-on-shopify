@@ -618,6 +618,15 @@ export default function Freestyle() {
           onClose={() => setLightboxOpen(false)}
           onNavigate={setLightboxIndex}
           onDownload={(idx) => handleDownload(savedImages[idx].url, idx)}
+          onDelete={(idx) => {
+            handleDelete(savedImages[idx].id);
+            setLightboxOpen(false);
+          }}
+          onCopyPrompt={(idx) => {
+            setPrompt(savedImages[idx].prompt);
+            setLightboxOpen(false);
+            import('sonner').then(({ toast }) => toast.success('Prompt copied to editor'));
+          }}
         />
       )}
     </div>
