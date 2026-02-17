@@ -217,13 +217,13 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                   Images
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-4 md:grid-cols-2 gap-1.5 md:gap-2">
                   {(isLoading ? Array.from({ length: count }) : signedUrls).map((item, i) => (
                     <button
                       key={i}
                       onClick={() => !isLoading && setSelectedIndex(i)}
                       className={cn(
-                        'aspect-square rounded-lg overflow-hidden border-2 transition-all',
+                        'aspect-square rounded-md md:rounded-lg overflow-hidden border-2 transition-all',
                         !isLoading && selectedIndex === i
                           ? 'border-primary ring-2 ring-primary/30'
                           : 'border-border/30 hover:border-primary/40'
