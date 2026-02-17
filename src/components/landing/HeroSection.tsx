@@ -315,8 +315,9 @@ export function HeroSection() {
               <div
                 ref={scrollRef}
                 onScroll={updateScrollState}
-                className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin"
-                style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
+                data-hero-carousel
+                className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
               >
                 {current.outputs.map((output, idx) => (
                   <div
@@ -366,6 +367,7 @@ export function HeroSection() {
       </div>
 
       <style>{`
+        [data-hero-carousel]::-webkit-scrollbar { display: none; }
         @keyframes pillPulse {
           0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
           50% { box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2); }
