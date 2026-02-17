@@ -15,9 +15,12 @@ const listingProduct = getLandingAssetUrl('products/cream-hyaluronic.jpg');
 const listingResult = getLandingAssetUrl('workflows/workflow-product-listing.jpg');
 
 // Selfie / UGC Set
-const ugcProduct = getLandingAssetUrl('products/lipstick-matte.jpg');
+const ugcProduct = getLandingAssetUrl('products/ice-roller-white.png');
 const ugcModel = getLandingAssetUrl('models/model-female-average-american-redhead.jpg');
-const ugcResult = getLandingAssetUrl('workflows/workflow-selfie-ugc.jpg');
+const ugcResult1 = getLandingAssetUrl('workflows/ugc-result-1.jpg');
+const ugcResult2 = getLandingAssetUrl('workflows/ugc-result-2.jpg');
+const ugcResult3 = getLandingAssetUrl('workflows/ugc-result-3.jpg');
+const ugcResult4 = getLandingAssetUrl('workflows/ugc-result-4.jpg');
 
 // Mirror Selfie Set
 const mirrorSelfieModel = getLandingAssetUrl('models/model-mirror-selfie-blonde.jpg');
@@ -78,24 +81,25 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   },
 
   'Selfie / UGC Set': {
-    background: getLandingAssetUrl('workflows/ugc-preview-1.jpg'),
+    background: ugcResult1,
+    backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
     elements: [
       {
-        type: 'product', image: ugcProduct, label: 'Lipstick', sublabel: 'Product',
+        type: 'product', image: ugcProduct, label: 'Ice Roller', sublabel: 'Product',
         icon: <Plus className="w-3 h-3" />,
         position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
       {
         type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
-        position: { top: '42%', left: '40%' }, enterDelay: 0.9, animation: 'pop',
+        position: { top: '40%', left: '38%' }, enterDelay: 0.9, animation: 'pop',
       },
       {
         type: 'model', image: ugcModel, label: 'Creator',
-        icon: <Star className="w-3 h-3" />,
+        icon: <User className="w-3 h-3" />,
         position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
       },
       {
-        type: 'badge', label: 'Selfie Mode', icon: <Smartphone className="w-3 h-3" />,
+        type: 'badge', label: 'UGC Style', icon: <Camera className="w-3 h-3" />,
         position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
       },
     ],
