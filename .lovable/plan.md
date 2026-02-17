@@ -1,77 +1,96 @@
 
+## Fix Style Chip Mismatch + Popover Click Bug on Mobile
 
-## Optimize Mobile Prompt Bar: Compact Layout + Visible Style Toggle
+### Problem 1: Style Chip Looks Different
 
-### Problem
+The chips use inconsistent sizing:
+- **Model, Scene, Product** chips: `px-3.5 py-2` (padding-based, no fixed height)
+- **Output chips (Ratio, Quality, Camera), Style trigger, Image Count**: `h-8 px-3` (fixed height)
+- **Framing chip**: `h-8 px-3` (fixed height)
+- **Presets chip inside Style**: `h-7 px-2.5` (smaller)
 
-1. The prompt bar with all labeled sections (Assets, Creative, Output, Style) takes up too much vertical space on mobile, leaving little room for the image gallery
-2. The "Style" collapsible trigger is barely visible -- just tiny text that doesn't look tappable or like it contains more settings
+This creates a visual mismatch where some chips are taller/shorter than others. All chips in the settings panel should use the same sizing convention.
 
-### Changes
+### Problem 2: Popovers Not Opening on Mobile
 
-**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`** (mobile section, lines 337-436)
+The entire mobile layout (lines 340-421) is wrapped inside a single `<Collapsible>` component. When you tap a `PopoverTrigger` (Model, Scene, Product) inside the Collapsible, the click event can bubble up and get intercepted by the Collapsible's event handling, preventing the Popover from opening.
 
-#### 1. Remove section labels
+### Fix
 
-The uppercase "CREATIVE", "OUTPUT" labels add visual noise and vertical height. Remove all three section labels. The chips are self-explanatory (they say "Model", "Scene", "1:1", etc.). This saves ~36px of vertical space.
+**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
 
-#### 2. Merge Assets + Creative into one row
+1. **Restructure mobile layout**: Move the `<Collapsible>` wrapper to only wrap Row 2 and the CollapsibleContent, not Row 1. Row 1 (Upload, Product, Model, Scene, Framing) should sit outside the Collapsible so their Popovers work without interference.
 
-Combine Upload Image, Add Product, Model, Scene, and Framing into a single scrollable row. This eliminates one entire section gap (~12px saved).
+2. No chip sizing changes needed in this file since the Style trigger already uses `h-8 px-3` matching the output chips.
 
-#### 3. Keep Output as a compact single row
+**File: `src/components/app/freestyle/ModelSelectorChip.tsx`**
 
-Aspect ratio, quality, camera style, and image count stay together but without the "OUTPUT" label above them.
+Normalize the trigger button from `px-3.5 py-2` to `h-8 px-3` to match all other chips.
 
-#### 4. Restyle the Style trigger as a proper chip button
+**File: `src/components/app/freestyle/SceneSelectorChip.tsx`**
 
-Instead of tiny uppercase text, make it look like the other chips -- a rounded-full button with an icon, border, and background. When active settings exist, highlight it. This makes it instantly recognizable as tappable.
+Same fix: normalize trigger button from `px-3.5 py-2` to `h-8 px-3`.
 
-### New compact layout
+**File: `src/components/app/freestyle/ProductSelectorChip.tsx`**
 
-```text
-+--------------------------------------------------+
-|  Describe what you want to create...              |
-+--------------------------------------------------+
-|  [Upload] [Product] [Model] [Scene] [Framing]    |
-|  [1:1] [Standard] [Pro] [- 1 +]  [Style ▾]      |
-+--------------------------------------------------+
-|              [ Generate (4) ]                     |
-+--------------------------------------------------+
-```
+Same fix: normalize trigger button from `px-3.5 py-2` to `h-8 px-3`.
 
 ### Technical Details
 
-**Replace mobile return (lines 337-436) with:**
-
-- **Row 1**: `flex-wrap gap-2` containing `uploadButton`, `ProductSelectorChip`, `ModelSelectorChip`, `SceneSelectorChip`, `FramingSelectorChip` -- all in one flow
-- **Row 2**: `flex-wrap gap-2` containing `aspectRatioChip`, `qualityChip`, `cameraStyleChip`, `imageCountStepper`, and the **Style trigger chip**
-- **Style trigger**: Rendered as a proper chip button (`h-8 px-3 rounded-full border`) with `SlidersHorizontal` icon, showing badge count when settings are active. Opens the same `Collapsible` content below.
-- Vertical spacing between the two rows: `space-y-2` (8px instead of current 12px between sections)
-- Collapsible Style content renders below row 2 with `pt-2`
-
-**Style chip button styling:**
+**FreestyleSettingsChips.tsx mobile section (lines 337-422)** -- restructure to:
 
 ```tsx
-<CollapsibleTrigger asChild>
-  <button className={cn(
-    'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-    advancedActiveCount > 0
-      ? 'border-primary/30 bg-primary/10 text-primary'
-      : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-  )}>
-    <SlidersHorizontal className="w-3.5 h-3.5" />
-    Style
-    {advancedActiveCount > 0 && (
-      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
-        {advancedActiveCount}
-      </span>
-    )}
-    <ChevronDown className={cn('w-3 h-3 opacity-40 transition-transform', advancedOpen && 'rotate-180')} />
-  </button>
-</CollapsibleTrigger>
+if (isMobile) {
+  return (
+    <TooltipProvider delayDuration={300}>
+      <div className="space-y-2">
+        {/* Row 1: Assets + Creative — OUTSIDE Collapsible */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {uploadButton}
+          <ProductSelectorChip ... />
+          <ModelSelectorChip ... />
+          <SceneSelectorChip ... />
+          <FramingSelectorChip ... />
+        </div>
+
+        {/* Row 2 + Style — wrapped in Collapsible */}
+        <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+          <div className="flex items-center gap-2 flex-wrap">
+            {aspectRatioChip}
+            {qualityChip}
+            {cameraStyleChip}
+            {imageCountStepper}
+            <CollapsibleTrigger asChild>
+              <button className={cn(...)}>
+                ...Style button...
+              </button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="pt-2">
+            ...style content...
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    </TooltipProvider>
+  );
+}
 ```
 
-### Files Modified
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx` -- compact 2-row mobile layout, style chip button
+**ModelSelectorChip.tsx line 49**, **SceneSelectorChip.tsx line 47**, **ProductSelectorChip.tsx line 33** -- change:
 
+```diff
+- className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors"
++ className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors"
+```
+
+### Summary
+
+- All chips get unified `h-8 px-3` sizing for visual consistency
+- Row 1 (with Popovers) moves outside the Collapsible to fix the click interception bug
+- Row 2 + Style section stays inside Collapsible since that's where the trigger lives
+
+### Files Modified
+- `src/components/app/freestyle/FreestyleSettingsChips.tsx` -- restructure Collapsible scope
+- `src/components/app/freestyle/ModelSelectorChip.tsx` -- normalize chip height
+- `src/components/app/freestyle/SceneSelectorChip.tsx` -- normalize chip height
+- `src/components/app/freestyle/ProductSelectorChip.tsx` -- normalize chip height
