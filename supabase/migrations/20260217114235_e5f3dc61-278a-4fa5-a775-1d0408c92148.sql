@@ -1,0 +1,1 @@
+UPDATE public.workflows SET description = 'High-quality content like top creators -- your product plus model, generating super professional results in seconds.' WHERE id = '3b54d43a-a03a-49a6-a64e-bf2dd999abc8';
