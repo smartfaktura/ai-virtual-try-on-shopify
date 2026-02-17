@@ -270,15 +270,6 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   }, [scene]);
   const imagesReady = usePreloadImages(allUrls);
 
-  // Show shimmer while images load
-  if (!imagesReady) {
-    return (
-      <div className="relative w-full h-full overflow-hidden bg-muted">
-        <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
-      </div>
-    );
-  }
-
   // Compute timing from element delays (only used for recipe mode)
   const maxDelay = isCarousel ? 0 : Math.max(...scene.elements.map((e) => e.enterDelay));
   const elementsExitAt = maxDelay + 1.8;
@@ -294,6 +285,15 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
     const timer = setInterval(() => setIteration((i) => i + 1), totalDuration * 1000);
     return () => clearInterval(timer);
   }, [isActive, totalDuration, isCarousel]);
+
+  // Show shimmer while images load
+  if (!imagesReady) {
+    return (
+      <div className="relative w-full h-full overflow-hidden bg-muted">
+        <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
+      </div>
+    );
+  }
 
   // For carousel mode, delegate to dedicated component
   if (isCarousel) {
