@@ -74,7 +74,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
   };
 
   // Optimize element images to small thumbnails
-  const optimizedImage = element.image ? getOptimizedUrl(element.image, { width: 120 }) : undefined;
+  const optimizedImage = element.image ? getOptimizedUrl(element.image, { width: 200 }) : undefined;
 
   switch (element.type) {
     case 'product':
@@ -84,7 +84,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
           <div className="wf-card bg-white rounded-xl overflow-hidden flex items-center gap-2.5 pr-3">
             <img
               src={optimizedImage}
-              className="w-14 h-16 object-contain bg-neutral-50"
+              className="w-14 h-16 object-cover bg-neutral-50"
               alt=""
               style={{ imageRendering: 'auto' }}
             />
