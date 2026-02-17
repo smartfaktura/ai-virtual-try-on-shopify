@@ -1,55 +1,74 @@
 
 
-## Fix: Cache Recent Creations Thumbnails
+## Fix: Batch-Aware Activity on Workflows Page
 
 ### Problem
 
-Every time you visit `/app/workflows`, the Recent Creations thumbnails shimmer and reload from scratch because:
+When a generation requires multiple batches (e.g., 2 jobs), the Workflows page shows them as separate activity rows. As one job completes, its row disappears while the other stays -- making it look like something broke. After both finish, images silently appear in "Recent Creations" with no transition or celebration. The user has no idea what happened.
 
-1. **Signed URLs are stored in component state** (`useState`) -- lost on every unmount/remount (navigation away and back)
-2. **The `useEffect` re-runs on every refetch** because the `jobs` array reference changes, even when the actual data hasn't changed
-3. **No caching** of the signed URL mapping between page visits
+Key issues:
+1. Batch jobs appear as separate, unrelated activity rows
+2. Completed jobs vanish individually with no feedback
+3. No "just finished" state -- jobs go from Activity directly to Recent Creations with no bridge
+4. If the user navigates away from the Generate page during batch generation, they lose all batch progress context
 
 ### Solution
 
-Move the signed URL resolution into a React Query hook so it benefits from the same caching as all other data. React Query will keep the signed URLs in memory across navigations and only refetch when truly stale.
+Group related queue jobs into a single activity row with batch-aware progress, and add a brief "just completed" state so users see a clear transition.
 
 ### Changes
 
-**File: `src/components/app/WorkflowRecentRow.tsx`**
+**1. `src/pages/Workflows.tsx` -- Group active jobs by batch**
 
-1. Replace the `useState` + `useEffect` pattern for signed URLs with a `useQuery` call:
-   - Query key: `['workflow-recent-thumbnails', jobIds]` (derived from jobs)
-   - Query function: extract raw URLs from jobs, call `toSignedUrls`, return the map
-   - `staleTime: 5 * 60 * 1000` (5 minutes -- signed URLs are valid for 1 hour)
-   - `enabled: jobs.length > 0`
-   - `keepPreviousData: true` (so old thumbnails stay visible during background refresh)
+Before passing jobs to `WorkflowActivityCard`, group queue jobs that share the same `workflow_id` + `product_title` and were created within 5 seconds of each other. This creates "batch groups" that represent a single user action.
 
-2. Remove the `signedUrlMap` state, `urlsReady` state, and the `useEffect` that populates them
+```text
+Before: [Job A (processing), Job B (queued)] -> 2 separate activity rows
+After:  [BatchGroup { jobs: [A, B], workflow_name, product_name }] -> 1 activity row
+```
 
-3. Derive `signedUrlMap` and `urlsReady` directly from the query result
+Also add a query for "recently completed" queue jobs (completed in last 60 seconds) so we can show a brief "Just finished" state before they appear in Recent Creations.
 
-This means:
-- First visit: shimmer, then images appear (same as now)
-- Navigating away and back: images appear instantly from cache
-- Background refetch happens silently without shimmer
+**2. `src/components/app/WorkflowActivityCard.tsx` -- Render batch groups**
+
+Update the component to accept grouped jobs and render:
+- A single row per batch group showing "Generating 2 batches" with a mini progress bar
+- Per-batch status: "1 of 2 complete" with a progress indicator
+- A "Just finished" state (green) for jobs completed in the last 60 seconds, with a "View Results" link
+- Failed batch indication within the group (e.g., "1 of 2 failed -- credits refunded")
+
+### Visual Flow
+
+```text
+BEFORE (confusing):
+  [Activity]
+  | Workflow generation -- Candle Sand  |  PROCESSING  |
+  | Workflow generation -- Candle Sand  |  QUEUED      |
+  
+  (one disappears... then both disappear... images appear in Recent Creations)
+
+AFTER (clear):
+  [Activity]
+  | Workflow generation -- Candle Sand       |
+  | Batch 1 of 2 complete  |  4 images ready |
+  | [====------] progress bar                |
+  
+  (transitions to...)
+  
+  | Workflow generation -- Candle Sand       |  COMPLETED  |
+  | 8 images ready         |  View Results ->            |
+  
+  (fades out after 60s, appears in Recent Creations)
+```
 
 ### Technical Details
 
-```text
-Before:
-  useState(signedUrlMap) + useEffect([jobs]) -> toSignedUrls() -> setState
-  Result: Fresh network calls every mount
-
-After:
-  useQuery(['workflow-recent-thumbnails', jobIds]) -> toSignedUrls()
-  Result: Cached in memory, instant on revisit, background refresh
-```
-
 | Item | Detail |
 |------|--------|
-| File | `src/components/app/WorkflowRecentRow.tsx` |
-| Lines changed | ~20 lines (replace useState+useEffect with useQuery) |
-| New dependency | None (already uses `@tanstack/react-query`) |
-| Cache duration | 5 minutes staleTime, stays in memory while app is open |
+| Files changed | `src/pages/Workflows.tsx`, `src/components/app/WorkflowActivityCard.tsx` |
+| Grouping logic | Same `workflow_id` + same product title + created within 5s |
+| "Just finished" query | `generation_queue` where `status = 'completed'` and `completed_at > now() - 60s` and `payload->workflow_id IS NOT NULL` |
+| Recently completed window | 60 seconds (enough time to notice, then fades to Recent Creations) |
+| Failed jobs query | Also updated to read from `generation_queue` instead of `generation_jobs` (fixes the earlier invisible failures bug) |
+| No DB changes needed | All data already exists in `generation_queue` |
 
