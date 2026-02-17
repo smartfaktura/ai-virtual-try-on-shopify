@@ -10,11 +10,22 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const teamAvatar = (file: string) => getOptimizedUrl(getLandingAssetUrl(`team/${file}`), { quality: 50 });
 
+const FREESTYLE_AVATARS = [
+  { file: 'avatar-yuki.jpg', name: 'Yuki' },
+  { file: 'avatar-luna.jpg', name: 'Luna' },
+  { file: 'avatar-amara.jpg', name: 'Amara' },
+  { file: 'avatar-kenji.jpg', name: 'Kenji' },
+];
+
 const getTeamAvatar = (activityId: string) => {
   if (activityId.startsWith('job-')) return { src: teamAvatar('avatar-sophia.jpg'), name: 'Sophia' };
   if (activityId.startsWith('product-')) return { src: teamAvatar('avatar-max.jpg'), name: 'Max' };
   if (activityId.startsWith('brand-')) return { src: teamAvatar('avatar-sienna.jpg'), name: 'Sienna' };
-  if (activityId.startsWith('freestyle-')) return { src: teamAvatar('avatar-liam.jpg'), name: 'Liam' };
+  if (activityId.startsWith('freestyle-')) {
+    const hash = activityId.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    const pick = FREESTYLE_AVATARS[hash % FREESTYLE_AVATARS.length];
+    return { src: teamAvatar(pick.file), name: pick.name };
+  }
   return null;
 };
 
