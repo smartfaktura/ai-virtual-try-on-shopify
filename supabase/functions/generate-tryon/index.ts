@@ -210,7 +210,8 @@ async function generateImage(
   prompt: string,
   productImageUrl: string,
   modelImageUrl: string,
-  apiKey: string
+  apiKey: string,
+  aspectRatio: string
 ): Promise<string | null> {
   const maxRetries = 2;
 
@@ -240,6 +241,7 @@ async function generateImage(
               },
             ],
             modalities: ["image", "text"],
+            image_config: { aspect_ratio: aspectRatio },
           }),
         }
       );
@@ -398,7 +400,7 @@ serve(async (req) => {
             ? prompt
             : `${prompt}\n\nVariation ${i + 1}: Slightly different angle and lighting while maintaining the same high quality.`;
 
-        const base64Url = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY);
+        const base64Url = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1");
 
         if (base64Url) {
           const publicUrl = await uploadBase64ToStorage(base64Url, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
