@@ -1,41 +1,47 @@
 
 
-## Fix Hero Carousel: Hide Scrollbar and Clean Up Layout
+## Create a Dedicated "Meet the Team" Page
 
-### Problem
-The hero output carousel shows an ugly visible scrollbar beneath the images. The `scrollbar-thin` class and inline `scrollbarColor` style make it visible, which looks unprofessional alongside the dot indicators and arrow buttons that already serve as navigation.
+### Overview
+A new standalone `/team` page featuring all 10 AI Studio Team members with their living avatar videos, roles, and descriptions. The design follows an Apple-inspired, luxury, spacious layout with generous whitespace and editorial typography. The page ends with relevant CTAs and a contact section.
 
-### Changes
+### Page Structure
 
-**File: `src/components/landing/HeroSection.tsx`**
+1. **Hero Section** -- Full-width, centered headline with a subtle badge. Large, airy typography:
+   - Badge: "Your AI Studio Team"
+   - Headline: "10 AI Professionals. Zero Overhead."
+   - Subheadline: Brief one-liner about the team
 
-1. **Hide the scrollbar completely** on the carousel container (line 318-319):
-   - Remove `scrollbar-thin` class
-   - Remove inline `scrollbarColor` style
-   - Add a CSS utility class `scrollbar-hide` to completely hide the scrollbar while keeping scroll functionality
+2. **Team Grid** -- A responsive grid (2 cols mobile, 3 cols tablet, 4-5 cols desktop) of team member cards. Each card:
+   - Large rounded video element (aspect 4:5) with `poster` fallback, `autoPlay`, `muted`, `loop`, `playsInline`, `preload="none"` (per project conventions)
+   - Subtle hover scale effect and border highlight
+   - Name, role (in primary color), and description below
 
-2. **Add scrollbar-hide CSS** via an inline style block (or use the existing pattern of inline `<style>` tags already in the component):
-   - Add `-webkit-scrollbar { display: none }` and `scrollbar-width: none` to the carousel container
+3. **CTA Section** -- Bottom area with:
+   - Primary CTA: "Start Creating Free" button linking to `/auth`
+   - Secondary info: contact email (e.g., hello@vovv.ai) for questions
+   - Trust signals: "Free to try", "No credit card required", "Cancel anytime"
 
-### Technical Detail
+### Files to Create/Modify
 
-Line 318 change:
-```tsx
-// Before
-className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin"
-style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
+**New file: `src/pages/Team.tsx`**
+- Uses `PageLayout` wrapper (consistent nav + footer)
+- Imports `TEAM_MEMBERS` from `@/data/teamData`
+- Three sections: Hero, Team Grid, Bottom CTA with contact email
 
-// After
-className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
-style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
-```
+**Modified file: `src/App.tsx`**
+- Add route: `<Route path="/team" element={<Team />} />`
+- Import the new `Team` page component
 
-Also add to the existing `<style>` block at the bottom of the component:
-```css
-[data-hero-carousel]::-webkit-scrollbar { display: none; }
-```
+**Modified file: `src/components/landing/LandingFooter.tsx`**
+- Add "Team" link (`/team`) to the Company section of the footer
 
-And add `data-hero-carousel` attribute to the scroll container.
+### Technical Details
 
-This keeps smooth horizontal scrolling via touch/trackpad and arrow buttons while completely hiding the scrollbar for a clean premium look.
+- Videos use `preload="none"` + `poster` attribute for lazy loading (per project memory)
+- Page uses `PageLayout` which includes `LandingNav` and `LandingFooter` and handles scroll-to-top
+- Cards use `rounded-2xl`, `border-border`, `shadow-sm` styling consistent with existing landing sections
+- Contact email displayed as a `mailto:` link
+- Spacious padding: `py-24 sm:py-32` for hero, `py-20` for grid, `py-20` for CTA
+- Grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 lg:gap-10`
 
