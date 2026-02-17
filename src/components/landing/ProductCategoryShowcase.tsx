@@ -50,11 +50,12 @@ function CategoryCard({ label, images, cycleDuration }: CategoryCardProps) {
            src={img}
            alt={`${label} AI-generated product shot`}
            decoding="async"
-           className="absolute inset-0 w-full h-full object-cover"
-           style={{
+           wrapperClassName="absolute inset-0"
+           wrapperStyle={{
              opacity: i === currentIndex ? 1 : 0,
              transition: 'opacity 1.2s ease-in-out',
            }}
+           className="w-full h-full object-cover"
          />
        ))}
     </div>
