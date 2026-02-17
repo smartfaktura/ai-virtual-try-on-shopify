@@ -9,6 +9,7 @@ export interface ActiveJob {
   workflow_id: string | null;
   error_message: string | null;
   product_name?: string | null;
+  credits_reserved?: number;
 }
 
 export interface BatchGroup {

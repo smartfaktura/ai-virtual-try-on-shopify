@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { PageHeader } from '@/components/app/PageHeader';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
 import { WorkflowActivityCard } from '@/components/app/WorkflowActivityCard';
@@ -21,6 +22,7 @@ export default function Workflows() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const prevActiveCountRef = useRef(0);
+  const autoCleanupTriggeredRef = useRef(false);
 
   // ── Workflow catalog ──
   const { data: workflows = [], isLoading } = useQuery({
@@ -43,7 +45,7 @@ export default function Workflows() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('generation_queue')
-        .select('id, status, created_at, started_at, payload, error_message, job_type')
+        .select('id, status, created_at, started_at, payload, error_message, job_type, credits_reserved')
         .in('status', ['queued', 'processing'])
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -64,6 +66,7 @@ export default function Workflows() {
             workflow_id: (p?.workflow_id as string) ?? null,
             workflow_name: (p?.workflow_name as string) ?? null,
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
+            credits_reserved: j.credits_reserved ?? 0,
           };
         });
     },
@@ -180,6 +183,57 @@ export default function Workflows() {
     prevActiveCountRef.current = activeJobs.length;
   }, [activeJobs.length, queryClient]);
 
+  // ── Auto-cleanup: trigger retry-queue for stuck processing jobs ──
+  useEffect(() => {
+    if (autoCleanupTriggeredRef.current) return;
+    const stuckJobs = activeJobs.filter(
+      (j) => j.status === 'processing' && j.started_at &&
+        Date.now() - new Date(j.started_at).getTime() > 5 * 60 * 1000,
+    );
+    if (stuckJobs.length === 0) return;
+
+    autoCleanupTriggeredRef.current = true;
+    console.log('[Workflows] Auto-triggering cleanup for', stuckJobs.length, 'stuck jobs');
+
+    supabase.functions.invoke('retry-queue').then(() => {
+      queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-failed-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['credits'] });
+    });
+  }, [activeJobs, queryClient]);
+
+  // ── Cancel stuck job handler ──
+  const handleCancelJob = useCallback(async (jobId: string, creditsReserved: number) => {
+    try {
+      // Mark job as failed via service — use direct REST update since RLS only allows
+      // updating queued jobs; for processing jobs we call the cleanup function
+      const { error: updateError } = await supabase
+        .from('generation_queue')
+        .update({ status: 'failed', error_message: 'Cancelled by user', completed_at: new Date().toISOString() } as never)
+        .eq('id', jobId);
+
+      if (updateError) {
+        // If RLS blocks it (processing status), trigger cleanup instead
+        await supabase.functions.invoke('retry-queue');
+      }
+
+      // Refund credits
+      if (creditsReserved > 0) {
+        await supabase.rpc('refund_credits', { p_user_id: user!.id, p_amount: creditsReserved });
+      }
+
+      toast.success(`Generation cancelled. ${creditsReserved} credits refunded.`);
+
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-failed-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['credits'] });
+    } catch (err) {
+      console.error('Cancel job error:', err);
+      toast.error('Failed to cancel job. Try again.');
+    }
+  }, [user, queryClient]);
+
   // ── Batch grouping ──
   const activeBatchGroups = groupJobsIntoBatches(activeJobs);
   const completedBatchGroups = groupJobsIntoBatches(recentlyCompletedJobs);
@@ -208,6 +262,7 @@ export default function Workflows() {
               batchGroups={activeBatchGroups}
               completedGroups={completedBatchGroups}
               failedGroups={failedBatchGroups}
+              onCancelJob={handleCancelJob}
             />
           )}
           <div className="flex items-center gap-3">
