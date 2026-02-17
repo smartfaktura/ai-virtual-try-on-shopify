@@ -1,33 +1,54 @@
 
 
-## Clean Up Carousel to Apple-Inspired Design
+## Fix Corrupted Image Downloads in Workflow Preview
 
-### Changes to `src/components/app/WorkflowRecentRow.tsx`
+### Root Cause
 
-**1. Replace dot indicators with a modern Apple-style pill indicator**
-- Instead of individual dots for each item, use a single capsule/pill track with a sliding active segment
-- Show only 3-5 dots max (grouped) like iOS page indicators -- if more items exist, compress into a smaller set
-- Use `w-6 h-1 rounded-full` capsule shape for active, `w-1.5 h-1.5 rounded-full` for inactive, with smooth width transition
+Two issues are causing corrupted downloads:
 
-**2. Remove edge fade gradients**
-- Delete the two `pointer-events-none` gradient divs (lines 184-186) that create the "doggy faded look"
+1. **No response validation**: Neither `downloadSingleImage` nor `downloadDropAsZip` check `response.ok` before reading the body. If the fetch returns an error (e.g., 403 from an expired signed URL, or a CORS error), the error HTML/JSON gets saved as the "image" file, producing a corrupted file that macOS Preview cannot open.
 
-**3. Simplify the carousel container**
-- Remove `snap-x snap-mandatory` to reduce the snappy/slider feel -- let it scroll freely and smoothly
-- Keep `scrollbar-none` for clean look
+2. **Wrong file extension**: The extension is parsed from the URL using `url.split('.').pop()`, but signed URLs often have long query strings and may not have a clean file extension in the path (e.g., UUIDs without extensions). This can result in wrong or missing extensions, making the OS unable to recognize the file type.
 
-### Summary of visual changes
+### Fix in `src/lib/dropDownload.ts`
 
-| Element | Before | After |
-|---------|--------|-------|
-| Edge fades | Left/right gradient overlays | Removed entirely |
-| Dots | Individual circles per item | Apple-style pill: active = wide capsule, inactive = small dot |
-| Scroll behavior | `snap-x snap-mandatory` (snappy) | Free smooth scroll |
-| Overall feel | "Slider" with fades | Clean, minimal horizontal scroll |
+**Changes:**
 
-### File
+| Change | Detail |
+|--------|--------|
+| Add `response.ok` check | Throw an error if the HTTP response is not 2xx, preventing error pages from being saved as images |
+| Detect content type from headers | Use `response.headers.get('content-type')` to determine the correct file extension (`image/png` -> `.png`, `image/jpeg` -> `.jpg`, `image/webp` -> `.webp`) instead of parsing the URL |
+| Fallback extension | Default to `.jpg` if content-type is missing or unrecognized |
+| Fix single image download | Same response validation and proper extension handling for `downloadSingleImage` |
+
+**Content-type to extension map:**
+```text
+image/png   -> .png
+image/jpeg  -> .jpg
+image/webp  -> .webp
+image/gif   -> .gif
+default     -> .jpg
+```
+
+**Updated logic (pseudocode):**
+```text
+downloadSingleImage:
+  1. fetch(url)
+  2. if (!response.ok) throw Error
+  3. get content-type header -> determine extension
+  4. ensure fileName uses correct extension
+  5. blob -> createObjectURL -> download
+
+downloadDropAsZip:
+  1. for each image: fetch(url)
+  2. if (!response.ok) skip with warning
+  3. get content-type -> determine extension
+  4. arrayBuffer -> zip.file with correct extension
+```
+
+### File to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/app/WorkflowRecentRow.tsx` | Remove edge fades, replace dots with pill indicator, remove snap scroll |
+| `src/lib/dropDownload.ts` | Add response validation, content-type based extension detection, proper error handling |
 
