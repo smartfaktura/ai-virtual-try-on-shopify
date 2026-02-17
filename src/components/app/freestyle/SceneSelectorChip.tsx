@@ -42,7 +42,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect 
     : filterCategoryMap[activeFilter];
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
+    <Popover open={open} onOpenChange={onOpenChange} modal>
       <PopoverTrigger asChild>
         <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
           {selectedScene ? (

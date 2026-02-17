@@ -30,7 +30,7 @@ export function FramingSelectorChip({ framing, onFramingChange, open, onOpenChan
   const selectedOption = FRAMING_OPTIONS.find(o => o.value === framing);
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
+    <Popover open={open} onOpenChange={onOpenChange} modal>
       <PopoverTrigger asChild>
         <button className={cn(
           'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
