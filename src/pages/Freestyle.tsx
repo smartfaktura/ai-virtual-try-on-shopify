@@ -408,10 +408,12 @@ export default function Freestyle() {
         }, ...prev]);
         resetQueueRef.current();
       } else {
-        // Images are saved server-side by process-queue, just refresh the list
-        refreshImagesRef.current();
-        refreshBalanceRef.current();
-        resetQueueRef.current();
+        // Delay to ensure DB write has propagated, then refetch
+        setTimeout(() => {
+          refreshImagesRef.current();
+          refreshBalanceRef.current();
+          resetQueueRef.current();
+        }, 800);
       }
     }
 

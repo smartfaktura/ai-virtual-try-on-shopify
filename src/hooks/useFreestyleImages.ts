@@ -270,7 +270,7 @@ export function useFreestyleImages() {
 
   // Refresh = invalidate cache
   const refreshImages = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    queryClient.refetchQueries({ queryKey: [QUERY_KEY] });
   }, [queryClient]);
 
   return {
