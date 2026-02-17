@@ -95,6 +95,12 @@ export function WorkflowActivityCard({
                       <>Queued · waiting {elapsed}</>
                     )}
                   </p>
+                  {isProcessing && (
+                    <p className="text-[11px] text-muted-foreground/70">
+                      Pro model — est. ~60-120s per image
+                      {isBatch && group.totalCount > 1 && ` · ~${Math.ceil(group.totalCount * 1)}-${Math.ceil(group.totalCount * 2)} min total`}
+                    </p>
+                  )}
                 </div>
                 {hasStuckJobs && onCancelJob && (
                   <Button
@@ -111,6 +117,14 @@ export function WorkflowActivityCard({
                     <X className="w-3.5 h-3.5" />
                     Cancel
                   </Button>
+                )}
+                {isProcessing && (
+                  <Badge
+                    variant="secondary"
+                    className="shrink-0 text-[10px] uppercase tracking-wider font-semibold bg-violet-100 text-violet-700 hover:bg-violet-100"
+                  >
+                    Pro Model
+                  </Badge>
                 )}
                 <Badge
                   variant="secondary"
