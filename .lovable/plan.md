@@ -1,63 +1,53 @@
 
 
-## Fix Doubled Popover on Desktop
+## Fix: Dual-Mounted Prompt Panels Causing Duplicate Popovers
 
 ### Root Cause
 
-Adding `modal` unconditionally to all 4 chip Popovers fixed the mobile touch issue but broke desktop. On desktop, the `modal` prop creates a full dismiss layer with portal behavior that conflicts with the existing `PopoverContent` portal, resulting in the popover content appearing twice.
+The `Freestyle.tsx` page renders `FreestylePromptPanel` **twice** simultaneously -- once for desktop (line 607, inside `hidden lg:block`) and once for mobile (line 634, inside `lg:hidden`). Both are always mounted in the DOM; only CSS visibility differs.
 
-### Fix
+Both instances share the **same popover state** (e.g. `modelPopoverOpen`). When you click "Model":
+1. State becomes `true`
+2. **Both** mounted `Popover` components open
+3. `PopoverContent` uses a **Portal**, which renders outside the hidden parent, bypassing the CSS `display:none`
+4. Result: two identical popover panels appear, and Radix's outside-click detection from one immediately closes both
 
-Pass a `modal` prop from the parent (`FreestyleSettingsChips`) which already knows if we're on mobile via `useIsMobile()`. Each chip component gets an optional `modal?: boolean` prop on its Popover. On mobile it's `true` (fixes touch), on desktop it's `false` (no doubling).
+This explains both symptoms: **doubled panels** and **instant disappearance**.
 
-### Files to Change
+### Solution
 
-**1. `src/components/app/freestyle/ModelSelectorChip.tsx`**
+Render only ONE `FreestylePromptPanel` instead of two. The panel already adapts its layout based on `useIsMobile()` internally, so there is no need for two separate mount points.
 
-- Add `modal?: boolean` to the props interface
-- Use it on the Popover: `<Popover open={open} onOpenChange={onOpenChange} modal={modal}>`
+### Changes
 
-**2. `src/components/app/freestyle/SceneSelectorChip.tsx`**
+**File: `src/pages/Freestyle.tsx`**
 
-- Same: add `modal?: boolean` prop, pass to Popover
+1. Remove the duplicate mobile rendering (lines 612-635) of `FreestylePromptPanel`
+2. In the desktop container (lines 582-610), remove the `hidden lg:block` restriction so the single panel renders on all screen sizes
+3. Adjust the container styling to work for both mobile and desktop:
+   - Desktop: keep the absolute-positioned floating bar with gradient fade
+   - Mobile: switch to a simpler docked layout
 
-**3. `src/components/app/freestyle/ProductSelectorChip.tsx`**
-
-- Same: add `modal?: boolean` prop, pass to Popover
-
-**4. `src/components/app/FramingSelectorChip.tsx`**
-
-- Same: add `modal?: boolean` prop, pass to Popover (it already had `modal` hardcoded before, so this makes it conditional)
-
-**5. `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
-
-- Pass `modal={isMobile}` to each of the 4 chip components in both the mobile and desktop render sections (mobile gets `true`, desktop gets `false`)
-
-### Technical Detail
+The key change is to use a single responsive container:
 
 ```tsx
-// In each chip component:
-interface Props {
-  // ...existing props
-  modal?: boolean;
-}
-
-export function ModelSelectorChip({ ..., modal }: Props) {
-  return (
-    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
+{/* Prompt panel - single instance for all screen sizes */}
+<div className="lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:z-20">
+  {/* Desktop gradient fade */}
+  <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none" />
+  
+  <div className="lg:px-4 lg:sm:px-8 lg:pb-3 lg:sm:pb-5 lg:pt-2">
+    <div className="lg:max-w-3xl lg:mx-auto lg:pointer-events-auto relative">
+      {/* Scene hint (shown on both) */}
+      ...
+      <FreestylePromptPanel {...panelProps} />
+    </div>
+  </div>
+</div>
 ```
 
-```tsx
-// In FreestyleSettingsChips.tsx (both mobile and desktop sections):
-<ModelSelectorChip ... modal={isMobile} />
-<SceneSelectorChip ... modal={isMobile} />
-<ProductSelectorChip ... modal={isMobile} />
-<FramingSelectorChip ... modal={isMobile} />
-```
+This eliminates the dual-mount entirely, fixing both the duplicate popover and flash-close issues without needing any `modal` prop workarounds.
 
-### Summary
-
-- Desktop: `modal={false}` -- popovers render normally, no doubling
-- Mobile: `modal={true}` -- Radix dismiss layer prevents flash-close on touch
-- 5 files changed, minimal edits
+### Files Modified
+- `src/pages/Freestyle.tsx` -- merge desktop and mobile panel containers into a single mount point
 
