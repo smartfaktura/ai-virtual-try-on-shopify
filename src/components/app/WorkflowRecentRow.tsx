@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ImageIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ImageIcon } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -39,9 +37,9 @@ function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl
   return (
     <button
       onClick={() => onSelect(job)}
-      className="group/thumb flex flex-col gap-2 shrink-0 w-[140px] text-left"
+      className="group/thumb flex flex-col gap-2 shrink-0 w-[130px] sm:w-[140px] snap-start text-left"
     >
-      <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border transition-shadow group-hover/thumb:shadow-md">
+      <div className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border transition-shadow group-hover/thumb:shadow-md snap-start">
         {errored || (!isLoading && !optimizedUrl) ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-1">
             <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
@@ -73,7 +71,6 @@ function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl
 }
 
 export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRowProps) {
-  const navigate = useNavigate();
   const [signedUrlMap, setSignedUrlMap] = useState<Record<string, string>>({});
   const [urlsReady, setUrlsReady] = useState(false);
   const [selectedJob, setSelectedJob] = useState<RecentJob | null>(null);
@@ -105,15 +102,8 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
   if (!isLoading && jobs.length === 0) return null;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="section-label">Recent Creations</p>
-        <Button variant="ghost" size="sm" className="text-xs gap-1 h-7" onClick={() => navigate('/app/library')}>
-          View All
-          <ArrowRight className="w-3 h-3" />
-        </Button>
-      </div>
-      <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+    <div className="relative">
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-none">
         {isLoading && jobs.length === 0
           ? Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex flex-col gap-2 shrink-0 w-[140px]">
@@ -135,6 +125,9 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
               />
             ))}
       </div>
+      {/* Edge fade gradients */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-background to-transparent" />
 
       <WorkflowPreviewModal
         open={selectedJob !== null}
