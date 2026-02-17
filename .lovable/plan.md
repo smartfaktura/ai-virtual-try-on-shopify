@@ -1,69 +1,75 @@
 
 
-## Apple-Inspired Mobile Prompt Bar Polish
+## Mobile Prompt Bar: Swipe Gesture + Collapsed Message
 
 ### Problem
 
-1. The collapse/expand handle (pill bar + chevron + text) looks cluttered and cheap -- not aligned with the app's luxury aesthetic
-2. A visible border line appears above the prompt panel because BOTH the parent wrapper (`border-t`) and the panel itself (`border`) draw borders, creating a double-line effect
-3. The rounded top corners of the panel are cropped/clipped by the parent container
+1. The prompt bar only responds to taps on the pill handle -- there's no swipe-down gesture, which feels unnatural on mobile (users expect to swipe a bottom sheet down to dismiss it)
+2. When collapsed, there's no hint about what the bar does -- just a tiny pill with no context
+3. The pill handle alone doesn't feel interactive enough for a premium app experience
 
 ### Changes
 
-**File: `src/pages/Freestyle.tsx`** (line 613)
+**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
 
-Remove the `border-t border-border/60` and `bg-background/80 backdrop-blur-xl` from the mobile dock wrapper. The panel component itself already has background, blur, and border styling -- the wrapper should be transparent and borderless to avoid doubling.
+1. **Add touch swipe gesture** for collapse/expand:
+   - Track `touchStart` Y position on the handle area
+   - On `touchEnd`, if user swiped down more than 40px while expanded, collapse; if swiped up more than 40px while collapsed, expand
+   - Add `onTouchStart` and `onTouchEnd` handlers to the outer container (not just the pill button)
+   - This gives the native iOS bottom-sheet feel
 
-Change:
+2. **Show a compact collapsed row** when collapsed:
+   - Instead of just a bare pill, show: pill handle + a single line like "Tap to create" or "Describe what you want..." in muted small text + a small chevron-up icon
+   - This gives users a clear hint that the bar is interactive and what it does
+   - Keep height compact (~52px) so it doesn't eat into the grid
+
+3. **Subtle visual refinements to the pill**:
+   - Slightly wider pill when collapsed (`w-10`) to be more visible
+   - Add a gentle scale animation on touch (`active:scale-95`) for tactile feedback
+
+**Collapsed state layout:**
+```text
++--------------------------------------------------+
+|              ───── (pill handle) ─────            |
+|   "Describe what you want..."        ChevronUp   |
++--------------------------------------------------+
 ```
-<div className="lg:hidden border-t border-border/60 bg-background/80 backdrop-blur-xl">
-```
-To:
-```
-<div className="lg:hidden">
-```
 
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`** (lines 186-196)
+### Technical Details
 
-Replace the current cluttered handle (pill + chevron + text) with a clean, Apple-inspired minimal design:
+**Touch gesture implementation** (added to FreestylePromptPanel):
 
-- Single centered pill indicator (like iOS sheet handles): `w-9 h-[5px] rounded-full bg-border/40` inside a generous `py-3` touch target
-- No text, no chevron -- the pill alone is the universal iOS "drag handle" affordance
-- When collapsed, show a compact row with just the pill and a subtle upward-facing chevron to hint "tap to expand"
-- Larger touch target (`min-h-[44px]`) for easy tapping
-
-Replace lines 186-196 with:
 ```tsx
-{isMobile && onToggleCollapse && (
-  <button
-    onClick={onToggleCollapse}
-    className="w-full flex items-center justify-center min-h-[44px] active:bg-muted/20 transition-colors"
-    aria-label={isCollapsed ? 'Expand prompt' : 'Collapse prompt'}
-  >
-    <div className={cn(
-      'w-9 h-[5px] rounded-full transition-colors',
-      isCollapsed ? 'bg-muted-foreground/30' : 'bg-border/50'
-    )} />
-  </button>
-)}
+const touchStartY = useRef<number | null>(null);
+
+const handleTouchStart = (e: React.TouchEvent) => {
+  touchStartY.current = e.touches[0].clientY;
+};
+
+const handleTouchEnd = (e: React.TouchEvent) => {
+  if (touchStartY.current === null || !onToggleCollapse) return;
+  const delta = e.changedTouches[0].clientY - touchStartY.current;
+  // Swipe down while expanded -> collapse
+  if (delta > 40 && !isCollapsed) onToggleCollapse();
+  // Swipe up while collapsed -> expand
+  if (delta < -40 && isCollapsed) onToggleCollapse();
+  touchStartY.current = null;
+};
 ```
 
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`** (lines 153-163)
+Attach `onTouchStart={handleTouchStart}` and `onTouchEnd={handleTouchEnd}` to the outer mobile container div.
 
-Update the mobile container to use a subtle top shadow instead of a border for a cleaner, more spacious feel:
+**Collapsed row** (replaces current collapsed state):
 
-- Change mobile styling from `rounded-t-2xl border-b-0 shadow-none` to `rounded-t-3xl border-0 shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.08)]`
-- Remove the generic `border` from the shared class and only apply it on desktop
-- Use `overflow-visible` on mobile so the rounded corners are not clipped by the parent
+When `isCollapsed` is true, instead of only showing the pill button, show:
+- The pill handle (slightly larger)
+- A row below with muted placeholder text "Describe what you want..." and a ChevronUp icon on the right
+- The whole area is tappable to expand
 
-### Summary of Visual Effect
+**Updated pill button section** (lines 186-197):
 
-- The prompt bar will appear to "float" upward from the bottom with a soft shadow instead of a hard border line
-- The collapse handle becomes a single clean pill indicator (Apple sheet-style)
-- More vertical breathing room around the handle for a spacious, premium feel
-- No double borders, no content clipping
+The pill handle remains but gets `active:scale-95` for feedback. When collapsed, an additional hint row appears below the pill with the placeholder text and chevron.
 
 ### Files Modified
-- `src/pages/Freestyle.tsx` -- remove redundant border/bg from mobile wrapper
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` -- Apple-style handle, shadow instead of border on mobile
+- `src/components/app/freestyle/FreestylePromptPanel.tsx` -- swipe gesture, collapsed hint row, pill refinements
 
