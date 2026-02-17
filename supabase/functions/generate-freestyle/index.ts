@@ -83,7 +83,9 @@ function buildNegativePrompt(cameraStyle?: 'pro' | 'natural'): string {
   return `
 CRITICAL — DO NOT include any of the following:
 - No text, watermarks, logos, labels, or signatures anywhere in the image
-- No distorted or extra fingers, hands, or limbs
+- Exactly 2 arms, 2 hands (5 fingers each), 2 legs per person — no extra, missing, or merged limbs
+- Natural joint articulation only — no impossible bends, twisted spines, or backward limbs
+- No duplicated or phantom body parts
 - ${blurRule}
 - No AI-looking skin smoothing or plastic textures
 - No collage layouts or split-screen compositions
