@@ -43,7 +43,7 @@ interface CreditContextValue {
   openBuyModal: () => void;
   closeBuyModal: () => void;
   
-  calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean }) => number;
+  calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string }) => number;
 }
 
 const defaultValue: CreditContextValue = {
@@ -142,10 +142,13 @@ export function CreditProvider({ children }: CreditProviderProps) {
     toast('Subscription reactivated (placeholder)');
   }, []);
   
-  const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean }) => {
-    const { count, quality, mode, hasModel, hasScene } = settings;
+  const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string }) => {
+    const { count, quality, mode, hasModel, hasScene, modelName, duration } = settings;
     if (mode === 'video') {
-      return count * 30;
+      const isV16 = modelName === 'kling-v1-6';
+      const baseCost = isV16 ? 70 : 90;
+      const multiplier = duration === '10' ? 2 : 1;
+      return count * baseCost * multiplier;
     }
     if (mode === 'virtual-try-on') {
       return count * 8;
