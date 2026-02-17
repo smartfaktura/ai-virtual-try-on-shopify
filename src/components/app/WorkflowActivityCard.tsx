@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ArrowRight, XCircle, CheckCircle2, Clock } from 'lucide-react';
+import { Loader2, ArrowRight, XCircle, CheckCircle2, Clock, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ interface WorkflowActivityCardProps {
   batchGroups: BatchGroup[];
   completedGroups?: BatchGroup[];
   failedGroups?: BatchGroup[];
+  onCancelJob?: (jobId: string, creditsReserved: number) => void;
 }
 
 function elapsedLabel(dateStr: string): string {
@@ -21,10 +22,16 @@ function elapsedLabel(dateStr: string): string {
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
 
+function isStuck(dateStr: string | null): boolean {
+  if (!dateStr) return false;
+  return Date.now() - new Date(dateStr).getTime() > 3 * 60 * 1000; // 3 minutes
+}
+
 export function WorkflowActivityCard({
   batchGroups,
   completedGroups = [],
   failedGroups = [],
+  onCancelJob,
 }: WorkflowActivityCardProps) {
   const navigate = useNavigate();
   const [, tick] = useState(0);
@@ -55,6 +62,12 @@ export function WorkflowActivityCard({
           group.jobs.find((j) => j.started_at)?.started_at ?? group.created_at,
         );
 
+        // Check if any processing job in this group is stuck (>3 min)
+        const stuckJobs = group.jobs.filter(
+          (j) => j.status === 'processing' && isStuck(j.started_at),
+        );
+        const hasStuckJobs = stuckJobs.length > 0;
+
         return (
           <Card key={group.key} className="border-primary/20 bg-primary/[0.03]">
             <CardContent className="py-4 px-5 space-y-2">
@@ -83,6 +96,22 @@ export function WorkflowActivityCard({
                     )}
                   </p>
                 </div>
+                {hasStuckJobs && onCancelJob && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10"
+                    onClick={() => {
+                      // Cancel all stuck processing jobs in this group
+                      stuckJobs.forEach((j) =>
+                        onCancelJob(j.id, j.credits_reserved ?? 0),
+                      );
+                    }}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Cancel
+                  </Button>
+                )}
                 <Badge
                   variant="secondary"
                   className="shrink-0 text-[10px] uppercase tracking-wider font-semibold"
