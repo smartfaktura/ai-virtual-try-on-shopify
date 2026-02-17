@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ImageIcon, Eye } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { toSignedUrls } from '@/lib/signedUrl';
@@ -105,34 +106,36 @@ function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl
 }
 
 export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRowProps) {
-  const [signedUrlMap, setSignedUrlMap] = useState<Record<string, string>>({});
-  const [urlsReady, setUrlsReady] = useState(false);
   const [selectedJob, setSelectedJob] = useState<RecentJob | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (jobs.length === 0) { setUrlsReady(true); return; }
+  const jobIds = useMemo(() => jobs.map(j => j.id).sort().join(','), [jobs]);
 
-    const rawUrls: string[] = [];
-    const indexMap: { jobId: string; idx: number }[] = [];
+  const { data: signedUrlMap = {}, isFetched: urlsReady } = useQuery({
+    queryKey: ['workflow-recent-thumbnails', jobIds],
+    queryFn: async () => {
+      const rawUrls: string[] = [];
+      const indexMap: { jobId: string; idx: number }[] = [];
 
-    jobs.forEach((job) => {
-      const url = firstImageUrl(job.results);
-      if (url) {
-        indexMap.push({ jobId: job.id, idx: rawUrls.length });
-        rawUrls.push(url);
-      }
-    });
+      jobs.forEach((job) => {
+        const url = firstImageUrl(job.results);
+        if (url) {
+          indexMap.push({ jobId: job.id, idx: rawUrls.length });
+          rawUrls.push(url);
+        }
+      });
 
-    if (rawUrls.length === 0) { setUrlsReady(true); return; }
+      if (rawUrls.length === 0) return {} as Record<string, string>;
 
-    toSignedUrls(rawUrls).then((signed) => {
+      const signed = await toSignedUrls(rawUrls);
       const map: Record<string, string> = {};
       indexMap.forEach(({ jobId, idx }) => { map[jobId] = signed[idx]; });
-      setSignedUrlMap(map);
-      setUrlsReady(true);
-    });
-  }, [jobs]);
+      return map;
+    },
+    enabled: jobs.length > 0,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (prev) => prev,
+  });
 
 
 
