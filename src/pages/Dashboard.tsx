@@ -338,7 +338,7 @@ export default function Dashboard() {
                             <img
                               src={displayUrl}
                               alt={job.user_products?.title || job.workflows?.name || 'Generation'}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                           </div>
                           <span className="font-medium text-sm">
