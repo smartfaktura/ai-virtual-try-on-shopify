@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw, History, Trash2, Repeat, Info } from 'lucide-react';
+import { Upload, Film, Download, Loader2, Clock, ImageIcon, LinkIcon, X, Play, RotateCcw, History, Trash2, Repeat, Info, Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { useGenerateVideo, VideoGenStatus, GeneratedVideo } from '@/hooks/useGenerateVideo';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useCredits } from '@/contexts/CreditContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -119,8 +120,10 @@ export default function VideoGenerate() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
   const { status, videoUrl, error, elapsedSeconds, startGeneration, reset, history, isLoadingHistory } = useGenerateVideo();
+  const { calculateCost } = useCredits();
 
   const isGenerating = status === 'creating' || status === 'processing';
+  const videoCost = calculateCost({ count: 1, quality: 'standard', mode: 'video', modelName, duration });
 
   const handleFileSelect = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -446,7 +449,7 @@ export default function VideoGenerate() {
             ) : (
               <>
                 <Film className="w-5 h-5" />
-                Generate Video
+                Generate Video · {videoCost} credits
               </>
             )}
           </Button>
