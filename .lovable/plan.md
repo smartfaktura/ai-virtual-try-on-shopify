@@ -1,41 +1,63 @@
 
 
-## Fix Popover Flash-Close on Mobile
+## Fix Doubled Popover on Desktop
 
 ### Root Cause
 
-On mobile, tapping a Radix `PopoverTrigger` produces a sequence of touch/pointer events (touchstart, pointerdown, touchend, pointerup, click). After the popover opens, Radix detects subsequent pointer events as "outside" interactions and immediately closes it. This is a known Radix UI behavior on touch devices.
+Adding `modal` unconditionally to all 4 chip Popovers fixed the mobile touch issue but broke desktop. On desktop, the `modal` prop creates a full dismiss layer with portal behavior that conflicts with the existing `PopoverContent` portal, resulting in the popover content appearing twice.
 
-### Solution
+### Fix
 
-Add `modal` prop to each `Popover` component used in the chip selectors. When `modal={true}`, Radix creates a dismiss layer that properly manages focus and prevents the "pointer down outside" detection from firing prematurely. This is the standard Radix solution for touch-device popover issues.
+Pass a `modal` prop from the parent (`FreestyleSettingsChips`) which already knows if we're on mobile via `useIsMobile()`. Each chip component gets an optional `modal?: boolean` prop on its Popover. On mobile it's `true` (fixes touch), on desktop it's `false` (no doubling).
 
 ### Files to Change
 
-**1. `src/components/app/freestyle/ModelSelectorChip.tsx` (line 47)**
+**1. `src/components/app/freestyle/ModelSelectorChip.tsx`**
 
-Change `<Popover open={open} onOpenChange={onOpenChange}>` to `<Popover open={open} onOpenChange={onOpenChange} modal>`.
+- Add `modal?: boolean` to the props interface
+- Use it on the Popover: `<Popover open={open} onOpenChange={onOpenChange} modal={modal}>`
 
-**2. `src/components/app/freestyle/SceneSelectorChip.tsx` (line 45)**
+**2. `src/components/app/freestyle/SceneSelectorChip.tsx`**
 
-Same change: add `modal` prop.
+- Same: add `modal?: boolean` prop, pass to Popover
 
-**3. `src/components/app/freestyle/ProductSelectorChip.tsx` (line 31)**
+**3. `src/components/app/freestyle/ProductSelectorChip.tsx`**
 
-Same change: add `modal` prop.
+- Same: add `modal?: boolean` prop, pass to Popover
 
 **4. `src/components/app/FramingSelectorChip.tsx`**
 
-Same change: add `modal` prop to the Popover.
+- Same: add `modal?: boolean` prop, pass to Popover (it already had `modal` hardcoded before, so this makes it conditional)
 
-### What `modal` Does
+**5. `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
 
-- Prevents pointer events outside the popover from closing it prematurely
-- Adds a transparent backdrop that catches outside clicks properly
-- Traps focus inside the popover (good for accessibility)
-- Pressing Escape or tapping the backdrop still closes it correctly
+- Pass `modal={isMobile}` to each of the 4 chip components in both the mobile and desktop render sections (mobile gets `true`, desktop gets `false`)
 
-### No Other Changes Needed
+### Technical Detail
 
-This is a one-word fix (`modal`) on 4 files. No layout, styling, or structural changes required.
+```tsx
+// In each chip component:
+interface Props {
+  // ...existing props
+  modal?: boolean;
+}
+
+export function ModelSelectorChip({ ..., modal }: Props) {
+  return (
+    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
+```
+
+```tsx
+// In FreestyleSettingsChips.tsx (both mobile and desktop sections):
+<ModelSelectorChip ... modal={isMobile} />
+<SceneSelectorChip ... modal={isMobile} />
+<ProductSelectorChip ... modal={isMobile} />
+<FramingSelectorChip ... modal={isMobile} />
+```
+
+### Summary
+
+- Desktop: `modal={false}` -- popovers render normally, no doubling
+- Mobile: `modal={true}` -- Radix dismiss layer prevents flash-close on touch
+- 5 files changed, minimal edits
 
