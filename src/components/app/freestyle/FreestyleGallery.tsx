@@ -62,6 +62,9 @@ interface FreestyleGalleryProps {
   blockedEntries?: BlockedEntry[];
   onDismissBlocked?: (id: string) => void;
   onEditBlockedPrompt?: (prompt: string) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isFetchingMore?: boolean;
 }
 
 function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: number; aspectRatio?: string; className?: string }) {
@@ -312,7 +315,7 @@ function ImageCard({
   );
 }
 
-export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt }: FreestyleGalleryProps) {
+export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, onLoadMore, hasMore, isFetchingMore }: FreestyleGalleryProps) {
   const { isAdmin } = useIsAdmin();
   const isMobile = useIsMobile();
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
@@ -431,6 +434,17 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           </div>
         ))}
       </div>
+      {hasMore && onLoadMore && (
+        <div className="flex justify-center pb-6">
+          <button
+            onClick={onLoadMore}
+            disabled={isFetchingMore}
+            className="px-6 py-2.5 rounded-full text-sm font-medium bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-border/30 transition-colors disabled:opacity-50"
+          >
+            {isFetchingMore ? 'Loading…' : 'Load more'}
+          </button>
+        </div>
+      )}
       {modals}
     </>
   );
