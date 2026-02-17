@@ -1,19 +1,47 @@
 
 
-## Change Image Count Options: Default to 1, Max 4, Remove "recommended"
+## Update Quality Selection and Credit Pricing Across All Generation Modes
 
-### Changes
+### What Changes
+
+1. **Add quality selector to Virtual Try-On** -- replace the static "uses High quality by default" text with an actual Standard/High dropdown, same as workflows
+2. **Update credit pricing** to Standard = 8 credits, High (Pro model) = 16 credits
+3. **Add explanations** for each quality level so users understand the difference
+
+### New Pricing
+
+| Quality | Model Used | Credits/Image | Description |
+|---------|-----------|---------------|-------------|
+| Standard | Gemini 2.5 Flash | 8 credits | Fast generation, great for testing and iteration |
+| High | Gemini 3 Pro | 16 credits | Pro model, best quality, slower (~60-120s) |
+
+### Files to Change
 
 **`src/pages/Generate.tsx`**
 
-1. Change default `imageCount` state from `'4'` to `'1'`
-2. Update the type from `'1' | '4' | '8'` to `'1' | '2' | '3' | '4'`
-3. Update both "Number of Images" Select dropdowns (workflow and try-on) to show options: 1, 2, 3, 4 -- without any "(recommended)" labels
-4. Update credit calculation references that use `parseInt(imageCount)` (these will work as-is since they parse the string value)
+- Line 833: Update credit cost formula -- Standard from 4 to 8, High from 10 to 16
+- Lines 1489-1492: Update workflow quality dropdown labels with descriptions and new prices
+- Line 2174: Replace static "uses High quality" text with actual Quality dropdown (same as workflows)
+- Lines 2183-2184: Update try-on credit display to use dynamic quality pricing instead of hardcoded 8
 
-### Technical Details
+**`supabase/functions/enqueue-generation/index.ts`**
 
-- Line 191: Change `useState<'1' | '4' | '8'>('4')` to `useState<'1' | '2' | '3' | '4'>('1')`
-- Lines 1475-1481 and 2163-2169: Replace select options with plain "1 image", "2 images", "3 images", "4 images"
-- The `setImageCount` cast on lines 1475 and 2163 updated to match new type
+- Line 21-22: Update `calculateCreditCost` -- try-on uses quality-based pricing (not flat 8), standard = 8, high = 16
+
+**`src/lib/dropCreditCalculator.ts`**
+
+- Update `getCostPerImage` pricing to match new rates (base 8, model 16, model+scene 20)
+
+### Quality Dropdown Labels
+
+```
+Standard -- Fast generation, good quality (8 credits/img)
+High (Pro Model) -- Best quality, ~60-120s per image (16 credits/img)
+```
+
+### Technical Notes
+
+- The `enqueue-generation` edge function needs redeployment after the pricing change
+- Try-on will no longer be hardcoded to 8 credits -- it will follow the same Standard/High pricing
+- The `dropCreditCalculator` costs are updated proportionally to keep the same relative complexity tiers
 
