@@ -1,30 +1,18 @@
 
 
-## Pixel-Perfect Grid + Prompt Bar Alignment (Mobile/Tablet Only)
+## Align Freestyle Grid Top with Sidebar Top Edge (Desktop)
 
 ### Problem
 
-Two issues on mobile and tablet:
-
-1. **Grid side padding mismatch**: The freestyle image grid uses `px-[15px]` (15px) while the floating header bar uses `p-3` (12px). This creates a 3px mismatch on each side -- the grid is slightly narrower than the header bar.
-
-2. **Prompt bar too wide**: The prompt bar container uses `px-3` (12px) on mobile and `px-6` (24px) on tablet, making it stretch close to the viewport edges with little visible breathing room.
+On desktop, the sidebar floats with `m-3` (12px) margin from the viewport top. The freestyle grid currently starts at ~4px from the top (`lg:pt-1`), which is above the sidebar's top edge. The user wants the grid's first row of images to start at the same vertical position as the sidebar's top edge.
 
 ### Changes
 
-**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`** (or `src/pages/Freestyle.tsx`)
 
-1. **Line ~426** (small count layout): Change `px-[15px] lg:px-1` to `px-3 lg:px-1` -- matches the floating header's `p-3` (12px) exactly.
+The scrollable content area on line 535 currently uses `pt-[5rem] lg:pt-1`. Change `lg:pt-1` to `lg:pt-3` (12px) so the grid's top padding on desktop matches the sidebar's 12px top margin.
 
-2. **Line ~452** (masonry layout): Same change -- `px-[15px] lg:px-1` to `px-3 lg:px-1`.
+**Line 535**: Change `pt-[5rem] lg:pt-1` to `pt-[5rem] lg:pt-3`
 
-**File: `src/pages/Freestyle.tsx`**
-
-3. **Line ~583** (prompt bar wrapper): Change `px-3 sm:px-6` to `px-4 sm:px-8` -- adds 4px more breathing room on mobile (16px vs 12px) and 8px more on tablet (32px vs 24px), making the prompt bar visibly narrower and more inset from the edges.
-
-### Summary
-
-- Grid now matches the floating header edges pixel-for-pixel (both use 12px from viewport)
-- Prompt bar gains extra side padding so it floats with more visual breathing room above the grid
-- Desktop layout is completely unaffected
+This single change aligns the grid's top edge with the sidebar's top edge on desktop. Mobile/tablet padding remains unchanged at 80px (`5rem`).
 
