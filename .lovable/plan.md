@@ -1,19 +1,36 @@
 
 
-## Fix Recent Jobs Thumbnail — Revert to object-cover
+## Fix Anatomy Issues in Freestyle Generation
 
 ### Problem
-The previous fix changed thumbnails from `object-cover` to `object-contain`. For portrait-ratio images (taller than wide), `object-contain` shrinks the entire image to fit, resulting in a thin vertical line inside the 10x10 square container.
+People are being generated with 3 arms, extra legs, unnatural poses, and duplicate fingers -- especially when prompted to hold products or sit.
 
-### Solution
-Revert the image class back to `object-cover`. This center-crops the image to perfectly fill the square container, which is the correct behavior for small thumbnail previews in a table.
+### What We WON'T Do
+- We will NOT touch the "No text, watermarks, logos" line yet since that's a separate issue worth discussing (it can strip legitimate product branding). That deserves its own focused fix.
+- We will NOT make the prompt longer than necessary.
 
-- `object-cover` = fills the box, crops overflow (correct for thumbnails)
-- `object-contain` = fits entire image, leaves empty space (wrong for thumbnails)
+### Change
+
+**File: `supabase/functions/generate-freestyle/index.ts`** -- line 86
+
+Replace the weak single line:
+```
+- No distorted or extra fingers, hands, or limbs
+```
+
+With a focused 3-line anatomy block:
+```
+- Exactly 2 arms, 2 hands (5 fingers each), 2 legs per person — no extra, missing, or merged limbs
+- Natural joint articulation only — no impossible bends, twisted spines, or backward limbs
+- No duplicated or phantom body parts
+```
+
+That's it -- 3 short, specific lines replacing 1 vague line. Stays within prompt budget and targets exactly the problem.
 
 ### Technical Detail
 
-| File | Line | Change |
+| File | Lines | Change |
 |---|---|---|
-| `src/pages/Dashboard.tsx` | 341 | Change `object-contain` back to `object-cover` |
+| `supabase/functions/generate-freestyle/index.ts` | 86 | Replace single anatomy line with 3 focused rules |
 
+After editing, the function will be redeployed automatically.
