@@ -1,49 +1,34 @@
 
 
-## Settings Page Audit and Fixes
+## Add "Create New Product" Button to Product Selection Step
 
-### Issues Found and Fixes
+### What Changes
 
-**File: `src/pages/Settings.tsx`**
+Add a "+ Add New Product" card at the end of the product grid in the workflow product selection step (step 1). When clicked, it opens the existing `AddProductModal`. After a product is added, the product list refreshes automatically.
 
-#### 1. Default Image Count options are outdated
-- **Problem**: Dropdown shows 1, 4, 8 (line 261-264) but Generate page now uses 1, 2, 3, 4
-- **Fix**: Update to match: "1 image", "2 images", "3 images", "4 images"
-- **Also**: Change `DEFAULT_SETTINGS.defaultImageCount` from `'4'` to `'1'` (line 56) to match Generate page default
+### File to Change
 
-#### 2. Credit prices are wrong in Quality dropdown
-- **Problem**: Shows "Standard (4 credits/image)" and "High (10 credits/image)" (lines 508-509)
-- **Fix**: Update to "Standard -- Fast generation, good quality (8 credits/img)" and "High (Pro Model) -- Best quality, slower (16 credits/img)"
+**`src/pages/Generate.tsx`**
 
-#### 3. AI Model badge is generic
-- **Problem**: Shows "vovv-v1 (Latest stable version)" (lines 499-501)
-- **Fix**: Show both models: "Standard: Gemini 2.5 Flash" and "High: Gemini 3 Pro" with appropriate badges
+1. **Import** `AddProductModal` from `@/components/app/AddProductModal` and add `useQueryClient` from `@tanstack/react-query`
+2. **Add state**: `const [showAddProduct, setShowAddProduct] = useState(false)` 
+3. **Add query client**: `const queryClient = useQueryClient()` for invalidating the product list after adding
+4. **In the try-on product grid** (line ~1067-1091): After the product cards loop, add a "+ Add New Product" button card styled as a dashed-border placeholder that opens the modal
+5. **In the non-try-on product grid** (line ~1092-1099): Add the same button below or beside the `ProductMultiSelect`
+6. **Render the modal** with `onProductAdded` callback that invalidates the `['user-products']` query so the list refreshes
+7. **In the empty state** (lines 1048-1065): Also add an inline button to open the modal instead of navigating away to `/app/products`
 
-#### 4. Help and Support links point to brandframe.ai
-- **Problem**: Documentation, Contact Support, and FAQ links all use `brandframe.ai` domain (lines 541-549)
-- **Fix**: Update to `vovv.ai` domain and correct email to `support@vovv.ai`
+### Visual Design
 
-#### 5. Default quality default value
-- **Problem**: `DEFAULT_SETTINGS.defaultQuality` is `'standard'` which is fine, but keeping it consistent
+The "+ Add New Product" card will match the existing product card grid style:
+- Same size as other product cards
+- Dashed border with muted styling
+- Plus icon centered with "Add New" label below
+- On click, opens the Add Product modal inline (no page navigation needed)
 
-### Summary of Changes
+### Technical Detail
 
-All changes are in `src/pages/Settings.tsx`:
-
-| Line(s) | What | Before | After |
-|---------|------|--------|-------|
-| 56 | Default image count | `'4'` | `'1'` |
-| 261-264 | Image count options | 1, 4, 8 | 1, 2, 3, 4 |
-| 498-501 | AI Model display | Single "vovv-v1" badge | Two model badges showing Standard/High models |
-| 508-509 | Quality dropdown labels | 4 credits / 10 credits | 8 credits / 16 credits with descriptions |
-| 541-549 | Help links | brandframe.ai URLs | vovv.ai URLs |
-
-### What's already good (no changes needed)
-
-- General tab: Brand Defaults section works well
-- Notifications section is comprehensive
-- Plans and Credits tab is well-structured with billing toggle, plan cards, credit packs
-- Account tab: Download/Export defaults, Team and Permissions
-- About section correctly shows VOVV.AI branding
-- Save functionality with database persistence works correctly
+- Reuses the existing `AddProductModal` component (already has Upload, Store URL, CSV, and Mobile tabs)
+- Uses `queryClient.invalidateQueries({ queryKey: ['user-products'] })` to refresh the grid after a product is added
+- No new components or database changes needed
 
