@@ -1,73 +1,56 @@
 
 
-## Workflows Page: Capping, Failed Jobs, and Loading Polish
+## Fix: Workflow Activity Not Showing + Remove Duplicate Completed Jobs
 
-### What's Already Safe
+### Problem 1: Active workflows don't appear in Activity
 
-The recent completions query already uses `.limit(5)`, so even with 500 completed workflow jobs, only the 5 most recent thumbnails are shown. The "View All" button correctly links to the Library for the full history. No changes needed here.
+**Root cause found in database:** Workflow jobs are enqueued with `job_type: 'tryon'` (or `'product'`, `'freestyle'` depending on the workflow type), NOT `'workflow'`. However, they do carry a `workflow_id` in their `payload` JSON.
 
-### What's Missing
+The current filter on line 46 of `Workflows.tsx`:
+```typescript
+.filter((j) => j.job_type === 'workflow')
+```
+...matches zero rows because no jobs ever have `job_type === 'workflow'`. Verified in database: the most recent workflow generations all have `job_type: 'tryon'` with `payload.workflow_id` set.
 
-#### 1. Failed jobs are completely invisible
-Currently the Workflows page queries:
-- Active: `status IN ('queued', 'processing')` from `generation_queue`
-- Recent: `status = 'completed'` from `generation_jobs`
+**Fix:** Instead of filtering by `job_type`, filter by the presence of `workflow_id` in the payload. Since `payload` is JSONB, we can't easily filter server-side with the JS client, so we filter client-side by checking if `payload.workflow_id` exists.
 
-If a job **fails**, it disappears from the active query (no longer queued/processing) and never appears in recent (not completed). The user has zero visibility into failures.
+### Problem 2: Completed jobs show in both Activity AND Recent Creations
 
-**Fix:** Add a third query for recently failed jobs (last 24 hours, limit 3) and show them in a compact error card with the workflow name, failure time, and a dismissible "Retry" or "View Details" option.
+The "just completed" green cards in Activity are redundant with the Recent Creations thumbnails below. Same data, shown twice.
 
-#### 2. No "just completed" success feedback
-When a processing job finishes, it simply vanishes from the Active section. There's no transitional "Done!" state -- it jumps straight to the Recent row (if the user refreshes). This feels jarring.
+**Fix:** Remove the `justCompletedJobs` query entirely. Completed workflows should only appear in the Recent Creations row. The Activity section should only show actively running/queued jobs and failures -- things that need attention.
 
-**Fix:** Query recently completed jobs from the last 5 minutes alongside active jobs, and show them in the same `WorkflowActivityCard` component with a green checkmark and "Completed" badge. They auto-dismiss after 5 minutes.
-
-#### 3. No loading skeleton for the activity section
-The `workflow-recent-jobs` query might take a moment, but the activity section either shows nothing or shows data. No shimmer/skeleton while loading.
-
-**Fix:** Add a compact skeleton row (3 shimmer thumbnail cards) when `isLoadingRecent` is true.
-
-### Technical Changes
+### Changes
 
 **`src/pages/Workflows.tsx`**
-- Add a query for recently failed jobs: `generation_jobs` where `status = 'failed'`, `workflow_id IS NOT NULL`, `created_at > now() - 24h`, limit 3
-- Add a query for just-completed jobs: `generation_jobs` where `status = 'completed'`, `workflow_id IS NOT NULL`, `created_at > now() - 5min`, limit 3 (shown as success cards in the active section)
-- Pass `isLoadingRecent` to `WorkflowRecentRow` to show skeleton thumbnails during load
-- Update `hasActivity` to also check for failed jobs and just-completed jobs
+- Change the active jobs filter from `j.job_type === 'workflow'` to checking for `workflow_id` in the payload JSONB
+- Remove the `justCompletedJobs` query (lines 66-89) entirely
+- Update `hasActivity` to no longer reference `justCompletedJobs`
+- Remove `completedJobs` prop from `WorkflowActivityCard`
+- Enable polling (refetchInterval) on the active jobs query even when empty (e.g., every 15s) so newly started jobs appear without a page refresh
 
 **`src/components/app/WorkflowActivityCard.tsx`**
-- Accept a new `completedJobs` and `failedJobs` prop alongside existing `jobs` (active)
-- Render completed jobs with a green `CheckCircle2` icon, "Completed" badge, and "View in Library" link
-- Render failed jobs with a red `XCircle` icon, "Failed" badge, error message snippet, and optional "Retry" link back to the generate page
-- Completed cards auto-hide after 5 minutes (already handled by the query filter)
+- Remove the `completedJobs` prop and all green "Completed" card rendering
+- Keep only active (queued/processing) and failed job cards
 
-**`src/components/app/WorkflowRecentRow.tsx`**
-- Accept an `isLoading` prop
-- When true, render 3 skeleton thumbnail cards (shimmer squares with text placeholders) instead of real data
-- Keeps the layout stable while signed URLs and job data are being fetched
+### Technical Details
 
-### What stays the same
-- The `.limit(5)` cap on recent jobs -- safe with any volume
-- The "View All" link to Library for full history
-- Active job polling (5-second interval)
-- All existing animations and thumbnail rendering
-
-### Summary of states a user can see
-
-```text
-+--------------------------------------------------+
-| WORKFLOWS                                         |
-|                                                    |
-| Active Generations (if any)                       |
-| [spinner] "Virtual Try-On" generating... 45s      |
-| [check]   "Flat Lay Set" completed just now       |
-| [x]       "Product Listing" failed 10m ago        |
-|                                                    |
-| Recent Creations            [View All ->]         |
-| [shimmer] [shimmer] [shimmer]  (while loading)    |
-| [thumb1]  [thumb2]  [thumb3]   (when loaded)      |
-|                                                    |
-| --- Create a New Set ---                          |
-| [WorkflowCard catalog...]                         |
-+--------------------------------------------------+
+Current DB data shows workflow jobs look like:
 ```
+job_type: "tryon"
+payload: { workflow_id: "021146a4-...", ... }
+```
+
+The fix changes the filter to:
+```typescript
+// Before (broken):
+.filter((j) => j.job_type === 'workflow')
+
+// After (works):
+.filter((j) => {
+  const p = j.payload as Record<string, unknown> | null;
+  return p?.workflow_id != null;
+})
+```
+
+This correctly catches all workflow-originated jobs regardless of their underlying job type (tryon, product, freestyle).
