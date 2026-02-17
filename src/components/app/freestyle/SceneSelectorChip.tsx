@@ -11,6 +11,7 @@ interface SceneSelectorChipProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (scene: TryOnPose | null) => void;
+  modal?: boolean;
 }
 
 type SceneFilter = 'all' | 'on-model' | 'product' | 'food-home' | 'beauty';
@@ -31,7 +32,7 @@ const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
   beauty: ['bathroom', 'botanical'],
 };
 
-export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect }: SceneSelectorChipProps) {
+export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
   const { asPoses: customPoses } = useCustomScenes();
 
@@ -42,7 +43,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect 
     : filterCategoryMap[activeFilter];
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange} modal>
+    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
       <PopoverTrigger asChild>
         <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
           {selectedScene ? (

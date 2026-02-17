@@ -15,10 +15,11 @@ interface ProductSelectorChipProps {
   onSelect: (product: UserProduct | null) => void;
   products: UserProduct[];
   isLoading: boolean;
+  modal?: boolean;
 }
 
 export function ProductSelectorChip({
-  selectedProduct, open, onOpenChange, onSelect, products, isLoading,
+  selectedProduct, open, onOpenChange, onSelect, products, isLoading, modal,
 }: ProductSelectorChipProps) {
   const [search, setSearch] = useState('');
 
@@ -28,7 +29,7 @@ export function ProductSelectorChip({
   );
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange} modal>
+    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
       <PopoverTrigger asChild>
         <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
           {selectedProduct ? (
