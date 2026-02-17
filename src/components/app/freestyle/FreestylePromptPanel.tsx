@@ -201,19 +201,13 @@ export function FreestylePromptPanel({
       {isMobile && onToggleCollapse && (
         <button
           onClick={onToggleCollapse}
-          className="w-full flex flex-col items-center pt-2.5 pb-1 active:scale-[0.98] transition-transform"
+          className="w-full flex items-center justify-center py-3 active:scale-[0.98] transition-transform"
           aria-label={isCollapsed ? 'Expand prompt' : 'Collapse prompt'}
         >
           <div className={cn(
             'h-[5px] rounded-full transition-all',
             isCollapsed ? 'w-10 bg-muted-foreground/30' : 'w-9 bg-border/50'
           )} />
-          {isCollapsed && (
-            <div className="flex items-center justify-between w-full px-5 pt-2 pb-1">
-              <span className="text-sm text-muted-foreground/60">Describe what you want...</span>
-              <ChevronUp className="w-4 h-4 text-muted-foreground/40" />
-            </div>
-          )}
         </button>
       )}
 
