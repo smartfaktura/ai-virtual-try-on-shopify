@@ -543,7 +543,9 @@ serve(async (req) => {
 
     const quality =
       body.quality || config.fixed_settings.quality || "standard";
-    const model = getModelForQuality(quality);
+    let model = getModelForQuality(quality);
+    // Force Pro model when a person/model reference image is present (e.g. Selfie/UGC Set)
+    if (body.model?.imageUrl) model = "google/gemini-3-pro-image-preview";
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;
     console.log(
