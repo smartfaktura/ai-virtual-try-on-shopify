@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Download, Trash2, Camera, User, X, Sparkles, Loader2 } from 'lucide-react';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -95,10 +96,11 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
         >
           {/* Left — Image */}
           <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
-            <img
+            <ShimmerImage
               src={item.imageUrl}
               alt={item.label}
               className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
+              wrapperClassName="flex items-center justify-center max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
             />
           </div>
 
