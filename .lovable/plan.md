@@ -1,26 +1,22 @@
 
 
-## Make Video Generation "Coming Soon" for Non-Admin Users
+## Add Loading States to Dashboard Metric Cards
+
+### Problem
+The four metric cards (Images Generated, Credits Remaining, Products, Active Schedules) render immediately with default `0` values before data loads from the backend. This causes a visual "pop-in" where numbers jump from 0 to their real values, making the dashboard look broken momentarily.
+
+### Solution
+Extract `isLoading` from each `useQuery` call and pass it to the `MetricCard` `loading` prop. The MetricCard component already has built-in skeleton/shimmer loading states -- they just need to be wired up.
 
 ### Changes
 
-**1. `src/components/app/AppShell.tsx` -- Sidebar Video Nav Item**
-- Add a "Coming Soon" badge next to the Video nav label for non-admin users
-- For non-admin users, clicking Video will show a toast ("Coming soon!") instead of navigating
-- Admin users keep full access as before
-- Uses the existing `useIsAdmin` hook already imported in the file
+**`src/pages/Dashboard.tsx`**
+- Add `isLoading` destructuring to the four metric queries:
+  - `generatedCount` query -> `isLoading: generatedLoading`
+  - `productCount` query -> `isLoading: productsLoading`
+  - `scheduleCount` query -> `isLoading: schedulesLoading`
+  - Credits balance comes from `useCredits()` context -- no loading state needed since it initializes from context
+- Pass `loading` prop to each MetricCard in the returning user dashboard metrics grid
 
-**2. `src/pages/VideoGenerate.tsx` -- Full Page Gate**
-- Add a check at the top: if user is not admin, render a "Coming Soon" placeholder page instead of the video generator
-- The placeholder shows a Film icon, "Video Generation" title, "Coming Soon" badge, and a brief message
-- Admin users see the full video generation UI as before
-
-**3. `src/data/mockData.ts` -- Plan Feature Lists**
-- Change "Video Generation" to "Video Generation (coming soon)" in Starter, Growth, and Pro plan feature lists
-
-### Technical Details
-
-- Import `useIsAdmin` in `VideoGenerate.tsx` and check `isAdmin` to gate access
-- In `AppShell.tsx`, the `NavItemButton` component will be updated to accept an optional `comingSoon` prop; when true and user is not admin, it shows a badge and prevents navigation
-- No database or backend changes needed
+The MetricCard already renders pulse-animated skeleton placeholders when `loading={true}`, so no changes needed to that component.
 
