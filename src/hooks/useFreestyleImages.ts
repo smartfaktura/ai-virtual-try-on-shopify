@@ -74,6 +74,8 @@ export function useFreestyleImages() {
       lastPage.hasMore ? allPages.length : undefined,
     initialPageParam: 0,
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   // Flatten pages into a single array
