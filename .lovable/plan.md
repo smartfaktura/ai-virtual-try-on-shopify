@@ -1,52 +1,105 @@
 
-## Fix "Failed to start generation" — Source Image Too Large for Queue Payload
 
-### Root Cause
+## Revamp Selfie / UGC Set Animation with Rotating Results
 
-When a user uploads a product image (or selects one from the library), it gets converted to base64 (~2MB+) and stored in React state. When Generate is clicked, that entire base64 blob is embedded in the JSON body sent to `enqueue-generation`, which then stores it in the database `payload` JSONB column.
+### Concept
+The animation will tell the story: **1 Product + Select Model = Multiple Diverse Outcomes**. Each animation loop shows a different result image, rotating through 4 of your uploaded photos — demonstrating that one ice roller product can generate diverse UGC content with different models and scenes.
 
-This fails because the edge function request body limit is ~2MB. A single high-res product image can exceed this, causing a network-level "Failed to fetch" error.
+### Animation Flow (per loop)
+1. Ice Roller product chip slides in from left (white background product shot)
+2. "+" action button pops in center
+3. Model avatar slides in from right
+4. "UGC Style" badge slides up from bottom
+5. All elements exit, shimmer sweep, result reveals (different result each loop)
+6. "Generated" badge pops in
+7. Loop restarts with the NEXT result image as background
 
-The backend logs confirm: all successful recent jobs had `hasSourceImage: false` — it's specifically jobs with a product source image that fail.
+### Changes Required
 
-### Solution: Upload Image to Storage First, Pass URL in Payload
+**Step 1: Upload 5 images to `landing-assets` storage bucket**
 
-Instead of embedding raw base64 in the queue payload, upload the source image to a storage bucket before enqueueing, then pass only the public URL.
+| Image | Storage Path | Purpose |
+|---|---|---|
+| `freestyle-9.png` | `products/ice-roller-white.png` | Product chip thumbnail |
+| `freestyle-7.png` | `workflows/ugc-result-1.jpg` | Result 1 (curly hair model) |
+| `freestyle-5.png` | `workflows/ugc-result-2.jpg` | Result 2 (redhead model) |
+| `freestyle-3_1.png` | `workflows/ugc-result-3.jpg` | Result 3 (blonde model) |
+| `freestyle-1_12.png` | `workflows/ugc-result-4.jpg` | Result 4 (braids model, luxury bathroom) |
 
-### Step 1: Create a storage bucket for temporary generation inputs
+**Step 2: Extend `WorkflowScene` type to support rotating backgrounds**
 
-Create a `generation-inputs` bucket (if not already existing) for temporary image uploads used during generation.
+In `WorkflowAnimatedThumbnail.tsx`, update the `WorkflowScene` interface to accept either a single background or an array:
 
-### Step 2: Update `Freestyle.tsx` — upload source image before enqueue
-
-Before calling `enqueue()`, upload the base64 source image to the `generation-inputs` bucket using the Supabase storage client. Replace the base64 blob in the payload with the resulting public URL.
-
+```typescript
+export interface WorkflowScene {
+  background: string;
+  backgrounds?: string[];  // rotating backgrounds — if set, cycles on each loop
+  elements: SceneElement[];
+}
 ```
-// Pseudocode for the change:
-// 1. If sourceImage is base64, upload to storage
-// 2. Get public URL
-// 3. Pass URL (not base64) in queuePayload.sourceImage
+
+**Step 3: Update `WorkflowAnimatedThumbnail` to cycle backgrounds**
+
+In the main component, pick a different background on each iteration using modulo:
+
+```typescript
+const currentBg = scene.backgrounds
+  ? scene.backgrounds[iteration % scene.backgrounds.length]
+  : scene.background;
 ```
 
-This keeps the payload small (a URL string instead of 2MB+ base64).
+Then use `currentBg` as the `<img src>` for the background instead of `scene.background`.
 
-### Step 3: Update `generate-freestyle/index.ts` — handle URL source images
+**Step 4: Update the UGC scene definition in `workflowAnimationData.tsx`**
 
-The generate-freestyle function already handles URLs (the `convertImageToBase64` utility returns URLs as-is if they're HTTPS). No changes should be needed here, but we'll verify the image fetch logic handles storage URLs correctly.
+Replace the current Selfie / UGC Set (lines 80-101) with:
 
-### Step 4: Apply same fix to model/scene images if needed
+```typescript
+'Selfie / UGC Set': {
+    background: ugcResult1,  // fallback for static/first frame
+    backgrounds: [ugcResult1, ugcResult2, ugcResult3, ugcResult4],
+    elements: [
+      {
+        type: 'product', image: ugcProduct, label: 'Ice Roller', sublabel: 'Product',
+        icon: <Plus className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
+        position: { top: '40%', left: '38%' }, enterDelay: 0.9, animation: 'pop',
+      },
+      {
+        type: 'model', image: ugcModel, label: 'Creator',
+        icon: <User className="w-3 h-3" />,
+        position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: 'UGC Style', icon: <Camera className="w-3 h-3" />,
+        position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
+      },
+    ],
+  },
+```
 
-Check if `modelImage` and `sceneImage` have the same issue. Model images from the library may already be URLs, but we should ensure consistency.
+Asset references updated at the top of the file:
+```typescript
+// Selfie / UGC Set
+const ugcProduct = getLandingAssetUrl('products/ice-roller-white.png');
+const ugcModel = getLandingAssetUrl('models/model-female-average-american-redhead.jpg');
+const ugcResult1 = getLandingAssetUrl('workflows/ugc-result-1.jpg');
+const ugcResult2 = getLandingAssetUrl('workflows/ugc-result-2.jpg');
+const ugcResult3 = getLandingAssetUrl('workflows/ugc-result-3.jpg');
+const ugcResult4 = getLandingAssetUrl('workflows/ugc-result-4.jpg');
+```
 
-### Technical Detail
+### Files Modified
 
 | File | Change |
 |---|---|
-| Database migration | Create `generation-inputs` storage bucket with appropriate policies |
-| `src/pages/Freestyle.tsx` | Upload source image to storage before enqueue; pass URL in payload instead of base64 |
-| `supabase/functions/generate-freestyle/index.ts` | Verify storage URLs are handled correctly (likely no changes needed) |
+| Storage: `landing-assets` bucket | Upload 5 images (1 product + 4 results) |
+| `src/components/app/WorkflowAnimatedThumbnail.tsx` | Add optional `backgrounds` array to type, cycle through them per iteration |
+| `src/components/app/workflowAnimationData.tsx` | Replace UGC scene with ice roller product, model, and 4 rotating result backgrounds |
 
-### What This Fixes
-- Eliminates "Failed to start generation" errors when a product image is attached
-- Reduces database bloat (no more 2MB+ JSONB payloads)
-- Makes the queue system more reliable for all image-heavy generations
+### Result
+Each time the animation loops, visitors see a different model holding the same ice roller in a different bathroom setting — powerfully demonstrating that one product upload generates diverse, professional UGC content.
+
