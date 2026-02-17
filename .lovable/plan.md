@@ -1,34 +1,21 @@
 
 
-## Add "Create New Product" Button to Product Selection Step
+## Fix Zoomed-In Source Thumbnails in Recent Jobs Table
 
-### What Changes
+### Problem
 
-Add a "+ Add New Product" card at the end of the product grid in the workflow product selection step (step 1). When clicked, it opens the existing `AddProductModal`. After a product is added, the product list refreshes automatically.
+The source image thumbnails in the Recent Jobs table appear zoomed in and cropped because:
+1. Server-side image optimization forces a `width: 80` resize, which can distort non-square images
+2. CSS `object-cover` crops the image to fill the square container, cutting off parts of the product
 
-### File to Change
+### Fix
 
-**`src/pages/Generate.tsx`**
+**File: `src/pages/Dashboard.tsx`**
 
-1. **Import** `AddProductModal` from `@/components/app/AddProductModal` and add `useQueryClient` from `@tanstack/react-query`
-2. **Add state**: `const [showAddProduct, setShowAddProduct] = useState(false)` 
-3. **Add query client**: `const queryClient = useQueryClient()` for invalidating the product list after adding
-4. **In the try-on product grid** (line ~1067-1091): After the product cards loop, add a "+ Add New Product" button card styled as a dashed-border placeholder that opens the modal
-5. **In the non-try-on product grid** (line ~1092-1099): Add the same button below or beside the `ProductMultiSelect`
-6. **Render the modal** with `onProductAdded` callback that invalidates the `['user-products']` query so the list refreshes
-7. **In the empty state** (lines 1048-1065): Also add an inline button to open the modal instead of navigating away to `/app/products`
+| Line | Change | Reason |
+|------|--------|--------|
+| 335 | Remove `width: 80` from `getOptimizedUrl`, keep only `quality: 50` | Preserve original aspect ratio during optimization |
+| 344 | Change `object-cover` to `object-contain` | Show the full product image without cropping |
 
-### Visual Design
-
-The "+ Add New Product" card will match the existing product card grid style:
-- Same size as other product cards
-- Dashed border with muted styling
-- Plus icon centered with "Add New" label below
-- On click, opens the Add Product modal inline (no page navigation needed)
-
-### Technical Detail
-
-- Reuses the existing `AddProductModal` component (already has Upload, Store URL, CSV, and Mobile tabs)
-- Uses `queryClient.invalidateQueries({ queryKey: ['user-products'] })` to refresh the grid after a product is added
-- No new components or database changes needed
+This matches the platform's optimization guidelines: tiny thumbnails should use quality-only optimization to prevent distortion, and `object-contain` ensures the full product is visible within the square container.
 
