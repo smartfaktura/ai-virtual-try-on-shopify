@@ -6,7 +6,8 @@ import { WorkflowCard } from '@/components/app/WorkflowCard';
 import { WorkflowActivityCard } from '@/components/app/WorkflowActivityCard';
 import { WorkflowRecentRow } from '@/components/app/WorkflowRecentRow';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Workflow } from '@/types/workflow';
@@ -153,6 +154,13 @@ export default function Workflows() {
               failedJobs={failedJobs}
             />
           )}
+          <div className="section-divider">
+            <span className="section-label">Recent Creations</span>
+            <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 shrink-0" onClick={() => navigate('/app/library')}>
+              View All
+              <ArrowRight className="w-3 h-3" />
+            </Button>
+          </div>
           <WorkflowRecentRow jobs={recentJobs} isLoading={isLoadingRecent} />
 
           <div className="section-divider">
