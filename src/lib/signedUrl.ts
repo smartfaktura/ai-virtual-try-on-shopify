@@ -52,5 +52,33 @@ export async function toSignedUrl(publicUrl: string): Promise<string> {
  * Batch-converts an array of public URLs to signed URLs.
  */
 export async function toSignedUrls(urls: string[]): Promise<string[]> {
-  return Promise.all(urls.map(toSignedUrl));
+  const bucketGroups: Record<string, { index: number; path: string }[]> = {};
+  for (let i = 0; i < urls.length; i++) {
+    const p = parseStorageUrl(urls[i]);
+    if (!p) continue;
+    if (!bucketGroups[p.bucket]) bucketGroups[p.bucket] = [];
+    bucketGroups[p.bucket].push({ index: i, path: p.path });
+  }
+
+  const results = urls.slice();
+
+  await Promise.all(
+    Object.entries(bucketGroups).map(async ([bucket, entries]) => {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .createSignedUrls(entries.map(e => e.path), 3600);
+
+      if (error || !data) {
+        console.warn('[signedUrl] Batch sign failed for bucket:', bucket, error);
+        return;
+      }
+      for (let j = 0; j < data.length; j++) {
+        if (data[j].signedUrl) {
+          results[entries[j].index] = data[j].signedUrl;
+        }
+      }
+    })
+  );
+
+  return results;
 }
