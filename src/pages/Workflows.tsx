@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -234,10 +234,27 @@ export default function Workflows() {
     }
   }, [user, queryClient]);
 
+  // ── Dismissed activity (localStorage-backed) ──
+  const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('dismissed-activity');
+      return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+    } catch { return new Set(); }
+  });
+
+  const handleDismiss = useCallback((key: string) => {
+    setDismissedKeys((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      localStorage.setItem('dismissed-activity', JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
   // ── Batch grouping ──
   const activeBatchGroups = groupJobsIntoBatches(activeJobs);
-  const completedBatchGroups = groupJobsIntoBatches(recentlyCompletedJobs);
-  const failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs);
+  const completedBatchGroups = groupJobsIntoBatches(recentlyCompletedJobs).filter((g) => !dismissedKeys.has(g.key));
+  const failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs).filter((g) => !dismissedKeys.has(g.key));
 
   const hasActivity =
     activeBatchGroups.length > 0 ||
@@ -263,6 +280,7 @@ export default function Workflows() {
               completedGroups={completedBatchGroups}
               failedGroups={failedBatchGroups}
               onCancelJob={handleCancelJob}
+              onDismiss={handleDismiss}
             />
           )}
           <div className="flex items-center gap-3">

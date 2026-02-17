@@ -12,6 +12,7 @@ interface WorkflowActivityCardProps {
   completedGroups?: BatchGroup[];
   failedGroups?: BatchGroup[];
   onCancelJob?: (jobId: string, creditsReserved: number) => void;
+  onDismiss?: (groupKey: string) => void;
 }
 
 function elapsedLabel(dateStr: string): string {
@@ -32,6 +33,7 @@ export function WorkflowActivityCard({
   completedGroups = [],
   failedGroups = [],
   onCancelJob,
+  onDismiss,
 }: WorkflowActivityCardProps) {
   const navigate = useNavigate();
   const [, tick] = useState(0);
@@ -179,6 +181,16 @@ export function WorkflowActivityCard({
                 View Results
                 <ArrowRight className="w-3.5 h-3.5" />
               </Button>
+              {onDismiss && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="shrink-0 h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={() => onDismiss(group.key)}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </CardContent>
           </Card>
         );
@@ -224,6 +236,16 @@ export function WorkflowActivityCard({
               Retry
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
+            {onDismiss && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="shrink-0 h-7 w-7 text-muted-foreground hover:text-foreground"
+                onClick={() => onDismiss(group.key)}
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            )}
           </CardContent>
         </Card>
       ))}
