@@ -75,9 +75,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
 
   // Optimize element images — model circles use quality-only to preserve face crop
   const optimizedImage = element.image
-    ? element.type === 'model'
-      ? getOptimizedUrl(element.image, { quality: 60 })
-      : getOptimizedUrl(element.image, { width: 200 })
+    ? getOptimizedUrl(element.image, { quality: 60 })
     : undefined;
 
   switch (element.type) {
@@ -159,7 +157,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
   // Preload only the element images (small chips)
   const elementUrls = useMemo(
     () => scene.elements.filter((el) => el.image).map((el) =>
-      el.type === 'model' ? getOptimizedUrl(el.image!, { quality: 60 }) : getOptimizedUrl(el.image!, { width: 200 })
+      getOptimizedUrl(el.image!, { quality: 60 })
     ),
     [scene.elements],
   );
@@ -286,7 +284,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   // Only preload the small element images (not backgrounds)
   const elementUrls = useMemo(
     () => scene.elements.filter((el) => el.image).map((el) =>
-      el.type === 'model' ? getOptimizedUrl(el.image!, { quality: 60 }) : getOptimizedUrl(el.image!, { width: 200 })
+      getOptimizedUrl(el.image!, { quality: 60 })
     ),
     [scene.elements],
   );
