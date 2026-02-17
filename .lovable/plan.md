@@ -1,62 +1,72 @@
 
 
-## Fix Credit Indicator + Add Separate Video Credits
+## Fix Credit Indicator, Update Video Pricing, and Add Video Generation to Plans
 
-### Current Issue
-The credit indicator shows a single balance (1446 / 1,500) but doesn't distinguish between image and video credits. The progress bar also looks off visually.
+### 1. Fix Credit Indicator Display
 
-### Solution
-Add a separate video credits quota per plan, stored in the database alongside image credits. The CreditIndicator will show two compact rows: one for Image credits and one for Video credits, each with their own progress bar.
+The current CreditIndicator already shows credits on a single card with balance, quota, and progress bar. The visual issue is that the progress bar color is too subtle (`bg-sidebar-foreground/30`). Will improve contrast and keep the clean single-line layout as shown in the screenshot.
 
-### Video Credit Quotas per Plan
+### 2. Update Video Generation Pricing Logic
 
-| Plan | Image Credits | Video Credits |
-|------|--------------|---------------|
-| Free | 20 | 0 |
-| Starter | 500 | 2 |
-| Growth | 1,500 | 5 |
-| Pro | 4,500 | 15 |
-| Enterprise | Unlimited | Unlimited |
+New video credit costs based on model and duration:
 
-### Changes
+| Model | 5 seconds | 10 seconds |
+|-------|-----------|------------|
+| V2.1 (kling-v2-1) | 90 credits | 180 credits |
+| V1.6 (kling-v1-6) | 70 credits | 140 credits |
 
-**1. Database Migration**
-- Add `video_credits_balance` column to `profiles` table (integer, default 0)
-- Update `handle_new_user()` to set initial video credits to 0
-- Add `deduct_video_credits` and `refund_video_credits` functions
-- Set existing users' video credits based on their current plan
+Currently `calculateCost` in CreditContext returns `count * 30` for video mode. This will be updated to accept `modelName` and `duration` parameters and apply the new pricing.
 
-**2. `src/contexts/CreditContext.tsx`**
-- Add `videoBalance` state
-- Add `monthlyVideoCredits` to `PlanConfig`
-- Update `PLAN_CONFIG` with video quotas
-- Fetch `video_credits_balance` from profiles
-- Add `deductVideoCredits`, `addVideoCredits` to context value
-- Update `calculateCost` to flag video costs separately
+### 3. Add Video Generation Feature to Plan Cards
 
-**3. `src/components/app/CreditIndicator.tsx`**
-- Show two sections: Image credits row + Video credits row
-- Each row has its own icon (Sparkles for images, Film for video), balance, quota, and thin progress bar
-- Video row only shows for plans with video credits > 0
-- Clean, compact layout fitting the sidebar width
+Currently only the Pro plan lists "Video Generation" as a feature. Per the request, Starter, Growth, and Pro plans should all showcase Video Generation. Free plan stays without it.
 
-### Visual Design (CreditIndicator)
-
-```text
-+----------------------------------+
-| GROWTH PLAN           Upgrade -> |
-|                                  |
-| [*] 1446 / 1,500         [+]    |
-| ==============================-- | (image bar)
-|                                  |
-| [F] 5 / 5                       |
-| ================================ | (video bar)
-+----------------------------------+
-```
+Updated features:
+- **Starter**: Add "Video Generation" to features list
+- **Growth**: Add "Video Generation" to features list  
+- **Pro**: Already has it
 
 ### Files Modified
-- Database migration (add video_credits_balance column + functions)
-- `src/contexts/CreditContext.tsx` (add video balance tracking)
-- `src/components/app/CreditIndicator.tsx` (dual credit display)
-- `src/integrations/supabase/types.ts` (auto-updated)
 
+**`src/contexts/CreditContext.tsx`**
+- Update `calculateCost` to accept optional `modelName` and `duration` params
+- V2.1 model: 90 credits for 5s, 180 for 10s
+- V1.6 model: 70 credits for 5s, 140 for 10s
+- Default (no model specified): 90 credits for 5s
+
+**`src/components/app/CreditIndicator.tsx`**
+- Improve progress bar visibility (better contrast color)
+- Keep single-line layout as-is
+
+**`src/pages/VideoGenerate.tsx`**
+- Show dynamic credit cost on the Generate button based on selected model and duration
+- Import and use `useCredits().calculateCost` to display cost
+
+**`src/data/mockData.ts`**
+- Add "Video Generation" to Starter and Growth plan features lists
+
+**`src/types/index.ts`**
+- No changes needed -- GenerationMode already includes 'video'
+
+### Technical Details
+
+The `calculateCost` function signature will expand:
+
+```text
+calculateCost({
+  count: 1,
+  quality: 'standard',
+  mode: 'video',
+  modelName: 'kling-v2-1',  // new
+  duration: '10',            // new
+}) => 180
+```
+
+The Generate Video button will show the cost dynamically:
+
+```text
+Generate Video · 90 credits    (V2.1, 5s)
+Generate Video · 180 credits   (V2.1, 10s)
+Generate Video · 70 credits    (V1.6, 5s)
+Generate Video · 140 credits   (V1.6, 10s)
+```
