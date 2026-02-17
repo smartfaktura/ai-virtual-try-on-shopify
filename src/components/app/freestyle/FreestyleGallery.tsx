@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -318,6 +318,19 @@ function ImageCard({
 export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, onLoadMore, hasMore, isFetchingMore }: FreestyleGalleryProps) {
   const { isAdmin } = useIsAdmin();
   const isMobile = useIsMobile();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasMore || !onLoadMore || isFetchingMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) onLoadMore(); },
+      { rootMargin: '400px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, onLoadMore, isFetchingMore]);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
@@ -434,15 +447,10 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           </div>
         ))}
       </div>
-      {hasMore && onLoadMore && (
+      {hasMore && <div ref={sentinelRef} className="h-1" />}
+      {isFetchingMore && (
         <div className="flex justify-center pb-6">
-          <button
-            onClick={onLoadMore}
-            disabled={isFetchingMore}
-            className="px-6 py-2.5 rounded-full text-sm font-medium bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-border/30 transition-colors disabled:opacity-50"
-          >
-            {isFetchingMore ? 'Loading…' : 'Load more'}
-          </button>
+          <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
       )}
       {modals}
