@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-const MAX_IMAGES_PER_JOB = 4;
+const MAX_IMAGES_PER_JOB = 1;
 
 export interface BatchJob {
   jobId: string;
