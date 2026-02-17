@@ -84,7 +84,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
           <div className="wf-card bg-white rounded-xl overflow-hidden flex items-center gap-2.5 pr-3">
             <img
               src={optimizedImage}
-              className="w-14 h-16 object-cover"
+              className="w-14 h-16 object-contain bg-neutral-50"
               alt=""
               style={{ imageRendering: 'auto' }}
             />
@@ -181,14 +181,14 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
       <img
         src={backgrounds[prev]}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-top"
+        className="absolute inset-0 w-full h-full object-cover object-center"
       />
       {/* Current image (crossfade in) */}
       <img
         key={index}
         src={backgrounds[index]}
         alt=""
-        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-300 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-300 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
           ...(bgLoaded ? { animation: `wf-carousel-fade 0.6s ease-in-out forwards` } : {}),
         }}
@@ -320,12 +320,9 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
         alt=""
         loading="eager"
         decoding="async"
-        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
           transform: 'translateZ(0)',
-          ...(isActive && bgLoaded
-            ? { animation: `wf-ken-burns ${totalDuration}s ease-in-out forwards` }
-            : {}),
         }}
         onLoad={() => setBgLoaded(true)}
       />
