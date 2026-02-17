@@ -1,41 +1,64 @@
 
-## Fix Missing Team Avatar Videos
+
+## Fix Product Category Showcase Image Stacking
 
 ### Problem
-The security hardening made `generated-videos` private, and the code was updated to reference `landing-assets/team-videos/` -- but the video files were never actually copied there. The `landing-assets/team-videos/` folder is empty, so all 10 team avatar videos on the landing page are broken.
+The "All products look better here" section shows blank cards because of a CSS stacking conflict with the `ShimmerImage` component. The images are loading fine (all return HTTP 200), but they aren't visually displayed.
 
-The videos still exist in the private `generated-videos` bucket at path `fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/<id>.mp4`.
+The `ProductCategoryShowcase` stacks multiple images absolutely inside each card, toggling opacity to crossfade between them. However, `ShimmerImage` wraps each `<img>` in an extra `<div class="relative overflow-hidden w-full h-full">`. This means:
+
+- The `absolute inset-0` class ends up on the `<img>` inside the wrapper, positioning it relative to the wrapper -- not the card
+- The wrapper divs themselves are in normal document flow and not absolutely positioned, so they don't stack properly
+- ShimmerImage also has its own internal `opacity-0 / opacity-100` logic that conflicts with the external opacity style used for crossfading
 
 ### Solution
-Create a one-time edge function that copies all 10 team video files from `generated-videos` to `landing-assets/team-videos/`, then call it once. After the copy completes, the existing code in `teamData.ts` will work since `landing-assets` is a public bucket.
+Use the `wrapperClassName` prop on `ShimmerImage` to make the wrapper itself absolutely positioned, and move the opacity/transition styles to the wrapper level so both the shimmer placeholder and the image fade together correctly.
 
-### Steps
+### Technical Changes
 
-1. **Create edge function `copy-team-videos`** that:
-   - Lists the 10 known video file IDs
-   - Downloads each from `generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/<id>.mp4` using the service role
-   - Uploads each to `landing-assets/team-videos/<id>.mp4`
-   - Returns a summary of what was copied
+**File: `src/components/landing/ProductCategoryShowcase.tsx`** (lines 47-59)
 
-2. **Deploy and invoke the edge function** to perform the copy
+Replace the current ShimmerImage usage with wrapper-level absolute positioning:
 
-3. **Delete the edge function** after successful copy (it's a one-time utility)
+```tsx
+{images.map((img, i) => (
+  <ShimmerImage
+    key={i}
+    src={img}
+    alt={`${label} AI-generated product shot`}
+    decoding="async"
+    wrapperClassName="absolute inset-0"
+    wrapperStyle={{
+      opacity: i === currentIndex ? 1 : 0,
+      transition: 'opacity 1.2s ease-in-out',
+    }}
+    className="w-full h-full object-cover"
+  />
+))}
+```
 
-No frontend code changes needed -- `teamData.ts` already points to `landing-assets/team-videos/<id>.mp4` which is the correct destination.
+**File: `src/components/ui/shimmer-image.tsx`**
 
-### Technical Details
+Add `wrapperStyle` to the props interface so the parent can pass transition styles to the wrapper div:
 
-**Edge function** (`supabase/functions/copy-team-videos/index.ts`):
-- Uses the Supabase service role client to bypass RLS on the private `generated-videos` bucket
-- Downloads each video as a blob and re-uploads to the public `landing-assets` bucket
-- Video IDs to copy:
-  - 849395850555686932.mp4 (Sophia)
-  - 849398236443574344.mp4 (Amara)
-  - 849398707518439436.mp4 (Luna)
-  - 849400657458757636.mp4 (Kenji)
-  - 849398252540657664.mp4 (Yuki)
-  - 849398684226822188.mp4 (Omar)
-  - 849398695958937689.mp4 (Sienna)
-  - 849399340514426899.mp4 (Max)
-  - 849399354389184514.mp4 (Zara)
-  - 849399365948022876.mp4 (Leo)
+```tsx
+interface ShimmerImageProps extends ImgHTMLAttributes<HTMLImageElement> {
+  aspectRatio?: string;
+  wrapperClassName?: string;
+  wrapperStyle?: React.CSSProperties;  // NEW
+}
+```
+
+Then apply it to the wrapper div:
+
+```tsx
+<div
+  className={cn('relative overflow-hidden w-full h-full', wrapperClassName)}
+  style={{
+    ...(aspectRatio && !loaded ? { aspectRatio } : undefined),
+    ...wrapperStyle,
+  }}
+>
+```
+
+This ensures each ShimmerImage wrapper is absolutely positioned inside the card, stacking correctly, and the crossfade opacity is controlled at the wrapper level rather than conflicting with ShimmerImage's internal load-state opacity.
