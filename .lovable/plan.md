@@ -1,45 +1,45 @@
 
 
-## Modernize Workflow Recent Creations Carousel and Preview Modal
+## Remove the Visible Scrollbar from Recent Creations Row
 
-### Issues Identified
+### Problem
 
-1. **Too many dots**: Every single job gets its own dot indicator -- with 5+ jobs this creates a long row of dots that looks cluttered
-2. **Dots not tracking correctly**: The scroll calculation uses a hardcoded `140 + 12` card width, but the actual mobile card width is `130px` with `12px` gap, causing misalignment
-3. **"Slider" feel still visible**: Cards still have `snap-start` class on each card, creating snappy behavior
-4. **Preview modal thumbnails too large on mobile**: The 2-column grid with square thumbnails takes up too much vertical space, pushing download buttons below the fold
+The horizontal scroll container uses a `scrollbar-none` CSS class that doesn't exist in the project's styles or Tailwind config. This means the native browser scrollbar is visible beneath the cards — that's the gray bar ("slider") you see under the first card.
 
----
+### Fix
 
-### Changes
+**File: `src/components/app/WorkflowRecentRow.tsx`**
 
-#### 1. `src/components/app/WorkflowRecentRow.tsx` -- Fix dots and remove slider feel
+The container already has an inline style object but only hides scrollbars for Firefox and IE. The `scrollbar-none` class does nothing because it's not defined. The fix:
 
-**Remove snap-start from cards:**
-- Remove `snap-start` from the ThumbnailCard button className
+1. Remove the non-functional `scrollbar-none` class from the scroll container
+2. Add inline styles to hide the scrollbar across all browsers (WebKit + Firefox):
+   - Add `WebkitOverflowScrolling: 'touch'` for smooth iOS scrolling
+   - The container already uses `overflow-x-auto` which is correct
 
-**Replace dot indicators with a compact 3-dot iOS-style system:**
-- Show max 3 dots at any time (like iOS when many pages exist)
-- Active dot is a wide pill (`w-5 h-1.5`), neighbors are medium circles (`w-1.5 h-1.5`), distant items are tiny (`w-1 h-1`)
-- Cap visible indicators to 3-5 regardless of total job count
-- Only show on mobile when more than 2 items exist
+Alternatively, add a global CSS utility class `.scrollbar-none` in `src/index.css` so it works everywhere it's used in the project.
 
-**Fix scroll tracking math:**
-- Use actual card width: `130px` on mobile (not 140) + `12px` gap = `142px` per card
+**Recommended approach — add the utility once in CSS so all scroll containers benefit:**
 
-#### 2. `src/components/app/WorkflowPreviewModal.tsx` -- Smaller mobile thumbnails
+**File: `src/index.css`** — Add at the bottom:
+```css
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+```
 
-**Make thumbnail grid more compact on mobile:**
-- Change from `grid-cols-2` to `grid-cols-4` on mobile for smaller preview thumbnails
-- Reduce aspect ratio from `aspect-square` to a smaller fixed size
-- This ensures all thumbnails + download buttons fit within the 55vh panel without scrolling
+This single addition fixes the scrollbar visibility for this component and any other component using `scrollbar-none`.
 
----
+Also clean up leftover unused state (`activeIndex`, `handleScroll`, scroll listener effect) from `WorkflowRecentRow.tsx` since the dot indicators were removed — this is dead code now.
 
-### Technical Details
+### Files to Change
 
 | File | Change |
 |------|--------|
-| `src/components/app/WorkflowRecentRow.tsx` | Remove `snap-start`, fix scroll tracking to use 130+12=142, replace dots with compact 3-dot iOS indicator (max 5 visible dots with size scaling) |
-| `src/components/app/WorkflowPreviewModal.tsx` | Change thumbnail grid to `grid-cols-4` on mobile, reduce thumbnail size so download actions are always visible |
+| `src/index.css` | Add `.scrollbar-none` utility (3 lines) |
+| `src/components/app/WorkflowRecentRow.tsx` | Remove unused `activeIndex` state, `handleScroll` callback, and scroll listener `useEffect` (dead code from removed dots) |
 
