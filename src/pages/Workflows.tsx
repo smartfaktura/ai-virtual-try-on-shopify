@@ -10,6 +10,8 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { groupJobsIntoBatches } from '@/lib/batchGrouping';
+import type { ActiveJob } from '@/lib/batchGrouping';
 import type { Workflow } from '@/types/workflow';
 
 export type { Workflow } from '@/types/workflow';
@@ -51,7 +53,7 @@ export default function Workflows() {
           const p = j.payload as Record<string, unknown> | null;
           return p?.workflow_id != null;
         })
-        .map((j) => {
+        .map((j): ActiveJob => {
           const p = j.payload as Record<string, unknown> | null;
           return {
             id: j.id,
@@ -69,31 +71,74 @@ export default function Workflows() {
     refetchInterval: 5_000,
   });
 
+  // ── Recently completed workflow queue jobs (last 60s) ──
+  const { data: recentlyCompletedJobs = [] } = useQuery({
+    queryKey: ['workflow-recently-completed'],
+    queryFn: async () => {
+      const sixtySecsAgo = new Date(Date.now() - 60_000).toISOString();
+      const { data, error } = await supabase
+        .from('generation_queue')
+        .select('id, status, created_at, started_at, completed_at, payload, error_message')
+        .eq('status', 'completed')
+        .gte('completed_at', sixtySecsAgo)
+        .order('completed_at', { ascending: false });
+      if (error) throw error;
 
+      return (data ?? [])
+        .filter((j) => {
+          const p = j.payload as Record<string, unknown> | null;
+          return p?.workflow_id != null;
+        })
+        .map((j): ActiveJob => {
+          const p = j.payload as Record<string, unknown> | null;
+          return {
+            id: j.id,
+            status: j.status,
+            created_at: j.created_at,
+            started_at: j.started_at,
+            error_message: j.error_message,
+            workflow_id: (p?.workflow_id as string) ?? null,
+            workflow_name: (p?.workflow_name as string) ?? null,
+            product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
+          };
+        });
+    },
+    enabled: !!user,
+    refetchInterval: 10_000,
+  });
 
-
-  // ── Recently failed workflow jobs (last 24h) ──
-  const { data: failedJobs = [] } = useQuery({
+  // ── Recently failed workflow queue jobs (last 24h) ──
+  const { data: recentlyFailedJobs = [] } = useQuery({
     queryKey: ['workflow-failed-jobs'],
     queryFn: async () => {
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
-        .from('generation_jobs')
-        .select('id, workflow_id, created_at, error_message, workflows(name)')
-        .not('workflow_id', 'is', null)
+        .from('generation_queue')
+        .select('id, status, created_at, started_at, completed_at, payload, error_message')
         .eq('status', 'failed')
         .gte('created_at', oneDayAgo)
         .order('created_at', { ascending: false })
-        .limit(3);
+        .limit(5);
       if (error) throw error;
 
-      return (data ?? []).map((j) => ({
-        id: j.id,
-        workflow_id: j.workflow_id,
-        workflow_name: (j.workflows as unknown as { name: string } | null)?.name ?? null,
-        created_at: j.created_at,
-        error_message: j.error_message,
-      }));
+      return (data ?? [])
+        .filter((j) => {
+          const p = j.payload as Record<string, unknown> | null;
+          return p?.workflow_id != null;
+        })
+        .map((j): ActiveJob => {
+          const p = j.payload as Record<string, unknown> | null;
+          return {
+            id: j.id,
+            status: j.status,
+            created_at: j.created_at,
+            started_at: j.started_at,
+            error_message: j.error_message,
+            workflow_id: (p?.workflow_id as string) ?? null,
+            workflow_name: (p?.workflow_name as string) ?? null,
+            product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
+          };
+        });
     },
     enabled: !!user,
     staleTime: 60_000,
@@ -130,11 +175,21 @@ export default function Workflows() {
     if (prevActiveCountRef.current > 0 && activeJobs.length === 0) {
       queryClient.invalidateQueries({ queryKey: ['workflow-recent-jobs'] });
       queryClient.invalidateQueries({ queryKey: ['workflow-failed-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-recently-completed'] });
     }
     prevActiveCountRef.current = activeJobs.length;
   }, [activeJobs.length, queryClient]);
 
-  const hasActivity = activeJobs.length > 0 || failedJobs.length > 0 || recentJobs.length > 0;
+  // ── Batch grouping ──
+  const activeBatchGroups = groupJobsIntoBatches(activeJobs);
+  const completedBatchGroups = groupJobsIntoBatches(recentlyCompletedJobs);
+  const failedBatchGroups = groupJobsIntoBatches(recentlyFailedJobs);
+
+  const hasActivity =
+    activeBatchGroups.length > 0 ||
+    completedBatchGroups.length > 0 ||
+    failedBatchGroups.length > 0 ||
+    recentJobs.length > 0;
 
   const handleCreateVisualSet = (workflow: Workflow) => {
     navigate(`/app/generate?workflow=${workflow.id}`);
@@ -148,10 +203,11 @@ export default function Workflows() {
       {/* ── Activity section ── */}
       {hasActivity && (
         <div className="space-y-6">
-          {(activeJobs.length > 0 || failedJobs.length > 0) && (
+          {(activeBatchGroups.length > 0 || completedBatchGroups.length > 0 || failedBatchGroups.length > 0) && (
             <WorkflowActivityCard
-              jobs={activeJobs}
-              failedJobs={failedJobs}
+              batchGroups={activeBatchGroups}
+              completedGroups={completedBatchGroups}
+              failedGroups={failedBatchGroups}
             />
           )}
           <div className="flex items-center gap-3">
