@@ -1,54 +1,44 @@
 
-## Improve Buy Credits Modal UX
 
-### Issues Found
+## Branded Discover Loading State with Team Avatars
 
-**Top Up Tab:**
-1. No price anchoring -- users can't quickly compare value across packs
-2. "Buy" CTA is too generic and doesn't reinforce what they're getting
-3. No visual hierarchy beyond the "Best Value" badge -- all cards feel equal
-4. Missing savings indicator on the larger pack vs. the smallest
+### Problem
+The Discover page loading state is a plain spinning icon -- minimal and forgettable. It doesn't reinforce the VOVV.AI brand or the Studio Team concept.
 
-**Plans Tab:**
-5. "Downgrade" CTA on lower plans feels negative and discouraging -- users on Growth see "Downgrade" on Free and Starter which is off-putting
-6. The Growth card shows two prices ($79/mo crossed out style + $63/mo annual) but the annual price hierarchy is confusing -- the monthly price appears first at the top
-7. No crossed-out monthly price when annual is selected to anchor the savings
-8. Feature lists start with "Everything in X" which wastes a line on redundant info in a compact modal
-9. Free plan shows "$0/mo" which looks odd -- better as "Free" or "Free forever"
-10. No urgency or social proof element
+### Solution
+Replace the generic spinner with an immersive, branded loading experience featuring the Studio Team avatars and rotating status messages -- matching the generation loading pattern already used elsewhere in the app.
 
-### Proposed Changes
+### Design
 
-**File: `src/components/app/BuyCreditsModal.tsx`**
+The loading state will show:
+1. A row of 5 randomly-selected team member avatars in small circles, with a subtle staggered fade-in animation
+2. A rotating status message from the currently "active" team member (e.g., "Sophia is curating your feed...")
+3. A subtle shimmer bar underneath to indicate progress
+4. The whole block is centered vertically and horizontally in the content area
 
-**Top Up tab improvements:**
-- Add per-credit cost under each pack (e.g., "7.5c/credit", "5.8c/credit", "4.6c/credit") so users can compare value
-- Show a "Save X%" label on the 500 and 1500 packs relative to the smallest pack
-- Change "Buy" CTA to "Buy 200 credits", "Buy 500 credits", etc. for clarity
-- Add a subtle "Most popular with creators" note under the Best Value pack
+### Changes
 
-**Plans tab improvements:**
-- When annual billing is selected, show the monthly price crossed out above the annual-equivalent price to anchor the savings (e.g., ~~$79~~ $63/mo)
-- Replace "Downgrade" label on lower plans with just the plan name ("Get Free", "Get Starter") to reduce negative friction -- the PlanChangeDialog already handles the downgrade confirmation
-- For the Free plan, display "Free" instead of "$0/mo"
-- Replace "Everything in X" feature lines with the actual distinguishing feature to maximize information density (e.g., Starter's first feature becomes "Try-On mode" instead of "Everything in Free")
-- Add a small "billed annually" or "billed monthly" note under the price
+**File: `src/pages/Discover.tsx`**
 
-**File: `src/data/mockData.ts`**
+1. Import `TEAM_MEMBERS` from `@/data/teamData`
+2. Add a `useMemo` to pick 5 random team members (stable per mount)
+3. Add a `useState` + `useEffect` to cycle through the 5 members every 2.5 seconds, showing their status message
+4. Replace the current loading block (lines 359-362) with the new branded loading component:
 
-- Update feature lists to remove "Everything in X" entries and replace with actual differentiating features:
-  - Starter: "Try-On mode", "3 Brand Profiles", "Up to 10 products", "High quality images"
-  - Growth: "Priority queue", "10 Brand Profiles", "Up to 100 products", "All workflows"
-  - Pro: "Video Generation", "Creative Drops", "Unlimited profiles", "Unlimited products"
+```
+Before:
+  <Loader2 spinning icon>
 
-### Technical Details
+After:
+  <div centered>
+    <row of 5 circular avatars, active one highlighted with ring>
+    <"Sophia is curating your feed..." rotating text>
+    <shimmer progress bar>
+  </div>
+```
 
-All changes are UI-only in two files:
-- `src/components/app/BuyCreditsModal.tsx` -- rendering logic for price anchoring, CTA labels, savings badges
-- `src/data/mockData.ts` -- updated feature arrays for plan cards
-
-No new dependencies, no database changes, no new components needed.
+The avatar images are already optimized and hosted. Status messages come from `teamData.ts` (e.g., "Setting up the lighting...") -- we'll adapt them to discovery context like "[Name] is curating your feed...".
 
 ### Files Modified
-- `src/components/app/BuyCreditsModal.tsx` -- price anchoring, smarter CTAs, savings indicators
-- `src/data/mockData.ts` -- feature list improvements
+- `src/pages/Discover.tsx` -- replace loading spinner with branded team avatar loading state
+
