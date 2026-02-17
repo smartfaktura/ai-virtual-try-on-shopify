@@ -1,19 +1,41 @@
 
 
-## Fix: Chat Icon Should Be Behind Mobile Sidebar Menu
+## Fix Hero Carousel: Hide Scrollbar and Clean Up Layout
 
 ### Problem
-The Studio Chat floating button and panel use `z-50`, which is the same z-index as the mobile sidebar overlay. This causes the chat icon to appear on top of (or compete with) the sidebar menu when it's open.
+The hero output carousel shows an ugly visible scrollbar beneath the images. The `scrollbar-thin` class and inline `scrollbarColor` style make it visible, which looks unprofessional alongside the dot indicators and arrow buttons that already serve as navigation.
 
-### Fix
+### Changes
 
-**File: `src/components/app/StudioChat.tsx`**
+**File: `src/components/landing/HeroSection.tsx`**
 
-Lower the z-index of both the chat panel and the floating button from `z-50` to `z-40`. This ensures the sidebar overlay (`z-50`) renders above the chat icon when the menu is open.
+1. **Hide the scrollbar completely** on the carousel container (line 318-319):
+   - Remove `scrollbar-thin` class
+   - Remove inline `scrollbarColor` style
+   - Add a CSS utility class `scrollbar-hide` to completely hide the scrollbar while keeping scroll functionality
 
-Changes on two lines:
-- Line 82: Chat panel — change `z-50` to `z-40`
-- Line 217: Floating button — change `z-50` to `z-40`
+2. **Add scrollbar-hide CSS** via an inline style block (or use the existing pattern of inline `<style>` tags already in the component):
+   - Add `-webkit-scrollbar { display: none }` and `scrollbar-width: none` to the carousel container
 
-The chat icon will still appear above normal page content but will correctly sit behind the mobile sidebar overlay.
+### Technical Detail
+
+Line 318 change:
+```tsx
+// Before
+className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin"
+style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
+
+// After
+className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
+style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+```
+
+Also add to the existing `<style>` block at the bottom of the component:
+```css
+[data-hero-carousel]::-webkit-scrollbar { display: none; }
+```
+
+And add `data-hero-carousel` attribute to the scroll container.
+
+This keeps smooth horizontal scrolling via touch/trackpad and arrow buttons while completely hiding the scrollbar for a clean premium look.
 
