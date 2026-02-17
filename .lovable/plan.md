@@ -1,80 +1,51 @@
 
 
-## Fix: Lightbox Performance and Action Buttons
+## Add Shimmer Loading State to Lightbox Images
 
-### Problem 1: Thumbnail strip loads all images
-The thumbnail strip at the bottom renders every single image (40+), each fetching a separate optimized URL. This causes significant lag when opening the lightbox.
+### Problem
+When navigating images in the lightbox, they load progressively (part by part, top to bottom), which looks unpolished. The image should appear all at once with a smooth fade-in, matching the rest of the platform's loading behavior.
 
-### Problem 2: Missing action buttons
-The Freestyle lightbox only passes `onDownload`. It lacks Delete, Copy Prompt, and other useful actions that are available on the gallery cards.
-
----
+### Solution
+Replace the plain `<img>` tag in the lightbox with the existing `ShimmerImage` component, and reset the loading state when navigating between images so each new image gets its own shimmer-to-fade transition.
 
 ### Changes
 
 **File: `src/components/app/ImageLightbox.tsx`**
 
-1. **Remove the thumbnail strip entirely** -- it loads all images and causes the slowness. Navigation via left/right arrows and keyboard is sufficient and much faster.
+1. Import `ShimmerImage` from `@/components/ui/shimmer-image` and add a `useState` for tracking loaded state per image.
 
-2. **Add new action props** -- accept `onDelete` and `onCopyPrompt` callbacks so Freestyle can wire them up.
+2. Replace the plain `<img>` element with `ShimmerImage`, adding a dark shimmer background that fits the lightbox aesthetic.
 
-3. **Add action buttons to the bottom bar**:
-   - Download (already exists)
-   - Delete (trash icon)
-   - Copy Prompt (clipboard icon)
-   - Keep existing Select/Regenerate buttons for other consumers (Generate page)
+3. Use a `key={currentIndex}` on the image so React remounts it when navigating, resetting the loading state for each new image.
 
-Updated interface:
 ```tsx
-interface ImageLightboxProps {
-  images: string[];
-  currentIndex: number;
-  open: boolean;
-  onClose: () => void;
-  onNavigate: (index: number) => void;
-  onSelect?: (index: number) => void;
-  onRegenerate?: (index: number) => void;
-  onDownload?: (index: number) => void;
-  onDelete?: (index: number) => void;
-  onCopyPrompt?: (index: number) => void;
-  selectedIndices?: Set<number>;
-  productName?: string;
-}
-```
+// Before:
+<img
+  src={currentImage}
+  alt={`Generated image ${currentIndex + 1}`}
+  className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl shadow-black/40"
+/>
 
-Remove the entire thumbnail strip section (lines 148-166) to eliminate the performance bottleneck.
-
-Add Delete and Copy Prompt buttons to the bottom action bar alongside existing Download button.
-
-**File: `src/pages/Freestyle.tsx`**
-
-Wire up the new callbacks to the ImageLightbox:
-```tsx
-<ImageLightbox
-  images={savedImages.map(i => i.url)}
-  currentIndex={lightboxIndex}
-  open={lightboxOpen}
-  onClose={() => setLightboxOpen(false)}
-  onNavigate={setLightboxIndex}
-  onDownload={(idx) => handleDownload(savedImages[idx].url, idx)}
-  onDelete={(idx) => {
-    handleDelete(savedImages[idx].id);
-    setLightboxOpen(false);
-  }}
-  onCopyPrompt={(idx) => {
-    setPrompt(savedImages[idx].prompt);
-    setLightboxOpen(false);
-    toast.success('Prompt copied to editor');
-  }}
+// After:
+<ShimmerImage
+  key={currentIndex}
+  src={currentImage}
+  alt={`Generated image ${currentIndex + 1}`}
+  className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl shadow-black/40"
+  wrapperClassName="flex items-center justify-center max-w-full max-h-[80vh]"
 />
 ```
 
+The ShimmerImage component handles:
+- Displaying an animated shimmer gradient while the image loads
+- A 300ms crossfade transition once the image is ready
+- The `key={currentIndex}` ensures each navigation resets the loading state
+
 ### Result
-- Lightbox opens instantly -- no more loading 40+ thumbnails
-- Users navigate with arrows (click or keyboard)
-- Download, Delete, and Copy Prompt actions are accessible directly from the lightbox
-- Other lightbox consumers (Generate, Jobs, Drops) are unaffected -- they don't pass the new optional props
+- Images appear with a smooth shimmer animation instead of loading part-by-part
+- Clean fade-in once fully loaded
+- Consistent with the rest of the platform's image loading behavior
+- No layout shift during loading
 
 ### Files Modified
-- `src/components/app/ImageLightbox.tsx` -- remove thumbnail strip, add Delete/Copy Prompt buttons
-- `src/pages/Freestyle.tsx` -- wire up onDelete and onCopyPrompt to lightbox
+- `src/components/app/ImageLightbox.tsx` -- use ShimmerImage with key-based remount
