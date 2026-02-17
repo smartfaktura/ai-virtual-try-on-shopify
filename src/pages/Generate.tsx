@@ -188,7 +188,7 @@ export default function Generate() {
   const [negatives, setNegatives] = useState<string[]>(['text overlays', 'busy backgrounds']);
   const [consistencyEnabled, setConsistencyEnabled] = useState(true);
 
-  const [imageCount, setImageCount] = useState<'1' | '4' | '8'>('4');
+  const [imageCount, setImageCount] = useState<'1' | '2' | '3' | '4'>('1');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [quality, setQuality] = useState<ImageQuality>('standard');
   const [framing, setFraming] = useState<FramingOption | null>(null);
@@ -1472,12 +1472,13 @@ export default function Generate() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Number of Images</Label>
-                      <Select value={imageCount} onValueChange={v => setImageCount(v as '1' | '4' | '8')}>
+                      <Select value={imageCount} onValueChange={v => setImageCount(v as '1' | '2' | '3' | '4')}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="1">1 image</SelectItem>
-                          <SelectItem value="4">4 images (recommended)</SelectItem>
-                          <SelectItem value="8">8 images</SelectItem>
+                          <SelectItem value="2">2 images</SelectItem>
+                          <SelectItem value="3">3 images</SelectItem>
+                          <SelectItem value="4">4 images</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -2160,12 +2161,13 @@ export default function Generate() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Number of Images</Label>
-                  <Select value={imageCount} onValueChange={v => setImageCount(v as '1' | '4' | '8')}>
+                  <Select value={imageCount} onValueChange={v => setImageCount(v as '1' | '2' | '3' | '4')}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">1 image</SelectItem>
-                      <SelectItem value="4">4 images (recommended)</SelectItem>
-                      <SelectItem value="8">8 images</SelectItem>
+                      <SelectItem value="2">2 images</SelectItem>
+                      <SelectItem value="3">3 images</SelectItem>
+                      <SelectItem value="4">4 images</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
