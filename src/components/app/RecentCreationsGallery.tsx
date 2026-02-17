@@ -96,9 +96,10 @@ export function RecentCreationsGallery() {
 
       if (!freestyleResult.error) {
         for (const f of freestyleResult.data ?? []) {
+          const signedUrl = await toSignedUrl(f.image_url);
           items.push({
             id: f.id,
-            imageUrl: f.image_url,
+            imageUrl: signedUrl,
             label: 'Freestyle',
             date: new Date(f.created_at).toLocaleDateString(),
             rawDate: f.created_at,
