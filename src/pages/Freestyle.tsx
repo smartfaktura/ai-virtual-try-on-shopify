@@ -194,7 +194,7 @@ export default function Freestyle() {
     if (detected) setFraming(detected);
   }, [productSourced]);
 
-  // Helper: upload a base64 image to generation-inputs bucket, return public URL
+  // Helper: upload a base64 image to generation-inputs bucket, return storage path URL
   const uploadImageToStorage = useCallback(async (base64Data: string, prefix: string): Promise<string> => {
     if (!user) throw new Error('Not authenticated');
     // If it's already a URL (not base64), return as-is
@@ -218,11 +218,13 @@ export default function Freestyle() {
 
     if (error) throw new Error(`Upload failed: ${error.message}`);
 
-    const { data: urlData } = supabase.storage
+    // Use signed URL since bucket is now private
+    const { data: signedData, error: signError } = await supabase.storage
       .from('generation-inputs')
-      .getPublicUrl(data.path);
+      .createSignedUrl(data.path, 3600);
 
-    return urlData.publicUrl;
+    if (signError || !signedData?.signedUrl) throw new Error('Failed to create signed URL');
+    return signedData.signedUrl;
   }, [user]);
 
   const handleGenerate = useCallback(async () => {

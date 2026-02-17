@@ -10,7 +10,7 @@ export interface TeamMember {
   statusMessage: string;
 }
 
-const VIDEO_BASE = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/generated-videos/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc';
+const VIDEO_BASE = getLandingAssetUrl('team-videos');
 
 const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
 const avatarAmara = getLandingAssetUrl('team/avatar-amara.jpg');

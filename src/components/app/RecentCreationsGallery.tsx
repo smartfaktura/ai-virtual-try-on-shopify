@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 const PLACEHOLDER_IMAGES = [
   getLandingAssetUrl('showcase/fashion-blazer-golden.jpg'),
@@ -63,9 +64,10 @@ export function RecentCreationsGallery() {
               if (url) {
                 const isTryOn = url.includes('tryon-images');
                 const label = isTryOn ? 'Virtual Try-On' : (workflowName || 'Product Shot');
+                const signedUrl = await toSignedUrl(url);
                 items.push({
                   id: `${job.id}-${i}`,
-                  imageUrl: url,
+                  imageUrl: signedUrl,
                   label,
                   subtitle: productTitle || undefined,
                   date: new Date(job.created_at).toLocaleDateString(),

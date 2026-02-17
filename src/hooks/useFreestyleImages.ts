@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 export interface FreestyleImage {
   id: string;
@@ -50,17 +51,19 @@ export function useFreestyleImages() {
         return;
       }
 
-      const mapped: FreestyleImage[] = (data || []).map((row: any) => ({
-        id: row.id,
-        url: row.image_url,
-        prompt: row.prompt,
-        aspectRatio: row.aspect_ratio,
-        quality: row.quality,
-        createdAt: new Date(row.created_at).getTime(),
-        modelId: row.model_id ?? null,
-        sceneId: row.scene_id ?? null,
-        productId: row.product_id ?? null,
-      }));
+      const mapped: FreestyleImage[] = await Promise.all(
+        (data || []).map(async (row: any) => ({
+          id: row.id,
+          url: await toSignedUrl(row.image_url),
+          prompt: row.prompt,
+          aspectRatio: row.aspect_ratio,
+          quality: row.quality,
+          createdAt: new Date(row.created_at).getTime(),
+          modelId: row.model_id ?? null,
+          sceneId: row.scene_id ?? null,
+          productId: row.product_id ?? null,
+        }))
+      );
 
       setImages(mapped);
       setIsLoading(false);
@@ -123,9 +126,10 @@ export function useFreestyleImages() {
         return null;
       }
 
+      const signedImageUrl = await toSignedUrl(imageUrl);
       const saved: FreestyleImage = {
         id: row.id,
-        url: imageUrl,
+        url: signedImageUrl,
         prompt: meta.prompt,
         aspectRatio: meta.aspectRatio,
         quality: meta.quality,
@@ -230,9 +234,10 @@ export function useFreestyleImages() {
           return null;
         }
 
+        const signedBatchUrl = await toSignedUrl(imageUrl);
         return {
           id: row.id,
-          url: imageUrl,
+          url: signedBatchUrl,
           prompt: meta.prompt,
           aspectRatio: meta.aspectRatio,
           quality: meta.quality,
@@ -273,17 +278,19 @@ export function useFreestyleImages() {
       return;
     }
 
-    const mapped: FreestyleImage[] = (data || []).map((row: any) => ({
-      id: row.id,
-      url: row.image_url,
-      prompt: row.prompt,
-      aspectRatio: row.aspect_ratio,
-      quality: row.quality,
-      createdAt: new Date(row.created_at).getTime(),
-      modelId: row.model_id ?? null,
-      sceneId: row.scene_id ?? null,
-      productId: row.product_id ?? null,
-    }));
+    const mapped: FreestyleImage[] = await Promise.all(
+      (data || []).map(async (row: any) => ({
+        id: row.id,
+        url: await toSignedUrl(row.image_url),
+        prompt: row.prompt,
+        aspectRatio: row.aspect_ratio,
+        quality: row.quality,
+        createdAt: new Date(row.created_at).getTime(),
+        modelId: row.model_id ?? null,
+        sceneId: row.scene_id ?? null,
+        productId: row.product_id ?? null,
+      }))
+    );
 
     setImages(mapped);
   }, [user]);
