@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 export type VideoGenStatus = 'idle' | 'creating' | 'processing' | 'complete' | 'error';
 
@@ -77,7 +78,15 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         return;
       }
 
-      setHistory((data as GeneratedVideo[]) || []);
+      // Sign video URLs for private bucket access
+      const signedHistory = await Promise.all(
+        ((data as GeneratedVideo[]) || []).map(async (v) => ({
+          ...v,
+          video_url: v.video_url ? await toSignedUrl(v.video_url) : null,
+          source_image_url: await toSignedUrl(v.source_image_url),
+        }))
+      );
+      setHistory(signedHistory);
     } catch (err) {
       console.error('[useGenerateVideo] History fetch error:', err);
     } finally {
@@ -128,7 +137,8 @@ export function useGenerateVideo(): UseGenerateVideoResult {
         if (data.status === 'succeed' && data.video_url) {
           cleanup();
           setStatus('complete');
-          setVideoUrl(data.video_url);
+          const signedVideoUrl = await toSignedUrl(data.video_url);
+          setVideoUrl(signedVideoUrl);
           toast.success('Video generated successfully!');
           // Refresh history to include the new video
           fetchHistory();

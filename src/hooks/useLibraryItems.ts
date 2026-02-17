@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
+import { toSignedUrl } from '@/lib/signedUrl';
 
 export type LibrarySortBy = 'newest' | 'oldest';
 
@@ -50,9 +51,10 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
                 !promptText.toLowerCase().includes(q) &&
                 !productTitle.toLowerCase().includes(q)) continue;
 
+            const signedUrl = await toSignedUrl(url);
             items.push({
               id: `${job.id}-${i}`,
-              imageUrl: url,
+              imageUrl: signedUrl,
               source: 'generation',
               label,
               prompt: job.prompt_final || undefined,
@@ -70,9 +72,10 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
       for (const f of freestyleResult.data ?? []) {
         if (q && !f.prompt.toLowerCase().includes(q)) continue;
 
+        const signedFreestyleUrl = await toSignedUrl(f.image_url);
         items.push({
           id: f.id,
-          imageUrl: f.image_url,
+          imageUrl: signedFreestyleUrl,
           source: 'freestyle',
           label: 'Freestyle',
           prompt: f.prompt,
