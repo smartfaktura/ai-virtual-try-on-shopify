@@ -45,7 +45,10 @@ export function StudioChat() {
     }
   }, [isOpen]);
 
-  const hideOnMobile = isMobile && location.pathname === '/app/creative-drops';
+  const hideOnMobile = isMobile && (
+    location.pathname === '/app/creative-drops' ||
+    location.pathname === '/app/freestyle'
+  );
 
   if (hideOnMobile) return null;
 
