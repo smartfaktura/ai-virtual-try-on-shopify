@@ -181,25 +181,6 @@ export function WorkflowRecentRow({ jobs, isLoading = false }: WorkflowRecentRow
             ))}
       </div>
 
-      {/* Compact iOS-style indicators */}
-      {jobs.length > 2 && (
-        <div className="flex justify-center items-center gap-1 pt-3 md:hidden">
-          {jobs.map((_, i) => {
-            const dist = Math.abs(i - activeIndex);
-            let sizeClass: string;
-            if (dist === 0) sizeClass = 'w-5 h-1.5 bg-primary';
-            else if (dist === 1) sizeClass = 'w-1.5 h-1.5 bg-muted-foreground/30';
-            else if (dist === 2) sizeClass = 'w-1 h-1 bg-muted-foreground/15';
-            else return null; // hide dots beyond distance 2
-            return (
-              <div
-                key={i}
-                className={`rounded-full transition-all duration-300 ease-in-out ${sizeClass}`}
-              />
-            );
-          })}
-        </div>
-      )}
 
       <WorkflowPreviewModal
         open={selectedJob !== null}
