@@ -1,30 +1,62 @@
 
-## Fix: Generated Images Not Loading (Bucket Access Issue)
 
-### Root Cause
+## Fix Credit Indicator + Add Separate Video Credits
 
-The storage buckets `tryon-images` and `freestyle-images` are set to **private**, but the edge functions use `getPublicUrl()` to generate image URLs. Private buckets reject requests to the `/object/public/` path, returning a 404 "Bucket not found" error. Since `<img>` tags in the browser cannot send authentication headers, the images never load.
+### Current Issue
+The credit indicator shows a single balance (1446 / 1,500) but doesn't distinguish between image and video credits. The progress bar also looks off visually.
 
-The `workflow-previews` bucket works because it is already public.
+### Solution
+Add a separate video credits quota per plan, stored in the database alongside image credits. The CreditIndicator will show two compact rows: one for Image credits and one for Video credits, each with their own progress bar.
 
-### Fix
+### Video Credit Quotas per Plan
 
-Run a database migration to update both buckets to **public** access. This is the same approach already used for `workflow-previews` and `scratch-uploads`.
+| Plan | Image Credits | Video Credits |
+|------|--------------|---------------|
+| Free | 20 | 0 |
+| Starter | 500 | 2 |
+| Growth | 1,500 | 5 |
+| Pro | 4,500 | 15 |
+| Enterprise | Unlimited | Unlimited |
 
-```sql
-UPDATE storage.buckets SET public = true WHERE id IN ('tryon-images', 'freestyle-images');
+### Changes
+
+**1. Database Migration**
+- Add `video_credits_balance` column to `profiles` table (integer, default 0)
+- Update `handle_new_user()` to set initial video credits to 0
+- Add `deduct_video_credits` and `refund_video_credits` functions
+- Set existing users' video credits based on their current plan
+
+**2. `src/contexts/CreditContext.tsx`**
+- Add `videoBalance` state
+- Add `monthlyVideoCredits` to `PlanConfig`
+- Update `PLAN_CONFIG` with video quotas
+- Fetch `video_credits_balance` from profiles
+- Add `deductVideoCredits`, `addVideoCredits` to context value
+- Update `calculateCost` to flag video costs separately
+
+**3. `src/components/app/CreditIndicator.tsx`**
+- Show two sections: Image credits row + Video credits row
+- Each row has its own icon (Sparkles for images, Film for video), balance, quota, and thin progress bar
+- Video row only shows for plans with video credits > 0
+- Clean, compact layout fitting the sidebar width
+
+### Visual Design (CreditIndicator)
+
+```text
++----------------------------------+
+| GROWTH PLAN           Upgrade -> |
+|                                  |
+| [*] 1446 / 1,500         [+]    |
+| ==============================-- | (image bar)
+|                                  |
+| [F] 5 / 5                       |
+| ================================ | (video bar)
++----------------------------------+
 ```
 
-This single SQL statement will make both buckets publicly accessible, allowing the existing `getPublicUrl()` URLs to work correctly.
-
-### Why Public Is Safe Here
-
-- The file paths already include the user's ID as a folder prefix (e.g., `fe45fd27-.../image.png`), so URLs are not guessable
-- These are AI-generated images, not sensitive user data
-- The same pattern is already used for `workflow-previews` and `scratch-uploads`
-
 ### Files Modified
-- Database migration only -- no code changes needed
+- Database migration (add video_credits_balance column + functions)
+- `src/contexts/CreditContext.tsx` (add video balance tracking)
+- `src/components/app/CreditIndicator.tsx` (dual credit display)
+- `src/integrations/supabase/types.ts` (auto-updated)
 
-### Result
-All previously generated images (try-on, freestyle) will immediately start loading. No regeneration required.
