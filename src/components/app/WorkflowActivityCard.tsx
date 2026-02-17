@@ -123,7 +123,7 @@ export function WorkflowActivityCard({
                 {isProcessing && (
                   <Badge
                     variant="secondary"
-                    className="shrink-0 text-[10px] uppercase tracking-wider font-semibold bg-violet-100 text-violet-700 hover:bg-violet-100"
+                    className="shrink-0 text-[10px] uppercase tracking-wider font-semibold bg-primary/10 text-primary hover:bg-primary/10"
                   >
                     Pro Model
                   </Badge>
