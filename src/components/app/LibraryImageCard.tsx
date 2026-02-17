@@ -51,6 +51,7 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
     <div
       className={cn(
         "group relative rounded-lg overflow-hidden cursor-pointer bg-muted transition-all",
+        getAspectClass(item.aspectRatio),
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
       )}
       onClick={onClick}
