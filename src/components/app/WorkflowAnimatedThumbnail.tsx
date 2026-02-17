@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { Sparkles } from 'lucide-react';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 /* ── Image preloader hook ── */
 
@@ -17,7 +18,7 @@ function usePreloadImages(urls: string[]) {
           new Promise<void>((resolve) => {
             const img = new Image();
             img.onload = () => resolve();
-            img.onerror = () => resolve(); // graceful degradation
+            img.onerror = () => resolve();
             img.src = src;
           }),
       ),
@@ -40,7 +41,7 @@ export interface SceneElement {
   sublabel?: string;
   icon: ReactNode;
   position: React.CSSProperties;
-  enterDelay: number; // seconds
+  enterDelay: number;
   animation: ElementAnimation;
 }
 
@@ -72,6 +73,9 @@ function FloatingEl({ element }: { element: SceneElement }) {
     animation: `${animName} 0.55s cubic-bezier(.22,1,.36,1) ${element.enterDelay}s forwards`,
   };
 
+  // Optimize element images to small thumbnails
+  const optimizedImage = element.image ? getOptimizedUrl(element.image, { width: 120 }) : undefined;
+
   switch (element.type) {
     case 'product':
     case 'scene':
@@ -79,7 +83,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
         <div className="absolute" style={style}>
           <div className="wf-card bg-white rounded-xl overflow-hidden flex items-center gap-2.5 pr-3">
             <img
-              src={element.image}
+              src={optimizedImage}
               className="w-14 h-16 object-cover"
               alt=""
               style={{ imageRendering: 'auto' }}
@@ -103,7 +107,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
         <div className="absolute flex flex-col items-center gap-1.5" style={style}>
           <div className="wf-card-circle rounded-full p-[3px] bg-white">
             <img
-              src={element.image}
+              src={optimizedImage}
               className="w-[60px] h-[60px] rounded-full object-cover"
               alt=""
               style={{ imageRendering: 'auto' }}
@@ -139,8 +143,6 @@ function FloatingEl({ element }: { element: SceneElement }) {
   }
 }
 
-/* ── Main component ── */
-
 /* ── Carousel mode component ── */
 
 function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
@@ -148,6 +150,14 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
   const INTERVAL = 3000;
   const [index, setIndex] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
+  const [bgLoaded, setBgLoaded] = useState(false);
+
+  // Preload only the element images (small chips)
+  const elementUrls = useMemo(
+    () => scene.elements.filter((el) => el.image).map((el) => getOptimizedUrl(el.image!, { width: 120 })),
+    [scene.elements],
+  );
+  const elementsReady = usePreloadImages(elementUrls);
 
   useEffect(() => {
     if (!isActive || backgrounds.length <= 1) return;
@@ -162,6 +172,11 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
+      {/* Shimmer placeholder */}
+      {!bgLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
+      )}
+
       {/* Previous image (underneath) */}
       <img
         src={backgrounds[prev]}
@@ -173,10 +188,11 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
         key={index}
         src={backgrounds[index]}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-top"
+        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-300 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
-          animation: `wf-carousel-fade 0.6s ease-in-out forwards`,
+          ...(bgLoaded ? { animation: `wf-carousel-fade 0.6s ease-in-out forwards` } : {}),
         }}
+        onLoad={() => setBgLoaded(true)}
       />
 
       {/* Gradient overlay */}
@@ -187,8 +203,8 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
         }}
       />
 
-      {/* Persistent overlay elements */}
-      {isActive && (
+      {/* Persistent overlay elements — only when element images ready */}
+      {isActive && elementsReady && (
         <div className="absolute inset-0 z-10" style={{ animation: 'wf-fade-in 0.4s ease-out forwards' }}>
           {scene.elements.map((el, i) => (
             <FloatingEl key={i} element={{ ...el, enterDelay: 0, animation: 'pop' }} />
@@ -196,7 +212,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
         </div>
       )}
 
-      {/* "Generated" badge — always visible */}
+      {/* "Generated" badge */}
       {isActive && (
         <div
           className="absolute bottom-7 right-4 z-20"
@@ -259,16 +275,14 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
 export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   const isCarousel = scene.mode === 'carousel';
   const [iteration, setIteration] = useState(0);
+  const [bgLoaded, setBgLoaded] = useState(false);
 
-  // Collect all image URLs and preload them
-  const allUrls = useMemo(() => {
-    const urls: string[] = [];
-    if (scene.background) urls.push(scene.background);
-    if (scene.backgrounds) urls.push(...scene.backgrounds);
-    scene.elements.forEach((el) => { if (el.image) urls.push(el.image); });
-    return [...new Set(urls)];
-  }, [scene]);
-  const imagesReady = usePreloadImages(allUrls);
+  // Only preload the small element images (not backgrounds)
+  const elementUrls = useMemo(
+    () => scene.elements.filter((el) => el.image).map((el) => getOptimizedUrl(el.image!, { width: 120 })),
+    [scene.elements],
+  );
+  const elementsReady = usePreloadImages(elementUrls);
 
   // Compute timing from element delays (only used for recipe mode)
   const maxDelay = isCarousel ? 0 : Math.max(...scene.elements.map((e) => e.enterDelay));
@@ -286,38 +300,37 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
     return () => clearInterval(timer);
   }, [isActive, totalDuration, isCarousel]);
 
-  // Show shimmer while images load
-  if (!imagesReady) {
-    return (
-      <div className="relative w-full h-full overflow-hidden bg-muted">
-        <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
-      </div>
-    );
-  }
-
   // For carousel mode, delegate to dedicated component
   if (isCarousel) {
     return <CarouselThumbnail scene={scene} isActive={isActive} />;
   }
 
+  const bgSrc = scene.backgrounds ? scene.backgrounds[iteration % scene.backgrounds.length] : scene.background;
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted" key={isActive ? iteration : 'static'}>
-      {/* Background — always visible, subtle Ken Burns on hover */}
+      {/* Shimmer placeholder while background loads */}
+      {!bgLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
+      )}
+
+      {/* Background — renders immediately, fades in when loaded */}
       <img
-        src={scene.backgrounds ? scene.backgrounds[iteration % scene.backgrounds.length] : scene.background}
+        src={bgSrc}
         alt=""
         loading="eager"
         decoding="async"
-        className="absolute inset-0 w-full h-full object-cover object-top"
+        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
           transform: 'translateZ(0)',
-          ...(isActive
+          ...(isActive && bgLoaded
             ? { animation: `wf-ken-burns ${totalDuration}s ease-in-out forwards` }
             : {}),
         }}
+        onLoad={() => setBgLoaded(true)}
       />
 
-      {isActive && (
+      {isActive && elementsReady && (
         <>
           {/* Light gradient overlay */}
           <div

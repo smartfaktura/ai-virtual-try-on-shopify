@@ -24,6 +24,7 @@ export default function Workflows() {
       return data as unknown as Workflow[];
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,
   });
 
   const handleCreateVisualSet = (workflow: Workflow) => {
