@@ -1,51 +1,80 @@
 
 
-## Fix: Presets Chip Mismatched Design and Duplicate Icon
+## Fix: Lightbox Performance and Action Buttons
 
-### Problem
+### Problem 1: Thumbnail strip loads all images
+The thumbnail strip at the bottom renders every single image (40+), each fetching a separate optimized URL. This causes significant lag when opening the lightbox.
 
-1. **Different sizing**: The Presets chip on mobile uses `h-7 px-2.5 text-[11px]` while every other chip uses `h-8 px-3 text-xs` -- making it visually smaller and inconsistent.
-2. **Different border/bg**: Uses `border-border/60 bg-muted/30 text-muted-foreground/60` instead of the standard `border-border bg-muted/50 text-foreground/70`.
-3. **Duplicate icon**: Both Brand and Presets use the `Palette` icon from Lucide, making them look identical.
+### Problem 2: Missing action buttons
+The Freestyle lightbox only passes `onDownload`. It lacks Delete, Copy Prompt, and other useful actions that are available on the gallery cards.
 
-### Fix
+---
 
-**File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
+### Changes
 
-1. **Match chip sizing and colors** (lines 300-305): Change the Presets popover trigger to use the same `h-8 px-3 text-xs` sizing and `border-border bg-muted/50 text-foreground/70` default colors as all other chips.
+**File: `src/components/app/ImageLightbox.tsx`**
 
-2. **Change Presets icon** (line 306): Replace `Palette` with `Sparkles` from Lucide -- this better represents style presets and is visually distinct from the Brand chip's `Palette` icon.
+1. **Remove the thumbnail strip entirely** -- it loads all images and causes the slowness. Navigation via left/right arrows and keyboard is sufficient and much faster.
 
-### Technical Details
+2. **Add new action props** -- accept `onDelete` and `onCopyPrompt` callbacks so Freestyle can wire them up.
 
-Line 2 -- add `Sparkles` to imports (replace or add alongside existing icons):
+3. **Add action buttons to the bottom bar**:
+   - Download (already exists)
+   - Delete (trash icon)
+   - Copy Prompt (clipboard icon)
+   - Keep existing Select/Regenerate buttons for other consumers (Generate page)
+
+Updated interface:
 ```tsx
-import { ..., Sparkles, ... } from 'lucide-react';
+interface ImageLightboxProps {
+  images: string[];
+  currentIndex: number;
+  open: boolean;
+  onClose: () => void;
+  onNavigate: (index: number) => void;
+  onSelect?: (index: number) => void;
+  onRegenerate?: (index: number) => void;
+  onDownload?: (index: number) => void;
+  onDelete?: (index: number) => void;
+  onCopyPrompt?: (index: number) => void;
+  selectedIndices?: Set<number>;
+  productName?: string;
+}
 ```
 
-Lines 300-308 -- update the Presets trigger button:
-```tsx
-// Before:
-<button className={cn(
-  'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors',
-  stylePresets.length > 0
-    ? 'border-primary/40 bg-primary/10 text-primary'
-    : 'border-border/60 bg-muted/30 text-muted-foreground/60'
-)}>
-  <Palette className="w-3 h-3" />
+Remove the entire thumbnail strip section (lines 148-166) to eliminate the performance bottleneck.
 
-// After:
-<button className={cn(
-  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-  stylePresets.length > 0
-    ? 'border-primary/30 bg-primary/10 text-primary'
-    : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-)}>
-  <Sparkles className="w-3.5 h-3.5" />
+Add Delete and Copy Prompt buttons to the bottom action bar alongside existing Download button.
+
+**File: `src/pages/Freestyle.tsx`**
+
+Wire up the new callbacks to the ImageLightbox:
+```tsx
+<ImageLightbox
+  images={savedImages.map(i => i.url)}
+  currentIndex={lightboxIndex}
+  open={lightboxOpen}
+  onClose={() => setLightboxOpen(false)}
+  onNavigate={setLightboxIndex}
+  onDownload={(idx) => handleDownload(savedImages[idx].url, idx)}
+  onDelete={(idx) => {
+    handleDelete(savedImages[idx].id);
+    setLightboxOpen(false);
+  }}
+  onCopyPrompt={(idx) => {
+    setPrompt(savedImages[idx].prompt);
+    setLightboxOpen(false);
+    toast.success('Prompt copied to editor');
+  }}
+/>
 ```
 
 ### Result
-- Presets chip matches the exact size, colors, and hover behavior of Model, Scene, Brand, etc.
-- Unique `Sparkles` icon distinguishes Presets from Brand at a glance
-- No other files affected
+- Lightbox opens instantly -- no more loading 40+ thumbnails
+- Users navigate with arrows (click or keyboard)
+- Download, Delete, and Copy Prompt actions are accessible directly from the lightbox
+- Other lightbox consumers (Generate, Jobs, Drops) are unaffected -- they don't pass the new optional props
 
+### Files Modified
+- `src/components/app/ImageLightbox.tsx` -- remove thumbnail strip, add Delete/Copy Prompt buttons
+- `src/pages/Freestyle.tsx` -- wire up onDelete and onCopyPrompt to lightbox
