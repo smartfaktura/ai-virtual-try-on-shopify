@@ -91,15 +91,6 @@ export const workflowScenes: Record<string, WorkflowScene> = {
         position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
       },
       {
-        type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
-        position: { top: '40%', left: '38%' }, enterDelay: 0, animation: 'pop',
-      },
-      {
-        type: 'model', image: ugcModel, label: 'Creator',
-        icon: <User className="w-3 h-3" />,
-        position: { top: '22%', right: '6%' }, enterDelay: 0, animation: 'slide-right',
-      },
-      {
         type: 'badge', label: 'UGC Style', icon: <Camera className="w-3 h-3" />,
         position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
