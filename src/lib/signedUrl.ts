@@ -62,6 +62,8 @@ export async function toSignedUrls(urls: string[]): Promise<string[]> {
 
   const results = urls.slice();
 
+  if (Object.keys(bucketGroups).length === 0) return results;
+
   await Promise.all(
     Object.entries(bucketGroups).map(async ([bucket, entries]) => {
       const { data, error } = await supabase.storage
