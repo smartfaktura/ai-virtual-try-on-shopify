@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Compass, Loader2, X } from 'lucide-react';
+import { Search, Compass, X } from 'lucide-react';
+import { TEAM_MEMBERS } from '@/data/teamData';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
@@ -127,6 +129,59 @@ function useColumnCount() {
     return () => window.removeEventListener('resize', update);
   }, []);
   return count;
+}
+
+function DiscoverLoadingState() {
+  const team = useMemo(() => [...TEAM_MEMBERS].sort(() => 0.5 - Math.random()).slice(0, 5), []);
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setActiveIdx((i) => (i + 1) % 5), 2500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const activeMember = team[activeIdx];
+
+  return (
+    <div className="flex flex-col items-center justify-center py-24 gap-6">
+      {/* Avatar row */}
+      <div className="flex items-center gap-3">
+        {team.map((member, i) => (
+          <div
+            key={member.name}
+            className="transition-all duration-500"
+            style={{ animationDelay: `${i * 120}ms` }}
+          >
+            <Avatar
+              className={cn(
+                'w-11 h-11 border-2 transition-all duration-500 animate-fade-in',
+                i === activeIdx
+                  ? 'border-primary ring-2 ring-primary/30 scale-110'
+                  : 'border-border/40 opacity-50 grayscale-[30%]'
+              )}
+            >
+              <AvatarImage src={member.avatar} alt={member.name} />
+              <AvatarFallback className="text-xs">{member.name[0]}</AvatarFallback>
+            </Avatar>
+          </div>
+        ))}
+      </div>
+
+      {/* Rotating status text */}
+      <p
+        key={activeMember.name}
+        className="text-sm text-muted-foreground animate-fade-in"
+      >
+        <span className="font-medium text-foreground">{activeMember.name}</span>{' '}
+        is curating your feed…
+      </p>
+
+      {/* Shimmer progress bar */}
+      <div className="w-48 h-1 rounded-full bg-muted overflow-hidden">
+        <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 animate-shimmer bg-[length:200%_100%]" />
+      </div>
+    </div>
+  );
 }
 
 export default function Discover() {
@@ -357,9 +412,7 @@ export default function Discover() {
 
       {/* Masonry grid */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
+        <DiscoverLoadingState />
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Compass className="w-10 h-10 text-muted-foreground/30 mb-3" />
