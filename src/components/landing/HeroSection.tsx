@@ -121,8 +121,8 @@ function useTypewriter(phrases: string[], typingSpeed = 55, deletingSpeed = 30, 
   return displayText;
 }
 
-const optimizeProduct = (url: string) => getOptimizedUrl(url, { width: 200, quality: 70 });
-const optimizeOutput = (url: string) => getOptimizedUrl(url, { width: 250, quality: 70 });
+const optimizeProduct = (url: string) => getOptimizedUrl(url, { quality: 70 });
+const optimizeOutput = (url: string) => getOptimizedUrl(url, { quality: 70 });
 
 export function HeroSection() {
   const navigate = useNavigate();
