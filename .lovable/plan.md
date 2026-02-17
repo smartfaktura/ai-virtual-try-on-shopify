@@ -1,32 +1,33 @@
 
 
-## Fix Corrupted Images in ZIP Download
+## Clean Up Carousel to Apple-Inspired Design
 
-### Problem
-When downloading all images as a ZIP from the workflow preview modal, the images inside the ZIP are corrupted and cannot be opened. This is because the current code passes `blob` objects to JSZip, which can cause data integrity issues with binary image data.
+### Changes to `src/components/app/WorkflowRecentRow.tsx`
 
-### Root Cause
-In `src/lib/dropDownload.ts`, the `downloadDropAsZip` function uses `response.blob()` to get image data and passes it directly to `zip.file()`. JSZip handles `ArrayBuffer` (raw binary) more reliably than `Blob` for binary files like images.
+**1. Replace dot indicators with a modern Apple-style pill indicator**
+- Instead of individual dots for each item, use a single capsule/pill track with a sliding active segment
+- Show only 3-5 dots max (grouped) like iOS page indicators -- if more items exist, compress into a smaller set
+- Use `w-6 h-1 rounded-full` capsule shape for active, `w-1.5 h-1.5 rounded-full` for inactive, with smooth width transition
 
-### Fix
+**2. Remove edge fade gradients**
+- Delete the two `pointer-events-none` gradient divs (lines 184-186) that create the "doggy faded look"
 
-**File: `src/lib/dropDownload.ts`**
+**3. Simplify the carousel container**
+- Remove `snap-x snap-mandatory` to reduce the snappy/slider feel -- let it scroll freely and smoothly
+- Keep `scrollbar-none` for clean look
 
-Change the fetch handling from `blob()` to `arrayBuffer()`:
+### Summary of visual changes
 
-```text
-Before: const blob = await response.blob();
-        zip.file(`${folder}/${fileName}`, blob);
+| Element | Before | After |
+|---------|--------|-------|
+| Edge fades | Left/right gradient overlays | Removed entirely |
+| Dots | Individual circles per item | Apple-style pill: active = wide capsule, inactive = small dot |
+| Scroll behavior | `snap-x snap-mandatory` (snappy) | Free smooth scroll |
+| Overall feel | "Slider" with fades | Clean, minimal horizontal scroll |
 
-After:  const arrayBuffer = await response.arrayBuffer();
-        zip.file(`${folder}/${fileName}`, arrayBuffer, { binary: true });
-```
-
-This single change ensures JSZip receives raw binary data with the `binary: true` flag, which prevents any encoding/conversion issues that corrupt image files.
-
-### Files to Modify
+### File
 
 | File | Change |
 |------|--------|
-| `src/lib/dropDownload.ts` | Replace `blob` with `arrayBuffer` + `{ binary: true }` in the zip file addition |
+| `src/components/app/WorkflowRecentRow.tsx` | Remove edge fades, replace dots with pill indicator, remove snap scroll |
 
