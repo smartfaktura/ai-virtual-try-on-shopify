@@ -333,30 +333,23 @@ export function FreestyleSettingsChips({
     <StylePresetChips selected={stylePresets} onChange={onStylePresetsChange} />
   );
 
-  // --- Mobile: organized sections ---
+  // --- Mobile: compact 2-row layout ---
   if (isMobile) {
     return (
       <TooltipProvider delayDuration={300}>
-        <div className="space-y-3">
-          {/* Assets row */}
-          <div className="flex items-center gap-2">
-            {uploadButton}
-            <ProductSelectorChip
-              selectedProduct={selectedProduct}
-              open={productPopoverOpen}
-              onOpenChange={onProductPopoverChange}
-              onSelect={onProductSelect}
-              products={products}
-              isLoading={isLoadingProducts}
-            />
-          </div>
-
-          {/* Creative section */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium px-0.5">
-              Creative
-            </span>
+        <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+          <div className="space-y-2">
+            {/* Row 1: Assets + Creative */}
             <div className="flex items-center gap-2 flex-wrap">
+              {uploadButton}
+              <ProductSelectorChip
+                selectedProduct={selectedProduct}
+                open={productPopoverOpen}
+                onOpenChange={onProductPopoverChange}
+                onSelect={onProductSelect}
+                products={products}
+                isLoading={isLoadingProducts}
+              />
               <ModelSelectorChip
                 selectedModel={selectedModel}
                 open={modelPopoverOpen}
@@ -376,41 +369,34 @@ export function FreestyleSettingsChips({
                 onOpenChange={onFramingPopoverChange}
               />
             </div>
-          </div>
 
-          {/* Output section */}
-          <div className="space-y-1.5">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium px-0.5">
-              Output
-            </span>
+            {/* Row 2: Output + Style trigger */}
             <div className="flex items-center gap-2 flex-wrap">
               {aspectRatioChip}
               {qualityChip}
               {cameraStyleChip}
-              <div className="flex-1" />
               {imageCountStepper}
+              <CollapsibleTrigger asChild>
+                <button className={cn(
+                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                  advancedActiveCount > 0
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+                )}>
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  Style
+                  {advancedActiveCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+                      {advancedActiveCount}
+                    </span>
+                  )}
+                  <ChevronDown className={cn('w-3 h-3 opacity-40 transition-transform', advancedOpen && 'rotate-180')} />
+                </button>
+              </CollapsibleTrigger>
             </div>
-          </div>
 
-          {/* Style section — collapsible */}
-          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <CollapsibleTrigger asChild>
-              <button className={cn(
-                'inline-flex items-center gap-1.5 h-7 px-0.5 text-[10px] uppercase tracking-wider font-medium transition-colors',
-                advancedActiveCount > 0
-                  ? 'text-primary'
-                  : 'text-muted-foreground/50 hover:text-muted-foreground/70'
-              )}>
-                Style
-                {advancedActiveCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
-                    {advancedActiveCount}
-                  </span>
-                )}
-                <ChevronDown className={cn('w-3 h-3 opacity-40 transition-transform', advancedOpen && 'rotate-180')} />
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-1.5">
+            {/* Collapsible Style content */}
+            <CollapsibleContent className="pt-0.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <BrandProfileChip
                   selectedProfile={selectedBrandProfile}
@@ -430,8 +416,8 @@ export function FreestyleSettingsChips({
                 {presetsSection}
               </div>
             </CollapsibleContent>
-          </Collapsible>
-        </div>
+          </div>
+        </Collapsible>
       </TooltipProvider>
     );
   }
