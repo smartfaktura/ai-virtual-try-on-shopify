@@ -2,7 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
-import { toSignedUrl } from '@/lib/signedUrl';
+import { toSignedUrls } from '@/lib/signedUrl';
 
 export type LibrarySortBy = 'newest' | 'oldest';
 
@@ -100,7 +100,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
         });
 
         // Sign all URLs in parallel
-        const signedUrls = await Promise.all(rawItems.map(r => toSignedUrl(r.url)));
+        const signedUrls = await toSignedUrls(rawItems.map(r => r.url));
 
         for (let i = 0; i < rawItems.length; i++) {
           items.push({ ...rawItems[i].item, imageUrl: signedUrls[i] } as LibraryItem);
