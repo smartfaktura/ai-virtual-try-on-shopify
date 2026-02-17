@@ -1,5 +1,32 @@
-import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { Sparkles } from 'lucide-react';
+
+/* ── Image preloader hook ── */
+
+function usePreloadImages(urls: string[]) {
+  const [ready, setReady] = useState(false);
+  const key = urls.join('|');
+
+  useEffect(() => {
+    if (urls.length === 0) { setReady(true); return; }
+    let cancelled = false;
+    setReady(false);
+    Promise.all(
+      urls.map(
+        (src) =>
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // graceful degradation
+            img.src = src;
+          }),
+      ),
+    ).then(() => { if (!cancelled) setReady(true); });
+    return () => { cancelled = true; };
+  }, [key]);
+
+  return ready;
+}
 
 /* ── Types ── */
 
@@ -232,6 +259,25 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
 export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   const isCarousel = scene.mode === 'carousel';
   const [iteration, setIteration] = useState(0);
+
+  // Collect all image URLs and preload them
+  const allUrls = useMemo(() => {
+    const urls: string[] = [];
+    if (scene.background) urls.push(scene.background);
+    if (scene.backgrounds) urls.push(...scene.backgrounds);
+    scene.elements.forEach((el) => { if (el.image) urls.push(el.image); });
+    return [...new Set(urls)];
+  }, [scene]);
+  const imagesReady = usePreloadImages(allUrls);
+
+  // Show shimmer while images load
+  if (!imagesReady) {
+    return (
+      <div className="relative w-full h-full overflow-hidden bg-muted">
+        <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
+      </div>
+    );
+  }
 
   // Compute timing from element delays (only used for recipe mode)
   const maxDelay = isCarousel ? 0 : Math.max(...scene.elements.map((e) => e.enterDelay));
