@@ -154,8 +154,9 @@ export default function Workflows() {
               failedJobs={failedJobs}
             />
           )}
-          <div className="section-divider">
-            <span className="section-label">Recent Creations</span>
+          <div className="flex items-center gap-3">
+            <span className="section-label shrink-0">Recent Creations</span>
+            <div className="flex-1 h-px bg-border" />
             <Button variant="ghost" size="sm" className="text-xs gap-1 h-7 shrink-0" onClick={() => navigate('/app/library')}>
               View All
               <ArrowRight className="w-3 h-3" />
