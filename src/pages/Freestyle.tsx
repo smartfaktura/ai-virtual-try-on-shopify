@@ -580,7 +580,7 @@ export default function Freestyle() {
       </div>
 
       {/* Prompt panel - single instance for all screen sizes */}
-      <div className="flex-shrink-0 relative z-20 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
+      <div className="flex-shrink-0 relative z-20 -mt-4 lg:mt-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0">
         {/* Desktop gradient fade */}
         <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
         <div className="lg:px-4 lg:sm:px-8 lg:pb-3 lg:sm:pb-5 lg:pt-2 lg:pointer-events-none">
