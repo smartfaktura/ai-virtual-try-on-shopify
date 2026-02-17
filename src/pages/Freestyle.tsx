@@ -64,6 +64,7 @@ export default function Freestyle() {
   const [showSceneHint, setShowSceneHint] = useState(false);
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
+  const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -522,17 +523,19 @@ export default function Freestyle() {
     onFramingChange: setFraming,
     framingPopoverOpen,
     onFramingPopoverChange: setFramingPopoverOpen,
+    isCollapsed: isPromptCollapsed,
+    onToggleCollapse: () => setIsPromptCollapsed(prev => !prev),
   };
 
   return (
-    <div className="freestyle-root relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-24 lg:-mt-8 bg-muted/30 overflow-hidden" style={{ minHeight: '100%' }}>
+    <div className="freestyle-root relative -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 -mt-24 lg:-mt-8 bg-muted/30 overflow-hidden flex flex-col lg:block" style={{ minHeight: '100%' }}>
       {/* On lg+ the sidebar is beside content so we reclaim the full height */}
       <style>{`@media (min-width: 1024px) { .freestyle-root { height: 100dvh !important; margin-top: -2rem; } }`}</style>
       <style>{`@media (max-width: 1023px) { .freestyle-root { height: 100dvh !important; } }`}</style>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
       {/* Scrollable content area */}
-      <div className="h-full overflow-y-auto pt-[5rem] lg:pt-3 pb-72">
+      <div className="flex-1 lg:h-full overflow-y-auto pt-[5rem] lg:pt-3 pb-4 lg:pb-72">
         {showLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
@@ -576,35 +579,59 @@ export default function Freestyle() {
         )}
       </div>
 
-      {/* Gradient fade above prompt bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
-
-      {/* Always-pinned Prompt Bar */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-3 sm:pb-5 pt-2 pointer-events-none z-20">
-        <div className="max-w-3xl mx-auto pointer-events-auto relative">
-          {/* Scene applied hint */}
-          {showSceneHint && selectedScene && (
-            <div className="absolute -top-14 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg">
-                <Camera className="w-3.5 h-3.5" />
-                Scene applied: {selectedScene.name}
-                <button
-                  onClick={() => {
-                    localStorage.setItem('hideSceneAppliedHint', 'true');
-                    setShowSceneHint(false);
-                  }}
-                  className="ml-1 opacity-70 hover:opacity-100 text-[10px] underline underline-offset-2"
-                >
-                  Don't show again
-                </button>
-                <button onClick={() => setShowSceneHint(false)} className="ml-0.5 opacity-70 hover:opacity-100">
-                  <XIcon className="w-3 h-3" />
-                </button>
+      {/* Desktop: Gradient fade + floating prompt bar */}
+      <div className="hidden lg:block">
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-muted/80 via-muted/40 to-transparent pointer-events-none z-10" />
+        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-3 sm:pb-5 pt-2 pointer-events-none z-20">
+          <div className="max-w-3xl mx-auto pointer-events-auto relative">
+            {showSceneHint && selectedScene && (
+              <div className="absolute -top-14 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg">
+                  <Camera className="w-3.5 h-3.5" />
+                  Scene applied: {selectedScene.name}
+                  <button
+                    onClick={() => {
+                      localStorage.setItem('hideSceneAppliedHint', 'true');
+                      setShowSceneHint(false);
+                    }}
+                    className="ml-1 opacity-70 hover:opacity-100 text-[10px] underline underline-offset-2"
+                  >
+                    Don't show again
+                  </button>
+                  <button onClick={() => setShowSceneHint(false)} className="ml-0.5 opacity-70 hover:opacity-100">
+                    <XIcon className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-          <FreestylePromptPanel {...panelProps} />
+            )}
+            <FreestylePromptPanel {...panelProps} />
+          </div>
         </div>
+      </div>
+
+      {/* Mobile: Docked bottom prompt panel */}
+      <div className="lg:hidden border-t border-border/60 bg-background/80 backdrop-blur-xl">
+        {showSceneHint && selectedScene && (
+          <div className="flex justify-center py-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg">
+              <Camera className="w-3.5 h-3.5" />
+              Scene applied: {selectedScene.name}
+              <button
+                onClick={() => {
+                  localStorage.setItem('hideSceneAppliedHint', 'true');
+                  setShowSceneHint(false);
+                }}
+                className="ml-1 opacity-70 hover:opacity-100 text-[10px] underline underline-offset-2"
+              >
+                Don't show again
+              </button>
+              <button onClick={() => setShowSceneHint(false)} className="ml-0.5 opacity-70 hover:opacity-100">
+                <XIcon className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        )}
+        <FreestylePromptPanel {...panelProps} />
       </div>
 
       {savedImages.length > 0 && (

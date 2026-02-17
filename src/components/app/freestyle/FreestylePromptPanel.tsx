@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Plus, X, Sparkles, Loader2, ImagePlus } from 'lucide-react';
+import { Plus, X, Sparkles, Loader2, ImagePlus, ChevronUp } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { FreestyleSettingsChips, type FreestyleAspectRatio } from './FreestyleSettingsChips';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
@@ -45,28 +46,26 @@ interface FreestylePromptPanelProps {
   onImageCountChange: (count: number) => void;
   stylePresets: string[];
   onStylePresetsChange: (ids: string[]) => void;
-  // Brand profile
   selectedBrandProfile: BrandProfile | null;
   onBrandProfileSelect: (profile: BrandProfile | null) => void;
   brandProfilePopoverOpen: boolean;
   onBrandProfilePopoverChange: (open: boolean) => void;
   brandProfiles: BrandProfile[];
   isLoadingBrandProfiles: boolean;
-  // Negatives
   negatives: string[];
   onNegativesChange: (negatives: string[]) => void;
   negativesPopoverOpen: boolean;
   onNegativesPopoverChange: (open: boolean) => void;
-  // Camera style
   cameraStyle: 'pro' | 'natural';
   onCameraStyleChange: (s: 'pro' | 'natural') => void;
-  // Framing
   framing: FramingOption | null;
   onFramingChange: (f: FramingOption | null) => void;
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
-  // Drag and drop
   onFileDrop?: (file: File) => void;
+  // Mobile collapse
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export function FreestylePromptPanel({
@@ -89,7 +88,10 @@ export function FreestylePromptPanel({
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
+  isCollapsed,
+  onToggleCollapse,
 }: FreestylePromptPanelProps) {
+  const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounterRef = useRef(0);
 
@@ -149,7 +151,11 @@ export function FreestylePromptPanel({
 
   return (
     <div
-      className={`relative bg-background/80 backdrop-blur-xl border rounded-2xl shadow-lg overflow-hidden transition-colors duration-200 ${
+      className={`relative bg-background/80 backdrop-blur-xl border overflow-hidden transition-colors duration-200 ${
+        isMobile
+          ? 'rounded-t-2xl border-b-0 shadow-none'
+          : 'rounded-2xl shadow-lg'
+      } ${
         isDragOver
           ? 'border-primary border-2 ring-2 ring-primary/20'
           : 'border-border/60'
@@ -175,83 +181,98 @@ export function FreestylePromptPanel({
         </div>
       )}
 
-      {/* Row 1 — Prompt Input */}
-      <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3">
-        <textarea
-          value={prompt}
-          onChange={e => onPromptChange(e.target.value)}
-          placeholder={hasAssets ? "Optional — describe extra details, or leave empty to auto-generate" : "Describe what you want to create..."}
-          rows={3}
-          className="w-full bg-transparent border-none text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0 min-h-[72px]"
-          onKeyDown={e => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-              e.preventDefault();
-              onGenerate();
-            }
-          }}
-        />
-      </div>
+      {/* Mobile collapse handle */}
+      {isMobile && onToggleCollapse && (
+        <button
+          onClick={onToggleCollapse}
+          className="w-full flex items-center justify-center py-2 hover:bg-muted/30 transition-colors"
+        >
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </button>
+      )}
 
-      {/* Divider */}
-      <div className="border-t border-border/40 mx-4 sm:mx-5" />
+      {/* Collapsible content */}
+      {!(isMobile && isCollapsed) && (
+        <>
+          {/* Row 1 — Prompt Input */}
+          <div className={`px-4 sm:px-5 ${isMobile && onToggleCollapse ? 'pt-1' : 'pt-4 sm:pt-5'} pb-3`}>
+            <textarea
+              value={prompt}
+              onChange={e => onPromptChange(e.target.value)}
+              placeholder={hasAssets ? "Optional — describe extra details, or leave empty to auto-generate" : "Describe what you want to create..."}
+              rows={isMobile ? 2 : 3}
+              className="w-full bg-transparent border-none text-base leading-relaxed text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-0 min-h-[48px] lg:min-h-[72px]"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  onGenerate();
+                }
+              }}
+            />
+          </div>
 
-      {/* Row 2 — Settings Chips */}
-      <div className="px-4 sm:px-5 py-3">
-        <FreestyleSettingsChips
-          uploadButton={uploadButton}
-          selectedProduct={selectedProduct} onProductSelect={onProductSelect}
-          productPopoverOpen={productPopoverOpen} onProductPopoverChange={onProductPopoverChange}
-          products={products} isLoadingProducts={isLoadingProducts}
-          selectedModel={selectedModel} onModelSelect={onModelSelect}
-          modelPopoverOpen={modelPopoverOpen} onModelPopoverChange={onModelPopoverChange}
-          selectedScene={selectedScene} onSceneSelect={onSceneSelect}
-          scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
-          aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
-          quality={quality} onQualityChange={onQualityChange}
-          polishPrompt={polishPrompt} onPolishChange={onPolishChange}
-          imageCount={imageCount} onImageCountChange={onImageCountChange}
-          stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
-          selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
-          brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
-          brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
-          negatives={negatives} onNegativesChange={onNegativesChange}
-          negativesPopoverOpen={negativesPopoverOpen} onNegativesPopoverChange={onNegativesPopoverChange}
-          cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
-          framing={framing} onFramingChange={onFramingChange}
-          framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
-          hasModelSelected={!!selectedModel}
-        />
-      </div>
+          {/* Divider */}
+          <div className="border-t border-border/40 mx-4 sm:mx-5" />
 
-      {/* Divider */}
-      <div className="border-t border-border/40 mx-4 sm:mx-5" />
+          {/* Row 2 — Settings Chips */}
+          <div className="px-4 sm:px-5 py-3">
+            <FreestyleSettingsChips
+              uploadButton={uploadButton}
+              selectedProduct={selectedProduct} onProductSelect={onProductSelect}
+              productPopoverOpen={productPopoverOpen} onProductPopoverChange={onProductPopoverChange}
+              products={products} isLoadingProducts={isLoadingProducts}
+              selectedModel={selectedModel} onModelSelect={onModelSelect}
+              modelPopoverOpen={modelPopoverOpen} onModelPopoverChange={onModelPopoverChange}
+              selectedScene={selectedScene} onSceneSelect={onSceneSelect}
+              scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
+              aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
+              quality={quality} onQualityChange={onQualityChange}
+              polishPrompt={polishPrompt} onPolishChange={onPolishChange}
+              imageCount={imageCount} onImageCountChange={onImageCountChange}
+              stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
+              selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
+              brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
+              brandProfiles={brandProfiles} isLoadingBrandProfiles={isLoadingBrandProfiles}
+              negatives={negatives} onNegativesChange={onNegativesChange}
+              negativesPopoverOpen={negativesPopoverOpen} onNegativesPopoverChange={onNegativesPopoverChange}
+              cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
+              framing={framing} onFramingChange={onFramingChange}
+              framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
+              hasModelSelected={!!selectedModel}
+            />
+          </div>
 
-      {/* Row 3 — Action Bar */}
-      <div className="px-4 sm:px-5 py-3 flex items-center justify-end">
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={onGenerate}
-                disabled={!canGenerate}
-                size="lg"
-                className="h-11 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold w-full sm:w-auto"
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                Generate
-                <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
-              {selectedModel && selectedScene
-                ? `${creditCost} credits: Model + Scene (15/image) × ${imageCount}`
-                : selectedModel
-                  ? `${creditCost} credits: Model reference (12/image) × ${imageCount}`
-                  : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'} × ${imageCount}`}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+          {/* Divider */}
+          <div className="border-t border-border/40 mx-4 sm:mx-5" />
+
+          {/* Row 3 — Action Bar */}
+          <div className="px-4 sm:px-5 py-3 flex items-center justify-end">
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={onGenerate}
+                    disabled={!canGenerate}
+                    size="lg"
+                    className="h-11 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold w-full sm:w-auto"
+                  >
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    Generate
+                    <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {selectedModel && selectedScene
+                    ? `${creditCost} credits: Model + Scene (15/image) × ${imageCount}`
+                    : selectedModel
+                      ? `${creditCost} credits: Model reference (12/image) × ${imageCount}`
+                      : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'} × ${imageCount}`}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </>
+      )}
     </div>
   );
 }
