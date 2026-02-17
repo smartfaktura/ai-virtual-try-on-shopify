@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy } from 'lucide-react';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 
 interface ImageLightboxProps {
@@ -105,10 +106,12 @@ export function ImageLightbox({
 
       {/* Main image */}
       <div className="relative z-10 flex flex-col items-center max-w-[90vw] max-h-[90vh] animate-in zoom-in-95 fade-in duration-200">
-        <img
+        <ShimmerImage
+          key={currentIndex}
           src={currentImage}
           alt={`Generated image ${currentIndex + 1}`}
           className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl shadow-black/40"
+          wrapperClassName="flex items-center justify-center max-w-full max-h-[80vh]"
         />
 
         {/* Bottom action bar */}
