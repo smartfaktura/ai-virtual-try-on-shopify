@@ -4,6 +4,7 @@ import { ArrowRight, CreditCard, Shield, ChevronRight, ChevronLeft, Sparkles } f
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 
@@ -120,28 +121,54 @@ function useTypewriter(phrases: string[], typingSpeed = 55, deletingSpeed = 30, 
   return displayText;
 }
 
+const optimizeProduct = (url: string) => getOptimizedUrl(url, { width: 200, quality: 70 });
+const optimizeOutput = (url: string) => getOptimizedUrl(url, { width: 250, quality: 70 });
+
 export function HeroSection() {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeScene, setActiveScene] = useState(0);
+  const [pulsed, setPulsed] = useState(false);
+  const [visibleDot, setVisibleDot] = useState(0);
   const typedText = useTypewriter(SLOGANS);
 
   const current = showcases[activeScene];
+
+  // Preload all showcase images on mount
+  useEffect(() => {
+    showcases.forEach(scene => {
+      new Image().src = optimizeProduct(scene.product.img);
+      scene.outputs.forEach(o => {
+        new Image().src = optimizeOutput(o.img);
+      });
+    });
+  }, []);
+
+  // One-time attention pulse on product pills after 2s
+  useEffect(() => {
+    const t = setTimeout(() => setPulsed(true), 2000);
+    return () => clearTimeout(t);
+  }, []);
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 10);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-  }, []);
+    // Update active dot based on scroll position
+    const itemWidth = 196; // ~180px + gap
+    const idx = Math.round(el.scrollLeft / itemWidth);
+    setVisibleDot(Math.min(idx, current.outputs.length - 1));
+  }, [current.outputs.length]);
 
   // Reset scroll when switching scenes
   useEffect(() => {
     const el = scrollRef.current;
     if (el) {
       el.scrollTo({ left: 0 });
+      setVisibleDot(0);
       requestAnimationFrame(updateScrollState);
     }
   }, [activeScene, updateScrollState]);
@@ -211,7 +238,7 @@ export function HeroSection() {
               <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
                 <div className="relative aspect-[3/4]">
                   <ShimmerImage
-                    src={current.product.img}
+                    src={optimizeProduct(current.product.img)}
                     alt={current.product.label}
                     className="w-full h-full object-cover transition-all duration-500"
                     aspectRatio="3/4"
@@ -232,16 +259,21 @@ export function HeroSection() {
                   <button
                     key={i}
                     onClick={() => setActiveScene(i)}
-                    className={`text-[10px] sm:text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+                    className={`text-[10px] sm:text-xs font-medium px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                       activeScene === i
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                        : 'bg-card text-muted-foreground border-border hover:border-primary/40'
+                        : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
+                            !pulsed ? 'animate-[pillPulse_1.5s_ease-in-out_2s_2]' : ''
+                          }`
                     }`}
                   >
                     {scene.product.label}
                   </button>
                 ))}
               </div>
+              <p className="text-[9px] text-muted-foreground/60 text-center mt-1.5">
+                ↑ Tap to switch product
+              </p>
             </div>
 
             {/* Flow arrow */}
@@ -258,7 +290,7 @@ export function HeroSection() {
               {/* Carousel arrows */}
               <button
                 onClick={() => scroll('left')}
-                className={`absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
+                className={`absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
                   canScrollLeft ? 'opacity-100 hover:bg-accent' : 'opacity-0 pointer-events-none'
                 }`}
                 aria-label="Scroll left"
@@ -267,7 +299,7 @@ export function HeroSection() {
               </button>
               <button
                 onClick={() => scroll('right')}
-                className={`absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
+                className={`absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
                   canScrollRight ? 'opacity-100 hover:bg-accent' : 'opacity-0 pointer-events-none'
                 }`}
                 aria-label="Scroll right"
@@ -275,13 +307,18 @@ export function HeroSection() {
                 <ChevronRight className="w-4 h-4 text-foreground" />
               </button>
 
+              {/* Right-edge gradient fade to signal scrollability */}
+              {canScrollRight && (
+                <div className="absolute right-0 top-0 bottom-3 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
+              )}
+
               <div
                 ref={scrollRef}
                 onScroll={updateScrollState}
                 className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin"
                 style={{ scrollbarColor: 'hsl(var(--border)) transparent' }}
               >
-                {current.outputs.map((output) => (
+                {current.outputs.map((output, idx) => (
                   <div
                     key={output.label}
                     className="flex-shrink-0 w-[150px] sm:w-[180px] snap-start group"
@@ -289,10 +326,11 @@ export function HeroSection() {
                     <div className="rounded-xl border border-border bg-card overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-primary/30 transition-all duration-300">
                       <div className="relative aspect-[3/4]">
                         <ShimmerImage
-                           src={output.img}
+                           src={optimizeOutput(output.img)}
                            alt={output.label}
                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                            decoding="async"
+                           loading={idx < 3 ? 'eager' : 'lazy'}
                            aspectRatio="3/4"
                          />
                         <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
@@ -304,14 +342,35 @@ export function HeroSection() {
                 ))}
               </div>
 
+              {/* Dot indicators */}
+              <div className="flex items-center justify-center gap-1.5 mt-2">
+                {current.outputs.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`rounded-full transition-all duration-300 ${
+                      idx === visibleDot
+                        ? 'w-4 h-1.5 bg-primary'
+                        : 'w-1.5 h-1.5 bg-border'
+                    }`}
+                  />
+                ))}
+              </div>
+
               {/* Caption */}
-              <p className="text-center text-xs text-muted-foreground mt-3">
+              <p className="text-center text-xs text-muted-foreground mt-2">
                 {current.caption}
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes pillPulse {
+          0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+          50% { box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2); }
+        }
+      `}</style>
     </section>
   );
 }
