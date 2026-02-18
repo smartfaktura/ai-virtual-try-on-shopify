@@ -232,38 +232,31 @@ export default function Jobs() {
             const kenji = TEAM_MEMBERS.find(m => m.name === 'Kenji');
             return (
               <div className="py-8">
-                <div className="border border-dashed border-border/50 rounded-2xl bg-transparent py-16 sm:py-20 flex flex-col items-center text-center space-y-5">
+                <div className="rounded-2xl bg-transparent py-20 sm:py-28 flex flex-col items-center text-center space-y-4">
                   {!searchQuery && kenji ? (
-                    <div className="flex flex-col items-center space-y-4">
-                      <img src={kenji.avatar} alt={kenji.name} className="w-16 h-16 rounded-full ring-2 ring-border object-cover" loading="lazy" />
-                      <div className="space-y-0.5">
-                        <p className="text-xs font-medium text-foreground">{kenji.name}</p>
-                        <p className="text-[11px] text-muted-foreground">{kenji.role}</p>
-                      </div>
-                      <p className="text-sm italic text-muted-foreground max-w-xs leading-relaxed">
-                        "Your gallery is waiting. Start a workflow and I'll direct the shoot."
+                    <>
+                      <img src={kenji.avatar} alt={kenji.name} className="w-14 h-14 rounded-full ring-2 ring-border object-cover" loading="lazy" />
+                      <p className="text-xs text-muted-foreground">{kenji.name}</p>
+                      <p className="text-[15px] text-muted-foreground max-w-xs leading-relaxed">
+                        Start a workflow to build your creative library.
                       </p>
-                    </div>
+                    </>
                   ) : (
-                    <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
-                      <Image className="w-7 h-7 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="space-y-1.5">
-                    <h3 className="text-xl font-semibold tracking-tight">
-                      {searchQuery ? 'No results found' : 'No creations yet'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground max-w-md">
-                      {searchQuery ? 'No results match your search.' : 'Start generating to build your library.'}
-                    </p>
-                  </div>
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="px-4 py-2 rounded-full text-xs font-medium bg-muted/40 text-muted-foreground hover:bg-muted/70 transition-all"
-                    >
-                      Clear search
-                    </button>
+                    <>
+                      <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+                        <Image className="w-7 h-7 text-muted-foreground" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <h3 className="text-lg font-semibold">No results found</h3>
+                        <p className="text-sm text-muted-foreground">No results match your search.</p>
+                      </div>
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="px-4 py-2 rounded-full text-xs font-medium bg-muted/40 text-muted-foreground hover:bg-muted/70 transition-all"
+                      >
+                        Clear search
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
