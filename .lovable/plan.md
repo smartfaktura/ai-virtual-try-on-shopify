@@ -1,40 +1,38 @@
 
 
-## Expand Product Types + Fix Product Card Design
+## Fix Product Image Not Loading on Mobile
 
-### Problem 1: Product Types Too Narrow
-The current list has 26 clothing/beauty-focused types. Real-world products span many more categories. Need a comprehensive but organized list with an "Other" option (already exists but list needs expansion).
+### Root Cause
 
-### Problem 2: Product Card Text & Layout Issues
-From the screenshot, the imported product shows:
-- Title truncated badly: "Cropped Sway Cr..." -- card is too narrow and text gets cut
-- Product type badge shows raw imported value "Women:Outerwear:Coverups" which overflows the card
-- Image thumbnail feels small relative to the card
-- Overall card feels cramped
+The `product-uploads` storage bucket is set to **private**. Product images are stored as signed URLs (with long JWT tokens in the query string). While these work on desktop preview, they can fail on mobile browsers (especially Safari) due to:
+- Very long URL strings with JWT tokens that mobile browsers may handle differently
+- Token-based URLs are not cacheable, causing repeated failed fetches
+- Some mobile browsers strip or truncate long query parameters
 
-### Changes
+Other image buckets (`tryon-images`, `freestyle-images`, `workflow-previews`) are already set to public for exactly this reason.
 
-#### 1. Expand Product Types (ManualProductTab.tsx)
-Replace the current 26-item list with a comprehensive categorized list covering:
-- **Apparel**: T-Shirt, Hoodie, Sweater, Pullover, Jacket, Coat, Blazer, Vest, Dress, Skirt, Pants, Jeans, Leggings, Shorts, Swimwear, Activewear, Underwear, Sleepwear
-- **Footwear**: Sneakers, Boots, Sandals, Heels, Flats, Loafers, Slides
-- **Accessories**: Bag, Handbag, Backpack, Wallet, Belt, Hat, Cap, Scarf, Gloves, Sunglasses, Watch, Jewelry, Ring, Necklace, Earrings, Bracelet
-- **Beauty & Skincare**: Serum, Cream, Moisturizer, Cleanser, Toner, Mask, Lipstick, Foundation, Mascara, Perfume, Fragrance
-- **Home & Living**: Candle, Mug, Pillow, Blanket, Lamp, Vase, Frame, Rug, Towel
-- **Food & Beverage**: Food, Beverage, Supplement, Coffee, Tea, Snack
-- **Tech & Electronics**: Phone Case, Headphones, Speaker, Charger
-- **Other**: catches everything else
+### Fix
 
-#### 2. Fix Product Card Layout (Products.tsx)
-- Reduce grid to `grid-cols-2 sm:grid-cols-3 md:grid-cols-4` (remove the 5-column breakpoint) so cards are wider
-- Increase card content padding from `p-3` to `p-4`
-- Allow title to wrap to 2 lines instead of truncating with `line-clamp-2` instead of `truncate`
-- Truncate long product_type badges: if the type contains `:` or is longer than 20 chars, show only the last segment or truncate with ellipsis
-- Add `space-y-1.5` for better vertical rhythm between title and badges
+1. **Make `product-uploads` bucket public** via a database migration -- this matches the pattern used by other image buckets in the app.
 
-#### 3. Improve Badge Display for Imported Types
-When a product type comes from an import (e.g., "Women:Outerwear:Coverups"), extract only the last meaningful segment ("Coverups") or truncate to fit. Apply `max-w-[120px] truncate` to the badge text.
+2. **Update the import-product edge function** (`supabase/functions/import-product/index.ts`) to store public URLs instead of signed URLs when saving imported product images.
+
+3. **Update the AddProductModal / ManualProductTab** upload flow to use `getPublicUrl()` instead of `createSignedUrl()` when storing the image reference in the database.
+
+### Technical Details
+
+**Migration SQL:**
+```sql
+UPDATE storage.buckets SET public = true WHERE id = 'product-uploads';
+```
+
+**Edge function change:** Replace `createSignedUrl()` calls with `getPublicUrl()` for the product-uploads bucket.
+
+**Frontend upload change:** In the upload flow (ManualProductTab), after uploading to storage, use `supabase.storage.from('product-uploads').getPublicUrl(path)` instead of `createSignedUrl()`.
+
+**Existing products:** Products already stored with signed URLs will continue to work until their tokens expire (~1 year). Making the bucket public means even old signed URLs still work, and new products will use simpler public URLs.
 
 ### Files Modified
-- `src/components/app/ManualProductTab.tsx` -- expanded PRODUCT_TYPES array
-- `src/pages/Products.tsx` -- wider grid, better card padding/text handling, badge truncation
+- Database migration -- make product-uploads bucket public
+- `supabase/functions/import-product/index.ts` -- use public URLs
+- `src/components/app/ManualProductTab.tsx` -- use public URLs after upload
