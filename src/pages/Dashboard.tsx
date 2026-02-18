@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,65 @@ import { supabase } from '@/integrations/supabase/client';
 import type { JobStatus } from '@/types';
 import type { Workflow } from '@/pages/Workflows';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
+import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
+import { workflowScenes } from '@/components/app/workflowAnimationData';
+import { Badge } from '@/components/ui/badge';
+
+/* ── Inline card with IntersectionObserver for animations ── */
+function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (id: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.3 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const scene = workflowScenes[workflow.name];
+
+  return (
+    <div
+      ref={ref}
+      className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 flex flex-col"
+    >
+      <div className="aspect-[4/5] bg-muted/30 overflow-hidden relative">
+        {scene ? (
+          <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
+        ) : (
+          <img
+            src={workflow.preview_image_url || '/placeholder.svg'}
+            alt={workflow.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+          />
+        )}
+        {workflow.uses_tryon && (
+          <Badge className="absolute top-2 right-2 z-20 text-[10px] px-2 py-0.5 bg-primary/90 text-primary-foreground border-0">
+            Try-On
+          </Badge>
+        )}
+      </div>
+      <div className="p-4 flex flex-col flex-1">
+        <h3 className="text-sm font-bold text-foreground truncate">{workflow.name}</h3>
+        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{workflow.description}</p>
+        <Button
+          size="sm"
+          className="w-full rounded-full font-semibold gap-1.5 mt-3 text-xs"
+          onClick={() => onNavigate(workflow.id)}
+        >
+          Create Set
+          <ArrowRight className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -216,37 +276,17 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Explore Workflows — compact cards */}
+        {/* Explore Workflows — compact animated cards */}
         {workflows.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Workflows</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {workflows.map(workflow => (
-                <div
+                <DashboardWorkflowCard
                   key={workflow.id}
-                  className="rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 flex flex-col"
-                >
-                  <div className="aspect-square bg-muted/30 overflow-hidden">
-                    <img
-                      src={workflow.preview_image_url || '/placeholder.svg'}
-                      alt={workflow.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
-                    />
-                  </div>
-                  <div className="p-3 flex flex-col flex-1">
-                    <h3 className="text-sm font-bold text-foreground truncate">{workflow.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{workflow.description}</p>
-                    <Button
-                      size="sm"
-                      className="w-full rounded-full font-semibold gap-1.5 mt-3 text-xs"
-                      onClick={() => navigate(`/app/generate?workflow=${workflow.id}`)}
-                    >
-                      Create Set
-                      <ArrowRight className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
+                  workflow={workflow}
+                  onNavigate={(id) => navigate(`/app/generate?workflow=${id}`)}
+                />
               ))}
             </div>
           </div>
