@@ -77,30 +77,52 @@ export default function Auth() {
             </p>
           </div>
 
-          {/* Google Sign-In */}
-          <button
-            type="button"
-            onClick={async () => {
-              const result = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
-              });
-              if (result?.error) {
-                toast.error('Google sign-in failed. Please try again.');
-              }
-            }}
-            className="w-full h-11 rounded-full border border-input bg-background hover:bg-accent flex items-center justify-center gap-3 text-sm font-medium transition-colors"
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-              <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-              <path d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
-              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 7.294C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-          </button>
+          {/* OAuth Buttons */}
+          <div className="space-y-3">
+            {/* Google Sign-In */}
+            <button
+              type="button"
+              onClick={async () => {
+                const result = await lovable.auth.signInWithOAuth("google", {
+                  redirect_uri: window.location.origin,
+                });
+                if (result?.error) {
+                  toast.error('Google sign-in failed. Please try again.');
+                }
+              }}
+              className="w-full h-11 rounded-full border border-input bg-background hover:bg-accent flex items-center justify-center gap-3 text-sm font-medium transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+                <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                <path d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
+                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 7.294C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+              </svg>
+              Continue with Google
+            </button>
+
+            {/* Apple Sign-In */}
+            <button
+              type="button"
+              onClick={async () => {
+                const result = await lovable.auth.signInWithOAuth("apple", {
+                  redirect_uri: window.location.origin,
+                });
+                if (result?.error) {
+                  toast.error('Apple sign-in failed. Please try again.');
+                }
+              }}
+              className="w-full h-11 rounded-full bg-black text-white hover:bg-black/90 flex items-center justify-center gap-3 text-sm font-medium transition-colors"
+            >
+              <svg width="16" height="20" viewBox="0 0 16 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15.545 15.467c-.29.672-.633 1.29-1.032 1.856-.543.773-.988 1.308-1.332 1.605-.532.488-1.102.738-1.712.754-.438 0-.966-.125-1.582-.38-.618-.254-1.186-.379-1.707-.379-.543 0-1.125.125-1.746.38-.623.254-1.125.387-1.508.399-.586.024-1.168-.234-1.746-.773-.373-.324-.84-.879-1.398-1.664-.598-.84-1.09-1.816-1.476-2.93C.14 13.028 0 11.764 0 10.543c0-1.398.301-2.602.906-3.609.476-.809 1.11-1.446 1.903-1.914.793-.469 1.649-.707 2.57-.72.465 0 1.075.145 1.836.426.758.282 1.246.426 1.46.426.16 0 .703-.168 1.622-.504.87-.312 1.602-.441 2.2-.39 1.627.13 2.851.77 3.668 1.921-1.453.883-2.172 2.12-2.156 3.707.015 1.238.461 2.27 1.336 3.09.398.375.84.664 1.332.867-.106.313-.22.613-.34.903zM11.91.422c0 .97-.355 1.875-1.062 2.71-.855 1-.89 1.574-1.883 1.637-.012-.102-.02-.21-.02-.324 0-.93.406-1.926 1.126-2.74.36-.414.82-.758 1.375-1.032.555-.27 1.078-.418 1.57-.445.016.066.024.133.024.2z"/>
+              </svg>
+              Continue with Apple
+            </button>
+          </div>
 
           {/* Divider */}
-          <div className="flex items-center gap-3">
+          <div className="my-6 flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
             <span className="text-xs text-muted-foreground uppercase">or</span>
             <div className="flex-1 h-px bg-border" />
