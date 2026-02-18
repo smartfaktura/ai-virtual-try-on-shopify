@@ -244,7 +244,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
       )}
 
       {!extracted && !isImporting && (
-        <div className="sticky bottom-0 flex justify-end pt-3 pb-1 border-t border-border/50 bg-background/95 backdrop-blur-sm -mx-6 px-6">
+        <div className="flex justify-end pt-5 mt-2 border-t border-border/40">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
         </div>
       )}
