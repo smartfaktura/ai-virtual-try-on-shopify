@@ -240,7 +240,7 @@ export default function Jobs() {
                     heading="No images yet"
                     description=""
                     icon={<Image className="w-12 h-12" />}
-                    teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Start a workflow to build your creative library." }}
+                    teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Create stunning visuals with workflows or freestyle generation." }}
                     actions={[
                       { content: 'Explore Workflows', onAction: () => navigate('/app/workflows'), variant: 'outline' },
                       { content: 'Freestyle Generation', onAction: () => navigate('/app/freestyle'), variant: 'default' },
