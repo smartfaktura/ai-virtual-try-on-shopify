@@ -21,6 +21,11 @@ interface EmptyStateCardProps {
     content: string;
     onAction: () => void;
   };
+  actions?: Array<{
+    content: string;
+    onAction: () => void;
+    variant?: 'default' | 'outline';
+  }>;
   image?: string;
   icon?: React.ReactNode;
   /** Show a collage of showcase images instead of the icon */
@@ -29,23 +34,49 @@ interface EmptyStateCardProps {
   teamMember?: TeamMemberDisplay;
 }
 
-export function EmptyStateCard({ heading, description, action, icon, showCollage, teamMember }: EmptyStateCardProps) {
+export function EmptyStateCard({ heading, description, action, actions, icon, showCollage, teamMember }: EmptyStateCardProps) {
+  const renderedActions = actions ?? (action ? [{ content: action.content, onAction: action.onAction, variant: 'default' as const }] : []);
+
   if (teamMember) {
     return (
       <Card className="border-0 bg-transparent shadow-none">
-        <CardContent className="py-20 sm:py-28 flex flex-col items-center text-center space-y-4">
-          <img
-            src={teamMember.avatar}
-            alt={teamMember.name}
-            className="w-14 h-14 rounded-full ring-2 ring-border object-cover"
-            loading="lazy"
-          />
-          <p className="text-xs text-muted-foreground">{teamMember.name}</p>
+        <CardContent className="py-20 sm:py-28 flex flex-col items-center text-center space-y-5">
+          {/* Large icon container */}
+          {icon && (
+            <div className="w-20 h-20 rounded-3xl bg-muted/50 flex items-center justify-center">
+              {icon}
+            </div>
+          )}
+
+          {/* Small avatar + name */}
+          <div className="flex flex-col items-center gap-1.5">
+            <img
+              src={teamMember.avatar}
+              alt={teamMember.name}
+              className="w-10 h-10 rounded-full ring-2 ring-border object-cover"
+              loading="lazy"
+            />
+            <p className="text-xs text-muted-foreground">{teamMember.name}</p>
+          </div>
+
           <p className="text-[15px] text-muted-foreground max-w-xs leading-relaxed">
             {teamMember.quote}
           </p>
-          {action && (
-            <Button onClick={action.onAction} className="mt-2">{action.content}</Button>
+
+          {/* Actions row */}
+          {renderedActions.length > 0 && (
+            <div className="flex items-center gap-3 mt-1">
+              {renderedActions.map((a, i) => (
+                <Button
+                  key={i}
+                  variant={a.variant === 'outline' ? 'outline' : 'default'}
+                  onClick={a.onAction}
+                  className="rounded-full px-6"
+                >
+                  {a.content}
+                </Button>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -76,8 +107,14 @@ export function EmptyStateCard({ heading, description, action, icon, showCollage
           <h3 className="text-lg font-semibold">{heading}</h3>
           <p className="text-sm text-muted-foreground max-w-md">{description}</p>
         </div>
-        {action && (
-          <Button onClick={action.onAction}>{action.content}</Button>
+        {renderedActions.length > 0 && (
+          <div className="flex items-center gap-3">
+            {renderedActions.map((a, i) => (
+              <Button key={i} variant={a.variant === 'outline' ? 'outline' : 'default'} onClick={a.onAction}>
+                {a.content}
+              </Button>
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
