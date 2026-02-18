@@ -55,7 +55,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
         ) : (
           <Tabs defaultValue="manual" className="w-full flex flex-col flex-1 min-h-0">
             <div className="px-10 shrink-0">
-              <div className="bg-muted/60 rounded-xl p-1 inline-flex gap-1">
+              <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto">
                 <TabsTrigger
                   value="manual"
                   className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
@@ -84,7 +84,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
                   <Smartphone className="w-3.5 h-3.5" />
                   Mobile
                 </TabsTrigger>
-              </div>
+              </TabsList>
             </div>
 
             <div className="px-10 pb-10 pt-6 overflow-y-auto flex-1 min-h-0">
