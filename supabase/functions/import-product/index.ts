@@ -305,17 +305,12 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const { data: signedUrlData, error: signedUrlError } = await adminClient.storage
+        const { data: publicUrlData } = adminClient.storage
           .from("product-uploads")
-          .createSignedUrl(uploadData.path, 60 * 60 * 24 * 365);
-
-        if (signedUrlError) {
-          console.warn(`Signed URL error for image ${i + 1}:`, signedUrlError);
-          continue;
-        }
+          .getPublicUrl(uploadData.path);
 
         uploadedImages.push({
-          image_url: signedUrlData.signedUrl,
+          image_url: publicUrlData.publicUrl,
           storage_path: uploadData.path,
           position: i,
         });
