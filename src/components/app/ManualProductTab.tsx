@@ -240,7 +240,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     setImages(reordered);
   }, []);
 
-  async function uploadNewImage(img: ImageItem): Promise<{ signedUrl: string; storagePath: string }> {
+  async function uploadNewImage(img: ImageItem): Promise<{ publicUrl: string; storagePath: string }> {
     if (!user || !img.file) throw new Error('No file to upload');
 
     const timestamp = Date.now();
@@ -258,13 +258,11 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
 
     if (uploadError) throw new Error(uploadError.message);
 
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+    const { data: publicUrlData } = supabase.storage
       .from('product-uploads')
-      .createSignedUrl(uploadData.path, 60 * 60 * 24 * 365);
+      .getPublicUrl(uploadData.path);
 
-    if (signedUrlError) throw new Error(signedUrlError.message);
-
-    return { signedUrl: signedUrlData.signedUrl, storagePath: uploadData.path };
+    return { publicUrl: publicUrlData.publicUrl, storagePath: uploadData.path };
   }
 
   const handleSubmitNew = async () => {
@@ -279,17 +277,17 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
 
     try {
       const primaryImage = images.find(i => i.isPrimary) || images[0];
-      let primarySignedUrl = '';
-      const uploadedImages: { signedUrl: string; storagePath: string; position: number; imgId: string }[] = [];
+      let primaryUrl = '';
+      const uploadedImages: { publicUrl: string; storagePath: string; position: number; imgId: string }[] = [];
 
       for (let i = 0; i < images.length; i++) {
         const img = images[i];
         if (!img.file) continue;
         setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
-        const { signedUrl, storagePath } = await uploadNewImage(img);
+        const { publicUrl, storagePath } = await uploadNewImage(img);
         const position = img.isPrimary ? 0 : i + 1;
-        uploadedImages.push({ signedUrl, storagePath, position, imgId: img.id });
-        if (img.id === primaryImage.id) primarySignedUrl = signedUrl;
+        uploadedImages.push({ publicUrl, storagePath, position, imgId: img.id });
+        if (img.id === primaryImage.id) primaryUrl = publicUrl;
       }
 
       const { data: productData, error: insertError } = await supabase
@@ -299,7 +297,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           title: title.trim().substring(0, 200),
           product_type: productType || '',
           description: description.trim().substring(0, 500),
-          image_url: primarySignedUrl,
+          image_url: primaryUrl,
           dimensions: dimensions.trim() || null,
         } as any)
         .select('id')
@@ -310,7 +308,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       const imageRows = uploadedImages.map(img => ({
         product_id: productData.id,
         user_id: user.id,
-        image_url: img.signedUrl,
+        image_url: img.publicUrl,
         storage_path: img.storagePath,
         position: img.position,
       }));
@@ -359,28 +357,28 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       }
 
       const newImages = images.filter(i => i.file);
-      const uploadedNew: { imageItem: ImageItem; signedUrl: string; storagePath: string }[] = [];
+      const uploadedNew: { imageItem: ImageItem; publicUrl: string; storagePath: string }[] = [];
       setUploadProgress({ current: 0, total: newImages.length });
 
       for (const img of newImages) {
         setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
-        const { signedUrl, storagePath } = await uploadNewImage(img);
-        uploadedNew.push({ imageItem: img, signedUrl, storagePath });
+        const { publicUrl, storagePath } = await uploadNewImage(img);
+        uploadedNew.push({ imageItem: img, publicUrl, storagePath });
       }
 
-      let primarySignedUrl = '';
-      const allFinalImages: { dbId?: string; signedUrl: string; storagePath: string; position: number; isNew: boolean }[] = [];
+      let primaryUrl = '';
+      const allFinalImages: { dbId?: string; imageUrl: string; storagePath: string; position: number; isNew: boolean }[] = [];
 
       images.forEach((img, idx) => {
         const position = img.isPrimary ? 0 : idx + 1;
         const uploaded = uploadedNew.find(u => u.imageItem.id === img.id);
 
         if (uploaded) {
-          allFinalImages.push({ signedUrl: uploaded.signedUrl, storagePath: uploaded.storagePath, position, isNew: true });
-          if (img.isPrimary) primarySignedUrl = uploaded.signedUrl;
+          allFinalImages.push({ imageUrl: uploaded.publicUrl, storagePath: uploaded.storagePath, position, isNew: true });
+          if (img.isPrimary) primaryUrl = uploaded.publicUrl;
         } else {
-          allFinalImages.push({ dbId: img.dbId, signedUrl: img.src, storagePath: img.storagePath || '', position, isNew: false });
-          if (img.isPrimary) primarySignedUrl = img.src;
+          allFinalImages.push({ dbId: img.dbId, imageUrl: img.src, storagePath: img.storagePath || '', position, isNew: false });
+          if (img.isPrimary) primaryUrl = img.src;
         }
       });
 
@@ -390,7 +388,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           title: title.trim().substring(0, 200),
           product_type: productType || '',
           description: description.trim().substring(0, 500),
-          image_url: primarySignedUrl,
+          image_url: primaryUrl,
           dimensions: dimensions.trim() || null,
         } as any)
         .eq('id', editingProduct.id);
@@ -409,7 +407,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         .map(i => ({
           product_id: editingProduct.id,
           user_id: user.id,
-          image_url: i.signedUrl,
+          image_url: i.imageUrl,
           storage_path: i.storagePath,
           position: i.position,
         }));
