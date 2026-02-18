@@ -1,63 +1,38 @@
 
 
-## Improve Product Upload -- Design and Functionality
+## Improve Add Product Modal -- Design, CTA Visibility, CSV Template, and Naming
 
-### Current Gaps
-1. **No AI auto-fill**: The Generate wizard's `UploadSourceCard` already calls `analyze-product-image` to auto-detect title, type, and description -- but the Products page upload does NOT use this. Users have to fill everything manually.
-2. **No drag-to-reorder images**: Users can only set a primary image by clicking the star. No way to reorder the gallery.
-3. **Upload progress is invisible**: When submitting, the button just says "Uploading..." with no per-image feedback.
-4. **Product type list is limited**: The dropdown has 26 types but no search/filter, making it hard to find the right one on mobile.
+### Problems Identified
+1. **CTA button not visible** -- The "Add Product" button is below the fold in the modal, users have to scroll to find it
+2. **CSV has no template** -- Users must guess the correct column format; a downloadable template would prevent errors
+3. **Tab says "Store URL"** -- Should be "Product URL" since it imports a single product page, not an entire store
 
-### Proposed Improvements
+### Changes
 
-#### 1. AI Auto-Fill on First Image Upload (High Impact)
-When the user uploads the first image, automatically call the existing `analyze-product-image` edge function to pre-fill:
-- Product Name
-- Product Type
-- Description
+#### 1. Sticky Footer for CTA (ManualProductTab.tsx)
+Move the action buttons (Cancel / Add Product) into a sticky footer that's always visible at the bottom of the modal, regardless of scroll position. This ensures the CTA is never hidden.
 
-Show a subtle "AI analyzing..." shimmer state on the form fields while analyzing. This reuses existing infrastructure -- no new edge functions needed.
+- Wrap the form fields in a scrollable area
+- Make the footer `sticky bottom-0` with a subtle top border and background blur
+- Same treatment for StoreImportTab and CsvImportTab footers for consistency
 
-**File: `src/components/app/ManualProductTab.tsx`**
-- Import the `analyze-product-image` fetch logic (similar to `UploadSourceCard`)
-- Trigger analysis when the first image is added via `addFiles`
-- Auto-populate `title`, `productType`, and `description` states with AI results
-- Show a shimmer/skeleton on the text fields during analysis
-- Only auto-fill fields that are still empty (don't overwrite manual edits)
+#### 2. Rename "Store URL" to "Product URL" (AddProductModal.tsx)
+- Change the tab label from "Store URL" to "Product URL"
+- Update the icon if needed (keep Globe, it fits)
 
-#### 2. Searchable Product Type Selector
-Replace the basic `Select` dropdown with a `Command`-based combobox (already have `cmdk` installed) so users can type to filter product types.
+#### 3. CSV Downloadable Template (CsvImportTab.tsx)
+- Add a "Download Template" button/link below the dropzone
+- Generate a CSV file with the correct headers: `title, product_type, image_url, description`
+- Include 2 example rows so users understand the expected format
+- Use a simple `Blob` download -- no backend needed
 
-**File: `src/components/app/ManualProductTab.tsx`**
-- Replace the `Select` component with a `Popover` + `Command` combo
-- Allow typing to filter the product type list
-- Keep the same `PRODUCT_TYPES` array
-
-#### 3. Upload Progress Indicator
-Show individual image upload progress during submission instead of a single "Uploading..." button.
-
-**File: `src/components/app/ManualProductTab.tsx`**
-- Track upload progress as `currentImageIndex / totalImages`
-- Show a thin progress bar above the action buttons during upload
-- Update button text to "Uploading 2/4..." format
-
-#### 4. Drag-to-Reorder Images (Nice to Have)
-Allow users to drag images in the gallery to reorder them. The first position automatically becomes the cover image.
-
-**File: `src/components/app/ProductImageGallery.tsx`**
-- Add pointer-based drag reorder using native HTML drag events (no new library)
-- When an image is dragged to position 0, it becomes the primary/cover
-- Visual feedback: ghost preview while dragging, drop indicator between slots
-
-### Implementation Order
-1. AI Auto-Fill (biggest UX win, reuses existing edge function)
-2. Searchable Product Type
-3. Upload Progress
-4. Drag-to-Reorder (if time allows)
+#### 4. Modal Layout Polish (AddProductModal.tsx)
+- Restructure the modal so the tab content area scrolls independently while the header and footer remain fixed
+- This prevents the entire modal from scrolling and losing the tabs/CTA
 
 ### Files Modified
-- `src/components/app/ManualProductTab.tsx` -- AI auto-fill, searchable type, progress
-- `src/components/app/ProductImageGallery.tsx` -- drag reorder
+- `src/components/app/AddProductModal.tsx` -- sticky layout structure, rename tab
+- `src/components/app/ManualProductTab.tsx` -- sticky footer for action buttons
+- `src/components/app/CsvImportTab.tsx` -- add download template button
+- `src/components/app/StoreImportTab.tsx` -- consistent sticky footer
 
-### No Backend Changes
-All improvements are frontend-only. The `analyze-product-image` edge function already exists and works.
