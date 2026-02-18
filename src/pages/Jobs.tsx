@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
+import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 import { Button } from '@/components/ui/button';
@@ -44,6 +46,7 @@ function useColumnCount() {
 }
 
 export default function Jobs() {
+  const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
@@ -232,33 +235,25 @@ export default function Jobs() {
             const kenji = TEAM_MEMBERS.find(m => m.name === 'Kenji');
             return (
               <div className="py-8">
-                <div className="rounded-2xl bg-transparent py-20 sm:py-28 flex flex-col items-center text-center space-y-4">
-                  {!searchQuery && kenji ? (
-                    <>
-                      <img src={kenji.avatar} alt={kenji.name} className="w-14 h-14 rounded-full ring-2 ring-border object-cover" loading="lazy" />
-                      <p className="text-xs text-muted-foreground">{kenji.name}</p>
-                      <p className="text-[15px] text-muted-foreground max-w-xs leading-relaxed">
-                        Start a workflow to build your creative library.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
-                        <Image className="w-7 h-7 text-muted-foreground" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <h3 className="text-lg font-semibold">No results found</h3>
-                        <p className="text-sm text-muted-foreground">No results match your search.</p>
-                      </div>
-                      <button
-                        onClick={() => setSearchQuery('')}
-                        className="px-4 py-2 rounded-full text-xs font-medium bg-muted/40 text-muted-foreground hover:bg-muted/70 transition-all"
-                      >
-                        Clear search
-                      </button>
-                    </>
-                  )}
-                </div>
+                {!searchQuery && kenji ? (
+                  <EmptyStateCard
+                    heading="No images yet"
+                    description=""
+                    icon={<Image className="w-9 h-9 text-muted-foreground" />}
+                    teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Start a workflow to build your creative library." }}
+                    actions={[
+                      { content: 'Explore Workflows', onAction: () => navigate('/app/workflows'), variant: 'outline' },
+                      { content: 'Freestyle Generation', onAction: () => navigate('/app/freestyle'), variant: 'default' },
+                    ]}
+                  />
+                ) : (
+                  <EmptyStateCard
+                    heading="No results found"
+                    description="No results match your search."
+                    action={{ content: 'Clear search', onAction: () => setSearchQuery('') }}
+                    icon={<Image className="w-7 h-7 text-muted-foreground" />}
+                  />
+                )}
               </div>
             );
           })()
