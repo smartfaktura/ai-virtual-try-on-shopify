@@ -1,5 +1,5 @@
-import { useCallback, useRef } from 'react';
-import { Star, X, Plus } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+import { Star, X, Plus, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 
@@ -15,6 +15,7 @@ interface ProductImageGalleryProps {
   onSetPrimary: (id: string) => void;
   onRemove: (id: string) => void;
   onAddFiles: (files: File[]) => void;
+  onReorder?: (images: ImageItem[]) => void;
   maxImages?: number;
   disabled?: boolean;
 }
@@ -24,10 +25,13 @@ export function ProductImageGallery({
   onSetPrimary,
   onRemove,
   onAddFiles,
+  onReorder,
   maxImages = 6,
   disabled = false,
 }: ProductImageGalleryProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,20 +42,77 @@ export function ProductImageGallery({
     [onAddFiles]
   );
 
+  const handleDragStart = (e: React.DragEvent, idx: number) => {
+    if (disabled) return;
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+    // Use a transparent image so the default ghost is minimal
+    const ghost = document.createElement('div');
+    ghost.style.opacity = '0';
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, 0, 0);
+    setTimeout(() => document.body.removeChild(ghost), 0);
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) return;
+    setOverIdx(idx);
+  };
+
+  const handleDrop = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx || !onReorder) {
+      setDragIdx(null);
+      setOverIdx(null);
+      return;
+    }
+    const reordered = [...images];
+    const [moved] = reordered.splice(dragIdx, 1);
+    reordered.splice(idx, 0, moved);
+    // First position is always primary
+    const withPrimary = reordered.map((img, i) => ({
+      ...img,
+      isPrimary: i === 0,
+    }));
+    onReorder(withPrimary);
+    setDragIdx(null);
+    setOverIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIdx(null);
+    setOverIdx(null);
+  };
+
   const canAddMore = images.length < maxImages;
 
   return (
     <div className="flex gap-3 overflow-x-auto pb-1">
-      {images.map((img) => (
+      {images.map((img, idx) => (
         <div
           key={img.id}
+          draggable={!disabled && !!onReorder}
+          onDragStart={(e) => handleDragStart(e, idx)}
+          onDragOver={(e) => handleDragOver(e, idx)}
+          onDrop={(e) => handleDrop(e, idx)}
+          onDragEnd={handleDragEnd}
           className={cn(
             'group relative shrink-0 w-24 h-24 rounded-xl overflow-hidden border transition-all duration-200',
             img.isPrimary
               ? 'border-primary shadow-md ring-1 ring-primary/20'
-              : 'border-border hover:border-muted-foreground/30'
+              : 'border-border hover:border-muted-foreground/30',
+            dragIdx === idx && 'opacity-40 scale-95',
+            overIdx === idx && dragIdx !== null && dragIdx !== idx && 'ring-2 ring-primary/40'
           )}
         >
+          {/* Drag handle */}
+          {!disabled && onReorder && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-70 transition-opacity pointer-events-none">
+              <GripVertical className="w-4 h-4 text-white drop-shadow-md" />
+            </div>
+          )}
+
           {/* Image with inner zoom — no overflow */}
            <ShimmerImage
              src={img.src}

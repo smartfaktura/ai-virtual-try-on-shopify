@@ -1,15 +1,19 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Info } from 'lucide-react';
+import { ImagePlus, Loader2, Info, Sparkles, Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ProductImageGallery } from './ProductImageGallery';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface UserProduct {
   id: string;
@@ -57,7 +61,11 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [isLoadingImages, setIsLoadingImages] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [typeOpen, setTypeOpen] = useState(false);
   const initialImageIdsRef = useRef<string[]>([]);
+  const hasManualEdits = useRef({ title: false, productType: false, description: false });
 
   useEffect(() => {
     if (editingProduct) {
@@ -66,6 +74,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       setDescription(editingProduct.description);
       setDimensions((editingProduct as any).dimensions || '');
       loadExistingImages(editingProduct.id, editingProduct.image_url);
+      hasManualEdits.current = { title: true, productType: true, description: true };
     }
   }, [editingProduct]);
 
@@ -116,6 +125,28 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     }
   }
 
+  const analyzeImage = useCallback(async (imageDataUrl: string) => {
+    setIsAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-product-image', {
+        body: { imageUrl: imageDataUrl },
+      });
+      if (error) throw error;
+      if (data) {
+        if (data.title && !hasManualEdits.current.title) setTitle(data.title);
+        if (data.productType && !hasManualEdits.current.productType) {
+          const match = PRODUCT_TYPES.find(t => t.toLowerCase() === data.productType.toLowerCase());
+          if (match) setProductType(match);
+        }
+        if (data.description && !hasManualEdits.current.description) setDescription(data.description);
+      }
+    } catch (err) {
+      console.error('AI analysis failed:', err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, []);
+
   const addFiles = useCallback((files: File[]) => {
     const validFiles = files.filter(f => {
       if (!f.type.startsWith('image/')) {
@@ -136,12 +167,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       toast.error(`Max ${MAX_IMAGES} images allowed`);
     }
 
-    toAdd.forEach(file => {
+    const isFirstImage = images.length === 0 && toAdd.length > 0;
+
+    toAdd.forEach((file, fileIdx) => {
       const reader = new FileReader();
       reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
         const newItem: ImageItem = {
           id: `${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          src: e.target?.result as string,
+          src: dataUrl,
           file,
           isPrimary: false,
         };
@@ -152,10 +186,15 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           }
           return updated;
         });
+
+        // Trigger AI analysis on the first image uploaded
+        if (isFirstImage && fileIdx === 0) {
+          analyzeImage(dataUrl);
+        }
       };
       reader.readAsDataURL(file);
     });
-  }, [images.length]);
+  }, [images.length, analyzeImage]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -179,6 +218,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       }
       return updated;
     });
+  }, []);
+
+  const handleReorder = useCallback((reordered: ImageItem[]) => {
+    setImages(reordered);
   }, []);
 
   async function uploadNewImage(img: ImageItem): Promise<{ signedUrl: string; storagePath: string }> {
@@ -215,17 +258,21 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     }
 
     setIsUploading(true);
+    const filesToUpload = images.filter(i => i.file);
+    setUploadProgress({ current: 0, total: filesToUpload.length });
+
     try {
       const primaryImage = images.find(i => i.isPrimary) || images[0];
       let primarySignedUrl = '';
-      const uploadedImages: { signedUrl: string; storagePath: string; position: number }[] = [];
+      const uploadedImages: { signedUrl: string; storagePath: string; position: number; imgId: string }[] = [];
 
       for (let i = 0; i < images.length; i++) {
         const img = images[i];
         if (!img.file) continue;
+        setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
         const { signedUrl, storagePath } = await uploadNewImage(img);
         const position = img.isPrimary ? 0 : i + 1;
-        uploadedImages.push({ signedUrl, storagePath, position });
+        uploadedImages.push({ signedUrl, storagePath, position, imgId: img.id });
         if (img.id === primaryImage.id) primarySignedUrl = signedUrl;
       }
 
@@ -262,6 +309,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       toast.error(err instanceof Error ? err.message : 'Failed to add product');
     } finally {
       setIsUploading(false);
+      setUploadProgress({ current: 0, total: 0 });
     }
   };
 
@@ -296,8 +344,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
 
       const newImages = images.filter(i => i.file);
       const uploadedNew: { imageItem: ImageItem; signedUrl: string; storagePath: string }[] = [];
+      setUploadProgress({ current: 0, total: newImages.length });
 
       for (const img of newImages) {
+        setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
         const { signedUrl, storagePath } = await uploadNewImage(img);
         uploadedNew.push({ imageItem: img, signedUrl, storagePath });
       }
@@ -360,6 +410,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       toast.error(err instanceof Error ? err.message : 'Failed to update product');
     } finally {
       setIsUploading(false);
+      setUploadProgress({ current: 0, total: 0 });
     }
   };
 
@@ -371,8 +422,14 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       {/* ── Image Section ── */}
       <div className="space-y-2.5">
         {images.length > 0 && (
-          <div className="flex items-center justify-end">
-            <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5">
+          <div className="flex items-center justify-between">
+            {isAnalyzing && (
+              <div className="flex items-center gap-1.5 text-[11px] text-primary">
+                <Sparkles className="w-3 h-3 animate-pulse" />
+                AI analyzing…
+              </div>
+            )}
+            <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5 ml-auto">
               {images.length}/{MAX_IMAGES}
             </Badge>
           </div>
@@ -437,6 +494,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               onSetPrimary={handleSetPrimary}
               onRemove={handleRemove}
               onAddFiles={addFiles}
+              onReorder={handleReorder}
               maxImages={MAX_IMAGES}
               disabled={isUploading}
             />
@@ -448,7 +506,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           <div className="flex items-center gap-1.5 px-1">
             <Info className="w-3 h-3 text-muted-foreground shrink-0" />
             <p className="text-[11px] text-muted-foreground">
-              The <span className="text-primary font-medium">cover</span> image is used as the primary AI reference
+              The <span className="text-primary font-medium">cover</span> image is used as the primary AI reference · drag to reorder
             </p>
           </div>
         )}
@@ -460,44 +518,89 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           <Label htmlFor="product-title" className="text-xs font-medium">
             Product Name <span className="text-destructive">*</span>
           </Label>
-          <Input
-            id="product-title"
-            placeholder="e.g. Black Yoga Leggings"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={200}
-          />
+          {isAnalyzing && !hasManualEdits.current.title ? (
+            <Skeleton className="h-9 w-full rounded-md" />
+          ) : (
+            <Input
+              id="product-title"
+              placeholder="e.g. Black Yoga Leggings"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                hasManualEdits.current.title = true;
+              }}
+              maxLength={200}
+            />
+          )}
         </div>
 
         <div className="space-y-1">
           <Label htmlFor="product-type" className="text-xs font-medium">
             Product Type
           </Label>
-          <Select value={productType} onValueChange={setProductType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select type…" />
-            </SelectTrigger>
-            <SelectContent>
-              {PRODUCT_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isAnalyzing && !hasManualEdits.current.productType ? (
+            <Skeleton className="h-9 w-full rounded-md" />
+          ) : (
+            <Popover open={typeOpen} onOpenChange={setTypeOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={typeOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  {productType || 'Select type…'}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search types…" />
+                  <CommandList>
+                    <CommandEmpty>No type found.</CommandEmpty>
+                    <CommandGroup>
+                      {PRODUCT_TYPES.map((t) => (
+                        <CommandItem
+                          key={t}
+                          value={t}
+                          onSelect={(val) => {
+                            setProductType(val === productType ? '' : t);
+                            hasManualEdits.current.productType = true;
+                            setTypeOpen(false);
+                          }}
+                        >
+                          <Check className={cn('mr-2 h-4 w-4', productType === t ? 'opacity-100' : 'opacity-0')} />
+                          {t}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
 
         <div className="space-y-1">
           <Label htmlFor="product-desc" className="text-xs font-medium">
             Description
           </Label>
-          <Textarea
-            id="product-desc"
-            placeholder="Brief description…"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={500}
-            rows={2}
-            className="resize-none"
-          />
+          {isAnalyzing && !hasManualEdits.current.description ? (
+            <Skeleton className="h-[52px] w-full rounded-md" />
+          ) : (
+            <Textarea
+              id="product-desc"
+              placeholder="Brief description…"
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                hasManualEdits.current.description = true;
+              }}
+              maxLength={500}
+              rows={2}
+              className="resize-none"
+            />
+          )}
         </div>
 
         <div className="space-y-1">
@@ -515,6 +618,16 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         </div>
       </div>
 
+      {/* ── Upload Progress ── */}
+      {isUploading && uploadProgress.total > 0 && (
+        <div className="space-y-1.5">
+          <Progress value={(uploadProgress.current / uploadProgress.total) * 100} className="h-1.5" />
+          <p className="text-[11px] text-muted-foreground text-center">
+            Uploading {uploadProgress.current}/{uploadProgress.total} images…
+          </p>
+        </div>
+      )}
+
       {/* ── Footer Actions ── */}
       <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
         <Button variant="ghost" size="sm" onClick={onClose} disabled={isUploading}>
@@ -522,14 +635,16 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={isUploading || isLoadingImages || !title.trim() || images.length === 0}
+          disabled={isUploading || isLoadingImages || isAnalyzing || !title.trim() || images.length === 0}
           size="sm"
           className="min-w-[110px] rounded-lg"
         >
           {isUploading ? (
             <>
               <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-              {isEditing ? 'Saving…' : 'Uploading…'}
+              {uploadProgress.total > 0
+                ? `Uploading ${uploadProgress.current}/${uploadProgress.total}…`
+                : isEditing ? 'Saving…' : 'Uploading…'}
             </>
           ) : (
             isEditing ? 'Save Changes' : 'Add Product'
