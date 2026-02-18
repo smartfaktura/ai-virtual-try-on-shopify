@@ -1,31 +1,23 @@
 
 
-## Fix First-Run Dashboard Issues
+## Dashboard First-Run Improvements
 
-### Problem Summary
-The first-run dashboard (new user state) has four issues:
-1. **Images not loading** in "What You Can Create" gallery, onboarding checklist thumbnails, and team avatars -- all reference files in the `landing-assets` storage bucket that may not exist or may be returning 404s
-2. **"Two Ways to Create" section** should be removed -- user says it's not needed
-3. **"Explore Workflows" layout is broken** -- the `WorkflowCard` component is designed as a large horizontal row card (with side-by-side image + text), but the dashboard renders them in a `grid-cols-3` grid, causing severe content truncation and overflow
-4. **React warning** about `FloatingEl` not using `forwardRef` in `WorkflowAnimatedThumbnail`
+### 1. Add "Two Ways to Create" Section (after AI Studio Team)
 
-### Plan
+A new two-card section with **Freestyle Studio** and **Workflows** as the two paths. Each card will have an icon, title, short description, and a CTA button. This replaces the old Product Photos / Virtual Try-On split with the correct Freestyle / Workflows split.
 
-**1. Remove "Two Ways to Create" section from first-run dashboard**
-- In `src/pages/Dashboard.tsx`, delete the `GenerationModeCards` section block (the "Two Ways to Create" heading and `<GenerationModeCards />` component) from the first-run (isNewUser) return block.
+- Placed directly after `<DashboardTeamCarousel />`
+- Two side-by-side cards on desktop, stacked on mobile
 
-**2. Fix "Explore Workflows" layout**
-- The current grid (`grid-cols-2 lg:grid-cols-3`) cramps the large `WorkflowCard` components which are designed for full-width display.
-- Change the layout to a **single-column stack** (`grid-cols-1`) so each `WorkflowCard` gets full width and its internal `flex-row` layout works properly. Optionally use `lg:grid-cols-2` for desktop.
-- Alternatively, pass a `reversed` prop to alternate card layouts.
+### 2. Redesign "Explore Workflows" as Compact Cards
 
-**3. Fix broken/missing images**
-- The `RecentCreationsGallery` placeholder images, `OnboardingChecklist` thumbnails, and `DashboardTeamCarousel` avatars all use `getLandingAssetUrl()` paths. If these files don't exist in the storage bucket, they'll show as blank grey cards.
-- Add fallback handling: for the gallery and checklist, provide local fallback images from `public/placeholder.svg` when the storage URLs fail to load.
-- For team avatars, add an `onError` handler on `<img>` elements to show initials or a placeholder.
+The current `WorkflowCard` is a large horizontal card designed for the dedicated Workflows page -- too big for the dashboard. Instead of reusing it, the dashboard will render **compact workflow cards** inline with:
 
-**4. Fix WorkflowAnimatedThumbnail forwardRef warning**
-- Wrap the `FloatingEl` function component with `React.forwardRef` to eliminate the React console warning.
+- A **1:1 square preview image** (using the workflow's `preview_image_url` or animated thumbnail)
+- **Workflow name** as a bold title
+- **One-line description** (truncated)
+- A compact "Create Set" button
+- Grid: `grid-cols-2 md:grid-cols-3 lg:grid-cols-4` so they fit neatly in a row
 
 ### Technical Details
 
@@ -33,9 +25,6 @@ The first-run dashboard (new user state) has four issues:
 
 | File | Change |
 |------|--------|
-| `src/pages/Dashboard.tsx` | Remove "Two Ways to Create" section; change Explore Workflows grid from `grid-cols-2 md:grid-cols-2 lg:grid-cols-3` to `grid-cols-1 lg:grid-cols-2` |
-| `src/components/app/WorkflowAnimatedThumbnail.tsx` | Wrap `FloatingEl` with `React.forwardRef` |
-| `src/components/app/RecentCreationsGallery.tsx` | Add `onError` fallback to `ShimmerImage` for placeholder images |
-| `src/components/app/OnboardingChecklist.tsx` | Add `onError` fallback to thumbnail `<img>` elements |
-| `src/components/app/DashboardTeamCarousel.tsx` | Add `onError` fallback to avatar `<img>` elements |
+| `src/pages/Dashboard.tsx` | Add inline "Two Ways to Create" section (Freestyle + Workflows cards) after `DashboardTeamCarousel`. Replace the `WorkflowCard` usage with compact inline cards featuring 1:1 thumbnails, short text, and small CTAs. |
 
+No new component files needed -- both sections will be rendered inline in the first-run dashboard block for simplicity.
