@@ -226,8 +226,8 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
             </div>
           )}
 
-          <div className="flex justify-end pt-5 mt-2 border-t border-border/40">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <div className="flex justify-end pt-6">
+            <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
           </div>
         </>
       ) : (
@@ -284,8 +284,8 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-5 mt-2 border-t border-border/40">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <div className="flex justify-end gap-3 pt-6">
+            <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
             <Button onClick={handleImportAll} disabled={isImporting || validCount === 0}>
               {isImporting ? (
                 <>

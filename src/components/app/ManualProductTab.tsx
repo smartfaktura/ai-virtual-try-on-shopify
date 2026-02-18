@@ -629,15 +629,14 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       )}
 
       {/* ── Footer Actions ── */}
-      <div className="flex justify-end gap-2 pt-5 mt-2 border-t border-border/40">
-        <Button variant="ghost" size="sm" onClick={onClose} disabled={isUploading}>
+      <div className="flex justify-end gap-3 pt-6">
+        <Button variant="ghost" onClick={onClose} disabled={isUploading} className="rounded-xl">
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={isUploading || isLoadingImages || isAnalyzing || !title.trim() || images.length === 0}
-          size="sm"
-          className="min-w-[110px] rounded-lg"
+          className="min-w-[120px] rounded-xl"
         >
           {isUploading ? (
             <>

@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Globe, FileSpreadsheet, Smartphone } from 'lucide-react';
 import { ManualProductTab } from './ManualProductTab';
@@ -30,17 +30,22 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[640px] max-h-[85vh] flex flex-col overflow-hidden rounded-2xl p-0">
-        <div className="px-8 pt-8 pb-3 shrink-0">
-          <DialogHeader>
+      <DialogContent className="sm:max-w-[680px] max-h-[85vh] flex flex-col overflow-hidden rounded-2xl p-0 gap-0">
+        <div className="px-10 pt-10 pb-4 shrink-0">
+          <DialogHeader className="space-y-1.5">
             <DialogTitle className="text-xl font-semibold tracking-tight">
               {editingProduct ? 'Edit Product' : 'Add Product'}
             </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {editingProduct
+                ? 'Update your product details and images.'
+                : 'Upload images, import from a URL, or bulk-add via CSV.'}
+            </DialogDescription>
           </DialogHeader>
         </div>
 
         {editingProduct ? (
-          <div className="px-8 pb-8 overflow-y-auto flex-1 min-h-0">
+          <div className="px-10 pb-10 overflow-y-auto flex-1 min-h-0">
             <ManualProductTab
               onProductAdded={onProductAdded}
               onClose={handleClose}
@@ -49,40 +54,40 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
           </div>
         ) : (
           <Tabs defaultValue="manual" className="w-full flex flex-col flex-1 min-h-0">
-            <div className="px-8 shrink-0">
-              <TabsList className="w-full bg-transparent p-0 h-auto gap-2 border-b border-border rounded-none justify-start">
+            <div className="px-10 shrink-0">
+              <div className="bg-muted/60 rounded-xl p-1 inline-flex gap-1">
                 <TabsTrigger
                   value="manual"
-                  className="rounded-full px-3.5 py-1.5 text-xs font-medium data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+                  className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
                 >
                   <Upload className="w-3.5 h-3.5" />
                   Upload
                 </TabsTrigger>
                 <TabsTrigger
                   value="store"
-                  className="rounded-full px-3.5 py-1.5 text-xs font-medium data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+                  className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
                 >
                   <Globe className="w-3.5 h-3.5" />
                   Product URL
                 </TabsTrigger>
                 <TabsTrigger
                   value="csv"
-                  className="rounded-full px-3.5 py-1.5 text-xs font-medium data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+                  className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
                   CSV
                 </TabsTrigger>
                 <TabsTrigger
                   value="mobile"
-                  className="rounded-full px-3.5 py-1.5 text-xs font-medium data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+                  className="rounded-lg px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
                 >
                   <Smartphone className="w-3.5 h-3.5" />
                   Mobile
                 </TabsTrigger>
-              </TabsList>
+              </div>
             </div>
 
-            <div className="px-8 pb-8 pt-5 overflow-y-auto flex-1 min-h-0">
+            <div className="px-10 pb-10 pt-6 overflow-y-auto flex-1 min-h-0">
               <TabsContent value="manual" className="mt-0">
                 <ManualProductTab onProductAdded={onProductAdded} onClose={handleClose} />
               </TabsContent>
