@@ -15,25 +15,30 @@ interface ProductData {
   dimensions?: string | null;
 }
 
-/** Try the Shopify JSON API for URLs that look like /products/{handle} */
-async function tryShopifyJson(parsedUrl: URL): Promise<ProductData | null> {
-  const match = parsedUrl.pathname.match(/\/products\/([^/?#]+)/);
-  if (!match) return null;
+const browserHeaders = {
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Sec-Fetch-Dest": "document",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Site": "none",
+  "Sec-Fetch-User": "?1",
+  "Cache-Control": "no-cache",
+  Pragma: "no-cache",
+};
 
-  const handle = match[1];
-  const jsonUrl = `${parsedUrl.origin}/products/${handle}.json`;
-  console.log(`Trying Shopify JSON API: ${jsonUrl}`);
-
+/** Try a single Shopify JSON path */
+async function fetchShopifyJson(origin: string, path: string): Promise<ProductData | null> {
+  const url = `${origin}${path}`;
+  console.log(`Trying Shopify JSON: ${url}`);
   try {
-    const res = await fetch(jsonUrl, {
+    const res = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        ...browserHeaders,
         Accept: "application/json",
       },
     });
-
     if (!res.ok) return null;
-
     const json = await res.json();
     const product = json.product;
     if (!product?.title) return null;
@@ -42,7 +47,6 @@ async function tryShopifyJson(parsedUrl: URL): Promise<ProductData | null> {
       .slice(0, 6)
       .map((img: any) => img.src?.replace(/\?.*$/, "") || "")
       .filter(Boolean);
-
     if (imageUrls.length === 0) return null;
 
     const bodyText = (product.body_html || "")
@@ -59,28 +63,76 @@ async function tryShopifyJson(parsedUrl: URL): Promise<ProductData | null> {
       dimensions: null,
     };
   } catch (err) {
-    console.log("Shopify JSON fallback failed:", err);
+    console.log(`Shopify JSON failed for ${path}:`, err);
     return null;
   }
 }
 
-/** Scrape HTML + use AI to extract product data */
-async function extractFromHtml(url: string, parsedUrl: URL): Promise<ProductData> {
-  console.log(`Fetching product page: ${url}`);
-  const pageResponse = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      "Accept-Language": "en-US,en;q=0.9",
-    },
-    redirect: "follow",
-  });
+/** Try the Shopify JSON API with multiple path variations */
+async function tryShopifyJson(parsedUrl: URL): Promise<ProductData | null> {
+  const match = parsedUrl.pathname.match(/\/products\/([^/?#]+)/);
+  if (!match) return null;
 
-  if (!pageResponse.ok) {
-    throw new Error(`Could not access the product page (HTTP ${pageResponse.status}). The site may be blocking automated requests.`);
+  const handle = match[1];
+
+  // Extract locale prefix if present (e.g. /en-lt/products/... -> /en-lt)
+  const localeMatch = parsedUrl.pathname.match(/^(\/[a-z]{2}(?:-[a-z]{2,4})?)\/products\//i);
+
+  const pathsToTry: string[] = [];
+
+  // Try locale-prefixed path first if URL has locale
+  if (localeMatch) {
+    pathsToTry.push(`${localeMatch[1]}/products/${handle}.json`);
+  }
+  // Always try without locale
+  pathsToTry.push(`/products/${handle}.json`);
+
+  for (const path of pathsToTry) {
+    const result = await fetchShopifyJson(parsedUrl.origin, path);
+    if (result) return result;
   }
 
-  const html = await pageResponse.text();
+  return null;
+}
+
+/** Scrape HTML + use AI to extract product data */
+async function extractFromHtml(url: string, parsedUrl: URL): Promise<ProductData> {
+  // Try the original URL first, then without locale prefix as fallback
+  const urlsToTry = [url];
+  const localeMatch = parsedUrl.pathname.match(/^\/[a-z]{2}(?:-[a-z]{2,4})?(\/.+)/i);
+  if (localeMatch) {
+    urlsToTry.push(`${parsedUrl.origin}${localeMatch[1]}`);
+  }
+
+  let html = "";
+  let lastStatus = 0;
+
+  for (const tryUrl of urlsToTry) {
+    console.log(`Fetching product page: ${tryUrl}`);
+    try {
+      const pageResponse = await fetch(tryUrl, {
+        headers: {
+          ...browserHeaders,
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        },
+        redirect: "follow",
+      });
+      lastStatus = pageResponse.status;
+      if (pageResponse.ok) {
+        html = await pageResponse.text();
+        break;
+      }
+    } catch (err) {
+      console.log(`Fetch failed for ${tryUrl}:`, err);
+    }
+  }
+
+  if (!html) {
+    throw new Error(
+      `Could not access the product page (HTTP ${lastStatus}). The site may be blocking automated requests. Try removing any country/language prefix from the URL, or use manual upload instead.`
+    );
+  }
+
   const truncatedHtml = html.substring(0, 50000);
 
   const aiApiKey = Deno.env.get("LOVABLE_API_KEY");
@@ -195,7 +247,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Try Shopify JSON API first, fall back to HTML scraping
+    // Try Shopify JSON API first (with locale + without), fall back to HTML scraping
     let productData = await tryShopifyJson(parsedUrl);
     if (!productData) {
       productData = await extractFromHtml(url, parsedUrl);
@@ -224,7 +276,7 @@ Deno.serve(async (req) => {
       try {
         const imageResponse = await fetch(imgUrl, {
           headers: {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+            ...browserHeaders,
             Accept: "image/*",
             Referer: url,
           },
