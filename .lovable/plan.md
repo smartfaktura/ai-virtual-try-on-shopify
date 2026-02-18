@@ -1,69 +1,33 @@
 
-## Premium Empty States with CTAs -- Apple-Inspired Redesign
 
-### Problem
-The current empty states feel bare -- just a small avatar, a name, and a single line of text. No visual richness, no icon, and the Library page has no actionable CTAs to guide the user forward.
+## Refined Empty State -- Cohesive, Minimal Layout
 
-### New Design
+### Issues with Current Design
+- The large icon box (`w-20 h-20 rounded-3xl bg-muted/50`) feels like a separate UI element floating above the avatar -- two competing focal points
+- Too many vertically stacked layers: icon box, avatar, name, quote, buttons -- feels like a list, not a composition
+- The icon container background color (`bg-muted/50`) draws too much attention and looks "boxy"
 
-A refined, spacious empty state with:
-- A large, subtle icon in a soft rounded container (the visual anchor)
-- Team member avatar small and inline below the icon (adds personality without dominating)
-- A single clean message
-- **Two CTA buttons** (Library) or **one CTA** (Products) styled as pill-shaped outline buttons for a premium feel
+### New Approach
+Merge the icon and avatar into one cohesive visual group. Remove the icon container background entirely and place the icon inline above the avatar with no box -- just a subtle, large icon as a watermark/backdrop effect.
 
-```text
-      [ large icon container ]
-      
-         (small avatar)
-          Team member name
+**Layout (top to bottom):**
+1. Icon rendered large (w-10 h-10) in muted color with no background container -- just the bare icon, lighter and more decorative
+2. Quote text as the single message
+3. CTA buttons row
 
-    "Contextual message here."
+Remove the avatar and name entirely. The team member concept added clutter without clear value in this context. The icon alone provides the visual anchor, and the quote provides the personality.
 
-   [ CTA Button 1 ]  [ CTA Button 2 ]
-```
+### Changes
 
-### Specific Changes
+**`src/components/app/EmptyStateCard.tsx`** -- Simplify teamMember layout:
+- Remove the avatar image and name display when `teamMember` is present
+- Remove the `bg-muted/50 rounded-3xl` container around the icon -- render icon bare with `text-muted-foreground/40` for a soft watermark feel, sized at `w-12 h-12`
+- Tighten spacing to `space-y-3` for a more cohesive grouping
+- Keep `py-20 sm:py-28` padding and CTA buttons
 
-**File: `src/components/app/EmptyStateCard.tsx`**
-- Redesign the `teamMember` mode layout:
-  - Add a large icon container at top (w-20 h-20 rounded-3xl bg-muted/50) with a relevant icon passed via the existing `icon` prop
-  - Below it, show the avatar smaller (w-10 h-10) with the name
-  - Quote text stays as `text-[15px]` muted
-  - Keep generous padding `py-20 sm:py-28`
-- Add support for multiple actions: new `actions` prop as an array of `{ content, onAction, variant? }` for rendering multiple CTA buttons side by side
-- When `actions` array is provided, render them in a flex row with gap; support `variant: 'default' | 'outline'`
+**`src/pages/Jobs.tsx`** -- Pass icon sized at `w-12 h-12` (the component will handle styling)
 
-**File: `src/pages/Products.tsx`**
-- Pass a `Package` icon to the empty state
-- Keep single "Add Product" CTA button
+**`src/pages/Products.tsx`** -- Same icon size adjustment
 
-**File: `src/pages/Jobs.tsx` (Library)**
-- Pass a `Image` icon (from lucide) to the empty state
-- Add two CTA buttons:
-  - "Explore Workflows" (outline variant) -- navigates to `/app/workflows`
-  - "Freestyle Generation" (default variant) -- navigates to `/app/freestyle`
-- Use `useNavigate` from react-router-dom for navigation
-
-### Technical Detail
-
-**EmptyStateCard props update:**
-```typescript
-actions?: Array<{
-  content: string;
-  onAction: () => void;
-  variant?: 'default' | 'outline';
-}>;
-```
-
-When `teamMember` is provided AND `icon` is provided, render:
-1. Icon container (w-20 h-20 rounded-3xl bg-muted/50 with the icon at w-9 h-9)
-2. Small avatar (w-10 h-10) + name text
-3. Quote text
-4. Actions row (flex gap-3, buttons with rounded-full styling)
-
-The existing single `action` prop continues to work as before for backwards compatibility. The new `actions` array takes precedence when provided.
-
-**Library page:** Import `useNavigate`, add two navigation CTAs. Remove inline empty state markup and use EmptyStateCard component instead.
-
-**Products page:** Add Package icon to the EmptyStateCard call.
+### Result
+Goes from 5 visual layers to 3 (icon, message, buttons), feeling unified and Apple-clean rather than fragmented.
