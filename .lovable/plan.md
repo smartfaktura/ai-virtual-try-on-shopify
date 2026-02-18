@@ -1,21 +1,48 @@
 
 
-## Fix Zoomed-In Source Thumbnails in Recent Jobs Table
+## Enable Google Sign-In
 
-### Problem
+### Step 1: Configure Google OAuth
+Use Lovable Cloud's built-in social auth configuration tool to set up Google OAuth and generate the required module at `src/integrations/lovable/`.
 
-The source image thumbnails in the Recent Jobs table appear zoomed in and cropped because:
-1. Server-side image optimization forces a `width: 80` resize, which can distort non-square images
-2. CSS `object-cover` crops the image to fill the square container, cutting off parts of the product
+### Step 2: Add Google Sign-In Button to Auth Page
 
-### Fix
+**File: `src/pages/Auth.tsx`**
 
-**File: `src/pages/Dashboard.tsx`**
+- Import `lovable` from `@/integrations/lovable/index`
+- Add a `handleGoogleSignIn` function that calls `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })`
+- Add a "Continue with Google" button between the heading and the email/password form, with a visual divider ("or") separating it from the form
+- The button will use Google's brand colors (white background, dark text, Google "G" icon via inline SVG)
+- Show the Google button in both signup and login modes
 
-| Line | Change | Reason |
-|------|--------|--------|
-| 335 | Remove `width: 80` from `getOptimizedUrl`, keep only `quality: 50` | Preserve original aspect ratio during optimization |
-| 344 | Change `object-cover` to `object-contain` | Show the full product image without cropping |
+### UI Layout (after changes)
 
-This matches the platform's optimization guidelines: tiny thumbnails should use quality-only optimization to prevent distortion, and `object-contain` ensures the full product is visible within the square container.
+```text
++---------------------------+
+|  VOVV.AI logo             |
+|  Create your account      |
+|  Start with 5 free...     |
+|                           |
+|  [G  Continue with Google]|
+|                           |
+|  ──── or ────             |
+|                           |
+|  Display name             |
+|  Email                    |
+|  Password                 |
+|  [Create Account]         |
+|                           |
+|  Already have an account? |
++---------------------------+
+```
+
+### Technical Details
+
+| What | Detail |
+|------|--------|
+| OAuth provider | Google (managed by Lovable Cloud, no API key needed) |
+| Auth function | `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })` |
+| Redirect handling | Existing `onAuthStateChange` listener in `AuthContext` will pick up the session automatically |
+| Files changed | `src/pages/Auth.tsx` (add button + handler) |
+| New dependency | `@lovable.dev/cloud-auth-js` (auto-installed by configure tool) |
 
