@@ -179,6 +179,7 @@ export function RecentCreationsGallery() {
                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                    loading="lazy"
                    aspectRatio="4/5"
+                   onError={(e: any) => { e.currentTarget.src = '/placeholder.svg'; }}
                  />
                 {/* Always-visible label bar */}
                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 via-black/20 to-transparent">

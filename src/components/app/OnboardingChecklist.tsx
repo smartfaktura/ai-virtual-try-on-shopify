@@ -90,7 +90,7 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
 
                 {/* Preview thumbnail */}
                 <div className="w-12 h-12 rounded-lg overflow-hidden border border-border flex-shrink-0 hidden sm:block">
-                  <img src={step.preview} alt={step.title} className="w-full h-full object-cover" loading="lazy" />
+                  <img src={step.preview} alt={step.title} className="w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
                 </div>
 
                 <div className="flex-1 min-w-0">
