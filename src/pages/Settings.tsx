@@ -69,7 +69,7 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 export default function Settings() {
   const { user } = useAuth();
-  const { balance, plan, planConfig, addCredits, subscriptionStatus } = useCredits();
+  const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal, checkSubscription } = useCredits();
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
@@ -151,23 +151,23 @@ export default function Settings() {
   };
 
   const handleDialogConfirm = () => {
-    if (dialogMode === 'upgrade' && selectedPlan) {
-      toast.success(`Upgraded to ${selectedPlan.name}!`);
-    } else if (dialogMode === 'downgrade' && selectedPlan) {
-      toast.success(`Plan will change to ${selectedPlan.name} at end of billing period.`);
-    } else if (dialogMode === 'reactivate') {
-      toast.success('Subscription reactivated!');
+    if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
+      const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+      if (priceId) {
+        startCheckout(priceId, 'subscription');
+      }
     } else if (dialogMode === 'cancel') {
-      toast.success('Subscription will be cancelled at end of billing period.');
+      openCustomerPortal();
+    } else if (dialogMode === 'reactivate') {
+      openCustomerPortal();
     }
     setDialogOpen(false);
   };
 
   const handleCreditPurchase = (packId: string) => {
     const pack = creditPacks.find(p => p.packId === packId);
-    if (pack) {
-      addCredits(pack.credits);
-      toast.success(`Purchased ${pack.credits} credits for $${pack.price}!`);
+    if (pack?.stripePriceId) {
+      startCheckout(pack.stripePriceId, 'payment');
     }
   };
 
@@ -333,7 +333,7 @@ export default function Settings() {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
-                    {plan !== 'free' && ' • Renews Feb 15, 2026'}
+                    {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
                   </p>
                 </div>
               </div>

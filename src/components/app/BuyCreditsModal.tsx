@@ -13,7 +13,7 @@ import type { PricingPlan } from '@/types';
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
 
 export function BuyCreditsModal() {
-  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, addCredits, subscriptionStatus } = useCredits();
+  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, startCheckout } = useCredits();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'topup' | 'upgrade'>(() => plan === 'free' ? 'upgrade' : 'topup');
@@ -25,9 +25,9 @@ export function BuyCreditsModal() {
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
 
-  const handlePurchase = (credits: number) => {
-    addCredits(credits);
-    toast.success(`Added ${credits} credits to your account!`);
+  const handlePurchase = (stripePriceId: string | undefined) => {
+    if (!stripePriceId) return;
+    startCheckout(stripePriceId, 'payment');
     closeBuyModal();
   };
 
@@ -52,12 +52,11 @@ export function BuyCreditsModal() {
   };
 
   const handleDialogConfirm = () => {
-    if (dialogMode === 'upgrade' && selectedPlan) {
-      toast.success(`Upgraded to ${selectedPlan.name}!`);
-    } else if (dialogMode === 'downgrade' && selectedPlan) {
-      toast.success(`Plan will change to ${selectedPlan.name} at end of billing period.`);
-    } else if (dialogMode === 'reactivate') {
-      toast.success('Subscription reactivated!');
+    if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
+      const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+      if (priceId) {
+        startCheckout(priceId, 'subscription');
+      }
     }
     setDialogOpen(false);
     closeBuyModal();
@@ -162,7 +161,7 @@ export function BuyCreditsModal() {
                             <Button
                               variant={pack.popular ? 'default' : 'outline'}
                               className="w-full min-h-[44px] rounded-xl text-sm font-medium"
-                              onClick={() => handlePurchase(pack.credits)}
+                              onClick={() => handlePurchase(pack.stripePriceId)}
                             >
                               Buy {pack.credits.toLocaleString()} credits
                             </Button>

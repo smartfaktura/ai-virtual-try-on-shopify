@@ -6,7 +6,6 @@ import type { ImageQuality, GenerationMode } from '@/types';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
-
 export interface PlanConfig {
   name: string;
   monthlyCredits: number;
@@ -36,8 +35,9 @@ interface CreditContextValue {
   addCredits: (amount: number) => void;
   refreshBalance: () => Promise<void>;
   setBalanceFromServer: (newBalance: number) => void;
-  cancelSubscription: () => void;
-  reactivateSubscription: () => void;
+  checkSubscription: () => Promise<void>;
+  openCustomerPortal: () => Promise<void>;
+  startCheckout: (priceId: string, mode: 'subscription' | 'payment') => Promise<void>;
   
   buyModalOpen: boolean;
   openBuyModal: () => void;
@@ -60,8 +60,9 @@ const defaultValue: CreditContextValue = {
   addCredits: () => {},
   refreshBalance: async () => {},
   setBalanceFromServer: () => {},
-  cancelSubscription: () => {},
-  reactivateSubscription: () => {},
+  checkSubscription: async () => {},
+  openCustomerPortal: async () => {},
+  startCheckout: async () => {},
   buyModalOpen: false,
   openBuyModal: () => {},
   closeBuyModal: () => {},
@@ -78,6 +79,8 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const { user } = useAuth();
   const [balance, setBalance] = useState(0);
   const [plan, setPlan] = useState('free');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>('none');
+  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
 
@@ -85,26 +88,106 @@ export function CreditProvider({ children }: CreditProviderProps) {
     if (!user) {
       setBalance(0);
       setPlan('free');
+      setSubscriptionStatus('none');
+      setCurrentPeriodEnd(null);
       setIsLoading(false);
       return;
     }
-    // Silent refresh — no setIsLoading(true) to avoid re-render flash
     const { data, error } = await supabase
       .from('profiles')
-      .select('credits_balance, plan')
+      .select('credits_balance, plan, subscription_status, current_period_end')
       .eq('user_id', user.id)
       .single();
     
     if (!error && data) {
       setBalance(data.credits_balance);
       setPlan(data.plan || 'free');
+      setSubscriptionStatus((data.subscription_status as SubscriptionStatus) || 'none');
+      setCurrentPeriodEnd(data.current_period_end ? new Date(data.current_period_end) : null);
     }
+    setIsLoading(false);
   }, [user]);
   
-  // Fetch real credits and plan from profiles table
+  const checkSubscription = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      if (error) {
+        console.error('check-subscription error:', error);
+        return;
+      }
+      if (data) {
+        if (data.plan) setPlan(data.plan);
+        if (data.subscription_status !== undefined) setSubscriptionStatus(data.subscription_status as SubscriptionStatus);
+        if (data.credits_balance !== null && data.credits_balance !== undefined) setBalance(data.credits_balance);
+        if (data.current_period_end) setCurrentPeriodEnd(new Date(data.current_period_end));
+        else setCurrentPeriodEnd(null);
+      }
+    } catch (err) {
+      console.error('Failed to check subscription:', err);
+    }
+  }, [user]);
+
+  const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment') => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId, mode },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      toast.error('Failed to start checkout. Please try again.');
+    }
+  }, []);
+
+  const openCustomerPortal = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (err) {
+      console.error('Portal error:', err);
+      toast.error('Failed to open billing portal. Please try again.');
+    }
+  }, []);
+
+  // Fetch credits on mount
   useEffect(() => {
     fetchCredits();
   }, [fetchCredits]);
+  
+  // Check subscription on login and periodically
+  useEffect(() => {
+    if (!user) return;
+    checkSubscription();
+    const interval = setInterval(checkSubscription, 60000); // every minute
+    return () => clearInterval(interval);
+  }, [user, checkSubscription]);
+
+  // Handle payment return query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    if (payment === 'success') {
+      toast.success('Payment successful! Your credits are being updated…');
+      // Delay to give Stripe time to process
+      setTimeout(() => checkSubscription(), 2000);
+      // Clean URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('payment');
+      window.history.replaceState({}, '', url.toString());
+    } else if (payment === 'cancelled') {
+      toast.info('Payment cancelled.');
+      const url = new URL(window.location.href);
+      url.searchParams.delete('payment');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [checkSubscription]);
   
   const planConfig = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
   const lowThreshold = planConfig.monthlyCredits === Infinity ? 0 : Math.round(planConfig.monthlyCredits * 0.2);
@@ -127,20 +210,6 @@ export function CreditProvider({ children }: CreditProviderProps) {
   
   const openBuyModal = useCallback(() => setBuyModalOpen(true), []);
   const closeBuyModal = useCallback(() => setBuyModalOpen(false), []);
-
-  // Placeholder subscription state (will be fetched from DB in Phase 2)
-  const subscriptionStatus: SubscriptionStatus = 'none';
-  const currentPeriodEnd: Date | null = null;
-
-  const cancelSubscription = useCallback(() => {
-    // Placeholder — will call edge function in Phase 2
-    toast('Subscription cancelled (placeholder)');
-  }, []);
-
-  const reactivateSubscription = useCallback(() => {
-    // Placeholder — will call edge function in Phase 2
-    toast('Subscription reactivated (placeholder)');
-  }, []);
   
   const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string }) => {
     const { count, quality, mode, hasModel, hasScene, modelName, duration } = settings;
@@ -153,7 +222,6 @@ export function CreditProvider({ children }: CreditProviderProps) {
     if (mode === 'virtual-try-on') {
       return count * 8;
     }
-    // Model-reference pricing: Pro model is used automatically
     if (hasModel && hasScene) {
       return count * 15;
     }
@@ -179,8 +247,9 @@ export function CreditProvider({ children }: CreditProviderProps) {
         addCredits,
         refreshBalance: fetchCredits,
         setBalanceFromServer,
-        cancelSubscription,
-        reactivateSubscription,
+        checkSubscription,
+        openCustomerPortal,
+        startCheckout,
         buyModalOpen,
         openBuyModal,
         closeBuyModal,

@@ -1382,6 +1382,8 @@ export const pricingPlans: PricingPlan[] = [
       'High quality images',
     ],
     ctaText: 'Get Starter',
+    stripePriceIdMonthly: 'price_1T26oWC8WPO5rhKrKggeWeLh',
+    stripePriceIdAnnual: 'price_1T26pAC8WPO5rhKrvWHK7Lvb',
   },
   {
     planId: 'growth',
@@ -1399,6 +1401,8 @@ export const pricingPlans: PricingPlan[] = [
     highlighted: true,
     badge: 'Most Popular',
     ctaText: 'Get Growth',
+    stripePriceIdMonthly: 'price_1T26pOC8WPO5rhKrjBpH0lgw',
+    stripePriceIdAnnual: 'price_1T26pcC8WPO5rhKr4w4koC4C',
   },
   {
     planId: 'pro',
@@ -1413,6 +1417,8 @@ export const pricingPlans: PricingPlan[] = [
       'Unlimited products',
     ],
     ctaText: 'Get Pro',
+    stripePriceIdMonthly: 'price_1T26psC8WPO5rhKrGbOwmpNy',
+    stripePriceIdAnnual: 'price_1T26qCC8WPO5rhKrKubiCvsd',
   },
   {
     planId: 'enterprise',
@@ -1440,6 +1446,7 @@ export const creditPacks: CreditPack[] = [
     credits: 200,
     price: 15,
     pricePerCredit: 0.075,
+    stripePriceId: 'price_1T26qSC8WPO5rhKr4t7gyY8o',
   },
   {
     packId: 'pack_500',
@@ -1447,11 +1454,13 @@ export const creditPacks: CreditPack[] = [
     price: 29,
     pricePerCredit: 0.058,
     popular: true,
+    stripePriceId: 'price_1T26qgC8WPO5rhKrF3wKkeft',
   },
   {
     packId: 'pack_1500',
     credits: 1500,
     price: 69,
     pricePerCredit: 0.046,
+    stripePriceId: 'price_1T26qxC8WPO5rhKrEZNQVZdu',
   },
 ];
