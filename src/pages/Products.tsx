@@ -235,7 +235,7 @@ export default function Products() {
                 heading={isFiltered ? 'No products match your filters' : 'No products yet'}
                 description={isFiltered ? 'Try a different search term or clear filters.' : ''}
                 action={!isFiltered ? { content: 'Add Product', onAction: () => setModalOpen(true) } : undefined}
-                icon={isFiltered ? <Package className="w-10 h-10 text-muted-foreground" /> : <Package className="w-9 h-9 text-muted-foreground" />}
+                icon={<Package className="w-12 h-12" />}
                 teamMember={!isFiltered && sophia ? { name: sophia.name, role: sophia.role, avatar: sophia.avatar, quote: "Upload your first product to start creating studio-quality visuals." } : undefined}
               />
             );

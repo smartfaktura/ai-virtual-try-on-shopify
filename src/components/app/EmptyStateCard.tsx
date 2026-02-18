@@ -40,32 +40,19 @@ export function EmptyStateCard({ heading, description, action, actions, icon, sh
   if (teamMember) {
     return (
       <Card className="border-0 bg-transparent shadow-none">
-        <CardContent className="py-20 sm:py-28 flex flex-col items-center text-center space-y-5">
-          {/* Large icon container */}
+        <CardContent className="py-20 sm:py-28 flex flex-col items-center text-center space-y-3">
           {icon && (
-            <div className="w-20 h-20 rounded-3xl bg-muted/50 flex items-center justify-center">
+            <div className="text-muted-foreground/40 mb-1">
               {icon}
             </div>
           )}
-
-          {/* Small avatar + name */}
-          <div className="flex flex-col items-center gap-1.5">
-            <img
-              src={teamMember.avatar}
-              alt={teamMember.name}
-              className="w-10 h-10 rounded-full ring-2 ring-border object-cover"
-              loading="lazy"
-            />
-            <p className="text-xs text-muted-foreground">{teamMember.name}</p>
-          </div>
 
           <p className="text-[15px] text-muted-foreground max-w-xs leading-relaxed">
             {teamMember.quote}
           </p>
 
-          {/* Actions row */}
           {renderedActions.length > 0 && (
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex items-center gap-3 pt-1">
               {renderedActions.map((a, i) => (
                 <Button
                   key={i}
