@@ -1,51 +1,44 @@
 
 
-## Premium Empty States with Team Avatars
+## Simplify Empty States -- Less Text, Unified Hierarchy
 
-Redesign the empty states on the Products page and Library (Jobs) page to feel spacious, premium, and on-brand with VOVV.AI's luxury aesthetic, featuring a team member avatar with a contextual message.
+### Problem
+The current empty states have **5 separate text elements** stacked vertically (name, role, quote, heading, description), creating a cluttered, mixed-sizing feel. It doesn't match the Apple-inspired minimalism of VOVV.AI.
 
-### Changes
+### New Design
+Strip it down to just **3 elements**: avatar, one single message, and the CTA button. The team member's quote becomes the only text -- no separate heading, no separate description, no name/role labels cluttering the space.
 
-**1. Upgrade EmptyStateCard component** (`src/components/app/EmptyStateCard.tsx`)
+```text
+        [avatar]
+   [team member name]
 
-Add a new `teamMember` mode that shows:
-- A team avatar (rounded, with subtle ring border) at ~64px
-- A speech bubble quote from the team member (e.g., Sophia saying "I'm ready to photograph your first product!")
-- The team member's name and role in small text below the avatar
-- Much more vertical padding (py-20 instead of py-10) for spacious feel
-- Larger, tracking-tight typography for heading
-- Max-width constraint on description for editorial readability
-- No card border -- use a borderless, background-only container for luxury feel
+  "Single clean message"
 
-New props: `teamMember?: { name, role, avatar, quote }`
+      [ Button ]
+```
 
-**2. Update Products empty state** (`src/pages/Products.tsx`)
-
-Pass Sophia (Product Photographer) as the team member with quote: "Upload your first product and I'll handle the rest -- studio-quality shots, every angle."
-
-**3. Update Library empty state** (`src/pages/Jobs.tsx`)
-
-Pass Kenji (Campaign Art Director) as the team member with quote: "Your gallery is waiting. Start a workflow and I'll direct the shoot."
-
-### Technical Details
+### Specific Changes
 
 **File: `src/components/app/EmptyStateCard.tsx`**
-- Import `TeamMember` type from `@/data/teamData`
-- Add optional `teamMember` prop with `{ name, role, avatar, quote }` shape
-- When `teamMember` is provided, render:
-  - Centered avatar image (w-16 h-16 rounded-full ring-2 ring-border)
-  - Name + role below avatar in xs text
-  - A styled quote bubble with the message (italic, text-muted-foreground, max-w-xs)
-- Increase container padding to `py-16 sm:py-20`
-- Make heading `text-xl font-semibold tracking-tight`
-- Make description `text-sm text-muted-foreground max-w-md`
-- Use `border-dashed border-border/50` on the card for a softer empty-state feel
+- When `teamMember` is provided, simplify to just:
+  - Avatar (w-14 h-14, rounded-full, subtle ring)
+  - Name only in small muted text (drop the role -- less clutter)
+  - Quote as the single message in `text-[15px] text-muted-foreground` (not italic, cleaner)
+  - Remove the separate `heading` and `description` display when teamMember is active
+- Increase vertical padding to `py-20 sm:py-28` for more breathing room
+- Use `space-y-4` between elements (not space-y-5)
+- Drop the border entirely (`border-0`) for a cleaner, more invisible container
 
 **File: `src/pages/Products.tsx`**
-- Import `TEAM_MEMBERS` from `@/data/teamData`
-- Find Sophia and pass her data + a custom quote to EmptyStateCard
+- Simplify the quote to be the complete message: "Upload your first product to start creating studio-quality visuals."
+- Remove the separate heading/description since the quote covers it
+- Keep the "Add Product" CTA button
 
-**File: `src/pages/Jobs.tsx`**
-- Import `TEAM_MEMBERS` from `@/data/teamData`
-- Find Kenji and pass his data + a custom quote to the empty state section (refactor inline empty state to use EmptyStateCard, or apply the same pattern inline)
+**File: `src/pages/Jobs.tsx` (Library)**
+- Simplify Kenji's quote to: "Start a workflow to build your creative library."
+- Remove the separate heading/description
+- No CTA button needed (already none for library)
+
+### Result
+Each empty state goes from 5 text elements to 2 (name + quote), feeling dramatically more spacious and premium across mobile, tablet, and desktop.
 
