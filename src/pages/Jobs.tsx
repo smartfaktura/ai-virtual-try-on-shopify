@@ -239,7 +239,7 @@ export default function Jobs() {
                   <EmptyStateCard
                     heading="No images yet"
                     description=""
-                    icon={<Image className="w-9 h-9 text-muted-foreground" />}
+                    icon={<Image className="w-12 h-12" />}
                     teamMember={{ name: kenji.name, role: kenji.role, avatar: kenji.avatar, quote: "Start a workflow to build your creative library." }}
                     actions={[
                       { content: 'Explore Workflows', onAction: () => navigate('/app/workflows'), variant: 'outline' },
