@@ -1,38 +1,70 @@
 
 
-## Improve Add Product Modal -- Design, CTA Visibility, CSV Template, and Naming
+## Fix Product URL Import + Redesign Add Product Modal
 
-### Problems Identified
-1. **CTA button not visible** -- The "Add Product" button is below the fold in the modal, users have to scroll to find it
-2. **CSV has no template** -- Users must guess the correct column format; a downloadable template would prevent errors
-3. **Tab says "Store URL"** -- Should be "Product URL" since it imports a single product page, not an entire store
+### Issue 1: Product URL Import Failing (Alo Yoga)
 
-### Changes
+The edge function fetches the raw HTML but many modern sites (like aloyoga.com) use client-side rendering, so the HTML contains minimal product data. The AI extractor then fails to find title/images and returns a non-2xx error.
 
-#### 1. Sticky Footer for CTA (ManualProductTab.tsx)
-Move the action buttons (Cancel / Add Product) into a sticky footer that's always visible at the bottom of the modal, regardless of scroll position. This ensures the CTA is never hidden.
+**Fix in `supabase/functions/import-product/index.ts`:**
+- Increase HTML truncation from 15,000 to 50,000 characters to capture more data from JS-heavy pages
+- Add fallback: try fetching the Shopify JSON API endpoint (`/products/[handle].json`) for Shopify-detected URLs before scraping HTML -- this returns structured data reliably
+- Improve error messages so the user gets a clear explanation instead of a generic "non-2xx status code"
+- Add better User-Agent and Accept headers to avoid bot detection
 
-- Wrap the form fields in a scrollable area
-- Make the footer `sticky bottom-0` with a subtle top border and background blur
-- Same treatment for StoreImportTab and CsvImportTab footers for consistency
+### Issue 2: Modal Design Overhaul -- Modern, Spacious, Apple-Inspired
 
-#### 2. Rename "Store URL" to "Product URL" (AddProductModal.tsx)
-- Change the tab label from "Store URL" to "Product URL"
-- Update the icon if needed (keep Globe, it fits)
+The current modal feels cramped and the sticky footer overlaps content. A full redesign to match the luxury aesthetic.
 
-#### 3. CSV Downloadable Template (CsvImportTab.tsx)
-- Add a "Download Template" button/link below the dropzone
-- Generate a CSV file with the correct headers: `title, product_type, image_url, description`
-- Include 2 example rows so users understand the expected format
-- Use a simple `Blob` download -- no backend needed
+**Changes to `src/components/app/AddProductModal.tsx`:**
+- Increase modal max-width from `580px` to `640px`
+- Add more generous padding (`px-8 pt-8`) for a spacious feel
+- Remove the internal scrollable wrapper and let the dialog handle overflow properly
+- Clean up tab styling with more spacing between tabs
 
-#### 4. Modal Layout Polish (AddProductModal.tsx)
-- Restructure the modal so the tab content area scrolls independently while the header and footer remain fixed
-- This prevents the entire modal from scrolling and losing the tabs/CTA
+**Changes to `src/components/app/ManualProductTab.tsx`:**
+- Remove the `sticky` footer -- instead place it naturally at the bottom with proper spacing and a top border
+- Remove negative margins (`-mx-6 px-6`) that cause overlap issues
+- Increase vertical spacing between form sections (`space-y-6` instead of `space-y-5`)
+- Make the dropzone taller and more visually inviting
+- Increase description textarea rows from 2 to 3
+
+**Changes to `src/components/app/StoreImportTab.tsx`:**
+- Same footer fix: remove sticky positioning, use natural flow with proper spacing
+- Remove negative margins on footer
+- Better error state styling
+
+**Changes to `src/components/app/CsvImportTab.tsx`:**
+- Same footer fix as above
+- More generous dropzone padding
+
+### Technical Details
+
+**Shopify JSON API fallback (import-product edge function):**
+```text
+For URLs containing "/products/", try fetching:
+  {origin}/products/{handle}.json
+
+This returns structured JSON with title, images[], body_html, 
+product_type -- no scraping needed. If this fails, fall back 
+to the existing HTML scraping + AI extraction approach.
+```
+
+**Footer fix pattern (all tabs):**
+Replace:
+```
+<div className="sticky bottom-0 ... -mx-6 px-6">
+```
+With:
+```
+<div className="flex justify-end gap-2 pt-5 mt-2">
+```
+No sticky, no negative margins, no overlap.
 
 ### Files Modified
-- `src/components/app/AddProductModal.tsx` -- sticky layout structure, rename tab
-- `src/components/app/ManualProductTab.tsx` -- sticky footer for action buttons
-- `src/components/app/CsvImportTab.tsx` -- add download template button
-- `src/components/app/StoreImportTab.tsx` -- consistent sticky footer
+- `supabase/functions/import-product/index.ts` -- Shopify JSON fallback, better error handling, larger HTML window
+- `src/components/app/AddProductModal.tsx` -- wider modal, more padding, better layout
+- `src/components/app/ManualProductTab.tsx` -- remove sticky footer, more spacious layout
+- `src/components/app/StoreImportTab.tsx` -- remove sticky footer, clean spacing
+- `src/components/app/CsvImportTab.tsx` -- remove sticky footer, clean spacing
 
