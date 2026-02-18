@@ -49,7 +49,7 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
       ref={ref}
       className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 flex flex-col"
     >
-      <div className="aspect-[4/5] bg-muted/30 overflow-hidden relative">
+      <div className="aspect-[4/3] sm:aspect-[4/5] bg-muted/30 overflow-hidden relative">
         {scene ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
         ) : (
@@ -71,7 +71,7 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
         <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{workflow.description}</p>
         <Button
           size="sm"
-          className="w-full rounded-full font-semibold gap-1.5 mt-3 text-xs"
+          className="w-full rounded-xl font-semibold gap-1.5 mt-3 text-xs min-h-[44px]"
           onClick={() => onNavigate(workflow.id)}
         >
           Create Set
@@ -200,7 +200,7 @@ export default function Dashboard() {
   // --- FIRST-RUN DASHBOARD ---
   if (isNewUser) {
     return (
-      <div className="space-y-8 sm:space-y-10">
+      <div className="space-y-6 sm:space-y-10">
         {/* Welcome — bold, matching landing hero */}
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
@@ -253,7 +253,7 @@ export default function Dashboard() {
                   Pick a ready-made workflow — Try-On, Product Listing, UGC, Flat Lay — and get a complete visual set in one click.
                 </p>
               </div>
-              <Button className="w-full rounded-full font-semibold gap-2 mt-4 shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
+              <Button className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px] shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
                 Browse Workflows
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -268,7 +268,7 @@ export default function Dashboard() {
                   Full creative control — mix prompts, products, models, scenes, and brand profiles to generate any image you imagine.
                 </p>
               </div>
-              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4" onClick={() => navigate('/app/freestyle')}>
+              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4 min-h-[44px]" onClick={() => navigate('/app/freestyle')}>
                 Open Studio
                 <ArrowRight className="w-4 h-4" />
               </Button>

@@ -77,24 +77,36 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
             return (
               <div
                 key={step.key}
-                className={`flex items-center gap-4 py-4 ${!isLast ? 'border-b border-border' : ''}`}
+                className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-5 sm:py-4 ${!isLast ? 'border-b border-border' : ''}`}
               >
-                {/* Step number circle — matches landing HowItWorks */}
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                  done
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-primary text-primary-foreground'
-                }`}>
-                  {done ? <Check className="w-4 h-4" /> : String(index + 1).padStart(2, '0')}
+                {/* Top row on mobile: number + title */}
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {/* Step number circle */}
+                  <div className={`w-9 h-9 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                    done
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-primary text-primary-foreground'
+                  }`}>
+                    {done ? <Check className="w-4 h-4" /> : String(index + 1).padStart(2, '0')}
+                  </div>
+
+                  {/* Preview thumbnail — always visible */}
+                  <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-border flex-shrink-0">
+                    <img src={step.preview} alt={step.title} className="w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
+                  </div>
+
+                  {/* Title + description inline on desktop */}
+                  <div className="flex-1 min-w-0 sm:hidden">
+                    <h3 className={`text-sm font-semibold ${done ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                      {step.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
+                  </div>
                 </div>
 
-                {/* Preview thumbnail */}
-                <div className="w-12 h-12 rounded-lg overflow-hidden border border-border flex-shrink-0 hidden sm:block">
-                  <img src={step.preview} alt={step.title} className="w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h3 className={`text-sm font-semibold ${done ? 'text-muted-foreground' : 'text-foreground'}`}>
+                {/* Desktop: title + description */}
+                <div className="hidden sm:block flex-1 min-w-0">
+                  <h3 className={`text-sm font-semibold ${done ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                     {step.title}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
@@ -104,7 +116,7 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
                   <Button
                     size="sm"
                     variant="outline"
-                    className="rounded-full font-semibold gap-1 flex-shrink-0"
+                    className="w-full sm:w-auto rounded-full font-semibold gap-1 flex-shrink-0 min-h-[44px] sm:min-h-0"
                     onClick={() => navigate(step.path)}
                   >
                     {step.cta}
