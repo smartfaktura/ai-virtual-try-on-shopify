@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { TEAM_MEMBERS } from '@/data/teamData';
 
 interface UserProduct {
   id: string;
@@ -226,12 +227,19 @@ export default function Products() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyStateCard
-            heading={search || typeFilter !== 'all' ? 'No products match your filters' : 'No products yet'}
-            description={search || typeFilter !== 'all' ? 'Try a different search term or clear filters.' : 'Upload your first product to start generating professional visuals.'}
-            action={!search && typeFilter === 'all' ? { content: 'Add Product', onAction: () => setModalOpen(true) } : undefined}
-            icon={<Package className="w-10 h-10 text-muted-foreground" />}
-          />
+          (() => {
+            const isFiltered = !!(search || typeFilter !== 'all');
+            const sophia = TEAM_MEMBERS.find(m => m.name === 'Sophia');
+            return (
+              <EmptyStateCard
+                heading={isFiltered ? 'No products match your filters' : 'No products yet'}
+                description={isFiltered ? 'Try a different search term or clear filters.' : 'Upload your first product to start generating professional visuals.'}
+                action={!isFiltered ? { content: 'Add Product', onAction: () => setModalOpen(true) } : undefined}
+                icon={isFiltered ? <Package className="w-10 h-10 text-muted-foreground" /> : undefined}
+                teamMember={!isFiltered && sophia ? { name: sophia.name, role: sophia.role, avatar: sophia.avatar, quote: "Upload your first product and I'll handle the rest — studio-quality shots, every angle." } : undefined}
+              />
+            );
+          })()
         ) : viewMode === 'grid' ? (
           /* Grid view */
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
