@@ -17,8 +17,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 import {
-  ArrowLeft, ArrowRight, Check, CalendarIcon, Sun, Snowflake, Leaf, Flower2,
-  Gift, ShoppingBag, Heart, GraduationCap, Sparkles, Search, Loader2,
+  ArrowLeft, ArrowRight, Check, CalendarIcon,
+  Sparkles, Search, Loader2,
   Zap, CreditCard, Clock, RocketIcon, Repeat, Plus, Trash2, ChevronDown, Package, Info,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,19 +63,7 @@ interface CreativeDropWizardProps {
   editingScheduleId?: string;
 }
 
-const THEMES = [
-  { id: 'spring', label: 'Spring', icon: Flower2 },
-  { id: 'summer', label: 'Summer', icon: Sun },
-  { id: 'autumn', label: 'Autumn', icon: Leaf },
-  { id: 'winter', label: 'Winter', icon: Snowflake },
-  { id: 'holiday', label: 'Holiday', icon: Gift },
-  { id: 'black_friday', label: 'Black Friday', icon: ShoppingBag },
-  { id: 'valentines', label: "Valentine's", icon: Heart },
-  { id: 'back_to_school', label: 'Back to School', icon: GraduationCap },
-  { id: 'custom', label: 'Custom', icon: Sparkles },
-];
-
-const STEPS = ['Theme', 'Products', 'Workflows', 'Schedule', 'Review'];
+const STEPS = ['Details', 'Products', 'Workflows', 'Schedule', 'Review'];
 const IMAGE_PRESETS = [10, 25, 50, 100];
 const ASPECT_RATIOS = [
   { id: '1:1', label: '1:1', w: 1, h: 1 },
@@ -421,7 +409,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   );
 
   const selectedWorkflows = workflows.filter(w => selectedWorkflowIds.has(w.id));
-  const themeConfig = THEMES.find(t => t.id === theme);
+  
 
   const getWorkflowFormat = (id: string) => workflowFormats[id] || '1:1';
 
@@ -488,29 +476,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 )}
               </div>
 
-              <div className="space-y-3">
-                <p className="section-label">Theme</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {THEMES.map(t => {
-                    const Icon = t.icon;
-                    return (
-                      <button
-                         key={t.id}
-                        onClick={() => setTheme(t.id)}
-                        className={cn(
-                          'flex items-center gap-2.5 px-4 py-3.5 rounded-2xl border-2 text-sm font-medium transition-all',
-                          theme === t.id
-                            ? 'border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm text-foreground'
-                            : 'border-border hover:border-primary/30 hover:shadow-sm text-foreground bg-card'
-                        )}
-                      >
-                        <Icon className="w-4 h-4 flex-shrink-0" />
-                        {t.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
               <div className="space-y-2">
                 <p className="section-label">Brand Profile</p>
@@ -1339,9 +1304,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
               <Card className="rounded-2xl shadow-sm">
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-center gap-2">
-                    {themeConfig && <themeConfig.icon className="w-4 h-4" />}
+                    <Sparkles className="w-4 h-4" />
                     <span className="font-semibold">{name}</span>
-                    <Badge variant="secondary" className="text-xs rounded-full">{themeConfig?.label}</Badge>
                   </div>
                   <Separator />
                   <div className="grid grid-cols-2 gap-4 text-sm">
