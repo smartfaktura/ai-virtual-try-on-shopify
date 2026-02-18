@@ -215,7 +215,7 @@ export default function Products() {
         {isLoading ? (
           <div className={cn(
             viewMode === 'grid'
-              ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'
+              ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'
               : 'space-y-2'
           )}>
             {[1, 2, 3, 4, 5].map(i => (
@@ -242,9 +242,12 @@ export default function Products() {
           })()
         ) : viewMode === 'grid' ? (
           /* Grid view */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {filtered.map(product => {
               const imgCount = imageCounts[product.id] || 0;
+              const displayType = product.product_type?.includes(':')
+                ? product.product_type.split(':').pop()
+                : product.product_type;
               return (
                 <Card key={product.id} className="group overflow-hidden">
                   <div className="aspect-square relative bg-muted">
@@ -272,11 +275,11 @@ export default function Products() {
                       </div>
                     </div>
                   </div>
-                  <CardContent className="p-3 space-y-1">
-                    <p className="text-sm font-medium truncate">{product.title}</p>
+                  <CardContent className="p-4 space-y-1.5">
+                    <p className="text-sm font-medium line-clamp-2">{product.title}</p>
                     <div className="flex items-center gap-1 flex-wrap">
-                      {product.product_type && (
-                        <Badge variant="secondary" className="text-[10px]">{product.product_type}</Badge>
+                      {displayType && (
+                        <Badge variant="secondary" className="text-[10px] max-w-[120px] truncate">{displayType}</Badge>
                       )}
                       {(product as any).dimensions && (
                         <Badge variant="outline" className="text-[10px] gap-0.5">

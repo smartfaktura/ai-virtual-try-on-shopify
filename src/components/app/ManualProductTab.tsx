@@ -43,10 +43,26 @@ interface ImageItem {
 }
 
 const PRODUCT_TYPES = [
-  'T-Shirt', 'Hoodie', 'Dress', 'Jacket', 'Pants', 'Leggings', 'Shorts',
-  'Sneakers', 'Boots', 'Sandals', 'Bag', 'Hat', 'Jewelry', 'Watch',
-  'Serum', 'Cream', 'Lipstick', 'Foundation', 'Supplement', 'Candle',
-  'Mug', 'Pillow', 'Lamp', 'Food', 'Beverage', 'Other',
+  // Apparel
+  'T-Shirt', 'Hoodie', 'Sweater', 'Pullover', 'Jacket', 'Coat', 'Blazer', 'Vest',
+  'Dress', 'Skirt', 'Pants', 'Jeans', 'Leggings', 'Shorts', 'Swimwear',
+  'Activewear', 'Underwear', 'Sleepwear', 'Top', 'Blouse', 'Shirt',
+  // Footwear
+  'Sneakers', 'Boots', 'Sandals', 'Heels', 'Flats', 'Loafers', 'Slides',
+  // Accessories
+  'Bag', 'Handbag', 'Backpack', 'Wallet', 'Belt', 'Hat', 'Cap', 'Scarf',
+  'Gloves', 'Sunglasses', 'Watch', 'Jewelry', 'Ring', 'Necklace', 'Earrings', 'Bracelet',
+  // Beauty & Skincare
+  'Serum', 'Cream', 'Moisturizer', 'Cleanser', 'Toner', 'Mask', 'Lipstick',
+  'Foundation', 'Mascara', 'Perfume', 'Fragrance',
+  // Home & Living
+  'Candle', 'Mug', 'Pillow', 'Blanket', 'Lamp', 'Vase', 'Frame', 'Rug', 'Towel',
+  // Food & Beverage
+  'Food', 'Beverage', 'Supplement', 'Coffee', 'Tea', 'Snack',
+  // Tech & Electronics
+  'Phone Case', 'Headphones', 'Speaker', 'Charger',
+  // Other
+  'Other',
 ];
 
 const MAX_IMAGES = 6;
