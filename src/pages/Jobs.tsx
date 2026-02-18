@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
+import { TEAM_MEMBERS } from '@/data/teamData';
 import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
@@ -227,22 +228,47 @@ export default function Jobs() {
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : items.length === 0 ? (
-          <div className="text-center py-24 space-y-3">
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
-              <Image className="w-7 h-7 text-muted-foreground" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {searchQuery ? 'No results match your search.' : 'No creations yet. Start generating to build your library.'}
-            </p>
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="px-4 py-2 rounded-full text-xs font-medium bg-muted/40 text-muted-foreground hover:bg-muted/70 transition-all"
-              >
-                Clear search
-              </button>
-            )}
-          </div>
+          (() => {
+            const kenji = TEAM_MEMBERS.find(m => m.name === 'Kenji');
+            return (
+              <div className="py-8">
+                <div className="border border-dashed border-border/50 rounded-2xl bg-transparent py-16 sm:py-20 flex flex-col items-center text-center space-y-5">
+                  {!searchQuery && kenji ? (
+                    <div className="flex flex-col items-center space-y-4">
+                      <img src={kenji.avatar} alt={kenji.name} className="w-16 h-16 rounded-full ring-2 ring-border object-cover" loading="lazy" />
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-medium text-foreground">{kenji.name}</p>
+                        <p className="text-[11px] text-muted-foreground">{kenji.role}</p>
+                      </div>
+                      <p className="text-sm italic text-muted-foreground max-w-xs leading-relaxed">
+                        "Your gallery is waiting. Start a workflow and I'll direct the shoot."
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+                      <Image className="w-7 h-7 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="space-y-1.5">
+                    <h3 className="text-xl font-semibold tracking-tight">
+                      {searchQuery ? 'No results found' : 'No creations yet'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-md">
+                      {searchQuery ? 'No results match your search.' : 'Start generating to build your library.'}
+                    </p>
+                  </div>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="px-4 py-2 rounded-full text-xs font-medium bg-muted/40 text-muted-foreground hover:bg-muted/70 transition-all"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })()
         ) : (
           <>
             <div className="flex gap-1">
