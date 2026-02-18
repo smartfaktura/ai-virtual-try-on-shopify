@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FileSpreadsheet, Upload, X, AlertCircle, Loader2, Check } from 'lucide-react';
+import { FileSpreadsheet, Upload, X, AlertCircle, Loader2, Check, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -173,6 +173,17 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
   const validCount = rows.filter((r) => r.valid).length;
   const invalidCount = rows.filter((r) => !r.valid).length;
 
+  const downloadTemplate = () => {
+    const csvContent = `title,product_type,image_url,description\n"Classic White T-Shirt","T-Shirt","https://example.com/images/white-tee.jpg","Soft cotton crew-neck tee"\n"Leather Crossbody Bag","Bag","https://example.com/images/crossbody.jpg","Premium leather crossbody with adjustable strap"`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'product-import-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-5">
       {rows.length === 0 ? (
@@ -199,9 +210,13 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
                 />
               </label>
             </p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground mb-3">
               Required: <span className="font-medium text-foreground">title</span>. Optional: type, image_url, description
             </p>
+            <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-1.5 text-xs">
+              <Download className="w-3.5 h-3.5" />
+              Download Template
+            </Button>
           </div>
 
           {error && (
@@ -211,7 +226,7 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
             </div>
           )}
 
-          <div className="flex justify-end">
+          <div className="sticky bottom-0 flex justify-end pt-3 pb-1 border-t border-border/50 bg-background/95 backdrop-blur-sm -mx-6 px-6">
             <Button variant="outline" onClick={onClose}>Cancel</Button>
           </div>
         </>
@@ -269,7 +284,7 @@ export function CsvImportTab({ onProductAdded, onClose }: CsvImportTabProps) {
             )}
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="sticky bottom-0 flex justify-end gap-2 pt-3 pb-1 border-t border-border/50 bg-background/95 backdrop-blur-sm -mx-6 px-6">
             <Button variant="outline" onClick={onClose}>Cancel</Button>
             <Button onClick={handleImportAll} disabled={isImporting || validCount === 0}>
               {isImporting ? (
