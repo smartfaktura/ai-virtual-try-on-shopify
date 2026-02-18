@@ -46,21 +46,38 @@ serve(async (req) => {
     logStep("Function started");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "No authorization header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError) throw new Error(`Auth error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      logStep("Auth failed", { error: claimsError?.message });
+      return new Response(JSON.stringify({ error: "Auth session missing or expired" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = claimsData.claims.sub as string;
+    const userEmail = claimsData.claims.email as string;
+    if (!userId || !userEmail) {
+      return new Response(JSON.stringify({ error: "Invalid token claims" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    logStep("User authenticated", { userId, email: userEmail });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
 
     // Find Stripe customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     if (customers.data.length === 0) {
       logStep("No Stripe customer found — free plan");
       // Update profile to ensure it's on free plan
@@ -69,7 +86,7 @@ serve(async (req) => {
         stripe_customer_id: null,
         stripe_subscription_id: null,
         current_period_end: null,
-      }).eq("user_id", user.id);
+      }).eq("user_id", userId);
 
       return new Response(JSON.stringify({
         plan: "free",
@@ -118,7 +135,7 @@ serve(async (req) => {
     if (creditsToAdd > 0) {
       logStep("Adding purchased credits", { amount: creditsToAdd });
       await supabaseAdmin.rpc("add_purchased_credits", {
-        p_user_id: user.id,
+        p_user_id: userId,
         p_amount: creditsToAdd,
       });
     }
@@ -165,13 +182,13 @@ serve(async (req) => {
       plan,
     };
 
-    await supabaseAdmin.from("profiles").update(updateData).eq("user_id", user.id);
+    await supabaseAdmin.from("profiles").update(updateData).eq("user_id", userId);
     logStep("Profile synced to database", updateData);
 
     // Get the latest balance
     const { data: profile } = await supabaseAdmin.from("profiles")
       .select("credits_balance, plan")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     return new Response(JSON.stringify({
