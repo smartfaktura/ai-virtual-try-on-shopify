@@ -1,70 +1,51 @@
 
 
-## Fix Product URL Import + Redesign Add Product Modal
+## Fix Product Import Error + Modern Modal Redesign
 
-### Issue 1: Product URL Import Failing (Alo Yoga)
+### Issue 1: Alo Yoga 403 Error
 
-The edge function fetches the raw HTML but many modern sites (like aloyoga.com) use client-side rendering, so the HTML contains minimal product data. The AI extractor then fails to find title/images and returns a non-2xx error.
+The Shopify JSON API fallback is working but Alo Yoga blocks it. The HTML scrape also returns 403. Root causes:
+- The URL has a locale prefix (`/en-lt/products/...`) -- the Shopify JSON API should also try the locale-prefixed path
+- Both requests lack proper cookies/headers that modern Shopify stores require
+- Need to add `Cookie` header and additional headers to bypass bot protection
 
 **Fix in `supabase/functions/import-product/index.ts`:**
-- Increase HTML truncation from 15,000 to 50,000 characters to capture more data from JS-heavy pages
-- Add fallback: try fetching the Shopify JSON API endpoint (`/products/[handle].json`) for Shopify-detected URLs before scraping HTML -- this returns structured data reliably
-- Improve error messages so the user gets a clear explanation instead of a generic "non-2xx status code"
-- Add better User-Agent and Accept headers to avoid bot detection
+- Try multiple Shopify JSON paths: with locale prefix (`/en-lt/products/{handle}.json`) AND without (`/products/{handle}.json`)
+- Add `Sec-Fetch-*` headers and broader `Accept-Language` to mimic a real browser request
+- For HTML scraping fallback, add the same enhanced headers
+- Add a third fallback: try fetching the URL without the locale prefix (some Shopify stores serve the default locale with less blocking)
+- Improve error message to suggest "Try removing country/language prefix from the URL"
 
-### Issue 2: Modal Design Overhaul -- Modern, Spacious, Apple-Inspired
+### Issue 2: Modal Design -- Modern, Apple-Inspired Overhaul
 
-The current modal feels cramped and the sticky footer overlaps content. A full redesign to match the luxury aesthetic.
+The modal still looks outdated. A full visual refresh:
 
-**Changes to `src/components/app/AddProductModal.tsx`:**
-- Increase modal max-width from `580px` to `640px`
-- Add more generous padding (`px-8 pt-8`) for a spacious feel
-- Remove the internal scrollable wrapper and let the dialog handle overflow properly
-- Clean up tab styling with more spacing between tabs
+**`src/components/app/AddProductModal.tsx`:**
+- Increase max-width to `680px` for breathing room
+- Add a subtle description subtitle under "Add Product" title
+- Restyle tabs: use a cleaner pill-style segmented control with `bg-muted` background wrapper and rounded pills for active state
+- More generous padding throughout (`px-10 pt-10`)
 
-**Changes to `src/components/app/ManualProductTab.tsx`:**
-- Remove the `sticky` footer -- instead place it naturally at the bottom with proper spacing and a top border
-- Remove negative margins (`-mx-6 px-6`) that cause overlap issues
-- Increase vertical spacing between form sections (`space-y-6` instead of `space-y-5`)
-- Make the dropzone taller and more visually inviting
-- Increase description textarea rows from 2 to 3
+**`src/components/app/ManualProductTab.tsx`:**
+- Replace the `border-t border-border/40` footer divider with clean spacing only
+- Use `rounded-xl` buttons with slightly larger size
+- More generous spacing between form sections (`space-y-5` for fields)
+- Make the dropzone more visually inviting: larger min-height, softer colors
 
-**Changes to `src/components/app/StoreImportTab.tsx`:**
-- Same footer fix: remove sticky positioning, use natural flow with proper spacing
-- Remove negative margins on footer
-- Better error state styling
+**`src/components/app/StoreImportTab.tsx`:**
+- Same footer cleanup -- remove border-t, use clean spacing
+- Softer input styling with larger padding
+- Better error card styling with rounded-xl
 
-**Changes to `src/components/app/CsvImportTab.tsx`:**
-- Same footer fix as above
-- More generous dropzone padding
-
-### Technical Details
-
-**Shopify JSON API fallback (import-product edge function):**
-```text
-For URLs containing "/products/", try fetching:
-  {origin}/products/{handle}.json
-
-This returns structured JSON with title, images[], body_html, 
-product_type -- no scraping needed. If this fails, fall back 
-to the existing HTML scraping + AI extraction approach.
-```
-
-**Footer fix pattern (all tabs):**
-Replace:
-```
-<div className="sticky bottom-0 ... -mx-6 px-6">
-```
-With:
-```
-<div className="flex justify-end gap-2 pt-5 mt-2">
-```
-No sticky, no negative margins, no overlap.
+**`src/components/app/CsvImportTab.tsx`:**
+- Same footer cleanup
+- Rounder dropzone borders
+- Softer color palette for the template download area
 
 ### Files Modified
-- `supabase/functions/import-product/index.ts` -- Shopify JSON fallback, better error handling, larger HTML window
-- `src/components/app/AddProductModal.tsx` -- wider modal, more padding, better layout
-- `src/components/app/ManualProductTab.tsx` -- remove sticky footer, more spacious layout
-- `src/components/app/StoreImportTab.tsx` -- remove sticky footer, clean spacing
-- `src/components/app/CsvImportTab.tsx` -- remove sticky footer, clean spacing
+- `supabase/functions/import-product/index.ts` -- multi-path Shopify JSON fallback, enhanced headers
+- `src/components/app/AddProductModal.tsx` -- wider modal, subtitle, modern tab styling
+- `src/components/app/ManualProductTab.tsx` -- cleaner footer, modern spacing
+- `src/components/app/StoreImportTab.tsx` -- cleaner footer, softer styling
+- `src/components/app/CsvImportTab.tsx` -- cleaner footer, softer styling
 
