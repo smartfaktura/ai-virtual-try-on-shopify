@@ -418,7 +418,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const isEditing = !!editingProduct;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* ── Image Section ── */}
       <div className="space-y-2.5">
         {images.length > 0 && (
@@ -444,7 +444,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         ) : images.length === 0 ? (
           <div
-            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-8 ${
+            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-10 ${
               dragActive
                 ? 'bg-primary/5 border-2 border-primary'
                 : 'bg-muted/30 hover:bg-muted/50 border border-dashed border-border'
@@ -597,7 +597,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                 hasManualEdits.current.description = true;
               }}
               maxLength={500}
-              rows={2}
+              rows={3}
               className="resize-none"
             />
           )}
@@ -628,8 +628,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         </div>
       )}
 
-      {/* ── Sticky Footer Actions ── */}
-      <div className="sticky bottom-0 flex justify-end gap-2 pt-3 pb-1 border-t border-border/50 bg-background/95 backdrop-blur-sm -mx-6 px-6 mt-auto">
+      {/* ── Footer Actions ── */}
+      <div className="flex justify-end gap-2 pt-5 mt-2 border-t border-border/40">
         <Button variant="ghost" size="sm" onClick={onClose} disabled={isUploading}>
           Cancel
         </Button>
