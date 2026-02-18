@@ -8,7 +8,6 @@ import { StatusBadge } from '@/components/app/StatusBadge';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { OnboardingChecklist } from '@/components/app/OnboardingChecklist';
-import { GenerationModeCards } from '@/components/app/GenerationModeCards';
 import { UpcomingDropsCard } from '@/components/app/UpcomingDropsCard';
 import { WorkflowCard } from '@/components/app/WorkflowCard';
 import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
@@ -180,17 +179,11 @@ export default function Dashboard() {
         {/* Your AI Studio Team */}
         <DashboardTeamCarousel />
 
-        {/* Two Ways to Create */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-foreground tracking-tight">Two Ways to Create</h2>
-          <GenerationModeCards />
-        </div>
-
         {/* Explore Workflows */}
         {workflows.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Workflows</h2>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {workflows.map(workflow => (
                 <WorkflowCard
                   key={workflow.id}
