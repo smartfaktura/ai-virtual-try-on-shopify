@@ -9,7 +9,7 @@ import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { OnboardingChecklist } from '@/components/app/OnboardingChecklist';
 import { UpcomingDropsCard } from '@/components/app/UpcomingDropsCard';
-import { WorkflowCard } from '@/components/app/WorkflowCard';
+
 import { DashboardTeamCarousel } from '@/components/app/DashboardTeamCarousel';
 import { RecentCreationsGallery } from '@/components/app/RecentCreationsGallery';
 import { DashboardTipCard } from '@/components/app/DashboardTipCard';
@@ -179,17 +179,74 @@ export default function Dashboard() {
         {/* Your AI Studio Team */}
         <DashboardTeamCarousel />
 
-        {/* Explore Workflows */}
+        {/* Two Ways to Create */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">Two Ways to Create</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Layers className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-foreground">Workflows</h3>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                  Pick a ready-made workflow — Try-On, Product Listing, UGC, Flat Lay — and get a complete visual set in one click.
+                </p>
+              </div>
+              <Button className="w-full rounded-full font-semibold gap-2 mt-4 shadow-lg shadow-primary/25" onClick={() => navigate('/app/workflows')}>
+                Browse Workflows
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="relative rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:border-primary/30 transition-all duration-300">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-foreground">Freestyle Studio</h3>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                  Full creative control — mix prompts, products, models, scenes, and brand profiles to generate any image you imagine.
+                </p>
+              </div>
+              <Button variant="outline" className="w-full rounded-full font-semibold gap-2 mt-4" onClick={() => navigate('/app/freestyle')}>
+                Open Studio
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Explore Workflows — compact cards */}
         {workflows.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Workflows</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {workflows.map(workflow => (
-                <WorkflowCard
+                <div
                   key={workflow.id}
-                  workflow={workflow}
-                  onSelect={() => navigate(`/app/generate?workflow=${workflow.id}`)}
-                />
+                  className="rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 flex flex-col"
+                >
+                  <div className="aspect-square bg-muted/30 overflow-hidden">
+                    <img
+                      src={workflow.preview_image_url || '/placeholder.svg'}
+                      alt={workflow.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+                    />
+                  </div>
+                  <div className="p-3 flex flex-col flex-1">
+                    <h3 className="text-sm font-bold text-foreground truncate">{workflow.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{workflow.description}</p>
+                    <Button
+                      size="sm"
+                      className="w-full rounded-full font-semibold gap-1.5 mt-3 text-xs"
+                      onClick={() => navigate(`/app/generate?workflow=${workflow.id}`)}
+                    >
+                      Create Set
+                      <ArrowRight className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
