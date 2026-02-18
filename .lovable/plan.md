@@ -1,48 +1,41 @@
 
 
-## Fix: Handle Expired Auth Sessions Gracefully
+## Fix First-Run Dashboard Issues
 
-### Problem
-The user's authentication session has expired, but the app still tries to call backend functions (`check-subscription`, `create-checkout`) with the stale token. This causes repeated "Auth session missing!" errors.
+### Problem Summary
+The first-run dashboard (new user state) has four issues:
+1. **Images not loading** in "What You Can Create" gallery, onboarding checklist thumbnails, and team avatars -- all reference files in the `landing-assets` storage bucket that may not exist or may be returning 404s
+2. **"Two Ways to Create" section** should be removed -- user says it's not needed
+3. **"Explore Workflows" layout is broken** -- the `WorkflowCard` component is designed as a large horizontal row card (with side-by-side image + text), but the dashboard renders them in a `grid-cols-3` grid, causing severe content truncation and overflow
+4. **React warning** about `FloatingEl` not using `forwardRef` in `WorkflowAnimatedThumbnail`
 
-### Solution
+### Plan
 
-**1. Update `src/contexts/CreditContext.tsx`**
-- Before calling `check-subscription` or `create-checkout`, retrieve the current session from the auth client
-- If no valid session exists, skip the call silently (for check-subscription) or show a "please log in" message (for checkout)
-- Pass the fresh access token explicitly if needed
+**1. Remove "Two Ways to Create" section from first-run dashboard**
+- In `src/pages/Dashboard.tsx`, delete the `GenerationModeCards` section block (the "Two Ways to Create" heading and `<GenerationModeCards />` component) from the first-run (isNewUser) return block.
 
-Changes:
-- In `checkSubscription`: call `supabase.auth.getSession()` first; if no session, return early without error
-- In `startCheckout`: call `supabase.auth.getSession()` first; if no session, show toast asking user to log in
-- Clear the polling interval if the session becomes invalid
+**2. Fix "Explore Workflows" layout**
+- The current grid (`grid-cols-2 lg:grid-cols-3`) cramps the large `WorkflowCard` components which are designed for full-width display.
+- Change the layout to a **single-column stack** (`grid-cols-1`) so each `WorkflowCard` gets full width and its internal `flex-row` layout works properly. Optionally use `lg:grid-cols-2` for desktop.
+- Alternatively, pass a `reversed` prop to alternate card layouts.
 
-**2. No edge function changes needed**
-Both `create-checkout` and `check-subscription` already use `SUPABASE_SERVICE_ROLE_KEY` with `persistSession: false` -- this is correct. The problem is purely that an expired token is being sent.
+**3. Fix broken/missing images**
+- The `RecentCreationsGallery` placeholder images, `OnboardingChecklist` thumbnails, and `DashboardTeamCarousel` avatars all use `getLandingAssetUrl()` paths. If these files don't exist in the storage bucket, they'll show as blank grey cards.
+- Add fallback handling: for the gallery and checklist, provide local fallback images from `public/placeholder.svg` when the storage URLs fail to load.
+- For team avatars, add an `onError` handler on `<img>` elements to show initials or a placeholder.
+
+**4. Fix WorkflowAnimatedThumbnail forwardRef warning**
+- Wrap the `FloatingEl` function component with `React.forwardRef` to eliminate the React console warning.
 
 ### Technical Details
 
-In `CreditContext.tsx`, the `checkSubscription` callback will be updated to:
-```text
-const checkSubscription = useCallback(async () => {
-  if (!user) return;
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return; // Session expired, skip silently
-  // ... existing invoke call
-}, [user]);
-```
+**Files to modify:**
 
-Similarly for `startCheckout`:
-```text
-const startCheckout = useCallback(async (priceId, mode) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    toast.error('Please log in to continue.');
-    return;
-  }
-  // ... existing invoke call
-}, []);
-```
-
-This ensures no backend calls are made with expired tokens, eliminating the 500 errors.
+| File | Change |
+|------|--------|
+| `src/pages/Dashboard.tsx` | Remove "Two Ways to Create" section; change Explore Workflows grid from `grid-cols-2 md:grid-cols-2 lg:grid-cols-3` to `grid-cols-1 lg:grid-cols-2` |
+| `src/components/app/WorkflowAnimatedThumbnail.tsx` | Wrap `FloatingEl` with `React.forwardRef` |
+| `src/components/app/RecentCreationsGallery.tsx` | Add `onError` fallback to `ShimmerImage` for placeholder images |
+| `src/components/app/OnboardingChecklist.tsx` | Add `onError` fallback to thumbnail `<img>` elements |
+| `src/components/app/DashboardTeamCarousel.tsx` | Add `onError` fallback to avatar `<img>` elements |
 
