@@ -233,10 +233,10 @@ export default function Products() {
             return (
               <EmptyStateCard
                 heading={isFiltered ? 'No products match your filters' : 'No products yet'}
-                description={isFiltered ? 'Try a different search term or clear filters.' : 'Upload your first product to start generating professional visuals.'}
+                description={isFiltered ? 'Try a different search term or clear filters.' : ''}
                 action={!isFiltered ? { content: 'Add Product', onAction: () => setModalOpen(true) } : undefined}
                 icon={isFiltered ? <Package className="w-10 h-10 text-muted-foreground" /> : undefined}
-                teamMember={!isFiltered && sophia ? { name: sophia.name, role: sophia.role, avatar: sophia.avatar, quote: "Upload your first product and I'll handle the rest — studio-quality shots, every angle." } : undefined}
+                teamMember={!isFiltered && sophia ? { name: sophia.name, role: sophia.role, avatar: sophia.avatar, quote: "Upload your first product to start creating studio-quality visuals." } : undefined}
               />
             );
           })()
