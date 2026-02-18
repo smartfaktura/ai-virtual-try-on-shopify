@@ -628,8 +628,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         </div>
       )}
 
-      {/* ── Footer Actions ── */}
-      <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+      {/* ── Sticky Footer Actions ── */}
+      <div className="sticky bottom-0 flex justify-end gap-2 pt-3 pb-1 border-t border-border/50 bg-background/95 backdrop-blur-sm -mx-6 px-6 mt-auto">
         <Button variant="ghost" size="sm" onClick={onClose} disabled={isUploading}>
           Cancel
         </Button>

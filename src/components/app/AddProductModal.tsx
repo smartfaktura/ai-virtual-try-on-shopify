@@ -30,8 +30,8 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[580px] max-h-[85vh] overflow-y-auto overflow-x-hidden rounded-2xl p-0">
-        <div className="px-6 pt-6 pb-2">
+      <DialogContent className="sm:max-w-[580px] max-h-[85vh] flex flex-col overflow-hidden rounded-2xl p-0">
+        <div className="px-6 pt-6 pb-2 shrink-0">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold tracking-tight">
               {editingProduct ? 'Edit Product' : 'Add Product'}
@@ -40,7 +40,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
         </div>
 
         {editingProduct ? (
-          <div className="px-6 pb-6">
+          <div className="px-6 pb-6 overflow-y-auto flex-1 min-h-0">
             <ManualProductTab
               onProductAdded={onProductAdded}
               onClose={handleClose}
@@ -48,8 +48,8 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
             />
           </div>
         ) : (
-          <Tabs defaultValue="manual" className="w-full">
-            <div className="px-6">
+          <Tabs defaultValue="manual" className="w-full flex flex-col flex-1 min-h-0">
+            <div className="px-6 shrink-0">
               <TabsList className="w-full bg-transparent p-0 h-auto gap-1 border-b border-border rounded-none justify-start">
                 <TabsTrigger
                   value="manual"
@@ -63,7 +63,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
                   className="rounded-full px-3.5 py-1.5 text-xs font-medium data-[state=active]:bg-foreground data-[state=active]:text-background data-[state=active]:shadow-none bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
                 >
                   <Globe className="w-3.5 h-3.5" />
-                  Store URL
+                  Product URL
                 </TabsTrigger>
                 <TabsTrigger
                   value="csv"
@@ -82,7 +82,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
               </TabsList>
             </div>
 
-            <div className="px-6 pb-6 pt-4">
+            <div className="px-6 pb-6 pt-4 overflow-y-auto flex-1 min-h-0">
               <TabsContent value="manual" className="mt-0">
                 <ManualProductTab onProductAdded={onProductAdded} onClose={handleClose} />
               </TabsContent>
