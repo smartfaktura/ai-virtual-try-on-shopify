@@ -1,21 +1,22 @@
 
 
-## Enable Google Sign-In
+## Add Apple Sign-In and Fix Auth Page Layout
 
-### Step 1: Configure Google OAuth
-Use Lovable Cloud's built-in social auth configuration tool to set up Google OAuth and generate the required module at `src/integrations/lovable/`.
+### Problem
+1. No Apple Sign-In option on the auth page
+2. The Google button and "or" divider have no vertical spacing between sections (they're crammed together as seen in the screenshot)
 
-### Step 2: Add Google Sign-In Button to Auth Page
+### Changes
 
 **File: `src/pages/Auth.tsx`**
 
-- Import `lovable` from `@/integrations/lovable/index`
-- Add a `handleGoogleSignIn` function that calls `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })`
-- Add a "Continue with Google" button between the heading and the email/password form, with a visual divider ("or") separating it from the form
-- The button will use Google's brand colors (white background, dark text, Google "G" icon via inline SVG)
-- Show the Google button in both signup and login modes
+1. **Add Apple Sign-In button** below the Google button, using the Apple logo SVG and dark styling to match Apple's brand guidelines
 
-### UI Layout (after changes)
+2. **Fix spacing** by wrapping the OAuth buttons and divider in a properly spaced container:
+   - Add `space-y-3` wrapper around both OAuth buttons
+   - Add `my-6` margin to the divider so it has breathing room from the buttons above and the form below
+
+3. **Layout after fix:**
 
 ```text
 +---------------------------+
@@ -23,9 +24,10 @@ Use Lovable Cloud's built-in social auth configuration tool to set up Google OAu
 |  Create your account      |
 |  Start with 5 free...     |
 |                           |
-|  [G  Continue with Google]|
-|                           |
-|  ──── or ────             |
+|  [G  Continue with Google]|  <- space-y-3
+|  [  Continue with Apple ]|
+|                           |  <- my-6
+|  ──────── or ────────     |
 |                           |
 |  Display name             |
 |  Email                    |
@@ -40,9 +42,9 @@ Use Lovable Cloud's built-in social auth configuration tool to set up Google OAu
 
 | What | Detail |
 |------|--------|
-| OAuth provider | Google (managed by Lovable Cloud, no API key needed) |
-| Auth function | `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })` |
-| Redirect handling | Existing `onAuthStateChange` listener in `AuthContext` will pick up the session automatically |
-| Files changed | `src/pages/Auth.tsx` (add button + handler) |
-| New dependency | `@lovable.dev/cloud-auth-js` (auto-installed by configure tool) |
+| Apple OAuth | Uses `lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin })` from the already-configured `@lovable.dev/cloud-auth-js` module |
+| Apple button style | Dark background (`bg-black text-white`) with Apple logo SVG, rounded-full to match Google button |
+| Google button | Unchanged functionally, just spacing fixed |
+| Divider | Gets `my-6` for proper vertical breathing room |
+| Files changed | `src/pages/Auth.tsx` only |
 
