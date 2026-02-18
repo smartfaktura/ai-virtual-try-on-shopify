@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowUpRight, AlertCircle } from 'lucide-react';
 import { creditPacks } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
-import { toast } from 'sonner';
 
 interface NoCreditsModalProps {
   open: boolean;
@@ -12,11 +11,11 @@ interface NoCreditsModalProps {
 }
 
 export function NoCreditsModal({ open, onClose }: NoCreditsModalProps) {
-  const { addCredits } = useCredits();
+  const { startCheckout } = useCredits();
 
-  const handlePurchase = (credits: number) => {
-    addCredits(credits);
-    toast.success(`Added ${credits} credits to your account!`);
+  const handlePurchase = (stripePriceId: string | undefined) => {
+    if (!stripePriceId) return;
+    startCheckout(stripePriceId, 'payment');
     onClose();
   };
 
@@ -68,7 +67,7 @@ export function NoCreditsModal({ open, onClose }: NoCreditsModalProps) {
                   <Button
                     variant={pack.popular ? 'default' : 'outline'}
                     className="w-full min-h-[44px] rounded-xl text-sm font-medium"
-                    onClick={() => handlePurchase(pack.credits)}
+                    onClick={() => handlePurchase(pack.stripePriceId)}
                   >
                     Purchase
                   </Button>

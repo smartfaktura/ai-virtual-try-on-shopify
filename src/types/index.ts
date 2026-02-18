@@ -197,6 +197,8 @@ export interface PricingPlan {
   badge?: string;
   ctaText: string;
   isEnterprise?: boolean;
+  stripePriceIdMonthly?: string;
+  stripePriceIdAnnual?: string;
 }
 
 export interface CreditPack {
@@ -205,4 +207,5 @@ export interface CreditPack {
   price: number;
   pricePerCredit: number;
   popular?: boolean;
+  stripePriceId?: string;
 }

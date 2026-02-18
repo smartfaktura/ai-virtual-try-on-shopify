@@ -746,6 +746,7 @@ export type Database = {
           company_url: string | null
           created_at: string
           credits_balance: number
+          current_period_end: string | null
           display_name: string | null
           email: string
           first_name: string | null
@@ -756,6 +757,9 @@ export type Database = {
           product_categories: string[]
           referral_source: string | null
           settings: Json | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string
           updated_at: string
           user_id: string
         }
@@ -764,6 +768,7 @@ export type Database = {
           company_url?: string | null
           created_at?: string
           credits_balance?: number
+          current_period_end?: string | null
           display_name?: string | null
           email: string
           first_name?: string | null
@@ -774,6 +779,9 @@ export type Database = {
           product_categories?: string[]
           referral_source?: string | null
           settings?: Json | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string
           updated_at?: string
           user_id: string
         }
@@ -782,6 +790,7 @@ export type Database = {
           company_url?: string | null
           created_at?: string
           credits_balance?: number
+          current_period_end?: string | null
           display_name?: string | null
           email?: string
           first_name?: string | null
@@ -792,6 +801,9 @@ export type Database = {
           product_categories?: string[]
           referral_source?: string | null
           settings?: Json | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string
           updated_at?: string
           user_id?: string
         }
