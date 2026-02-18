@@ -181,7 +181,7 @@ export default function Dashboard() {
       const { data, error } = await supabase
         .from('workflows')
         .select('*')
-        .order('name');
+        .order('sort_order');
       if (error) throw error;
       return data as unknown as Workflow[];
     },
@@ -281,7 +281,16 @@ export default function Dashboard() {
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground tracking-tight">Explore Workflows</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {workflows.map(workflow => (
+              {[...workflows].sort((a, b) => {
+                const order: Record<string, number> = {
+                  'Virtual Try-On Set': 1,
+                  'Product Listing Set': 2,
+                  'Selfie / UGC Set': 3,
+                  'Mirror Selfie Set': 4,
+                  'Flat Lay Set': 5,
+                };
+                return (order[a.name] ?? 99) - (order[b.name] ?? 99);
+              }).map(workflow => (
                 <DashboardWorkflowCard
                   key={workflow.id}
                   workflow={workflow}
