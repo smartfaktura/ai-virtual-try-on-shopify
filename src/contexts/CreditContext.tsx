@@ -110,6 +110,8 @@ export function CreditProvider({ children }: CreditProviderProps) {
   
   const checkSubscription = useCallback(async () => {
     if (!user) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return; // Session expired, skip silently
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription');
       if (error) {
@@ -129,6 +131,11 @@ export function CreditProvider({ children }: CreditProviderProps) {
   }, [user]);
 
   const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment') => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error('Please log in to continue.');
+      return;
+    }
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId, mode },
