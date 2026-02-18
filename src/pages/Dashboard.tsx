@@ -49,7 +49,7 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
       ref={ref}
       className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 flex flex-col"
     >
-      <div className="aspect-[4/3] sm:aspect-[4/5] bg-muted/30 overflow-hidden relative">
+      <div className="aspect-[4/5] bg-muted/30 overflow-hidden relative">
         {scene ? (
           <WorkflowAnimatedThumbnail scene={scene} isActive={isVisible} />
         ) : (
