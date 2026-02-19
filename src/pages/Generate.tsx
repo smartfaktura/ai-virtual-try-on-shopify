@@ -468,48 +468,7 @@ export default function Generate() {
       return;
     }
     if (!selectedTemplate) { toast.error('Please select a template first'); return; }
-    setConfirmModalOpen(true);
-  };
-
-  const handleConfirmGenerate = async () => {
-    if (!selectedProduct || !selectedTemplate) return;
-    let sourceImageUrl = '';
-    if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) sourceImageUrl = scratchUpload.uploadedUrl;
-    else if (selectedProduct) {
-      const selectedImageId = Array.from(selectedSourceImages)[0];
-      const sourceImage = selectedProduct.images.find(img => img.id === selectedImageId);
-      sourceImageUrl = sourceImage?.url || selectedProduct.images[0]?.url || '';
-    }
-    if (!sourceImageUrl) { toast.error('No source image available'); return; }
-    setConfirmModalOpen(false);
-    setCurrentStep('generating');
-    setGeneratingProgress(0);
-
-    const base64Image = await convertImageToBase64(sourceImageUrl);
-    const enqueueResult = await enqueue({
-      jobType: 'product',
-      payload: {
-        product: { title: selectedProduct.title, productType: selectedProduct.productType, description: selectedProduct.description, imageUrl: base64Image },
-        template: { name: selectedTemplate.name, promptBlueprint: selectedTemplate.promptBlueprint, negativePrompt: selectedTemplate.defaults.negativePrompt },
-        brandSettings: { tone: brandTone, backgroundStyle },
-        aspectRatio, imageCount: parseInt(imageCount),
-        product_id: selectedProduct?.id || null,
-        brand_profile_id: selectedBrandProfileId || null,
-      },
-      imageCount: parseInt(imageCount),
-      quality,
-    }, {
-      imageCount: parseInt(imageCount),
-      quality,
-      hasModel: false,
-      hasScene: false,
-      hasProduct: true,
-    });
-    if (enqueueResult) {
-      setBalanceFromServer(enqueueResult.newBalance);
-    } else {
-      setCurrentStep('settings');
-    }
+    toast.error('Template-based generation is no longer supported. Please use a workflow.');
   };
 
   const handleWorkflowGenerate = async () => {
