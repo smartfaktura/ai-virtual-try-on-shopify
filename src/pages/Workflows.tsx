@@ -121,7 +121,7 @@ export default function Workflows() {
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from('generation_queue')
-        .select('id, status, created_at, started_at, completed_at, payload, error_message')
+        .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type')
         .eq('status', 'failed')
         .gte('created_at', oneDayAgo)
         .order('created_at', { ascending: false })
