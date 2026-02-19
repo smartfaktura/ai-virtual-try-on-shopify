@@ -266,7 +266,10 @@ export default function Products() {
                         <span className="text-[10px] font-medium text-foreground">{imgCount}</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className={cn(
+                      "absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center",
+                      isMobile ? "opacity-100 bg-gradient-to-t from-black/60 via-transparent to-transparent items-end justify-end pb-2 pr-2" : "opacity-0 group-hover:opacity-100"
+                    )}>
                       <div className="flex gap-2">
                         <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
                           <Pencil className="w-3.5 h-3.5" />
