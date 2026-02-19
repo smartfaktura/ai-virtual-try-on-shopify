@@ -1,41 +1,33 @@
 
 
-## Fix: Credit Banner Colors, Button States, and Mobile Text
+## Fix: Restore Branded Button Color and Fix Desktop Gradient Overlap
 
-### Issues Found
+### Problem 1: Button Color Changed
+The Generate button was changed from the branded `bg-primary` (dark navy VOVV.AI color) to `bg-blue-600`. This should be reverted back to `bg-primary` for brand consistency.
 
-1. **"Out of credits" banner** uses `bg-primary` (dark navy) -- same color as the sidebar/navigation. Looks like part of the nav, not a warning. Needs a distinct color.
-2. **"Buy Credits" button in prompt panel** uses orange styling -- user wants it grey/neutral instead.
-3. **Mobile text shows truncated "+4 cred"** -- the shortfall message `+{creditCost - balance} credits` is getting cut off on small screens. Needs rewording.
-4. **Disabled Generate button** uses lowered opacity which looks bad on desktop -- needs a clean muted style without opacity tricks.
+### Problem 2: Gradient Fade Covers the Button
+On desktop, a gradient overlay (`h-40 bg-gradient-to-t from-muted/80`) sits at `z-10` but the prompt panel has no explicit z-index, so the gradient renders on top of the button making it look faded/washed out.
 
 ### Changes
 
-#### 1. LowCreditsBanner -- New Color Scheme
-**File: `src/components/app/LowCreditsBanner.tsx`**
-
-Replace `bg-primary text-primary-foreground` with a soft warm/amber warning style that stands apart from the dark navy navigation:
-- Light: `bg-amber-50 text-amber-900 border border-amber-200`
-- "Buy Credits" button: `bg-amber-600 text-white hover:bg-amber-700` (warm, distinct from nav)
-- Sparkles icon: amber tinted
-- Works across mobile/tablet/desktop
-
-#### 2. Generate Button -- Grey "Buy Credits" State
 **File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
+- Revert the active Generate button from `bg-blue-600 hover:bg-blue-700` back to `bg-primary hover:bg-primary/90 text-primary-foreground`
+- Keep the shadow for visual prominence
 
-Replace the orange "Buy Credits" button with a neutral/grey style:
-- `bg-muted text-foreground border border-border` -- clearly different from the active blue, but not alarming orange
-- No lowered opacity on the disabled state -- use explicit `bg-muted text-muted-foreground` colors instead
+**File: `src/pages/Freestyle.tsx`**
+- Add `relative z-20` to the prompt panel's inner content wrapper so it sits above the gradient fade
+- This ensures the gradient provides the visual fade effect on the gallery behind but never overlaps the interactive prompt panel
 
-#### 3. Fix Mobile Shortfall Text
-Replace `+{creditCost - balance} credits` (which truncates to "+4 cred") with a clearer short message:
-- Mobile: `"Not enough credits"` (no numbers, no truncation)
-- Desktop: `"Need {X} more credits"` (unchanged)
+### Technical Detail
 
-### Technical Summary
+```
+FreestylePromptPanel.tsx line 314:
+  Before: "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
+  After:  "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25"
 
-| File | What Changes |
-|------|-------------|
-| `LowCreditsBanner.tsx` | Banner bg from dark navy to amber/warning. Button color to amber. |
-| `FreestylePromptPanel.tsx` | "Buy Credits" button from orange to grey/neutral. Mobile shortfall text fixed. Disabled button uses explicit muted colors (no opacity). |
+Freestyle.tsx line 595:
+  Before: <div className="lg:max-w-3xl lg:mx-auto lg:pointer-events-auto relative">
+  After:  <div className="lg:max-w-3xl lg:mx-auto lg:pointer-events-auto relative z-20">
+```
 
+Two lines changed across two files.
