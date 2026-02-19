@@ -114,7 +114,7 @@ function ProcessingState({ job }: { job: QueueJob }) {
       </div>
 
       {/* Rotating team message */}
-      <div className="flex items-center gap-2.5 pl-0.5 transition-opacity duration-500">
+      <div className="hidden sm:flex items-center gap-2.5 pl-0.5 transition-opacity duration-500">
         <Avatar className="w-6 h-6 border border-border">
           <AvatarImage src={currentMember.avatar} alt={currentMember.name} />
           <AvatarFallback className="text-[10px]">{currentMember.name[0]}</AvatarFallback>
