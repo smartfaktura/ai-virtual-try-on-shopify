@@ -234,7 +234,7 @@ export function BuyCreditsModal() {
                     return (
                       <div
                         key={p.planId}
-                        className={`relative rounded-2xl p-5 flex flex-col transition-all duration-200 ${
+                        className={`relative rounded-2xl p-4 sm:p-5 flex flex-col transition-all duration-200 ${
                           p.highlighted
                             ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
                             : isCurrent
