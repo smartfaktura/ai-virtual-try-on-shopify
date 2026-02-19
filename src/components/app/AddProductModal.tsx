@@ -1,11 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Globe, FileSpreadsheet, Smartphone } from 'lucide-react';
+import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag } from 'lucide-react';
 import { ManualProductTab } from './ManualProductTab';
 import { StoreImportTab } from './StoreImportTab';
 import { CsvImportTab } from './CsvImportTab';
 import { MobileUploadTab } from './MobileUploadTab';
+import { ShopifyImportTab } from './ShopifyImportTab';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UserProduct {
