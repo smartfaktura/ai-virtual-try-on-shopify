@@ -434,7 +434,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         ) : images.length === 0 ? (
           <div
-            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-7 sm:py-10 ${
+            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-5 sm:py-6 ${
               dragActive
                 ? 'bg-primary/5 border-2 border-primary'
                 : 'bg-muted/30 hover:bg-muted/50 border border-dashed border-border'
