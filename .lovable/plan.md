@@ -1,71 +1,84 @@
 
 
-## Pre-Launch Audit: Issues Found and Fixes
+## Pre-Launch Final Audit: Issues and Fixes
 
-After testing all pages, checking security policies, storage configuration, edge functions, and database setup, here are the findings:
-
-### Status: What's Working Well
-- All app pages render correctly (Dashboard, Products, Workflows, Creative Drops, Discover, Library, Freestyle, Settings, Generate)
-- Landing page looks polished with proper carousel and CTA
-- Product cards display nicely with proper title wrapping and badge truncation
-- Empty states are clean and helpful (Library, Creative Drops)
-- New user trigger (`on_auth_user_created`) is active and creates profiles with 20 credits
-- All storage buckets are correctly configured (public/private as intended)
-- No JavaScript console errors in the app
-- RLS policies are properly scoped for all user data tables
-
----
-
-### Issue 1: Edge Functions Have No JWT Gate (Security - Medium)
-
-**Problem:** All 18+ edge functions in `supabase/config.toml` have `verify_jwt = false`. While many functions do manual JWT parsing internally (e.g., `getUserIdFromJwt`), some functions like `describe-image`, `create-model-from-image`, `create-scene-from-image`, `analyze-product-image`, and `studio-chat` don't appear to verify the caller at all. This means anyone with your API URL can call these functions and consume your AI API credits.
-
-**Fix:** For functions that already do internal auth checking (like `enqueue-generation`, `generate-video`, `trigger-creative-drop`, `retry-queue`, `generate-freestyle`), enable `verify_jwt = true` in `config.toml`. For functions that need to be called without auth (like `mobile-upload` which uses session tokens, or `process-queue` which is internal), keep `verify_jwt = false` but add rate limiting or internal secret checks.
-
-**Files:** `supabase/config.toml`, plus adding auth checks to unprotected edge functions
+### What's Working Well
+- Landing page hero, carousel, trust badges ("20 free credits") -- all correct
+- Mobile responsiveness looks good on all landing sections
+- Auth page design is polished with Google/Apple OAuth
+- Onboarding flow is clean with 3-step wizard
+- All app routes properly protected with ProtectedRoute
+- RLS policies correctly scoped across all tables
+- Storage buckets properly configured (public/private)
+- Edge functions now have JWT validation
+- No console errors detected
 
 ---
 
-### Issue 2: Leaked Password Protection Disabled (Security - Low)
+### Issue 1: Auth Page Says "5 free credits" (Text Bug - High)
 
-**Problem:** The database linter flagged that leaked password protection is disabled. This means users can sign up with passwords that have appeared in known data breaches.
+**Problem:** The Auth page has TWO instances of "5 free credits" that were missed when the landing page was updated to "20 free credits":
+- Line 75: "Start with 5 free credits -- no credit card required"
+- Line 203: "5 free credits included with every new account"
 
-**Fix:** Enable leaked password protection in the authentication settings. This is a configuration change, not a code change.
+This is the first thing new users see when signing up -- it's misleading and inconsistent with the landing page and the actual 20-credit allocation.
 
----
-
-### Issue 3: `generated_videos` Service Role Policy (Security - Informational)
-
-**Problem:** The linter flagged the "Service role can manage all videos" RLS policy with `USING (true)`. However, this policy is scoped to the `service_role` role only, which is only available server-side. This is actually safe and intentional -- edge functions need service role access to update video status.
-
-**Fix:** No code change needed. This is a false positive from the linter.
+**Fix:** Update both strings in `src/pages/Auth.tsx` to say "20 free credits".
 
 ---
 
-### Issue 4: Landing Page Says "5 free visuals" But Users Get 20 Credits (Content - Low)
+### Issue 2: FAQ Says "5 free visuals" (Text Bug - Medium)
 
-**Problem:** The landing page hero section shows "5 free visuals" in the social proof bar, but new users actually receive 20 credits. This is misleading (in the user's favor, but still inconsistent).
+**Problem:** The FAQ answer for "Is there a free trial?" says "Every new account gets 5 free visuals" -- should be 20 free credits.
 
-**Fix:** Update the landing page text to match the actual credit allocation, or adjust to say "20 free credits" / "Up to 20 free visuals".
-
-**File:** `src/components/landing/HeroSection.tsx`
+**Fix:** Update the FAQ answer in `src/components/landing/LandingFAQ.tsx` line 39 to say "20 free credits" instead of "5 free visuals".
 
 ---
 
-### Recommended Fix Priority
+### Issue 3: Footer Social Links Are Dead (UX - Medium)
 
-1. **Issue 1** (Edge function auth) -- Should be addressed before launch to prevent credit abuse
-2. **Issue 4** (Landing page text) -- Quick fix for consistency  
-3. **Issue 2** (Password protection) -- Configuration change via backend settings
-4. **Issue 3** -- No action needed
+**Problem:** The footer has Twitter, LinkedIn, and Instagram links that all point to `#` (no real URLs). Clicking them does nothing, which looks unprofessional.
 
-### Technical Implementation
+**Fix:** Either:
+- Replace with real social media URLs if they exist
+- Remove the social links section entirely until real URLs are available
 
-**For Issue 1 (Edge Function Auth):**
-- Update `supabase/config.toml` to set `verify_jwt = true` for functions that already do internal auth
-- Add auth header validation to unprotected functions (`describe-image`, `create-model-from-image`, `create-scene-from-image`, `analyze-product-image`, `studio-chat`) that call external AI APIs
-- Keep `verify_jwt = false` only for truly public endpoints (`mobile-upload`, `process-queue`, `import-product`)
+Recommendation: Remove the social links for now to avoid a broken impression at launch.
 
-**For Issue 4 (Landing Text):**
-- Change "5 free visuals" to "20 free credits" in `HeroSection.tsx`
+---
+
+### Issue 4: Enterprise "Contact Sales" Routes to Auth Page (UX - Low)
+
+**Problem:** On the landing pricing section, the Enterprise "Contact Sales" button navigates to `/auth` (signup page) instead of `/contact`. Enterprise leads should be routed to the contact form.
+
+**Fix:** Update the Enterprise CTA in `src/components/landing/LandingPricing.tsx` line 135 to navigate to `/contact` instead of `/auth`.
+
+---
+
+### Issue 5: Contact Form Doesn't Actually Send (Functional - Low)
+
+**Problem:** The contact form at `/contact` shows a success toast but doesn't actually send the message anywhere (no backend integration). This is acceptable for MVP but should be noted.
+
+**Fix:** No code change needed for launch -- just be aware that contact form submissions are not persisted or emailed. Can be connected to an email service post-launch.
+
+---
+
+### Summary of Code Changes Needed
+
+| Priority | File | Change |
+|----------|------|--------|
+| High | `src/pages/Auth.tsx` | Change "5 free credits" to "20 free credits" (2 places) |
+| Medium | `src/components/landing/LandingFAQ.tsx` | Change "5 free visuals" to "20 free credits" |
+| Medium | `src/components/landing/LandingFooter.tsx` | Remove social links with `#` hrefs |
+| Low | `src/components/landing/LandingPricing.tsx` | Enterprise CTA: navigate to `/contact` |
+
+### No Issues Found In
+- Database triggers and functions
+- RLS policies (all properly scoped)
+- Storage bucket visibility
+- Edge function authentication
+- Mobile responsiveness
+- App shell navigation
+- Product upload flow
+- Onboarding wizard
 
