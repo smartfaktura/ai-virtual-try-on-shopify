@@ -126,7 +126,7 @@ function ProcessingState({ job }: { job: QueueJob }) {
 
       <Progress
         value={progress}
-        className="h-1.5 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
+        className="h-1 sm:h-1.5 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
       />
     </div>
   );
