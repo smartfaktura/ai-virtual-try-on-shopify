@@ -1,23 +1,43 @@
 
 
-## Fix: Close Button Overlapping "FREE" Badge
+## Fix: "Not enough credits" Text Clipping on Mobile
 
 ### Problem
-The dialog's built-in close (X) button overlaps the plan badge ("FREE") in the modal header because both sit at the top-right corner. The badge has no right margin to account for the close button.
+In the freestyle prompt panel's action bar, the "Not enough credits" message and "Buy Credits" button share a single horizontal row. On mobile, the text gets truncated ("Not enough c...") because the button takes priority in the flex layout.
 
 ### Solution
-Add right padding to the header's badge area so it doesn't collide with the close button. The DialogContent close button is typically positioned at `right-4 top-4`, so the badge needs enough margin-right (approximately `mr-8`) to clear it.
+When credits are insufficient on mobile, switch the action bar to a vertical layout so the warning text appears above a full-width "Buy Credits" button.
 
-### Change (single file: `src/components/app/BuyCreditsModal.tsx`)
+### Changes (single file: `src/components/app/freestyle/FreestylePromptPanel.tsx`)
 
-**Line 86** - Add `mr-8` to the Badge so it sits to the left of the X button:
-
+**Line 275 — Action bar container**: Make it wrap vertically on mobile when showing insufficient credits:
 ```tsx
 // Before
-<Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-semibold px-3 py-1">
+<div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
 
-// After
-<Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-semibold px-3 py-1 mr-8">
+// After — add flex-wrap support
+<div className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
 ```
 
-This gives the close button its own space without touching the plan label.
+**Lines 287-290 — Warning text**: Make it full-width on mobile so it sits on its own row:
+```tsx
+// Before
+<p className="text-xs text-muted-foreground mr-auto truncate">
+  <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
+  <span className="sm:hidden">Not enough credits</span>
+</p>
+
+// After — full width on mobile, no truncation
+<p className="text-xs text-muted-foreground mr-auto w-full sm:w-auto">
+  <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
+  <span className="sm:hidden">Not enough credits</span>
+</p>
+```
+
+**Line 301 — Buy Credits button**: Make it full-width on mobile (it already has `w-full sm:w-auto`, so it just needs the parent to allow wrapping — already handled above).
+
+This gives a clean two-row layout on mobile:
+- Row 1: "Not enough credits" (full width)
+- Row 2: "Buy Credits" button (full width)
+
+On desktop, it remains a single row as before.
