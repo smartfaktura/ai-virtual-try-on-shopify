@@ -1,11 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Globe, FileSpreadsheet, Smartphone } from 'lucide-react';
+import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag } from 'lucide-react';
 import { ManualProductTab } from './ManualProductTab';
 import { StoreImportTab } from './StoreImportTab';
 import { CsvImportTab } from './CsvImportTab';
 import { MobileUploadTab } from './MobileUploadTab';
+import { ShopifyImportTab } from './ShopifyImportTab';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UserProduct {
@@ -81,6 +82,13 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
             <Smartphone className="w-3.5 h-3.5" />
             Mobile
           </TabsTrigger>
+          <TabsTrigger
+            value="shopify"
+            className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            Shopify
+          </TabsTrigger>
         </TabsList>
       </div>
 
@@ -96,6 +104,9 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
         </TabsContent>
         <TabsContent value="mobile" className="mt-0">
           <MobileUploadTab onProductAdded={onProductAdded} onClose={handleClose} />
+        </TabsContent>
+        <TabsContent value="shopify" className="mt-0">
+          <ShopifyImportTab onProductAdded={onProductAdded} onClose={handleClose} />
         </TabsContent>
       </div>
     </Tabs>
