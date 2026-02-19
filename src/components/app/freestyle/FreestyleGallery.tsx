@@ -80,7 +80,7 @@ function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: n
   return (
     <div
       className={cn(
-        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-5 px-8',
+        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-3 sm:gap-5 px-4 sm:px-8',
         'border border-border/30 w-full',
         'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
         className,
