@@ -89,11 +89,11 @@ function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: n
     >
       {/* Avatar with glow ring */}
       <div className="relative">
-        <div className="absolute -inset-1.5 rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]" />
+        <div className="absolute -inset-1 sm:-inset-1.5 rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]" />
         <img
           src={crew.avatar}
           alt={crew.name}
-          className="relative w-16 h-16 rounded-full object-cover ring-2 ring-primary/40"
+          className="relative w-10 h-10 sm:w-16 sm:h-16 rounded-full object-cover ring-2 ring-primary/40"
         />
       </div>
 
