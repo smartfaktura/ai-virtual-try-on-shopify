@@ -33,7 +33,7 @@ import { PageHeader } from '@/components/app/PageHeader';
 import { TemplatePreviewCard, getTemplateImage } from '@/components/app/TemplatePreviewCard';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { PublishModal } from '@/components/app/PublishModal';
-import { GenerateConfirmModal } from '@/components/app/GenerateConfirmModal';
+
 import { TryOnConfirmModal } from '@/components/app/TryOnConfirmModal';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
