@@ -108,7 +108,7 @@ function ProcessingState({ job }: { job: QueueJob }) {
             <span className="text-xs font-mono text-muted-foreground">{elapsed}s elapsed</span>
           </div>
           {(complexityHint || proModelHint) && (
-            <p className="text-[11px] text-muted-foreground/70 mt-0.5">{complexityHint || proModelHint}</p>
+            <p className="hidden sm:block text-[11px] text-muted-foreground/70 mt-0.5">{complexityHint || proModelHint}</p>
           )}
         </div>
       </div>
