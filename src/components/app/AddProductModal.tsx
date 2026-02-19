@@ -105,6 +105,9 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
         <TabsContent value="mobile" className="mt-0">
           <MobileUploadTab onProductAdded={onProductAdded} onClose={handleClose} />
         </TabsContent>
+        <TabsContent value="shopify" className="mt-0">
+          <ShopifyImportTab onProductAdded={onProductAdded} onClose={handleClose} />
+        </TabsContent>
       </div>
     </Tabs>
   );
