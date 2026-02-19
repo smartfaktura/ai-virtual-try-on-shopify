@@ -1,52 +1,45 @@
 
 
-## Fix: Align Backend Credit Pricing with Frontend Tiers
+## Fix: Confusing Disabled State on Generate Button
 
-### The Real Problem
+### What's Happening
 
-The **frontend** pricing is correct (matching your intent), but the **backend** uses a flat 8/16 rate that ignores model/scene complexity. This causes the "insufficient credits" error when a user has 4 credits and tries a basic (no model, no scene) generation that should cost 4.
+The Generate button is currently disabled and greyed out. The user sees "Need 4 more credits" and assumes credits are the problem, but the button is actually disabled because **no prompt has been typed yet** (the text field is empty). The credit warning is a secondary issue.
 
-### Your Intended Pricing (per image)
+This creates confusion because two different problems overlap without clear feedback about which one is blocking the action.
 
-| Scenario | Standard | High Quality |
-|----------|----------|-------------|
-| Base (no model, no scene) | 4 | 10 |
-| With model | 12 | 12 |
-| With model + scene | 15 | 15 |
-| Virtual try-on | 8 | 8 |
+### Root Cause
 
-### What Needs to Change
+The button uses `disabled={!canGenerate}` where `canGenerate = canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading`. With an empty prompt and no assets, the button is disabled regardless of credit balance. But the only visible feedback is the credit warning, misleading the user.
 
-**1. Backend: `supabase/functions/enqueue-generation/index.ts`**
+### Solution
 
-Update the `calculateCreditCost` function to accept `hasModel` and `hasScene` flags from the frontend payload, and apply the correct tiered pricing instead of the flat 8/16 rate.
+**1. Show contextual helper text explaining what's needed**
 
-```text
-Before:  perImage = quality === "high" ? 16 : 8  (always)
-After:
-  - model + scene: 15 per image
-  - model only:    12 per image
-  - base:          quality === "high" ? 10 : 4 per image
-  - tryon:         8 per image
-```
+When the button is disabled due to missing input (not credits), show a small text hint: "Type a prompt or add a reference to start". This appears in the action bar area, left-aligned, so the user knows exactly what to do.
 
-The edge function will read `hasModel` and `hasScene` from the request body (already sent by the freestyle page) and pass them to the cost calculator.
+**2. Prioritize the input message over the credit message**
 
-**2. Frontend: `src/pages/Freestyle.tsx`**
+When BOTH input is missing AND credits are insufficient, show the input requirement first (since fixing credits alone won't help). The credit warning appears only when the user has valid input but not enough credits.
 
-Add `hasModel` and `hasScene` flags to the payload sent to `enqueue-generation` so the backend can calculate the correct cost. Currently these flags exist in the component but may not be forwarded in the request body.
-
-**3. Frontend: `src/contexts/CreditContext.tsx`**
-
-Update the `calculateCost` function to match the same rates (4/10/12/15) so any other UI that uses it stays consistent. The current `calculateCost` already has this logic, so this may just need verification.
-
-### Technical Details
+### File to Change
 
 | File | Change |
 |------|--------|
-| `supabase/functions/enqueue-generation/index.ts` | Rewrite `calculateCreditCost` to use tiered pricing based on `hasModel`/`hasScene` flags; extract those flags from `body` |
-| `src/pages/Freestyle.tsx` | Ensure `hasModel` and `hasScene` are included in the generation request payload |
-| `src/hooks/useGenerateFreestyle.ts` | Verify the hook passes `hasModel`/`hasScene` to the enqueue call |
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | In the action bar (Row 3), conditionally show helper text. When `!canGenerate` and the reason is no input (not just credits), show "Type a prompt or add a reference" hint. Only show the credit warning when input is valid but credits are short. |
 
-This fix will make a basic freestyle generation correctly cost 4 credits, allowing the user with 4 credits to generate successfully.
+### Technical Details
 
+In the action bar section (around line 275-289), change the logic:
+
+```text
+Current:
+  if creditBalance < creditCost -> show "Need X more credits"
+
+Proposed:
+  if !canGenerate AND creditBalance >= creditCost -> show "Type a prompt or add a reference"
+  if canGenerate AND creditBalance < creditCost -> show "Need X more credits" + Top up
+  if !canGenerate AND creditBalance < creditCost -> show "Type a prompt or add a reference" (prioritize input message)
+```
+
+This ensures the user always knows what action to take next, whether it's typing a prompt or buying credits.
