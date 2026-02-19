@@ -2340,9 +2340,6 @@ export default function Generate() {
       </div>
 
       {/* Modals */}
-      <GenerateConfirmModal open={confirmModalOpen} onClose={() => setConfirmModalOpen(false)} onConfirm={handleConfirmGenerate}
-        product={selectedProduct} template={selectedTemplate} sourceImageIds={selectedSourceImages}
-        imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} quality={quality} creditsRemaining={balance} onBuyCredits={openBuyModal} />
       <TryOnConfirmModal open={tryOnConfirmModalOpen} onClose={() => setTryOnConfirmModalOpen(false)} onConfirm={handleTryOnConfirmGenerate}
         product={selectedProduct} model={selectedModel} pose={selectedPose}
         imageCount={parseInt(imageCount)} aspectRatio={aspectRatio} creditsRemaining={balance} isLoading={isEnqueuing} onBuyCredits={openBuyModal}
