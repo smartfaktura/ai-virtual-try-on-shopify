@@ -1,95 +1,89 @@
 
 
-## Fix Product Categories: From Clothing-Only to Universal
+## Redesign Freestyle Prompt Bar: Organized Settings Layout
 
-### The Problem
+### Current Problem
+The settings row has 12+ chips in a single flat wrap with no visual hierarchy:
+`Upload Image | Add Product | Model | Scene | Framing | Brand | Exclude | 1:1 | Standard | Pro | Polish | -1+ | Cinematic Editorial Minimal...`
 
-The product category/type system is hardcoded for clothing and fashion products in **4 separate places**, making the platform unusable for customers selling candles, tech gadgets, pet supplies, furniture, or anything outside fashion:
+Users can't quickly find what they need because asset controls, creative settings, and output settings are all mixed together.
 
-1. **ManualProductTab.tsx** (line 45-66): 65+ hardcoded types, heavily clothing-biased (T-Shirt, Hoodie, Leggings...). A candle seller sees mostly irrelevant options.
+### Proposed Layout: 3 Logical Groups with Subtle Dividers
 
-2. **UploadSourceCard.tsx** (line 33-36): Only 11 clothing types (Leggings, Hoodie, T-Shirt, Sports Bra...). Completely useless for non-clothing.
+**Desktop (single row with vertical dividers):**
 
-3. **analyze-product-image edge function**: AI prompt says "Analyze this image of a **clothing/fashion product**" and restricts productType to "One of: Leggings, Hoodie, T-Shirt, Sports Bra, Jacket, Tank Top, Joggers, Shorts, Dress, Sweater, Other". Any non-clothing product gets "Other".
+```text
+[+ Upload] [Add Product] [Model] [Scene]  |  [Framing] [Brand] [Exclude] [Presets]  |  [1:1] [Standard] [Pro] [Polish]  ___  [-1+]
+ ^--- Assets/References ---^                 ^--- Creative Controls ---^               ^--- Output Settings ---^          ^count
+```
 
-4. **categoryUtils.ts**: Keyword-based detection only covers 5 categories (clothing, cosmetics, food, home, supplements). Everything else returns `null`.
+- Group 1 "References": Upload Image, Product, Model, Scene -- what goes INTO the image
+- Group 2 "Style": Framing, Brand, Exclude, Presets -- HOW it looks
+- Group 3 "Output": Aspect Ratio, Quality, Camera Style, Polish -- technical output config
+- Image count stepper stays right-aligned
 
-### How Product Type is Actually Used
+Groups separated by a thin vertical `border-l` divider (1px, subtle) -- no labels needed, the visual grouping is enough.
 
-After tracing through all generation flows:
+**Mobile (keep current 2-row collapsible approach but regroup):**
+- Row 1: Upload, Product, Model, Scene (references -- most used)
+- Row 2: Framing, Aspect Ratio, Quality, Camera, Count, Style (collapsed advanced)
+- Move Brand + Exclude + Polish + Presets into the "Style" collapsible (already works this way)
 
-- **generate-product**: Passes `productType` into the prompt as context ("Type: {productType}")
-- **generate-tryon**: Uses it in prompt ("Details: {description or productType}")
-- **generate-workflow**: Uses `getProductInteraction()` which maps broad categories (skincare, clothing, food, tech, etc.) to interaction descriptions. Falls back to generic "holding the product naturally"
-- **Freestyle**: Just displays it as a label, no generation impact
-- **categoryUtils**: Used for template recommendations only
+### Style Presets: Move Inside the Prompt Bar
+Currently style presets (Cinematic, Editorial, Minimal, etc.) sit as a separate row below the chips. Move them inline as part of the "Style" group on desktop -- either as a popover like on mobile, or keep them inline but visually grouped with the other creative controls.
 
-**Key insight**: The generation prompts use productType as free-text context. They don't validate against a fixed list. So we can use ANY descriptive type and it works fine.
-
-### The Fix: Simple Free-Text Input with AI Smart Detection
-
-Replace the rigid combobox with a **free-text input that accepts any product type**, plus improve the AI to detect any product category automatically.
-
-**1. ManualProductTab.tsx -- Replace combobox with smart input**
-- Replace the 65-item `PRODUCT_TYPES` array and Popover/Command combobox with a simple `Input` field
-- Add a small set of **suggestion chips** (8-10 common ones) that users can tap to quickly fill
-- Suggestions: Clothing, Footwear, Beauty, Skincare, Food, Drink, Home Decor, Electronics, Jewelry, Accessories
-- User can type anything: "Ceramic Plant Pot", "Dog Harness", "Guitar Pedal" -- all valid
-- Much simpler UI, works perfectly on mobile
-
-**2. UploadSourceCard.tsx -- Same approach**
-- Replace the 11-item Select dropdown with a simple Input field
-- Remove the `productTypeOptions` array entirely
-- The AI analysis will auto-fill this field anyway
-
-**3. analyze-product-image edge function -- Make AI universal**
-- Change the prompt from "clothing/fashion product" to "product"
-- Remove the restricted "One of:" list for productType
-- Instead: "productType: A short category label (e.g. 'Sneakers', 'Scented Candle', 'Face Serum', 'Wireless Earbuds', 'Dog Leash')"
-- The AI will now correctly identify ANY product type
-
-**4. categoryUtils.ts -- Add catch-all**
-- Add more broad categories: "tech", "pets", "sports", "toys", "stationery"
-- Keep the existing keyword matching but make it more inclusive
-- This only affects template recommendations, not generation quality
-
-### Files to Change
+### File to Change
 
 | File | Change |
 |------|--------|
-| `src/components/app/ManualProductTab.tsx` | Replace combobox with free-text Input + suggestion chips |
-| `src/components/app/UploadSourceCard.tsx` | Replace Select dropdown with simple Input |
-| `supabase/functions/analyze-product-image/index.ts` | Update AI prompt to detect any product, not just clothing |
-| `src/lib/categoryUtils.ts` | Broaden keyword categories, add tech/pets/sports |
+| `src/components/app/freestyle/FreestyleSettingsChips.tsx` | Regroup desktop layout into 3 visual groups with dividers; move presets into creative group |
 
 ### Technical Details
 
-**ManualProductTab.tsx:**
-- Remove `PRODUCT_TYPES` array (lines 45-66)
-- Remove `Popover`, `Command*` imports and the combobox JSX
-- Replace with:
-```
-<Input
-  value={productType}
-  onChange={(e) => { setProductType(e.target.value); hasManualEdits.current.productType = true; }}
-  placeholder="e.g. Scented Candle, Sneakers, Face Serum..."
-/>
-```
-- Add suggestion chips below:
-```
-const QUICK_TYPES = ['Clothing', 'Footwear', 'Beauty', 'Skincare', 'Food & Drink', 'Home Decor', 'Electronics', 'Jewelry', 'Accessories', 'Pet Supplies'];
-```
-- Render as small tappable badges that fill the input on click
+**FreestyleSettingsChips.tsx -- Desktop layout (lines 429-488):**
 
-**UploadSourceCard.tsx:**
-- Remove `productTypeOptions` array
-- Replace `Select` with `Input` using same placeholder pattern
+Replace the single flat `flex-wrap` with grouped sections:
 
-**analyze-product-image/index.ts:**
-- Change prompt to: "Analyze this product image. Return a JSON object with: title, productType (a short descriptive category like 'Running Shoes', 'Scented Candle', 'Face Serum', 'Wireless Earbuds'), description"
+```tsx
+// Desktop: grouped chips with subtle dividers
+<div className="flex items-center gap-1.5 flex-wrap">
+  {/* Group 1: References */}
+  {uploadButton}
+  <ProductSelectorChip ... />
+  <ModelSelectorChip ... />
+  <SceneSelectorChip ... />
+  
+  {/* Divider */}
+  <div className="h-5 w-px bg-border/60 mx-1" />
+  
+  {/* Group 2: Creative */}
+  <FramingSelectorChip ... />
+  <BrandProfileChip ... />
+  <NegativesChip ... />
+  {presetsChipOrInline}
+  
+  {/* Divider */}
+  <div className="h-5 w-px bg-border/60 mx-1" />
+  
+  {/* Group 3: Output */}
+  {aspectRatioChip}
+  {qualityChip}
+  {cameraStyleChip}
+  {polishChip}
+  
+  <div className="flex-1" />
+  {imageCountStepper}
+</div>
+```
 
-**categoryUtils.ts:**
-- Add `tech` category keywords: phone, laptop, headphone, speaker, charger, cable, gadget
-- Add `pets` keywords: dog, cat, pet, collar, leash, harness
-- Add to TemplateCategory type if needed, or keep returning `null` for truly unknown types (the fallback to 'universal' templates already handles this)
+- No separate presets row on desktop -- merge into a single popover chip like mobile (saves vertical space)
+- Remove the extra `{presetsSection}` below the main row on desktop
+- Mobile layout stays mostly the same (already well-organized with collapsible)
+
+### What This Achieves
+- Clear visual grouping without labels or extra UI weight
+- Users intuitively find "what" (references) vs "how" (style) vs "output" (technical)
+- Removes the random feel of the current flat chip soup
+- Saves vertical space by collapsing presets into a chip on desktop too
+- No functionality changes -- just reorganization
 
