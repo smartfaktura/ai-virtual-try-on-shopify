@@ -72,7 +72,14 @@ serve(async (req) => {
       const imgResponse = await fetch(imageUrl);
       if (!imgResponse.ok) throw new Error("Failed to fetch source image");
       const imgBuffer = await imgResponse.arrayBuffer();
-      const imgBase64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
+      // Chunked base64 encoding to avoid stack overflow on large images
+      const uint8 = new Uint8Array(imgBuffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < uint8.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, Array.from(uint8.slice(i, i + chunkSize)));
+      }
+      const imgBase64 = btoa(binary);
       const mimeType = imgResponse.headers.get("content-type") || "image/png";
 
       // Call AI to upscale
