@@ -10,6 +10,8 @@ export interface ActiveJob {
   error_message: string | null;
   product_name?: string | null;
   credits_reserved?: number;
+  job_type?: string | null;
+  quality?: string | null;
 }
 
 export interface BatchGroup {
