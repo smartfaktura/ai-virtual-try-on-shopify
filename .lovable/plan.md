@@ -1,80 +1,53 @@
 
 
-## Shopify Direct Sync: Bulk Product Import
+## Fix: Mobile Upload Session Mismatch
 
-### Overview
+### Root Cause
 
-Add a new "Shopify" tab to the Add Product modal that lets users connect their Shopify store and bulk-import products. Only the data our platform actually needs gets imported (title, type, description, images) -- no variants, inventory, pricing, or other Shopify-specific data.
+The `MobileUploadTab` component creates a new session every time it mounts (via `useEffect` calling `createSession`). When the component remounts (modal close/reopen, tab switch, React re-render), a brand new session + QR code is generated. But the user's phone already scanned the PREVIOUS QR code and uploaded to that session. The desktop polls only the newest session token, so the upload is never detected.
 
-### Security
+Evidence from the database:
+- Session `8597b86d` (11:45:09) -- status: **uploaded** with image (the phone uploaded here)
+- Session `fd7d419e` (11:45:31) -- status: **pending** (desktop was polling this one)
 
-- All imported products go into `user_products` which has RLS: `auth.uid() = user_id`. Only the owner can see, edit, or delete their products.
-- The Shopify access token is sent per-request to the edge function and never stored in the database.
-- The edge function validates the user's auth token before doing anything.
+### Fix Strategy
 
-### Handling Thousands of Products
+Two changes to make this robust:
 
-Instead of importing everything at once (which would time out), the flow works in two steps:
+**1. MobileUploadTab.tsx -- Poll ALL recent pending/uploaded sessions, not just the latest one**
 
-1. **List step**: Fetches product titles + thumbnail URLs from Shopify (fast, lightweight -- just metadata). Paginated at 250/page per Shopify API limits.
-2. **Import step**: User selects which products to import. We process them in batches of 10 -- downloading images, uploading to storage, creating DB rows. A progress bar shows real-time status. User can import a few now and come back for more later.
+Instead of polling a single session token, the status check should look for any session that has been uploaded for this user within the last 15 minutes. This way, even if the component remounts and creates a new session, it will still detect uploads from earlier sessions.
 
-### User Instructions (Built Into UI)
+Change the polling logic: Instead of checking `status` for one specific token, also query for the most recent `uploaded` session for the user. The edge function `status` action will be updated to support this.
 
-The Shopify tab will include a clear 3-step guide with no technical jargon:
+**2. Edge function mobile-upload/index.ts -- Add a "check-any" status action**
 
-```text
-1. In your Shopify admin, go to Settings -> Apps -> Develop apps
-2. Create an app, enable "read_products" access scope
-3. Copy your Admin API access token and paste it below
-```
+Add a new action (or modify "status") that checks if ANY session for this user has status "uploaded" and returns it. This covers the case where the desktop session token doesn't match the one the phone used.
 
-A helper link to Shopify's official docs will be provided.
-
-### What Gets Imported (Only What We Need)
-
-| Imported | NOT Imported |
-|----------|-------------|
-| Title | Prices / variants |
-| Product type (free-text) | Inventory / stock |
-| Description (text only) | Tags / collections |
-| Up to 6 images | Metafields |
-| | SEO data |
-| | Shipping info |
-
-### Files to Create/Edit
+### Files to Change
 
 | File | Change |
 |------|--------|
-| `supabase/functions/shopify-sync/index.ts` | **New** -- edge function to list and import from Shopify Admin API |
-| `src/components/app/ShopifyImportTab.tsx` | **New** -- UI for connecting store, browsing, selecting, importing |
-| `src/components/app/AddProductModal.tsx` | Add "Shopify" tab to the tab bar |
-| `supabase/config.toml` | Register new function with `verify_jwt = false` |
+| `supabase/functions/mobile-upload/index.ts` | Add fallback: when the polled session is still "pending", also check if any other session for this user was recently uploaded |
+| `src/components/app/MobileUploadTab.tsx` | Update polling to pass user context and handle the "found uploaded from different session" case |
 
 ### Technical Details
 
-**Edge function `shopify-sync`** handles two actions:
+**Edge function change (mobile-upload/index.ts, status action):**
 
-- `action: "list"` -- Calls `GET /admin/api/2024-01/products.json?fields=id,title,product_type,body_html,images&limit=250` with pagination via Link header. Returns lightweight product list (id, title, type, thumbnail). Fetches all pages but only returns summary data.
-
-- `action: "import"` -- Receives array of selected Shopify product IDs. For each product, downloads up to 6 images, uploads to `product-uploads` bucket, creates `user_products` + `product_images` rows. Processes in batches of 10 products to stay within timeout. Returns progress so frontend can call again with remaining IDs.
-
-**ShopifyImportTab.tsx** UI flow:
-
-1. Domain input + access token input (with inline setup instructions)
-2. "Connect & Load Products" button
-3. Product grid with checkboxes, "Select All" toggle, product count
-4. "Import Selected (N)" button with progress bar
-5. Success state showing how many were imported
-
-**AddProductModal.tsx** -- adds a 5th tab:
-
-```tsx
-<TabsTrigger value="shopify">
-  <ShoppingBag className="w-3.5 h-3.5" />
-  Shopify
-</TabsTrigger>
+When `action=status` and the specific token returns "pending", also query:
+```sql
+SELECT image_url FROM mobile_upload_sessions 
+WHERE user_id = :userId AND status = 'uploaded' 
+AND created_at > now() - interval '15 minutes'
+ORDER BY created_at DESC LIMIT 1
 ```
 
-The import follows the exact same pattern as existing `StoreImportTab` and `ManualProductTab` -- same DB writes, same storage bucket, same RLS protection.
+If found, return that image_url even though the specific token is still pending. This handles the session mismatch gracefully.
+
+**MobileUploadTab.tsx:**
+
+No major UI changes needed. The polling callback just needs to handle the new response shape where `image_url` can come from a different session.
+
+Also add a guard to prevent creating a new session if one was created less than 30 seconds ago (debounce re-creation on remount).
 
