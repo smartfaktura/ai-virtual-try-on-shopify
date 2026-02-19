@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, X, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ScratchUpload } from '@/types';
@@ -20,10 +19,6 @@ interface UploadSourceCardProps {
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-const productTypeOptions = [
-  'Leggings', 'Hoodie', 'T-Shirt', 'Sports Bra', 'Jacket', 'Tank Top',
-  'Joggers', 'Shorts', 'Dress', 'Sweater', 'Other',
-];
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -63,7 +58,7 @@ export function UploadSourceCard({
       const data = await resp.json();
       onUpdateProductInfo({
         title: data.title || currentInfo.title,
-        productType: productTypeOptions.includes(data.productType) ? data.productType : currentInfo.productType,
+        productType: data.productType || currentInfo.productType,
         description: data.description || currentInfo.description,
       });
     } catch {
@@ -115,12 +110,12 @@ export function UploadSourceCard({
               </div>
               <div className="space-y-1.5">
                 <Label>Product Type</Label>
-                <Select value={scratchUpload.productInfo.productType} onValueChange={(val) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: val })}>
-                  <SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger>
-                  <SelectContent>
-                    {productTypeOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Input
+                  value={scratchUpload.productInfo.productType}
+                  onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: e.target.value })}
+                  placeholder="e.g. Scented Candle, Sneakers, Face Serum…"
+                  maxLength={100}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="product-desc">Description (optional)</Label>

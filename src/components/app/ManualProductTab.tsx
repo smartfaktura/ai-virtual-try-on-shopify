@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Info, Sparkles, Check, ChevronsUpDown } from 'lucide-react';
+import { ImagePlus, Loader2, Info, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,8 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ProductImageGallery } from './ProductImageGallery';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,27 +40,9 @@ interface ImageItem {
   storagePath?: string;
 }
 
-const PRODUCT_TYPES = [
-  // Apparel
-  'T-Shirt', 'Hoodie', 'Sweater', 'Pullover', 'Jacket', 'Coat', 'Blazer', 'Vest',
-  'Dress', 'Skirt', 'Pants', 'Jeans', 'Leggings', 'Shorts', 'Swimwear',
-  'Activewear', 'Underwear', 'Sleepwear', 'Top', 'Blouse', 'Shirt',
-  // Footwear
-  'Sneakers', 'Boots', 'Sandals', 'Heels', 'Flats', 'Loafers', 'Slides',
-  // Accessories
-  'Bag', 'Handbag', 'Backpack', 'Wallet', 'Belt', 'Hat', 'Cap', 'Scarf',
-  'Gloves', 'Sunglasses', 'Watch', 'Jewelry', 'Ring', 'Necklace', 'Earrings', 'Bracelet',
-  // Beauty & Skincare
-  'Serum', 'Cream', 'Moisturizer', 'Cleanser', 'Toner', 'Mask', 'Lipstick',
-  'Foundation', 'Mascara', 'Perfume', 'Fragrance',
-  // Home & Living
-  'Candle', 'Mug', 'Pillow', 'Blanket', 'Lamp', 'Vase', 'Frame', 'Rug', 'Towel',
-  // Food & Beverage
-  'Food', 'Beverage', 'Supplement', 'Coffee', 'Tea', 'Snack',
-  // Tech & Electronics
-  'Phone Case', 'Headphones', 'Speaker', 'Charger',
-  // Other
-  'Other',
+const QUICK_TYPES = [
+  'Clothing', 'Footwear', 'Beauty', 'Skincare', 'Food & Drink',
+  'Home Decor', 'Electronics', 'Jewelry', 'Accessories', 'Pet Supplies',
 ];
 
 const MAX_IMAGES = 6;
@@ -79,7 +59,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
-  const [typeOpen, setTypeOpen] = useState(false);
   const initialImageIdsRef = useRef<string[]>([]);
   const hasManualEdits = useRef({ title: false, productType: false, description: false });
 
@@ -150,10 +129,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (error) throw error;
       if (data) {
         if (data.title && !hasManualEdits.current.title) setTitle(data.title);
-        if (data.productType && !hasManualEdits.current.productType) {
-          const match = PRODUCT_TYPES.find(t => t.toLowerCase() === data.productType.toLowerCase());
-          if (match) setProductType(match);
-        }
+        if (data.productType && !hasManualEdits.current.productType) setProductType(data.productType);
         if (data.description && !hasManualEdits.current.description) setDescription(data.description);
       }
     } catch (err) {
@@ -555,43 +531,33 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           {isAnalyzing && !hasManualEdits.current.productType ? (
             <Skeleton className="h-9 w-full rounded-md" />
           ) : (
-            <Popover open={typeOpen} onOpenChange={setTypeOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={typeOpen}
-                  className="w-full justify-between font-normal"
-                >
-                  {productType || 'Select type…'}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search types…" />
-                  <CommandList>
-                    <CommandEmpty>No type found.</CommandEmpty>
-                    <CommandGroup>
-                      {PRODUCT_TYPES.map((t) => (
-                        <CommandItem
-                          key={t}
-                          value={t}
-                          onSelect={(val) => {
-                            setProductType(val === productType ? '' : t);
-                            hasManualEdits.current.productType = true;
-                            setTypeOpen(false);
-                          }}
-                        >
-                          <Check className={cn('mr-2 h-4 w-4', productType === t ? 'opacity-100' : 'opacity-0')} />
-                          {t}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <div className="space-y-2">
+              <Input
+                id="product-type"
+                placeholder="e.g. Scented Candle, Sneakers, Face Serum…"
+                value={productType}
+                onChange={(e) => {
+                  setProductType(e.target.value);
+                  hasManualEdits.current.productType = true;
+                }}
+                maxLength={100}
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_TYPES.map((t) => (
+                  <Badge
+                    key={t}
+                    variant={productType === t ? 'default' : 'outline'}
+                    className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
+                    onClick={() => {
+                      setProductType(productType === t ? '' : t);
+                      hasManualEdits.current.productType = true;
+                    }}
+                  >
+                    {t}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 

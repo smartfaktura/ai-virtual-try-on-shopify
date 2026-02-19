@@ -50,6 +50,40 @@ export function detectProductCategory(product: Product): TemplateCategory | null
   ];
   if (supplementKeywords.some(kw => combined.includes(kw))) return 'supplements';
 
+  // Tech keywords
+  const techKeywords = [
+    'phone', 'laptop', 'headphone', 'earbuds', 'speaker', 'charger', 'cable',
+    'gadget', 'electronics', 'tablet', 'keyboard', 'mouse', 'monitor', 'camera',
+    'drone', 'smartwatch', 'wearable', 'tech', 'wireless', 'bluetooth'
+  ];
+  if (techKeywords.some(kw => combined.includes(kw))) return 'universal';
+
+  // Pet keywords
+  const petKeywords = [
+    'dog', 'cat', 'pet', 'collar', 'leash', 'harness', 'aquarium', 'bird',
+    'treat', 'kibble', 'litter', 'grooming'
+  ];
+  if (petKeywords.some(kw => combined.includes(kw))) return 'universal';
+
+  // Sports & Outdoors
+  const sportsKeywords = [
+    'ball', 'racket', 'helmet', 'bike', 'camping', 'tent', 'fishing',
+    'hiking', 'climbing', 'surfboard', 'skateboard', 'fitness', 'gym', 'sport'
+  ];
+  if (sportsKeywords.some(kw => combined.includes(kw))) return 'universal';
+
+  // Toys & Kids
+  const toysKeywords = [
+    'toy', 'puzzle', 'game', 'doll', 'plush', 'lego', 'figurine', 'board game', 'baby'
+  ];
+  if (toysKeywords.some(kw => combined.includes(kw))) return 'universal';
+
+  // Stationery & Office
+  const stationeryKeywords = [
+    'notebook', 'pen', 'pencil', 'planner', 'sticker', 'desk', 'office', 'stationery'
+  ];
+  if (stationeryKeywords.some(kw => combined.includes(kw))) return 'universal';
+
   return null;
 }
 
