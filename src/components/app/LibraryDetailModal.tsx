@@ -36,6 +36,11 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
+  // Reset upscaled URL when item changes
+  useEffect(() => {
+    setUpscaledUrl(null);
+  }, [item?.id]);
+
   // Close on Escape
   useEffect(() => {
     if (!open) return;
