@@ -11,6 +11,7 @@ interface GenerateTryOnParams {
   imageCount: number;
   sourceImageUrl: string;  // The specific product image to use as reference
   modelImageUrl: string;   // The model's preview image for appearance reference
+  sceneImageUrl?: string;  // The scene's preview image for environment reference
 }
 
 interface GenerateTryOnResult {
@@ -59,11 +60,12 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
       const { data: { session } } = await supabase.auth.getSession();
       const authToken = session?.access_token || SUPABASE_ANON_KEY;
 
-      // Convert both product and model images to base64 so AI model can access them
+      // Convert product, model, and scene images to base64 so AI model can access them
       console.log('[useGenerateTryOn] Converting images to base64...');
-      const [base64ProductImage, base64ModelImage] = await Promise.all([
+      const [base64ProductImage, base64ModelImage, base64SceneImage] = await Promise.all([
         convertImageToBase64(params.sourceImageUrl),
         convertImageToBase64(params.modelImageUrl),
+        params.sceneImageUrl ? convertImageToBase64(params.sceneImageUrl) : Promise.resolve(undefined),
       ]);
       console.log('[useGenerateTryOn] Images converted, sending to API');
 
@@ -92,6 +94,7 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
             name: params.pose.name,
             description: params.pose.promptHint || params.pose.description,
             category: params.pose.category,
+            imageUrl: base64SceneImage,
           },
           aspectRatio: params.aspectRatio,
           imageCount: params.imageCount,

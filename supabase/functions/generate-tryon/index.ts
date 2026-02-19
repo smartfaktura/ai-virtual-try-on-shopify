@@ -26,6 +26,7 @@ interface TryOnRequest {
     name: string;
     description: string;
     category: string;
+    imageUrl?: string;  // Scene reference image for environment matching
   };
   aspectRatio: "1:1" | "4:5" | "9:16" | "16:9";
   imageCount: number;
@@ -110,20 +111,35 @@ function buildIdentityBlock(req: TryOnRequest): string {
 }
 
 function buildPrompt(req: TryOnRequest): string {
+  const hasSceneImage = !!req.pose.imageUrl;
+
   const backgroundMap: Record<string, string> = {
     studio: "clean white or light gray professional studio backdrop",
     lifestyle: "natural outdoor or modern interior setting with soft ambient lighting",
     editorial: "dramatic minimalist backdrop with artistic lighting and geometric shadows",
     streetwear: "urban street environment with concrete, graffiti art, or industrial elements",
   };
-  const background = backgroundMap[req.pose.category] || backgroundMap.studio;
 
   const aspectInstruction = buildAspectRatioInstruction(req.aspectRatio);
   const identityBlock = buildIdentityBlock(req);
   const jewelryGuard = buildJewelryGuard(req.product);
   const framingInstruction = buildFramingInstruction(req.framing);
 
-  return `Create a professional fashion photograph combining the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE].
+  // Build environment/background section based on whether scene image is provided
+  let environmentBlock: string;
+  if (hasSceneImage) {
+    environmentBlock = `   - Background & Environment: Replicate the environment, lighting, backdrop, and composition shown in [SCENE IMAGE]. Match the mood, color palette, and spatial depth.
+   - IMPORTANT: Use [SCENE IMAGE] ONLY for environment/backdrop reference. The person's identity, face, and body MUST come exclusively from [MODEL IMAGE]. Do NOT take any identity or appearance cues from any person visible in [SCENE IMAGE].`;
+  } else {
+    const background = backgroundMap[req.pose.category] || backgroundMap.studio;
+    environmentBlock = `   - Background: ${background}`;
+  }
+
+  const imageReferences = hasSceneImage
+    ? "the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE] in the environment shown in [SCENE IMAGE]"
+    : "the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE]";
+
+  return `Create a professional fashion photograph combining ${imageReferences}.
 
 ${aspectInstruction}
 
@@ -138,7 +154,7 @@ ${identityBlock}
 
 3. Photography style:
    - Pose: ${req.pose.name} - ${req.pose.description}
-   - Background: ${background}
+${environmentBlock}
    - Lighting: Professional studio lighting with soft key light and rim light for depth
    - Camera: Shot on Canon EOS R5, 85mm f/1.4 lens, fashion editorial quality
 
@@ -148,7 +164,7 @@ ${identityBlock}
    - No AI artifacts or distortions
    - Ultra high resolution
 
-${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].`;
+${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " The environment must match [SCENE IMAGE] but the person must NOT resemble anyone in [SCENE IMAGE]." : ""}`;
 }
 
 const negativePrompt =
@@ -211,12 +227,28 @@ async function generateImage(
   productImageUrl: string,
   modelImageUrl: string,
   apiKey: string,
-  aspectRatio: string
+  aspectRatio: string,
+  sceneImageUrl?: string
 ): Promise<string | null> {
   const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
+      // Build content array with product and model images, plus optional scene image
+      const contentParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+        {
+          type: "text",
+          text: `${prompt}\n\nNegative prompt (avoid these): ${negativePrompt}`,
+        },
+        { type: "image_url", image_url: { url: productImageUrl } },
+        { type: "image_url", image_url: { url: modelImageUrl } },
+      ];
+
+      // Add scene image as third reference if provided
+      if (sceneImageUrl) {
+        contentParts.push({ type: "image_url", image_url: { url: sceneImageUrl } });
+      }
+
       const response = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
         {
@@ -230,14 +262,7 @@ async function generateImage(
             messages: [
               {
                 role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: `${prompt}\n\nNegative prompt (avoid these): ${negativePrompt}`,
-                  },
-                  { type: "image_url", image_url: { url: productImageUrl } },
-                  { type: "image_url", image_url: { url: modelImageUrl } },
-                ],
+                content: contentParts,
               },
             ],
             modalities: ["image", "text"],
@@ -400,7 +425,7 @@ serve(async (req) => {
             ? prompt
             : `${prompt}\n\nVariation ${i + 1}: Slightly different angle and lighting while maintaining the same high quality.`;
 
-        const base64Url = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1");
+        const base64Url = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", body.pose.imageUrl);
 
         if (base64Url) {
           const publicUrl = await uploadBase64ToStorage(base64Url, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
