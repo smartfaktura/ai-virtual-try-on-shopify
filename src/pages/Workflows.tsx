@@ -83,7 +83,7 @@ export default function Workflows() {
       const sixtySecsAgo = new Date(Date.now() - 60_000).toISOString();
       const { data, error } = await supabase
         .from('generation_queue')
-        .select('id, status, created_at, started_at, completed_at, payload, error_message')
+        .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type')
         .eq('status', 'completed')
         .gte('completed_at', sixtySecsAgo)
         .order('completed_at', { ascending: false });
