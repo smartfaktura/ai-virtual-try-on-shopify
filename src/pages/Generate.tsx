@@ -457,7 +457,7 @@ export default function Generate() {
       return;
     }
     const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode, hasModel: !!selectedModel });
-    if (balance < cost) { setNoCreditsModalOpen(true); return; }
+    if (balance < cost) { openBuyModal(); return; }
     if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
       if (!selectedModel || !selectedPose) { toast.error('Please select a model and scene first'); return; }
       handleTryOnConfirmGenerate(); return;
