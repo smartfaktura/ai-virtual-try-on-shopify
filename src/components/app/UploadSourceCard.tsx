@@ -19,10 +19,6 @@ interface UploadSourceCardProps {
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-const productTypeOptions = [
-  'Leggings', 'Hoodie', 'T-Shirt', 'Sports Bra', 'Jacket', 'Tank Top',
-  'Joggers', 'Shorts', 'Dress', 'Sweater', 'Other',
-];
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
