@@ -541,7 +541,7 @@ export default function Freestyle() {
 
       {/* Scrollable content area */}
       <div className="flex-1 lg:h-full overflow-y-auto pt-[5rem] lg:pt-3 pb-4 lg:pb-72">
-        <div className="px-4 sm:px-6 lg:px-8">
+        <div className="px-3 lg:px-1">
           <LowCreditsBanner />
         </div>
         {showLoading ? (
@@ -551,7 +551,7 @@ export default function Freestyle() {
         ) : hasImages || isLoading || isProcessing || hasBlocked ? (
           <>
             {activeJob && isProcessing && (
-              <div className="px-1 pt-1">
+              <div className="px-3 lg:px-1 pt-1 pb-2">
                 <QueuePositionIndicator job={activeJob} onCancel={() => resetQueue()} />
               </div>
             )}
