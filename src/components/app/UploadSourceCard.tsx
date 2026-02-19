@@ -58,7 +58,7 @@ export function UploadSourceCard({
       const data = await resp.json();
       onUpdateProductInfo({
         title: data.title || currentInfo.title,
-        productType: productTypeOptions.includes(data.productType) ? data.productType : currentInfo.productType,
+        productType: data.productType || currentInfo.productType,
         description: data.description || currentInfo.description,
       });
     } catch {
