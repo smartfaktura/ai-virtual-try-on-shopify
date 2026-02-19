@@ -414,7 +414,7 @@ export function FreestyleSettingsChips({
                   onOpenChange={onNegativesPopoverChange}
                 />
                 {polishChip}
-                {presetsSection}
+                {presetsChip}
               </div>
             </CollapsibleContent>
           </Collapsible>
