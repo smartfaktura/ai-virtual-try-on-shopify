@@ -7,17 +7,31 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Contact() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !subject || !message.trim()) {
       toast.error('Please fill in all fields');
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.from('contact_submissions' as any).insert({
+      name: name.trim().slice(0, 100),
+      email: email.trim().slice(0, 255),
+      inquiry_type: subject,
+      message: message.trim().slice(0, 5000),
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error('Failed to send message. Please try again.');
       return;
     }
     toast.success('Message sent!', {
