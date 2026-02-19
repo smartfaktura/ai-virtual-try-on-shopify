@@ -1,75 +1,49 @@
 
 
-## Final Pre-Launch Audit: Issues Found
+## Fix: OAuth Redirect Sends Users to Landing Page Instead of App
 
-After a thorough review of every page, component, text string, route, and security configuration, here are the remaining issues:
+### The Problem
+When users sign in with Google or Apple, the OAuth `redirect_uri` is set to `window.location.origin` (the root `/`). After authentication completes, users land on the **Landing page** instead of being taken into the app. They have to manually navigate to `/app`, which then checks if onboarding is needed.
 
----
+### The Fix
+Two changes are needed:
 
-### Issue 1: Onboarding Page Not Protected (Security/UX - High)
+**1. Update OAuth redirect_uri in Auth.tsx (lines ~89 and ~107)**
+Change `redirect_uri: window.location.origin` to `redirect_uri: window.location.origin + '/app'` for both Google and Apple sign-in buttons. This sends users directly to the protected app route after OAuth, which will:
+- Show the dashboard if onboarding is complete
+- Redirect to `/onboarding` if onboarding is not complete
 
-**Problem:** The `/onboarding` route is a public route -- anyone can access it without being logged in. The onboarding form renders fully, showing "Your profile" with name fields. While the final save will silently fail (no user object), this:
-- Exposes internal UI to unauthenticated visitors
-- Creates a confusing experience if someone stumbles onto it
-- Could leak product category options and referral tracking questions
+**2. Add auth-aware redirect on the Landing page**
+Add a simple check at the top of the Landing page component: if the user is already authenticated, redirect them to `/app`. This handles edge cases where users visit `/` while logged in (e.g., typing the URL directly or bookmarking it).
 
-**Fix:** Wrap the `/onboarding` route with a simple auth check. If no user is logged in, redirect to `/auth`. This is different from `ProtectedRoute` (which also checks onboarding status), so a lightweight guard is needed.
+### Files to Change
 
-**File:** `src/App.tsx` and/or `src/pages/Onboarding.tsx`
+| File | Change |
+|------|--------|
+| `src/pages/Auth.tsx` | Change `redirect_uri` from `window.location.origin` to `window.location.origin + '/app'` (2 places: Google and Apple buttons) |
+| `src/pages/Landing.tsx` | Add `useAuth()` check -- if user is logged in, redirect to `/app` |
 
----
+### Technical Details
 
-### Issue 2: CompetitorComparison Says "5 credits" (Text Bug - Medium)
+In `Auth.tsx`, the Google button (around line 89):
+```typescript
+// Before
+redirect_uri: window.location.origin,
+// After
+redirect_uri: window.location.origin + '/app',
+```
 
-**Problem:** The `CompetitorComparison.tsx` component (shown on the Generate page) says "Every account gets 5 credits to test the quality." This is the last remaining instance of the old "5 credits" text.
+Same change for the Apple button (around line 107).
 
-**Fix:** Change "5 credits" to "20 free credits" on line 44.
+In `Landing.tsx`, add at the top of the component:
+```typescript
+const { user, isLoading } = useAuth();
+const navigate = useNavigate();
 
-**File:** `src/components/app/CompetitorComparison.tsx`
-
----
-
-### Issue 3: SocialProofBar Shows Placeholder Brand Logos (Design - Medium)
-
-**Problem:** The `SocialProofBar.tsx` component displays "Brand A", "Brand B", "Brand C", "Brand D", "Brand E" as placeholder text in the "Trusted by" section. These are obviously fake and look unprofessional.
-
-**Fix:** Remove the placeholder logo row entirely. Keep the metrics and testimonial sections, but drop the "Trusted by" + fake brand names until real brand logos are available.
-
-**File:** `src/components/landing/SocialProofBar.tsx`
-
----
-
-### Issue 4: CompetitorComparison Uses Generic Names (Design - Low)
-
-**Problem:** The same `CompetitorComparison.tsx` component uses "Competitor A" and "Competitor B" as comparison names. This looks placeholder-ish. While it might be intentional (to avoid naming competitors), it reduces credibility.
-
-**Fix:** Replace with more descriptive labels like "Traditional AI Tools" and "Photo Studios" to make the comparison feel real without naming specific competitors.
-
-**File:** `src/components/app/CompetitorComparison.tsx`
-
----
-
-### Summary of Changes
-
-| Priority | File | Change |
-|----------|------|--------|
-| High | `src/pages/Onboarding.tsx` | Add auth guard -- redirect unauthenticated users to `/auth` |
-| Medium | `src/components/app/CompetitorComparison.tsx` | Change "5 credits" to "20 free credits" |
-| Medium | `src/components/landing/SocialProofBar.tsx` | Remove fake "Brand A-E" placeholder logos |
-| Low | `src/components/app/CompetitorComparison.tsx` | Replace "Competitor A/B" with descriptive labels |
-
-### What's Verified and Working
-
-- Landing page hero, trust badges, and FAQ all say "20 free credits"
-- Auth page says "20 free credits" in both places
-- Footer has no dead social links
-- Enterprise CTA routes to `/contact`
-- Mobile layout looks correct across landing and auth pages
-- RLS policies are properly scoped on all tables
-- Storage buckets configured correctly (public/private)
-- Edge functions have JWT validation
-- Signed URL logic only signs private buckets
-- Onboarding saves to correct profile fields
-- Dashboard shows 20 credits for new users
-- 404 page is functional
+useEffect(() => {
+  if (!isLoading && user) {
+    navigate('/app', { replace: true });
+  }
+}, [user, isLoading, navigate]);
+```
 
