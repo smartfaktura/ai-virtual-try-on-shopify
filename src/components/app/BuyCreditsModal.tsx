@@ -291,7 +291,7 @@ export function BuyCreditsModal() {
 
                         {/* Features */}
                         <div className="space-y-2 flex-1 mb-4">
-                          {p.features.slice(0, 4).map((f, i) => (
+                          {p.features.slice(0, 3).map((f, i) => (
                             <div key={i} className="flex items-start gap-2">
                               <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
                               <span className="text-[11px] text-muted-foreground leading-snug">{f}</span>
