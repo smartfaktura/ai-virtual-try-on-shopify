@@ -70,7 +70,7 @@ export function BuyCreditsModal() {
   return (
     <>
       <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
-        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl">
+        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl max-h-[85dvh] flex flex-col">
 
           {/* Balance header */}
           <div className="px-6 pt-5 pb-4 border-b border-border/40 flex items-center justify-between">
