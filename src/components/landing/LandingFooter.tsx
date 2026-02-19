@@ -92,15 +92,7 @@ export function LandingFooter() {
             © {new Date().getFullYear()} VOVV.AI. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <a href="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Twitter
-            </a>
-            <a href="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              LinkedIn
-            </a>
-            <a href="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Instagram
-            </a>
+            <span className="text-xs text-muted-foreground">Built with ❤️ for e-commerce brands</span>
           </div>
         </div>
       </div>

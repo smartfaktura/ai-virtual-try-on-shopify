@@ -72,7 +72,7 @@ export default function Auth() {
             </h1>
             <p className="text-muted-foreground mt-2">
               {mode === 'signup'
-                ? 'Start with 5 free credits — no credit card required'
+                ? 'Start with 20 free credits — no credit card required'
                 : 'Sign in to continue generating'}
             </p>
           </div>
@@ -200,7 +200,7 @@ export default function Auth() {
           {mode === 'signup' && (
             <div className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
               <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
-              <span>5 free credits included with every new account</span>
+              <span>20 free credits included with every new account</span>
             </div>
           )}
         </div>
