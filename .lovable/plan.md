@@ -1,55 +1,73 @@
 
 
-## Fix: Banner Branding and Margin Alignment
+## Improve Credit Awareness on Workflow Generate Page
 
-### 1. Restyle LowCreditsBanner to VOVV.AI Branding
-**File: `src/components/app/LowCreditsBanner.tsx`**
+The current workflow page lets users configure everything and only tells them they don't have enough credits *after* clicking Generate. This is a poor experience. Here's what we'll fix:
 
-Replace the amber/yellow color scheme with the app's primary dark navy palette:
+### Problem Areas
+- Generate buttons show as fully active even when balance is insufficient
+- Cost summary sections show "X credits available" in plain text with no warning styling
+- No inline guidance to buy credits or upgrade — user only finds out via modal on click
+- Virtual Try-On settings page has the same issue
 
-| Element | Current (amber) | New (primary/brand) |
-|---------|-----------------|---------------------|
-| Container bg | `bg-amber-50` | `bg-primary/5` |
-| Container text | `text-amber-900` | `text-foreground` |
-| Container border | `border-amber-200` | `border-primary/20` |
-| Dark container | `dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-800` | (remove, primary tokens handle dark mode) |
-| Icon color | `text-amber-500 dark:text-amber-400` | `text-primary` |
-| Button bg | `bg-amber-600 hover:bg-amber-700` | `bg-primary hover:bg-primary/90 text-primary-foreground` |
+### Changes
 
-### 2. Fix QueuePositionIndicator Margins
-**File: `src/pages/Freestyle.tsx`**
+#### 1. Add Insufficient Credits Warning to Cost Summary Bars
+**File: `src/pages/Generate.tsx`**
 
-The queue indicator wrapper uses `px-1 pt-1` while the gallery grid uses `px-3 lg:px-1`. Update line 554:
+In all 4 cost summary sections (workflow scenes ~line 2078, flat lay ~line 1944, try-on ~line 2164, template ~line 1523), enhance the "X credits available" text:
 
+- When `balance < creditCost`: show text in red (`text-destructive`) with a warning icon and "Not enough credits" label
+- Add a small "Buy Credits" link button next to it that calls `openBuyModal()`
+- When `balance >= creditCost`: keep current neutral styling with a green checkmark
+
+#### 2. Change Generate Buttons to Reflect Credit State
+**File: `src/pages/Generate.tsx`**
+
+For all Generate buttons (~lines 1533, 1958, 2098, 2176):
+
+- When `balance < creditCost`: change button text to "Buy Credits" with a different style (`bg-muted text-muted-foreground`), and onClick opens the buy modal directly instead of attempting generation
+- When `balance >= creditCost`: keep current primary button styling and behavior
+- This gives immediate visual feedback without needing to click first
+
+#### 3. Show LowCreditsBanner on Generate Page
+**File: `src/pages/Generate.tsx`**
+
+The `LowCreditsBanner` is already imported (line 38) but only shown conditionally. Ensure it appears at the top of the settings step when credits are low/empty, giving users an early heads-up before they scroll to the bottom.
+
+### Technical Details
+
+The key conditional is simple:
+```tsx
+const hasEnoughCredits = balance >= creditCost;
 ```
-// Before
-<div className="px-1 pt-1">
 
-// After
-<div className="px-3 lg:px-1 pt-1 pb-2">
+For the Generate buttons:
+```tsx
+<Button
+  onClick={hasEnoughCredits ? handleGenerateClick : openBuyModal}
+  disabled={selectedVariationIndices.size === 0}
+  className={!hasEnoughCredits ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+>
+  {hasEnoughCredits
+    ? `Generate ${selectedVariationIndices.size} Images`
+    : 'Buy Credits'}
+</Button>
 ```
 
-Also update the LowCreditsBanner wrapper (line 544) to use matching padding:
-
+For the cost summary bars:
+```tsx
+<p className={cn("text-sm", hasEnoughCredits ? "text-muted-foreground" : "text-destructive font-semibold")}>
+  {hasEnoughCredits ? `${balance} credits available` : (
+    <button onClick={openBuyModal} className="flex items-center gap-1 text-destructive hover:underline">
+      <AlertCircle className="w-3.5 h-3.5" />
+      {balance} credits — need {creditCost}. Top up
+    </button>
+  )}
+</p>
 ```
-// Before
-<div className="px-4 sm:px-6 lg:px-8">
 
-// After
-<div className="px-3 lg:px-1">
-```
+This applies to all 4 generation paths: workflow scenes, flat lay, virtual try-on, and template-based.
 
-### 3. Increase Grid Gaps for Breathing Room
-**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
-
-Increase `gap-1` to `gap-2` in both gallery layouts:
-
-- Centered layout (line 426): `gap-1` to `gap-2`
-- Masonry layout (line 452): `gap-1` to `gap-2`
-- Masonry column gap (line 454): `gap-1` to `gap-2`
-
-### Summary
-- Banner uses branded navy/primary colors instead of amber
-- All three horizontal sections (banner, queue indicator, gallery) share consistent `px-3 lg:px-1` padding
-- Gallery grid has slightly more breathing room between items
-
+### Files to Edit
+- `src/pages/Generate.tsx` — all changes are in this single file
