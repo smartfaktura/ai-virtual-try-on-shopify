@@ -200,7 +200,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
 
               {/* Secondary actions */}
               <div className="flex gap-2">
-                {!isUpscaled && item.source === 'freestyle' && (
+                {!isUpscaled && (
                   <button
                     onClick={handleUpscale}
                     disabled={upscaling}
