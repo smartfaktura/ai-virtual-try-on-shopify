@@ -311,7 +311,7 @@ export function FreestylePromptPanel({
                             className={cn(
                               "h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto",
                               canGenerate
-                                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
+                                ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25"
                                 : "bg-muted text-muted-foreground shadow-none pointer-events-none"
                             )}
                           >
