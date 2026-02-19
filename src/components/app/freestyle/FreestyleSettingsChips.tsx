@@ -294,7 +294,7 @@ export function FreestyleSettingsChips({
     </div>
   );
 
-  const presetsSection = isMobile ? (
+  const presetsChip = (
     <Popover open={presetsPopoverOpen} onOpenChange={setPresetsPopoverOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
@@ -329,8 +329,6 @@ export function FreestyleSettingsChips({
         ))}
       </PopoverContent>
     </Popover>
-  ) : (
-    <StylePresetChips selected={stylePresets} onChange={onStylePresetsChange} />
   );
 
   // --- Mobile: compact 2-row layout ---
