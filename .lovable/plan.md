@@ -1,112 +1,95 @@
 
 
-## Full Platform Audit: Issues Found Before Launch
+## Fix Product Categories: From Clothing-Only to Universal
 
-After reviewing every page, component, route, auth flow, and edge case, here are the remaining issues organized by priority.
+### The Problem
 
----
+The product category/type system is hardcoded for clothing and fashion products in **4 separate places**, making the platform unusable for customers selling candles, tech gadgets, pet supplies, furniture, or anything outside fashion:
 
-### ISSUE 1: No "Forgot Password" Flow (Security/UX - HIGH)
+1. **ManualProductTab.tsx** (line 45-66): 65+ hardcoded types, heavily clothing-biased (T-Shirt, Hoodie, Leggings...). A candle seller sees mostly irrelevant options.
 
-**Problem:** There is no password reset functionality anywhere in the app. The Auth page has email/password login but no "Forgot password?" link. Users who sign up with email and forget their password have no way to recover their account.
+2. **UploadSourceCard.tsx** (line 33-36): Only 11 clothing types (Leggings, Hoodie, T-Shirt, Sports Bra...). Completely useless for non-clothing.
 
-**Impact:** Users are permanently locked out if they forget their password. This is a basic authentication requirement.
+3. **analyze-product-image edge function**: AI prompt says "Analyze this image of a **clothing/fashion product**" and restricts productType to "One of: Leggings, Hoodie, T-Shirt, Sports Bra, Jacket, Tank Top, Joggers, Shorts, Dress, Sweater, Other". Any non-clothing product gets "Other".
 
-**Fix:**
-- Add a "Forgot password?" link on the Auth page login form
-- Create a `/reset-password` page that handles the recovery token
-- Wire up `supabase.auth.resetPasswordForEmail()` and `supabase.auth.updateUser({ password })`
-- Add the `/reset-password` route in App.tsx as a public route
+4. **categoryUtils.ts**: Keyword-based detection only covers 5 categories (clothing, cosmetics, food, home, supplements). Everything else returns `null`.
 
-**Files:** `src/pages/Auth.tsx`, new `src/pages/ResetPassword.tsx`, `src/App.tsx`
+### How Product Type is Actually Used
 
----
+After tracing through all generation flows:
 
-### ISSUE 2: Email Signup Redirects to Root Instead of `/app` (UX - HIGH)
+- **generate-product**: Passes `productType` into the prompt as context ("Type: {productType}")
+- **generate-tryon**: Uses it in prompt ("Details: {description or productType}")
+- **generate-workflow**: Uses `getProductInteraction()` which maps broad categories (skincare, clothing, food, tech, etc.) to interaction descriptions. Falls back to generic "holding the product naturally"
+- **Freestyle**: Just displays it as a label, no generation impact
+- **categoryUtils**: Used for template recommendations only
 
-**Problem:** In `AuthContext.tsx`, the `emailRedirectTo` for email signups is set to `window.location.origin` (the root `/`). When a user clicks the confirmation email link, they land on the Landing page instead of being redirected into the app. The OAuth redirect was already fixed to `/app`, but email signup was missed.
+**Key insight**: The generation prompts use productType as free-text context. They don't validate against a fixed list. So we can use ANY descriptive type and it works fine.
 
-**Fix:** Change `emailRedirectTo: window.location.origin` to `emailRedirectTo: window.location.origin + '/app'` in `AuthContext.tsx` line 44.
+### The Fix: Simple Free-Text Input with AI Smart Detection
 
-**File:** `src/contexts/AuthContext.tsx`
+Replace the rigid combobox with a **free-text input that accepts any product type**, plus improve the AI to detect any product category automatically.
 
----
+**1. ManualProductTab.tsx -- Replace combobox with smart input**
+- Replace the 65-item `PRODUCT_TYPES` array and Popover/Command combobox with a simple `Input` field
+- Add a small set of **suggestion chips** (8-10 common ones) that users can tap to quickly fill
+- Suggestions: Clothing, Footwear, Beauty, Skincare, Food, Drink, Home Decor, Electronics, Jewelry, Accessories
+- User can type anything: "Ceramic Plant Pot", "Dog Harness", "Guitar Pedal" -- all valid
+- Much simpler UI, works perfectly on mobile
 
-### ISSUE 3: Contact Form Doesn't Save Data (Functional - HIGH)
+**2. UploadSourceCard.tsx -- Same approach**
+- Replace the 11-item Select dropdown with a simple Input field
+- Remove the `productTypeOptions` array entirely
+- The AI analysis will auto-fill this field anyway
 
-**Problem:** The Contact page (`src/pages/Contact.tsx`) shows a toast "Message sent!" but does absolutely nothing with the data -- it just clears the form. Enterprise leads, support requests, and partnership inquiries are silently lost.
+**3. analyze-product-image edge function -- Make AI universal**
+- Change the prompt from "clothing/fashion product" to "product"
+- Remove the restricted "One of:" list for productType
+- Instead: "productType: A short category label (e.g. 'Sneakers', 'Scented Candle', 'Face Serum', 'Wireless Earbuds', 'Dog Leash')"
+- The AI will now correctly identify ANY product type
 
-**Fix:** Create a `contact_submissions` database table and save the form data. Add RLS policies so submissions are insert-only for anyone and readable only by admins.
+**4. categoryUtils.ts -- Add catch-all**
+- Add more broad categories: "tech", "pets", "sports", "toys", "stationery"
+- Keep the existing keyword matching but make it more inclusive
+- This only affects template recommendations, not generation quality
 
-**Files:** `src/pages/Contact.tsx`, database migration
+### Files to Change
 
----
+| File | Change |
+|------|--------|
+| `src/components/app/ManualProductTab.tsx` | Replace combobox with free-text Input + suggestion chips |
+| `src/components/app/UploadSourceCard.tsx` | Replace Select dropdown with simple Input |
+| `supabase/functions/analyze-product-image/index.ts` | Update AI prompt to detect any product, not just clothing |
+| `src/lib/categoryUtils.ts` | Broaden keyword categories, add tech/pets/sports |
 
-### ISSUE 4: SocialProofBar Still Has Unused Placeholder Variable (Code Quality - LOW)
+### Technical Details
 
-**Problem:** `SocialProofBar.tsx` still has `const placeholderLogos = ['Brand A', 'Brand B', ...]` on line 10, even though it's no longer rendered. This is dead code that could confuse future developers.
+**ManualProductTab.tsx:**
+- Remove `PRODUCT_TYPES` array (lines 45-66)
+- Remove `Popover`, `Command*` imports and the combobox JSX
+- Replace with:
+```
+<Input
+  value={productType}
+  onChange={(e) => { setProductType(e.target.value); hasManualEdits.current.productType = true; }}
+  placeholder="e.g. Scented Candle, Sneakers, Face Serum..."
+/>
+```
+- Add suggestion chips below:
+```
+const QUICK_TYPES = ['Clothing', 'Footwear', 'Beauty', 'Skincare', 'Food & Drink', 'Home Decor', 'Electronics', 'Jewelry', 'Accessories', 'Pet Supplies'];
+```
+- Render as small tappable badges that fill the input on click
 
-**Fix:** Remove the unused `placeholderLogos` variable.
+**UploadSourceCard.tsx:**
+- Remove `productTypeOptions` array
+- Replace `Select` with `Input` using same placeholder pattern
 
-**File:** `src/components/landing/SocialProofBar.tsx`
+**analyze-product-image/index.ts:**
+- Change prompt to: "Analyze this product image. Return a JSON object with: title, productType (a short descriptive category like 'Running Shoes', 'Scented Candle', 'Face Serum', 'Wireless Earbuds'), description"
 
----
-
-### ISSUE 5: Product Grid Edit/Delete Buttons Not Tappable on Mobile (UX - MEDIUM)
-
-**Problem:** On the Products page, the edit and delete buttons on product cards only appear on hover (`opacity-0 group-hover:opacity-100`). On mobile/touch devices, there's no hover state, so users can't access edit/delete from the grid view. They have to switch to list view, which also uses hover-based button visibility.
-
-**Fix:** Make the action buttons always visible on mobile using the `useIsMobile` hook, similar to what was done for `ProductImageGallery`.
-
-**File:** `src/pages/Products.tsx`
-
----
-
-### ISSUE 6: `check-subscription` Called 3+ Times on Every Page Load (Performance - MEDIUM)
-
-**Problem:** Looking at the network requests, `check-subscription` is called 3 times simultaneously on every page load. The `CreditContext` calls it, and it appears other components also trigger it. Each call is a paid edge function invocation.
-
-**Fix:** Add a deduplication mechanism -- either a `useRef` flag to prevent concurrent calls, or consolidate to a single call triggered by `CreditContext` and consumed by all components via context.
-
-**File:** `src/contexts/CreditContext.tsx`
-
----
-
-### ISSUE 7: Duplicate Profile/Credit Queries on Page Load (Performance - LOW)
-
-**Problem:** The network logs show `profiles` table being queried 4+ times simultaneously (onboarding check x2, credit fetch x2). The `ProtectedRoute` and `CreditContext` independently query the same table.
-
-**Fix:** Consolidate the profile query into a single provider that shares the data, or use React Query's built-in deduplication by ensuring the same `queryKey` is used everywhere.
-
-**Files:** `src/components/app/ProtectedRoute.tsx`, `src/contexts/CreditContext.tsx`
-
----
-
-### Summary Table
-
-| # | Priority | Issue | Impact |
-|---|----------|-------|--------|
-| 1 | HIGH | No password reset flow | Users locked out permanently |
-| 2 | HIGH | Email signup redirects to `/` not `/app` | Broken post-signup flow |
-| 3 | HIGH | Contact form doesn't save data | Lost enterprise leads |
-| 4 | LOW | Dead placeholder variable in SocialProofBar | Code cleanliness |
-| 5 | MEDIUM | Product cards not tappable on mobile | Can't edit/delete products on phone |
-| 6 | MEDIUM | `check-subscription` called 3x per page load | Unnecessary edge function costs |
-| 7 | LOW | Duplicate profile queries on load | Minor performance waste |
-
-### What's Working Correctly
-
-- OAuth redirect to `/app` (Google + Apple) -- confirmed fixed
-- Landing page auto-redirects logged-in users to `/app`
-- Onboarding page blocks unauthenticated users
-- All "20 free credits" text is consistent
-- CompetitorComparison uses proper labels
-- SocialProofBar no longer shows fake brand logos
-- Product edit modal uses Drawer on mobile
-- Image reorder works with tap arrows on mobile
-- RLS policies are properly scoped on all tables
-- Edge functions validate JWT tokens
-- 404 page is functional
-- Footer links all route correctly
-- Mobile navigation works with hamburger menu
+**categoryUtils.ts:**
+- Add `tech` category keywords: phone, laptop, headphone, speaker, charger, cable, gadget
+- Add `pets` keywords: dog, cat, pet, collar, leash, harness
+- Add to TemplateCategory type if needed, or keep returning `null` for truly unknown types (the fallback to 'universal' templates already handles this)
 
