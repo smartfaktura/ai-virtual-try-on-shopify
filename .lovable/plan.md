@@ -1,55 +1,76 @@
 
 
-## Redesign: "Out of Credits" Banner -- VOVV.AI Branded
+## Fix: Mobile Freestyle Credit UX and Button Visibility
 
-### Current State
+### Problems Identified
 
-The banner uses a generic red `Alert` component with a plain "destructive" variant -- red border, red icon, plain text. It looks like a system error rather than a branded upsell moment.
+1. **"Out of credits" banner is too tall on mobile** -- Takes ~120px of precious mobile real estate, pushing the generating card and gallery into cramped space (visible in screenshot).
 
-### Proposed Design
+2. **Generate button appears clickable when user has no credits** -- On mobile, the button shows blue "Generate (4)" even though user has 0 credits. This is misleading; user expects clicking it will generate, but it opens the Buy Credits modal instead. Bad UX.
 
-Replace the generic alert with a custom branded banner that feels like part of VOVV.AI's premium design language:
+3. **Generate button looks grey/disabled on desktop even when active** -- The `bg-primary` color (dark navy `hsl(217, 33%, 17%)`) is almost indistinguishable from the disabled grey state.
 
-- **Dark card style** matching the sidebar aesthetic (deep navy `hsl(222, 47%, 11%)` background with light text)
-- **Gradient accent** -- subtle left border or top gradient using the primary blue
-- **VOVV.AI "V" mark** or Sparkles icon instead of the red AlertCircle
-- **Refined typography** -- semibold title, muted description, clean layout
-- **Primary-styled CTA button** -- "Buy Credits" in the brand's primary color, not a generic small button
-- **Dismissible for warning states** (low/critical) with a subtle X; non-dismissible when empty
+### Solution
 
-### Layout
+#### 1. Compact LowCreditsBanner on Mobile
+**File: `src/components/app/LowCreditsBanner.tsx`**
 
-```text
-+--------------------------------------------------------------+
-|  [Sparkles icon]                                          [X] |
-|  You're out of credits                                        |
-|  Top up to keep creating with VOVV.AI            [Buy Credits]|
-+--------------------------------------------------------------+
-```
+- Reduce padding on mobile (`p-3` instead of `p-4`)
+- Hide the description text on small screens (`hidden sm:block`)
+- Keep icon + title + button in a single horizontal row
+- Result: ~48px tall instead of ~120px
 
-- Background: `bg-primary text-primary-foreground` (dark navy with white text)
-- Button: `bg-white text-primary` (inverted for contrast on dark bg)
-- Rounded corners (`rounded-xl`), padding, and a clean single-row layout on desktop
-- On mobile: stacks vertically with full-width button
+#### 2. Visual States for Generate Button Based on Credit Balance
+**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
 
-### File to Change
+Add three distinct visual states for the Generate button:
+
+| State | Appearance | Behavior |
+|-------|-----------|----------|
+| **Disabled** (no prompt/assets) | Grey/muted, not clickable | Shows "Type a prompt..." hint |
+| **Insufficient credits** | Orange/warning outline style, "Buy Credits" label | Opens Buy Credits modal |
+| **Ready to generate** | Bright blue (`bg-blue-600`), clearly active | Starts generation |
+
+When the user doesn't have enough credits:
+- Button text changes from "Generate (4)" to "Buy Credits"
+- Button uses an outline/warning style instead of solid primary
+- The inline shortfall text ("Need X more credits") remains visible
+
+When the user has enough credits:
+- Button uses bright vivid blue (`bg-blue-600`) instead of dark navy `bg-primary`
+- Clearly distinguishable from the disabled grey state
+
+#### 3. Add 4 Credits to 123presets
+- Database update to add 4 credits for testing
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/app/LowCreditsBanner.tsx` | Replace the generic `Alert` with a custom branded card using the primary dark background, Sparkles icon, refined copy, and an inverted "Buy Credits" button. Keep the same logic (dismissed state, isLow/isCritical/isEmpty checks). Update copy to reference "VOVV.AI" naturally. |
+| `src/components/app/LowCreditsBanner.tsx` | Compact single-line layout on mobile |
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Three distinct button visual states based on credit balance |
 
-### Copy Updates
+### Technical Detail
 
-| State | Title | Description |
-|-------|-------|-------------|
-| Empty (0 credits) | You're out of credits | Top up to keep creating with VOVV.AI |
-| Critical (very low) | Almost out of credits | Only X credits left -- top up to avoid interruptions |
-| Low | Running low on credits | You have X credits remaining. Top up to keep creating |
+```
+Generate button states:
 
-### Technical Details
+1. !canGenerate (no prompt):
+   className = "bg-muted text-muted-foreground" + disabled
 
-- Remove dependency on `Alert`, `AlertTitle`, `AlertDescription` from `@/components/ui/alert`
-- Use a plain `div` with Tailwind classes: `bg-primary text-primary-foreground rounded-xl p-4 flex items-center justify-between`
-- Button styled as `bg-white text-primary hover:bg-white/90 rounded-lg px-4 py-2 text-sm font-semibold`
-- Mobile responsive: `flex-col sm:flex-row` with `w-full sm:w-auto` on button
-- Keep Sparkles icon from lucide-react for brand consistency with the credit system
+2. canGenerate BUT creditBalance < creditCost:
+   className = "border-2 border-orange-400 bg-orange-50 text-orange-700"
+   label = "Buy Credits"
+   onClick = opens buy modal
+
+3. canGenerate AND creditBalance >= creditCost:
+   className = "bg-blue-600 hover:bg-blue-700 text-white"
+   label = "Generate (cost)"
+   onClick = starts generation
+```
+
+```
+LowCreditsBanner mobile:
+  Before: p-4, flex-col, icon + title + description + full-width button = ~120px
+  After:  p-3 sm:p-4, flex-row always, description hidden on mobile = ~48px
+```
