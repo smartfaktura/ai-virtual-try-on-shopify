@@ -40,10 +40,6 @@ const TOTAL_STEPS = 3;
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
-
-  if (!isLoading && !user) {
-    return <Navigate to="/auth" replace />;
-  }
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +53,10 @@ export default function Onboarding() {
 
   // Step 3: Categories
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  if (!isLoading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const toggleCategory = (id: string) => {
     setSelectedCategories((prev) =>
