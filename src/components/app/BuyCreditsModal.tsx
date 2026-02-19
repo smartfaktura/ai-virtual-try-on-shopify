@@ -73,7 +73,7 @@ export function BuyCreditsModal() {
         <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[85dvh] h-full sm:h-auto flex flex-col">
 
           {/* Balance header */}
-          <div className="px-6 pt-5 pb-4 border-b border-border/40 flex items-center justify-between">
+          <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border/40 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-muted">
                 <Wallet className="w-4 h-4 text-foreground" />
