@@ -76,11 +76,18 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
             CSV
           </TabsTrigger>
           <TabsTrigger
-            value="mobile"
+78:             value="mobile"
             className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
           >
             <Smartphone className="w-3.5 h-3.5" />
             Mobile
+          </TabsTrigger>
+          <TabsTrigger
+            value="shopify"
+            className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            Shopify
           </TabsTrigger>
         </TabsList>
       </div>
