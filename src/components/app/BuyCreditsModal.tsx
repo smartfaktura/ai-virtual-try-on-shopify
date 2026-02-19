@@ -267,7 +267,7 @@ export function BuyCreditsModal() {
                                 {isAnnual && p.monthlyPrice > displayPrice && (
                                   <span className="text-sm text-muted-foreground line-through">${p.monthlyPrice}</span>
                                 )}
-                                <span className="text-3xl font-bold tracking-tight">${displayPrice}</span>
+                                <span className="text-2xl sm:text-3xl font-bold tracking-tight">${displayPrice}</span>
                                 <span className="text-xs text-muted-foreground">/mo</span>
                               </div>
                               <p className="text-[10px] text-muted-foreground mt-0.5">
