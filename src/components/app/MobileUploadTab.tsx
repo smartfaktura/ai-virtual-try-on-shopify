@@ -69,6 +69,7 @@ export function MobileUploadTab({ onProductAdded, onClose }: MobileUploadTabProp
 
       const data = await res.json();
       setSessionToken(data.session_token);
+      lastSessionCreatedRef.current = Date.now();
 
       // Build the mobile upload URL
       const uploadUrl = `${window.location.origin}/upload/${data.session_token}`;
