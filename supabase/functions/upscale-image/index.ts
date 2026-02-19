@@ -15,7 +15,6 @@ serve(async (req) => {
   }
 
   try {
-    // Auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -72,6 +71,7 @@ serve(async (req) => {
       const imgResponse = await fetch(imageUrl);
       if (!imgResponse.ok) throw new Error("Failed to fetch source image");
       const imgBuffer = await imgResponse.arrayBuffer();
+      
       // Chunked base64 encoding to avoid stack overflow on large images
       const uint8 = new Uint8Array(imgBuffer);
       let binary = '';
@@ -166,8 +166,18 @@ serve(async (req) => {
         bytes[i] = binaryStr.charCodeAt(i);
       }
 
+      // Parse sourceId — generation items use composite IDs like "jobUUID-0"
+      let storageId = sourceId;
+      if (sourceType === "generation") {
+        // Extract just the UUID part for storage path (strip the -index suffix)
+        const lastDash = sourceId.lastIndexOf("-");
+        if (lastDash > 0) {
+          storageId = sourceId.substring(0, lastDash);
+        }
+      }
+
       const ext = newMimeType.includes("png") ? "png" : "jpg";
-      const storagePath = `upscaled/${userId}/${sourceId}-prohd.${ext}`;
+      const storagePath = `upscaled/${userId}/${storageId}-prohd.${ext}`;
 
       const { error: uploadError } = await supabaseAdmin.storage
         .from("freestyle-images")
@@ -187,7 +197,7 @@ serve(async (req) => {
 
       const newImageUrl = publicUrlData.publicUrl;
 
-      // Update source record
+      // Update source record based on type
       if (sourceType === "freestyle") {
         const { error: updateError } = await supabaseAdmin
           .from("freestyle_generations")
@@ -198,6 +208,41 @@ serve(async (req) => {
         if (updateError) {
           console.error("DB update error:", updateError);
           throw new Error("Failed to update record");
+        }
+      } else if (sourceType === "generation") {
+        // sourceId is composite: "jobUUID-resultIndex"
+        const lastDash = sourceId.lastIndexOf("-");
+        const jobId = sourceId.substring(0, lastDash);
+        const resultIndex = parseInt(sourceId.substring(lastDash + 1), 10);
+
+        // Fetch current results array
+        const { data: jobData, error: fetchError } = await supabaseAdmin
+          .from("generation_jobs")
+          .select("results")
+          .eq("id", jobId)
+          .eq("user_id", userId)
+          .single();
+
+        if (fetchError || !jobData) {
+          console.error("Failed to fetch job:", fetchError);
+          throw new Error("Failed to find generation job");
+        }
+
+        // Replace the URL at the specific index
+        const results = Array.isArray(jobData.results) ? [...jobData.results] : [];
+        if (resultIndex >= 0 && resultIndex < results.length) {
+          results[resultIndex] = newImageUrl;
+        }
+
+        const { error: updateError } = await supabaseAdmin
+          .from("generation_jobs")
+          .update({ results, quality: "upscaled" })
+          .eq("id", jobId)
+          .eq("user_id", userId);
+
+        if (updateError) {
+          console.error("DB update error:", updateError);
+          throw new Error("Failed to update generation job");
         }
       }
 
