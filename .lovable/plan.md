@@ -1,76 +1,41 @@
 
 
-## Fix: Mobile Freestyle Credit UX and Button Visibility
+## Fix: Credit Banner Colors, Button States, and Mobile Text
 
-### Problems Identified
+### Issues Found
 
-1. **"Out of credits" banner is too tall on mobile** -- Takes ~120px of precious mobile real estate, pushing the generating card and gallery into cramped space (visible in screenshot).
+1. **"Out of credits" banner** uses `bg-primary` (dark navy) -- same color as the sidebar/navigation. Looks like part of the nav, not a warning. Needs a distinct color.
+2. **"Buy Credits" button in prompt panel** uses orange styling -- user wants it grey/neutral instead.
+3. **Mobile text shows truncated "+4 cred"** -- the shortfall message `+{creditCost - balance} credits` is getting cut off on small screens. Needs rewording.
+4. **Disabled Generate button** uses lowered opacity which looks bad on desktop -- needs a clean muted style without opacity tricks.
 
-2. **Generate button appears clickable when user has no credits** -- On mobile, the button shows blue "Generate (4)" even though user has 0 credits. This is misleading; user expects clicking it will generate, but it opens the Buy Credits modal instead. Bad UX.
+### Changes
 
-3. **Generate button looks grey/disabled on desktop even when active** -- The `bg-primary` color (dark navy `hsl(217, 33%, 17%)`) is almost indistinguishable from the disabled grey state.
-
-### Solution
-
-#### 1. Compact LowCreditsBanner on Mobile
+#### 1. LowCreditsBanner -- New Color Scheme
 **File: `src/components/app/LowCreditsBanner.tsx`**
 
-- Reduce padding on mobile (`p-3` instead of `p-4`)
-- Hide the description text on small screens (`hidden sm:block`)
-- Keep icon + title + button in a single horizontal row
-- Result: ~48px tall instead of ~120px
+Replace `bg-primary text-primary-foreground` with a soft warm/amber warning style that stands apart from the dark navy navigation:
+- Light: `bg-amber-50 text-amber-900 border border-amber-200`
+- "Buy Credits" button: `bg-amber-600 text-white hover:bg-amber-700` (warm, distinct from nav)
+- Sparkles icon: amber tinted
+- Works across mobile/tablet/desktop
 
-#### 2. Visual States for Generate Button Based on Credit Balance
+#### 2. Generate Button -- Grey "Buy Credits" State
 **File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
 
-Add three distinct visual states for the Generate button:
+Replace the orange "Buy Credits" button with a neutral/grey style:
+- `bg-muted text-foreground border border-border` -- clearly different from the active blue, but not alarming orange
+- No lowered opacity on the disabled state -- use explicit `bg-muted text-muted-foreground` colors instead
 
-| State | Appearance | Behavior |
-|-------|-----------|----------|
-| **Disabled** (no prompt/assets) | Grey/muted, not clickable | Shows "Type a prompt..." hint |
-| **Insufficient credits** | Orange/warning outline style, "Buy Credits" label | Opens Buy Credits modal |
-| **Ready to generate** | Bright blue (`bg-blue-600`), clearly active | Starts generation |
+#### 3. Fix Mobile Shortfall Text
+Replace `+{creditCost - balance} credits` (which truncates to "+4 cred") with a clearer short message:
+- Mobile: `"Not enough credits"` (no numbers, no truncation)
+- Desktop: `"Need {X} more credits"` (unchanged)
 
-When the user doesn't have enough credits:
-- Button text changes from "Generate (4)" to "Buy Credits"
-- Button uses an outline/warning style instead of solid primary
-- The inline shortfall text ("Need X more credits") remains visible
+### Technical Summary
 
-When the user has enough credits:
-- Button uses bright vivid blue (`bg-blue-600`) instead of dark navy `bg-primary`
-- Clearly distinguishable from the disabled grey state
+| File | What Changes |
+|------|-------------|
+| `LowCreditsBanner.tsx` | Banner bg from dark navy to amber/warning. Button color to amber. |
+| `FreestylePromptPanel.tsx` | "Buy Credits" button from orange to grey/neutral. Mobile shortfall text fixed. Disabled button uses explicit muted colors (no opacity). |
 
-#### 3. Add 4 Credits to 123presets
-- Database update to add 4 credits for testing
-
-### Files Changed
-
-| File | Change |
-|------|--------|
-| `src/components/app/LowCreditsBanner.tsx` | Compact single-line layout on mobile |
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Three distinct button visual states based on credit balance |
-
-### Technical Detail
-
-```
-Generate button states:
-
-1. !canGenerate (no prompt):
-   className = "bg-muted text-muted-foreground" + disabled
-
-2. canGenerate BUT creditBalance < creditCost:
-   className = "border-2 border-orange-400 bg-orange-50 text-orange-700"
-   label = "Buy Credits"
-   onClick = opens buy modal
-
-3. canGenerate AND creditBalance >= creditCost:
-   className = "bg-blue-600 hover:bg-blue-700 text-white"
-   label = "Generate (cost)"
-   onClick = starts generation
-```
-
-```
-LowCreditsBanner mobile:
-  Before: p-4, flex-col, icon + title + description + full-width button = ~120px
-  After:  p-3 sm:p-4, flex-row always, description hidden on mobile = ~48px
-```
