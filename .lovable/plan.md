@@ -1,53 +1,55 @@
 
 
-## Fix: Banner Branding, Spacing, and Margin Alignment
+## Fix: Banner Branding and Margin Alignment
 
-### 1. Restyle LowCreditsBanner to Match VOVV.AI Branding
+### 1. Restyle LowCreditsBanner to VOVV.AI Branding
 **File: `src/components/app/LowCreditsBanner.tsx`**
 
-Replace the amber/yellow color scheme with the app's dark navy primary palette:
-- Container: `bg-primary/5 text-foreground border-primary/20` (instead of amber-50)
-- Icon: `text-primary` (instead of amber-500)
-- Button: `bg-primary text-primary-foreground hover:bg-primary/90` (instead of amber-600)
-- Dark mode variants updated accordingly
+Replace the amber/yellow color scheme with the app's primary dark navy palette:
 
-### 2. Fix QueuePositionIndicator Margins to Match Gallery Grid
+| Element | Current (amber) | New (primary/brand) |
+|---------|-----------------|---------------------|
+| Container bg | `bg-amber-50` | `bg-primary/5` |
+| Container text | `text-amber-900` | `text-foreground` |
+| Container border | `border-amber-200` | `border-primary/20` |
+| Dark container | `dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-800` | (remove, primary tokens handle dark mode) |
+| Icon color | `text-amber-500 dark:text-amber-400` | `text-primary` |
+| Button bg | `bg-amber-600 hover:bg-amber-700` | `bg-primary hover:bg-primary/90 text-primary-foreground` |
+
+### 2. Fix QueuePositionIndicator Margins
 **File: `src/pages/Freestyle.tsx`**
 
-The queue indicator wrapper currently uses `px-1 pt-1` while the gallery uses `px-3 lg:px-1`. Update the queue indicator wrapper to use matching horizontal padding:
-
-```
-// Before (line 554)
-<div className="px-1 pt-1">
-
-// After — match gallery's px-3 and add bottom spacing
-<div className="px-3 lg:px-1 pt-1 pb-2">
-```
-
-### 3. Add Spacing Between Generating Card and Image Grid
-**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
-
-Currently the masonry grid and the centered layout both use `gap-1` with no vertical separation from generating cards. In the masonry branch (4+ items), generating cards are mixed into columns already. In the centered branch (1-3 items), add a small gap:
-
-```
-// Before (line ~290)
-<div className="flex items-stretch justify-center gap-1 px-3 lg:px-1">
-
-// After — add gap-2 for breathing room
-<div className="flex items-stretch justify-center gap-2 px-3 lg:px-1">
-```
-
-Also for the masonry layout, increase column gap slightly:
+The queue indicator wrapper uses `px-1 pt-1` while the gallery grid uses `px-3 lg:px-1`. Update line 554:
 
 ```
 // Before
-<div className="flex gap-1 px-3 lg:px-1 pb-4">
+<div className="px-1 pt-1">
 
 // After
-<div className="flex gap-2 px-3 lg:px-1 pb-4">
+<div className="px-3 lg:px-1 pt-1 pb-2">
 ```
 
-### Summary of Visual Changes
-- **Banner**: Dark navy/primary branding instead of amber/yellow
-- **Queue indicator**: Horizontal margins match gallery grid (px-3 on mobile)
-- **Grid gaps**: Slightly larger gaps (gap-2) between generating cards and images for breathing room
+Also update the LowCreditsBanner wrapper (line 544) to use matching padding:
+
+```
+// Before
+<div className="px-4 sm:px-6 lg:px-8">
+
+// After
+<div className="px-3 lg:px-1">
+```
+
+### 3. Increase Grid Gaps for Breathing Room
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
+
+Increase `gap-1` to `gap-2` in both gallery layouts:
+
+- Centered layout (line 426): `gap-1` to `gap-2`
+- Masonry layout (line 452): `gap-1` to `gap-2`
+- Masonry column gap (line 454): `gap-1` to `gap-2`
+
+### Summary
+- Banner uses branded navy/primary colors instead of amber
+- All three horizontal sections (banner, queue indicator, gallery) share consistent `px-3 lg:px-1` padding
+- Gallery grid has slightly more breathing room between items
+
