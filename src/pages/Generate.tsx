@@ -1520,17 +1520,29 @@ export default function Generate() {
                   )}
                 </CardContent></Card>
 
-                <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+                <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
                   <div>
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                     <p className="text-xs text-muted-foreground">{imageCount} images × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''}</p>
                   </div>
-                  <p className="text-sm">{balance} credits available</p>
+                  {balance >= creditCost ? (
+                    <p className="text-sm text-muted-foreground">{balance} credits available</p>
+                  ) : (
+                    <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {balance} credits — need {creditCost}. Top up
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setCurrentStep('template')}>Back</Button>
-                  <Button onClick={handleGenerateClick}>Generate {imageCount} Images</Button>
+                  <Button
+                    onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
+                    className={balance < creditCost ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                  >
+                    {balance >= creditCost ? `Generate ${imageCount} Images` : 'Buy Credits'}
+                  </Button>
                 </div>
               </div>
             )}
