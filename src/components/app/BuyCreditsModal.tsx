@@ -109,7 +109,7 @@ export function BuyCreditsModal() {
           </div>
 
           {/* Content */}
-          <div className="px-6 pb-6 pt-5">
+          <div className="px-4 sm:px-6 pb-6 pt-5 overflow-y-auto flex-1 min-h-0">
 
             {/* === TOP UP TAB === */}
             {activeTab === 'topup' && (() => {
