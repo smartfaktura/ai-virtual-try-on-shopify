@@ -70,7 +70,7 @@ export function BuyCreditsModal() {
   return (
     <>
       <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
-        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl">
+        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl max-h-[85dvh] flex flex-col">
 
           {/* Balance header */}
           <div className="px-6 pt-5 pb-4 border-b border-border/40 flex items-center justify-between">
@@ -109,7 +109,7 @@ export function BuyCreditsModal() {
           </div>
 
           {/* Content */}
-          <div className="px-6 pb-6 pt-5">
+          <div className="px-4 sm:px-6 pb-6 pt-5 overflow-y-auto flex-1 min-h-0">
 
             {/* === TOP UP TAB === */}
             {activeTab === 'topup' && (() => {
@@ -216,7 +216,7 @@ export function BuyCreditsModal() {
                 </div>
 
                 {/* Plan cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {mainPlans.map((p) => {
                     const isCurrent = p.planId === plan;
                     const currentIdx = PLAN_ORDER.indexOf(plan);
