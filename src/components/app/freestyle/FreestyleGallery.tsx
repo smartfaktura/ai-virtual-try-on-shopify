@@ -80,7 +80,7 @@ function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: n
   return (
     <div
       className={cn(
-        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-5 px-8',
+        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-3 sm:gap-5 px-4 sm:px-8',
         'border border-border/30 w-full',
         'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
         className,
@@ -89,28 +89,28 @@ function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: n
     >
       {/* Avatar with glow ring */}
       <div className="relative">
-        <div className="absolute -inset-1.5 rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]" />
+        <div className="absolute -inset-1 sm:-inset-1.5 rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]" />
         <img
           src={crew.avatar}
           alt={crew.name}
-          className="relative w-16 h-16 rounded-full object-cover ring-2 ring-primary/40"
+          className="relative w-10 h-10 sm:w-16 sm:h-16 rounded-full object-cover ring-2 ring-primary/40"
         />
       </div>
 
       {/* Status text */}
-      <div className="text-center space-y-1.5 min-h-[3.5rem]">
-        <p className="text-sm font-medium text-foreground/70">
+      <div className="text-center space-y-1.5 min-h-0 sm:min-h-[3.5rem]">
+        <p className="text-xs sm:text-sm font-medium text-foreground/70">
           {crew.name} is working on this…
         </p>
-        <p className="text-sm text-muted-foreground/60 transition-opacity duration-300">
+        <p className="text-xs sm:text-sm text-muted-foreground/60 transition-opacity duration-300">
           {STATUS_MESSAGES[msgIdx]}
         </p>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full max-w-[200px] space-y-2">
+      <div className="w-full max-w-[140px] sm:max-w-[200px] space-y-1 sm:space-y-2">
         <Progress value={progress} className="h-1" />
-        <p className="text-xs text-muted-foreground/40 text-center">Wrapping up shortly</p>
+        <p className="text-[10px] sm:text-xs text-muted-foreground/40 text-center">Wrapping up shortly</p>
       </div>
     </div>
   );

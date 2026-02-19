@@ -91,8 +91,8 @@ function ProcessingState({ job }: { job: QueueJob }) {
   const isStuck = elapsed > 300; // 5 minutes
 
   return (
-    <div className="flex flex-col gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-primary/5 border border-primary/20">
+      <div className="flex items-center gap-2 sm:gap-3">
         <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
@@ -108,13 +108,13 @@ function ProcessingState({ job }: { job: QueueJob }) {
             <span className="text-xs font-mono text-muted-foreground">{elapsed}s elapsed</span>
           </div>
           {(complexityHint || proModelHint) && (
-            <p className="text-[11px] text-muted-foreground/70 mt-0.5">{complexityHint || proModelHint}</p>
+            <p className="hidden sm:block text-[11px] text-muted-foreground/70 mt-0.5">{complexityHint || proModelHint}</p>
           )}
         </div>
       </div>
 
       {/* Rotating team message */}
-      <div className="flex items-center gap-2.5 pl-0.5 transition-opacity duration-500">
+      <div className="hidden sm:flex items-center gap-2.5 pl-0.5 transition-opacity duration-500">
         <Avatar className="w-6 h-6 border border-border">
           <AvatarImage src={currentMember.avatar} alt={currentMember.name} />
           <AvatarFallback className="text-[10px]">{currentMember.name[0]}</AvatarFallback>
@@ -126,7 +126,7 @@ function ProcessingState({ job }: { job: QueueJob }) {
 
       <Progress
         value={progress}
-        className="h-1.5 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
+        className="h-1 sm:h-1.5 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
       />
     </div>
   );
