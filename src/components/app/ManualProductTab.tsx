@@ -408,7 +408,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const isEditing = !!editingProduct;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       {/* ── Image Section ── */}
       <div className="space-y-2">
         {images.length > 0 && (
