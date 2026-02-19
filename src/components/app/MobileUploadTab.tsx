@@ -36,6 +36,10 @@ export function MobileUploadTab({ onProductAdded, onClose }: MobileUploadTabProp
 
   const createSession = useCallback(async () => {
     if (!user) return;
+    // Debounce: don't create a new session if one was created less than 30s ago
+    const now = Date.now();
+    if (now - lastSessionCreatedRef.current < 30000 && sessionToken) return;
+
     setIsCreating(true);
     setError(null);
     setUploadedImageUrl(null);
