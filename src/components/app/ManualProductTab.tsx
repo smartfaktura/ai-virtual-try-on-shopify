@@ -531,43 +531,33 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           {isAnalyzing && !hasManualEdits.current.productType ? (
             <Skeleton className="h-9 w-full rounded-md" />
           ) : (
-            <Popover open={typeOpen} onOpenChange={setTypeOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={typeOpen}
-                  className="w-full justify-between font-normal"
-                >
-                  {productType || 'Select type…'}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search types…" />
-                  <CommandList>
-                    <CommandEmpty>No type found.</CommandEmpty>
-                    <CommandGroup>
-                      {PRODUCT_TYPES.map((t) => (
-                        <CommandItem
-                          key={t}
-                          value={t}
-                          onSelect={(val) => {
-                            setProductType(val === productType ? '' : t);
-                            hasManualEdits.current.productType = true;
-                            setTypeOpen(false);
-                          }}
-                        >
-                          <Check className={cn('mr-2 h-4 w-4', productType === t ? 'opacity-100' : 'opacity-0')} />
-                          {t}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <div className="space-y-2">
+              <Input
+                id="product-type"
+                placeholder="e.g. Scented Candle, Sneakers, Face Serum…"
+                value={productType}
+                onChange={(e) => {
+                  setProductType(e.target.value);
+                  hasManualEdits.current.productType = true;
+                }}
+                maxLength={100}
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_TYPES.map((t) => (
+                  <Badge
+                    key={t}
+                    variant={productType === t ? 'default' : 'outline'}
+                    className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
+                    onClick={() => {
+                      setProductType(productType === t ? '' : t);
+                      hasManualEdits.current.productType = true;
+                    }}
+                  >
+                    {t}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 

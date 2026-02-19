@@ -42,9 +42,9 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: `Analyze this image of a clothing/fashion product. Return a JSON object with these fields:
-- "title": Short product name (e.g. "Black High-Waist Yoga Leggings")
-- "productType": One of: Leggings, Hoodie, T-Shirt, Sports Bra, Jacket, Tank Top, Joggers, Shorts, Dress, Sweater, Other
+                text: `Analyze this product image. Return a JSON object with these fields:
+- "title": Short product name (e.g. "Black High-Waist Yoga Leggings", "Lavender Soy Candle", "Wireless Bluetooth Earbuds")
+- "productType": A short descriptive category label (e.g. "Leggings", "Scented Candle", "Face Serum", "Wireless Earbuds", "Dog Harness", "Desk Lamp")
 - "description": 10-20 word description of color, material, style, and key features
 
 Return ONLY the JSON object, no markdown or explanation.`,

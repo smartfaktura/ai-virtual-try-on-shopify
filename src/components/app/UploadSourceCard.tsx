@@ -110,12 +110,12 @@ export function UploadSourceCard({
               </div>
               <div className="space-y-1.5">
                 <Label>Product Type</Label>
-                <Select value={scratchUpload.productInfo.productType} onValueChange={(val) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: val })}>
-                  <SelectTrigger><SelectValue placeholder="Select type..." /></SelectTrigger>
-                  <SelectContent>
-                    {productTypeOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Input
+                  value={scratchUpload.productInfo.productType}
+                  onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: e.target.value })}
+                  placeholder="e.g. Scented Candle, Sneakers, Face Serum…"
+                  maxLength={100}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="product-desc">Description (optional)</Label>
