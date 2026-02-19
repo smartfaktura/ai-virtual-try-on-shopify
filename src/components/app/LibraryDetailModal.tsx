@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Download, Trash2, Camera, User, X, Sparkles, Loader2 } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +11,14 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
+
+const UPSCALE_MESSAGES = [
+  "VOVV.AI team is enhancing your image…",
+  "Adding extra detail and sharpness…",
+  "Refining textures and colors…",
+  "Almost there, finalizing PRO HD…",
+  "Polishing the last pixels…",
+];
 
 interface LibraryDetailModalProps {
   item: LibraryItem | null;
@@ -21,10 +30,23 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
   const [deleting, setDeleting] = useState(false);
   const [upscaling, setUpscaling] = useState(false);
   const [upscaledUrl, setUpscaledUrl] = useState<string | null>(null);
+  const [upscaleMessageIndex, setUpscaleMessageIndex] = useState(0);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
+
+  // Rotate upscale messages
+  useEffect(() => {
+    if (!upscaling) {
+      setUpscaleMessageIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setUpscaleMessageIndex((i) => (i + 1) % UPSCALE_MESSAGES.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [upscaling]);
 
   // Lock body scroll
   useEffect(() => {
@@ -158,7 +180,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
                   {item.label}
                   {isUpscaled && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-500/10 text-violet-400 text-xs font-semibold uppercase tracking-wider">
                       <Sparkles className="w-3 h-3" /> PRO HD
                     </span>
                   )}
@@ -198,42 +220,50 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <Download className="w-4 h-4 mr-2" /> Download Image
               </Button>
 
-              {/* Secondary actions */}
-              <div className="flex gap-2">
-                {!isUpscaled && (
-                  <button
-                    onClick={handleUpscale}
-                    disabled={upscaling}
-                    className="flex-1 flex flex-col items-center justify-center gap-0.5 h-14 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-600 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:brightness-110 transition-all duration-300 disabled:opacity-60 disabled:pointer-events-none"
-                  >
-                    {upscaling ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Enhancing…
-                      </span>
-                    ) : (
-                      <>
-                        <span className="flex items-center gap-1.5">
-                          <Sparkles className="w-4 h-4" />
-                          Enhance to PRO HD
-                          <span className="ml-1 px-1.5 py-0.5 rounded-md bg-white/20 text-[10px] font-bold tracking-wide">4 CR</span>
-                        </span>
-                        <span className="text-[10px] font-normal text-white/70">AI-powered upscale</span>
-                      </>
+              {/* Separator + Secondary actions */}
+              {(!isUpscaled || item.source === 'freestyle') && (
+                <>
+                  <Separator className="bg-border/30" />
+
+                  <div className="flex flex-col gap-3">
+                    {/* Upscale button or loading state */}
+                    {!isUpscaled && !upscaling && (
+                      <button
+                        onClick={handleUpscale}
+                        className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/20 hover:shadow-xl hover:shadow-violet-500/30 hover:brightness-110 transition-all duration-300"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Enhance to PRO HD
+                        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-white/20 text-[10px] font-bold tracking-wide">4 CR</span>
+                      </button>
                     )}
-                  </button>
-                )}
-                {item.source === 'freestyle' && (
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-destructive bg-muted/30 backdrop-blur-sm border border-destructive/20 hover:bg-destructive/10 transition-all disabled:opacity-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    {deleting ? 'Deleting…' : 'Delete'}
-                  </button>
-                )}
-              </div>
+
+                    {/* Loading state with rotating messages */}
+                    {upscaling && (
+                      <div className="w-full flex flex-col items-center justify-center gap-2 h-20 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/20">
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Enhancing…
+                        </span>
+                        <span className="text-[11px] font-normal text-white/80 animate-pulse text-center px-4">
+                          {UPSCALE_MESSAGES[upscaleMessageIndex]}
+                        </span>
+                      </div>
+                    )}
+
+                    {item.source === 'freestyle' && (
+                      <button
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-destructive bg-muted/30 backdrop-blur-sm border border-destructive/20 hover:bg-destructive/10 transition-all disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        {deleting ? 'Deleting…' : 'Delete'}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
 
               {/* Admin actions */}
               {isAdmin && (
