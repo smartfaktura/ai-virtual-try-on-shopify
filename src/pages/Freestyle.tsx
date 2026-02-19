@@ -4,6 +4,7 @@ import { Sparkles, Loader2, Camera, X as XIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
+import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import type { BlockedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
