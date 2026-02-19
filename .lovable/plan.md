@@ -1,28 +1,29 @@
 
 
-## Fix: Mobile Buy Credits Modal - Scrollable and Better Layout
+## Fix: Mobile Plan Selection UX Polish
 
-### Problem
-The Buy Credits modal on mobile/tablet is not scrollable and the plan cards don't fit on screen, creating a bad experience. The 2-column grid (`grid-cols-2`) is too cramped on small screens.
+### Problems Identified
+1. **No edge padding on mobile** -- Plan cards touch the screen edges with minimal breathing room (only `px-4` on the scrollable area, but the cards themselves have no margin from the modal edges since the modal itself has no side margins on mobile)
+2. **Modal not full-height on mobile** -- The `max-h-[85dvh]` combined with the default dialog positioning leaves awkward gaps on small screens
+3. **Cards too tall on mobile** -- Each plan card has `p-5` padding and shows 4 features, making them unnecessarily long to scroll through
+4. **Header too spacious for mobile** -- The balance header uses desktop-sized padding
 
-### Changes
+### Changes (single file: `src/components/app/BuyCreditsModal.tsx`)
 
-**File: `src/components/app/BuyCreditsModal.tsx`**
+| Issue | Before | After |
+|-------|--------|-------|
+| Modal sizing on mobile | `max-w-4xl p-0 gap-0 overflow-hidden rounded-2xl max-h-[85dvh]` | Add mobile full-screen: `max-w-4xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl max-h-[100dvh] sm:max-h-[85dvh] h-full sm:h-auto` |
+| Header padding | `px-6 pt-5 pb-4` | `px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4` |
+| Tab padding | `px-6 pt-1` | `px-4 sm:px-6 pt-1` |
+| Plan card padding | `p-5` | `p-4 sm:p-5` |
+| Plan card features | Shows 4 features always | Show 3 on mobile via `slice(0, 3)` on small screens (keep 4 on `sm:`) -- simplify to always show 3 for compactness |
+| Price text size | `text-3xl` | `text-2xl sm:text-3xl` |
+| Plan grid gap | `gap-3` | `gap-2.5 sm:gap-3` |
+| Billing toggle | `px-6 py-2` | `px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm` |
 
-1. **Make modal scrollable on mobile**: Add `max-h-[85vh] overflow-y-auto` to the DialogContent so the entire modal scrolls when content exceeds viewport height.
+These changes ensure:
+- Full-screen modal on mobile (common pattern for complex selection UIs on phones)
+- Proper padding and breathing room throughout
+- Compact plan cards that show more plans per scroll
+- Touch-friendly sizing maintained (44px CTA buttons stay)
 
-2. **Single-column plan cards on mobile**: Change the plan grid from `grid-cols-2 lg:grid-cols-4` to `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` so plans stack vertically on phones and use 2 columns on tablets.
-
-3. **Compact plan cards on mobile**: Reduce padding from `p-5` to `p-4 sm:p-5` for tighter mobile layout.
-
-4. **Smaller header on mobile**: Reduce header padding for mobile to save vertical space.
-
-### Technical Detail
-
-| Line | Before | After |
-|------|--------|-------|
-| 73 | `max-w-4xl p-0 gap-0 overflow-hidden` | `max-w-4xl p-0 gap-0 overflow-hidden max-h-[85dvh] flex flex-col` |
-| 112 | `px-6 pb-6 pt-5` | `px-6 pb-6 pt-5 overflow-y-auto flex-1 min-h-0` |
-| 219 | `grid-cols-2 lg:grid-cols-4` | `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` |
-
-This ensures the modal is scrollable when content overflows and plan cards stack cleanly on mobile.
