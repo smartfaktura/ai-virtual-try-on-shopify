@@ -33,7 +33,7 @@ function getComplexityHint(meta?: GenerationMeta): string | null {
 }
 
 function getProModelHint(meta?: GenerationMeta): string | null {
-  if (!meta) return 'Using Pro model for best quality — ~60-120s per image';
+  if (!meta) return 'Using Pro model for best quality';
   return null;
 }
 
