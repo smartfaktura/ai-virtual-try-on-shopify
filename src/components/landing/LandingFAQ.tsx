@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: 'Is there a free trial?',
-    a: 'Every new account gets 5 free visuals — no credit card required. That\'s enough to create your first Visual Set and see the quality before committing to a plan.',
+    a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to create your first Visual Set and see the quality before committing to a plan.',
   },
   {
     q: 'How does Virtual Try-On work?',

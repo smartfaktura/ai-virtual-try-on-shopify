@@ -132,7 +132,7 @@ export function LandingPricing() {
               <Button
                 variant="outline"
                 className="rounded-full font-semibold gap-2 shrink-0"
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/contact')}
               >
                 Contact Sales
                 <ArrowRight className="w-4 h-4" />
