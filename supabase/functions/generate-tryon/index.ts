@@ -164,7 +164,7 @@ ${environmentBlock}
    - No AI artifacts or distortions
    - Ultra high resolution
 
-${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " The environment must match [SCENE IMAGE] but the person must NOT resemble anyone in [SCENE IMAGE]." : ""}`;
+${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " Match the pose, composition, and environment from [SCENE IMAGE], but the person's identity must come from [MODEL IMAGE] only." : ""}`;
 }
 
 const negativePrompt =
