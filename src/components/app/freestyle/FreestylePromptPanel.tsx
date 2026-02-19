@@ -273,47 +273,68 @@ export function FreestylePromptPanel({
 
           {/* Row 3 — Action Bar */}
           <div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
-            {!canGenerate && !isLoading ? (
-              <p className="text-xs text-muted-foreground mr-auto truncate">
-                Type a prompt or add a reference to start
-              </p>
-            ) : canGenerate && creditBalance !== undefined && creditBalance < creditCost ? (
-              <p className="text-xs text-muted-foreground mr-auto truncate">
-                <span className="hidden sm:inline">Need {creditCost - creditBalance} more credits · </span>
-                <span className="sm:hidden">+{creditCost - creditBalance} credits · </span>
-                <button
-                  onClick={onGenerate}
-                  className="underline underline-offset-2 hover:text-foreground transition-colors"
-                >
-                  Top up
-                </button>
-              </p>
-            ) : null}
-            <TooltipProvider delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={onGenerate}
-                    disabled={!canGenerate}
-                    size="lg"
-                    className="h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto shadow-lg shadow-primary/25"
-                  >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    Generate
-                    <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  {creditBalance !== undefined && creditBalance < creditCost
-                    ? `You need ${creditCost - creditBalance} more credits to generate`
-                    : selectedModel && selectedScene
-                      ? `${creditCost} credits: Model + Scene (15/image) × ${imageCount}`
-                      : selectedModel
-                        ? `${creditCost} credits: Model reference (12/image) × ${imageCount}`
-                        : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'} × ${imageCount}`}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {(() => {
+              const hasEnoughCredits = creditBalance === undefined || creditBalance >= creditCost;
+              const showInsufficientCredits = canGenerate && !hasEnoughCredits;
+
+              return (
+                <>
+                  {!canGenerate && !isLoading ? (
+                    <p className="text-xs text-muted-foreground mr-auto truncate">
+                      Type a prompt or add a reference to start
+                    </p>
+                  ) : showInsufficientCredits ? (
+                    <p className="text-xs text-muted-foreground mr-auto truncate">
+                      <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
+                      <span className="sm:hidden">+{creditCost - (creditBalance ?? 0)} credits</span>
+                    </p>
+                  ) : null}
+
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {showInsufficientCredits ? (
+                          <Button
+                            onClick={onGenerate}
+                            size="lg"
+                            variant="outline"
+                            className="h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto border-2 border-orange-400 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 dark:bg-orange-950/30 dark:text-orange-400 dark:hover:bg-orange-950/50 shadow-none"
+                          >
+                            <Sparkles className="w-4 h-4" />
+                            Buy Credits
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={onGenerate}
+                            disabled={!canGenerate}
+                            size="lg"
+                            className={cn(
+                              "h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto",
+                              canGenerate
+                                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
+                                : "shadow-none"
+                            )}
+                          >
+                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                            Generate
+                            <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
+                          </Button>
+                        )}
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        {showInsufficientCredits
+                          ? `You need ${creditCost - (creditBalance ?? 0)} more credits to generate`
+                          : selectedModel && selectedScene
+                            ? `${creditCost} credits: Model + Scene (15/image) × ${imageCount}`
+                            : selectedModel
+                              ? `${creditCost} credits: Model reference (12/image) × ${imageCount}`
+                              : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'} × ${imageCount}`}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </>
+              );
+            })()}
           </div>
         </>
       )}

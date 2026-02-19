@@ -22,18 +22,18 @@ export function LowCreditsBanner() {
       : `You have ${balance} credits remaining. Top up to keep creating`;
   
   return (
-    <div className="mb-4 bg-primary text-primary-foreground rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="mb-4 bg-primary text-primary-foreground rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3">
       <div className="flex items-center gap-3 min-w-0">
         <Sparkles className="h-5 w-5 shrink-0 opacity-80" />
         <div className="min-w-0">
           <p className="font-semibold text-sm">{title}</p>
-          <p className="text-sm opacity-80">{message}</p>
+          <p className="text-sm opacity-80 hidden sm:block">{message}</p>
         </div>
       </div>
-      <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         <button
           onClick={openBuyModal}
-          className="bg-white text-primary hover:bg-white/90 rounded-lg px-4 py-2 text-sm font-semibold transition-colors w-full sm:w-auto"
+          className="bg-white text-primary hover:bg-white/90 rounded-lg px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap"
         >
           Buy Credits
         </button>
