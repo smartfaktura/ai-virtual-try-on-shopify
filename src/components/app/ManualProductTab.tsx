@@ -59,7 +59,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
-  const [typeOpen, setTypeOpen] = useState(false);
   const initialImageIdsRef = useRef<string[]>([]);
   const hasManualEdits = useRef({ title: false, productType: false, description: false });
 
