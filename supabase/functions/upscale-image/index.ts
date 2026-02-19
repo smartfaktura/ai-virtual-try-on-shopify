@@ -72,7 +72,14 @@ serve(async (req) => {
       const imgResponse = await fetch(imageUrl);
       if (!imgResponse.ok) throw new Error("Failed to fetch source image");
       const imgBuffer = await imgResponse.arrayBuffer();
-      const imgBase64 = btoa(String.fromCharCode(...new Uint8Array(imgBuffer)));
+      // Chunked base64 encoding to avoid stack overflow on large images
+      const uint8 = new Uint8Array(imgBuffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < uint8.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, Array.from(uint8.slice(i, i + chunkSize)));
+      }
+      const imgBase64 = btoa(binary);
       const mimeType = imgResponse.headers.get("content-type") || "image/png";
 
       // Call AI to upscale
@@ -114,16 +121,35 @@ serve(async (req) => {
       let newImageBase64: string | null = null;
       let newMimeType = "image/png";
 
-      const content = aiResult.choices?.[0]?.message?.content;
-      if (Array.isArray(content)) {
-        for (const part of content) {
-          if (part.type === "image_url" && part.image_url?.url) {
-            const dataUrl = part.image_url.url as string;
+      // Try images array first (Lovable AI gateway format)
+      const images = aiResult.choices?.[0]?.message?.images;
+      if (Array.isArray(images)) {
+        for (const img of images) {
+          if (img.type === "image_url" && img.image_url?.url) {
+            const dataUrl = img.image_url.url as string;
             const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
             if (match) {
               newMimeType = match[1];
               newImageBase64 = match[2];
               break;
+            }
+          }
+        }
+      }
+
+      // Fallback to content array
+      if (!newImageBase64) {
+        const content = aiResult.choices?.[0]?.message?.content;
+        if (Array.isArray(content)) {
+          for (const part of content) {
+            if (part.type === "image_url" && part.image_url?.url) {
+              const dataUrl = part.image_url.url as string;
+              const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+              if (match) {
+                newMimeType = match[1];
+                newImageBase64 = match[2];
+                break;
+              }
             }
           }
         }

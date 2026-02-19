@@ -204,18 +204,21 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                   <button
                     onClick={handleUpscale}
                     disabled={upscaling}
-                    className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold text-primary-foreground bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:brightness-110 transition-all duration-300 disabled:opacity-60 disabled:pointer-events-none"
+                    className="flex-1 flex flex-col items-center justify-center gap-0.5 h-14 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-600 shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:brightness-110 transition-all duration-300 disabled:opacity-60 disabled:pointer-events-none"
                   >
                     {upscaling ? (
-                      <>
+                      <span className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Enhancing…
-                      </>
+                      </span>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4" />
-                        PRO HD
-                        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-white/20 text-[10px] font-bold tracking-wide">4 CR</span>
+                        <span className="flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4" />
+                          Enhance to PRO HD
+                          <span className="ml-1 px-1.5 py-0.5 rounded-md bg-white/20 text-[10px] font-bold tracking-wide">4 CR</span>
+                        </span>
+                        <span className="text-[10px] font-normal text-white/70">AI-powered upscale</span>
                       </>
                     )}
                   </button>
