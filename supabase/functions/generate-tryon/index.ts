@@ -26,6 +26,7 @@ interface TryOnRequest {
     name: string;
     description: string;
     category: string;
+    imageUrl?: string;  // Scene reference image for environment matching
   };
   aspectRatio: "1:1" | "4:5" | "9:16" | "16:9";
   imageCount: number;
