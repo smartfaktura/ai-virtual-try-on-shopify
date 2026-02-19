@@ -286,7 +286,7 @@ export function FreestylePromptPanel({
                   ) : showInsufficientCredits ? (
                     <p className="text-xs text-muted-foreground mr-auto truncate">
                       <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
-                      <span className="sm:hidden">+{creditCost - (creditBalance ?? 0)} credits</span>
+                      <span className="sm:hidden">Not enough credits</span>
                     </p>
                   ) : null}
 
