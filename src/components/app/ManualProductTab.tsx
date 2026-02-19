@@ -447,8 +447,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               if (input) input.click();
             }}
           >
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-2.5">
-              <ImagePlus className="w-5 h-5 text-muted-foreground" />
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mb-2">
+              <ImagePlus className="w-4 h-4 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">
               Drop images or <span className="text-primary font-medium">browse</span>
