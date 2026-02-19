@@ -39,6 +39,7 @@ import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import CookiePolicy from '@/pages/CookiePolicy';
 import Team from '@/pages/Team';
+import ResetPassword from '@/pages/ResetPassword';
 
 const queryClient = new QueryClient();
 
