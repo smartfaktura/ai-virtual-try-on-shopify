@@ -198,7 +198,7 @@ export function BuyCreditsModal() {
                       Monthly
                     </button>
                     <button
-                      className={`px-6 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
+                      className={`px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
                         billingPeriod === 'annual'
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
