@@ -121,16 +121,35 @@ serve(async (req) => {
       let newImageBase64: string | null = null;
       let newMimeType = "image/png";
 
-      const content = aiResult.choices?.[0]?.message?.content;
-      if (Array.isArray(content)) {
-        for (const part of content) {
-          if (part.type === "image_url" && part.image_url?.url) {
-            const dataUrl = part.image_url.url as string;
+      // Try images array first (Lovable AI gateway format)
+      const images = aiResult.choices?.[0]?.message?.images;
+      if (Array.isArray(images)) {
+        for (const img of images) {
+          if (img.type === "image_url" && img.image_url?.url) {
+            const dataUrl = img.image_url.url as string;
             const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
             if (match) {
               newMimeType = match[1];
               newImageBase64 = match[2];
               break;
+            }
+          }
+        }
+      }
+
+      // Fallback to content array
+      if (!newImageBase64) {
+        const content = aiResult.choices?.[0]?.message?.content;
+        if (Array.isArray(content)) {
+          for (const part of content) {
+            if (part.type === "image_url" && part.image_url?.url) {
+              const dataUrl = part.image_url.url as string;
+              const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+              if (match) {
+                newMimeType = match[1];
+                newImageBase64 = match[2];
+                break;
+              }
             }
           }
         }
