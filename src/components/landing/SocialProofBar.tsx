@@ -7,7 +7,6 @@ const metrics = [
   { icon: TrendingUp, value: '2,000+', label: 'Brands trust VOVV.AI' },
 ];
 
-const placeholderLogos = ['Brand A', 'Brand B', 'Brand C', 'Brand D', 'Brand E'];
 
 export function SocialProofBar() {
   return (

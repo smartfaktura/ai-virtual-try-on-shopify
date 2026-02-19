@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Ruler } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Package, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
@@ -33,6 +34,7 @@ type ViewMode = 'grid' | 'list';
 type SortBy = 'newest' | 'oldest' | 'name-asc' | 'name-desc';
 
 export default function Products() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -264,7 +266,10 @@ export default function Products() {
                         <span className="text-[10px] font-medium text-foreground">{imgCount}</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className={cn(
+                      "absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center",
+                      isMobile ? "opacity-100 bg-gradient-to-t from-black/60 via-transparent to-transparent items-end justify-end pb-2 pr-2" : "opacity-0 group-hover:opacity-100"
+                    )}>
                       <div className="flex gap-2">
                         <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
                           <Pencil className="w-3.5 h-3.5" />
@@ -344,7 +349,7 @@ export default function Products() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className={cn("flex items-center gap-1 transition-opacity shrink-0", isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>

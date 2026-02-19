@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -83,6 +83,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
+  const checkingRef = useRef(false);
 
   const fetchCredits = useCallback(async () => {
     if (!user) {
@@ -109,9 +110,10 @@ export function CreditProvider({ children }: CreditProviderProps) {
   }, [user]);
   
   const checkSubscription = useCallback(async () => {
-    if (!user) return;
+    if (!user || checkingRef.current) return;
+    checkingRef.current = true;
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return; // Session expired, skip silently
+    if (!session) { checkingRef.current = false; return; }
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription');
       if (error) {
@@ -127,6 +129,8 @@ export function CreditProvider({ children }: CreditProviderProps) {
       }
     } catch (err) {
       console.error('Failed to check subscription:', err);
+    } finally {
+      checkingRef.current = false;
     }
   }, [user]);
 
