@@ -36,20 +36,6 @@ export function SocialProofBar() {
           </p>
         </div>
 
-        {/* Logo row */}
-        <div className="flex items-center justify-center gap-8">
-          <span className="text-xs text-muted-foreground shrink-0">Trusted by</span>
-          <div className="flex items-center gap-6">
-            {placeholderLogos.map((logo) => (
-              <span
-                key={logo}
-                className="text-xs font-semibold text-muted-foreground/40 tracking-wider uppercase"
-              >
-                {logo}
-              </span>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );

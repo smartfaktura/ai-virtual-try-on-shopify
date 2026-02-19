@@ -39,7 +39,11 @@ const TOTAL_STEPS = 3;
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (!isLoading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
 
