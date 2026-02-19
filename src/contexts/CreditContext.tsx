@@ -83,6 +83,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
+  const checkingRef = useRef(false);
 
   const fetchCredits = useCallback(async () => {
     if (!user) {
