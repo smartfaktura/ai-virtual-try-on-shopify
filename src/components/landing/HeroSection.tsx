@@ -10,7 +10,7 @@ const h = (file: string) => getLandingAssetUrl(`hero/${file}`);
 
 const trustBadges = [
   { icon: CreditCard, text: 'No credit card required' },
-  { icon: Sparkles, text: '5 free visuals' },
+  { icon: Sparkles, text: '20 free credits' },
   { icon: Shield, text: 'Cancel anytime' },
 ];
 
