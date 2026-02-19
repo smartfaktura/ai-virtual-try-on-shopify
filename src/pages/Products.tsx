@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Ruler } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Package, Trash2, Pencil, Search, LayoutGrid, List, X, Image as ImageIcon } from 'lucide-react';
