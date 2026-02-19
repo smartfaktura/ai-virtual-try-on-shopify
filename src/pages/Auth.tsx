@@ -72,7 +72,7 @@ export default function Auth() {
             </h1>
             <p className="text-muted-foreground mt-2">
               {mode === 'signup'
-                ? 'Start with 5 free credits — no credit card required'
+                ? 'Start with 20 free credits — no credit card required'
                 : 'Sign in to continue generating'}
             </p>
           </div>
