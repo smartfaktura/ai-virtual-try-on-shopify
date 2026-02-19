@@ -1,43 +1,33 @@
 
 
-## Fix: "Not enough credits" Text Clipping on Mobile
+## Fix: Mobile-Optimize Queue Indicator and Generating Card
 
-### Problem
-In the freestyle prompt panel's action bar, the "Not enough credits" message and "Buy Credits" button share a single horizontal row. On mobile, the text gets truncated ("Not enough c...") because the button takes priority in the flex layout.
+Two overlapping sections need to be compacted on mobile: the **QueuePositionIndicator** (the "Generating your images..." banner) and the **GeneratingCard** (the avatar placeholder in the gallery).
 
-### Solution
-When credits are insufficient on mobile, switch the action bar to a vertical layout so the warning text appears above a full-width "Buy Credits" button.
+### 1. QueuePositionIndicator — Compact on Mobile
+**File: `src/components/app/QueuePositionIndicator.tsx`**
 
-### Changes (single file: `src/components/app/freestyle/FreestylePromptPanel.tsx`)
+In the `ProcessingState` component (lines 93-132):
 
-**Line 275 — Action bar container**: Make it wrap vertically on mobile when showing insufficient credits:
-```tsx
-// Before
-<div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
+- **Reduce padding**: `p-4` to `p-3 sm:p-4`
+- **Reduce gap**: `gap-3` to `gap-2 sm:gap-3`
+- **Hide the "Using Pro model" hint on mobile**: Add `hidden sm:block` to the complexity/pro-model hint line (line 110-112)
+- **Hide the rotating team message row on mobile**: Add `hidden sm:flex` to the team avatar + message row (lines 117-125) since the GeneratingCard already shows a team member
+- **Shrink progress bar**: reduce `h-1.5` to `h-1 sm:h-1.5`
 
-// After — add flex-wrap support
-<div className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-```
+This removes ~40px of vertical space on mobile.
 
-**Lines 287-290 — Warning text**: Make it full-width on mobile so it sits on its own row:
-```tsx
-// Before
-<p className="text-xs text-muted-foreground mr-auto truncate">
-  <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
-  <span className="sm:hidden">Not enough credits</span>
-</p>
+### 2. GeneratingCard — Shrink on Mobile
+**File: `src/components/app/freestyle/FreestyleGallery.tsx`**
 
-// After — full width on mobile, no truncation
-<p className="text-xs text-muted-foreground mr-auto w-full sm:w-auto">
-  <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
-  <span className="sm:hidden">Not enough credits</span>
-</p>
-```
+In the `GeneratingCard` component (lines 80-115):
 
-**Line 301 — Buy Credits button**: Make it full-width on mobile (it already has `w-full sm:w-auto`, so it just needs the parent to allow wrapping — already handled above).
+- **Container**: `gap-5 px-8` to `gap-3 sm:gap-5 px-4 sm:px-8`
+- **Avatar**: `w-16 h-16` to `w-10 h-10 sm:w-16 sm:h-16`; glow ring `-inset-1.5` to `-inset-1 sm:-inset-1.5`
+- **Status text container**: `min-h-[3.5rem]` to `min-h-0 sm:min-h-[3.5rem]`
+- **Text sizes**: both `text-sm` lines to `text-xs sm:text-sm`
+- **Progress bar**: `max-w-[200px]` to `max-w-[140px] sm:max-w-[200px]`; gap `space-y-2` to `space-y-1 sm:space-y-2`
+- **"Wrapping up" text**: `text-xs` to `text-[10px] sm:text-xs`
 
-This gives a clean two-row layout on mobile:
-- Row 1: "Not enough credits" (full width)
-- Row 2: "Buy Credits" button (full width)
+This shrinks the generating card to fit comfortably on mobile without overlapping the gallery images or prompt panel.
 
-On desktop, it remains a single row as before.
