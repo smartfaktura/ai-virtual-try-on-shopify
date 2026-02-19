@@ -1,68 +1,52 @@
 
 
-## Fix: Credit-Blocked UX on Freestyle (and Generate Page)
+## Fix: Align Backend Credit Pricing with Frontend Tiers
 
-### Problem
+### The Real Problem
 
-When a user doesn't have enough credits to generate:
+The **frontend** pricing is correct (matching your intent), but the **backend** uses a flat 8/16 rate that ignores model/scene complexity. This causes the "insufficient credits" error when a user has 4 credits and tries a basic (no model, no scene) generation that should cost 4.
 
-1. The **Generate button becomes disabled** with no explanation of why
-2. The user **cannot click the disabled button**, so the "open buy modal" fallback code never executes (dead code path)
-3. The **Freestyle page has no LowCreditsBanner** -- zero credit guidance
-4. When a user adds a Model (cost jumps from 4 to 12 credits), they get no feedback that their 4 credits are now insufficient
-5. No inline hint near the Generate button explaining the shortfall or how to top up
+### Your Intended Pricing (per image)
 
-### Solution
+| Scenario | Standard | High Quality |
+|----------|----------|-------------|
+| Base (no model, no scene) | 4 | 10 |
+| With model | 12 | 12 |
+| With model + scene | 15 | 15 |
+| Virtual try-on | 8 | 8 |
 
-**1. Make the Generate button clickable when only credit-blocked**
+### What Needs to Change
 
-Split `canGenerate` into two concerns:
-- `canSubmit`: has content (prompt or assets) and not loading -- controls whether clicking does anything
-- `hasEnoughCredits`: balance >= creditCost -- controls visual styling only
+**1. Backend: `supabase/functions/enqueue-generation/index.ts`**
 
-The button stays enabled when the user has valid input but insufficient credits. Clicking it opens the Buy Credits modal instead of generating.
+Update the `calculateCreditCost` function to accept `hasModel` and `hasScene` flags from the frontend payload, and apply the correct tiered pricing instead of the flat 8/16 rate.
 
-**2. Show inline credit shortfall indicator next to Generate button**
+```text
+Before:  perImage = quality === "high" ? 16 : 8  (always)
+After:
+  - model + scene: 15 per image
+  - model only:    12 per image
+  - base:          quality === "high" ? 10 : 4 per image
+  - tryon:         8 per image
+```
 
-When `balance < creditCost`, display a subtle amber/red text below or beside the button:
-- "Need X more credits" with a "Top up" link that opens the buy modal
-- Uses the existing `openBuyModal` function
+The edge function will read `hasModel` and `hasScene` from the request body (already sent by the freestyle page) and pass them to the cost calculator.
 
-**3. Add LowCreditsBanner to the Freestyle page**
+**2. Frontend: `src/pages/Freestyle.tsx`**
 
-Show the existing `LowCreditsBanner` at the top of the Freestyle content area, consistent with Dashboard and Generate pages.
+Add `hasModel` and `hasScene` flags to the payload sent to `enqueue-generation` so the backend can calculate the correct cost. Currently these flags exist in the component but may not be forwarded in the request body.
 
----
+**3. Frontend: `src/contexts/CreditContext.tsx`**
 
-### Files to Change
-
-| File | Change |
-|------|--------|
-| `src/pages/Freestyle.tsx` | Split `canGenerate` logic; add `LowCreditsBanner` import and render it in the scrollable content area |
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Accept new `balance` prop; show credit shortfall text near the Generate button when `balance < creditCost`; keep button enabled when only credit-blocked |
-| `src/pages/Generate.tsx` | Apply the same fix: ensure the generate/confirm buttons open buy modal when clicked with insufficient credits instead of being fully disabled |
+Update the `calculateCost` function to match the same rates (4/10/12/15) so any other UI that uses it stays consistent. The current `calculateCost` already has this logic, so this may just need verification.
 
 ### Technical Details
 
-**Freestyle.tsx changes:**
-- Change `canGenerate` to: `(prompt.trim().length > 0 || hasAssets) && !isLoading` (remove credit check from disable logic)
-- Pass `balance` to `FreestylePromptPanel`
-- Import and render `<LowCreditsBanner />` inside the scrollable content area (above gallery)
+| File | Change |
+|------|--------|
+| `supabase/functions/enqueue-generation/index.ts` | Rewrite `calculateCreditCost` to use tiered pricing based on `hasModel`/`hasScene` flags; extract those flags from `body` |
+| `src/pages/Freestyle.tsx` | Ensure `hasModel` and `hasScene` are included in the generation request payload |
+| `src/hooks/useGenerateFreestyle.ts` | Verify the hook passes `hasModel`/`hasScene` to the enqueue call |
 
-**FreestylePromptPanel.tsx changes (action bar area, line ~273-297):**
-- Accept `balance` prop
-- When `balance < creditCost`: show amber text "Need {creditCost - balance} more credits" with a clickable "Top up" that calls `onGenerate` (which will trigger `openBuyModal`)
-- Keep the Generate button visually distinct (amber/warning styling instead of primary) when credit-blocked but still clickable
-- The button text changes to "Generate (X)" with a small warning icon when insufficient
-
-**Generate.tsx changes:**
-- Same pattern: ensure generate/try-on confirm buttons remain clickable and open buy modal when credits are short
-
-### Design
-
-The credit shortfall indicator follows the platform's clean, minimal aesthetic:
-- Small text in `text-amber-500` (or `text-destructive` if completely out)
-- Positioned directly below the Generate button in the action bar
-- Shows exact deficit: "Need 8 more credits" with "Top up" as an underlined link
-- No large banners or popups -- just contextual inline guidance
+This fix will make a basic freestyle generation correctly cost 4 credits, allowing the user with 4 credits to generate successfully.
 
