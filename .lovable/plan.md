@@ -1,53 +1,38 @@
 
 
-## Fix: Mobile Upload Session Mismatch
+## Compact Add Product Form -- Fit Everything on One Screen
 
-### Root Cause
+### Problem
 
-The `MobileUploadTab` component creates a new session every time it mounts (via `useEffect` calling `createSession`). When the component remounts (modal close/reopen, tab switch, React re-render), a brand new session + QR code is generated. But the user's phone already scanned the PREVIOUS QR code and uploaded to that session. The desktop polls only the newest session token, so the upload is never detected.
+The current Upload tab in the Add Product modal requires scrolling to reach the Description and Dimensions fields. Users don't realize those fields exist, so they often go unfilled.
 
-Evidence from the database:
-- Session `8597b86d` (11:45:09) -- status: **uploaded** with image (the phone uploaded here)
-- Session `fd7d419e` (11:45:31) -- status: **pending** (desktop was polling this one)
+### Solution
 
-### Fix Strategy
+Make the form more compact so all fields (image drop zone, product name, product type, description, dimensions) are visible without scrolling in the modal's viewport.
 
-Two changes to make this robust:
+### Changes (single file: `src/components/app/ManualProductTab.tsx`)
 
-**1. MobileUploadTab.tsx -- Poll ALL recent pending/uploaded sessions, not just the latest one**
+**1. Reduce vertical spacing**
+- Change the outer container from `space-y-4 sm:space-y-6` to `space-y-3 sm:space-y-4`
+- Change the product details section from `space-y-3` to `space-y-2`
 
-Instead of polling a single session token, the status check should look for any session that has been uploaded for this user within the last 15 minutes. This way, even if the component remounts and creates a new session, it will still detect uploads from earlier sessions.
+**2. Shrink the empty drop zone**
+- Reduce padding from `py-7 sm:py-10` to `py-5 sm:py-6`
+- Make the icon circle smaller (w-8 h-8 instead of w-10 h-10, icon w-4 h-4 instead of w-5 h-5)
 
-Change the polling logic: Instead of checking `status` for one specific token, also query for the most recent `uploaded` session for the user. The edge function `status` action will be updated to support this.
+**3. Put Product Name and Product Type side by side**
+- Wrap them in a 2-column grid: `grid grid-cols-1 sm:grid-cols-2 gap-3`
+- Product Name takes the left column, Product Type input takes the right column
+- The quick-type badges row sits below the grid, spanning full width
 
-**2. Edge function mobile-upload/index.ts -- Add a "check-any" status action**
+**4. Put Description and Dimensions side by side**
+- Wrap them in a 2-column grid: `grid grid-cols-1 sm:grid-cols-2 gap-3`
+- Description (left, textarea with rows=2) and Dimensions (right, single input)
 
-Add a new action (or modify "status") that checks if ANY session for this user has status "uploaded" and returns it. This covers the case where the desktop session token doesn't match the one the phone used.
+**5. Reduce footer padding**
+- Change `pt-3 sm:pt-6` to `pt-2 sm:pt-3`
 
-### Files to Change
+### Result
 
-| File | Change |
-|------|--------|
-| `supabase/functions/mobile-upload/index.ts` | Add fallback: when the polled session is still "pending", also check if any other session for this user was recently uploaded |
-| `src/components/app/MobileUploadTab.tsx` | Update polling to pass user context and handle the "found uploaded from different session" case |
-
-### Technical Details
-
-**Edge function change (mobile-upload/index.ts, status action):**
-
-When `action=status` and the specific token returns "pending", also query:
-```sql
-SELECT image_url FROM mobile_upload_sessions 
-WHERE user_id = :userId AND status = 'uploaded' 
-AND created_at > now() - interval '15 minutes'
-ORDER BY created_at DESC LIMIT 1
-```
-
-If found, return that image_url even though the specific token is still pending. This handles the session mismatch gracefully.
-
-**MobileUploadTab.tsx:**
-
-No major UI changes needed. The polling callback just needs to handle the new response shape where `image_url` can come from a different session.
-
-Also add a guard to prevent creating a new session if one was created less than 30 seconds ago (debounce re-creation on remount).
+All fields will be visible on screen without scrolling in the 680px-wide modal. On mobile, fields still stack vertically (single column) so nothing gets cramped.
 
