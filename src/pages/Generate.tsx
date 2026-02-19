@@ -2195,19 +2195,29 @@ export default function Generate() {
               <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
             </CardContent></Card>
 
-            <Alert><AlertDescription>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">Virtual Try-On uses {creditCost} credits</p>
-                  <p className="text-xs text-muted-foreground">{parseInt(imageCount)} image{parseInt(imageCount) > 1 ? 's' : ''} × {quality === 'high' ? 16 : 8} credits each</p>
-                </div>
-                <p className="font-semibold">{balance} credits available</p>
+            <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
+              <div>
+                <p className="text-sm font-semibold">Virtual Try-On: {creditCost} credits</p>
+                <p className="text-xs text-muted-foreground">{parseInt(imageCount)} image{parseInt(imageCount) > 1 ? 's' : ''} × {quality === 'high' ? 16 : 8} credits each</p>
               </div>
-            </AlertDescription></Alert>
+              {balance >= creditCost ? (
+                <p className="text-sm text-muted-foreground">{balance} credits available</p>
+              ) : (
+                <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {balance} credits — need {creditCost}. Top up
+                </button>
+              )}
+            </div>
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setCurrentStep('pose')}>Back</Button>
-              <Button onClick={handleGenerateClick}>Generate {imageCount} Try-On Images</Button>
+              <Button
+                onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
+                className={balance < creditCost ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+              >
+                {balance >= creditCost ? `Generate ${imageCount} Try-On Images` : 'Buy Credits'}
+              </Button>
             </div>
           </div>
         )}
