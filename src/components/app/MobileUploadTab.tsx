@@ -32,6 +32,7 @@ export function MobileUploadTab({ onProductAdded, onClose }: MobileUploadTabProp
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastSessionCreatedRef = useRef<number>(0);
 
   const createSession = useCallback(async () => {
     if (!user) return;

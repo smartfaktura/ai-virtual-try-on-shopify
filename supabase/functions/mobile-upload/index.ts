@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Query using user's client (RLS ensures they only see their own sessions)
+      // Query the specific token first (RLS ensures they only see their own sessions)
       const { data: session, error: sessionError } = await supabase
         .from("mobile_upload_sessions")
         .select("status, image_url, expires_at")
@@ -219,6 +219,31 @@ Deno.serve(async (req) => {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      // If the specific token is still pending, check if ANY other session
+      // for this user was recently uploaded (handles session mismatch on remount)
+      if (session.status === "pending") {
+        const userId = claimsData.claims.sub as string;
+        const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+        const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+        const { data: uploaded } = await adminClient
+          .from("mobile_upload_sessions")
+          .select("image_url")
+          .eq("user_id", userId)
+          .eq("status", "uploaded")
+          .gte("created_at", fifteenMinAgo)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (uploaded?.image_url) {
+          return new Response(
+            JSON.stringify({ status: "uploaded", image_url: uploaded.image_url, expires_at: session.expires_at }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
 
       return new Response(JSON.stringify(session), {
