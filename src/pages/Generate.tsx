@@ -677,6 +677,8 @@ export default function Generate() {
           toast.success(`Generated ${batchState.aggregatedImages.length} images!`);
         }
         refreshBalance();
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
         resetBatch();
       } else {
         // All batches failed
