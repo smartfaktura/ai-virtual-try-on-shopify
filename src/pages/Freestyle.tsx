@@ -142,7 +142,9 @@ export default function Freestyle() {
       ? imageCount * 12
       : imageCount * (quality === 'high' ? 10 : 4);
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
-  const canGenerate = (prompt.trim().length > 0 || hasAssets) && !isLoading && balance >= creditCost;
+  const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
+  const hasEnoughCredits = balance >= creditCost;
+  const canGenerate = canSubmit && hasEnoughCredits;
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
