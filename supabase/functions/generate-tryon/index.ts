@@ -136,7 +136,7 @@ function buildPrompt(req: TryOnRequest): string {
   }
 
   const imageReferences = hasSceneImage
-    ? "the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE] in the environment shown in [SCENE IMAGE]"
+    ? "the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE], posed and composed like [SCENE IMAGE] in that same environment"
     : "the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE]";
 
   return `Create a professional fashion photograph combining ${imageReferences}.
