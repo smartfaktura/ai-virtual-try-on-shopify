@@ -227,12 +227,28 @@ async function generateImage(
   productImageUrl: string,
   modelImageUrl: string,
   apiKey: string,
-  aspectRatio: string
+  aspectRatio: string,
+  sceneImageUrl?: string
 ): Promise<string | null> {
   const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
+      // Build content array with product and model images, plus optional scene image
+      const contentParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+        {
+          type: "text",
+          text: `${prompt}\n\nNegative prompt (avoid these): ${negativePrompt}`,
+        },
+        { type: "image_url", image_url: { url: productImageUrl } },
+        { type: "image_url", image_url: { url: modelImageUrl } },
+      ];
+
+      // Add scene image as third reference if provided
+      if (sceneImageUrl) {
+        contentParts.push({ type: "image_url", image_url: { url: sceneImageUrl } });
+      }
+
       const response = await fetch(
         "https://ai.gateway.lovable.dev/v1/chat/completions",
         {
@@ -246,14 +262,7 @@ async function generateImage(
             messages: [
               {
                 role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: `${prompt}\n\nNegative prompt (avoid these): ${negativePrompt}`,
-                  },
-                  { type: "image_url", image_url: { url: productImageUrl } },
-                  { type: "image_url", image_url: { url: modelImageUrl } },
-                ],
+                content: contentParts,
               },
             ],
             modalities: ["image", "text"],
