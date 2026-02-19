@@ -274,22 +274,20 @@ export function FreestylePromptPanel({
           {/* Row 3 — Action Bar */}
           <div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
             {!canGenerate && !isLoading ? (
-              <p className="text-xs text-muted-foreground mr-auto">
+              <p className="text-xs text-muted-foreground mr-auto truncate">
                 Type a prompt or add a reference to start
               </p>
             ) : canGenerate && creditBalance !== undefined && creditBalance < creditCost ? (
-              <div className="flex items-center gap-1.5 text-xs mr-auto">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                <span className="text-amber-500 font-medium">
-                  Need {creditCost - creditBalance} more credits
-                </span>
+              <p className="text-xs text-muted-foreground mr-auto truncate">
+                <span className="hidden sm:inline">Need {creditCost - creditBalance} more credits · </span>
+                <span className="sm:hidden">+{creditCost - creditBalance} credits · </span>
                 <button
                   onClick={onGenerate}
-                  className="text-amber-500 underline underline-offset-2 hover:text-amber-400 transition-colors font-medium"
+                  className="underline underline-offset-2 hover:text-foreground transition-colors"
                 >
                   Top up
                 </button>
-              </div>
+              </p>
             ) : null}
             <TooltipProvider delayDuration={300}>
               <Tooltip>
@@ -298,14 +296,9 @@ export function FreestylePromptPanel({
                     onClick={onGenerate}
                     disabled={!canGenerate}
                     size="lg"
-                    className={cn(
-                      "h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto",
-                      creditBalance !== undefined && creditBalance < creditCost
-                        ? "bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/25"
-                        : "shadow-lg shadow-primary/25"
-                    )}
+                    className="h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto shadow-lg shadow-primary/25"
                   >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : creditBalance !== undefined && creditBalance < creditCost ? <AlertTriangle className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     Generate
                     <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
                   </Button>
