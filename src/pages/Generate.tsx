@@ -604,9 +604,10 @@ export default function Generate() {
     setCurrentStep('generating');
     setGeneratingProgress(0);
 
-    const [base64ProductImage, base64ModelImage] = await Promise.all([
+    const [base64ProductImage, base64ModelImage, base64SceneImage] = await Promise.all([
       convertImageToBase64(sourceImageUrl),
       convertImageToBase64(selectedModel.previewUrl),
+      selectedPose.previewUrl ? convertImageToBase64(selectedPose.previewUrl) : Promise.resolve(undefined),
     ]);
 
     const enqueueResult = await enqueue({
@@ -614,7 +615,7 @@ export default function Generate() {
       payload: {
         product: { title: productData.title, description: productData.description, productType: productData.productType, imageUrl: base64ProductImage },
         model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
-        pose: { name: selectedPose.name, description: selectedPose.promptHint || selectedPose.description, category: selectedPose.category },
+        pose: { name: selectedPose.name, description: selectedPose.promptHint || selectedPose.description, category: selectedPose.category, imageUrl: base64SceneImage },
         aspectRatio, imageCount: parseInt(imageCount),
         framing: framing || undefined,
         workflow_id: activeWorkflow?.id || null,

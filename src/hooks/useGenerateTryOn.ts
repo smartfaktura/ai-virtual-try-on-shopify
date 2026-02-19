@@ -94,6 +94,7 @@ export function useGenerateTryOn(): UseGenerateTryOnReturn {
             name: params.pose.name,
             description: params.pose.promptHint || params.pose.description,
             category: params.pose.category,
+            imageUrl: base64SceneImage,
           },
           aspectRatio: params.aspectRatio,
           imageCount: params.imageCount,
