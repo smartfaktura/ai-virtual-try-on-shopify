@@ -200,6 +200,25 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
 
               {/* Secondary actions */}
               <div className="flex gap-2">
+                {!isUpscaled && item.source === 'freestyle' && (
+                  <button
+                    onClick={handleUpscale}
+                    disabled={upscaling}
+                    className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-primary bg-primary/5 backdrop-blur-sm border border-primary/20 hover:bg-primary/10 transition-all disabled:opacity-50"
+                  >
+                    {upscaling ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Upscaling…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Upscale to PRO HD — 4 cr
+                      </>
+                    )}
+                  </button>
+                )}
                 {item.source === 'freestyle' && (
                   <button
                     onClick={handleDelete}
