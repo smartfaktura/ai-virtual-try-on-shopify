@@ -273,7 +273,11 @@ export function FreestylePromptPanel({
 
           {/* Row 3 — Action Bar */}
           <div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
-            {creditBalance !== undefined && creditBalance < creditCost && (
+            {!canGenerate && !isLoading ? (
+              <p className="text-xs text-muted-foreground mr-auto">
+                Type a prompt or add a reference to start
+              </p>
+            ) : canGenerate && creditBalance !== undefined && creditBalance < creditCost ? (
               <div className="flex items-center gap-1.5 text-xs mr-auto">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                 <span className="text-amber-500 font-medium">
@@ -286,7 +290,7 @@ export function FreestylePromptPanel({
                   Top up
                 </button>
               </div>
-            )}
+            ) : null}
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
