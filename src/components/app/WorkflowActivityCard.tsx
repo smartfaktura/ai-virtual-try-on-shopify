@@ -123,7 +123,7 @@ export function WorkflowActivityCard({
                     Cancel
                   </Button>
                 )}
-                {isProcessing && (
+                {isProcessing && (group.job_type === 'tryon' || group.quality === 'high') && (
                   <Badge
                     variant="secondary"
                     className="shrink-0 text-[10px] uppercase tracking-wider font-semibold bg-primary/10 text-primary hover:bg-primary/10"
