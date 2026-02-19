@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Plus, X, Sparkles, Loader2, ImagePlus, ChevronUp } from 'lucide-react';
+import { Plus, X, Sparkles, Loader2, ImagePlus, ChevronUp, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -64,6 +64,7 @@ interface FreestylePromptPanelProps {
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
   onFileDrop?: (file: File) => void;
+  creditBalance?: number;
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -89,6 +90,7 @@ export function FreestylePromptPanel({
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
+  creditBalance,
   isCollapsed,
   onToggleCollapse,
 }: FreestylePromptPanelProps) {
@@ -270,7 +272,21 @@ export function FreestylePromptPanel({
           <div className="border-t border-border/40 mx-4 sm:mx-5" />
 
           {/* Row 3 — Action Bar */}
-          <div className="px-4 sm:px-5 py-3 flex items-center justify-end">
+          <div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
+            {creditBalance !== undefined && creditBalance < creditCost && (
+              <div className="flex items-center gap-1.5 text-xs mr-auto">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                <span className="text-amber-500 font-medium">
+                  Need {creditCost - creditBalance} more credits
+                </span>
+                <button
+                  onClick={onGenerate}
+                  className="text-amber-500 underline underline-offset-2 hover:text-amber-400 transition-colors font-medium"
+                >
+                  Top up
+                </button>
+              </div>
+            )}
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -278,19 +294,26 @@ export function FreestylePromptPanel({
                     onClick={onGenerate}
                     disabled={!canGenerate}
                     size="lg"
-                    className="h-11 px-8 gap-2.5 rounded-xl shadow-lg shadow-primary/25 text-sm font-semibold w-full sm:w-auto"
+                    className={cn(
+                      "h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto",
+                      creditBalance !== undefined && creditBalance < creditCost
+                        ? "bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/25"
+                        : "shadow-lg shadow-primary/25"
+                    )}
                   >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : creditBalance !== undefined && creditBalance < creditCost ? <AlertTriangle className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
                     Generate
                     <span className="text-xs opacity-70 tabular-nums">({creditCost})</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  {selectedModel && selectedScene
-                    ? `${creditCost} credits: Model + Scene (15/image) × ${imageCount}`
-                    : selectedModel
-                      ? `${creditCost} credits: Model reference (12/image) × ${imageCount}`
-                      : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'} × ${imageCount}`}
+                  {creditBalance !== undefined && creditBalance < creditCost
+                    ? `You need ${creditCost - creditBalance} more credits to generate`
+                    : selectedModel && selectedScene
+                      ? `${creditCost} credits: Model + Scene (15/image) × ${imageCount}`
+                      : selectedModel
+                        ? `${creditCost} credits: Model reference (12/image) × ${imageCount}`
+                        : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'} × ${imageCount}`}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

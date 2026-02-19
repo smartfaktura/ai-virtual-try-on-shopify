@@ -4,6 +4,7 @@ import { Sparkles, Loader2, Camera, X as XIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
+import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import type { BlockedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
@@ -142,7 +143,9 @@ export default function Freestyle() {
       ? imageCount * 12
       : imageCount * (quality === 'high' ? 10 : 4);
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
-  const canGenerate = (prompt.trim().length > 0 || hasAssets) && !isLoading && balance >= creditCost;
+  const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
+  const hasEnoughCredits = balance >= creditCost;
+  const canGenerate = canSubmit && hasEnoughCredits;
 
   const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -229,8 +232,9 @@ export default function Freestyle() {
   }, [user]);
 
   const handleGenerate = useCallback(async () => {
-    if (!canGenerate) {
-      if (balance < creditCost) openBuyModal();
+    if (!canSubmit) return;
+    if (!hasEnoughCredits) {
+      openBuyModal();
       return;
     }
 
@@ -380,7 +384,7 @@ export default function Freestyle() {
       // Update balance from server response
       setBalanceFromServer(enqueueResult.newBalance);
     }
-  }, [canGenerate, balance, creditCost, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
@@ -478,7 +482,8 @@ export default function Freestyle() {
     onUploadClick: () => fileInputRef.current?.click(),
     onRemoveImage: removeSourceImage,
     onGenerate: handleGenerate,
-    canGenerate,
+    canGenerate: canSubmit,
+    creditBalance: balance,
     isLoading,
     progress: isLoading ? 0 : 100,
     creditCost,
@@ -536,6 +541,9 @@ export default function Freestyle() {
 
       {/* Scrollable content area */}
       <div className="flex-1 lg:h-full overflow-y-auto pt-[5rem] lg:pt-3 pb-4 lg:pb-72">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <LowCreditsBanner />
+        </div>
         {showLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-muted-foreground/40 animate-spin" />
