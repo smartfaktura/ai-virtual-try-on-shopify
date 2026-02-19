@@ -1,33 +1,53 @@
 
 
-## Fix: Mobile-Optimize Queue Indicator and Generating Card
+## Fix: Banner Branding, Spacing, and Margin Alignment
 
-Two overlapping sections need to be compacted on mobile: the **QueuePositionIndicator** (the "Generating your images..." banner) and the **GeneratingCard** (the avatar placeholder in the gallery).
+### 1. Restyle LowCreditsBanner to Match VOVV.AI Branding
+**File: `src/components/app/LowCreditsBanner.tsx`**
 
-### 1. QueuePositionIndicator — Compact on Mobile
-**File: `src/components/app/QueuePositionIndicator.tsx`**
+Replace the amber/yellow color scheme with the app's dark navy primary palette:
+- Container: `bg-primary/5 text-foreground border-primary/20` (instead of amber-50)
+- Icon: `text-primary` (instead of amber-500)
+- Button: `bg-primary text-primary-foreground hover:bg-primary/90` (instead of amber-600)
+- Dark mode variants updated accordingly
 
-In the `ProcessingState` component (lines 93-132):
+### 2. Fix QueuePositionIndicator Margins to Match Gallery Grid
+**File: `src/pages/Freestyle.tsx`**
 
-- **Reduce padding**: `p-4` to `p-3 sm:p-4`
-- **Reduce gap**: `gap-3` to `gap-2 sm:gap-3`
-- **Hide the "Using Pro model" hint on mobile**: Add `hidden sm:block` to the complexity/pro-model hint line (line 110-112)
-- **Hide the rotating team message row on mobile**: Add `hidden sm:flex` to the team avatar + message row (lines 117-125) since the GeneratingCard already shows a team member
-- **Shrink progress bar**: reduce `h-1.5` to `h-1 sm:h-1.5`
+The queue indicator wrapper currently uses `px-1 pt-1` while the gallery uses `px-3 lg:px-1`. Update the queue indicator wrapper to use matching horizontal padding:
 
-This removes ~40px of vertical space on mobile.
+```
+// Before (line 554)
+<div className="px-1 pt-1">
 
-### 2. GeneratingCard — Shrink on Mobile
+// After — match gallery's px-3 and add bottom spacing
+<div className="px-3 lg:px-1 pt-1 pb-2">
+```
+
+### 3. Add Spacing Between Generating Card and Image Grid
 **File: `src/components/app/freestyle/FreestyleGallery.tsx`**
 
-In the `GeneratingCard` component (lines 80-115):
+Currently the masonry grid and the centered layout both use `gap-1` with no vertical separation from generating cards. In the masonry branch (4+ items), generating cards are mixed into columns already. In the centered branch (1-3 items), add a small gap:
 
-- **Container**: `gap-5 px-8` to `gap-3 sm:gap-5 px-4 sm:px-8`
-- **Avatar**: `w-16 h-16` to `w-10 h-10 sm:w-16 sm:h-16`; glow ring `-inset-1.5` to `-inset-1 sm:-inset-1.5`
-- **Status text container**: `min-h-[3.5rem]` to `min-h-0 sm:min-h-[3.5rem]`
-- **Text sizes**: both `text-sm` lines to `text-xs sm:text-sm`
-- **Progress bar**: `max-w-[200px]` to `max-w-[140px] sm:max-w-[200px]`; gap `space-y-2` to `space-y-1 sm:space-y-2`
-- **"Wrapping up" text**: `text-xs` to `text-[10px] sm:text-xs`
+```
+// Before (line ~290)
+<div className="flex items-stretch justify-center gap-1 px-3 lg:px-1">
 
-This shrinks the generating card to fit comfortably on mobile without overlapping the gallery images or prompt panel.
+// After — add gap-2 for breathing room
+<div className="flex items-stretch justify-center gap-2 px-3 lg:px-1">
+```
 
+Also for the masonry layout, increase column gap slightly:
+
+```
+// Before
+<div className="flex gap-1 px-3 lg:px-1 pb-4">
+
+// After
+<div className="flex gap-2 px-3 lg:px-1 pb-4">
+```
+
+### Summary of Visual Changes
+- **Banner**: Dark navy/primary branding instead of amber/yellow
+- **Queue indicator**: Horizontal margins match gallery grid (px-3 on mobile)
+- **Grid gaps**: Slightly larger gaps (gap-2) between generating cards and images for breathing room
