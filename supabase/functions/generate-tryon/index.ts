@@ -240,13 +240,18 @@ async function generateImage(
           type: "text",
           text: `${prompt}\n\nNegative prompt (avoid these): ${negativePrompt}`,
         },
+        { type: "text", text: "[PRODUCT IMAGE]:" },
         { type: "image_url", image_url: { url: productImageUrl } },
+        { type: "text", text: "[MODEL IMAGE]:" },
         { type: "image_url", image_url: { url: modelImageUrl } },
       ];
 
       // Add scene image as third reference if provided
       if (sceneImageUrl) {
-        contentParts.push({ type: "image_url", image_url: { url: sceneImageUrl } });
+        contentParts.push(
+          { type: "text", text: "[SCENE IMAGE]:" },
+          { type: "image_url", image_url: { url: sceneImageUrl } }
+        );
       }
 
       const response = await fetch(
