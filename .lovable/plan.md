@@ -1,44 +1,70 @@
 
 
-## Fix Upscale Function + Improve Button Design
+## Fix Upscale Function (Stack Overflow) + Improve Button
 
-### Two Issues Found
+### Bug 1: Stack Overflow in Edge Function (Critical)
 
-**1. Edge function crash** -- The `upscale-image` function fails with `getClaims is not a function`. This method doesn't exist in the version of the Supabase client being used. Fix: replace with `getUser()` which is the standard approach used across all other edge functions.
+The crash `RangeError: Maximum call stack size exceeded` happens on line 75:
 
-**2. Button looks flat and text-heavy** -- The current "Upscale to PRO HD -- 4 cr" button is a plain outlined chip with small text. It should look more premium and be shorter/cleaner.
+```text
+btoa(String.fromCharCode(...new Uint8Array(imgBuffer)))
+```
+
+When an image is e.g. 2MB, this tries to spread 2 million arguments into `String.fromCharCode()`, which blows the call stack. Fix: use chunked base64 encoding.
+
+### Bug 2: Wrong AI Response Parsing
+
+The code looks for `content[].type === "image_url"` but the Lovable AI gateway returns generated images in `message.images[]` array. Need to handle both formats.
+
+### Bug 3: Button Clarity and Color
+
+Current button says "PRO HD" with "4 CR" badge — unclear what it does. Change to:
+- Text: **"Enhance to PRO HD"** with a subtle "4 cr" note
+- Color: Use an amber/gold gradient instead of primary (to distinguish from Download)
+- Tooltip-style subtitle below explaining the feature
 
 ### Changes
 
-#### 1. Fix Edge Function Auth (crash fix)
 **File: `supabase/functions/upscale-image/index.ts`**
 
-Replace the broken `getClaims` call with `getUser()`:
-
+1. Replace the broken base64 line with a chunked approach:
 ```typescript
-// Before (broken):
-const token = authHeader.replace("Bearer ", "");
-const { data: claimsData, error: claimsError } = await supabaseUser.auth.getClaims(token);
-const userId = claimsData.claims.sub as string;
-
-// After (working):
-const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
-if (userError || !user) { return 401; }
-const userId = user.id;
+// Chunked base64 encoding to avoid stack overflow
+const uint8 = new Uint8Array(imgBuffer);
+let binary = '';
+const chunkSize = 8192;
+for (let i = 0; i < uint8.length; i += chunkSize) {
+  binary += String.fromCharCode(...uint8.slice(i, i + chunkSize));
+}
+const imgBase64 = btoa(binary);
 ```
 
-#### 2. Redesign Upscale Button
+2. Fix response parsing to handle `images[]` format:
+```typescript
+// Try images array first (Lovable AI gateway format)
+const images = aiResult.choices?.[0]?.message?.images;
+if (Array.isArray(images)) {
+  for (const img of images) {
+    if (img.type === "image_url" && img.image_url?.url) {
+      // extract from data URL...
+    }
+  }
+}
+// Fallback to content array
+if (!newImageBase64) { /* existing content[] parsing */ }
+```
+
 **File: `src/components/app/LibraryDetailModal.tsx`**
 
-Make the button more premium-looking and concise:
-- Use a gradient background (primary tones) instead of flat outline
-- Shorten text to just **"PRO HD"** with a small "4 cr" badge
-- Make it full-width like the Download button for better hierarchy
-- Add a subtle shimmer/glow effect
+Update the upscale button:
+- Change gradient to amber/gold tones (`from-amber-500 to-yellow-600`)
+- Text: "Enhance to PRO HD" with small "4 cr" label
+- Make it clearly an "extra/premium" optional action, visually distinct from the dark Download button
 
 ### Files to Edit
+
 | File | Change |
 |------|--------|
-| `supabase/functions/upscale-image/index.ts` | Fix auth: replace `getClaims` with `getUser()` |
-| `src/components/app/LibraryDetailModal.tsx` | Redesign upscale button to be more premium and concise |
+| `supabase/functions/upscale-image/index.ts` | Fix stack overflow + response parsing |
+| `src/components/app/LibraryDetailModal.tsx` | Redesign button with amber color and clearer text |
 
