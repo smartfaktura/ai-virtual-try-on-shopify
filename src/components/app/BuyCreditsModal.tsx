@@ -70,10 +70,10 @@ export function BuyCreditsModal() {
   return (
     <>
       <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
-        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl max-h-[85dvh] flex flex-col">
+        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[85dvh] h-full sm:h-auto flex flex-col">
 
           {/* Balance header */}
-          <div className="px-6 pt-5 pb-4 border-b border-border/40 flex items-center justify-between">
+          <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border/40 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-muted">
                 <Wallet className="w-4 h-4 text-foreground" />
@@ -89,7 +89,7 @@ export function BuyCreditsModal() {
           </div>
 
           {/* Tab switcher */}
-          <div className="px-6 pt-1">
+          <div className="px-4 sm:px-6 pt-1">
             <div className="flex gap-1 border-b border-border/40">
               {(['topup', 'upgrade'] as const).map(tab => (
                 <button
@@ -188,7 +188,7 @@ export function BuyCreditsModal() {
                 <div className="flex justify-center">
                   <div className="flex rounded-full border border-border p-0.5 bg-muted/40">
                     <button
-                      className={`px-6 py-2 text-sm font-medium rounded-full transition-all ${
+                      className={`px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all ${
                         billingPeriod === 'monthly'
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -198,7 +198,7 @@ export function BuyCreditsModal() {
                       Monthly
                     </button>
                     <button
-                      className={`px-6 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
+                      className={`px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
                         billingPeriod === 'annual'
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
@@ -216,7 +216,7 @@ export function BuyCreditsModal() {
                 </div>
 
                 {/* Plan cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
                   {mainPlans.map((p) => {
                     const isCurrent = p.planId === plan;
                     const currentIdx = PLAN_ORDER.indexOf(plan);
@@ -234,7 +234,7 @@ export function BuyCreditsModal() {
                     return (
                       <div
                         key={p.planId}
-                        className={`relative rounded-2xl p-5 flex flex-col transition-all duration-200 ${
+                        className={`relative rounded-2xl p-4 sm:p-5 flex flex-col transition-all duration-200 ${
                           p.highlighted
                             ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
                             : isCurrent
@@ -259,7 +259,7 @@ export function BuyCreditsModal() {
                         <div className="mb-1">
                           {isFree ? (
                             <div className="flex items-baseline gap-1">
-                              <span className="text-3xl font-bold tracking-tight">Free</span>
+                              <span className="text-2xl sm:text-3xl font-bold tracking-tight">Free</span>
                             </div>
                           ) : (
                             <>
@@ -267,7 +267,7 @@ export function BuyCreditsModal() {
                                 {isAnnual && p.monthlyPrice > displayPrice && (
                                   <span className="text-sm text-muted-foreground line-through">${p.monthlyPrice}</span>
                                 )}
-                                <span className="text-3xl font-bold tracking-tight">${displayPrice}</span>
+                                <span className="text-2xl sm:text-3xl font-bold tracking-tight">${displayPrice}</span>
                                 <span className="text-xs text-muted-foreground">/mo</span>
                               </div>
                               <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -291,7 +291,7 @@ export function BuyCreditsModal() {
 
                         {/* Features */}
                         <div className="space-y-2 flex-1 mb-4">
-                          {p.features.slice(0, 4).map((f, i) => (
+                          {p.features.slice(0, 3).map((f, i) => (
                             <div key={i} className="flex items-start gap-2">
                               <Check className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
                               <span className="text-[11px] text-muted-foreground leading-snug">{f}</span>
