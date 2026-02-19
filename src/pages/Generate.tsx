@@ -198,7 +198,7 @@ export default function Generate() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedForPublish, setSelectedForPublish] = useState<Set<number>>(new Set());
 
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  
   const [tryOnConfirmModalOpen, setTryOnConfirmModalOpen] = useState(false);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
