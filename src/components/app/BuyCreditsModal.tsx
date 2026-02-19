@@ -188,7 +188,7 @@ export function BuyCreditsModal() {
                 <div className="flex justify-center">
                   <div className="flex rounded-full border border-border p-0.5 bg-muted/40">
                     <button
-                      className={`px-6 py-2 text-sm font-medium rounded-full transition-all ${
+                      className={`px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all ${
                         billingPeriod === 'monthly'
                           ? 'bg-primary text-primary-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground'
