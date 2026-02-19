@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AddProductModal } from '@/components/app/AddProductModal';
-import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone, Layers } from 'lucide-react';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle } from 'lucide-react';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
@@ -1520,17 +1520,29 @@ export default function Generate() {
                   )}
                 </CardContent></Card>
 
-                <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+                <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
                   <div>
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                     <p className="text-xs text-muted-foreground">{imageCount} images × {quality === 'high' ? 2 : 1} credit{quality === 'high' ? 's' : ''}</p>
                   </div>
-                  <p className="text-sm">{balance} credits available</p>
+                  {balance >= creditCost ? (
+                    <p className="text-sm text-muted-foreground">{balance} credits available</p>
+                  ) : (
+                    <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {balance} credits — need {creditCost}. Top up
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setCurrentStep('template')}>Back</Button>
-                  <Button onClick={handleGenerateClick}>Generate {imageCount} Images</Button>
+                  <Button
+                    onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
+                    className={balance < creditCost ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                  >
+                    {balance >= creditCost ? `Generate ${imageCount} Images` : 'Buy Credits'}
+                  </Button>
                 </div>
               </div>
             )}
@@ -1941,7 +1953,7 @@ export default function Generate() {
                 </CardContent></Card>
 
                 {/* Cost summary */}
-                <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+                <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
                   <div>
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                     <p className="text-xs text-muted-foreground">
@@ -1950,13 +1962,24 @@ export default function Generate() {
                       {selectedFlatLayProductIds.size > 1 && ` · ${selectedFlatLayProductIds.size} products in composition`}
                     </p>
                   </div>
-                  <p className="text-sm">{balance} credits available</p>
+                  {balance >= creditCost ? (
+                    <p className="text-sm text-muted-foreground">{balance} credits available</p>
+                  ) : (
+                    <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {balance} credits — need {creditCost}. Top up
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setFlatLayPhase('surfaces')}>Back to Surfaces</Button>
-                  <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0}>
-                    Generate {selectedVariationIndices.size} Flat Lay Images
+                  <Button
+                    onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
+                    disabled={selectedVariationIndices.size === 0}
+                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                  >
+                    {balance >= creditCost ? `Generate ${selectedVariationIndices.size} Flat Lay Images` : 'Buy Credits'}
                   </Button>
                 </div>
               </>
@@ -2075,7 +2098,7 @@ export default function Generate() {
                 </CardContent></Card>
 
                 {/* Cost summary */}
-                <div className="p-4 rounded-lg border border-border bg-muted/30 flex items-center justify-between">
+                <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
                   <div>
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                     <p className="text-xs text-muted-foreground">
@@ -2084,7 +2107,14 @@ export default function Generate() {
                       {' '}× {quality === 'high' ? 10 : 4} credits
                     </p>
                   </div>
-                  <p className="text-sm">{balance} credits available</p>
+                  {balance >= creditCost ? (
+                    <p className="text-sm text-muted-foreground">{balance} credits available</p>
+                  ) : (
+                    <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {balance} credits — need {creditCost}. Top up
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -2095,8 +2125,12 @@ export default function Generate() {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'));
                     }
                   }}>Back</Button>
-                  <Button onClick={handleGenerateClick} disabled={selectedVariationIndices.size === 0}>
-                    Generate {selectedVariationIndices.size} {activeWorkflow?.name} Images
+                  <Button
+                    onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
+                    disabled={selectedVariationIndices.size === 0}
+                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                  >
+                    {balance >= creditCost ? `Generate ${selectedVariationIndices.size} ${activeWorkflow?.name} Images` : 'Buy Credits'}
                   </Button>
                 </div>
               </>
@@ -2161,19 +2195,29 @@ export default function Generate() {
               <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
             </CardContent></Card>
 
-            <Alert><AlertDescription>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">Virtual Try-On uses {creditCost} credits</p>
-                  <p className="text-xs text-muted-foreground">{parseInt(imageCount)} image{parseInt(imageCount) > 1 ? 's' : ''} × {quality === 'high' ? 16 : 8} credits each</p>
-                </div>
-                <p className="font-semibold">{balance} credits available</p>
+            <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
+              <div>
+                <p className="text-sm font-semibold">Virtual Try-On: {creditCost} credits</p>
+                <p className="text-xs text-muted-foreground">{parseInt(imageCount)} image{parseInt(imageCount) > 1 ? 's' : ''} × {quality === 'high' ? 16 : 8} credits each</p>
               </div>
-            </AlertDescription></Alert>
+              {balance >= creditCost ? (
+                <p className="text-sm text-muted-foreground">{balance} credits available</p>
+              ) : (
+                <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {balance} credits — need {creditCost}. Top up
+                </button>
+              )}
+            </div>
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setCurrentStep('pose')}>Back</Button>
-              <Button onClick={handleGenerateClick}>Generate {imageCount} Try-On Images</Button>
+              <Button
+                onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
+                className={balance < creditCost ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+              >
+                {balance >= creditCost ? `Generate ${imageCount} Try-On Images` : 'Buy Credits'}
+              </Button>
             </div>
           </div>
         )}
