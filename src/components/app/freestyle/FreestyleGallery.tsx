@@ -423,7 +423,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   if (count <= 3) {
     return (
       <>
-        <div className="flex items-stretch justify-center gap-1 px-3 lg:px-1">
+        <div className="flex items-stretch justify-center gap-2 px-3 lg:px-1">
           {generatingCards.map((card, i) => (
             <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)]">{card}</div>
           ))}
