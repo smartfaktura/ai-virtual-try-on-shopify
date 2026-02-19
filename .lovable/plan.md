@@ -1,73 +1,57 @@
 
 
-## Improve Credit Awareness on Workflow Generate Page
+## Fix: Accurate Model Label in Activity Cards
 
-The current workflow page lets users configure everything and only tells them they don't have enough credits *after* clicking Generate. This is a poor experience. Here's what we'll fix:
+### Root Cause
+Two issues found:
 
-### Problem Areas
-- Generate buttons show as fully active even when balance is insufficient
-- Cost summary sections show "X credits available" in plain text with no warning styling
-- No inline guidance to buy credits or upgrade — user only finds out via modal on click
-- Virtual Try-On settings page has the same issue
+1. **"Pro Model" badge and hint are hardcoded** in `WorkflowActivityCard.tsx` — every processing job shows "Pro Model" regardless of actual quality or model used.
+
+2. **Try-On always uses Pro model** on the backend (required for identity preservation), which is correct. But the user selected "Standard" quality, so the UI should explain *why* Pro model is being used.
+
+### Generation Timeline (your last job)
+| Step | Time |
+|------|------|
+| Job created | 14:57:52 |
+| Processing started | 14:57:52 (instant, no queue wait) |
+| AI generation call | ~171 seconds (Pro model) |
+| Completed | 15:00:43 |
+
+The entire ~3 minutes was spent on the AI image generation itself. The Pro model (`gemini-3-pro-image-preview`) is inherently slower than Standard — this is expected behavior, not a bug. Try-On forces Pro model for identity preservation regardless of quality setting.
 
 ### Changes
 
-#### 1. Add Insufficient Credits Warning to Cost Summary Bars
-**File: `src/pages/Generate.tsx`**
+#### 1. Make Model Badge Dynamic in WorkflowActivityCard
+**File: `src/components/app/WorkflowActivityCard.tsx`**
 
-In all 4 cost summary sections (workflow scenes ~line 2078, flat lay ~line 1944, try-on ~line 2164, template ~line 1523), enhance the "X credits available" text:
+The batch group already carries `job_type` and quality info from the queue payload. Use it to determine the correct label:
 
-- When `balance < creditCost`: show text in red (`text-destructive`) with a warning icon and "Not enough credits" label
-- Add a small "Buy Credits" link button next to it that calls `openBuyModal()`
-- When `balance >= creditCost`: keep current neutral styling with a green checkmark
+- If `job_type === 'tryon'`: Show "Pro Model" badge (always Pro for identity)
+- If quality is `'high'`: Show "Pro Model" badge
+- Otherwise: Show "Standard" badge or no model badge at all
 
-#### 2. Change Generate Buttons to Reflect Credit State
-**File: `src/pages/Generate.tsx`**
+Replace the hardcoded "Pro model — est. ~60-120s per image" text (line 101-104) with dynamic text:
+- Pro model jobs: "Pro model — est. ~60-120s per image"
+- Standard model jobs: "Standard model — est. ~15-30s per image"
 
-For all Generate buttons (~lines 1533, 1958, 2098, 2176):
+Replace the hardcoded "Pro Model" badge (lines 123-129) with a conditional:
+- Only show "Pro Model" when the job actually uses Pro model
+- Show nothing or "Standard" for standard quality non-try-on jobs
 
-- When `balance < creditCost`: change button text to "Buy Credits" with a different style (`bg-muted text-muted-foreground`), and onClick opens the buy modal directly instead of attempting generation
-- When `balance >= creditCost`: keep current primary button styling and behavior
-- This gives immediate visual feedback without needing to click first
+#### 2. Pass Quality/Job Type Through BatchGroup
+**File: `src/lib/batchGrouping.ts`**
 
-#### 3. Show LowCreditsBanner on Generate Page
-**File: `src/pages/Generate.tsx`**
+Ensure the `BatchGroup` type carries `job_type` and `quality` from the queue jobs so `WorkflowActivityCard` can read them. If not already present, add these fields to the group.
 
-The `LowCreditsBanner` is already imported (line 38) but only shown conditionally. Ensure it appears at the top of the settings step when credits are low/empty, giving users an early heads-up before they scroll to the bottom.
+#### 3. Update QueuePositionIndicator Pro Model Hint
+**File: `src/components/app/QueuePositionIndicator.tsx`**
 
-### Technical Details
-
-The key conditional is simple:
-```tsx
-const hasEnoughCredits = balance >= creditCost;
-```
-
-For the Generate buttons:
-```tsx
-<Button
-  onClick={hasEnoughCredits ? handleGenerateClick : openBuyModal}
-  disabled={selectedVariationIndices.size === 0}
-  className={!hasEnoughCredits ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
->
-  {hasEnoughCredits
-    ? `Generate ${selectedVariationIndices.size} Images`
-    : 'Buy Credits'}
-</Button>
-```
-
-For the cost summary bars:
-```tsx
-<p className={cn("text-sm", hasEnoughCredits ? "text-muted-foreground" : "text-destructive font-semibold")}>
-  {hasEnoughCredits ? `${balance} credits available` : (
-    <button onClick={openBuyModal} className="flex items-center gap-1 text-destructive hover:underline">
-      <AlertCircle className="w-3.5 h-3.5" />
-      {balance} credits — need {creditCost}. Top up
-    </button>
-  )}
-</p>
-```
-
-This applies to all 4 generation paths: workflow scenes, flat lay, virtual try-on, and template-based.
+The `getProModelHint` function (line 35-38) currently returns "Using Pro model" only when meta is null. Fix it to check actual quality and model presence:
+- Show hint when `meta.quality === 'high'` or `meta.hasModel` (which forces Pro)
+- Remove the null-meta fallback that incorrectly assumes Pro
 
 ### Files to Edit
-- `src/pages/Generate.tsx` — all changes are in this single file
+- `src/components/app/WorkflowActivityCard.tsx` — dynamic model badge and timing hint
+- `src/lib/batchGrouping.ts` — pass quality/job_type to batch groups (if not already)
+- `src/components/app/QueuePositionIndicator.tsx` — fix Pro model hint logic
+
