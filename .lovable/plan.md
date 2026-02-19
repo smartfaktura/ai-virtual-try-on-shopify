@@ -1,89 +1,69 @@
 
 
-## Add Scene Reference Image to Virtual Try-On
+## Fix: Scene Reference Should Also Guide Composition/Pose
 
-### What Changes
-The AI will receive the selected scene's preview image as a **third reference**, so it visually matches the environment (lighting, backdrop, mood) while keeping the selected model's identity and appearance unchanged.
+### The Problem
+The current prompt instructs the AI: "Use [SCENE IMAGE] ONLY for environment/backdrop reference." This means the AI correctly copies the lighting and shadows from the "Editorial Minimal" scene but completely ignores the side-profile pose and composition shown in it. The result is a front-facing shot in the right environment -- missing the key compositional feel of the scene.
 
-### How It Works Today
-- Product image and model image are sent as visual references
-- Scene is only a short text hint (e.g., "Editorial Minimal") -- the AI guesses the environment
-
-### How It Will Work After
-- Product image: AI matches the exact garment
-- Model image: AI preserves the person's face and body
-- Scene image (NEW): AI replicates the environment, lighting, and composition -- but does NOT take any person/identity cues from it
+### The Fix
+Update the prompt in `supabase/functions/generate-tryon/index.ts` to tell the AI to replicate the **composition, pose direction, and framing** from [SCENE IMAGE] in addition to the environment -- while still preserving identity exclusively from [MODEL IMAGE].
 
 ### Changes
 
-#### 1. Frontend: Send scene image alongside product and model
-**File: `src/pages/Generate.tsx`** (~line 607-618)
+**File: `supabase/functions/generate-tryon/index.ts`** (lines ~131-132)
 
-- Convert `selectedPose.previewUrl` to base64 alongside the product and model images
-- Add `sceneImageUrl` to the enqueue payload under `pose`
+Replace the current environment block (when scene image is provided):
 
 ```
-pose: {
-  name: selectedPose.name,
-  description: selectedPose.promptHint || selectedPose.description,
-  category: selectedPose.category,
-  imageUrl: base64SceneImage,   // NEW
-}
+Before:
+"Replicate the environment, lighting, backdrop, and composition shown in [SCENE IMAGE].
+ Match the mood, color palette, and spatial depth.
+ IMPORTANT: Use [SCENE IMAGE] ONLY for environment/backdrop reference.
+ The person's identity, face, and body MUST come exclusively from [MODEL IMAGE].
+ Do NOT take any identity or appearance cues from any person visible in [SCENE IMAGE]."
 ```
 
-#### 2. Frontend hook: Pass scene image for direct calls
-**File: `src/hooks/useGenerateTryOn.ts`**
-
-- Add `pose.previewUrl` conversion and send `pose.imageUrl` in the request body (for any non-queue direct calls)
-
-#### 3. Backend: Accept and use scene image as third reference
-**File: `supabase/functions/generate-tryon/index.ts`**
-
-Update the `TryOnRequest` interface to include an optional `imageUrl` on the pose object:
 ```
-pose: {
-  name: string;
-  description: string;
-  category: string;
-  imageUrl?: string;  // NEW -- scene reference image
-}
+After:
+"Replicate the environment, lighting, backdrop, composition, pose direction,
+ and body positioning shown in [SCENE IMAGE]. Match the mood, color palette,
+ spatial depth, camera angle, and the way the subject is posed (e.g. side profile,
+ back turned, walking, leaning).
+ IMPORTANT: The person's IDENTITY (face, skin tone, hair, body type) MUST come
+ exclusively from [MODEL IMAGE]. Do NOT copy the face or appearance of any person
+ in [SCENE IMAGE] -- only copy their pose, stance, and the environment around them."
 ```
 
-Update `generateImage()` to accept an optional `sceneImageUrl` parameter and include it as a third image in the AI request:
+Also update the `imageReferences` line (~139) to clarify both pose and environment come from the scene:
+
 ```
-content: [
-  { type: "text", text: prompt },
-  { type: "image_url", image_url: { url: productImageUrl } },   // [PRODUCT IMAGE]
-  { type: "image_url", image_url: { url: modelImageUrl } },     // [MODEL IMAGE]
-  // Only if scene image provided:
-  { type: "image_url", image_url: { url: sceneImageUrl } },     // [SCENE IMAGE]
-]
+Before:
+"the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE]
+ in the environment shown in [SCENE IMAGE]"
+
+After:
+"the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE],
+ posed and composed like [SCENE IMAGE] in that same environment"
 ```
 
-Update `buildPrompt()` to reference `[SCENE IMAGE]` when a scene image is available:
-- Replace the hardcoded `backgroundMap` text with: "Replicate the environment, lighting, backdrop, and composition from [SCENE IMAGE]"
-- Add an explicit instruction: "Use [SCENE IMAGE] ONLY for environment reference. The person's identity must come exclusively from [MODEL IMAGE], NOT from [SCENE IMAGE]."
+And update the final reminder line (~167):
 
-#### 4. Prompt structure (key section)
-
-When scene image IS provided:
 ```
-3. Photography style:
-   - Pose: Editorial Minimal - Model in a clean minimalist setting...
-   - Background & Environment: Replicate the environment, lighting, backdrop,
-     and composition shown in [SCENE IMAGE]. Match the mood and color palette.
-   - IMPORTANT: Use [SCENE IMAGE] ONLY for environment/backdrop reference.
-     The person's identity, face, and body MUST come exclusively from [MODEL IMAGE].
-     Do NOT take any identity cues from any person visible in [SCENE IMAGE].
+Before:
+"The environment must match [SCENE IMAGE] but the person must NOT resemble
+ anyone in [SCENE IMAGE]."
+
+After:
+"Match the pose, composition, and environment from [SCENE IMAGE],
+ but the person's identity must come from [MODEL IMAGE] only."
 ```
 
-When scene image is NOT provided (fallback to current text-only behavior):
-```
-3. Photography style:
-   - Background: clean white or light gray professional studio backdrop
-```
+### Why This Works
+- The AI now knows to replicate the side profile, the stance, the camera angle from the scene
+- Identity (face, skin, hair) still comes only from [MODEL IMAGE]
+- The distinction is clear: copy the "what they're doing and where they are" from [SCENE IMAGE], but copy "who they are" from [MODEL IMAGE]
 
 ### Files to Edit
-- `src/pages/Generate.tsx` -- convert and send scene image in enqueue payload
-- `src/hooks/useGenerateTryOn.ts` -- send scene image for direct calls
-- `supabase/functions/generate-tryon/index.ts` -- accept scene image, include as third reference, update prompt
+- `supabase/functions/generate-tryon/index.ts` -- update 3 sections of the `buildPrompt` function
+- Redeploy the edge function
+
