@@ -155,8 +155,13 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
                   {item.source === 'freestyle' ? 'Freestyle' : 'Generation'}
                 </p>
-                <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+                <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
                   {item.label}
+                  {isUpscaled && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
+                      <Sparkles className="w-3 h-3" /> PRO HD
+                    </span>
+                  )}
                 </h2>
                 <div className="flex items-center gap-2 pt-0.5">
                   <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
