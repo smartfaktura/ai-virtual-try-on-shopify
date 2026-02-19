@@ -64,6 +64,7 @@ interface FreestylePromptPanelProps {
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
   onFileDrop?: (file: File) => void;
+  creditBalance?: number;
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
