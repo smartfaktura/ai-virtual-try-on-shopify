@@ -819,9 +819,9 @@ export default function Generate() {
         {/* Progress Steps */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto">
+            <div className="flex items-center justify-center gap-1 sm:gap-2 overflow-hidden">
               {getSteps().map((step, index) => (
-                <div key={step.name} className="flex items-center gap-1 sm:gap-2">
+                <div key={step.name} className="flex items-center gap-1 sm:gap-2 min-w-0">
                   <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-medium flex-shrink-0 ${
                     getStepNumber() > index + 1 ? 'bg-primary text-primary-foreground'
                     : getStepNumber() === index + 1 ? 'bg-primary text-primary-foreground'
@@ -829,11 +829,11 @@ export default function Generate() {
                   }`}>
                     {getStepNumber() > index + 1 ? '✓' : index + 1}
                   </div>
-                  <span className={`text-xs hidden md:inline ${getStepNumber() === index + 1 ? 'font-semibold' : 'text-muted-foreground'}`}>
+                  <span className={`text-xs hidden md:inline truncate ${getStepNumber() === index + 1 ? 'font-semibold' : 'text-muted-foreground'}`}>
                     {step.name}
                   </span>
                   {index < getSteps().length - 1 && (
-                    <div className={`w-4 sm:w-8 md:w-12 h-0.5 flex-shrink-0 ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
+                    <div className={`w-3 sm:w-6 md:w-10 h-0.5 flex-shrink ${getStepNumber() > index + 1 ? 'bg-primary' : 'bg-muted'}`} />
                   )}
                 </div>
               ))}
