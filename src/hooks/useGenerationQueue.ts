@@ -258,6 +258,8 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
           imageCount: params.imageCount,
           quality: params.quality,
           additionalProductCount: params.additionalProductCount || 0,
+          hasModel: meta?.hasModel || false,
+          hasScene: meta?.hasScene || false,
         }),
       });
 
