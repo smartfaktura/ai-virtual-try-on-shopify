@@ -67,6 +67,8 @@ export default function Workflows() {
             workflow_name: (p?.workflow_name as string) ?? null,
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
             credits_reserved: j.credits_reserved ?? 0,
+            job_type: j.job_type ?? null,
+            quality: (p?.quality as string) ?? null,
           };
         });
     },
