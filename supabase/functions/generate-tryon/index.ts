@@ -128,8 +128,8 @@ function buildPrompt(req: TryOnRequest): string {
   // Build environment/background section based on whether scene image is provided
   let environmentBlock: string;
   if (hasSceneImage) {
-    environmentBlock = `   - Background & Environment: Replicate the environment, lighting, backdrop, and composition shown in [SCENE IMAGE]. Match the mood, color palette, and spatial depth.
-   - IMPORTANT: Use [SCENE IMAGE] ONLY for environment/backdrop reference. The person's identity, face, and body MUST come exclusively from [MODEL IMAGE]. Do NOT take any identity or appearance cues from any person visible in [SCENE IMAGE].`;
+    environmentBlock = `   - Background & Environment: Replicate the environment, lighting, backdrop, composition, pose direction, and body positioning shown in [SCENE IMAGE]. Match the mood, color palette, spatial depth, camera angle, and the way the subject is posed (e.g. side profile, back turned, walking, leaning).
+   - IMPORTANT: The person's IDENTITY (face, skin tone, hair, body type) MUST come exclusively from [MODEL IMAGE]. Do NOT copy the face or appearance of any person in [SCENE IMAGE] -- only copy their pose, stance, and the environment around them.`;
   } else {
     const background = backgroundMap[req.pose.category] || backgroundMap.studio;
     environmentBlock = `   - Background: ${background}`;
