@@ -349,7 +349,7 @@ export default function Products() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className={cn("flex items-center gap-1 transition-opacity shrink-0", isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>

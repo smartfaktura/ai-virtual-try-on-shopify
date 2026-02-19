@@ -113,9 +113,9 @@ export default function Contact() {
                         required
                       />
                     </div>
-                    <Button type="submit" className="rounded-full px-8 gap-2">
+                    <Button type="submit" className="rounded-full px-8 gap-2" disabled={submitting}>
                       <Send className="w-4 h-4" />
-                      Send Message
+                      {submitting ? 'Sending…' : 'Send Message'}
                     </Button>
                   </form>
                 </CardContent>

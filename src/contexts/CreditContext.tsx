@@ -110,9 +110,10 @@ export function CreditProvider({ children }: CreditProviderProps) {
   }, [user]);
   
   const checkSubscription = useCallback(async () => {
-    if (!user) return;
+    if (!user || checkingRef.current) return;
+    checkingRef.current = true;
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return; // Session expired, skip silently
+    if (!session) { checkingRef.current = false; return; }
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription');
       if (error) {
@@ -128,6 +129,8 @@ export function CreditProvider({ children }: CreditProviderProps) {
       }
     } catch (err) {
       console.error('Failed to check subscription:', err);
+    } finally {
+      checkingRef.current = false;
     }
   }, [user]);
 
