@@ -1,45 +1,50 @@
 
 
-## Fix: Confusing Disabled State on Generate Button
+## Fix: Generate Button Should Stay Active When Out of Credits
 
-### What's Happening
+### Problems Identified
 
-The Generate button is currently disabled and greyed out. The user sees "Need 4 more credits" and assumes credits are the problem, but the button is actually disabled because **no prompt has been typed yet** (the text field is empty). The credit warning is a secondary issue.
+1. **Button disabled when out of credits** -- `canGenerate` includes `hasEnoughCredits` check, which greys out the button. But the generate handler already opens the Buy Credits modal when credits are insufficient. The button should stay active so users can click it and get prompted to buy.
 
-This creates confusion because two different problems overlap without clear feedback about which one is blocking the action.
+2. **Ugly amber/orange button styling** -- When credits are low, the button turns amber/orange which looks bad, especially on mobile where the text wraps awkwardly ("Need 4 more credits" breaking onto multiple lines).
 
-### Root Cause
-
-The button uses `disabled={!canGenerate}` where `canGenerate = canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading`. With an empty prompt and no assets, the button is disabled regardless of credit balance. But the only visible feedback is the credit warning, misleading the user.
+3. **Mobile layout overflow** -- The "Need X more credits" + "Top up" text doesn't fit well on small screens.
 
 ### Solution
 
-**1. Show contextual helper text explaining what's needed**
+**1. Fix `canGenerate` in `src/pages/Freestyle.tsx` (line 148)**
 
-When the button is disabled due to missing input (not credits), show a small text hint: "Type a prompt or add a reference to start". This appears in the action bar area, left-aligned, so the user knows exactly what to do.
+Remove the credit check from `canGenerate`. The button should be enabled whenever the user has valid input (`canSubmit`). The credit check stays in the handler where it opens the buy modal.
 
-**2. Prioritize the input message over the credit message**
+```
+Before: const canGenerate = canSubmit && hasEnoughCredits;
+After:  const canGenerate = canSubmit;
+```
 
-When BOTH input is missing AND credits are insufficient, show the input requirement first (since fixing credits alone won't help). The credit warning appears only when the user has valid input but not enough credits.
+**2. Clean up button styling in `FreestylePromptPanel.tsx`**
 
-### File to Change
+- Remove the amber/orange button color override entirely -- keep the primary button style always
+- Remove the `AlertTriangle` icon swap on the button -- always show `Sparkles`
+- Keep the subtle inline "Need X more credits" text + "Top up" link, but simplify it:
+  - Use `text-muted-foreground` instead of amber for the hint text
+  - On mobile, shorten to "Need X more" with a compact layout
+- Remove the amber shadow override
+
+**3. Fix mobile text overflow**
+
+Wrap the credit shortfall message in a responsive layout that doesn't break on small screens.
+
+### Files to Change
 
 | File | Change |
 |------|--------|
-| `src/components/app/freestyle/FreestylePromptPanel.tsx` | In the action bar (Row 3), conditionally show helper text. When `!canGenerate` and the reason is no input (not just credits), show "Type a prompt or add a reference" hint. Only show the credit warning when input is valid but credits are short. |
+| `src/pages/Freestyle.tsx` | Line 148: remove `hasEnoughCredits` from `canGenerate` |
+| `src/components/app/freestyle/FreestylePromptPanel.tsx` | Lines 275-323: Remove amber button styling, keep button always primary-colored, simplify the "need more credits" hint text with muted styling instead of amber, fix mobile overflow |
 
-### Technical Details
+### Result
 
-In the action bar section (around line 275-289), change the logic:
+- Button stays primary-colored and clickable when user has a prompt but no credits
+- Clicking it opens the Buy Credits modal (existing behavior in `handleGenerate`)
+- Small muted text hint shows credit shortfall without aggressive amber coloring
+- Mobile layout no longer overflows
 
-```text
-Current:
-  if creditBalance < creditCost -> show "Need X more credits"
-
-Proposed:
-  if !canGenerate AND creditBalance >= creditCost -> show "Type a prompt or add a reference"
-  if canGenerate AND creditBalance < creditCost -> show "Need X more credits" + Top up
-  if !canGenerate AND creditBalance < creditCost -> show "Type a prompt or add a reference" (prioritize input message)
-```
-
-This ensures the user always knows what action to take next, whether it's typing a prompt or buying credits.
