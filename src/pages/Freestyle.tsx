@@ -231,8 +231,9 @@ export default function Freestyle() {
   }, [user]);
 
   const handleGenerate = useCallback(async () => {
-    if (!canGenerate) {
-      if (balance < creditCost) openBuyModal();
+    if (!canSubmit) return;
+    if (!hasEnoughCredits) {
+      openBuyModal();
       return;
     }
 
