@@ -19,6 +19,8 @@ interface LibraryDetailModalProps {
 
 export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
+  const [upscaling, setUpscaling] = useState(false);
+  const [upscaledUrl, setUpscaledUrl] = useState<string | null>(null);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -33,6 +35,11 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
     }
     return () => { document.body.style.overflow = ''; };
   }, [open]);
+
+  // Reset upscaled URL when item changes
+  useEffect(() => {
+    setUpscaledUrl(null);
+  }, [item?.id]);
 
   // Close on Escape
   useEffect(() => {
@@ -79,6 +86,34 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
     setDeleting(false);
   };
 
+  const isUpscaled = item.quality === 'upscaled' || !!upscaledUrl;
+  const displayImageUrl = upscaledUrl || item.imageUrl;
+
+  const handleUpscale = async () => {
+    if (isUpscaled || upscaling) return;
+    setUpscaling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('upscale-image', {
+        body: {
+          imageUrl: item.imageUrl,
+          sourceType: item.source === 'freestyle' ? 'freestyle' : 'generation',
+          sourceId: item.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setUpscaledUrl(data.imageUrl);
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+      toast.success('Image upscaled to PRO HD');
+    } catch (err: any) {
+      toast.error(err?.message || 'Upscale failed — credits refunded');
+    } finally {
+      setUpscaling(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -97,7 +132,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
           {/* Left — Image */}
           <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
             <ShimmerImage
-              src={item.imageUrl}
+              src={displayImageUrl}
               alt={item.label}
               className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
               wrapperClassName="flex items-center justify-center max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
@@ -120,8 +155,13 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
                   {item.source === 'freestyle' ? 'Freestyle' : 'Generation'}
                 </p>
-                <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+                <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
                   {item.label}
+                  {isUpscaled && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
+                      <Sparkles className="w-3 h-3" /> PRO HD
+                    </span>
+                  )}
                 </h2>
                 <div className="flex items-center gap-2 pt-0.5">
                   <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
@@ -160,6 +200,25 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
 
               {/* Secondary actions */}
               <div className="flex gap-2">
+                {!isUpscaled && item.source === 'freestyle' && (
+                  <button
+                    onClick={handleUpscale}
+                    disabled={upscaling}
+                    className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-primary bg-primary/5 backdrop-blur-sm border border-primary/20 hover:bg-primary/10 transition-all disabled:opacity-50"
+                  >
+                    {upscaling ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Upscaling…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Upscale to PRO HD — 4 cr
+                      </>
+                    )}
+                  </button>
+                )}
                 {item.source === 'freestyle' && (
                   <button
                     onClick={handleDelete}

@@ -51,6 +51,9 @@ verify_jwt = false
 [functions.generate-scene-previews]
 verify_jwt = false
 
+[functions.upscale-image]
+verify_jwt = false
+
 [functions.create-checkout]
 verify_jwt = false
 
