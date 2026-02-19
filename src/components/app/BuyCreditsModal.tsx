@@ -83,7 +83,7 @@ export function BuyCreditsModal() {
                 <span className="text-xs text-muted-foreground">credits</span>
               </div>
             </div>
-            <Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-semibold px-3 py-1">
+            <Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-semibold px-3 py-1 mr-8">
               {planConfig.name}
             </Badge>
           </div>
