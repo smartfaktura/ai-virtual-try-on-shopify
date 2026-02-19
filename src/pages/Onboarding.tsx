@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ const TOTAL_STEPS = 3;
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
 
@@ -53,6 +53,10 @@ export default function Onboarding() {
 
   // Step 3: Categories
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  if (!isLoading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const toggleCategory = (id: string) => {
     setSelectedCategories((prev) =>

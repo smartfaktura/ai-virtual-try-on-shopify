@@ -4,8 +4,8 @@ import { CheckCircle } from 'lucide-react';
 export function CompetitorComparison() {
   const comparisons = [
     { name: 'VOVV.AI', price: '$0.04', highlight: true },
-    { name: 'Competitor A', price: '$0.08', highlight: false },
-    { name: 'Competitor B', price: '$0.12', highlight: false },
+    { name: 'Traditional AI Tools', price: '$0.08', highlight: false },
+    { name: 'Photo Studios', price: '$0.12', highlight: false },
   ];
 
   return (
@@ -41,7 +41,7 @@ export function CompetitorComparison() {
 
         <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 text-center">
           <p className="text-sm text-muted-foreground">
-            💡 <strong>Start free:</strong> Every account gets 5 credits to test the quality. No credit card required.
+            💡 <strong>Start free:</strong> Every account gets 20 free credits to test the quality. No credit card required.
           </p>
         </div>
       </CardContent>
