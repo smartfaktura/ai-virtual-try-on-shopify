@@ -1,38 +1,53 @@
 
 
-## Fix Product Image Not Loading on Mobile
+## Fix Stale Signed URL Config for Public Buckets
 
-### Root Cause
+### Problem Found
 
-The `product-uploads` storage bucket is set to **private**. Product images are stored as signed URLs (with long JWT tokens in the query string). While these work on desktop preview, they can fail on mobile browsers (especially Safari) due to:
-- Very long URL strings with JWT tokens that mobile browsers may handle differently
-- Token-based URLs are not cacheable, causing repeated failed fetches
-- Some mobile browsers strip or truncate long query parameters
+The `src/lib/signedUrl.ts` file has a `PRIVATE_BUCKETS` array that is outdated. It still lists `freestyle-images` and `tryon-images` as private, but both buckets were made **public** in earlier changes. This causes:
 
-Other image buckets (`tryon-images`, `freestyle-images`, `workflow-previews`) are already set to public for exactly this reason.
+- **Unnecessary signed URL generation** for every freestyle and try-on image -- adds latency and API calls
+- **Signed URLs expire after 1 hour**, so images in the gallery/library can break if the user keeps the tab open longer than that
+- **Mobile reliability issues** -- long signed URLs with JWT tokens are the exact problem we previously fixed for `product-uploads`
 
-### Fix
+### What New Profiles CAN See (No Issues)
 
-1. **Make `product-uploads` bucket public** via a database migration -- this matches the pattern used by other image buckets in the app.
+- Workflows, custom models, custom scenes, discover presets -- all have proper public SELECT RLS policies
+- Product images (`product-uploads` -- public bucket)
+- Workflow preview images (`workflow-previews` -- public bucket)
+- Landing assets (`landing-assets` -- public bucket)
+- Dashboard, onboarding, team carousel -- all work correctly
 
-2. **Update the import-product edge function** (`supabase/functions/import-product/index.ts`) to store public URLs instead of signed URLs when saving imported product images.
+### What Needs Fixing
 
-3. **Update the AddProductModal / ManualProductTab** upload flow to use `getPublicUrl()` instead of `createSignedUrl()` when storing the image reference in the database.
+**1. Update `PRIVATE_BUCKETS` in `src/lib/signedUrl.ts`**
 
-### Technical Details
+Remove `freestyle-images` and `tryon-images` from the private buckets list since they are now public. Only `generated-videos` and `generation-inputs` remain private.
 
-**Migration SQL:**
-```sql
-UPDATE storage.buckets SET public = true WHERE id = 'product-uploads';
+Change from:
+```text
+['freestyle-images', 'tryon-images', 'generated-videos', 'generation-inputs']
+```
+To:
+```text
+['generated-videos', 'generation-inputs']
 ```
 
-**Edge function change:** Replace `createSignedUrl()` calls with `getPublicUrl()` for the product-uploads bucket.
+This single change cascades through all 6 files that use `toSignedUrl` / `toSignedUrls`:
+- `RecentCreationsGallery.tsx` -- will stop signing freestyle/tryon URLs
+- `useFreestyleImages.ts` -- will stop signing freestyle URLs  
+- `useLibraryItems.ts` -- will stop signing library image URLs
+- `WorkflowRecentRow.tsx` -- will stop signing workflow result URLs
+- `WorkflowPreviewModal.tsx` -- will stop signing preview URLs
+- `useGenerateVideo.ts` -- will correctly continue signing video URLs (still private)
 
-**Frontend upload change:** In the upload flow (ManualProductTab), after uploading to storage, use `supabase.storage.from('product-uploads').getPublicUrl(path)` instead of `createSignedUrl()`.
+**2. No other privacy issues found**
 
-**Existing products:** Products already stored with signed URLs will continue to work until their tokens expire (~1 year). Making the bucket public means even old signed URLs still work, and new products will use simpler public URLs.
+- The `handle_new_user` database trigger exists and is attached to `auth.users` -- new profiles ARE created automatically with 20 credits
+- All user-scoped tables (products, jobs, generations, etc.) have correct RLS policies restricting access to `auth.uid() = user_id`
+- Public content (workflows, models, scenes, presets) is accessible to all authenticated users
+- Generated videos remain private with proper signed URL handling
 
 ### Files Modified
-- Database migration -- make product-uploads bucket public
-- `supabase/functions/import-product/index.ts` -- use public URLs
-- `src/components/app/ManualProductTab.tsx` -- use public URLs after upload
+- `src/lib/signedUrl.ts` -- remove `freestyle-images` and `tryon-images` from `PRIVATE_BUCKETS`
+
