@@ -90,6 +90,7 @@ export function FreestylePromptPanel({
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
+  creditBalance,
   isCollapsed,
   onToggleCollapse,
 }: FreestylePromptPanelProps) {
