@@ -432,9 +432,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const isEditing = !!editingProduct;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* ── Image Section ── */}
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {images.length > 0 && (
           <div className="flex items-center justify-between">
             {isAnalyzing && (
@@ -450,7 +450,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         )}
 
         {isLoadingImages ? (
-          <div className="flex items-center justify-center min-h-[100px] rounded-xl bg-muted/30">
+          <div className="flex items-center justify-center min-h-[80px] rounded-xl bg-muted/30">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               Loading images…
@@ -458,7 +458,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         ) : images.length === 0 ? (
           <div
-            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-10 ${
+            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-7 sm:py-10 ${
               dragActive
                 ? 'bg-primary/5 border-2 border-primary'
                 : 'bg-muted/30 hover:bg-muted/50 border border-dashed border-border'
@@ -496,7 +496,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         ) : (
           <div
-            className={`rounded-xl p-3 transition-all duration-200 ${
+            className={`rounded-xl p-2 sm:p-3 transition-all duration-200 ${
               dragActive ? 'bg-primary/5 ring-2 ring-primary/20' : 'bg-muted/20'
             }`}
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
@@ -515,9 +515,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         )}
 
-        {/* Condensed Pro Tip */}
+        {/* Pro Tip - hidden on mobile */}
         {images.length > 0 && (
-          <div className="flex items-center gap-1.5 px-1">
+          <div className="hidden sm:flex items-center gap-1.5 px-1">
             <Info className="w-3 h-3 text-muted-foreground shrink-0" />
             <p className="text-[11px] text-muted-foreground">
               The <span className="text-primary font-medium">cover</span> image is used as the primary AI reference · drag to reorder
@@ -611,7 +611,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                 hasManualEdits.current.description = true;
               }}
               maxLength={500}
-              rows={3}
+              rows={2}
               className="resize-none"
             />
           )}
@@ -628,7 +628,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             onChange={(e) => setDimensions(e.target.value)}
             maxLength={100}
           />
-          <p className="text-[11px] text-muted-foreground">Helps AI render the product at realistic scale</p>
         </div>
       </div>
 
@@ -643,14 +642,14 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       )}
 
       {/* ── Footer Actions ── */}
-      <div className="flex justify-end gap-3 pt-6">
+      <div className="flex justify-end gap-3 pt-3 sm:pt-6 sticky bottom-0 bg-background pb-1">
         <Button variant="ghost" onClick={onClose} disabled={isUploading} className="rounded-xl">
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           disabled={isUploading || isLoadingImages || isAnalyzing || !title.trim() || images.length === 0}
-          className="min-w-[120px] rounded-xl"
+          className="min-w-[100px] sm:min-w-[120px] rounded-xl"
         >
           {isUploading ? (
             <>
