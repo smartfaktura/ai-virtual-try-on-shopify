@@ -423,64 +423,74 @@ export function FreestyleSettingsChips({
     );
   }
 
-  // --- Desktop: all chips in a single flow ---
+  // --- Desktop: grouped chips with subtle dividers ---
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {uploadButton}
-          <ProductSelectorChip
-            selectedProduct={selectedProduct}
-            open={productPopoverOpen}
-            onOpenChange={onProductPopoverChange}
-            onSelect={onProductSelect}
-            products={products}
-            isLoading={isLoadingProducts}
-            modal={isMobile}
-          />
-          <ModelSelectorChip
-            selectedModel={selectedModel}
-            open={modelPopoverOpen}
-            onOpenChange={onModelPopoverChange}
-            onSelect={onModelSelect}
-            modal={isMobile}
-          />
-          <SceneSelectorChip
-            selectedScene={selectedScene}
-            open={scenePopoverOpen}
-            onOpenChange={onScenePopoverChange}
-            onSelect={onSceneSelect}
-            modal={isMobile}
-          />
-          <FramingSelectorChip
-            framing={framing}
-            onFramingChange={onFramingChange}
-            open={framingPopoverOpen}
-            onOpenChange={onFramingPopoverChange}
-            modal={isMobile}
-          />
-          <BrandProfileChip
-            selectedProfile={selectedBrandProfile}
-            open={brandProfilePopoverOpen}
-            onOpenChange={onBrandProfilePopoverChange}
-            onSelect={onBrandProfileSelect}
-            profiles={brandProfiles}
-            isLoading={isLoadingBrandProfiles}
-          />
-          <NegativesChip
-            negatives={negatives}
-            onNegativesChange={onNegativesChange}
-            open={negativesPopoverOpen}
-            onOpenChange={onNegativesPopoverChange}
-          />
-          {aspectRatioChip}
-          {qualityChip}
-          {cameraStyleChip}
-          {polishChip}
-          <div className="flex-1" />
-          {imageCountStepper}
-        </div>
-        {presetsSection}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {/* Group 1: References — what goes INTO the image */}
+        {uploadButton}
+        <ProductSelectorChip
+          selectedProduct={selectedProduct}
+          open={productPopoverOpen}
+          onOpenChange={onProductPopoverChange}
+          onSelect={onProductSelect}
+          products={products}
+          isLoading={isLoadingProducts}
+          modal={false}
+        />
+        <ModelSelectorChip
+          selectedModel={selectedModel}
+          open={modelPopoverOpen}
+          onOpenChange={onModelPopoverChange}
+          onSelect={onModelSelect}
+          modal={false}
+        />
+        <SceneSelectorChip
+          selectedScene={selectedScene}
+          open={scenePopoverOpen}
+          onOpenChange={onScenePopoverChange}
+          onSelect={onSceneSelect}
+          modal={false}
+        />
+
+        {/* Divider */}
+        <div className="h-5 w-px bg-border/60 mx-1" />
+
+        {/* Group 2: Creative — HOW it looks */}
+        <FramingSelectorChip
+          framing={framing}
+          onFramingChange={onFramingChange}
+          open={framingPopoverOpen}
+          onOpenChange={onFramingPopoverChange}
+          modal={false}
+        />
+        <BrandProfileChip
+          selectedProfile={selectedBrandProfile}
+          open={brandProfilePopoverOpen}
+          onOpenChange={onBrandProfilePopoverChange}
+          onSelect={onBrandProfileSelect}
+          profiles={brandProfiles}
+          isLoading={isLoadingBrandProfiles}
+        />
+        <NegativesChip
+          negatives={negatives}
+          onNegativesChange={onNegativesChange}
+          open={negativesPopoverOpen}
+          onOpenChange={onNegativesPopoverChange}
+        />
+        {presetsChip}
+
+        {/* Divider */}
+        <div className="h-5 w-px bg-border/60 mx-1" />
+
+        {/* Group 3: Output — technical settings */}
+        {aspectRatioChip}
+        {qualityChip}
+        {cameraStyleChip}
+        {polishChip}
+
+        <div className="flex-1" />
+        {imageCountStepper}
       </div>
     </TooltipProvider>
   );
