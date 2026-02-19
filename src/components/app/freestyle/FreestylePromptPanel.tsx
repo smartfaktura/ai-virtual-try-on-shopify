@@ -272,7 +272,7 @@ export function FreestylePromptPanel({
           <div className="border-t border-border/40 mx-4 sm:mx-5" />
 
           {/* Row 3 — Action Bar */}
-          <div className="px-4 sm:px-5 py-3 flex items-center justify-end gap-3">
+          <div className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
             {(() => {
               const hasEnoughCredits = creditBalance === undefined || creditBalance >= creditCost;
               const showInsufficientCredits = canGenerate && !hasEnoughCredits;
