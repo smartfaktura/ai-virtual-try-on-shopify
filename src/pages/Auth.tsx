@@ -84,7 +84,7 @@ export default function Auth() {
               type="button"
               onClick={async () => {
                 const result = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
+                  redirect_uri: window.location.origin + '/app',
                 });
                 if (result?.error) {
                   toast.error('Google sign-in failed. Please try again.');
@@ -106,7 +106,7 @@ export default function Auth() {
               type="button"
               onClick={async () => {
                 const result = await lovable.auth.signInWithOAuth("apple", {
-                  redirect_uri: window.location.origin,
+                  redirect_uri: window.location.origin + '/app',
                 });
                 if (result?.error) {
                   toast.error('Apple sign-in failed. Please try again.');
