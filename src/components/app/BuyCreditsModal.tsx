@@ -89,7 +89,7 @@ export function BuyCreditsModal() {
           </div>
 
           {/* Tab switcher */}
-          <div className="px-6 pt-1">
+          <div className="px-4 sm:px-6 pt-1">
             <div className="flex gap-1 border-b border-border/40">
               {(['topup', 'upgrade'] as const).map(tab => (
                 <button
