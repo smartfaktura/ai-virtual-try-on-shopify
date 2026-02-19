@@ -86,6 +86,34 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
     setDeleting(false);
   };
 
+  const isUpscaled = item.quality === 'upscaled' || !!upscaledUrl;
+  const displayImageUrl = upscaledUrl || item.imageUrl;
+
+  const handleUpscale = async () => {
+    if (isUpscaled || upscaling) return;
+    setUpscaling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('upscale-image', {
+        body: {
+          imageUrl: item.imageUrl,
+          sourceType: item.source === 'freestyle' ? 'freestyle' : 'generation',
+          sourceId: item.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setUpscaledUrl(data.imageUrl);
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+      toast.success('Image upscaled to PRO HD');
+    } catch (err: any) {
+      toast.error(err?.message || 'Upscale failed — credits refunded');
+    } finally {
+      setUpscaling(false);
+    }
+  };
+
   return (
     <>
       <div
