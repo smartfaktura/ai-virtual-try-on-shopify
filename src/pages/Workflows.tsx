@@ -67,6 +67,8 @@ export default function Workflows() {
             workflow_name: (p?.workflow_name as string) ?? null,
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
             credits_reserved: j.credits_reserved ?? 0,
+            job_type: j.job_type ?? null,
+            quality: (p?.quality as string) ?? null,
           };
         });
     },
@@ -81,7 +83,7 @@ export default function Workflows() {
       const sixtySecsAgo = new Date(Date.now() - 60_000).toISOString();
       const { data, error } = await supabase
         .from('generation_queue')
-        .select('id, status, created_at, started_at, completed_at, payload, error_message')
+        .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type')
         .eq('status', 'completed')
         .gte('completed_at', sixtySecsAgo)
         .order('completed_at', { ascending: false });
@@ -103,6 +105,8 @@ export default function Workflows() {
             workflow_id: (p?.workflow_id as string) ?? null,
             workflow_name: (p?.workflow_name as string) ?? null,
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
+            job_type: j.job_type ?? null,
+            quality: (p?.quality as string) ?? null,
           };
         });
     },
@@ -117,7 +121,7 @@ export default function Workflows() {
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from('generation_queue')
-        .select('id, status, created_at, started_at, completed_at, payload, error_message')
+        .select('id, status, created_at, started_at, completed_at, payload, error_message, job_type')
         .eq('status', 'failed')
         .gte('created_at', oneDayAgo)
         .order('created_at', { ascending: false })
@@ -140,6 +144,8 @@ export default function Workflows() {
             workflow_id: (p?.workflow_id as string) ?? null,
             workflow_name: (p?.workflow_name as string) ?? null,
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
+            job_type: j.job_type ?? null,
+            quality: (p?.quality as string) ?? null,
           };
         });
     },

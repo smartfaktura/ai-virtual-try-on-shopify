@@ -33,7 +33,8 @@ function getComplexityHint(meta?: GenerationMeta): string | null {
 }
 
 function getProModelHint(meta?: GenerationMeta): string | null {
-  if (!meta) return 'Using Pro model for best quality';
+  if (!meta) return null;
+  if (meta.quality === 'high' || meta.hasModel) return 'Using Pro model for best quality';
   return null;
 }
 

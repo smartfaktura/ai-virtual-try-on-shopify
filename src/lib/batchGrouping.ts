@@ -10,6 +10,8 @@ export interface ActiveJob {
   error_message: string | null;
   product_name?: string | null;
   credits_reserved?: number;
+  job_type?: string | null;
+  quality?: string | null;
 }
 
 export interface BatchGroup {
@@ -27,6 +29,10 @@ export interface BatchGroup {
   allCompleted: boolean;
   /** Earliest created_at in group */
   created_at: string;
+  /** Job type from queue (e.g. 'tryon', 'freestyle', 'workflow') */
+  job_type: string | null;
+  /** Quality setting ('standard' or 'high') */
+  quality: string | null;
 }
 
 /**
@@ -85,6 +91,8 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       failedCount,
       allCompleted: completedCount + failedCount === batch.length && completedCount > 0,
       created_at: anchor.created_at,
+      job_type: anchor.job_type ?? null,
+      quality: anchor.quality ?? null,
     });
   }
 
