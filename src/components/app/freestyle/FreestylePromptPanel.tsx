@@ -286,7 +286,7 @@ export function FreestylePromptPanel({
                   ) : showInsufficientCredits ? (
                     <p className="text-xs text-muted-foreground mr-auto truncate">
                       <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
-                      <span className="sm:hidden">+{creditCost - (creditBalance ?? 0)} credits</span>
+                      <span className="sm:hidden">Not enough credits</span>
                     </p>
                   ) : null}
 
@@ -298,9 +298,9 @@ export function FreestylePromptPanel({
                             onClick={onGenerate}
                             size="lg"
                             variant="outline"
-                            className="h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto border-2 border-orange-400 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 dark:bg-orange-950/30 dark:text-orange-400 dark:hover:bg-orange-950/50 shadow-none"
+                            className="h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto bg-muted text-foreground border border-border hover:bg-accent shadow-none"
                           >
-                            <Sparkles className="w-4 h-4" />
+                            <Sparkles className="w-4 h-4 text-muted-foreground" />
                             Buy Credits
                           </Button>
                         ) : (
@@ -312,7 +312,7 @@ export function FreestylePromptPanel({
                               "h-11 px-8 gap-2.5 rounded-xl text-sm font-semibold w-full sm:w-auto",
                               canGenerate
                                 ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
-                                : "shadow-none"
+                                : "bg-muted text-muted-foreground shadow-none pointer-events-none"
                             )}
                           >
                             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
