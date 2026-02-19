@@ -34,6 +34,7 @@ type ViewMode = 'grid' | 'list';
 type SortBy = 'newest' | 'oldest' | 'name-asc' | 'name-desc';
 
 export default function Products() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
