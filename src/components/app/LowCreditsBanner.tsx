@@ -22,9 +22,9 @@ export function LowCreditsBanner() {
       : `You have ${balance} credits remaining. Top up to keep creating`;
   
   return (
-    <div className="mb-4 bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-800 rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3">
+    <div className="mb-4 bg-primary/5 text-foreground border border-primary/20 rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3">
       <div className="flex items-center gap-3 min-w-0">
-        <Sparkles className="h-5 w-5 shrink-0 text-amber-500 dark:text-amber-400" />
+        <Sparkles className="h-5 w-5 shrink-0 text-primary" />
         <div className="min-w-0">
           <p className="font-semibold text-sm">{title}</p>
           <p className="text-sm opacity-80 hidden sm:block">{message}</p>
