@@ -29,6 +29,10 @@ export interface BatchGroup {
   allCompleted: boolean;
   /** Earliest created_at in group */
   created_at: string;
+  /** Job type from queue (e.g. 'tryon', 'freestyle', 'workflow') */
+  job_type: string | null;
+  /** Quality setting ('standard' or 'high') */
+  quality: string | null;
 }
 
 /**
