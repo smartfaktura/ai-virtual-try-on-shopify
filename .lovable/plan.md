@@ -1,69 +1,52 @@
 
 
-## Fix: Scene Reference Should Also Guide Composition/Pose
+## Fix: Label Reference Images So AI Knows Which Is Which
 
 ### The Problem
-The current prompt instructs the AI: "Use [SCENE IMAGE] ONLY for environment/backdrop reference." This means the AI correctly copies the lighting and shadows from the "Editorial Minimal" scene but completely ignores the side-profile pose and composition shown in it. The result is a front-facing shot in the right environment -- missing the key compositional feel of the scene.
+The prompt text says things like "copy pose from [SCENE IMAGE]" and "identity from [MODEL IMAGE]", but the three images are sent as unlabeled blobs in a flat array. The AI has no reliable way to know which image is which, so it defaults to the most prominent person image (the front-facing model) for pose -- ignoring the side-profile scene entirely.
 
 ### The Fix
-Update the prompt in `supabase/functions/generate-tryon/index.ts` to tell the AI to replicate the **composition, pose direction, and framing** from [SCENE IMAGE] in addition to the environment -- while still preserving identity exclusively from [MODEL IMAGE].
+Insert a short text label **before each image** in the content array, so the AI can correctly map `[PRODUCT IMAGE]`, `[MODEL IMAGE]`, and `[SCENE IMAGE]` to the right visuals.
 
 ### Changes
 
-**File: `supabase/functions/generate-tryon/index.ts`** (lines ~131-132)
+**File: `supabase/functions/generate-tryon/index.ts`** (lines ~238-250)
 
-Replace the current environment block (when scene image is provided):
-
-```
-Before:
-"Replicate the environment, lighting, backdrop, and composition shown in [SCENE IMAGE].
- Match the mood, color palette, and spatial depth.
- IMPORTANT: Use [SCENE IMAGE] ONLY for environment/backdrop reference.
- The person's identity, face, and body MUST come exclusively from [MODEL IMAGE].
- Do NOT take any identity or appearance cues from any person visible in [SCENE IMAGE]."
-```
+Replace the current unlabeled image array:
 
 ```
-After:
-"Replicate the environment, lighting, backdrop, composition, pose direction,
- and body positioning shown in [SCENE IMAGE]. Match the mood, color palette,
- spatial depth, camera angle, and the way the subject is posed (e.g. side profile,
- back turned, walking, leaning).
- IMPORTANT: The person's IDENTITY (face, skin tone, hair, body type) MUST come
- exclusively from [MODEL IMAGE]. Do NOT copy the face or appearance of any person
- in [SCENE IMAGE] -- only copy their pose, stance, and the environment around them."
+// Current (broken):
+contentParts = [
+  { type: "text", text: prompt + negativePrompt },
+  { type: "image_url", image_url: { url: productImageUrl } },
+  { type: "image_url", image_url: { url: modelImageUrl } },
+  // optional:
+  { type: "image_url", image_url: { url: sceneImageUrl } },
+]
 ```
 
-Also update the `imageReferences` line (~139) to clarify both pose and environment come from the scene:
+With labeled images:
 
 ```
-Before:
-"the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE]
- in the environment shown in [SCENE IMAGE]"
-
-After:
-"the person from [MODEL IMAGE] wearing the clothing item from [PRODUCT IMAGE],
- posed and composed like [SCENE IMAGE] in that same environment"
+// Fixed:
+contentParts = [
+  { type: "text", text: prompt + negativePrompt },
+  { type: "text", text: "[PRODUCT IMAGE]:" },
+  { type: "image_url", image_url: { url: productImageUrl } },
+  { type: "text", text: "[MODEL IMAGE]:" },
+  { type: "image_url", image_url: { url: modelImageUrl } },
+  // optional:
+  { type: "text", text: "[SCENE IMAGE]:" },
+  { type: "image_url", image_url: { url: sceneImageUrl } },
+]
 ```
 
-And update the final reminder line (~167):
-
-```
-Before:
-"The environment must match [SCENE IMAGE] but the person must NOT resemble
- anyone in [SCENE IMAGE]."
-
-After:
-"Match the pose, composition, and environment from [SCENE IMAGE],
- but the person's identity must come from [MODEL IMAGE] only."
-```
-
-### Why This Works
-- The AI now knows to replicate the side profile, the stance, the camera angle from the scene
-- Identity (face, skin, hair) still comes only from [MODEL IMAGE]
-- The distinction is clear: copy the "what they're doing and where they are" from [SCENE IMAGE], but copy "who they are" from [MODEL IMAGE]
+### Why This Fixes It
+- The AI now sees a text label immediately before each image, creating a clear mapping between the prompt instructions and the visual references
+- When the prompt says "copy pose from [SCENE IMAGE]", the AI knows exactly which of the three images that refers to
+- This is a standard practice in multimodal prompting -- without labels, models often treat the first person-image as the dominant reference
 
 ### Files to Edit
-- `supabase/functions/generate-tryon/index.ts` -- update 3 sections of the `buildPrompt` function
+- `supabase/functions/generate-tryon/index.ts` -- add text labels before each image in the `generateImage` function content array
 - Redeploy the edge function
 
