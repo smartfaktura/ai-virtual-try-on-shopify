@@ -32,9 +32,14 @@ export function MobileUploadTab({ onProductAdded, onClose }: MobileUploadTabProp
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastSessionCreatedRef = useRef<number>(0);
 
   const createSession = useCallback(async () => {
     if (!user) return;
+    // Debounce: don't create a new session if one was created less than 30s ago
+    const now = Date.now();
+    if (now - lastSessionCreatedRef.current < 30000 && sessionToken) return;
+
     setIsCreating(true);
     setError(null);
     setUploadedImageUrl(null);
@@ -64,6 +69,7 @@ export function MobileUploadTab({ onProductAdded, onClose }: MobileUploadTabProp
 
       const data = await res.json();
       setSessionToken(data.session_token);
+      lastSessionCreatedRef.current = Date.now();
 
       // Build the mobile upload URL
       const uploadUrl = `${window.location.origin}/upload/${data.session_token}`;
