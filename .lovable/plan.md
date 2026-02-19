@@ -1,33 +1,41 @@
 
 
-## Fix: Restore Branded Button Color and Fix Desktop Gradient Overlap
+## Move Customer Support Chat Icon to Left Side (Near Sidebar)
 
-### Problem 1: Button Color Changed
-The Generate button was changed from the branded `bg-primary` (dark navy VOVV.AI color) to `bg-blue-600`. This should be reverted back to `bg-primary` for brand consistency.
+### Current Behavior
+The chat bubble button is positioned at `fixed bottom-4 right-4` on tablet/desktop and `bottom-4 left-4` on mobile. It sits in the bottom-right corner, overlapping with the Generate button area.
 
-### Problem 2: Gradient Fade Covers the Button
-On desktop, a gradient overlay (`h-40 bg-gradient-to-t from-muted/80`) sits at `z-10` but the prompt panel has no explicit z-index, so the gradient renders on top of the button making it look faded/washed out.
+### Proposed Change
+Reposition the chat icon and panel to the **left side** on tablet/desktop, just outside the sidebar, so it doesn't overlap with the prompt panel or Generate button.
 
-### Changes
+**File: `src/components/app/StudioChat.tsx`**
 
-**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`**
-- Revert the active Generate button from `bg-blue-600 hover:bg-blue-700` back to `bg-primary hover:bg-primary/90 text-primary-foreground`
-- Keep the shadow for visual prominence
+- **Floating button**: Change from `sm:right-4` to `sm:left-[260px]` (when sidebar expanded) -- but since the sidebar width varies (72px collapsed, 240px expanded), use a simpler approach: always anchor to `left-4` on all screen sizes, and on `lg:` screens offset by the sidebar width using `lg:left-[calc(240px+1.5rem)]` for expanded or dynamically use a CSS variable.
+- Simpler approach: Position at `left-4` on mobile, `left-[80px]` on `lg:` (collapsed sidebar = 72px + gap), letting it sit just to the right of the sidebar. Since collapsed state is dynamic, we use a fixed left offset that works for both states: `lg:left-[1rem]` places it inside the sidebar margin area, or better -- place it at `bottom-4 left-4` universally and on `lg:` shift it to `lg:left-[calc(var(--sidebar-w,240px)+1.5rem)]`.
+- The cleanest solution: Keep `left-4` on mobile/tablet. On `lg:`, position at `lg:bottom-6 lg:left-[calc(theme(spacing.3)+240px+theme(spacing.3))]` which accounts for the sidebar margin (m-3 = 0.75rem) + sidebar width + gap. For collapsed, the sidebar is 72px.
+- **Practical approach**: Pass sidebar collapsed state or simply use a fixed `lg:left-20` (80px) that gives clearance for collapsed sidebar (72px + 12px margin) and sits cleanly beside it. When expanded, it'll be overlapped by sidebar -- so better to keep it **above** the sidebar at a fixed bottom-left with enough margin.
 
-**File: `src/pages/Freestyle.tsx`**
-- Add `relative z-20` to the prompt panel's inner content wrapper so it sits above the gradient fade
-- This ensures the gradient provides the visual fade effect on the gallery behind but never overlaps the interactive prompt panel
+**Final approach**: Position the button and panel at `left-4` on all sizes. On `lg:` screens, it naturally sits in the main content area to the left of the content, beside the sidebar (since sidebar has its own space in the flex layout). Actually, since the button is `fixed`, it ignores flex layout. So:
 
-### Technical Detail
+- Button: `fixed bottom-4 left-4` on mobile. On `lg:` use `lg:left-[268px]` (sidebar 240px + margin 12px + gap 16px). When collapsed, the sidebar is 72px, but we don't have access to that state in StudioChat.
 
-```
-FreestylePromptPanel.tsx line 314:
-  Before: "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
-  After:  "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25"
+**Simplest clean solution**: Move the button positioning to `left-4` on all breakpoints (already is on mobile). On `sm:` and above, keep `left-4` instead of `sm:right-4`. The chat panel also opens from the left. This places it in the bottom-left on all devices, next to (but not overlapping) the sidebar since the sidebar is in the document flow. But `fixed` positioning ignores flow, so on desktop it would overlap the sidebar.
 
-Freestyle.tsx line 595:
-  Before: <div className="lg:max-w-3xl lg:mx-auto lg:pointer-events-auto relative">
-  After:  <div className="lg:max-w-3xl lg:mx-auto lg:pointer-events-auto relative z-20">
-```
+**Best solution**: Accept the collapsed/expanded sidebar state from AppShell via a CSS custom property or simply hardcode for the most common case. Use `lg:left-[268px]` for the expanded state. The sidebar component in AppShell already sets the width, so we can add a CSS variable.
 
-Two lines changed across two files.
+### Implementation
+
+1. **AppShell.tsx**: Add a CSS custom property `--sidebar-offset` on the shell container that equals `72px + 24px` (collapsed) or `240px + 24px` (expanded), based on the `collapsed` state.
+
+2. **StudioChat.tsx**: 
+   - Button: `left-4 lg:left-[var(--sidebar-offset)]` 
+   - Panel: Same left positioning, opening upward from the button
+
+This keeps it next to the sidebar on desktop/tablet without overlapping.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/components/app/AppShell.tsx` | Add `--sidebar-offset` CSS variable to the shell container based on collapsed state |
+| `src/components/app/StudioChat.tsx` | Change button and panel from `sm:right-4` to left-aligned using the CSS variable on `lg:`, keep `left-4` on mobile |
