@@ -408,7 +408,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const isEditing = !!editingProduct;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       {/* ── Image Section ── */}
       <div className="space-y-2">
         {images.length > 0 && (
@@ -434,7 +434,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         ) : images.length === 0 ? (
           <div
-            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-7 sm:py-10 ${
+            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-5 sm:py-6 ${
               dragActive
                 ? 'bg-primary/5 border-2 border-primary'
                 : 'bg-muted/30 hover:bg-muted/50 border border-dashed border-border'
@@ -447,8 +447,8 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               if (input) input.click();
             }}
           >
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-2.5">
-              <ImagePlus className="w-5 h-5 text-muted-foreground" />
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mb-2">
+              <ImagePlus className="w-4 h-4 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">
               Drop images or <span className="text-primary font-medium">browse</span>
@@ -503,38 +503,39 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       </div>
 
       {/* ── Product Details ── */}
-      <div className="space-y-3">
-        <div className="space-y-1">
-          <Label htmlFor="product-title" className="text-xs font-medium">
-            Product Name <span className="text-destructive">*</span>
-          </Label>
-          {isAnalyzing && !hasManualEdits.current.title ? (
-            <Skeleton className="h-9 w-full rounded-md" />
-          ) : (
-            <Input
-              id="product-title"
-              placeholder="e.g. Black Yoga Leggings"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                hasManualEdits.current.title = true;
-              }}
-              maxLength={200}
-            />
-          )}
-        </div>
+      <div className="space-y-2">
+        {/* Name + Type side by side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="product-title" className="text-xs font-medium">
+              Product Name <span className="text-destructive">*</span>
+            </Label>
+            {isAnalyzing && !hasManualEdits.current.title ? (
+              <Skeleton className="h-9 w-full rounded-md" />
+            ) : (
+              <Input
+                id="product-title"
+                placeholder="e.g. Black Yoga Leggings"
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  hasManualEdits.current.title = true;
+                }}
+                maxLength={200}
+              />
+            )}
+          </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="product-type" className="text-xs font-medium">
-            Product Type
-          </Label>
-          {isAnalyzing && !hasManualEdits.current.productType ? (
-            <Skeleton className="h-9 w-full rounded-md" />
-          ) : (
-            <div className="space-y-2">
+          <div className="space-y-1">
+            <Label htmlFor="product-type" className="text-xs font-medium">
+              Product Type
+            </Label>
+            {isAnalyzing && !hasManualEdits.current.productType ? (
+              <Skeleton className="h-9 w-full rounded-md" />
+            ) : (
               <Input
                 id="product-type"
-                placeholder="e.g. Scented Candle, Sneakers, Face Serum…"
+                placeholder="e.g. Sneakers, Face Serum…"
                 value={productType}
                 onChange={(e) => {
                   setProductType(e.target.value);
@@ -542,58 +543,65 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                 }}
                 maxLength={100}
               />
-              <div className="flex flex-wrap gap-1.5">
-                {QUICK_TYPES.map((t) => (
-                  <Badge
-                    key={t}
-                    variant={productType === t ? 'default' : 'outline'}
-                    className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
-                    onClick={() => {
-                      setProductType(productType === t ? '' : t);
-                      hasManualEdits.current.productType = true;
-                    }}
-                  >
-                    {t}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="product-desc" className="text-xs font-medium">
-            Description
-          </Label>
-          {isAnalyzing && !hasManualEdits.current.description ? (
-            <Skeleton className="h-[52px] w-full rounded-md" />
-          ) : (
-            <Textarea
-              id="product-desc"
-              placeholder="Brief description…"
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                hasManualEdits.current.description = true;
-              }}
-              maxLength={500}
-              rows={2}
-              className="resize-none"
+        {/* Quick type badges */}
+        {!(isAnalyzing && !hasManualEdits.current.productType) && (
+          <div className="flex flex-wrap gap-1.5">
+            {QUICK_TYPES.map((t) => (
+              <Badge
+                key={t}
+                variant={productType === t ? 'default' : 'outline'}
+                className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
+                onClick={() => {
+                  setProductType(productType === t ? '' : t);
+                  hasManualEdits.current.productType = true;
+                }}
+              >
+                {t}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Description + Dimensions side by side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="product-desc" className="text-xs font-medium">
+              Description
+            </Label>
+            {isAnalyzing && !hasManualEdits.current.description ? (
+              <Skeleton className="h-[52px] w-full rounded-md" />
+            ) : (
+              <Textarea
+                id="product-desc"
+                placeholder="Brief description…"
+                value={description}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  hasManualEdits.current.description = true;
+                }}
+                maxLength={500}
+                rows={2}
+                className="resize-none min-h-0"
+              />
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="product-dimensions" className="text-xs font-medium">
+              Dimensions <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <Input
+              id="product-dimensions"
+              placeholder="e.g. 28 x 35 x 13 cm"
+              value={dimensions}
+              onChange={(e) => setDimensions(e.target.value)}
+              maxLength={100}
             />
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <Label htmlFor="product-dimensions" className="text-xs font-medium">
-            Dimensions <span className="text-muted-foreground font-normal">(optional)</span>
-          </Label>
-          <Input
-            id="product-dimensions"
-            placeholder="e.g. 28 x 35 x 13 cm"
-            value={dimensions}
-            onChange={(e) => setDimensions(e.target.value)}
-            maxLength={100}
-          />
+          </div>
         </div>
       </div>
 
@@ -608,7 +616,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       )}
 
       {/* ── Footer Actions ── */}
-      <div className="flex justify-end gap-3 pt-3 sm:pt-6 sticky bottom-0 bg-background pb-1">
+      <div className="flex justify-end gap-3 pt-2 sm:pt-3 sticky bottom-0 bg-background pb-1">
         <Button variant="ghost" onClick={onClose} disabled={isUploading} className="rounded-xl">
           Cancel
         </Button>
