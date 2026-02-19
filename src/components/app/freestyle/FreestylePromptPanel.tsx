@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Plus, X, Sparkles, Loader2, ImagePlus, ChevronUp, AlertTriangle } from 'lucide-react';
+import { Plus, X, Sparkles, Loader2, ImagePlus, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
