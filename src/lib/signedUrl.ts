@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 /** Buckets that are now private and need signed URLs */
-const PRIVATE_BUCKETS = ['freestyle-images', 'tryon-images', 'generated-videos', 'generation-inputs'];
+const PRIVATE_BUCKETS = ['generated-videos', 'generation-inputs'];
 
 /**
  * Extracts the bucket name and file path from a Supabase Storage public URL.
