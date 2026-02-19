@@ -649,6 +649,8 @@ export default function Generate() {
         setCurrentStep('results');
         toast.success(`Generated ${result.images.length} images!`);
         refreshBalance();
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
         resetQueue();
       }
     }
@@ -675,6 +677,8 @@ export default function Generate() {
           toast.success(`Generated ${batchState.aggregatedImages.length} images!`);
         }
         refreshBalance();
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
         resetBatch();
       } else {
         // All batches failed
