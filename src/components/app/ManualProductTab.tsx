@@ -129,10 +129,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       if (error) throw error;
       if (data) {
         if (data.title && !hasManualEdits.current.title) setTitle(data.title);
-        if (data.productType && !hasManualEdits.current.productType) {
-          const match = PRODUCT_TYPES.find(t => t.toLowerCase() === data.productType.toLowerCase());
-          if (match) setProductType(match);
-        }
+        if (data.productType && !hasManualEdits.current.productType) setProductType(data.productType);
         if (data.description && !hasManualEdits.current.description) setDescription(data.description);
       }
     } catch (err) {
