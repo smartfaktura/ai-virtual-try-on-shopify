@@ -1,57 +1,44 @@
 
 
-## Fix: Accurate Model Label in Activity Cards
+## Fix: Workflow Results Not Appearing in Library Instantly
 
 ### Root Cause
-Two issues found:
+When workflow generations complete on the Generate page, the code never tells the Library cache to refresh. The freestyle generation hook (`useGenerateFreestyle.ts`) correctly calls `queryClient.invalidateQueries({ queryKey: ['library'] })` after completion, but the Generate page's two completion handlers (single-job for Try-On, and batch for workflows) do not.
 
-1. **"Pro Model" badge and hint are hardcoded** in `WorkflowActivityCard.tsx` — every processing job shows "Pro Model" regardless of actual quality or model used.
+The Library uses `staleTime: 60_000` (60 seconds) and only auto-refreshes on window focus, so new workflow images don't appear for up to 5 minutes unless the user manually navigates away and back.
 
-2. **Try-On always uses Pro model** on the backend (required for identity preservation), which is correct. But the user selected "Standard" quality, so the UI should explain *why* Pro model is being used.
+### Fix (single file)
+**File: `src/pages/Generate.tsx`**
 
-### Generation Timeline (your last job)
-| Step | Time |
-|------|------|
-| Job created | 14:57:52 |
-| Processing started | 14:57:52 (instant, no queue wait) |
-| AI generation call | ~171 seconds (Pro model) |
-| Completed | 15:00:43 |
+1. Get `queryClient` via `useQueryClient()` (already imported from `@tanstack/react-query` on line 5)
+2. Add `queryClient.invalidateQueries({ queryKey: ['library'] })` in both completion handlers:
+   - **Single-job completion** (~line 650, after `toast.success`): for Try-On results
+   - **Batch completion** (~line 675-677, after `toast.success` / `toast.warning`): for workflow scene results
 
-The entire ~3 minutes was spent on the AI image generation itself. The Pro model (`gemini-3-pro-image-preview`) is inherently slower than Standard — this is expected behavior, not a bug. Try-On forces Pro model for identity preservation regardless of quality setting.
+This mirrors what `useGenerateFreestyle.ts` already does on line 146.
 
-### Changes
+### What This Changes
+- When a user completes any workflow generation and later navigates to Library, the data will already be fresh
+- If the user is already on the Library page, the next render will trigger a refetch immediately
+- No polling or realtime subscription needed -- simple cache invalidation is sufficient
 
-#### 1. Make Model Badge Dynamic in WorkflowActivityCard
-**File: `src/components/app/WorkflowActivityCard.tsx`**
+### Technical Detail
 
-The batch group already carries `job_type` and quality info from the queue payload. Use it to determine the correct label:
+```text
+// In the single-job completion effect (~line 650):
+toast.success(...);
+refreshBalance();
++ queryClient.invalidateQueries({ queryKey: ['library'] });
++ queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+resetQueue();
 
-- If `job_type === 'tryon'`: Show "Pro Model" badge (always Pro for identity)
-- If quality is `'high'`: Show "Pro Model" badge
-- Otherwise: Show "Standard" badge or no model badge at all
+// In the batch completion effect (~line 675-677):
+toast.success(...) / toast.warning(...);
+refreshBalance();
++ queryClient.invalidateQueries({ queryKey: ['library'] });
++ queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+resetBatch();
+```
 
-Replace the hardcoded "Pro model — est. ~60-120s per image" text (line 101-104) with dynamic text:
-- Pro model jobs: "Pro model — est. ~60-120s per image"
-- Standard model jobs: "Standard model — est. ~15-30s per image"
-
-Replace the hardcoded "Pro Model" badge (lines 123-129) with a conditional:
-- Only show "Pro Model" when the job actually uses Pro model
-- Show nothing or "Standard" for standard quality non-try-on jobs
-
-#### 2. Pass Quality/Job Type Through BatchGroup
-**File: `src/lib/batchGrouping.ts`**
-
-Ensure the `BatchGroup` type carries `job_type` and `quality` from the queue jobs so `WorkflowActivityCard` can read them. If not already present, add these fields to the group.
-
-#### 3. Update QueuePositionIndicator Pro Model Hint
-**File: `src/components/app/QueuePositionIndicator.tsx`**
-
-The `getProModelHint` function (line 35-38) currently returns "Using Pro model" only when meta is null. Fix it to check actual quality and model presence:
-- Show hint when `meta.quality === 'high'` or `meta.hasModel` (which forces Pro)
-- Remove the null-meta fallback that incorrectly assumes Pro
-
-### Files to Edit
-- `src/components/app/WorkflowActivityCard.tsx` — dynamic model badge and timing hint
-- `src/lib/batchGrouping.ts` — pass quality/job_type to batch groups (if not already)
-- `src/components/app/QueuePositionIndicator.tsx` — fix Pro model hint logic
+Both `library` and `recent-creations` query keys are invalidated, matching the pattern used by freestyle generations.
 
