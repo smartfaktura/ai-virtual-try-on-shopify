@@ -33,7 +33,7 @@ export function LowCreditsBanner() {
       <div className="flex items-center gap-2 shrink-0">
         <button
           onClick={openBuyModal}
-          className="bg-amber-600 text-white hover:bg-amber-700 rounded-lg px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap"
         >
           Buy Credits
         </button>
