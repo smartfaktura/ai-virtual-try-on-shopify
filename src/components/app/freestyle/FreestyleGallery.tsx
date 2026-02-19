@@ -98,11 +98,11 @@ function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: n
       </div>
 
       {/* Status text */}
-      <div className="text-center space-y-1.5 min-h-[3.5rem]">
-        <p className="text-sm font-medium text-foreground/70">
+      <div className="text-center space-y-1.5 min-h-0 sm:min-h-[3.5rem]">
+        <p className="text-xs sm:text-sm font-medium text-foreground/70">
           {crew.name} is working on this…
         </p>
-        <p className="text-sm text-muted-foreground/60 transition-opacity duration-300">
+        <p className="text-xs sm:text-sm text-muted-foreground/60 transition-opacity duration-300">
           {STATUS_MESSAGES[msgIdx]}
         </p>
       </div>
