@@ -259,7 +259,7 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className="flex h-dvh bg-background">
+    <div className="flex h-dvh bg-background" style={{ '--sidebar-offset': collapsed ? '96px' : '264px' } as React.CSSProperties}>
       {/* Desktop Floating Sidebar */}
       <aside
         className={cn(
