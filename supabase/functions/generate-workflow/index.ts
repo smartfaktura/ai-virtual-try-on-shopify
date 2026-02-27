@@ -357,10 +357,23 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       ? `\nCOLOR PALETTE: Use a ${expandedPalette} color scheme throughout the ${isExterior ? 'outdoor furniture, planters, textiles, and landscaping elements' : "room's furniture, textiles, and decor accessories"}.`
       : '';
 
-    // Time of day / natural light
-    const timeOfDayBlock = timeOfDay && timeOfDay !== 'As Photographed'
-      ? `\nNATURAL LIGHT: Render the scene as if photographed during ${timeOfDay}. Adjust window light direction, shadow angles, and ambient light color accordingly.`
-      : '';
+    // Time of day / natural light — context-aware for interior vs exterior
+    let timeOfDayBlock = '';
+    if (timeOfDay && timeOfDay !== 'As Photographed') {
+      if (isExterior) {
+        const exteriorTimeDescriptions: Record<string, string> = {
+          'Morning Light': 'Render as early morning: soft golden light from a low east angle, long gentle shadows, dewy freshness on surfaces.',
+          'Midday': 'Render at midday: bright overhead sun, minimal shadows, vivid colors, clear blue sky.',
+          'Golden Hour Glow': 'Render at golden hour: warm amber sunlight hitting the facade from a low angle, long dramatic shadows, warm sky gradient from gold to soft pink.',
+          'Dramatic Twilight': 'Render at twilight/blue hour: deep blue-purple sky, warm interior lights glowing through windows, exterior accent lighting visible, atmospheric and moody.',
+          'Night / Uplighting': 'Render at night: dark sky, architectural uplighting illuminating the facade and landscaping, warm pathway lights, dramatic pool/garden lighting if present.',
+          'Overcast': 'Render under overcast sky: soft diffused light, no harsh shadows, even illumination across all surfaces, muted sky.',
+        };
+        timeOfDayBlock = `\nNATURAL LIGHT: ${exteriorTimeDescriptions[timeOfDay] || `Render the exterior as if photographed during ${timeOfDay}. Adjust sun position, shadow angles, and sky accordingly.`}`;
+      } else {
+        timeOfDayBlock = `\nNATURAL LIGHT: Render the scene as if photographed during ${timeOfDay}. Adjust window light direction, shadow angles, and ambient light color accordingly.`;
+      }
+    }
 
     // Designer notes
     const designNotesBlock = designNotes
