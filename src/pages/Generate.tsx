@@ -2229,7 +2229,12 @@ export default function Generate() {
                     </div>
                     <div className="space-y-2">
                       <Label>Aspect Ratio</Label>
-                      {uiConfig?.lock_aspect_ratio ? (
+                      {isInteriorDesign ? (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Original</Badge>
+                          <span className="text-xs text-muted-foreground">Matches uploaded photo</span>
+                        </div>
+                      ) : uiConfig?.lock_aspect_ratio ? (
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary">{workflowConfig?.fixed_settings?.aspect_ratios?.[0] || aspectRatio}</Badge>
                           <span className="text-xs text-muted-foreground">Locked by workflow</span>
