@@ -813,7 +813,7 @@ export default function Generate() {
       return map[currentStep] || 1;
     }
     if (isInteriorDesign) {
-      const map: Record<string, number> = { source: 1, upload: 2, 'brand-profile': 3, settings: 4, generating: 5, results: 5 };
+      const map: Record<string, number> = { source: 1, upload: 2, settings: 3, generating: 4, results: 4 };
       return map[currentStep] || 1;
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
@@ -861,7 +861,7 @@ export default function Generate() {
       ];
     }
     if (isInteriorDesign) {
-      return [{ name: 'Type' }, { name: 'Upload Photo' }, { name: 'Brand' }, { name: 'Style' }, { name: 'Results' }];
+      return [{ name: 'Type' }, { name: 'Upload Photo' }, { name: 'Style' }, { name: 'Results' }];
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
@@ -1250,6 +1250,8 @@ export default function Generate() {
                     setScratchUpload({ ...scratchUpload, uploadedUrl: finalUrl });
                     if (activeWorkflow?.uses_tryon) {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                    } else if (isInteriorDesign) {
+                      setCurrentStep('settings');
                     } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
