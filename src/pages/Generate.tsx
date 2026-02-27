@@ -1814,7 +1814,9 @@ export default function Generate() {
               <div className="flex items-start gap-2 px-1">
                 <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  Products shown are for demonstration only — your product will be placed in each selected scene.
+                  {isInteriorDesign
+                    ? 'Each style will generate a uniquely staged version of your room while preserving its architecture.'
+                    : 'Products shown are for demonstration only — your product will be placed in each selected scene.'}
                 </p>
               </div>
 
