@@ -1250,6 +1250,8 @@ export default function Generate() {
                     setScratchUpload({ ...scratchUpload, uploadedUrl: finalUrl });
                     if (activeWorkflow?.uses_tryon) {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                    } else if (isInteriorDesign) {
+                      setCurrentStep('settings');
                     } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
