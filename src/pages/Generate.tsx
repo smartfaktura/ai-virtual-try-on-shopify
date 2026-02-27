@@ -2046,8 +2046,67 @@ export default function Generate() {
               </CardContent></Card>
             )}
 
-            {/* Product Angles — hidden for Mirror Selfie Set, Flat Lay, and Selfie/UGC */}
-            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !isFlatLay && !isSelfieUgc && (
+            {/* Interior Design Room Type, Wall Color & Flooring Selectors */}
+            {isInteriorDesign && (
+              <Card><CardContent className="p-5 space-y-4">
+                <div>
+                  <h3 className="text-base font-semibold flex items-center gap-2">
+                    🏠 Room Settings
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Specify the room type and optional color preferences</p>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Room Type</Label>
+                    <Select value={interiorRoomType} onValueChange={setInteriorRoomType}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {[
+                          'Living Room', 'Bedroom (Master)', 'Bedroom (Guest)',
+                          'Kids Room (Girl)', 'Kids Room (Boy)', 'Kids Room (Twins/Shared)',
+                          'Baby Nursery (Girl)', 'Baby Nursery (Boy)',
+                          'Kitchen', 'Dining Room',
+                          'Bathroom (Master)', 'Bathroom (Guest)',
+                          'Home Office / Work Room', 'Walk-in Closet', 'Hallway / Entryway',
+                          'Patio / Outdoor Living', 'Balcony / Terrace',
+                          'Laundry Room', 'Storage Room / Utility', 'Garage',
+                          'Basement / Rec Room', 'Exterior / Facade',
+                        ].map(rt => (
+                          <SelectItem key={rt} value={rt}>{rt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Wall Color <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                      <Select value={interiorWallColor} onValueChange={setInteriorWallColor}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {['Keep Original', 'White', 'Warm White', 'Light Gray', 'Beige / Cream', 'Sage Green', 'Navy Blue', 'Terracotta', 'Blush Pink', 'Charcoal', 'Olive Green'].map(c => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Flooring <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                      <Select value={interiorFlooring} onValueChange={setInteriorFlooring}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {['Keep Original', 'Hardwood Light', 'Hardwood Dark', 'Marble White', 'Marble Dark', 'Ceramic Tiles', 'Carpet', 'Polished Concrete', 'Herringbone Parquet'].map(f => (
+                            <SelectItem key={f} value={f}>{f}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </CardContent></Card>
+            )}
+
+            {/* Product Angles — hidden for Mirror Selfie Set, Flat Lay, Selfie/UGC, and Interior Design */}
+            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !isFlatLay && !isSelfieUgc && !isInteriorDesign && (
               <Card><CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">Product Angles</h3>
