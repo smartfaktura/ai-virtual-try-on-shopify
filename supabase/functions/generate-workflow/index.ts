@@ -294,6 +294,7 @@ ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${l
 This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
 ${furnitureHandlingBlock}
+${roomSizeBlock}
 ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
 ${flooring && flooring !== 'Keep Original' ? `\nFLOORING OVERRIDE: Change the flooring to ${flooring}. Apply this consistently across the entire visible floor area.` : '\nFLOORING: Keep the original flooring as shown in the photo.'}
 ${furnitureHandling !== 'Keep & Restyle' && furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} furniture pieces and decor items, regardless of the overall design style variation.` : ''}
