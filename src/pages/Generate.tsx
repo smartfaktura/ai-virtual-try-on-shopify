@@ -1286,7 +1286,7 @@ export default function Generate() {
                       {/* Room Size + Ceiling Height */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Room Size <span className="text-xs text-muted-foreground">(helps scale furniture)</span></Label>
+                          <Label>{interiorType === 'interior' ? 'Room Size' : 'Area Size'} <span className="text-xs text-muted-foreground">({interiorType === 'interior' ? 'helps scale furniture' : 'helps scale elements'})</span></Label>
                           <Select value={interiorRoomSize} onValueChange={setInteriorRoomSize}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
