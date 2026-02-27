@@ -2200,6 +2200,10 @@ export default function Generate() {
                     <div
                       onClick={() => {
                         setSelectedVariationIndices(prev => {
+                          // Interior design: single-select only
+                          if (isInteriorDesign) {
+                            return prev.has(i) ? new Set() : new Set([i]);
+                          }
                           const next = new Set(prev);
                           if (next.has(i)) { next.delete(i); }
                           else {
