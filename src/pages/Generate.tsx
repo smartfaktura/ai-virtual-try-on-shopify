@@ -1105,7 +1105,7 @@ export default function Generate() {
             </div>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => isInteriorDesign ? navigate('/app/workflows') : setCurrentStep('source')}>Back</Button>
+              <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
               <Button disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
                 onClick={async () => {
                   if (!scratchUpload) return;
