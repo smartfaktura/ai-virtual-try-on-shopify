@@ -2218,6 +2218,10 @@ export default function Generate() {
 
               {/* Scene category filter tabs */}
               {variationStrategy?.type === 'scene' && (() => {
+                // Build category list from scope-filtered variations
+                const scopeFilteredVars = isInteriorDesign
+                  ? variationStrategy.variations.filter((v: any) => !v.scope || v.scope === interiorType)
+                  : variationStrategy.variations;
                 const cats = Array.from(new Set(variationStrategy.variations.map(v => v.category).filter(Boolean))) as string[];
                 if (cats.length <= 1) return null;
                 return (
