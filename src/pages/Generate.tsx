@@ -2563,8 +2563,8 @@ export default function Generate() {
                       <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="standard">Standard (4 credits/img)</SelectItem>
-                          <SelectItem value="high">High (10 credits/img)</SelectItem>
+                          <SelectItem value="standard">Standard (8 credits/img)</SelectItem>
+                          <SelectItem value="high">High (16 credits/img)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
