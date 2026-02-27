@@ -1280,18 +1280,34 @@ export default function Generate() {
                         </div>
                       </div>
 
-                      {/* Room Size */}
-                      <div className="space-y-2">
-                        <Label>Room Size <span className="text-xs text-muted-foreground">(helps scale furniture realistically)</span></Label>
-                        <Select value={interiorRoomSize} onValueChange={setInteriorRoomSize}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Small">Small (under 10 sqm / 100 sqft)</SelectItem>
-                            <SelectItem value="Medium">Medium (10–20 sqm / 100–200 sqft)</SelectItem>
-                            <SelectItem value="Large">Large (20–40 sqm / 200–400 sqft)</SelectItem>
-                            <SelectItem value="Very Large">Very Large (40+ sqm / 400+ sqft)</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      {/* Room Size + Ceiling Height */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Room Size <span className="text-xs text-muted-foreground">(helps scale furniture)</span></Label>
+                          <Select value={interiorRoomSize} onValueChange={setInteriorRoomSize}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Small">Small (under 10 sqm / 100 sqft)</SelectItem>
+                              <SelectItem value="Medium">Medium (10–20 sqm / 100–200 sqft)</SelectItem>
+                              <SelectItem value="Large">Large (20–40 sqm / 200–400 sqft)</SelectItem>
+                              <SelectItem value="Very Large">Very Large (40+ sqm / 400+ sqft)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {interiorType === 'interior' && (
+                        <div className="space-y-2">
+                          <Label>Ceiling Height <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                          <Select value={interiorCeilingHeight} onValueChange={setInteriorCeilingHeight}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Low">Low (under 2.4m / 8ft)</SelectItem>
+                              <SelectItem value="Standard">Standard (2.4–2.7m / 8–9ft)</SelectItem>
+                              <SelectItem value="High">High (2.7m+ / 9ft+)</SelectItem>
+                              <SelectItem value="Double Height">Double Height (5m+ / 16ft+)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        )}
                       </div>
 
                       {/* Wall Color & Flooring (interior only) */}
