@@ -246,6 +246,12 @@ export default function Generate() {
   // Selfie / UGC Set detection
   const isSelfieUgc = activeWorkflow?.name === 'Selfie / UGC Set';
 
+  // Interior Design Set detection and state
+  const isInteriorDesign = activeWorkflow?.name === 'Interior Design Set';
+  const [interiorRoomType, setInteriorRoomType] = useState('Living Room');
+  const [interiorWallColor, setInteriorWallColor] = useState('Keep Original');
+  const [interiorFlooring, setInteriorFlooring] = useState('Keep Original');
+
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
     if (activeWorkflow) {
