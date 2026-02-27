@@ -325,6 +325,11 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
     }
 
+    // Room dimensions constraint (overrides generic room size when provided)
+    const roomDimensionsBlock = roomDimensions
+      ? `\nROOM DIMENSIONS (CRITICAL): This room measures ${roomDimensions}. Scale ALL furniture to fit realistically within these exact dimensions. Ensure walking paths of at least 60cm (2ft) remain between furniture pieces and walls. Do NOT place oversized furniture that would not physically fit in this space.`
+      : '';
+
     // Empty room instruction
     const emptyRoomBlock = isEmptyRoom
       ? `\nEMPTY ROOM (CRITICAL): This room is CURRENTLY COMPLETELY EMPTY — there is NO existing furniture at all. Stage it entirely from scratch with appropriate furniture for this room type and design style. Fill the space naturally without overcrowding.`
