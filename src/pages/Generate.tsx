@@ -1001,6 +1001,7 @@ export default function Generate() {
                 <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
                   onUpdateProductInfo={info => { setScratchUpload(prev => prev ? { ...prev, productInfo: info } : prev); }}
                   isUploading={isUploading}
+                  variant={isInteriorDesign ? 'room' : 'product'}
                 />
               </div>
 

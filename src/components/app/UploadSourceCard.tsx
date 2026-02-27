@@ -14,6 +14,7 @@ interface UploadSourceCardProps {
   onRemove: () => void;
   onUpdateProductInfo: (info: ScratchUpload['productInfo']) => void;
   isUploading?: boolean;
+  variant?: 'product' | 'room';
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -30,8 +31,9 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export function UploadSourceCard({
-  scratchUpload, onUpload, onRemove, onUpdateProductInfo, isUploading = false,
+  scratchUpload, onUpload, onRemove, onUpdateProductInfo, isUploading = false, variant = 'product',
 }: UploadSourceCardProps) {
+  const isRoom = variant === 'room';
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -86,7 +88,7 @@ export function UploadSourceCard({
       <div className="space-y-4">
         <div className="relative">
           <div className="aspect-square max-w-[200px] sm:max-w-xs rounded-lg overflow-hidden border border-border bg-card">
-            <img src={scratchUpload.previewUrl} alt="Uploaded product" className="w-full h-full object-contain" />
+            <img src={scratchUpload.previewUrl} alt={isRoom ? "Uploaded room photo" : "Uploaded product"} className="w-full h-full object-contain" />
           </div>
           <button type="button" onClick={onRemove} className="absolute top-2 right-2 p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors border border-border">
             <X className="w-4 h-4" />
@@ -94,32 +96,32 @@ export function UploadSourceCard({
         </div>
 
         <div className="space-y-3">
-          <h4 className="font-semibold">Product Details</h4>
+          <h4 className="font-semibold">{isRoom ? 'Room Details' : 'Product Details'}</h4>
           {isAnalyzing ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
               <Loader2 className="w-4 h-4 animate-spin" />
               <Sparkles className="w-4 h-4 text-primary/60" />
-              AI analyzing product…
+              {isRoom ? 'AI analyzing room…' : 'AI analyzing product…'}
             </div>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground">Add details to help the AI generate better images.</p>
+              <p className="text-sm text-muted-foreground">{isRoom ? 'Describe the space to help AI stage it accurately.' : 'Add details to help the AI generate better images.'}</p>
               <div className="space-y-1.5">
-                <Label htmlFor="product-title">Product Title</Label>
-                <Input id="product-title" value={scratchUpload.productInfo.title} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, title: e.target.value })} placeholder="e.g., High-Waist Yoga Leggings" />
+                <Label htmlFor="product-title">{isRoom ? 'Room Name' : 'Product Title'}</Label>
+                <Input id="product-title" value={scratchUpload.productInfo.title} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, title: e.target.value })} placeholder={isRoom ? 'e.g., Master Bedroom, Kitchen' : 'e.g., High-Waist Yoga Leggings'} />
               </div>
               <div className="space-y-1.5">
-                <Label>Product Type</Label>
+                <Label>{isRoom ? 'Space Type' : 'Product Type'}</Label>
                 <Input
                   value={scratchUpload.productInfo.productType}
                   onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: e.target.value })}
-                  placeholder="e.g. Scented Candle, Sneakers, Face Serum…"
+                  placeholder={isRoom ? 'e.g., Living Room, Front Facade' : 'e.g. Scented Candle, Sneakers, Face Serum…'}
                   maxLength={100}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="product-desc">Description (optional)</Label>
-                <Textarea id="product-desc" value={scratchUpload.productInfo.description} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, description: e.target.value })} placeholder="e.g., Black seamless leggings with high waistband" rows={3} />
+                <Textarea id="product-desc" value={scratchUpload.productInfo.description} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, description: e.target.value })} placeholder={isRoom ? 'e.g., Empty room with large windows, needs staging' : 'e.g., Black seamless leggings with high waistband'} rows={3} />
               </div>
             </>
           )}
