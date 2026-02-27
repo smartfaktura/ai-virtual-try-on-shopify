@@ -804,6 +804,10 @@ export default function Generate() {
       const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, pose: 4, settings: 5, generating: 6, results: 6 };
       return map[currentStep] || 1;
     }
+    if (isInteriorDesign) {
+      const map: Record<string, number> = { source: 1, upload: 2, 'brand-profile': 3, settings: 4, generating: 5, results: 5 };
+      return map[currentStep] || 1;
+    }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
         const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, settings: 4, generating: 5, results: 5 };
