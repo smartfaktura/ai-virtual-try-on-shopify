@@ -2260,9 +2260,18 @@ export default function Generate() {
 
               {/* Visual scene cards grid */}
               <div className={cn("grid gap-3", (isMirrorSelfie || isSelfieUgc) ? "grid-cols-3 sm:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4")}>
-                {variationStrategy?.variations.map((v, i) => {
-                  // Filter by category
-                  if (sceneFilterCategory !== 'all' && v.category && v.category !== sceneFilterCategory) return null;
+                {variationStrategy?.variations
+                  .map((v, i) => ({ v, i }))
+                  .filter(({ v }) => {
+                    // Filter by interior/exterior scope for staging workflow
+                    if (isInteriorDesign && (v as any).scope) {
+                      if ((v as any).scope !== interiorType) return false;
+                    }
+                    // Filter by category chip
+                    if (sceneFilterCategory !== 'all' && v.category && v.category !== sceneFilterCategory) return false;
+                    return true;
+                  })
+                  .map(({ v, i }) => {
                   const isSelected = selectedVariationIndices.has(i);
                   const hasPreview = !!v.preview_url;
 
