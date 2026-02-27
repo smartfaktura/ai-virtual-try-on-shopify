@@ -243,6 +243,10 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const isExterior = stagingType === 'exterior';
     const roomSize = (product as unknown as Record<string, unknown>).room_size as string || 'Medium';
     const keyPieces = (product as unknown as Record<string, unknown>).key_pieces as string[] || [];
+    const designNotes = (product as unknown as Record<string, unknown>).design_notes as string || '';
+    const colorPalettePreference = (product as unknown as Record<string, unknown>).color_palette_preference as string || '';
+    const timeOfDay = (product as unknown as Record<string, unknown>).time_of_day as string || '';
+    const stagingPurpose = (product as unknown as Record<string, unknown>).staging_purpose as string || '';
     const fullRoomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
     // For Keep modes, strip furniture-specific suggestions to avoid overriding the actual photo
     const isKeepMode = furnitureHandling === 'Keep & Restyle' || furnitureHandling === 'Keep Layout, Swap Style';
