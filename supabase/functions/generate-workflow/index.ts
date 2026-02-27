@@ -253,7 +253,6 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
   if (isInteriorWorkflow) {
     const roomTypeKey = (product as unknown as Record<string, unknown>).room_type as string ||
       ((config.ui_config as Record<string, unknown>).room_type as string) || '';
-    const roomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
     const wallColor = (product as unknown as Record<string, unknown>).wall_color as string || '';
     const flooring = (product as unknown as Record<string, unknown>).flooring_preference as string || '';
     const furnitureStyle = (product as unknown as Record<string, unknown>).furniture_style as string || '';
@@ -263,14 +262,24 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const isExterior = stagingType === 'exterior';
     const roomSize = (product as unknown as Record<string, unknown>).room_size as string || 'Medium';
 
+    const fullRoomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
+    // For Keep modes, strip furniture-specific suggestions to avoid overriding the actual photo
+    const isKeepMode = furnitureHandling === 'Keep & Restyle' || furnitureHandling === 'Keep Layout, Swap Style';
+    const roomDesc = isKeepMode
+      ? (roomTypeKey ? `a ${roomTypeKey.toLowerCase()} space` : 'a residential room')
+      : fullRoomDesc;
+
     // Build furniture handling instructions
     let furnitureHandlingBlock = '';
     if (furnitureHandling === 'Keep & Restyle') {
-      furnitureHandlingBlock = `\nFURNITURE HANDLING (CRITICAL): KEEP all existing furniture pieces EXACTLY as shown in the photo — same items, same positions, same sizes. Do NOT remove, replace, or rearrange any furniture. ONLY update their styling: change upholstery fabrics, wood finishes, colors, and textures to match the "${variation.label}" design style. Add appropriate decor accessories and styling elements around the existing furniture.`;
+      furnitureHandlingBlock = `\nFURNITURE HANDLING (CRITICAL): ANALYZE the uploaded photo carefully. Identify EVERY piece of furniture visible (e.g., sofa bed, desk, shelf, chair, wardrobe). Each piece MUST remain the SAME TYPE — a sofa bed stays a sofa bed, a desk stays a desk, a single bed stays a single bed. Do NOT upgrade, resize, or substitute furniture types (e.g., do NOT replace a sofa bed with a double bed). KEEP all furniture in their EXACT positions and sizes. ONLY update their styling: change upholstery fabrics, wood finishes, colors, and textures to match the "${variation.label}" design style. Add appropriate decor accessories around the existing furniture.`;
     } else if (furnitureHandling === 'Keep Layout, Swap Style') {
-      furnitureHandlingBlock = `\nFURNITURE HANDLING: Maintain the same furniture LAYOUT and types as shown (e.g., if there's a desk, keep a desk in that position; if there's a sofa, keep a sofa there). Replace each piece with a similar-type piece in the "${variation.label}" design style. Keep the same spatial arrangement and traffic flow.`;
+      furnitureHandlingBlock = `\nFURNITURE HANDLING (CRITICAL): ANALYZE the uploaded photo. Identify each furniture piece and its EXACT type. Replace with a same-TYPE piece in the "${variation.label}" style — a sofa bed becomes a styled sofa bed (NOT a double bed), a desk stays a desk, a compact chair stays a compact chair. Do NOT upgrade furniture categories. Maintain the same spatial arrangement and traffic flow.`;
     }
     // 'Replace All' = no special block, current default behavior
+
+    // Universal furniture realism constraint for ALL modes
+    const furnitureRealismBlock = `\nFURNITURE REALISM (CRITICAL): All furniture MUST be realistically proportioned for the visible room dimensions. Analyze the room's actual walls, floor area, and ceiling height from the photo. Never place furniture that would physically not fit through the door or in the available floor space. Furniture scale must match the room — small rooms get compact pieces, not oversized ones.`;
 
     // Build room size constraint
     let roomSizeBlock = '';
@@ -289,12 +298,14 @@ This is ${roomDesc}.
 Enhance this exterior with landscaping, outdoor furniture, lighting, and curb appeal elements appropriate for the "${variation.label}" design style.
 ${furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} outdoor furniture and design elements.` : ''}
 ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${lightingMood} lighting throughout the exterior scene.` : ''}
+${furnitureRealismBlock}
 \nIMPORTANT: The [PRODUCT IMAGE] is the BUILDING/EXTERIOR PHOTO to transform. Do NOT treat it as a product to place — instead, enhance the exterior scene while preserving its architecture, structure, and angles.\n`
       : `\nROOM CONTEXT:
 This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
 ${furnitureHandlingBlock}
 ${roomSizeBlock}
+${furnitureRealismBlock}
 ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
 ${flooring && flooring !== 'Keep Original' ? `\nFLOORING OVERRIDE: Change the flooring to ${flooring}. Apply this consistently across the entire visible floor area.` : '\nFLOORING: Keep the original flooring as shown in the photo.'}
 ${furnitureHandling !== 'Keep & Restyle' && furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} furniture pieces and decor items, regardless of the overall design style variation.` : ''}
