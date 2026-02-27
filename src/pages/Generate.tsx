@@ -2362,18 +2362,28 @@ export default function Generate() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedVariationIndices.size === 0 ? (
-                      <span className="text-destructive font-medium">Select at least 1 {isInteriorDesign ? 'style' : 'scene'} to continue</span>
+                  {isInteriorDesign ? (
+                    selectedVariationIndices.size === 0 ? (
+                      <p className="text-xs text-muted-foreground">Tap a style to select it</p>
                     ) : (
-                      <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : variationStrategy?.variations.length} {isInteriorDesign ? 'styles' : 'scenes'} selected
-                        {workflowImageCount > MAX_IMAGES_PER_JOB && (
-                          <span className="ml-1 text-muted-foreground">· Will split into {Math.ceil(selectedVariationIndices.size / Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier)))} batches</span>
-                        )}
-                      </>
-                    )}
-                  </p>
-                  {isFreeUser && (
+                      <p className="text-xs text-muted-foreground">
+                        1 style selected
+                      </p>
+                    )
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {selectedVariationIndices.size === 0 ? (
+                        <span className="text-destructive font-medium">Select at least 1 scene to continue</span>
+                      ) : (
+                        <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : variationStrategy?.variations.length} scenes selected
+                          {workflowImageCount > MAX_IMAGES_PER_JOB && (
+                            <span className="ml-1 text-muted-foreground">· Will split into {Math.ceil(selectedVariationIndices.size / Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier)))} batches</span>
+                          )}
+                        </>
+                      )}
+                    </p>
+                  )}
+                  {!isInteriorDesign && isFreeUser && (
                     <p className="text-xs text-amber-600 mt-0.5">Free plan: up to {FREE_SCENE_LIMIT} scenes. <button className="underline font-medium" onClick={openBuyModal}>Upgrade for more</button></p>
                   )}
                 </div>
