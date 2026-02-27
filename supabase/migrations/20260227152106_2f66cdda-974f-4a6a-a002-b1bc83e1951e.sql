@@ -1,0 +1,1 @@
+SELECT public.add_purchased_credits('68c931a0-454d-4ce3-806c-c0665d1541bd'::uuid, 30);
