@@ -655,7 +655,7 @@ serve(async (req) => {
           const prompt = buildVariationPrompt(
             config,
             angleVariation,
-            body.product,
+            productWithExtras as WorkflowRequest["product"],
             body.brand_profile,
             i,
             variationsToGenerate.length,
