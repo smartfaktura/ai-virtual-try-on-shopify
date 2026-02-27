@@ -343,9 +343,10 @@ export default function Generate() {
   useEffect(() => {
     setInteriorRoomType('');
     setInteriorKeyPieces([]);
-    setInteriorDesignNotes('');
     setInteriorColorPalette('');
     setInteriorTimeOfDay('As Photographed');
+    setInteriorIsEmptyRoom(false);
+    setInteriorCeilingHeight('Standard');
   }, [interiorType]);
 
   // Reset key pieces when room type changes
