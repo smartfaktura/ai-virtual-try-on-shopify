@@ -632,6 +632,7 @@ serve(async (req) => {
       room_type: body.room_type,
       wall_color: body.wall_color,
       flooring_preference: body.flooring_preference,
+      interior_type: body.interior_type,
     };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;
