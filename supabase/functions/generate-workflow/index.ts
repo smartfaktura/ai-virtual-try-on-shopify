@@ -277,10 +277,13 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const colorPalettePreference = (product as unknown as Record<string, unknown>).color_palette_preference as string || '';
     const timeOfDay = (product as unknown as Record<string, unknown>).time_of_day as string || '';
     const stagingPurpose = (product as unknown as Record<string, unknown>).staging_purpose as string || '';
+    const isEmptyRoom = (product as unknown as Record<string, unknown>).is_empty_room as boolean || false;
+    const ceilingHeight = (product as unknown as Record<string, unknown>).ceiling_height as string || '';
+    const hasKeyPieces = keyPieces.length > 0;
     const fullRoomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
-    // For Keep modes, strip furniture-specific suggestions to avoid overriding the actual photo
+    // When key_pieces are specified (ANY mode), strip furniture-specific suggestions to avoid conflict
     const isKeepMode = furnitureHandling === 'Keep & Restyle' || furnitureHandling === 'Keep Layout, Swap Style';
-    const roomDesc = isKeepMode
+    const roomDesc = (isKeepMode || hasKeyPieces)
       ? (roomTypeKey ? `a ${roomTypeKey.toLowerCase()} space` : 'a residential room')
       : fullRoomDesc;
 
