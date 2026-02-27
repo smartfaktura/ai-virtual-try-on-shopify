@@ -1765,6 +1765,7 @@ export default function Generate() {
                     </p>
                   )}
                 </div>
+                {!isInteriorDesign && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1779,6 +1780,7 @@ export default function Generate() {
                 >
                   {selectedVariationIndices.size === variationStrategy?.variations.length ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : 'Select All'}
                 </Button>
+                )}
               </div>
 
               {/* Scene category filter tabs */}
