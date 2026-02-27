@@ -2819,7 +2819,7 @@ export default function Generate() {
         {currentStep === 'results' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
             <Card><CardContent className="p-5 space-y-3">
-              <Badge variant="secondary">{sourceType === 'scratch' ? 'Generated from uploaded image' : (isFlatLay && selectedFlatLayProductIds.size > 1 ? `Publishing to · ${selectedFlatLayProductIds.size} products` : 'Publishing to')}</Badge>
+              <Badge variant="secondary">{isInteriorDesign ? 'Staged from your photo' : sourceType === 'scratch' ? 'Generated from uploaded image' : (isFlatLay && selectedFlatLayProductIds.size > 1 ? `Publishing to · ${selectedFlatLayProductIds.size} products` : 'Publishing to')}</Badge>
               {isFlatLay && selectedFlatLayProductIds.size > 1 ? (
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   {userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
