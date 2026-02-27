@@ -328,6 +328,7 @@ ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/cha
 ${flooring && flooring !== 'Keep Original' ? `\nFLOORING OVERRIDE: Change the flooring to ${flooring}. Apply this consistently across the entire visible floor area.` : '\nFLOORING: Keep the original flooring as shown in the photo.'}
 ${furnitureHandling !== 'Keep & Restyle' && furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} furniture pieces and decor items, regardless of the overall design style variation.` : ''}
 ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${lightingMood} lighting throughout the room. Adjust light sources, shadows, and ambiance accordingly.` : ''}
+${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
 \nIMPORTANT: The [PRODUCT IMAGE] is the ROOM PHOTO to transform. Do NOT treat it as a product to place — instead, transform the entire room scene while preserving its architecture.\n`;
   }
 
