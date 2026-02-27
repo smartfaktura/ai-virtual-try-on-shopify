@@ -246,11 +246,46 @@ export default function Generate() {
   // Selfie / UGC Set detection
   const isSelfieUgc = activeWorkflow?.name === 'Selfie / UGC Set';
 
-  // Interior Design Set detection and state
-  const isInteriorDesign = activeWorkflow?.name === 'Interior Design Set';
+  // Interior / Exterior Staging detection and state
+  const isInteriorDesign = activeWorkflow?.name === 'Interior / Exterior Staging';
+  const [interiorType, setInteriorType] = useState<'interior' | 'exterior'>('interior');
   const [interiorRoomType, setInteriorRoomType] = useState('Living Room');
   const [interiorWallColor, setInteriorWallColor] = useState('Keep Original');
   const [interiorFlooring, setInteriorFlooring] = useState('Keep Original');
+
+  const INTERIOR_ROOM_TYPES = [
+    'Living Room', 'Bedroom (Master)', 'Bedroom (Guest)',
+    'Kids Room (Girl)', 'Kids Room (Boy)', 'Kids Room (Twins/Shared)',
+    'Baby Nursery (Girl)', 'Baby Nursery (Boy)',
+    'Kitchen', 'Dining Room',
+    'Bathroom (Master)', 'Bathroom (Guest)',
+    'Home Office / Work Room', 'Walk-in Closet', 'Hallway / Entryway',
+    'Laundry Room', 'Storage Room / Utility',
+    'Basement / Rec Room',
+  ];
+
+  const EXTERIOR_ROOM_TYPES = [
+    'Front Facade', 'Backyard', 'Garden', 'Pool Area',
+    'Driveway', 'Rooftop Terrace', 'Entrance / Porch',
+    'Patio / Outdoor Living', 'Balcony / Terrace', 'Garage',
+  ];
+
+  // Auto-skip source step for interior design (no product selection)
+  useEffect(() => {
+    if (isInteriorDesign && currentStep === 'source') {
+      setSourceType('scratch');
+      setCurrentStep('upload');
+    }
+  }, [isInteriorDesign, currentStep]);
+
+  // Reset room type when switching interior/exterior
+  useEffect(() => {
+    if (interiorType === 'interior') {
+      setInteriorRoomType('Living Room');
+    } else {
+      setInteriorRoomType('Front Facade');
+    }
+  }, [interiorType]);
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
