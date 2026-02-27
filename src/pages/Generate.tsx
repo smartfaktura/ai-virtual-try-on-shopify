@@ -351,6 +351,8 @@ export default function Generate() {
     setInteriorCeilingHeight('Standard');
     setInteriorRoomDimensions('');
     setInteriorExactCeilingHeight('');
+    setSelectedVariationIndices(new Set());
+    setSceneFilterCategory('all');
   }, [interiorType]);
 
   // Reset key pieces when room type changes (but NOT design notes)
