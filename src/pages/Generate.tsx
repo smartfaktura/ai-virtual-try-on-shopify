@@ -647,6 +647,7 @@ export default function Generate() {
       lighting_mood: isInteriorDesign ? interiorLightingMood : undefined,
       furniture_handling: isInteriorDesign ? interiorFurnitureHandling : undefined,
       room_size: isInteriorDesign ? interiorRoomSize : undefined,
+      key_pieces: isInteriorDesign && interiorKeyPieces.length > 0 ? interiorKeyPieces : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
