@@ -283,7 +283,8 @@ export default function Generate() {
   const [interiorPurpose, setInteriorPurpose] = useState('');
   const [interiorIsEmptyRoom, setInteriorIsEmptyRoom] = useState(false);
   const [interiorCeilingHeight, setInteriorCeilingHeight] = useState('Standard');
-
+  const [interiorRoomDimensions, setInteriorRoomDimensions] = useState('');
+  const [interiorExactCeilingHeight, setInteriorExactCeilingHeight] = useState('');
   const ROOM_FURNITURE_PRESETS: Record<string, string[]> = {
     'Living Room': ['Sofa', 'Sectional', 'Coffee Table', 'TV Console', 'Bookshelf', 'Side Table', 'Kitchen Island', 'Bar Cart', 'Floor Lamp', 'Area Rug'],
     'Bedroom (Master)': ['King Bed', 'Queen Bed', 'Nightstands', 'Dresser', 'Vanity', 'Armchair', 'Floor Mirror'],
