@@ -268,7 +268,7 @@ export default function Generate() {
   // Interior / Exterior Staging detection and state
   const isInteriorDesign = activeWorkflow?.name === 'Interior / Exterior Staging';
   const [interiorType, setInteriorType] = useState<'interior' | 'exterior'>('interior');
-  const [interiorRoomType, setInteriorRoomType] = useState('Living Room');
+  const [interiorRoomType, setInteriorRoomType] = useState('');
   const [interiorWallColor, setInteriorWallColor] = useState('Keep Original');
   const [interiorFlooring, setInteriorFlooring] = useState('Keep Original');
   const [interiorFurnitureStyle, setInteriorFurnitureStyle] = useState('Match Design Style');
