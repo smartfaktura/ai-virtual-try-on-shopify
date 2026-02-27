@@ -1,4 +1,4 @@
-import { Plus, User, MapPin, Camera, Star, Layers, Smartphone } from 'lucide-react';
+import { Plus, User, MapPin, Camera, Star, Layers, Smartphone, Home } from 'lucide-react';
 import type { WorkflowScene } from './WorkflowAnimatedThumbnail';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 

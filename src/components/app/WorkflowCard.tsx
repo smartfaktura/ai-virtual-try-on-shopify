@@ -47,6 +47,13 @@ const featureMap: Record<string, string[]> = {
     'Identity-preserved model with your product',
     'All aspect ratios supported',
   ],
+  'Interior Design Set': [
+    'Transform empty rooms into fully staged interiors',
+    '12 design styles — Modern, Japandi, Scandinavian & more',
+    'Strict architectural preservation — windows, doors, angles unchanged',
+    'Optional wall color and flooring customization',
+    '22 room types from living rooms to walk-in closets',
+  ],
 };
 
 export function WorkflowCard({ workflow, onSelect, reversed }: WorkflowRowProps) {

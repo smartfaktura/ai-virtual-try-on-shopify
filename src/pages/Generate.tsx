@@ -794,6 +794,9 @@ export default function Generate() {
         { name: 'Model' }, { name: 'Scene' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
+    if (isInteriorDesign) {
+      return [{ name: 'Room Photo' }, { name: 'Brand' }, { name: 'Settings' }, { name: 'Results' }];
+    }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
         return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Model' }, { name: 'Settings' }, { name: 'Results' }];
