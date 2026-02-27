@@ -275,6 +275,39 @@ export default function Generate() {
   const [interiorLightingMood, setInteriorLightingMood] = useState('Keep Original');
   const [interiorFurnitureHandling, setInteriorFurnitureHandling] = useState('Keep & Restyle');
   const [interiorRoomSize, setInteriorRoomSize] = useState('Medium');
+  const [interiorKeyPieces, setInteriorKeyPieces] = useState<string[]>([]);
+
+  const ROOM_FURNITURE_PRESETS: Record<string, string[]> = {
+    'Living Room': ['Sofa', 'Sectional', 'Coffee Table', 'TV Console', 'Bookshelf', 'Side Table', 'Kitchen Island', 'Bar Cart', 'Floor Lamp', 'Area Rug'],
+    'Bedroom (Master)': ['King Bed', 'Queen Bed', 'Nightstands', 'Dresser', 'Vanity', 'Armchair', 'Floor Mirror'],
+    'Bedroom (Guest)': ['Double Bed', 'Single Bed', 'Sofa Bed', 'Nightstand', 'Small Desk', 'Armchair'],
+    'Kids Room (Girl)': ['Single Bed', 'Bunk Bed', 'Loft Bed', 'Study Desk', 'Bookshelf', 'Toy Storage', 'Bean Bag', 'Wall Shelves'],
+    'Kids Room (Boy)': ['Single Bed', 'Bunk Bed', 'Loft Bed', 'Study Desk', 'Bookshelf', 'Toy Storage', 'Bean Bag', 'Wall Shelves'],
+    'Kids Room (Twins/Shared)': ['Twin Beds', 'Bunk Bed', 'Shared Desk', 'Individual Nightstands', 'Toy Storage', 'Bookshelf'],
+    'Baby Nursery (Girl)': ['Crib', 'Changing Table', 'Rocking Chair', 'Dresser', 'Wall Shelves', 'Storage Baskets'],
+    'Baby Nursery (Boy)': ['Crib', 'Changing Table', 'Rocking Chair', 'Dresser', 'Wall Shelves', 'Storage Baskets'],
+    'Kitchen': ['Kitchen Island', 'Bar Stools', 'Dining Nook', 'Open Shelving', 'Pendant Lights'],
+    'Dining Room': ['Dining Table (4-seat)', 'Dining Table (6-seat)', 'Sideboard', 'Display Cabinet', 'Chandelier'],
+    'Bathroom (Master)': ['Vanity', 'Freestanding Tub', 'Shower', 'Storage Cabinet', 'Mirror', 'Towel Rack'],
+    'Bathroom (Guest)': ['Vanity', 'Shower', 'Storage Cabinet', 'Mirror', 'Towel Rack'],
+    'Home Office / Work Room': ['Desk', 'Ergonomic Chair', 'Bookshelf', 'Filing Cabinet', 'Monitor Stand', 'Floor Lamp'],
+    'Walk-in Closet': ['Shelving Unit', 'Hanging Rails', 'Drawer Unit', 'Island Dresser', 'Mirror', 'Shoe Rack'],
+    'Hallway / Entryway': ['Console Table', 'Mirror', 'Coat Hooks', 'Shoe Storage', 'Bench'],
+    'Laundry Room': ['Folding Table', 'Storage Shelves', 'Baskets', 'Drying Rack'],
+    'Storage Room / Utility': ['Shelving Units', 'Labeled Containers', 'Workbench', 'Pegboard'],
+    'Basement / Rec Room': ['Sofa', 'TV Console', 'Game Table', 'Bar Area', 'Bookshelf'],
+    // Exterior types
+    'Front Facade': ['Lounge Chairs', 'Planters', 'Outdoor Lighting', 'Welcome Mat'],
+    'Backyard': ['Lounge Chairs', 'Dining Set', 'Planters', 'Fire Pit', 'Pergola', 'Outdoor Rug'],
+    'Garden': ['Garden Bench', 'Planters', 'Water Feature', 'Pathway Lighting'],
+    'Pool Area': ['Lounge Chairs', 'Umbrellas', 'Side Tables', 'Planters', 'Outdoor Shower'],
+    'Driveway': ['Planters', 'Pathway Lighting', 'Gate', 'Bollards'],
+    'Rooftop Terrace': ['Lounge Set', 'Planters', 'Privacy Screen', 'String Lights', 'Outdoor Rug'],
+    'Entrance / Porch': ['Rocking Chair', 'Bench', 'Planters', 'Pendant Light', 'Welcome Mat'],
+    'Patio / Outdoor Living': ['Dining Set', 'Lounge Set', 'Planters', 'Fire Pit', 'Pergola', 'Outdoor Rug'],
+    'Balcony / Terrace': ['Compact Table', 'Chairs', 'Planters', 'String Lights'],
+    'Garage': ['Tool Storage', 'Workbench', 'Wall-mounted Racks', 'Floor Mat'],
+  };
 
   const INTERIOR_ROOM_TYPES = [
     'Living Room', 'Bedroom (Master)', 'Bedroom (Guest)',
@@ -300,14 +333,20 @@ export default function Generate() {
     }
   }, [isInteriorDesign]);
 
-  // Reset room type when switching interior/exterior
+  // Reset room type and key pieces when switching interior/exterior
   useEffect(() => {
     if (interiorType === 'interior') {
       setInteriorRoomType('Living Room');
     } else {
       setInteriorRoomType('Front Facade');
     }
+    setInteriorKeyPieces([]);
   }, [interiorType]);
+
+  // Reset key pieces when room type changes
+  useEffect(() => {
+    setInteriorKeyPieces([]);
+  }, [interiorRoomType]);
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
@@ -608,6 +647,7 @@ export default function Generate() {
       lighting_mood: isInteriorDesign ? interiorLightingMood : undefined,
       furniture_handling: isInteriorDesign ? interiorFurnitureHandling : undefined,
       room_size: isInteriorDesign ? interiorRoomSize : undefined,
+      key_pieces: isInteriorDesign && interiorKeyPieces.length > 0 ? interiorKeyPieces : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -1223,6 +1263,42 @@ export default function Generate() {
                           </Select>
                         </div>
                       </div>
+
+                      {/* Key Furniture & Features (optional) */}
+                      {ROOM_FURNITURE_PRESETS[interiorRoomType] && (
+                        <div className="space-y-2">
+                          <Label>Key Furniture & Features <span className="text-xs text-muted-foreground">(optional — helps the AI pick the right pieces)</span></Label>
+                          <div className="flex flex-wrap gap-2">
+                            {ROOM_FURNITURE_PRESETS[interiorRoomType].map(piece => {
+                              const isSelected = interiorKeyPieces.includes(piece);
+                              return (
+                                <button
+                                  key={piece}
+                                  type="button"
+                                  onClick={() => {
+                                    setInteriorKeyPieces(prev =>
+                                      isSelected ? prev.filter(p => p !== piece) : [...prev, piece]
+                                    );
+                                  }}
+                                  className={cn(
+                                    'px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
+                                    isSelected
+                                      ? 'bg-primary text-primary-foreground border-primary'
+                                      : 'bg-card border-border hover:border-primary hover:bg-primary/5'
+                                  )}
+                                >
+                                  {piece}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {interiorKeyPieces.length > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Selected: {interiorKeyPieces.join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </CardContent></Card>
                 )}
