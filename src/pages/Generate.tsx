@@ -845,13 +845,28 @@ export default function Generate() {
     setSelectedForPublish(prev => { const s = new Set(prev); s.has(index) ? s.delete(index) : s.add(index); return s; });
   };
   const handleImageClick = (index: number) => { setLightboxIndex(index); setLightboxOpen(true); };
-  const handleDownloadImage = (index: number) => {
+  const handleDownloadImage = async (index: number) => {
     const url = generatedImages[index];
-    const link = document.createElement('a');
-    link.href = url; link.download = `generated-image-${index + 1}.jpg`; link.click();
-    toast.success('Image downloaded');
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `generated-image-${index + 1}.jpg`;
+      link.click();
+      URL.revokeObjectURL(blobUrl);
+      toast.success('Image downloaded');
+    } catch {
+      toast.error('Download failed');
+    }
   };
-  const handleDownloadAll = () => { generatedImages.forEach((_, idx) => handleDownloadImage(idx)); toast.success(`${generatedImages.length} images downloaded`); };
+  const handleDownloadAll = async () => {
+    for (let idx = 0; idx < generatedImages.length; idx++) {
+      await handleDownloadImage(idx);
+    }
+    toast.success(`${generatedImages.length} images downloaded`);
+  };
   const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 
   const getStepNumber = () => {
