@@ -238,6 +238,24 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     ugcBlock = `\nEXPRESSION & ENERGY:\n${moodDesc}\n\nPRODUCT INTERACTION:\nThe subject must be naturally ${interaction} with the EXACT product from [PRODUCT IMAGE]. The product must be clearly visible and recognizable in the frame.\n`;
   }
 
+  // Interior Design block — room type, wall color, flooring overrides
+  let interiorBlock = "";
+  const isInteriorWorkflow = config.ui_config && (config.ui_config as Record<string, unknown>).show_room_type_picker === true;
+  if (isInteriorWorkflow) {
+    const roomTypeKey = (product as unknown as Record<string, unknown>).room_type as string ||
+      ((config.ui_config as Record<string, unknown>).room_type as string) || '';
+    const roomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
+    const wallColor = (product as unknown as Record<string, unknown>).wall_color as string || '';
+    const flooring = (product as unknown as Record<string, unknown>).flooring_preference as string || '';
+
+    interiorBlock = `\nROOM CONTEXT:
+This is ${roomDesc}.
+Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
+${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
+${flooring && flooring !== 'Keep Original' ? `\nFLOORING OVERRIDE: Change the flooring to ${flooring}. Apply this consistently across the entire visible floor area.` : '\nFLOORING: Keep the original flooring as shown in the photo.'}
+\nIMPORTANT: The [PRODUCT IMAGE] is the ROOM PHOTO to transform. Do NOT treat it as a product to place — instead, transform the entire room scene while preserving its architecture.\n`;
+  }
+
   // Replace {PRODUCT_INTERACTION} and {MOOD_DESCRIPTION} placeholders in prompt template
   let processedTemplate = config.prompt_template;
   if (ugcMood) {
