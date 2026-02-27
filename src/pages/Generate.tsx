@@ -2154,43 +2154,16 @@ export default function Generate() {
               </CardContent></Card>
             )}
 
-            {/* Interior / Exterior Staging: Type Toggle, Room Type, Wall Color & Flooring */}
+            {/* Interior / Exterior Staging: Room Type, Wall Color & Flooring (type toggle moved to source step) */}
             {isInteriorDesign && (
               <Card><CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-base font-semibold flex items-center gap-2">
-                    🏠 Staging Settings
+                    Room Details
                   </h3>
-                  <p className="text-sm text-muted-foreground">Choose interior or exterior, then specify the space type and optional preferences</p>
+                  <p className="text-sm text-muted-foreground">Specify the space type and optional preferences</p>
                 </div>
                 <div className="space-y-4">
-                  {/* Interior / Exterior Toggle */}
-                  <div className="space-y-2">
-                    <Label>Staging Type</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {([
-                        { id: 'interior' as const, label: 'Interior', desc: 'Rooms & indoor spaces', emoji: '🏠' },
-                        { id: 'exterior' as const, label: 'Exterior', desc: 'Building facades & outdoor', emoji: '🏡' },
-                      ]).map(opt => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setInteriorType(opt.id)}
-                          className={cn(
-                            'p-4 rounded-xl border-2 text-left transition-all cursor-pointer',
-                            interiorType === opt.id
-                              ? 'border-primary bg-primary/5 shadow-sm'
-                              : 'border-border hover:border-primary/40'
-                          )}
-                        >
-                          <span className="text-lg">{opt.emoji}</span>
-                          <p className="text-sm font-semibold mt-1">{opt.label}</p>
-                          <p className="text-xs text-muted-foreground">{opt.desc}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Room / Space Type */}
                   <div className="space-y-2">
                     <Label>{interiorType === 'interior' ? 'Room Type' : 'Exterior Area'}</Label>
