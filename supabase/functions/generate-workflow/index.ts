@@ -258,8 +258,18 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const flooring = (product as unknown as Record<string, unknown>).flooring_preference as string || '';
     const furnitureStyle = (product as unknown as Record<string, unknown>).furniture_style as string || '';
     const lightingMood = (product as unknown as Record<string, unknown>).lighting_mood as string || '';
+    const furnitureHandling = (product as unknown as Record<string, unknown>).furniture_handling as string || 'Replace All';
     const stagingType = (product as unknown as Record<string, unknown>).interior_type as string || 'interior';
     const isExterior = stagingType === 'exterior';
+
+    // Build furniture handling instructions
+    let furnitureHandlingBlock = '';
+    if (furnitureHandling === 'Keep & Restyle') {
+      furnitureHandlingBlock = `\nFURNITURE HANDLING (CRITICAL): KEEP all existing furniture pieces EXACTLY as shown in the photo — same items, same positions, same sizes. Do NOT remove, replace, or rearrange any furniture. ONLY update their styling: change upholstery fabrics, wood finishes, colors, and textures to match the "${variation.label}" design style. Add appropriate decor accessories and styling elements around the existing furniture.`;
+    } else if (furnitureHandling === 'Keep Layout, Swap Style') {
+      furnitureHandlingBlock = `\nFURNITURE HANDLING: Maintain the same furniture LAYOUT and types as shown (e.g., if there's a desk, keep a desk in that position; if there's a sofa, keep a sofa there). Replace each piece with a similar-type piece in the "${variation.label}" design style. Keep the same spatial arrangement and traffic flow.`;
+    }
+    // 'Replace All' = no special block, current default behavior
 
     interiorBlock = isExterior
       ? `\nEXTERIOR CONTEXT:
@@ -271,9 +281,10 @@ ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${l
       : `\nROOM CONTEXT:
 This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
+${furnitureHandlingBlock}
 ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
 ${flooring && flooring !== 'Keep Original' ? `\nFLOORING OVERRIDE: Change the flooring to ${flooring}. Apply this consistently across the entire visible floor area.` : '\nFLOORING: Keep the original flooring as shown in the photo.'}
-${furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} furniture pieces and decor items, regardless of the overall design style variation.` : ''}
+${furnitureHandling !== 'Keep & Restyle' && furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} furniture pieces and decor items, regardless of the overall design style variation.` : ''}
 ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${lightingMood} lighting throughout the room. Adjust light sources, shadows, and ambiance accordingly.` : ''}
 \nIMPORTANT: The [PRODUCT IMAGE] is the ROOM PHOTO to transform. Do NOT treat it as a product to place — instead, transform the entire room scene while preserving its architecture.\n`;
   }

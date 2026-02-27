@@ -273,6 +273,7 @@ export default function Generate() {
   const [interiorFlooring, setInteriorFlooring] = useState('Keep Original');
   const [interiorFurnitureStyle, setInteriorFurnitureStyle] = useState('Match Design Style');
   const [interiorLightingMood, setInteriorLightingMood] = useState('Keep Original');
+  const [interiorFurnitureHandling, setInteriorFurnitureHandling] = useState('Keep & Restyle');
 
   const INTERIOR_ROOM_TYPES = [
     'Living Room', 'Bedroom (Master)', 'Bedroom (Guest)',
@@ -604,6 +605,7 @@ export default function Generate() {
       interior_type: isInteriorDesign ? interiorType : undefined,
       furniture_style: isInteriorDesign ? interiorFurnitureStyle : undefined,
       lighting_mood: isInteriorDesign ? interiorLightingMood : undefined,
+      furniture_handling: isInteriorDesign ? interiorFurnitureHandling : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -1122,6 +1124,36 @@ export default function Generate() {
                         </Select>
                       </div>
 
+                      {/* Furniture Handling */}
+                      <div className="space-y-2">
+                        <Label>Furniture <span className="text-xs text-muted-foreground">(how to handle existing pieces)</span></Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { value: 'Keep & Restyle', label: 'Keep & Restyle', desc: 'Keep pieces, update style' },
+                            { value: 'Replace All', label: 'Replace All', desc: 'Fully restage the room' },
+                            { value: 'Keep Layout, Swap Style', label: 'Keep Layout', desc: 'Same layout, new pieces' },
+                          ].map(opt => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                setInteriorFurnitureHandling(opt.value);
+                                if (opt.value === 'Keep & Restyle') setInteriorFurnitureStyle('Match Design Style');
+                              }}
+                              className={cn(
+                                'rounded-lg border-2 p-3 text-left transition-colors',
+                                interiorFurnitureHandling === opt.value
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/40'
+                              )}
+                            >
+                              <span className="text-sm font-medium block">{opt.label}</span>
+                              <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       {/* Wall Color & Flooring (interior only) */}
                       {interiorType === 'interior' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1154,8 +1186,8 @@ export default function Generate() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>Furniture Style <span className="text-xs text-muted-foreground">(optional)</span></Label>
-                          <Select value={interiorFurnitureStyle} onValueChange={setInteriorFurnitureStyle}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          <Select value={interiorFurnitureStyle} onValueChange={setInteriorFurnitureStyle} disabled={interiorFurnitureHandling === 'Keep & Restyle'}>
+                            <SelectTrigger className={interiorFurnitureHandling === 'Keep & Restyle' ? 'opacity-50' : ''}><SelectValue /></SelectTrigger>
                             <SelectContent>
                               {['Match Design Style', 'Modern Minimalist', 'Mid-Century Modern', 'Scandinavian', 'Industrial', 'Traditional / Classic', 'Bohemian / Eclectic', 'Art Deco', 'Japandi', 'Coastal / Hampton'].map(s => (
                                 <SelectItem key={s} value={s}>{s}</SelectItem>
