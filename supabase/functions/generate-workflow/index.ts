@@ -279,6 +279,7 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const stagingPurpose = (product as unknown as Record<string, unknown>).staging_purpose as string || '';
     const isEmptyRoom = (product as unknown as Record<string, unknown>).is_empty_room as boolean || false;
     const ceilingHeight = (product as unknown as Record<string, unknown>).ceiling_height as string || '';
+    const roomDimensions = (product as unknown as Record<string, unknown>).room_dimensions as string || '';
     const hasKeyPieces = keyPieces.length > 0;
     const fullRoomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
     // When key_pieces are specified (ANY mode), strip furniture-specific suggestions to avoid conflict
