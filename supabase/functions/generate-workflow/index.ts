@@ -130,31 +130,12 @@ interface WorkflowRequest {
   wall_color?: string;
   flooring_preference?: string;
   interior_type?: 'interior' | 'exterior';
+  design_notes?: string;
+  color_palette_preference?: string;
+  time_of_day?: string;
+  staging_purpose?: string;
   model?: {
-    name: string;
-    gender: string;
-    ethnicity: string;
-    bodyType: string;
-    ageRange: string;
-    imageUrl: string;
-  };
-  brand_profile?: {
-    tone?: string;
-    background_style?: string;
-    lighting_style?: string;
-    color_temperature?: string;
-    brand_keywords?: string[];
-    color_palette?: string[];
-    target_audience?: string;
-    do_not_rules?: string[];
-    composition_bias?: string;
-    preferred_scenes?: string[];
-    photography_reference?: string;
-  };
-  selected_variations?: number[];
-  product_angles?: 'front' | 'front-side' | 'front-back' | 'all';
-  quality?: string;
-  image_count?: number;
+...
   // Creative Drops fields
   theme?: string;
   theme_notes?: string;
@@ -262,6 +243,10 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const isExterior = stagingType === 'exterior';
     const roomSize = (product as unknown as Record<string, unknown>).room_size as string || 'Medium';
     const keyPieces = (product as unknown as Record<string, unknown>).key_pieces as string[] || [];
+    const designNotes = (product as unknown as Record<string, unknown>).design_notes as string || '';
+    const colorPalettePreference = (product as unknown as Record<string, unknown>).color_palette_preference as string || '';
+    const timeOfDay = (product as unknown as Record<string, unknown>).time_of_day as string || '';
+    const stagingPurpose = (product as unknown as Record<string, unknown>).staging_purpose as string || '';
     const fullRoomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
     // For Keep modes, strip furniture-specific suggestions to avoid overriding the actual photo
     const isKeepMode = furnitureHandling === 'Keep & Restyle' || furnitureHandling === 'Keep Layout, Swap Style';
@@ -292,6 +277,31 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     }
     // 'Very Large' = no constraint needed
 
+    // Staging purpose instruction
+    let stagingPurposeBlock = '';
+    if (stagingPurpose === 'real-estate') {
+      stagingPurposeBlock = `\nSTAGING PURPOSE: Real estate listing. Bright, clean, spacious feel. Decluttered. Neutral staging to appeal to broadest audience. Make the space look move-in ready and aspirational.`;
+    } else if (stagingPurpose === 'design-portfolio') {
+      stagingPurposeBlock = `\nSTAGING PURPOSE: Interior design portfolio. Showcase design details, textures, and curated accessories. Editorial quality. Emphasize material choices, layering, and visual storytelling.`;
+    } else if (stagingPurpose === 'airbnb') {
+      stagingPurposeBlock = `\nSTAGING PURPOSE: Airbnb/rental listing. Warm, welcoming, lived-in feel. Show amenities clearly (towels, pillows, books, coffee setup). Make guests feel at home.`;
+    }
+
+    // Color palette preference
+    const colorPaletteBlock = colorPalettePreference
+      ? `\nCOLOR PALETTE: Use a ${colorPalettePreference} color scheme throughout the room's furniture, textiles, and decor accessories.`
+      : '';
+
+    // Time of day / natural light
+    const timeOfDayBlock = timeOfDay && timeOfDay !== 'As Photographed'
+      ? `\nNATURAL LIGHT: Render the scene as if photographed during ${timeOfDay}. Adjust window light direction, shadow angles, and ambient light color accordingly.`
+      : '';
+
+    // Designer notes
+    const designNotesBlock = designNotes
+      ? `\nDESIGNER NOTES: ${designNotes}`
+      : '';
+
     // Key furniture pieces constraint
     const keyPiecesBlock = keyPieces.length > 0
       ? `\nREQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: ${keyPieces.join(', ')}. Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.`
@@ -305,6 +315,7 @@ ${furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE
 ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${lightingMood} lighting throughout the exterior scene.` : ''}
 ${keyPiecesBlock}
 ${furnitureRealismBlock}
+${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
 \nIMPORTANT: The [PRODUCT IMAGE] is the BUILDING/EXTERIOR PHOTO to transform. Do NOT treat it as a product to place — instead, enhance the exterior scene while preserving its architecture, structure, and angles.\n`
       : `\nROOM CONTEXT:
 This is ${roomDesc}.
@@ -317,6 +328,7 @@ ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/cha
 ${flooring && flooring !== 'Keep Original' ? `\nFLOORING OVERRIDE: Change the flooring to ${flooring}. Apply this consistently across the entire visible floor area.` : '\nFLOORING: Keep the original flooring as shown in the photo.'}
 ${furnitureHandling !== 'Keep & Restyle' && furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} furniture pieces and decor items, regardless of the overall design style variation.` : ''}
 ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${lightingMood} lighting throughout the room. Adjust light sources, shadows, and ambiance accordingly.` : ''}
+${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
 \nIMPORTANT: The [PRODUCT IMAGE] is the ROOM PHOTO to transform. Do NOT treat it as a product to place — instead, transform the entire room scene while preserving its architecture.\n`;
   }
 
@@ -691,6 +703,15 @@ serve(async (req) => {
       wall_color: body.wall_color,
       flooring_preference: body.flooring_preference,
       interior_type: body.interior_type,
+      furniture_style: body.furniture_style,
+      lighting_mood: body.lighting_mood,
+      furniture_handling: body.furniture_handling,
+      room_size: body.room_size,
+      key_pieces: body.key_pieces,
+      design_notes: body.design_notes,
+      color_palette_preference: body.color_palette_preference,
+      time_of_day: body.time_of_day,
+      staging_purpose: body.staging_purpose,
     };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;

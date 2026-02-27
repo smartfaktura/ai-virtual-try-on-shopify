@@ -268,7 +268,7 @@ export default function Generate() {
   // Interior / Exterior Staging detection and state
   const isInteriorDesign = activeWorkflow?.name === 'Interior / Exterior Staging';
   const [interiorType, setInteriorType] = useState<'interior' | 'exterior'>('interior');
-  const [interiorRoomType, setInteriorRoomType] = useState('Living Room');
+  const [interiorRoomType, setInteriorRoomType] = useState('');
   const [interiorWallColor, setInteriorWallColor] = useState('Keep Original');
   const [interiorFlooring, setInteriorFlooring] = useState('Keep Original');
   const [interiorFurnitureStyle, setInteriorFurnitureStyle] = useState('Match Design Style');
@@ -276,6 +276,10 @@ export default function Generate() {
   const [interiorFurnitureHandling, setInteriorFurnitureHandling] = useState('Keep & Restyle');
   const [interiorRoomSize, setInteriorRoomSize] = useState('Medium');
   const [interiorKeyPieces, setInteriorKeyPieces] = useState<string[]>([]);
+  const [interiorDesignNotes, setInteriorDesignNotes] = useState('');
+  const [interiorColorPalette, setInteriorColorPalette] = useState('');
+  const [interiorTimeOfDay, setInteriorTimeOfDay] = useState('As Photographed');
+  const [interiorPurpose, setInteriorPurpose] = useState('');
 
   const ROOM_FURNITURE_PRESETS: Record<string, string[]> = {
     'Living Room': ['Sofa', 'Sectional', 'Coffee Table', 'TV Console', 'Bookshelf', 'Side Table', 'Kitchen Island', 'Bar Cart', 'Floor Lamp', 'Area Rug'],
@@ -335,17 +339,17 @@ export default function Generate() {
 
   // Reset room type and key pieces when switching interior/exterior
   useEffect(() => {
-    if (interiorType === 'interior') {
-      setInteriorRoomType('Living Room');
-    } else {
-      setInteriorRoomType('Front Facade');
-    }
+    setInteriorRoomType('');
     setInteriorKeyPieces([]);
+    setInteriorDesignNotes('');
+    setInteriorColorPalette('');
+    setInteriorTimeOfDay('As Photographed');
   }, [interiorType]);
 
   // Reset key pieces when room type changes
   useEffect(() => {
     setInteriorKeyPieces([]);
+    setInteriorDesignNotes('');
   }, [interiorRoomType]);
 
   // When workflow is loaded, set generation mode and defaults
@@ -648,6 +652,10 @@ export default function Generate() {
       furniture_handling: isInteriorDesign ? interiorFurnitureHandling : undefined,
       room_size: isInteriorDesign ? interiorRoomSize : undefined,
       key_pieces: isInteriorDesign && interiorKeyPieces.length > 0 ? interiorKeyPieces : undefined,
+      design_notes: isInteriorDesign && interiorDesignNotes ? interiorDesignNotes : undefined,
+      color_palette_preference: isInteriorDesign && interiorColorPalette ? interiorColorPalette : undefined,
+      time_of_day: isInteriorDesign && interiorTimeOfDay !== 'As Photographed' ? interiorTimeOfDay : undefined,
+      staging_purpose: isInteriorDesign && interiorPurpose ? interiorPurpose : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -1109,6 +1117,28 @@ export default function Generate() {
                   </p>
                 </div>
 
+                {/* Contextual upload tips for interior/exterior */}
+                {isInteriorDesign && !scratchUpload && (
+                  <Alert className="border-primary/20 bg-primary/5">
+                    <Info className="w-4 h-4 text-primary" />
+                    <AlertDescription className="text-xs space-y-1">
+                      {interiorType === 'interior' ? (
+                        <ul className="list-disc list-inside text-muted-foreground">
+                          <li>Shoot from a corner to capture two walls for best depth</li>
+                          <li>Use well-lit, daytime photos — avoid heavy shadows</li>
+                          <li>Avoid extreme wide-angle or fisheye lens distortion</li>
+                        </ul>
+                      ) : (
+                        <ul className="list-disc list-inside text-muted-foreground">
+                          <li>Shoot straight-on or at a 30° angle for best results</li>
+                          <li>Include the full facade — avoid cutting off edges</li>
+                          <li>Daytime photos with even lighting work best</li>
+                        </ul>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 {/* Recent uploads gallery for interior/exterior staging */}
                 {isInteriorDesign && previousUploads.length > 0 && !scratchUpload && (
                   <div className="space-y-2">
@@ -1153,11 +1183,38 @@ export default function Generate() {
                       <p className="text-sm text-muted-foreground">Specify the space type and optional preferences</p>
                     </div>
                     <div className="space-y-4">
+                      {/* Staging Purpose */}
+                      <div className="space-y-2">
+                        <Label>Staging Purpose <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { id: 'real-estate', label: 'Real Estate Listing' },
+                            { id: 'design-portfolio', label: 'Design Portfolio' },
+                            { id: 'airbnb', label: 'Airbnb / Rental' },
+                            { id: 'personal', label: 'Personal Inspiration' },
+                          ].map(p => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => setInteriorPurpose(interiorPurpose === p.id ? '' : p.id)}
+                              className={cn(
+                                'px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
+                                interiorPurpose === p.id
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-card border-border hover:border-primary hover:bg-primary/5'
+                              )}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       {/* Room / Space Type */}
                       <div className="space-y-2">
-                        <Label>{interiorType === 'interior' ? 'Room Type' : 'Exterior Area'}</Label>
+                        <Label>{interiorType === 'interior' ? 'Room Type' : 'Exterior Area'} <span className="text-destructive">*</span></Label>
                         <Select value={interiorRoomType} onValueChange={setInteriorRoomType}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder="Select room type..." /></SelectTrigger>
                           <SelectContent>
                             {(interiorType === 'interior' ? INTERIOR_ROOM_TYPES : EXTERIOR_ROOM_TYPES).map(rt => (
                               <SelectItem key={rt} value={rt}>{rt}</SelectItem>
@@ -1265,7 +1322,7 @@ export default function Generate() {
                       </div>
 
                       {/* Key Furniture & Features (optional) */}
-                      {ROOM_FURNITURE_PRESETS[interiorRoomType] && (
+                      {interiorRoomType && ROOM_FURNITURE_PRESETS[interiorRoomType] && (
                         <div className="space-y-2">
                           <Label>Key Furniture & Features <span className="text-xs text-muted-foreground">(optional — helps the AI pick the right pieces)</span></Label>
                           <div className="flex flex-wrap gap-2">
@@ -1299,6 +1356,53 @@ export default function Generate() {
                           )}
                         </div>
                       )}
+
+                      {/* Color Palette */}
+                      <div className="space-y-2">
+                        <Label>Color Palette <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <div className="flex flex-wrap gap-2">
+                          {['Neutral / Earth Tones', 'Cool & Calming', 'Warm & Inviting', 'Monochrome', 'Bold & Vibrant', 'Pastel Soft'].map(palette => (
+                            <button
+                              key={palette}
+                              type="button"
+                              onClick={() => setInteriorColorPalette(interiorColorPalette === palette ? '' : palette)}
+                              className={cn(
+                                'px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
+                                interiorColorPalette === palette
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-card border-border hover:border-primary hover:bg-primary/5'
+                              )}
+                            >
+                              {palette}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Time of Day / Natural Light */}
+                      <div className="space-y-2">
+                        <Label>Natural Light / Time of Day <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <Select value={interiorTimeOfDay} onValueChange={setInteriorTimeOfDay}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {['As Photographed', 'Morning Light', 'Midday Bright', 'Golden Hour', 'Blue Hour / Twilight', 'Overcast Soft'].map(t => (
+                              <SelectItem key={t} value={t}>{t}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Design Notes */}
+                      <div className="space-y-2">
+                        <Label>Design Notes <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <Textarea
+                          placeholder="e.g. client prefers warm Japandi feel, no curtains, maximize natural light, shutters only..."
+                          value={interiorDesignNotes}
+                          onChange={e => setInteriorDesignNotes(e.target.value)}
+                          className="min-h-[60px]"
+                        />
+                        <p className="text-xs text-muted-foreground">Add specific instructions for the AI designer</p>
+                      </div>
                     </div>
                   </CardContent></Card>
                 )}
@@ -1314,7 +1418,7 @@ export default function Generate() {
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
-              <Button disabled={!scratchUpload || (!isInteriorDesign && (!scratchUpload.productInfo.title || !scratchUpload.productInfo.productType))}
+              <Button disabled={!scratchUpload || (!isInteriorDesign && (!scratchUpload.productInfo.title || !scratchUpload.productInfo.productType)) || (isInteriorDesign && !interiorRoomType)}
                 onClick={async () => {
                   if (!scratchUpload) return;
                   // Skip upload if reusing a previously uploaded image
