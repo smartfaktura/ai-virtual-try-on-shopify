@@ -1017,6 +1017,35 @@ export default function Generate() {
                       : 'Upload a product image from your computer.'}
                   </p>
                 </div>
+
+                {/* Recent uploads gallery for interior/exterior staging */}
+                {isInteriorDesign && previousUploads.length > 0 && !scratchUpload && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Your Recent Uploads</Label>
+                    <p className="text-xs text-muted-foreground">Click to reuse a previously uploaded photo</p>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                      {previousUploads.map((upload) => (
+                        <button
+                          key={upload.name}
+                          type="button"
+                          onClick={() => {
+                            setScratchUpload({
+                              file: new File([], upload.name),
+                              previewUrl: upload.url,
+                              uploadedUrl: upload.url,
+                              productInfo: { title: upload.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').replace(/^\d+-\w+\s*/, ''), productType: '', description: '' },
+                            });
+                          }}
+                          className="aspect-square rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors bg-muted"
+                        >
+                          <img src={upload.url} alt="Previous upload" className="w-full h-full object-cover" loading="lazy" />
+                        </button>
+                      ))}
+                    </div>
+                    <Separator />
+                  </div>
+                )}
+
                 <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
                   onUpdateProductInfo={info => { setScratchUpload(prev => prev ? { ...prev, productInfo: info } : prev); }}
                   isUploading={isUploading}
