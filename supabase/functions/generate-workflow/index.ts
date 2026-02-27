@@ -277,6 +277,31 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     }
     // 'Very Large' = no constraint needed
 
+    // Staging purpose instruction
+    let stagingPurposeBlock = '';
+    if (stagingPurpose === 'real-estate') {
+      stagingPurposeBlock = `\nSTAGING PURPOSE: Real estate listing. Bright, clean, spacious feel. Decluttered. Neutral staging to appeal to broadest audience. Make the space look move-in ready and aspirational.`;
+    } else if (stagingPurpose === 'design-portfolio') {
+      stagingPurposeBlock = `\nSTAGING PURPOSE: Interior design portfolio. Showcase design details, textures, and curated accessories. Editorial quality. Emphasize material choices, layering, and visual storytelling.`;
+    } else if (stagingPurpose === 'airbnb') {
+      stagingPurposeBlock = `\nSTAGING PURPOSE: Airbnb/rental listing. Warm, welcoming, lived-in feel. Show amenities clearly (towels, pillows, books, coffee setup). Make guests feel at home.`;
+    }
+
+    // Color palette preference
+    const colorPaletteBlock = colorPalettePreference
+      ? `\nCOLOR PALETTE: Use a ${colorPalettePreference} color scheme throughout the room's furniture, textiles, and decor accessories.`
+      : '';
+
+    // Time of day / natural light
+    const timeOfDayBlock = timeOfDay && timeOfDay !== 'As Photographed'
+      ? `\nNATURAL LIGHT: Render the scene as if photographed during ${timeOfDay}. Adjust window light direction, shadow angles, and ambient light color accordingly.`
+      : '';
+
+    // Designer notes
+    const designNotesBlock = designNotes
+      ? `\nDESIGNER NOTES: ${designNotes}`
+      : '';
+
     // Key furniture pieces constraint
     const keyPiecesBlock = keyPieces.length > 0
       ? `\nREQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: ${keyPieces.join(', ')}. Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.`
