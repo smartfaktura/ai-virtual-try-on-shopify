@@ -917,17 +917,55 @@ export default function Generate() {
           </CardContent>
         </Card>
 
-        {/* Source Selection */}
-        {currentStep === 'source' && (
+        {/* Source Selection — Interior Design: Type Toggle */}
+        {currentStep === 'source' && isInteriorDesign && (
+          <Card><CardContent className="p-5 space-y-5">
+            <div>
+              <h2 className="text-base font-semibold">Choose Staging Type</h2>
+              <p className="text-sm text-muted-foreground">Are you staging an interior room or an exterior/facade?</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {([
+                { id: 'interior' as const, label: 'Interior', desc: 'Rooms & indoor spaces' },
+                { id: 'exterior' as const, label: 'Exterior', desc: 'Building facades & outdoor' },
+              ]).map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setInteriorType(opt.id)}
+                  className={cn(
+                    'p-4 sm:p-6 rounded-xl border-2 text-left transition-all cursor-pointer',
+                    interiorType === opt.id
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-primary/40'
+                  )}
+                >
+                  <p className="text-base sm:text-lg font-semibold">{opt.label}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{opt.desc}</p>
+                  {interiorType === opt.id && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                      <span className="text-sm font-medium">Selected</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={() => setCurrentStep('upload')}>Continue</Button>
+            </div>
+          </CardContent></Card>
+        )}
+
+        {/* Source Selection — Non-Interior */}
+        {currentStep === 'source' && !isInteriorDesign && (
           <Card><CardContent className="p-5 space-y-5">
             <div>
               <h2 className="text-base font-semibold">
-                {isInteriorDesign ? 'Add Your Room Photo' : activeWorkflow?.uses_tryon ? 'Add Your Product' : 'How do you want to start?'}
+                {activeWorkflow?.uses_tryon ? 'Add Your Product' : 'How do you want to start?'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {isInteriorDesign
-                  ? 'Upload a photo of an empty room, or a room with old furniture you want to transform.'
-                  : activeWorkflow?.uses_tryon
+                {activeWorkflow?.uses_tryon
                   ? 'Choose a clothing item from your products or upload a new photo to try on.'
                   : 'Choose whether to use existing products or upload your own image file.'}
               </p>
