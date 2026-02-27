@@ -167,48 +167,18 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <Download className="w-4 h-4 mr-2" /> Download Image
               </Button>
 
-              {/* Separator + Secondary actions */}
-              {(!isUpscaled || item.source === 'freestyle') && (
+              {/* Delete button for freestyle items */}
+              {item.source === 'freestyle' && (
                 <>
                   <Separator className="bg-border/30" />
-
-                  <div className="flex flex-col gap-3">
-                    {/* Upscale button or loading state */}
-                    {!isUpscaled && !upscaling && (
-                      <button
-                        onClick={handleUpscale}
-                        className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/20 hover:shadow-xl hover:shadow-violet-500/30 hover:brightness-110 transition-all duration-300"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        Enhance to PRO HD
-                        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-white/20 text-[10px] font-bold tracking-wide">4 CR</span>
-                      </button>
-                    )}
-
-                    {/* Loading state with rotating messages */}
-                    {upscaling && (
-                      <div className="w-full flex flex-col items-center justify-center gap-2 h-20 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/20">
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Enhancing…
-                        </span>
-                        <span className="text-[11px] font-normal text-white/80 animate-pulse text-center px-4">
-                          {UPSCALE_MESSAGES[upscaleMessageIndex]}
-                        </span>
-                      </div>
-                    )}
-
-                    {item.source === 'freestyle' && (
-                      <button
-                        onClick={handleDelete}
-                        disabled={deleting}
-                        className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-destructive bg-muted/30 backdrop-blur-sm border border-destructive/20 hover:bg-destructive/10 transition-all disabled:opacity-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        {deleting ? 'Deleting…' : 'Delete'}
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-destructive bg-muted/30 backdrop-blur-sm border border-destructive/20 hover:bg-destructive/10 transition-all disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    {deleting ? 'Deleting…' : 'Delete'}
+                  </button>
                 </>
               )}
 
