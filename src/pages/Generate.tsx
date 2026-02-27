@@ -289,13 +289,12 @@ export default function Generate() {
     'Patio / Outdoor Living', 'Balcony / Terrace', 'Garage',
   ];
 
-  // Auto-skip source step for interior design (no product selection)
+  // Auto-set scratch source type for interior design (upload-based)
   useEffect(() => {
-    if (isInteriorDesign && currentStep === 'source') {
+    if (isInteriorDesign) {
       setSourceType('scratch');
-      setCurrentStep('upload');
     }
-  }, [isInteriorDesign, currentStep]);
+  }, [isInteriorDesign]);
 
   // Reset room type when switching interior/exterior
   useEffect(() => {
@@ -805,6 +804,10 @@ export default function Generate() {
       const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, pose: 4, settings: 5, generating: 6, results: 6 };
       return map[currentStep] || 1;
     }
+    if (isInteriorDesign) {
+      const map: Record<string, number> = { source: 1, upload: 2, 'brand-profile': 3, settings: 4, generating: 5, results: 5 };
+      return map[currentStep] || 1;
+    }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
         const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, settings: 4, generating: 5, results: 5 };
@@ -850,7 +853,7 @@ export default function Generate() {
       ];
     }
     if (isInteriorDesign) {
-      return [{ name: 'Upload Photo' }, { name: 'Brand' }, { name: 'Settings' }, { name: 'Results' }];
+      return [{ name: 'Type' }, { name: 'Upload Photo' }, { name: 'Brand' }, { name: 'Style' }, { name: 'Results' }];
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
@@ -914,17 +917,55 @@ export default function Generate() {
           </CardContent>
         </Card>
 
-        {/* Source Selection */}
-        {currentStep === 'source' && (
+        {/* Source Selection — Interior Design: Type Toggle */}
+        {currentStep === 'source' && isInteriorDesign && (
+          <Card><CardContent className="p-5 space-y-5">
+            <div>
+              <h2 className="text-base font-semibold">Choose Staging Type</h2>
+              <p className="text-sm text-muted-foreground">Are you staging an interior room or an exterior/facade?</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {([
+                { id: 'interior' as const, label: 'Interior', desc: 'Rooms & indoor spaces' },
+                { id: 'exterior' as const, label: 'Exterior', desc: 'Building facades & outdoor' },
+              ]).map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setInteriorType(opt.id)}
+                  className={cn(
+                    'p-4 sm:p-6 rounded-xl border-2 text-left transition-all cursor-pointer',
+                    interiorType === opt.id
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border hover:border-primary/40'
+                  )}
+                >
+                  <p className="text-base sm:text-lg font-semibold">{opt.label}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{opt.desc}</p>
+                  {interiorType === opt.id && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                      <span className="text-sm font-medium">Selected</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={() => setCurrentStep('upload')}>Continue</Button>
+            </div>
+          </CardContent></Card>
+        )}
+
+        {/* Source Selection — Non-Interior */}
+        {currentStep === 'source' && !isInteriorDesign && (
           <Card><CardContent className="p-5 space-y-5">
             <div>
               <h2 className="text-base font-semibold">
-                {isInteriorDesign ? 'Add Your Room Photo' : activeWorkflow?.uses_tryon ? 'Add Your Product' : 'How do you want to start?'}
+                {activeWorkflow?.uses_tryon ? 'Add Your Product' : 'How do you want to start?'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {isInteriorDesign
-                  ? 'Upload a photo of an empty room, or a room with old furniture you want to transform.'
-                  : activeWorkflow?.uses_tryon
+                {activeWorkflow?.uses_tryon
                   ? 'Choose a clothing item from your products or upload a new photo to try on.'
                   : 'Choose whether to use existing products or upload your own image file.'}
               </p>
@@ -995,6 +1036,8 @@ export default function Generate() {
           </CardContent></Card>
         )}
 
+        {/* Upload Step for Interior Design — show room details below upload */}
+
         {/* Upload Step */}
         {currentStep === 'upload' && (
           <Card><CardContent className="p-5 space-y-5">
@@ -1062,7 +1105,7 @@ export default function Generate() {
             </div>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => isInteriorDesign ? navigate('/app/workflows') : setCurrentStep('source')}>Back</Button>
+              <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
               <Button disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
                 onClick={async () => {
                   if (!scratchUpload) return;
@@ -1715,8 +1758,8 @@ export default function Generate() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold">
-                      {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Styles' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
+                     <h3 className="text-base font-semibold">
+                      {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Style' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
                     </h3>
                     {isFlatLay && (
                       <>
@@ -1726,7 +1769,7 @@ export default function Generate() {
                     )}
                     {isInteriorDesign && (
                       <>
-                        <Badge variant="secondary" className="text-[10px]">🏠 Interior</Badge>
+                        <Badge variant="secondary" className="text-[10px]">{interiorType === 'interior' ? 'Interior' : 'Exterior'}</Badge>
                         <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Styles</Badge>
                       </>
                     )}
@@ -1745,7 +1788,7 @@ export default function Generate() {
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     {isFlatLay ? 'Choose surfaces for your flat lay — select at least 1' :
-                     isInteriorDesign ? 'Choose 1–3 design styles to generate for your room — each creates a different staged look' :
+                     isInteriorDesign ? 'Choose 1 design style to generate for your room' :
                      variationStrategy?.type === 'scene' ? 'Choose scenes for your product — select at least 1' :
                      variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
                      variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
@@ -1762,6 +1805,7 @@ export default function Generate() {
                     </p>
                   )}
                 </div>
+                {!isInteriorDesign && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1776,6 +1820,7 @@ export default function Generate() {
                 >
                   {selectedVariationIndices.size === variationStrategy?.variations.length ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : 'Select All'}
                 </Button>
+                )}
               </div>
 
               {/* Scene category filter tabs */}
@@ -2149,43 +2194,16 @@ export default function Generate() {
               </CardContent></Card>
             )}
 
-            {/* Interior / Exterior Staging: Type Toggle, Room Type, Wall Color & Flooring */}
+            {/* Interior / Exterior Staging: Room Type, Wall Color & Flooring (type toggle moved to source step) */}
             {isInteriorDesign && (
               <Card><CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-base font-semibold flex items-center gap-2">
-                    🏠 Staging Settings
+                    Room Details
                   </h3>
-                  <p className="text-sm text-muted-foreground">Choose interior or exterior, then specify the space type and optional preferences</p>
+                  <p className="text-sm text-muted-foreground">Specify the space type and optional preferences</p>
                 </div>
                 <div className="space-y-4">
-                  {/* Interior / Exterior Toggle */}
-                  <div className="space-y-2">
-                    <Label>Staging Type</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {([
-                        { id: 'interior' as const, label: 'Interior', desc: 'Rooms & indoor spaces', emoji: '🏠' },
-                        { id: 'exterior' as const, label: 'Exterior', desc: 'Building facades & outdoor', emoji: '🏡' },
-                      ]).map(opt => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setInteriorType(opt.id)}
-                          className={cn(
-                            'p-4 rounded-xl border-2 text-left transition-all cursor-pointer',
-                            interiorType === opt.id
-                              ? 'border-primary bg-primary/5 shadow-sm'
-                              : 'border-border hover:border-primary/40'
-                          )}
-                        >
-                          <span className="text-lg">{opt.emoji}</span>
-                          <p className="text-sm font-semibold mt-1">{opt.label}</p>
-                          <p className="text-xs text-muted-foreground">{opt.desc}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Room / Space Type */}
                   <div className="space-y-2">
                     <Label>{interiorType === 'interior' ? 'Room Type' : 'Exterior Area'}</Label>
@@ -2336,7 +2354,7 @@ export default function Generate() {
                     disabled={selectedVariationIndices.size === 0}
                     className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
                   >
-                    {balance >= creditCost ? `Generate ${selectedVariationIndices.size} ${activeWorkflow?.name} Images` : 'Buy Credits'}
+                    {balance >= creditCost ? (isInteriorDesign ? 'Generate 1 Image' : `Generate ${selectedVariationIndices.size} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
                   </Button>
                 </div>
               </>
