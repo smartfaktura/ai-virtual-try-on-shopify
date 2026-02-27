@@ -1246,7 +1246,8 @@ export default function Generate() {
                         </div>
                       )}
 
-                      {/* Furniture Handling */}
+                      {/* Furniture Handling (interior only) */}
+                      {interiorType === 'interior' && (
                       <div className="space-y-2">
                         <Label>Furniture <span className="text-xs text-muted-foreground">(how to handle existing pieces)</span></Label>
                         <div className="grid grid-cols-3 gap-2">
@@ -1280,6 +1281,7 @@ export default function Generate() {
                           })}
                         </div>
                       </div>
+                      )}
 
                       {/* Room Size + Ceiling Height */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
