@@ -1,70 +1,71 @@
 
-## Fix Upscale Feature: Function, UI, and State Management
 
-### Issues Found
+## Remove AI Room Detection + Add More Detail Options
 
-1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
-   - The image URL in `generation_jobs.results` array never changes
-   - The `quality` field is never set to `"upscaled"`
-   - On page reload, the original image shows again
-   - The "Enhance to PRO HD" button always reappears
+### 1. Remove AI Auto-Detection for Room Uploads
 
-2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
+The AI analysis takes too long and isn't reliable enough for rooms. Instead, use a simple generic name and let the user fill in details manually.
 
-3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
+**File: `src/components/app/UploadSourceCard.tsx`**
+- In `handleFile()` (line 80): Remove the `analyzeProduct()` call when `isRoom` is true. Only call it for product uploads.
+- Set the default title to `"Uploaded Room"` for room variant (already using `"Untitled Room"`, just rename).
+- Remove the `isAnalyzing` loading state display for room variant -- the "AI detecting room details..." spinner will no longer appear for rooms.
+- Keep AI analysis working for regular product uploads (non-room).
 
-4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
+### 2. Remove Room Name / Space Type / Description Fields from UploadSourceCard (for rooms)
 
-5. **No separator** -- Buttons section needs visual separation.
+Since the Room Details card below already has Room Type, Wall Color, and Flooring -- the UploadSourceCard's "Room Name", "Space Type", and "Description" fields are redundant for the room variant. 
 
----
+**File: `src/components/app/UploadSourceCard.tsx`**
+- When `isRoom`, hide the "Room Details" section (Room Name, Space Type, Description inputs) from the upload card. The user will fill details in the Room Details card below instead.
+- Only show the uploaded image preview with the remove button.
 
-### Changes
+### 3. Add More Detail Options for Better Results
 
-#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
+Add two new optional fields to the Room Details card to give the AI more context:
 
-- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
-- After uploading the upscaled image, update `generation_jobs`:
-  - Replace the specific URL in the `results` JSONB array
-  - Set `quality` to `"upscaled"`
-- Keep the existing freestyle update logic
+**New fields:**
+- **Furniture Style** (optional) -- e.g., "Modern Minimalist", "Mid-Century", "Scandinavian", "Industrial", "Traditional", "Bohemian", "Keep Default" (based on selected design style)
+- **Lighting Mood** (optional) -- e.g., "Keep Original", "Warm & Cozy", "Bright & Airy", "Dramatic / Moody", "Natural Daylight", "Soft Evening"
 
-#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
+**File: `src/pages/Generate.tsx`**
+- Add two new state variables: `interiorFurnitureStyle` and `interiorLightingMood` (both defaulting to their "keep default" option)
+- Add the two new Select dropdowns to the Room Details card (lines 1098-1149), below the existing Wall Color / Flooring row
+- Pass these new fields in the generation payload (line 599-602): add `furniture_style` and `lighting_mood`
 
-**Button redesign:**
-- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
-- Same height as download button (`h-12` instead of `h-14`)
-- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
-- Add a separator line between the Download button and secondary actions
+**File: `supabase/functions/generate-workflow/index.ts`**
+- Read the new `furniture_style` and `lighting_mood` fields from the product object
+- Add them to the interior prompt block (lines 267-272): append furniture style and lighting mood instructions when not set to defaults
 
-**Loading messages:**
-- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
-- Cycle every 4 seconds while `upscaling` is true
+### 4. Fix Continue Button Validation
 
-**Already upscaled handling:**
-- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
-
----
+**File: `src/pages/Generate.tsx`**
+- Currently (line 1163) the Continue button requires `productInfo.title` and `productInfo.productType`. Since we're removing those fields for rooms, update the validation: for `isInteriorDesign`, only require that `scratchUpload` exists (the photo is uploaded). Room Type is already set via the Room Details card.
 
 ### Technical Details
 
-**Edge function sourceId parsing:**
+**New state variables in Generate.tsx:**
 ```text
-// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
-// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
-// Split on last hyphen to get UUID and index
+interiorFurnitureStyle: string (default: "Match Design Style")
+interiorLightingMood: string (default: "Keep Original")
 ```
 
-**Generation jobs DB update:**
+**Furniture Style options:**
+Match Design Style, Modern Minimalist, Mid-Century Modern, Scandinavian, Industrial, Traditional / Classic, Bohemian / Eclectic, Art Deco, Japandi, Coastal / Hampton
+
+**Lighting Mood options:**
+Keep Original, Warm & Cozy, Bright & Airy, Dramatic / Moody, Natural Daylight, Soft Evening / Golden Hour
+
+**Prompt additions in edge function:**
 ```text
-// Fetch current results array
-// Replace results[index] with the new upscaled URL
-// Update quality to "upscaled"
+FURNITURE STYLE: Use {furniture_style} furniture pieces...
+LIGHTING MOOD: Apply {lighting_mood} lighting throughout...
 ```
 
 ### Files to Edit
 
 | File | Change |
 |------|--------|
-| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
-| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
+| `src/components/app/UploadSourceCard.tsx` | Skip AI analysis for rooms, hide room detail fields for room variant |
+| `src/pages/Generate.tsx` | Add furniture style + lighting mood state/UI, fix continue validation for rooms |
+| `supabase/functions/generate-workflow/index.ts` | Read and use new furniture_style and lighting_mood in prompt |
