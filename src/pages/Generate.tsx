@@ -2493,7 +2493,7 @@ export default function Generate() {
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                     <p className="text-xs text-muted-foreground">
                       {selectedVariationIndices.size} surface{selectedVariationIndices.size !== 1 ? 's' : ''}
-                      {' '}× {quality === 'high' ? 10 : 4} credits
+                      {' '}× {quality === 'high' ? 16 : 8} credits
                       {selectedFlatLayProductIds.size > 1 && ` · ${selectedFlatLayProductIds.size} products in composition`}
                     </p>
                   </div>
