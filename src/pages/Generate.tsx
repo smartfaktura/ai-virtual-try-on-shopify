@@ -1149,6 +1149,32 @@ export default function Generate() {
                           </div>
                         </div>
                       )}
+
+                      {/* Furniture Style & Lighting Mood */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Furniture Style <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                          <Select value={interiorFurnitureStyle} onValueChange={setInteriorFurnitureStyle}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {['Match Design Style', 'Modern Minimalist', 'Mid-Century Modern', 'Scandinavian', 'Industrial', 'Traditional / Classic', 'Bohemian / Eclectic', 'Art Deco', 'Japandi', 'Coastal / Hampton'].map(s => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Lighting Mood <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                          <Select value={interiorLightingMood} onValueChange={setInteriorLightingMood}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {['Keep Original', 'Warm & Cozy', 'Bright & Airy', 'Dramatic / Moody', 'Natural Daylight', 'Soft Evening / Golden Hour'].map(l => (
+                                <SelectItem key={l} value={l}>{l}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                   </CardContent></Card>
                 )}
