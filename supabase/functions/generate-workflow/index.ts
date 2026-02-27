@@ -117,6 +117,10 @@ interface WorkflowRequest {
   styling_notes?: string;
   prop_style?: 'clean' | 'decorated';
   ugc_mood?: string;
+  // Interior Design fields
+  room_type?: string;
+  wall_color?: string;
+  flooring_preference?: string;
   model?: {
     name: string;
     gender: string;
