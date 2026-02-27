@@ -130,10 +130,17 @@ interface WorkflowRequest {
   wall_color?: string;
   flooring_preference?: string;
   interior_type?: 'interior' | 'exterior';
+  furniture_style?: string;
+  lighting_mood?: string;
+  furniture_handling?: string;
+  room_size?: string;
+  key_pieces?: string[];
   design_notes?: string;
   color_palette_preference?: string;
   time_of_day?: string;
   staging_purpose?: string;
+  is_empty_room?: boolean;
+  ceiling_height?: string;
   model?: {
     name: string;
     gender: string;
