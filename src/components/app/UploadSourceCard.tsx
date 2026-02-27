@@ -77,7 +77,9 @@ export function UploadSourceCard({
     const previewUrl = URL.createObjectURL(file);
     const productInfo = { title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '), productType: '', description: '' };
     onUpload({ file, previewUrl, productInfo });
-    analyzeProduct(file, productInfo);
+    if (!isRoom) {
+      analyzeProduct(file, productInfo);
+    }
   }, [onUpload, analyzeProduct]);
 
   const handleDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleFile(file); }, [handleFile]);
