@@ -26,18 +26,6 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
-  // Rotate upscale messages
-  useEffect(() => {
-    if (!upscaling) {
-      setUpscaleMessageIndex(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setUpscaleMessageIndex((i) => (i + 1) % UPSCALE_MESSAGES.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [upscaling]);
-
   // Lock body scroll
   useEffect(() => {
     if (open) {
