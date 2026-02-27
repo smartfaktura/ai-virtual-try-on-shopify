@@ -129,6 +129,7 @@ interface WorkflowRequest {
   room_type?: string;
   wall_color?: string;
   flooring_preference?: string;
+  interior_type?: 'interior' | 'exterior';
   model?: {
     name: string;
     gender: string;
