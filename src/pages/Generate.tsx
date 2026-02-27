@@ -1627,7 +1627,7 @@ export default function Generate() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-semibold">
-                      {isFlatLay ? 'Select Your Surfaces' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
+                      {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Styles' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
                     </h3>
                     {isFlatLay && (
                       <>
@@ -1635,7 +1635,13 @@ export default function Generate() {
                         <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Surfaces</Badge>
                       </>
                     )}
-                    {variationStrategy?.type === 'scene' && !isFlatLay && activeWorkflow?.name !== 'Mirror Selfie Set' && (
+                    {isInteriorDesign && (
+                      <>
+                        <Badge variant="secondary" className="text-[10px]">🏠 Interior</Badge>
+                        <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Styles</Badge>
+                      </>
+                    )}
+                    {variationStrategy?.type === 'scene' && !isFlatLay && !isInteriorDesign && activeWorkflow?.name !== 'Mirror Selfie Set' && (
                       <>
                         <Badge variant="secondary" className="text-[10px]"><Ban className="w-3 h-3 mr-1" />No People</Badge>
                         <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
@@ -1650,6 +1656,7 @@ export default function Generate() {
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     {isFlatLay ? 'Choose surfaces for your flat lay — select at least 1' :
+                     isInteriorDesign ? 'Choose 1–3 design styles to generate for your room — each creates a different staged look' :
                      variationStrategy?.type === 'scene' ? 'Choose scenes for your product — select at least 1' :
                      variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
                      variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
