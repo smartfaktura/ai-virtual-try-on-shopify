@@ -427,6 +427,10 @@ CRITICAL REQUIREMENTS:
 6. NEVER block doorways, hallways, corridors, or room entrances with furniture. All passage areas must remain fully clear and walkable.
 7. Do NOT place furniture in front of windows, radiators, air vents, electrical panels, or fire exits.
 8. Maintain realistic traffic flow — leave clear walking paths between furniture groupings (minimum ~60 cm / 2 ft clearance).
+9. Do NOT mirror or flip the room horizontally — left wall stays left, right wall stays right.
+10. Do NOT change the size, shape, or position of ANY window, door, or architectural opening.
+11. Do NOT add or remove walls, columns, beams, or structural elements.
+12. The perspective vanishing point must remain identical to the source photo — no rotation, no tilt correction.
 
 ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstructed entrances, furniture in front of windows, unrealistic furniture placement. ${allNegatives}` : "AVOID: furniture blocking doorways, blocked hallways, obstructed entrances, furniture in front of windows, unrealistic furniture placement."}`
     : `${processedTemplate}
