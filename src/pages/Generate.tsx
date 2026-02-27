@@ -2846,6 +2846,16 @@ export default function Generate() {
                     <Download className="w-3.5 h-3.5 mr-1.5" /> Download All
                   </Button>
                   <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => setCurrentStep('settings')}>Adjust</Button>
+                  {isInteriorDesign && (
+                    <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => {
+                      setGeneratedImages([]);
+                      setSelectedForPublish(new Set());
+                      setSelectedVariationIndices(new Set());
+                      setCurrentStep('settings');
+                    }}>
+                      <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Try Another Style
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); }}>Start Over</Button>
                 </div>
               </div>
