@@ -652,6 +652,10 @@ export default function Generate() {
       furniture_handling: isInteriorDesign ? interiorFurnitureHandling : undefined,
       room_size: isInteriorDesign ? interiorRoomSize : undefined,
       key_pieces: isInteriorDesign && interiorKeyPieces.length > 0 ? interiorKeyPieces : undefined,
+      design_notes: isInteriorDesign && interiorDesignNotes ? interiorDesignNotes : undefined,
+      color_palette_preference: isInteriorDesign && interiorColorPalette ? interiorColorPalette : undefined,
+      time_of_day: isInteriorDesign && interiorTimeOfDay !== 'As Photographed' ? interiorTimeOfDay : undefined,
+      staging_purpose: isInteriorDesign && interiorPurpose ? interiorPurpose : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
