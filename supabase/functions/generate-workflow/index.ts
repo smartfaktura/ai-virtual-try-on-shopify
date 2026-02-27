@@ -292,12 +292,18 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     }
     // 'Very Large' = no constraint needed
 
+    // Key furniture pieces constraint
+    const keyPiecesBlock = keyPieces.length > 0
+      ? `\nREQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: ${keyPieces.join(', ')}. Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.`
+      : '';
+
     interiorBlock = isExterior
       ? `\nEXTERIOR CONTEXT:
 This is ${roomDesc}.
 Enhance this exterior with landscaping, outdoor furniture, lighting, and curb appeal elements appropriate for the "${variation.label}" design style.
 ${furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} outdoor furniture and design elements.` : ''}
 ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${lightingMood} lighting throughout the exterior scene.` : ''}
+${keyPiecesBlock}
 ${furnitureRealismBlock}
 \nIMPORTANT: The [PRODUCT IMAGE] is the BUILDING/EXTERIOR PHOTO to transform. Do NOT treat it as a product to place — instead, enhance the exterior scene while preserving its architecture, structure, and angles.\n`
       : `\nROOM CONTEXT:
@@ -305,6 +311,7 @@ This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
 ${furnitureHandlingBlock}
 ${roomSizeBlock}
+${keyPiecesBlock}
 ${furnitureRealismBlock}
 ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
 ${flooring && flooring !== 'Keep Original' ? `\nFLOORING OVERRIDE: Change the flooring to ${flooring}. Apply this consistently across the entire visible floor area.` : '\nFLOORING: Keep the original flooring as shown in the photo.'}
