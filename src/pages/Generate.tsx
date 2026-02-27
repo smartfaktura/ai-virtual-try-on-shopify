@@ -1124,6 +1124,36 @@ export default function Generate() {
                         </Select>
                       </div>
 
+                      {/* Furniture Handling */}
+                      <div className="space-y-2">
+                        <Label>Furniture <span className="text-xs text-muted-foreground">(how to handle existing pieces)</span></Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { value: 'Keep & Restyle', label: 'Keep & Restyle', desc: 'Keep pieces, update style' },
+                            { value: 'Replace All', label: 'Replace All', desc: 'Fully restage the room' },
+                            { value: 'Keep Layout, Swap Style', label: 'Keep Layout', desc: 'Same layout, new pieces' },
+                          ].map(opt => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                setInteriorFurnitureHandling(opt.value);
+                                if (opt.value === 'Keep & Restyle') setInteriorFurnitureStyle('Match Design Style');
+                              }}
+                              className={cn(
+                                'rounded-lg border-2 p-3 text-left transition-colors',
+                                interiorFurnitureHandling === opt.value
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/40'
+                              )}
+                            >
+                              <span className="text-sm font-medium block">{opt.label}</span>
+                              <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       {/* Wall Color & Flooring (interior only) */}
                       {interiorType === 'interior' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
