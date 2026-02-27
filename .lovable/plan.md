@@ -1,24 +1,70 @@
 
+## Fix Upscale Feature: Function, UI, and State Management
 
-## Move Room Details to Upload Step + Add Credits
+### Issues Found
 
-### 1. Move Room Details into the Upload Step
+1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
+   - The image URL in `generation_jobs.results` array never changes
+   - The `quality` field is never set to `"upscaled"`
+   - On page reload, the original image shows again
+   - The "Enhance to PRO HD" button always reappears
 
-Currently, Room Type, Wall Color, and Flooring selectors appear in the `settings` step (Style selection step). They should be part of the `upload` step, right below the photo upload card, so the user fills in all room info before moving to style selection.
+2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
 
-**File: `src/pages/Generate.tsx`**
+3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
 
-- **Remove** the Room Details card from the settings step (lines ~2197-2249) -- the entire `{isInteriorDesign && (<Card>...Room Details...</Card>)}` block.
-- **Add** the same Room Details card into the upload step (after the `UploadSourceCard` around line 1096), shown only when `isInteriorDesign && scratchUpload` (i.e., after a photo is uploaded/selected). This keeps upload + room details together as one logical step.
+4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
 
-### 2. Add 100 Credits to 123presets Account
+5. **No separator** -- Buttons section needs visual separation.
 
-The account has user_id `68c931a0-454d-4ce3-806c-c0665d1541bd` with current balance of 10 credits. Will run a database migration to add 100 credits (new balance: 110).
+---
 
-**Database migration:**
-```sql
-UPDATE profiles
-SET credits_balance = credits_balance + 100
-WHERE user_id = '68c931a0-454d-4ce3-806c-c0665d1541bd';
+### Changes
+
+#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
+
+- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
+- After uploading the upscaled image, update `generation_jobs`:
+  - Replace the specific URL in the `results` JSONB array
+  - Set `quality` to `"upscaled"`
+- Keep the existing freestyle update logic
+
+#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
+
+**Button redesign:**
+- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
+- Same height as download button (`h-12` instead of `h-14`)
+- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
+- Add a separator line between the Download button and secondary actions
+
+**Loading messages:**
+- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
+- Cycle every 4 seconds while `upscaling` is true
+
+**Already upscaled handling:**
+- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
+
+---
+
+### Technical Details
+
+**Edge function sourceId parsing:**
+```text
+// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
+// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
+// Split on last hyphen to get UUID and index
 ```
 
+**Generation jobs DB update:**
+```text
+// Fetch current results array
+// Replace results[index] with the new upscaled URL
+// Update quality to "upscaled"
+```
+
+### Files to Edit
+
+| File | Change |
+|------|--------|
+| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
+| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
