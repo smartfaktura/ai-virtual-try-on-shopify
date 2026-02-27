@@ -274,6 +274,7 @@ export default function Generate() {
   const [interiorFurnitureStyle, setInteriorFurnitureStyle] = useState('Match Design Style');
   const [interiorLightingMood, setInteriorLightingMood] = useState('Keep Original');
   const [interiorFurnitureHandling, setInteriorFurnitureHandling] = useState('Keep & Restyle');
+  const [interiorRoomSize, setInteriorRoomSize] = useState('Medium');
 
   const INTERIOR_ROOM_TYPES = [
     'Living Room', 'Bedroom (Master)', 'Bedroom (Guest)',
@@ -606,6 +607,7 @@ export default function Generate() {
       furniture_style: isInteriorDesign ? interiorFurnitureStyle : undefined,
       lighting_mood: isInteriorDesign ? interiorLightingMood : undefined,
       furniture_handling: isInteriorDesign ? interiorFurnitureHandling : undefined,
+      room_size: isInteriorDesign ? interiorRoomSize : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -1152,6 +1154,20 @@ export default function Generate() {
                             </button>
                           ))}
                         </div>
+                      </div>
+
+                      {/* Room Size */}
+                      <div className="space-y-2">
+                        <Label>Room Size <span className="text-xs text-muted-foreground">(helps scale furniture realistically)</span></Label>
+                        <Select value={interiorRoomSize} onValueChange={setInteriorRoomSize}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Small">Small (under 10 sqm / 100 sqft)</SelectItem>
+                            <SelectItem value="Medium">Medium (10–20 sqm / 100–200 sqft)</SelectItem>
+                            <SelectItem value="Large">Large (20–40 sqm / 200–400 sqft)</SelectItem>
+                            <SelectItem value="Very Large">Very Large (40+ sqm / 400+ sqft)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       {/* Wall Color & Flooring (interior only) */}
@@ -2613,7 +2629,7 @@ export default function Generate() {
               }`}>
                 {generatedImages.map((url, index) => (
                   <div key={index} className={`generation-preview relative group cursor-pointer rounded-lg overflow-hidden ${selectedForPublish.has(index) ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
-                    <img src={url} alt={`Generated ${index + 1}`} className="w-full aspect-[3/4] object-cover" onClick={() => toggleImageSelection(index)} />
+                    <img src={url} alt={`Generated ${index + 1}`} className="w-full object-contain bg-muted/10 rounded" onClick={() => toggleImageSelection(index)} />
                     {/* Variation label overlay */}
                     {workflowVariationLabels[index] && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-6">

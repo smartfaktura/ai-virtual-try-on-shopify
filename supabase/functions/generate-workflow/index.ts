@@ -261,6 +261,7 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const furnitureHandling = (product as unknown as Record<string, unknown>).furniture_handling as string || 'Replace All';
     const stagingType = (product as unknown as Record<string, unknown>).interior_type as string || 'interior';
     const isExterior = stagingType === 'exterior';
+    const roomSize = (product as unknown as Record<string, unknown>).room_size as string || 'Medium';
 
     // Build furniture handling instructions
     let furnitureHandlingBlock = '';
@@ -270,6 +271,17 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       furnitureHandlingBlock = `\nFURNITURE HANDLING: Maintain the same furniture LAYOUT and types as shown (e.g., if there's a desk, keep a desk in that position; if there's a sofa, keep a sofa there). Replace each piece with a similar-type piece in the "${variation.label}" design style. Keep the same spatial arrangement and traffic flow.`;
     }
     // 'Replace All' = no special block, current default behavior
+
+    // Build room size constraint
+    let roomSizeBlock = '';
+    if (roomSize === 'Small') {
+      roomSizeBlock = `\nROOM SIZE (CRITICAL): This is a SMALL room (under 10 sqm / 100 sqft). Use ONLY compact, space-saving furniture. NO king or queen beds, NO large sectionals, NO oversized pieces. A single bed, small desk, or compact chair is the maximum. Leave ample walking space between pieces. Every piece must look proportionally realistic for a tiny room.`;
+    } else if (roomSize === 'Medium') {
+      roomSizeBlock = `\nROOM SIZE: This is a MEDIUM-sized room (10–20 sqm). Use appropriately scaled furniture. Double bed maximum for bedrooms. Avoid oversized or bulky pieces. Furniture should leave comfortable walking paths.`;
+    } else if (roomSize === 'Large') {
+      roomSizeBlock = `\nROOM SIZE: This is a LARGE room (20–40 sqm). Standard to generous furniture sizing is appropriate. Ensure the room doesn't look empty — use area rugs, accent chairs, or decor to fill the space naturally.`;
+    }
+    // 'Very Large' = no constraint needed
 
     interiorBlock = isExterior
       ? `\nEXTERIOR CONTEXT:
@@ -282,6 +294,7 @@ ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${l
 This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
 ${furnitureHandlingBlock}
+${roomSizeBlock}
 ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
 ${flooring && flooring !== 'Keep Original' ? `\nFLOORING OVERRIDE: Change the flooring to ${flooring}. Apply this consistently across the entire visible floor area.` : '\nFLOORING: Keep the original flooring as shown in the photo.'}
 ${furnitureHandling !== 'Keep & Restyle' && furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} furniture pieces and decor items, regardless of the overall design style variation.` : ''}
