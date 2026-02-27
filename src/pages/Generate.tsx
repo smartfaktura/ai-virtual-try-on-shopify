@@ -2663,6 +2663,8 @@ export default function Generate() {
                   <Button variant="outline" onClick={() => {
                     if (isMirrorSelfie) {
                       setCurrentStep('model');
+                    } else if (isInteriorDesign) {
+                      setCurrentStep('upload');
                     } else {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'));
                     }
