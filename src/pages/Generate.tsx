@@ -2222,7 +2222,7 @@ export default function Generate() {
                 const scopeFilteredVars = isInteriorDesign
                   ? variationStrategy.variations.filter((v: any) => !v.scope || v.scope === interiorType)
                   : variationStrategy.variations;
-                const cats = Array.from(new Set(variationStrategy.variations.map(v => v.category).filter(Boolean))) as string[];
+                const cats = Array.from(new Set(scopeFilteredVars.map(v => v.category).filter(Boolean))) as string[];
                 if (cats.length <= 1) return null;
                 return (
                   <div className="flex gap-1.5 flex-wrap">

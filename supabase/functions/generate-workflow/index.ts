@@ -330,6 +330,10 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       } else if (ceilingHeight === 'Double Height') {
         ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
       }
+      // Exact ceiling height override
+      if (exactCeilingHeight) {
+        ceilingHeightBlock += `\nEXACT CEILING HEIGHT: ${exactCeilingHeight}. Scale vertical elements (curtains, shelving, art placement) to this precise height. This overrides the approximate ceiling height above.`;
+      }
     }
 
     // Empty room instruction
