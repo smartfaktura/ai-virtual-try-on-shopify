@@ -312,14 +312,16 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     }
     // 'Very Large' = no constraint needed
 
-    // Ceiling height constraint
+    // Ceiling height constraint — interior only (skip for exterior to prevent stale values)
     let ceilingHeightBlock = '';
-    if (ceilingHeight === 'Low') {
-      ceilingHeightBlock = `\nCEILING HEIGHT (CRITICAL): This room has LOW ceilings (under 2.4m / 8ft). Use ONLY low-profile furniture: platform beds instead of four-poster, low-back sofas, no tall bookcases or armoires. Avoid anything that would visually crowd the vertical space. Horizontal lines preferred over vertical.`;
-    } else if (ceilingHeight === 'High') {
-      ceilingHeightBlock = `\nCEILING HEIGHT: This room has HIGH ceilings (2.7m+ / 9ft+). Furniture can be taller and more substantial. Consider floor-to-ceiling curtains, tall shelving, and vertical decor to utilize the height naturally.`;
-    } else if (ceilingHeight === 'Double Height') {
-      ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
+    if (!isExterior) {
+      if (ceilingHeight === 'Low') {
+        ceilingHeightBlock = `\nCEILING HEIGHT (CRITICAL): This room has LOW ceilings (under 2.4m / 8ft). Use ONLY low-profile furniture: platform beds instead of four-poster, low-back sofas, no tall bookcases or armoires. Avoid anything that would visually crowd the vertical space. Horizontal lines preferred over vertical.`;
+      } else if (ceilingHeight === 'High') {
+        ceilingHeightBlock = `\nCEILING HEIGHT: This room has HIGH ceilings (2.7m+ / 9ft+). Furniture can be taller and more substantial. Consider floor-to-ceiling curtains, tall shelving, and vertical decor to utilize the height naturally.`;
+      } else if (ceilingHeight === 'Double Height') {
+        ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
+      }
     }
 
     // Empty room instruction
