@@ -1066,9 +1066,13 @@ export default function Generate() {
               <Button disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
                 onClick={async () => {
                   if (!scratchUpload) return;
-                  const uploadedUrl = await uploadFile(scratchUpload.file);
-                  if (uploadedUrl) {
-                    setScratchUpload({ ...scratchUpload, uploadedUrl });
+                  // Skip upload if reusing a previously uploaded image
+                  let finalUrl = scratchUpload.uploadedUrl;
+                  if (!finalUrl) {
+                    finalUrl = await uploadFile(scratchUpload.file) || undefined;
+                  }
+                  if (finalUrl) {
+                    setScratchUpload({ ...scratchUpload, uploadedUrl: finalUrl });
                     if (activeWorkflow?.uses_tryon) {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     } else if (brandProfiles.length > 0) {
