@@ -671,6 +671,8 @@ export default function Generate() {
       staging_purpose: isInteriorDesign && interiorPurpose ? interiorPurpose : undefined,
       is_empty_room: isInteriorDesign ? interiorIsEmptyRoom : undefined,
       ceiling_height: isInteriorDesign && interiorCeilingHeight !== 'Standard' ? interiorCeilingHeight : undefined,
+      room_dimensions: isInteriorDesign && interiorRoomDimensions ? interiorRoomDimensions : undefined,
+      exact_ceiling_height: isInteriorDesign && interiorExactCeilingHeight ? interiorExactCeilingHeight : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
