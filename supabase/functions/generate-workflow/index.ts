@@ -261,7 +261,7 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const stagingType = (product as unknown as Record<string, unknown>).interior_type as string || 'interior';
     const isExterior = stagingType === 'exterior';
     const roomSize = (product as unknown as Record<string, unknown>).room_size as string || 'Medium';
-
+    const keyPieces = (product as unknown as Record<string, unknown>).key_pieces as string[] || [];
     const fullRoomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
     // For Keep modes, strip furniture-specific suggestions to avoid overriding the actual photo
     const isKeepMode = furnitureHandling === 'Keep & Restyle' || furnitureHandling === 'Keep Layout, Swap Style';

@@ -1263,6 +1263,42 @@ export default function Generate() {
                           </Select>
                         </div>
                       </div>
+
+                      {/* Key Furniture & Features (optional) */}
+                      {ROOM_FURNITURE_PRESETS[interiorRoomType] && (
+                        <div className="space-y-2">
+                          <Label>Key Furniture & Features <span className="text-xs text-muted-foreground">(optional — helps the AI pick the right pieces)</span></Label>
+                          <div className="flex flex-wrap gap-2">
+                            {ROOM_FURNITURE_PRESETS[interiorRoomType].map(piece => {
+                              const isSelected = interiorKeyPieces.includes(piece);
+                              return (
+                                <button
+                                  key={piece}
+                                  type="button"
+                                  onClick={() => {
+                                    setInteriorKeyPieces(prev =>
+                                      isSelected ? prev.filter(p => p !== piece) : [...prev, piece]
+                                    );
+                                  }}
+                                  className={cn(
+                                    'px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
+                                    isSelected
+                                      ? 'bg-primary text-primary-foreground border-primary'
+                                      : 'bg-card border-border hover:border-primary hover:bg-primary/5'
+                                  )}
+                                >
+                                  {piece}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {interiorKeyPieces.length > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Selected: {interiorKeyPieces.join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </CardContent></Card>
                 )}
