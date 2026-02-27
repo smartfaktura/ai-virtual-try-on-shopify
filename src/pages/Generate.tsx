@@ -2095,61 +2095,83 @@ export default function Generate() {
               </CardContent></Card>
             )}
 
-            {/* Interior Design Room Type, Wall Color & Flooring Selectors */}
+            {/* Interior / Exterior Staging: Type Toggle, Room Type, Wall Color & Flooring */}
             {isInteriorDesign && (
               <Card><CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-base font-semibold flex items-center gap-2">
-                    🏠 Room Settings
+                    🏠 Staging Settings
                   </h3>
-                  <p className="text-sm text-muted-foreground">Specify the room type and optional color preferences</p>
+                  <p className="text-sm text-muted-foreground">Choose interior or exterior, then specify the space type and optional preferences</p>
                 </div>
                 <div className="space-y-4">
+                  {/* Interior / Exterior Toggle */}
                   <div className="space-y-2">
-                    <Label>Room Type</Label>
+                    <Label>Staging Type</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {([
+                        { id: 'interior' as const, label: 'Interior', desc: 'Rooms & indoor spaces', emoji: '🏠' },
+                        { id: 'exterior' as const, label: 'Exterior', desc: 'Building facades & outdoor', emoji: '🏡' },
+                      ]).map(opt => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setInteriorType(opt.id)}
+                          className={cn(
+                            'p-4 rounded-xl border-2 text-left transition-all cursor-pointer',
+                            interiorType === opt.id
+                              ? 'border-primary bg-primary/5 shadow-sm'
+                              : 'border-border hover:border-primary/40'
+                          )}
+                        >
+                          <span className="text-lg">{opt.emoji}</span>
+                          <p className="text-sm font-semibold mt-1">{opt.label}</p>
+                          <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Room / Space Type */}
+                  <div className="space-y-2">
+                    <Label>{interiorType === 'interior' ? 'Room Type' : 'Exterior Area'}</Label>
                     <Select value={interiorRoomType} onValueChange={setInteriorRoomType}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {[
-                          'Living Room', 'Bedroom (Master)', 'Bedroom (Guest)',
-                          'Kids Room (Girl)', 'Kids Room (Boy)', 'Kids Room (Twins/Shared)',
-                          'Baby Nursery (Girl)', 'Baby Nursery (Boy)',
-                          'Kitchen', 'Dining Room',
-                          'Bathroom (Master)', 'Bathroom (Guest)',
-                          'Home Office / Work Room', 'Walk-in Closet', 'Hallway / Entryway',
-                          'Patio / Outdoor Living', 'Balcony / Terrace',
-                          'Laundry Room', 'Storage Room / Utility', 'Garage',
-                          'Basement / Rec Room', 'Exterior / Facade',
-                        ].map(rt => (
+                        {(interiorType === 'interior' ? INTERIOR_ROOM_TYPES : EXTERIOR_ROOM_TYPES).map(rt => (
                           <SelectItem key={rt} value={rt}>{rt}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Wall Color <span className="text-xs text-muted-foreground">(optional)</span></Label>
-                      <Select value={interiorWallColor} onValueChange={setInteriorWallColor}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {['Keep Original', 'White', 'Warm White', 'Light Gray', 'Beige / Cream', 'Sage Green', 'Navy Blue', 'Terracotta', 'Blush Pink', 'Charcoal', 'Olive Green'].map(c => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+
+                  {/* Wall Color & Flooring (interior only) */}
+                  {interiorType === 'interior' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Wall Color <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <Select value={interiorWallColor} onValueChange={setInteriorWallColor}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {['Keep Original', 'White', 'Warm White', 'Light Gray', 'Beige / Cream', 'Sage Green', 'Navy Blue', 'Terracotta', 'Blush Pink', 'Charcoal', 'Olive Green'].map(c => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Flooring <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <Select value={interiorFlooring} onValueChange={setInteriorFlooring}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {['Keep Original', 'Hardwood Light', 'Hardwood Dark', 'Marble White', 'Marble Dark', 'Ceramic Tiles', 'Carpet', 'Polished Concrete', 'Herringbone Parquet'].map(f => (
+                              <SelectItem key={f} value={f}>{f}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Flooring <span className="text-xs text-muted-foreground">(optional)</span></Label>
-                      <Select value={interiorFlooring} onValueChange={setInteriorFlooring}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {['Keep Original', 'Hardwood Light', 'Hardwood Dark', 'Marble White', 'Marble Dark', 'Ceramic Tiles', 'Carpet', 'Polished Concrete', 'Herringbone Parquet'].map(f => (
-                            <SelectItem key={f} value={f}>{f}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </CardContent></Card>
             )}
