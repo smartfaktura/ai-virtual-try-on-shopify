@@ -2596,10 +2596,10 @@ export default function Generate() {
                 <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
                   <div>
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedVariationIndices.size} scene{selectedVariationIndices.size !== 1 ? 's' : ''}
+                     <p className="text-xs text-muted-foreground">
+                      {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                       {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                      {' '}× {quality === 'high' ? 10 : 4} credits
+                      {' '}× {quality === 'high' ? 16 : 8} credits
                     </p>
                   </div>
                   {balance >= creditCost ? (
