@@ -315,6 +315,7 @@ ${furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE
 ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${lightingMood} lighting throughout the exterior scene.` : ''}
 ${keyPiecesBlock}
 ${furnitureRealismBlock}
+${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
 \nIMPORTANT: The [PRODUCT IMAGE] is the BUILDING/EXTERIOR PHOTO to transform. Do NOT treat it as a product to place — instead, enhance the exterior scene while preserving its architecture, structure, and angles.\n`
       : `\nROOM CONTEXT:
 This is ${roomDesc}.
