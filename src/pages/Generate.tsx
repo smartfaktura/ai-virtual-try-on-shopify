@@ -861,10 +861,12 @@ export default function Generate() {
           <Card><CardContent className="p-5 space-y-5">
             <div>
               <h2 className="text-base font-semibold">
-                {activeWorkflow?.uses_tryon ? 'Add Your Product' : 'How do you want to start?'}
+                {isInteriorDesign ? 'Add Your Room Photo' : activeWorkflow?.uses_tryon ? 'Add Your Product' : 'How do you want to start?'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {activeWorkflow?.uses_tryon
+                {isInteriorDesign
+                  ? 'Upload a photo of an empty room, or a room with old furniture you want to transform.'
+                  : activeWorkflow?.uses_tryon
                   ? 'Choose a clothing item from your products or upload a new photo to try on.'
                   : 'Choose whether to use existing products or upload your own image file.'}
               </p>
