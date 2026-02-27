@@ -388,7 +388,7 @@ This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
 ${emptyRoomBlock}
 ${furnitureHandlingBlock}
-${roomSizeBlock}
+${roomDimensionsBlock || roomSizeBlock}
 ${ceilingHeightBlock}
 ${keyPiecesBlock}
 ${furnitureRealismBlock}
