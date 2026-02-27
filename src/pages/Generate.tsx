@@ -2780,6 +2780,7 @@ export default function Generate() {
               <p className="text-sm text-muted-foreground mt-1">
                 {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
                  isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
+                 isInteriorDesign ? `Staging your ${interiorRoomType || 'room'} in ${variationStrategy?.variations.find((_, i) => selectedVariationIndices.has(i))?.label || 'selected'} style` :
                  hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
                  `Creating ${imageCount} images of "${selectedProduct?.title}"`}
               </p>
