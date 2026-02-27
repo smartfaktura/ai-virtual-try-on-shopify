@@ -36,6 +36,7 @@ interface VariationItem {
   instruction: string;
   aspect_ratio?: string;
   category?: string;
+  scope?: string;
 }
 
 // Room Type Descriptions for Interior Design workflow
@@ -141,6 +142,8 @@ interface WorkflowRequest {
   staging_purpose?: string;
   is_empty_room?: boolean;
   ceiling_height?: string;
+  room_dimensions?: string;
+  exact_ceiling_height?: string;
   model?: {
     name: string;
     gender: string;
@@ -279,7 +282,8 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const stagingPurpose = (product as unknown as Record<string, unknown>).staging_purpose as string || '';
     const isEmptyRoom = (product as unknown as Record<string, unknown>).is_empty_room as boolean || false;
     const ceilingHeight = (product as unknown as Record<string, unknown>).ceiling_height as string || '';
-    const hasKeyPieces = keyPieces.length > 0;
+    const roomDimensions = (product as unknown as Record<string, unknown>).room_dimensions as string || '';
+    const exactCeilingHeight = (product as unknown as Record<string, unknown>).exact_ceiling_height as string || '';
     const fullRoomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
     // When key_pieces are specified (ANY mode), strip furniture-specific suggestions to avoid conflict
     const isKeepMode = furnitureHandling === 'Keep & Restyle' || furnitureHandling === 'Keep Layout, Swap Style';
@@ -310,6 +314,10 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     } else if (roomSize === 'Large') {
       roomSizeBlock = `\nROOM SIZE: This is a LARGE room (20–40 sqm). Standard to generous furniture sizing is appropriate. Ensure the room doesn't look empty — use area rugs, accent chairs, or decor to fill the space naturally.`;
     }
+    // Exact room dimensions override
+    if (roomDimensions) {
+      roomSizeBlock += `\nEXACT ROOM DIMENSIONS: ${roomDimensions}. Scale ALL furniture precisely to these real-world measurements. This overrides the approximate room size above.`;
+    }
     // 'Very Large' = no constraint needed
 
     // Ceiling height constraint — interior only (skip for exterior to prevent stale values)
@@ -321,6 +329,10 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
         ceilingHeightBlock = `\nCEILING HEIGHT: This room has HIGH ceilings (2.7m+ / 9ft+). Furniture can be taller and more substantial. Consider floor-to-ceiling curtains, tall shelving, and vertical decor to utilize the height naturally.`;
       } else if (ceilingHeight === 'Double Height') {
         ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
+      }
+      // Exact ceiling height override
+      if (exactCeilingHeight) {
+        ceilingHeightBlock += `\nEXACT CEILING HEIGHT: ${exactCeilingHeight}. Scale vertical elements (curtains, shelving, art placement) to this precise height. This overrides the approximate ceiling height above.`;
       }
     }
 
@@ -811,6 +823,8 @@ serve(async (req) => {
       staging_purpose: body.staging_purpose,
       is_empty_room: body.is_empty_room,
       ceiling_height: body.ceiling_height,
+      room_dimensions: body.room_dimensions,
+      exact_ceiling_height: body.exact_ceiling_height,
     };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;

@@ -283,7 +283,8 @@ export default function Generate() {
   const [interiorPurpose, setInteriorPurpose] = useState('');
   const [interiorIsEmptyRoom, setInteriorIsEmptyRoom] = useState(false);
   const [interiorCeilingHeight, setInteriorCeilingHeight] = useState('Standard');
-
+  const [interiorRoomDimensions, setInteriorRoomDimensions] = useState('');
+  const [interiorExactCeilingHeight, setInteriorExactCeilingHeight] = useState('');
   const ROOM_FURNITURE_PRESETS: Record<string, string[]> = {
     'Living Room': ['Sofa', 'Sectional', 'Coffee Table', 'TV Console', 'Bookshelf', 'Side Table', 'Kitchen Island', 'Bar Cart', 'Floor Lamp', 'Area Rug'],
     'Bedroom (Master)': ['King Bed', 'Queen Bed', 'Nightstands', 'Dresser', 'Vanity', 'Armchair', 'Floor Mirror'],
@@ -348,6 +349,10 @@ export default function Generate() {
     setInteriorTimeOfDay('As Photographed');
     setInteriorIsEmptyRoom(false);
     setInteriorCeilingHeight('Standard');
+    setInteriorRoomDimensions('');
+    setInteriorExactCeilingHeight('');
+    setSelectedVariationIndices(new Set());
+    setSceneFilterCategory('all');
   }, [interiorType]);
 
   // Reset key pieces when room type changes (but NOT design notes)
@@ -668,6 +673,8 @@ export default function Generate() {
       staging_purpose: isInteriorDesign && interiorPurpose ? interiorPurpose : undefined,
       is_empty_room: isInteriorDesign ? interiorIsEmptyRoom : undefined,
       ceiling_height: isInteriorDesign && interiorCeilingHeight !== 'Standard' ? interiorCeilingHeight : undefined,
+      room_dimensions: isInteriorDesign && interiorRoomDimensions ? interiorRoomDimensions : undefined,
+      exact_ceiling_height: isInteriorDesign && interiorExactCeilingHeight ? interiorExactCeilingHeight : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -1296,6 +1303,17 @@ export default function Generate() {
                               <SelectItem value="Very Large">Very Large (40+ sqm / 400+ sqft)</SelectItem>
                             </SelectContent>
                           </Select>
+                          {/* Exact Room Dimensions */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Exact Dimensions <span className="text-xs">(optional)</span></Label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 4.5m x 3.2m or 15ft x 10ft"
+                              value={interiorRoomDimensions}
+                              onChange={e => setInteriorRoomDimensions(e.target.value)}
+                              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            />
+                          </div>
                         </div>
                         {interiorType === 'interior' && (
                         <div className="space-y-2">
@@ -1309,6 +1327,17 @@ export default function Generate() {
                               <SelectItem value="Double Height">Double Height (5m+ / 16ft+)</SelectItem>
                             </SelectContent>
                           </Select>
+                          {/* Exact Ceiling Height */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Exact Height <span className="text-xs">(optional)</span></Label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 2.8m or 9.5ft"
+                              value={interiorExactCeilingHeight}
+                              onChange={e => setInteriorExactCeilingHeight(e.target.value)}
+                              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            />
+                          </div>
                         </div>
                         )}
                       </div>
@@ -2191,7 +2220,11 @@ export default function Generate() {
 
               {/* Scene category filter tabs */}
               {variationStrategy?.type === 'scene' && (() => {
-                const cats = Array.from(new Set(variationStrategy.variations.map(v => v.category).filter(Boolean))) as string[];
+                // Build category list from scope-filtered variations
+                const scopeFilteredVars = isInteriorDesign
+                  ? variationStrategy.variations.filter((v: any) => !v.scope || v.scope === interiorType)
+                  : variationStrategy.variations;
+                const cats = Array.from(new Set(scopeFilteredVars.map(v => v.category).filter(Boolean))) as string[];
                 if (cats.length <= 1) return null;
                 return (
                   <div className="flex gap-1.5 flex-wrap">
@@ -2233,9 +2266,18 @@ export default function Generate() {
 
               {/* Visual scene cards grid */}
               <div className={cn("grid gap-3", (isMirrorSelfie || isSelfieUgc) ? "grid-cols-3 sm:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4")}>
-                {variationStrategy?.variations.map((v, i) => {
-                  // Filter by category
-                  if (sceneFilterCategory !== 'all' && v.category && v.category !== sceneFilterCategory) return null;
+                {variationStrategy?.variations
+                  .map((v, i) => ({ v, i }))
+                  .filter(({ v }) => {
+                    // Filter by interior/exterior scope for staging workflow
+                    if (isInteriorDesign && (v as any).scope) {
+                      if ((v as any).scope !== interiorType) return false;
+                    }
+                    // Filter by category chip
+                    if (sceneFilterCategory !== 'all' && v.category && v.category !== sceneFilterCategory) return false;
+                    return true;
+                  })
+                  .map(({ v, i }) => {
                   const isSelected = selectedVariationIndices.has(i);
                   const hasPreview = !!v.preview_url;
 
@@ -2326,18 +2368,28 @@ export default function Generate() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedVariationIndices.size === 0 ? (
-                      <span className="text-destructive font-medium">Select at least 1 {isInteriorDesign ? 'style' : 'scene'} to continue</span>
+                  {isInteriorDesign ? (
+                    selectedVariationIndices.size === 0 ? (
+                      <p className="text-xs text-muted-foreground">Tap a style to select it</p>
                     ) : (
-                      <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : variationStrategy?.variations.length} {isInteriorDesign ? 'styles' : 'scenes'} selected
-                        {workflowImageCount > MAX_IMAGES_PER_JOB && (
-                          <span className="ml-1 text-muted-foreground">· Will split into {Math.ceil(selectedVariationIndices.size / Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier)))} batches</span>
-                        )}
-                      </>
-                    )}
-                  </p>
-                  {isFreeUser && (
+                      <p className="text-xs text-muted-foreground">
+                        1 style selected
+                      </p>
+                    )
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {selectedVariationIndices.size === 0 ? (
+                        <span className="text-destructive font-medium">Select at least 1 scene to continue</span>
+                      ) : (
+                        <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : variationStrategy?.variations.length} scenes selected
+                          {workflowImageCount > MAX_IMAGES_PER_JOB && (
+                            <span className="ml-1 text-muted-foreground">· Will split into {Math.ceil(selectedVariationIndices.size / Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier)))} batches</span>
+                          )}
+                        </>
+                      )}
+                    </p>
+                  )}
+                  {!isInteriorDesign && isFreeUser && (
                     <p className="text-xs text-amber-600 mt-0.5">Free plan: up to {FREE_SCENE_LIMIT} scenes. <button className="underline font-medium" onClick={openBuyModal}>Upgrade for more</button></p>
                   )}
                 </div>
