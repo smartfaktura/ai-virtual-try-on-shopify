@@ -952,10 +952,12 @@ export default function Generate() {
               <div className="space-y-4">
                 <div>
                   <h2 className="text-base font-semibold">
-                    {activeWorkflow?.uses_tryon ? 'Upload Your Clothing Photo' : 'Upload Your Image'}
+                    {isInteriorDesign ? 'Upload Your Room Photo' : activeWorkflow?.uses_tryon ? 'Upload Your Clothing Photo' : 'Upload Your Image'}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    {activeWorkflow?.uses_tryon
+                    {isInteriorDesign
+                      ? 'Upload a photo of the room you want to stage. Empty rooms or rooms with old furniture work best.'
+                      : activeWorkflow?.uses_tryon
                       ? 'Upload a clear photo of the clothing item you want to try on.'
                       : 'Upload a product image from your computer.'}
                   </p>
