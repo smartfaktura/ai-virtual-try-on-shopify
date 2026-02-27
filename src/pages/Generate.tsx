@@ -271,6 +271,8 @@ export default function Generate() {
   const [interiorRoomType, setInteriorRoomType] = useState('Living Room');
   const [interiorWallColor, setInteriorWallColor] = useState('Keep Original');
   const [interiorFlooring, setInteriorFlooring] = useState('Keep Original');
+  const [interiorFurnitureStyle, setInteriorFurnitureStyle] = useState('Match Design Style');
+  const [interiorLightingMood, setInteriorLightingMood] = useState('Keep Original');
 
   const INTERIOR_ROOM_TYPES = [
     'Living Room', 'Bedroom (Master)', 'Bedroom (Guest)',
@@ -600,6 +602,8 @@ export default function Generate() {
       wall_color: isInteriorDesign ? interiorWallColor : undefined,
       flooring_preference: isInteriorDesign ? interiorFlooring : undefined,
       interior_type: isInteriorDesign ? interiorType : undefined,
+      furniture_style: isInteriorDesign ? interiorFurnitureStyle : undefined,
+      lighting_mood: isInteriorDesign ? interiorLightingMood : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -1076,7 +1080,7 @@ export default function Generate() {
                               file: new File([], upload.name),
                               previewUrl: upload.url,
                               uploadedUrl: upload.url,
-                              productInfo: { title: isInteriorDesign ? 'Untitled Room' : upload.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').replace(/^\d+-\w+\s*/, ''), productType: '', description: '' },
+                              productInfo: { title: isInteriorDesign ? 'Uploaded Room' : upload.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').replace(/^\d+-\w+\s*/, ''), productType: isInteriorDesign ? 'Room' : '', description: '' },
                             });
                           }}
                           className="aspect-square rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors bg-muted"
@@ -1145,6 +1149,32 @@ export default function Generate() {
                           </div>
                         </div>
                       )}
+
+                      {/* Furniture Style & Lighting Mood */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Furniture Style <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                          <Select value={interiorFurnitureStyle} onValueChange={setInteriorFurnitureStyle}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {['Match Design Style', 'Modern Minimalist', 'Mid-Century Modern', 'Scandinavian', 'Industrial', 'Traditional / Classic', 'Bohemian / Eclectic', 'Art Deco', 'Japandi', 'Coastal / Hampton'].map(s => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Lighting Mood <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                          <Select value={interiorLightingMood} onValueChange={setInteriorLightingMood}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {['Keep Original', 'Warm & Cozy', 'Bright & Airy', 'Dramatic / Moody', 'Natural Daylight', 'Soft Evening / Golden Hour'].map(l => (
+                                <SelectItem key={l} value={l}>{l}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                   </CardContent></Card>
                 )}
@@ -1160,7 +1190,7 @@ export default function Generate() {
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
-              <Button disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
+              <Button disabled={!scratchUpload || (!isInteriorDesign && (!scratchUpload.productInfo.title || !scratchUpload.productInfo.productType))}
                 onClick={async () => {
                   if (!scratchUpload) return;
                   // Skip upload if reusing a previously uploaded image
