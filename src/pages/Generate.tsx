@@ -1156,6 +1156,20 @@ export default function Generate() {
                         </div>
                       </div>
 
+                      {/* Room Size */}
+                      <div className="space-y-2">
+                        <Label>Room Size <span className="text-xs text-muted-foreground">(helps scale furniture realistically)</span></Label>
+                        <Select value={interiorRoomSize} onValueChange={setInteriorRoomSize}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Small">Small (under 10 sqm / 100 sqft)</SelectItem>
+                            <SelectItem value="Medium">Medium (10–20 sqm / 100–200 sqft)</SelectItem>
+                            <SelectItem value="Large">Large (20–40 sqm / 200–400 sqft)</SelectItem>
+                            <SelectItem value="Very Large">Very Large (40+ sqm / 400+ sqft)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       {/* Wall Color & Flooring (interior only) */}
                       {interiorType === 'interior' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
