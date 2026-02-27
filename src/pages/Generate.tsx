@@ -831,7 +831,7 @@ export default function Generate() {
       ];
     }
     if (isInteriorDesign) {
-      return [{ name: 'Room Photo' }, { name: 'Brand' }, { name: 'Settings' }, { name: 'Results' }];
+      return [{ name: 'Upload Photo' }, { name: 'Brand' }, { name: 'Settings' }, { name: 'Results' }];
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
