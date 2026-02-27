@@ -271,6 +271,8 @@ export default function Generate() {
   const [interiorRoomType, setInteriorRoomType] = useState('Living Room');
   const [interiorWallColor, setInteriorWallColor] = useState('Keep Original');
   const [interiorFlooring, setInteriorFlooring] = useState('Keep Original');
+  const [interiorFurnitureStyle, setInteriorFurnitureStyle] = useState('Match Design Style');
+  const [interiorLightingMood, setInteriorLightingMood] = useState('Keep Original');
 
   const INTERIOR_ROOM_TYPES = [
     'Living Room', 'Bedroom (Master)', 'Bedroom (Guest)',
