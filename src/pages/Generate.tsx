@@ -154,6 +154,25 @@ export default function Generate() {
     enabled: !!user?.id,
   });
 
+  // Fetch previous room uploads for interior/exterior staging reuse
+  const { data: previousUploads = [] } = useQuery({
+    queryKey: ['previous-uploads', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data: files, error } = await supabase.storage
+        .from('product-uploads')
+        .list(user.id, { limit: 20, sortBy: { column: 'created_at', order: 'desc' } });
+      if (error || !files) return [];
+      return files
+        .filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name))
+        .map(f => {
+          const { data: urlData } = supabase.storage.from('product-uploads').getPublicUrl(`${user.id}/${f.name}`);
+          return { name: f.name, url: urlData.publicUrl, created_at: f.created_at };
+        });
+    },
+    enabled: !!user?.id && !!isInteriorDesign,
+  });
+
   const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
