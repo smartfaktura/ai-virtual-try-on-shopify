@@ -602,6 +602,8 @@ export default function Generate() {
       wall_color: isInteriorDesign ? interiorWallColor : undefined,
       flooring_preference: isInteriorDesign ? interiorFlooring : undefined,
       interior_type: isInteriorDesign ? interiorType : undefined,
+      furniture_style: isInteriorDesign ? interiorFurnitureStyle : undefined,
+      lighting_mood: isInteriorDesign ? interiorLightingMood : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
