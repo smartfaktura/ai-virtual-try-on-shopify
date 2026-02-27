@@ -813,7 +813,7 @@ export default function Generate() {
       return map[currentStep] || 1;
     }
     if (isInteriorDesign) {
-      const map: Record<string, number> = { source: 1, upload: 2, 'brand-profile': 3, settings: 4, generating: 5, results: 5 };
+      const map: Record<string, number> = { source: 1, upload: 2, settings: 3, generating: 4, results: 4 };
       return map[currentStep] || 1;
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
