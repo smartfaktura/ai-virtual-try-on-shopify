@@ -1718,8 +1718,8 @@ export default function Generate() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold">
-                      {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Styles' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
+                     <h3 className="text-base font-semibold">
+                      {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Style' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
                     </h3>
                     {isFlatLay && (
                       <>
