@@ -154,6 +154,25 @@ export default function Generate() {
     enabled: !!user?.id,
   });
 
+  // Fetch previous room uploads for interior/exterior staging reuse
+  const { data: previousUploads = [] } = useQuery({
+    queryKey: ['previous-uploads', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data: files, error } = await supabase.storage
+        .from('product-uploads')
+        .list(user.id, { limit: 20, sortBy: { column: 'created_at', order: 'desc' } });
+      if (error || !files) return [];
+      return files
+        .filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name))
+        .map(f => {
+          const { data: urlData } = supabase.storage.from('product-uploads').getPublicUrl(`${user.id}/${f.name}`);
+          return { name: f.name, url: urlData.publicUrl, created_at: f.created_at };
+        });
+    },
+    enabled: !!user?.id && activeWorkflow?.name === 'Interior / Exterior Staging',
+  });
+
   const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -998,6 +1017,35 @@ export default function Generate() {
                       : 'Upload a product image from your computer.'}
                   </p>
                 </div>
+
+                {/* Recent uploads gallery for interior/exterior staging */}
+                {isInteriorDesign && previousUploads.length > 0 && !scratchUpload && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Your Recent Uploads</Label>
+                    <p className="text-xs text-muted-foreground">Click to reuse a previously uploaded photo</p>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                      {previousUploads.map((upload) => (
+                        <button
+                          key={upload.name}
+                          type="button"
+                          onClick={() => {
+                            setScratchUpload({
+                              file: new File([], upload.name),
+                              previewUrl: upload.url,
+                              uploadedUrl: upload.url,
+                              productInfo: { title: upload.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').replace(/^\d+-\w+\s*/, ''), productType: '', description: '' },
+                            });
+                          }}
+                          className="aspect-square rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors bg-muted"
+                        >
+                          <img src={upload.url} alt="Previous upload" className="w-full h-full object-cover" loading="lazy" />
+                        </button>
+                      ))}
+                    </div>
+                    <Separator />
+                  </div>
+                )}
+
                 <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
                   onUpdateProductInfo={info => { setScratchUpload(prev => prev ? { ...prev, productInfo: info } : prev); }}
                   isUploading={isUploading}
@@ -1018,9 +1066,13 @@ export default function Generate() {
               <Button disabled={!scratchUpload || !scratchUpload.productInfo.title || !scratchUpload.productInfo.productType}
                 onClick={async () => {
                   if (!scratchUpload) return;
-                  const uploadedUrl = await uploadFile(scratchUpload.file);
-                  if (uploadedUrl) {
-                    setScratchUpload({ ...scratchUpload, uploadedUrl });
+                  // Skip upload if reusing a previously uploaded image
+                  let finalUrl = scratchUpload.uploadedUrl;
+                  if (!finalUrl) {
+                    finalUrl = await uploadFile(scratchUpload.file) || undefined;
+                  }
+                  if (finalUrl) {
+                    setScratchUpload({ ...scratchUpload, uploadedUrl: finalUrl });
                     if (activeWorkflow?.uses_tryon) {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     } else if (brandProfiles.length > 0) {
@@ -2229,7 +2281,12 @@ export default function Generate() {
                     </div>
                     <div className="space-y-2">
                       <Label>Aspect Ratio</Label>
-                      {uiConfig?.lock_aspect_ratio ? (
+                      {isInteriorDesign ? (
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Original</Badge>
+                          <span className="text-xs text-muted-foreground">Matches uploaded photo</span>
+                        </div>
+                      ) : uiConfig?.lock_aspect_ratio ? (
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary">{workflowConfig?.fixed_settings?.aspect_ratios?.[0] || aspectRatio}</Badge>
                           <span className="text-xs text-muted-foreground">Locked by workflow</span>
