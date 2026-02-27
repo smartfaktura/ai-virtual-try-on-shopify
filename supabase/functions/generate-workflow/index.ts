@@ -130,31 +130,12 @@ interface WorkflowRequest {
   wall_color?: string;
   flooring_preference?: string;
   interior_type?: 'interior' | 'exterior';
+  design_notes?: string;
+  color_palette_preference?: string;
+  time_of_day?: string;
+  staging_purpose?: string;
   model?: {
-    name: string;
-    gender: string;
-    ethnicity: string;
-    bodyType: string;
-    ageRange: string;
-    imageUrl: string;
-  };
-  brand_profile?: {
-    tone?: string;
-    background_style?: string;
-    lighting_style?: string;
-    color_temperature?: string;
-    brand_keywords?: string[];
-    color_palette?: string[];
-    target_audience?: string;
-    do_not_rules?: string[];
-    composition_bias?: string;
-    preferred_scenes?: string[];
-    photography_reference?: string;
-  };
-  selected_variations?: number[];
-  product_angles?: 'front' | 'front-side' | 'front-back' | 'all';
-  quality?: string;
-  image_count?: number;
+...
   // Creative Drops fields
   theme?: string;
   theme_notes?: string;
