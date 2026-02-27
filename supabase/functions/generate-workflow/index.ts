@@ -256,8 +256,15 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const roomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
     const wallColor = (product as unknown as Record<string, unknown>).wall_color as string || '';
     const flooring = (product as unknown as Record<string, unknown>).flooring_preference as string || '';
+    const stagingType = (product as unknown as Record<string, unknown>).interior_type as string || 'interior';
+    const isExterior = stagingType === 'exterior';
 
-    interiorBlock = `\nROOM CONTEXT:
+    interiorBlock = isExterior
+      ? `\nEXTERIOR CONTEXT:
+This is ${roomDesc}.
+Enhance this exterior with landscaping, outdoor furniture, lighting, and curb appeal elements appropriate for the "${variation.label}" design style.
+\nIMPORTANT: The [PRODUCT IMAGE] is the BUILDING/EXTERIOR PHOTO to transform. Do NOT treat it as a product to place — instead, enhance the exterior scene while preserving its architecture, structure, and angles.\n`
+      : `\nROOM CONTEXT:
 This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
 ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
