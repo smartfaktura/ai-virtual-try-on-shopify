@@ -387,12 +387,23 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       ? `\nREQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: ${keyPieces.join(', ')}. Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.`
       : '';
 
+    // Expanded outdoor style descriptions
+    const OUTDOOR_STYLE_EXPANSIONS: Record<string, string> = {
+      'Tropical': 'Tropical outdoor furniture and design elements: rattan, teak, palm-inspired planters, lush greenery, vibrant cushion fabrics, woven textures',
+      'Mediterranean': 'Mediterranean outdoor furniture and design elements: terracotta pots, wrought iron, olive trees, warm stone, mosaic tile accents, arched trellises',
+      'Desert / Arid': 'Desert/Arid outdoor design: drought-resistant succulents, sandstone pavers, weathered wood, earth-tone ceramics, gravel pathways, shade structures',
+      'Coastal': 'Coastal outdoor design: whitewashed wood, nautical blue accents, rope details, driftwood, linen cushions, sea grass planters',
+      'Modern': 'Modern outdoor design: clean-lined furniture, concrete planters, minimalist metal frames, neutral tones, geometric shapes',
+      'Rustic': 'Rustic outdoor design: reclaimed wood, stone elements, wildflower plantings, lantern lighting, natural untreated materials',
+    };
+
     interiorBlock = isExterior
       ? `\nEXTERIOR CONTEXT:
 This is ${roomDesc}.
 Enhance this exterior with landscaping, outdoor furniture, lighting, and curb appeal elements appropriate for the "${variation.label}" design style.
-${furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} outdoor furniture and design elements.` : ''}
+${furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${OUTDOOR_STYLE_EXPANSIONS[furnitureStyle] || `${furnitureStyle} outdoor furniture and design elements`}.` : ''}
 ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${lightingMood} lighting throughout the exterior scene.` : ''}
+${roomSizeBlock}
 ${keyPiecesBlock}
 ${furnitureRealismBlock}
 ${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
