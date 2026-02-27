@@ -312,14 +312,16 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     }
     // 'Very Large' = no constraint needed
 
-    // Ceiling height constraint
+    // Ceiling height constraint — interior only (skip for exterior to prevent stale values)
     let ceilingHeightBlock = '';
-    if (ceilingHeight === 'Low') {
-      ceilingHeightBlock = `\nCEILING HEIGHT (CRITICAL): This room has LOW ceilings (under 2.4m / 8ft). Use ONLY low-profile furniture: platform beds instead of four-poster, low-back sofas, no tall bookcases or armoires. Avoid anything that would visually crowd the vertical space. Horizontal lines preferred over vertical.`;
-    } else if (ceilingHeight === 'High') {
-      ceilingHeightBlock = `\nCEILING HEIGHT: This room has HIGH ceilings (2.7m+ / 9ft+). Furniture can be taller and more substantial. Consider floor-to-ceiling curtains, tall shelving, and vertical decor to utilize the height naturally.`;
-    } else if (ceilingHeight === 'Double Height') {
-      ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
+    if (!isExterior) {
+      if (ceilingHeight === 'Low') {
+        ceilingHeightBlock = `\nCEILING HEIGHT (CRITICAL): This room has LOW ceilings (under 2.4m / 8ft). Use ONLY low-profile furniture: platform beds instead of four-poster, low-back sofas, no tall bookcases or armoires. Avoid anything that would visually crowd the vertical space. Horizontal lines preferred over vertical.`;
+      } else if (ceilingHeight === 'High') {
+        ceilingHeightBlock = `\nCEILING HEIGHT: This room has HIGH ceilings (2.7m+ / 9ft+). Furniture can be taller and more substantial. Consider floor-to-ceiling curtains, tall shelving, and vertical decor to utilize the height naturally.`;
+      } else if (ceilingHeight === 'Double Height') {
+        ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
+      }
     }
 
     // Empty room instruction
@@ -330,22 +332,50 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     // Staging purpose instruction
     let stagingPurposeBlock = '';
     if (stagingPurpose === 'real-estate') {
-      stagingPurposeBlock = `\nSTAGING PURPOSE: Real estate listing. Bright, clean, spacious feel. Decluttered. Neutral staging to appeal to broadest audience. Make the space look move-in ready and aspirational.`;
+      stagingPurposeBlock = isExterior
+        ? `\nSTAGING PURPOSE: Real estate listing. Maximize curb appeal — clean pathways, manicured landscaping, warm lighting, and an inviting entrance. Make the property look aspirational and move-in ready from the outside.`
+        : `\nSTAGING PURPOSE: Real estate listing. Bright, clean, spacious feel. Decluttered. Neutral staging to appeal to broadest audience. Make the space look move-in ready and aspirational.`;
     } else if (stagingPurpose === 'design-portfolio') {
       stagingPurposeBlock = `\nSTAGING PURPOSE: Interior design portfolio. Showcase design details, textures, and curated accessories. Editorial quality. Emphasize material choices, layering, and visual storytelling.`;
     } else if (stagingPurpose === 'airbnb') {
-      stagingPurposeBlock = `\nSTAGING PURPOSE: Airbnb/rental listing. Warm, welcoming, lived-in feel. Show amenities clearly (towels, pillows, books, coffee setup). Make guests feel at home.`;
+      stagingPurposeBlock = isExterior
+        ? `\nSTAGING PURPOSE: Airbnb/rental listing. Welcoming outdoor entertaining space. Show outdoor dining, cozy seating, string lights, and lifestyle amenities. Make guests envision relaxing outside.`
+        : `\nSTAGING PURPOSE: Airbnb/rental listing. Warm, welcoming, lived-in feel. Show amenities clearly (towels, pillows, books, coffee setup). Make guests feel at home.`;
     }
 
-    // Color palette preference
-    const colorPaletteBlock = colorPalettePreference
-      ? `\nCOLOR PALETTE: Use a ${colorPalettePreference} color scheme throughout the room's furniture, textiles, and decor accessories.`
+    // Color palette preference — expanded descriptions
+    const COLOR_PALETTE_EXPANSIONS: Record<string, string> = {
+      'Neutral / Earth Tones': 'Neutral / Earth Tones (beige, taupe, warm brown, soft cream, terracotta accents, muted olive)',
+      'Cool & Calming': 'Cool & Calming (soft blue-gray, pale sage, dusty lavender, cool white, silver accents)',
+      'Warm & Inviting': 'Warm & Inviting (golden amber, burnt sienna, warm copper, rich caramel, deep rust accents)',
+      'Bold & Vibrant': 'Bold & Vibrant (deep navy, emerald green, mustard yellow, coral, rich burgundy)',
+      'Monochrome': 'Monochrome (pure black, charcoal, mid-gray, light gray, crisp white — single-tone palette)',
+      'Pastel': 'Pastel (blush pink, baby blue, mint green, soft peach, light lilac)',
+    };
+    const expandedPalette = colorPalettePreference
+      ? (COLOR_PALETTE_EXPANSIONS[colorPalettePreference] || colorPalettePreference)
+      : '';
+    const colorPaletteBlock = expandedPalette
+      ? `\nCOLOR PALETTE: Use a ${expandedPalette} color scheme throughout the ${isExterior ? 'outdoor furniture, planters, textiles, and landscaping elements' : "room's furniture, textiles, and decor accessories"}.`
       : '';
 
-    // Time of day / natural light
-    const timeOfDayBlock = timeOfDay && timeOfDay !== 'As Photographed'
-      ? `\nNATURAL LIGHT: Render the scene as if photographed during ${timeOfDay}. Adjust window light direction, shadow angles, and ambient light color accordingly.`
-      : '';
+    // Time of day / natural light — context-aware for interior vs exterior
+    let timeOfDayBlock = '';
+    if (timeOfDay && timeOfDay !== 'As Photographed') {
+      if (isExterior) {
+        const exteriorTimeDescriptions: Record<string, string> = {
+          'Morning Light': 'Render as early morning: soft golden light from a low east angle, long gentle shadows, dewy freshness on surfaces.',
+          'Midday': 'Render at midday: bright overhead sun, minimal shadows, vivid colors, clear blue sky.',
+          'Golden Hour Glow': 'Render at golden hour: warm amber sunlight hitting the facade from a low angle, long dramatic shadows, warm sky gradient from gold to soft pink.',
+          'Dramatic Twilight': 'Render at twilight/blue hour: deep blue-purple sky, warm interior lights glowing through windows, exterior accent lighting visible, atmospheric and moody.',
+          'Night / Uplighting': 'Render at night: dark sky, architectural uplighting illuminating the facade and landscaping, warm pathway lights, dramatic pool/garden lighting if present.',
+          'Overcast': 'Render under overcast sky: soft diffused light, no harsh shadows, even illumination across all surfaces, muted sky.',
+        };
+        timeOfDayBlock = `\nNATURAL LIGHT: ${exteriorTimeDescriptions[timeOfDay] || `Render the exterior as if photographed during ${timeOfDay}. Adjust sun position, shadow angles, and sky accordingly.`}`;
+      } else {
+        timeOfDayBlock = `\nNATURAL LIGHT: Render the scene as if photographed during ${timeOfDay}. Adjust window light direction, shadow angles, and ambient light color accordingly.`;
+      }
+    }
 
     // Designer notes
     const designNotesBlock = designNotes
@@ -357,12 +387,23 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       ? `\nREQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: ${keyPieces.join(', ')}. Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.`
       : '';
 
+    // Expanded outdoor style descriptions
+    const OUTDOOR_STYLE_EXPANSIONS: Record<string, string> = {
+      'Tropical': 'Tropical outdoor furniture and design elements: rattan, teak, palm-inspired planters, lush greenery, vibrant cushion fabrics, woven textures',
+      'Mediterranean': 'Mediterranean outdoor furniture and design elements: terracotta pots, wrought iron, olive trees, warm stone, mosaic tile accents, arched trellises',
+      'Desert / Arid': 'Desert/Arid outdoor design: drought-resistant succulents, sandstone pavers, weathered wood, earth-tone ceramics, gravel pathways, shade structures',
+      'Coastal': 'Coastal outdoor design: whitewashed wood, nautical blue accents, rope details, driftwood, linen cushions, sea grass planters',
+      'Modern': 'Modern outdoor design: clean-lined furniture, concrete planters, minimalist metal frames, neutral tones, geometric shapes',
+      'Rustic': 'Rustic outdoor design: reclaimed wood, stone elements, wildflower plantings, lantern lighting, natural untreated materials',
+    };
+
     interiorBlock = isExterior
       ? `\nEXTERIOR CONTEXT:
 This is ${roomDesc}.
 Enhance this exterior with landscaping, outdoor furniture, lighting, and curb appeal elements appropriate for the "${variation.label}" design style.
-${furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${furnitureStyle} outdoor furniture and design elements.` : ''}
+${furnitureStyle && furnitureStyle !== 'Match Design Style' ? `\nFURNITURE STYLE: Use ${OUTDOOR_STYLE_EXPANSIONS[furnitureStyle] || `${furnitureStyle} outdoor furniture and design elements`}.` : ''}
 ${lightingMood && lightingMood !== 'Keep Original' ? `\nLIGHTING MOOD: Apply ${lightingMood} lighting throughout the exterior scene.` : ''}
+${roomSizeBlock}
 ${keyPiecesBlock}
 ${furnitureRealismBlock}
 ${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}

@@ -1,80 +1,70 @@
 
+## Fix Upscale Feature: Function, UI, and State Management
 
-## Comprehensive Improvement Plan: Interior / Exterior Staging
+### Issues Found
 
-After auditing every function, UI element, and prompt block, here are the improvements organized by category.
+1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
+   - The image URL in `generation_jobs.results` array never changes
+   - The `quality` field is never set to `"upscaled"`
+   - On page reload, the original image shows again
+   - The "Enhance to PRO HD" button always reappears
 
----
+2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
 
-### 1. UI/UX Improvements
+3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
 
-**A. Missing "Back" button context for Interior Design in Settings step**
-The "Back" button on the settings/style page (line 2663-2668) navigates to brand-profile or upload/product, but for interior design it should always go back to "upload" since that's where Room Details live. Currently the logic doesn't account for `isInteriorDesign`.
+4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
 
-**B. Results page says "Publishing to" for interior staging**
-Line 2819 shows "Publishing to" or "Generated from uploaded image" — neither makes sense for room staging. Should say "Staged from your photo" for interior design.
-
-**C. "Generating" screen text not contextual for interior**
-Line 2781 says `Generating X variations of "Uploaded Room"`. Should say something like `Staging your ${interiorRoomType || 'room'} in ${selectedStyleName} style`.
-
-**D. Scene selection counter says "scenes" for interior**
-Line 2331-2333 says "Select at least 1 scene" and "X of Y scenes selected" — should say "styles" for interior design.
-
-**E. Quality dropdown shows wrong credits for Flat Lay**
-Line 2478 shows "4 credits/img" and "10 credits/img" for Flat Lay, but line 2613 shows "8 credits/img" and "16 credits/img" for the general settings. The Flat Lay credits are wrong (should be 8/16 like everything else since Pro model is used).
-
-**F. No visual preview of selected Room Details before generating**
-After completing Room Details and moving to Style selection, there's no summary showing what the user configured (room type, furniture handling, wall color, etc.). Users can't review their choices without going back.
+5. **No separator** -- Buttons section needs visual separation.
 
 ---
 
-### 2. Prompt Engineering Improvements
+### Changes
 
-**A. Exterior prompt doesn't include Room Size constraint**
-The exterior block (lines 360-369) includes `keyPiecesBlock` and `furnitureRealismBlock` but NOT `roomSizeBlock`. If a user selects "Small" area size for a balcony, the AI gets no scaling instruction for exterior.
+#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
 
-**B. Exterior prompt missing ceiling height exclusion confirmation**
-While the UI hides ceiling height for exterior, the backend still reads `ceiling_height` from the payload. If a stale value is sent (e.g., user switched from interior to exterior without resetting), it could inject a ceiling height block into an exterior prompt. The backend should explicitly skip it for exterior.
+- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
+- After uploading the upscaled image, update `generation_jobs`:
+  - Replace the specific URL in the `results` JSONB array
+  - Set `quality` to `"upscaled"`
+- Keep the existing freestyle update logic
 
-**C. No "Staging Purpose" context in the prompt for exterior**
-The `stagingPurposeBlock` IS included in the exterior prompt (line 368), but it says things like "make the space look move-in ready" which is interior-focused language. The real estate purpose should say "maximize curb appeal" for exterior.
+#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
 
-**D. Time of Day prompt is generic**
-Line 347: `Render the scene as if photographed during ${timeOfDay}` -- this works but could be more specific for interior vs exterior. For exterior, golden hour should include "warm sunlight hitting the facade from a low angle" rather than just "adjust window light direction."
+**Button redesign:**
+- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
+- Same height as download button (`h-12` instead of `h-14`)
+- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
+- Add a separator line between the Download button and secondary actions
 
-**E. Empty "Furniture Style" sent when "Match Design Style" is selected**
-Line 381: The backend checks `furnitureStyle !== 'Match Design Style'` before injecting the style block, which is correct. However, the exterior block (line 364) does the same check. Both are fine but the exterior options like "Tropical" and "Mediterranean" don't get a descriptive expansion -- "Use Tropical outdoor furniture" is vague. Should expand to "Use Tropical outdoor furniture and design elements: rattan, teak, palm-inspired planters, lush greenery, vibrant cushion fabrics."
+**Loading messages:**
+- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
+- Cycle every 4 seconds while `upscaling` is true
 
-**F. Color Palette block is too brief**
-Line 342: `Use a ${colorPalettePreference} color scheme throughout the room's furniture, textiles, and decor accessories.` -- This is thin. "Neutral / Earth Tones" should expand to specific colors the AI can reference (beige, taupe, warm brown, soft cream, terracotta accents).
-
----
-
-### 3. Functional Gaps
-
-**A. "Regenerate" button on results page is non-functional**
-Line 2848: `handleRegenerate` just shows a toast "Regenerating variation... (this would cost 1 credit)" -- it doesn't actually regenerate. This is a stub.
-
-**B. No aspect ratio detection from uploaded photo**
-The UI says "Matches uploaded photo" for aspect ratio (line 2621-2623), but the backend just uses the workflow's default ratio. There's no actual detection of the uploaded photo's dimensions to pass the correct ratio.
+**Already upscaled handling:**
+- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
 
 ---
 
-### 4. Proposed Changes
+### Technical Details
 
-| File | Change | Priority |
-|------|--------|----------|
-| `src/pages/Generate.tsx` | Fix "Back" button for interior design to go to 'upload' step | High |
-| `src/pages/Generate.tsx` | Change "Publishing to" to "Staged from your photo" for interior | Medium |
-| `src/pages/Generate.tsx` | Fix generating screen text to show room type and style name | Medium |
-| `src/pages/Generate.tsx` | Change "scenes" to "styles" in selection counter for interior | Medium |
-| `src/pages/Generate.tsx` | Fix Flat Lay credits display (4/10 should be 8/16) | High |
-| `src/pages/Generate.tsx` | Add Room Details summary card before style selection | Low |
-| `supabase/functions/generate-workflow/index.ts` | Add `roomSizeBlock` to exterior prompt | High |
-| `supabase/functions/generate-workflow/index.ts` | Add exterior-specific staging purpose language | Medium |
-| `supabase/functions/generate-workflow/index.ts` | Expand outdoor style descriptions (Tropical, Mediterranean, etc.) | Medium |
-| `supabase/functions/generate-workflow/index.ts` | Expand color palette descriptions with specific colors | Medium |
-| `supabase/functions/generate-workflow/index.ts` | Add exterior-specific time of day descriptions | Low |
+**Edge function sourceId parsing:**
+```text
+// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
+// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
+// Split on last hyphen to get UUID and index
+```
 
-Total: 2 files, 11 targeted improvements.
+**Generation jobs DB update:**
+```text
+// Fetch current results array
+// Replace results[index] with the new upscaled URL
+// Update quality to "upscaled"
+```
 
+### Files to Edit
+
+| File | Change |
+|------|--------|
+| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
+| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |

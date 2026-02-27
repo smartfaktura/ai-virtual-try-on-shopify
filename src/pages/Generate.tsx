@@ -2328,9 +2328,9 @@ export default function Generate() {
                 <div>
                   <p className="text-xs text-muted-foreground">
                     {selectedVariationIndices.size === 0 ? (
-                      <span className="text-destructive font-medium">Select at least 1 scene to continue</span>
+                      <span className="text-destructive font-medium">Select at least 1 {isInteriorDesign ? 'style' : 'scene'} to continue</span>
                     ) : (
-                      <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : variationStrategy?.variations.length} scenes selected
+                      <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : variationStrategy?.variations.length} {isInteriorDesign ? 'styles' : 'scenes'} selected
                         {workflowImageCount > MAX_IMAGES_PER_JOB && (
                           <span className="ml-1 text-muted-foreground">· Will split into {Math.ceil(selectedVariationIndices.size / Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier)))} batches</span>
                         )}
@@ -2475,8 +2475,8 @@ export default function Generate() {
                       <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="standard">Standard (4 credits/img)</SelectItem>
-                          <SelectItem value="high">High (10 credits/img)</SelectItem>
+                          <SelectItem value="standard">Standard (8 credits/img)</SelectItem>
+                          <SelectItem value="high">High (16 credits/img)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -2493,7 +2493,7 @@ export default function Generate() {
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                     <p className="text-xs text-muted-foreground">
                       {selectedVariationIndices.size} surface{selectedVariationIndices.size !== 1 ? 's' : ''}
-                      {' '}× {quality === 'high' ? 10 : 4} credits
+                      {' '}× {quality === 'high' ? 16 : 8} credits
                       {selectedFlatLayProductIds.size > 1 && ` · ${selectedFlatLayProductIds.size} products in composition`}
                     </p>
                   </div>
@@ -2663,6 +2663,8 @@ export default function Generate() {
                   <Button variant="outline" onClick={() => {
                     if (isMirrorSelfie) {
                       setCurrentStep('model');
+                    } else if (isInteriorDesign) {
+                      setCurrentStep('upload');
                     } else {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : (sourceType === 'scratch' ? 'upload' : 'product'));
                     }
@@ -2778,6 +2780,7 @@ export default function Generate() {
               <p className="text-sm text-muted-foreground mt-1">
                 {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
                  isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
+                 isInteriorDesign ? `Staging your ${interiorRoomType || 'room'} in ${variationStrategy?.variations.find((_, i) => selectedVariationIndices.has(i))?.label || 'selected'} style` :
                  hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
                  `Creating ${imageCount} images of "${selectedProduct?.title}"`}
               </p>
@@ -2816,7 +2819,7 @@ export default function Generate() {
         {currentStep === 'results' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
             <Card><CardContent className="p-5 space-y-3">
-              <Badge variant="secondary">{sourceType === 'scratch' ? 'Generated from uploaded image' : (isFlatLay && selectedFlatLayProductIds.size > 1 ? `Publishing to · ${selectedFlatLayProductIds.size} products` : 'Publishing to')}</Badge>
+              <Badge variant="secondary">{isInteriorDesign ? 'Staged from your photo' : sourceType === 'scratch' ? 'Generated from uploaded image' : (isFlatLay && selectedFlatLayProductIds.size > 1 ? `Publishing to · ${selectedFlatLayProductIds.size} products` : 'Publishing to')}</Badge>
               {isFlatLay && selectedFlatLayProductIds.size > 1 ? (
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   {userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
