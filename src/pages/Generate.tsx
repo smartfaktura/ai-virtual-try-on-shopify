@@ -542,6 +542,10 @@ export default function Generate() {
       prop_style: isFlatLay ? flatLayPropStyle : undefined,
       additional_products: additionalProducts,
       ugc_mood: isSelfieUgc ? ugcMood : undefined,
+      // Interior Design fields
+      room_type: isInteriorDesign ? interiorRoomType : undefined,
+      wall_color: isInteriorDesign ? interiorWallColor : undefined,
+      flooring_preference: isInteriorDesign ? interiorFlooring : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
