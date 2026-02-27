@@ -21,9 +21,6 @@ interface LibraryDetailModalProps {
 
 export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
-  const [upscaling, setUpscaling] = useState(false);
-  const [upscaledUrl, setUpscaledUrl] = useState<string | null>(null);
-  const [upscaleMessageIndex, setUpscaleMessageIndex] = useState(0);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const queryClient = useQueryClient();
