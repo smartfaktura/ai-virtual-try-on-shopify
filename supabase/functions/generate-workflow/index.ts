@@ -62,6 +62,14 @@ const ROOM_TYPE_DESCRIPTIONS: Record<string, string> = {
   'Garage': 'a garage with organized tool storage, workbench, floor coating, and efficient wall-mounted solutions',
   'Basement / Rec Room': 'a basement recreation room with comfortable seating, entertainment area, and warm lighting',
   'Exterior / Facade': 'building exterior with landscaping, outdoor lighting, pathway, and curb appeal elements',
+  // Exterior types
+  'Front Facade': 'the front face of a building with landscaping, outdoor lighting, pathway, and strong curb appeal',
+  'Backyard': 'a backyard space with patio seating, lawn area, garden beds, and outdoor entertaining features',
+  'Garden': 'a landscaped garden with flower beds, pathways, water features, and decorative plantings',
+  'Pool Area': 'a swimming pool area with lounge chairs, poolside landscaping, and outdoor lighting',
+  'Driveway': 'the driveway and front approach with pavers or concrete, bordering plants, and outdoor lighting',
+  'Rooftop Terrace': 'a rooftop terrace with weather-resistant seating, planters, privacy screens, and ambient lighting',
+  'Entrance / Porch': 'a welcoming entrance/porch with seating, potted plants, lighting fixtures, and decorative elements',
 };
 
 // UGC Product Interaction Mapping
@@ -121,6 +129,7 @@ interface WorkflowRequest {
   room_type?: string;
   wall_color?: string;
   flooring_preference?: string;
+  interior_type?: 'interior' | 'exterior';
   model?: {
     name: string;
     gender: string;
@@ -247,8 +256,15 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const roomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
     const wallColor = (product as unknown as Record<string, unknown>).wall_color as string || '';
     const flooring = (product as unknown as Record<string, unknown>).flooring_preference as string || '';
+    const stagingType = (product as unknown as Record<string, unknown>).interior_type as string || 'interior';
+    const isExterior = stagingType === 'exterior';
 
-    interiorBlock = `\nROOM CONTEXT:
+    interiorBlock = isExterior
+      ? `\nEXTERIOR CONTEXT:
+This is ${roomDesc}.
+Enhance this exterior with landscaping, outdoor furniture, lighting, and curb appeal elements appropriate for the "${variation.label}" design style.
+\nIMPORTANT: The [PRODUCT IMAGE] is the BUILDING/EXTERIOR PHOTO to transform. Do NOT treat it as a product to place — instead, enhance the exterior scene while preserving its architecture, structure, and angles.\n`
+      : `\nROOM CONTEXT:
 This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
 ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
@@ -623,6 +639,7 @@ serve(async (req) => {
       room_type: body.room_type,
       wall_color: body.wall_color,
       flooring_preference: body.flooring_preference,
+      interior_type: body.interior_type,
     };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;

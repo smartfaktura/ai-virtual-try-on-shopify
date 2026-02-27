@@ -142,7 +142,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     ],
   },
 
-  'Interior Design Set': {
+  'Interior / Exterior Staging': {
     background: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
     elements: [
       {

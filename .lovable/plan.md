@@ -1,63 +1,70 @@
 
+## Fix Upscale Feature: Function, UI, and State Management
 
-## Fix Interior Design Workflow: Rename + Fix Wizard Flow
+### Issues Found
 
-### Problems
-1. Workflow is called "Interior Design Set" -- should be renamed to **"Interior / Exterior Staging"** (or similar) to cover both use cases
-2. The first step shows "From Product(s)" and "From Scratch" selectors -- this makes no sense for interior design. Users should only be able to **upload an image** (no product selection)
-3. Missing **Interior vs Exterior** type selector so users can specify what they're staging
+1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
+   - The image URL in `generation_jobs.results` array never changes
+   - The `quality` field is never set to `"upscaled"`
+   - On page reload, the original image shows again
+   - The "Enhance to PRO HD" button always reappears
+
+2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
+
+3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
+
+4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
+
+5. **No separator** -- Buttons section needs visual separation.
+
+---
 
 ### Changes
 
-#### 1. Database Migration -- Rename Workflow
-- Rename from `Interior Design Set` to `Interior / Exterior Staging`
-- Update description accordingly
+#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
 
-#### 2. `src/pages/Generate.tsx` -- Fix Wizard Flow
-- Update detection: `isInteriorDesign` matches new name `'Interior / Exterior Staging'`
-- **Skip the source step entirely** for interior design -- go straight to `'upload'` step since product selection doesn't apply
-- Add new state: `interiorType` with values `'interior'` | `'exterior'`
-- Update wizard steps to: `['Upload Photo', 'Type & Room', 'Styles', 'Results']`
-- In the **upload step**, update copy to say "Upload a photo of a room or building exterior"
-- In the **settings step**, add an **Interior / Exterior toggle** at the top of Room Settings:
-  - When "Interior" is selected: show the full room type dropdown (Living Room, Kitchen, etc.)
-  - When "Exterior" is selected: show exterior-specific types (Front Facade, Backyard, Garden, Pool Area, Driveway, Rooftop Terrace, Entrance/Porch)
-- Pass `interior_type` (interior/exterior) to the generation payload
-- When workflow loads (`useEffect`), auto-set `currentStep` to `'upload'` instead of `'source'`
+- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
+- After uploading the upscaled image, update `generation_jobs`:
+  - Replace the specific URL in the `results` JSONB array
+  - Set `quality` to `"upscaled"`
+- Keep the existing freestyle update logic
 
-#### 3. `src/components/app/WorkflowCard.tsx` -- Update Feature List
-- Update the `featureMap` key from `'Interior Design Set'` to `'Interior / Exterior Staging'`
+#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
 
-#### 4. `supabase/functions/generate-workflow/index.ts` -- Handle Exterior Type
-- Add exterior room type descriptions to `ROOM_TYPE_DESCRIPTIONS`
-- Read `interior_type` from payload and adjust prompt accordingly (exterior shots focus on curb appeal, landscaping, architecture preservation)
+**Button redesign:**
+- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
+- Same height as download button (`h-12` instead of `h-14`)
+- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
+- Add a separator line between the Download button and secondary actions
+
+**Loading messages:**
+- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
+- Cycle every 4 seconds while `upscaling` is true
+
+**Already upscaled handling:**
+- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
+
+---
 
 ### Technical Details
 
-**Auto-skip to upload step for interior workflow:**
-```typescript
-useEffect(() => {
-  if (isInteriorDesign) {
-    setSourceType('scratch');
-    setCurrentStep('upload');
-  }
-}, [isInteriorDesign]);
+**Edge function sourceId parsing:**
+```text
+// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
+// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
+// Split on last hyphen to get UUID and index
 ```
 
-**Interior/Exterior toggle in settings:**
+**Generation jobs DB update:**
 ```text
-[Interior] [Exterior]  <-- two-button toggle
-
-Interior selected -> Room types: Living Room, Kitchen, etc.
-Exterior selected -> Room types: Front Facade, Backyard, Garden, Pool Area, etc.
+// Fetch current results array
+// Replace results[index] with the new upscaled URL
+// Update quality to "upscaled"
 ```
 
 ### Files to Edit
 
 | File | Change |
 |------|--------|
-| SQL Migration | Rename workflow to "Interior / Exterior Staging", update description |
-| `src/pages/Generate.tsx` | Auto-skip to upload, add interior/exterior toggle, update room types, pass interior_type |
-| `src/components/app/WorkflowCard.tsx` | Update featureMap key |
-| `supabase/functions/generate-workflow/index.ts` | Add exterior room descriptions, handle interior_type |
-
+| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
+| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
