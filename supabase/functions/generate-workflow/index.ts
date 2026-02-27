@@ -142,6 +142,8 @@ interface WorkflowRequest {
   staging_purpose?: string;
   is_empty_room?: boolean;
   ceiling_height?: string;
+  room_dimensions?: string;
+  exact_ceiling_height?: string;
   model?: {
     name: string;
     gender: string;
