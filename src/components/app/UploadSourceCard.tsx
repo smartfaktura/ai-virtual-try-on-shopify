@@ -95,37 +95,39 @@ export function UploadSourceCard({
           </button>
         </div>
 
-        <div className="space-y-3">
-          <h4 className="font-semibold">{isRoom ? 'Room Details' : 'Product Details'}</h4>
-          {isAnalyzing ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <Sparkles className="w-4 h-4 text-primary/60" />
-              {isRoom ? 'AI detecting room details…' : 'AI analyzing product…'}
-            </div>
-          ) : (
-            <>
-              <p className="text-sm text-muted-foreground">{isRoom ? 'Describe the space to help AI stage it accurately.' : 'Add details to help the AI generate better images.'}</p>
-              <div className="space-y-1.5">
-                <Label htmlFor="product-title">{isRoom ? 'Room Name' : 'Product Title'}</Label>
-                <Input id="product-title" value={scratchUpload.productInfo.title} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, title: e.target.value })} placeholder={isRoom ? 'e.g., Master Bedroom, Kitchen' : 'e.g., High-Waist Yoga Leggings'} />
+        {!isRoom && (
+          <div className="space-y-3">
+            <h4 className="font-semibold">Product Details</h4>
+            {isAnalyzing ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <Sparkles className="w-4 h-4 text-primary/60" />
+                AI analyzing product…
               </div>
-              <div className="space-y-1.5">
-                <Label>{isRoom ? 'Space Type' : 'Product Type'}</Label>
-                <Input
-                  value={scratchUpload.productInfo.productType}
-                  onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: e.target.value })}
-                  placeholder={isRoom ? 'e.g., Living Room, Front Facade' : 'e.g. Scented Candle, Sneakers, Face Serum…'}
-                  maxLength={100}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="product-desc">Description (optional)</Label>
-                <Textarea id="product-desc" value={scratchUpload.productInfo.description} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, description: e.target.value })} placeholder={isRoom ? 'e.g., Empty room with large windows, needs staging' : 'e.g., Black seamless leggings with high waistband'} rows={3} />
-              </div>
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">Add details to help the AI generate better images.</p>
+                <div className="space-y-1.5">
+                  <Label htmlFor="product-title">Product Title</Label>
+                  <Input id="product-title" value={scratchUpload.productInfo.title} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, title: e.target.value })} placeholder="e.g., High-Waist Yoga Leggings" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Product Type</Label>
+                  <Input
+                    value={scratchUpload.productInfo.productType}
+                    onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, productType: e.target.value })}
+                    placeholder="e.g. Scented Candle, Sneakers, Face Serum…"
+                    maxLength={100}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="product-desc">Description (optional)</Label>
+                  <Textarea id="product-desc" value={scratchUpload.productInfo.description} onChange={(e) => onUpdateProductInfo({ ...scratchUpload.productInfo, description: e.target.value })} placeholder="e.g., Black seamless leggings with high waistband" rows={3} />
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {isUploading && (
           <Alert><AlertDescription>Uploading image to storage...</AlertDescription></Alert>
