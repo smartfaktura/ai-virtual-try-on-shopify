@@ -12,13 +12,6 @@ import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
-const UPSCALE_MESSAGES = [
-  "VOVV.AI team is enhancing your image…",
-  "Adding extra detail and sharpness…",
-  "Refining textures and colors…",
-  "Almost there, finalizing PRO HD…",
-  "Polishing the last pixels…",
-];
 
 interface LibraryDetailModalProps {
   item: LibraryItem | null;
