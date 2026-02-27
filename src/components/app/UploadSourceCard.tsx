@@ -88,7 +88,7 @@ export function UploadSourceCard({
       <div className="space-y-4">
         <div className="relative">
           <div className="aspect-square max-w-[200px] sm:max-w-xs rounded-lg overflow-hidden border border-border bg-card">
-            <img src={scratchUpload.previewUrl} alt="Uploaded product" className="w-full h-full object-contain" />
+            <img src={scratchUpload.previewUrl} alt={isRoom ? "Uploaded room photo" : "Uploaded product"} className="w-full h-full object-contain" />
           </div>
           <button type="button" onClick={onRemove} className="absolute top-2 right-2 p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors border border-border">
             <X className="w-4 h-4" />
