@@ -341,9 +341,20 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
         : `\nSTAGING PURPOSE: Airbnb/rental listing. Warm, welcoming, lived-in feel. Show amenities clearly (towels, pillows, books, coffee setup). Make guests feel at home.`;
     }
 
-    // Color palette preference
-    const colorPaletteBlock = colorPalettePreference
-      ? `\nCOLOR PALETTE: Use a ${colorPalettePreference} color scheme throughout the room's furniture, textiles, and decor accessories.`
+    // Color palette preference — expanded descriptions
+    const COLOR_PALETTE_EXPANSIONS: Record<string, string> = {
+      'Neutral / Earth Tones': 'Neutral / Earth Tones (beige, taupe, warm brown, soft cream, terracotta accents, muted olive)',
+      'Cool & Calming': 'Cool & Calming (soft blue-gray, pale sage, dusty lavender, cool white, silver accents)',
+      'Warm & Inviting': 'Warm & Inviting (golden amber, burnt sienna, warm copper, rich caramel, deep rust accents)',
+      'Bold & Vibrant': 'Bold & Vibrant (deep navy, emerald green, mustard yellow, coral, rich burgundy)',
+      'Monochrome': 'Monochrome (pure black, charcoal, mid-gray, light gray, crisp white — single-tone palette)',
+      'Pastel': 'Pastel (blush pink, baby blue, mint green, soft peach, light lilac)',
+    };
+    const expandedPalette = colorPalettePreference
+      ? (COLOR_PALETTE_EXPANSIONS[colorPalettePreference] || colorPalettePreference)
+      : '';
+    const colorPaletteBlock = expandedPalette
+      ? `\nCOLOR PALETTE: Use a ${expandedPalette} color scheme throughout the ${isExterior ? 'outdoor furniture, planters, textiles, and landscaping elements' : "room's furniture, textiles, and decor accessories"}.`
       : '';
 
     // Time of day / natural light
