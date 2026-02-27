@@ -330,11 +330,15 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     // Staging purpose instruction
     let stagingPurposeBlock = '';
     if (stagingPurpose === 'real-estate') {
-      stagingPurposeBlock = `\nSTAGING PURPOSE: Real estate listing. Bright, clean, spacious feel. Decluttered. Neutral staging to appeal to broadest audience. Make the space look move-in ready and aspirational.`;
+      stagingPurposeBlock = isExterior
+        ? `\nSTAGING PURPOSE: Real estate listing. Maximize curb appeal — clean pathways, manicured landscaping, warm lighting, and an inviting entrance. Make the property look aspirational and move-in ready from the outside.`
+        : `\nSTAGING PURPOSE: Real estate listing. Bright, clean, spacious feel. Decluttered. Neutral staging to appeal to broadest audience. Make the space look move-in ready and aspirational.`;
     } else if (stagingPurpose === 'design-portfolio') {
       stagingPurposeBlock = `\nSTAGING PURPOSE: Interior design portfolio. Showcase design details, textures, and curated accessories. Editorial quality. Emphasize material choices, layering, and visual storytelling.`;
     } else if (stagingPurpose === 'airbnb') {
-      stagingPurposeBlock = `\nSTAGING PURPOSE: Airbnb/rental listing. Warm, welcoming, lived-in feel. Show amenities clearly (towels, pillows, books, coffee setup). Make guests feel at home.`;
+      stagingPurposeBlock = isExterior
+        ? `\nSTAGING PURPOSE: Airbnb/rental listing. Welcoming outdoor entertaining space. Show outdoor dining, cozy seating, string lights, and lifestyle amenities. Make guests envision relaxing outside.`
+        : `\nSTAGING PURPOSE: Airbnb/rental listing. Warm, welcoming, lived-in feel. Show amenities clearly (towels, pillows, books, coffee setup). Make guests feel at home.`;
     }
 
     // Color palette preference
