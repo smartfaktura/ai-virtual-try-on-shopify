@@ -1117,6 +1117,28 @@ export default function Generate() {
                   </p>
                 </div>
 
+                {/* Contextual upload tips for interior/exterior */}
+                {isInteriorDesign && !scratchUpload && (
+                  <Alert className="border-primary/20 bg-primary/5">
+                    <Info className="w-4 h-4 text-primary" />
+                    <AlertDescription className="text-xs space-y-1">
+                      {interiorType === 'interior' ? (
+                        <ul className="list-disc list-inside text-muted-foreground">
+                          <li>Shoot from a corner to capture two walls for best depth</li>
+                          <li>Use well-lit, daytime photos — avoid heavy shadows</li>
+                          <li>Avoid extreme wide-angle or fisheye lens distortion</li>
+                        </ul>
+                      ) : (
+                        <ul className="list-disc list-inside text-muted-foreground">
+                          <li>Shoot straight-on or at a 30° angle for best results</li>
+                          <li>Include the full facade — avoid cutting off edges</li>
+                          <li>Daytime photos with even lighting work best</li>
+                        </ul>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 {/* Recent uploads gallery for interior/exterior staging */}
                 {isInteriorDesign && previousUploads.length > 0 && !scratchUpload && (
                   <div className="space-y-2">
