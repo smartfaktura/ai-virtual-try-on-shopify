@@ -1729,7 +1729,7 @@ export default function Generate() {
                     )}
                     {isInteriorDesign && (
                       <>
-                        <Badge variant="secondary" className="text-[10px]">🏠 Interior</Badge>
+                        <Badge variant="secondary" className="text-[10px]">{interiorType === 'interior' ? 'Interior' : 'Exterior'}</Badge>
                         <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Styles</Badge>
                       </>
                     )}
