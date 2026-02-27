@@ -349,6 +349,7 @@ export default function Generate() {
   // Reset key pieces when room type changes
   useEffect(() => {
     setInteriorKeyPieces([]);
+    setInteriorDesignNotes('');
   }, [interiorRoomType]);
 
   // When workflow is loaded, set generation mode and defaults
