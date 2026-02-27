@@ -613,6 +613,17 @@ serve(async (req) => {
     let model = getModelForQuality(quality);
     // Force Pro model when a person/model reference image is present (e.g. Selfie/UGC Set)
     if (body.model?.imageUrl) model = "google/gemini-3-pro-image-preview";
+    // Force Pro model for interior design (architectural preservation needs highest fidelity)
+    const isInterior = (config.ui_config as Record<string, unknown>)?.show_room_type_picker === true;
+    if (isInterior) model = "google/gemini-3-pro-image-preview";
+
+    // Inject interior design fields into the product object so buildVariationPrompt can access them
+    const productWithExtras = {
+      ...body.product,
+      room_type: body.room_type,
+      wall_color: body.wall_color,
+      flooring_preference: body.flooring_preference,
+    };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;
     console.log(
