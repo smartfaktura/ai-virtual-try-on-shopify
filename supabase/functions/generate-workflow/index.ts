@@ -38,6 +38,32 @@ interface VariationItem {
   category?: string;
 }
 
+// Room Type Descriptions for Interior Design workflow
+const ROOM_TYPE_DESCRIPTIONS: Record<string, string> = {
+  'Living Room': 'a spacious living room with comfortable seating, coffee table, entertainment area, and ambient lighting',
+  'Bedroom (Master)': 'a master bedroom with king/queen bed, nightstands, dresser, and serene sleeping environment',
+  'Bedroom (Guest)': 'a welcoming guest bedroom with queen/double bed, simple nightstand, and hospitality touches',
+  'Kids Room (Girl)': 'a girls bedroom with age-appropriate bed, study desk, storage, and playful feminine touches',
+  'Kids Room (Boy)': 'a boys bedroom with age-appropriate bed, study desk, storage, and playful masculine touches',
+  'Kids Room (Twins/Shared)': 'a shared kids room with twin beds or bunk beds, shared storage, individual study spaces, and balanced design',
+  'Baby Nursery (Girl)': 'a baby girl nursery with crib, changing table, rocking chair, soft lighting, and gentle feminine palette',
+  'Baby Nursery (Boy)': 'a baby boy nursery with crib, changing table, rocking chair, soft lighting, and gentle masculine palette',
+  'Kitchen': 'a functional kitchen with countertops, appliance awareness, dining prep area, and organized storage',
+  'Dining Room': 'a dining room with dining table and chairs, sideboard, centerpiece, and ambient dining lighting',
+  'Bathroom (Master)': 'a master bathroom with vanity styling, towel arrangement, accessories, and spa-like atmosphere',
+  'Bathroom (Guest)': 'a guest bathroom with clean vanity styling, fresh towels, and welcoming accessories',
+  'Home Office / Work Room': 'a home office with desk, ergonomic chair, shelving, task lighting, and productive atmosphere',
+  'Walk-in Closet': 'a walk-in closet with organized shelving, hanging space, accessories display, and soft lighting',
+  'Hallway / Entryway': 'an entryway/hallway with console table, mirror, coat hooks, shoe storage, and welcoming decor',
+  'Patio / Outdoor Living': 'an outdoor patio with weather-appropriate seating, dining area, planters, and outdoor lighting',
+  'Balcony / Terrace': 'a balcony/terrace with compact seating, planters, small table, and cozy outdoor atmosphere',
+  'Laundry Room': 'a laundry room with organized storage, folding area, baskets, and functional bright lighting',
+  'Storage Room / Utility': 'a utility/storage room with organized shelving, labeled containers, and efficient use of space',
+  'Garage': 'a garage with organized tool storage, workbench, floor coating, and efficient wall-mounted solutions',
+  'Basement / Rec Room': 'a basement recreation room with comfortable seating, entertainment area, and warm lighting',
+  'Exterior / Facade': 'building exterior with landscaping, outdoor lighting, pathway, and curb appeal elements',
+};
+
 // UGC Product Interaction Mapping
 const PRODUCT_INTERACTIONS: Record<string, string> = {
   'skincare': 'applying to their skin or showing the product texture on the back of their hand',
@@ -91,6 +117,10 @@ interface WorkflowRequest {
   styling_notes?: string;
   prop_style?: 'clean' | 'decorated';
   ugc_mood?: string;
+  // Interior Design fields
+  room_type?: string;
+  wall_color?: string;
+  flooring_preference?: string;
   model?: {
     name: string;
     gender: string;
@@ -208,6 +238,24 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     ugcBlock = `\nEXPRESSION & ENERGY:\n${moodDesc}\n\nPRODUCT INTERACTION:\nThe subject must be naturally ${interaction} with the EXACT product from [PRODUCT IMAGE]. The product must be clearly visible and recognizable in the frame.\n`;
   }
 
+  // Interior Design block — room type, wall color, flooring overrides
+  let interiorBlock = "";
+  const isInteriorWorkflow = config.ui_config && (config.ui_config as Record<string, unknown>).show_room_type_picker === true;
+  if (isInteriorWorkflow) {
+    const roomTypeKey = (product as unknown as Record<string, unknown>).room_type as string ||
+      ((config.ui_config as Record<string, unknown>).room_type as string) || '';
+    const roomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
+    const wallColor = (product as unknown as Record<string, unknown>).wall_color as string || '';
+    const flooring = (product as unknown as Record<string, unknown>).flooring_preference as string || '';
+
+    interiorBlock = `\nROOM CONTEXT:
+This is ${roomDesc}.
+Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
+${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
+${flooring && flooring !== 'Keep Original' ? `\nFLOORING OVERRIDE: Change the flooring to ${flooring}. Apply this consistently across the entire visible floor area.` : '\nFLOORING: Keep the original flooring as shown in the photo.'}
+\nIMPORTANT: The [PRODUCT IMAGE] is the ROOM PHOTO to transform. Do NOT treat it as a product to place — instead, transform the entire room scene while preserving its architecture.\n`;
+  }
+
   // Replace {PRODUCT_INTERACTION} and {MOOD_DESCRIPTION} placeholders in prompt template
   let processedTemplate = config.prompt_template;
   if (ugcMood) {
@@ -233,7 +281,26 @@ ${themeNotes ? `Additional direction: ${themeNotes}` : ""}\n`
     ...(brandProfile?.do_not_rules || []),
   ].filter(Boolean).join('. ');
 
-  const prompt = `${processedTemplate}
+  // For interior design workflow, replace the product-centric prompt with room-centric one
+  const prompt = isInteriorWorkflow
+    ? `${processedTemplate}
+${interiorBlock}
+VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
+${variation.instruction}
+
+${compositionRules ? `COMPOSITION RULES:\n${compositionRules}` : ""}
+
+${brandLines.length > 0 ? `BRAND GUIDELINES:\n${brandLines.join("\n")}` : ""}
+
+CRITICAL REQUIREMENTS:
+1. The room architecture MUST remain EXACTLY as shown in [PRODUCT IMAGE] — same windows, doors, walls, angles, perspective.
+2. The camera viewpoint must NOT change at all.
+3. Ultra high resolution, photorealistic quality, no AI artifacts, proper shadows and lighting.
+4. This specific variation must clearly match the "${variation.label}" interior design style described above.
+5. All furniture must have correct perspective and scale for the room.
+
+${allNegatives ? `AVOID: ${allNegatives}` : ""}`
+    : `${processedTemplate}
 ${themeBlock}
 PRODUCT DETAILS:
 - Product: ${product.title}
@@ -546,6 +613,17 @@ serve(async (req) => {
     let model = getModelForQuality(quality);
     // Force Pro model when a person/model reference image is present (e.g. Selfie/UGC Set)
     if (body.model?.imageUrl) model = "google/gemini-3-pro-image-preview";
+    // Force Pro model for interior design (architectural preservation needs highest fidelity)
+    const isInterior = (config.ui_config as Record<string, unknown>)?.show_room_type_picker === true;
+    if (isInterior) model = "google/gemini-3-pro-image-preview";
+
+    // Inject interior design fields into the product object so buildVariationPrompt can access them
+    const productWithExtras = {
+      ...body.product,
+      room_type: body.room_type,
+      wall_color: body.wall_color,
+      flooring_preference: body.flooring_preference,
+    };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;
     console.log(
@@ -577,7 +655,7 @@ serve(async (req) => {
           const prompt = buildVariationPrompt(
             config,
             angleVariation,
-            body.product,
+            productWithExtras as WorkflowRequest["product"],
             body.brand_profile,
             i,
             variationsToGenerate.length,

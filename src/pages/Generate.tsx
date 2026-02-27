@@ -246,6 +246,12 @@ export default function Generate() {
   // Selfie / UGC Set detection
   const isSelfieUgc = activeWorkflow?.name === 'Selfie / UGC Set';
 
+  // Interior Design Set detection and state
+  const isInteriorDesign = activeWorkflow?.name === 'Interior Design Set';
+  const [interiorRoomType, setInteriorRoomType] = useState('Living Room');
+  const [interiorWallColor, setInteriorWallColor] = useState('Keep Original');
+  const [interiorFlooring, setInteriorFlooring] = useState('Keep Original');
+
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
     if (activeWorkflow) {
@@ -536,6 +542,10 @@ export default function Generate() {
       prop_style: isFlatLay ? flatLayPropStyle : undefined,
       additional_products: additionalProducts,
       ugc_mood: isSelfieUgc ? ugcMood : undefined,
+      // Interior Design fields
+      room_type: isInteriorDesign ? interiorRoomType : undefined,
+      wall_color: isInteriorDesign ? interiorWallColor : undefined,
+      flooring_preference: isInteriorDesign ? interiorFlooring : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -784,6 +794,9 @@ export default function Generate() {
         { name: 'Model' }, { name: 'Scene' }, { name: 'Settings' }, { name: 'Results' },
       ];
     }
+    if (isInteriorDesign) {
+      return [{ name: 'Room Photo' }, { name: 'Brand' }, { name: 'Settings' }, { name: 'Results' }];
+    }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
         return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Model' }, { name: 'Settings' }, { name: 'Results' }];
@@ -851,10 +864,12 @@ export default function Generate() {
           <Card><CardContent className="p-5 space-y-5">
             <div>
               <h2 className="text-base font-semibold">
-                {activeWorkflow?.uses_tryon ? 'Add Your Product' : 'How do you want to start?'}
+                {isInteriorDesign ? 'Add Your Room Photo' : activeWorkflow?.uses_tryon ? 'Add Your Product' : 'How do you want to start?'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {activeWorkflow?.uses_tryon
+                {isInteriorDesign
+                  ? 'Upload a photo of an empty room, or a room with old furniture you want to transform.'
+                  : activeWorkflow?.uses_tryon
                   ? 'Choose a clothing item from your products or upload a new photo to try on.'
                   : 'Choose whether to use existing products or upload your own image file.'}
               </p>
@@ -937,10 +952,12 @@ export default function Generate() {
               <div className="space-y-4">
                 <div>
                   <h2 className="text-base font-semibold">
-                    {activeWorkflow?.uses_tryon ? 'Upload Your Clothing Photo' : 'Upload Your Image'}
+                    {isInteriorDesign ? 'Upload Your Room Photo' : activeWorkflow?.uses_tryon ? 'Upload Your Clothing Photo' : 'Upload Your Image'}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    {activeWorkflow?.uses_tryon
+                    {isInteriorDesign
+                      ? 'Upload a photo of the room you want to stage. Empty rooms or rooms with old furniture work best.'
+                      : activeWorkflow?.uses_tryon
                       ? 'Upload a clear photo of the clothing item you want to try on.'
                       : 'Upload a product image from your computer.'}
                   </p>
@@ -1610,7 +1627,7 @@ export default function Generate() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-semibold">
-                      {isFlatLay ? 'Select Your Surfaces' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
+                      {isFlatLay ? 'Select Your Surfaces' : isInteriorDesign ? 'Select Design Styles' : variationStrategy?.type === 'scene' ? 'Select Your Scenes' : 'What You\'ll Get'}
                     </h3>
                     {isFlatLay && (
                       <>
@@ -1618,7 +1635,13 @@ export default function Generate() {
                         <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Surfaces</Badge>
                       </>
                     )}
-                    {variationStrategy?.type === 'scene' && !isFlatLay && activeWorkflow?.name !== 'Mirror Selfie Set' && (
+                    {isInteriorDesign && (
+                      <>
+                        <Badge variant="secondary" className="text-[10px]">🏠 Interior</Badge>
+                        <Badge variant="outline" className="text-[10px]">{variationStrategy?.variations.length} Styles</Badge>
+                      </>
+                    )}
+                    {variationStrategy?.type === 'scene' && !isFlatLay && !isInteriorDesign && activeWorkflow?.name !== 'Mirror Selfie Set' && (
                       <>
                         <Badge variant="secondary" className="text-[10px]"><Ban className="w-3 h-3 mr-1" />No People</Badge>
                         <Badge variant="outline" className="text-[10px]">{variationStrategy.variations.length} Scenes</Badge>
@@ -1633,6 +1656,7 @@ export default function Generate() {
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     {isFlatLay ? 'Choose surfaces for your flat lay — select at least 1' :
+                     isInteriorDesign ? 'Choose 1–3 design styles to generate for your room — each creates a different staged look' :
                      variationStrategy?.type === 'scene' ? 'Choose scenes for your product — select at least 1' :
                      variationStrategy?.type === 'seasonal' ? 'Each image captures a different season' :
                      variationStrategy?.type === 'multi-ratio' ? 'Images optimized for different platforms' :
@@ -1790,7 +1814,9 @@ export default function Generate() {
               <div className="flex items-start gap-2 px-1">
                 <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  Products shown are for demonstration only — your product will be placed in each selected scene.
+                  {isInteriorDesign
+                    ? 'Each style will generate a uniquely staged version of your room while preserving its architecture.'
+                    : 'Products shown are for demonstration only — your product will be placed in each selected scene.'}
                 </p>
               </div>
 
@@ -2034,8 +2060,67 @@ export default function Generate() {
               </CardContent></Card>
             )}
 
-            {/* Product Angles — hidden for Mirror Selfie Set, Flat Lay, and Selfie/UGC */}
-            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !isFlatLay && !isSelfieUgc && (
+            {/* Interior Design Room Type, Wall Color & Flooring Selectors */}
+            {isInteriorDesign && (
+              <Card><CardContent className="p-5 space-y-4">
+                <div>
+                  <h3 className="text-base font-semibold flex items-center gap-2">
+                    🏠 Room Settings
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Specify the room type and optional color preferences</p>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Room Type</Label>
+                    <Select value={interiorRoomType} onValueChange={setInteriorRoomType}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {[
+                          'Living Room', 'Bedroom (Master)', 'Bedroom (Guest)',
+                          'Kids Room (Girl)', 'Kids Room (Boy)', 'Kids Room (Twins/Shared)',
+                          'Baby Nursery (Girl)', 'Baby Nursery (Boy)',
+                          'Kitchen', 'Dining Room',
+                          'Bathroom (Master)', 'Bathroom (Guest)',
+                          'Home Office / Work Room', 'Walk-in Closet', 'Hallway / Entryway',
+                          'Patio / Outdoor Living', 'Balcony / Terrace',
+                          'Laundry Room', 'Storage Room / Utility', 'Garage',
+                          'Basement / Rec Room', 'Exterior / Facade',
+                        ].map(rt => (
+                          <SelectItem key={rt} value={rt}>{rt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Wall Color <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                      <Select value={interiorWallColor} onValueChange={setInteriorWallColor}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {['Keep Original', 'White', 'Warm White', 'Light Gray', 'Beige / Cream', 'Sage Green', 'Navy Blue', 'Terracotta', 'Blush Pink', 'Charcoal', 'Olive Green'].map(c => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Flooring <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                      <Select value={interiorFlooring} onValueChange={setInteriorFlooring}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {['Keep Original', 'Hardwood Light', 'Hardwood Dark', 'Marble White', 'Marble Dark', 'Ceramic Tiles', 'Carpet', 'Polished Concrete', 'Herringbone Parquet'].map(f => (
+                            <SelectItem key={f} value={f}>{f}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </CardContent></Card>
+            )}
+
+            {/* Product Angles — hidden for Mirror Selfie Set, Flat Lay, Selfie/UGC, and Interior Design */}
+            {variationStrategy?.type === 'scene' && !isMirrorSelfie && !isFlatLay && !isSelfieUgc && !isInteriorDesign && (
               <Card><CardContent className="p-5 space-y-4">
                 <div>
                   <h3 className="text-base font-semibold">Product Angles</h3>

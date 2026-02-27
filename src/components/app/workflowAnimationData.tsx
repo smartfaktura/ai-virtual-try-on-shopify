@@ -1,4 +1,4 @@
-import { Plus, User, MapPin, Camera, Star, Layers, Smartphone } from 'lucide-react';
+import { Plus, User, MapPin, Camera, Star, Layers, Smartphone, Home } from 'lucide-react';
 import type { WorkflowScene } from './WorkflowAnimatedThumbnail';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
@@ -137,6 +137,28 @@ export const workflowScenes: Record<string, WorkflowScene> = {
       {
         type: 'scene', image: mirrorSelfieScene, label: 'Cozy Bedroom', sublabel: 'Scene',
         icon: <MapPin className="w-3 h-3" />,
+        position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
+      },
+    ],
+  },
+
+  'Interior Design Set': {
+    background: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+    elements: [
+      {
+        type: 'badge', label: 'Room Photo', icon: <Home className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
+        position: { top: '44%', left: '42%' }, enterDelay: 0.9, animation: 'pop',
+      },
+      {
+        type: 'badge', label: 'Japandi', icon: <Star className="w-3 h-3" />,
+        position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: '12 Styles', icon: <Layers className="w-3 h-3" />,
         position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
       },
     ],
