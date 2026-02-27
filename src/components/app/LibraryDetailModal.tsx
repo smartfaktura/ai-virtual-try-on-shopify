@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, Camera, User, X, Sparkles, Loader2 } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -12,13 +12,6 @@ import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
-const UPSCALE_MESSAGES = [
-  "VOVV.AI team is enhancing your image…",
-  "Adding extra detail and sharpness…",
-  "Refining textures and colors…",
-  "Almost there, finalizing PRO HD…",
-  "Polishing the last pixels…",
-];
 
 interface LibraryDetailModalProps {
   item: LibraryItem | null;
@@ -28,25 +21,10 @@ interface LibraryDetailModalProps {
 
 export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
-  const [upscaling, setUpscaling] = useState(false);
-  const [upscaledUrl, setUpscaledUrl] = useState<string | null>(null);
-  const [upscaleMessageIndex, setUpscaleMessageIndex] = useState(0);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
-
-  // Rotate upscale messages
-  useEffect(() => {
-    if (!upscaling) {
-      setUpscaleMessageIndex(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setUpscaleMessageIndex((i) => (i + 1) % UPSCALE_MESSAGES.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [upscaling]);
 
   // Lock body scroll
   useEffect(() => {
@@ -57,11 +35,6 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
     }
     return () => { document.body.style.overflow = ''; };
   }, [open]);
-
-  // Reset upscaled URL when item changes
-  useEffect(() => {
-    setUpscaledUrl(null);
-  }, [item?.id]);
 
   // Close on Escape
   useEffect(() => {
@@ -108,33 +81,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
     setDeleting(false);
   };
 
-  const isUpscaled = item.quality === 'upscaled' || !!upscaledUrl;
-  const displayImageUrl = upscaledUrl || item.imageUrl;
-
-  const handleUpscale = async () => {
-    if (isUpscaled || upscaling) return;
-    setUpscaling(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('upscale-image', {
-        body: {
-          imageUrl: item.imageUrl,
-          sourceType: item.source === 'freestyle' ? 'freestyle' : 'generation',
-          sourceId: item.id,
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      setUpscaledUrl(data.imageUrl);
-      queryClient.invalidateQueries({ queryKey: ['library'] });
-      queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-      toast.success('Image upscaled to PRO HD');
-    } catch (err: any) {
-      toast.error(err?.message || 'Upscale failed — credits refunded');
-    } finally {
-      setUpscaling(false);
-    }
-  };
+  const isUpscaled = item.quality === 'upscaled';
 
   return (
     <>
@@ -154,7 +101,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
           {/* Left — Image */}
           <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
             <ShimmerImage
-              src={displayImageUrl}
+              src={item.imageUrl}
               alt={item.label}
               className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
               wrapperClassName="flex items-center justify-center max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)]"
@@ -220,48 +167,18 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <Download className="w-4 h-4 mr-2" /> Download Image
               </Button>
 
-              {/* Separator + Secondary actions */}
-              {(!isUpscaled || item.source === 'freestyle') && (
+              {/* Delete button for freestyle items */}
+              {item.source === 'freestyle' && (
                 <>
                   <Separator className="bg-border/30" />
-
-                  <div className="flex flex-col gap-3">
-                    {/* Upscale button or loading state */}
-                    {!isUpscaled && !upscaling && (
-                      <button
-                        onClick={handleUpscale}
-                        className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/20 hover:shadow-xl hover:shadow-violet-500/30 hover:brightness-110 transition-all duration-300"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        Enhance to PRO HD
-                        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-white/20 text-[10px] font-bold tracking-wide">4 CR</span>
-                      </button>
-                    )}
-
-                    {/* Loading state with rotating messages */}
-                    {upscaling && (
-                      <div className="w-full flex flex-col items-center justify-center gap-2 h-20 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/20">
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Enhancing…
-                        </span>
-                        <span className="text-[11px] font-normal text-white/80 animate-pulse text-center px-4">
-                          {UPSCALE_MESSAGES[upscaleMessageIndex]}
-                        </span>
-                      </div>
-                    )}
-
-                    {item.source === 'freestyle' && (
-                      <button
-                        onClick={handleDelete}
-                        disabled={deleting}
-                        className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-destructive bg-muted/30 backdrop-blur-sm border border-destructive/20 hover:bg-destructive/10 transition-all disabled:opacity-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        {deleting ? 'Deleting…' : 'Delete'}
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-destructive bg-muted/30 backdrop-blur-sm border border-destructive/20 hover:bg-destructive/10 transition-all disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    {deleting ? 'Deleting…' : 'Delete'}
+                  </button>
                 </>
               )}
 
