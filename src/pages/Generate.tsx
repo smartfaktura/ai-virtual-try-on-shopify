@@ -1246,7 +1246,8 @@ export default function Generate() {
                         </div>
                       )}
 
-                      {/* Furniture Handling */}
+                      {/* Furniture Handling (interior only) */}
+                      {interiorType === 'interior' && (
                       <div className="space-y-2">
                         <Label>Furniture <span className="text-xs text-muted-foreground">(how to handle existing pieces)</span></Label>
                         <div className="grid grid-cols-3 gap-2">
@@ -1280,11 +1281,12 @@ export default function Generate() {
                           })}
                         </div>
                       </div>
+                      )}
 
                       {/* Room Size + Ceiling Height */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Room Size <span className="text-xs text-muted-foreground">(helps scale furniture)</span></Label>
+                          <Label>{interiorType === 'interior' ? 'Room Size' : 'Area Size'} <span className="text-xs text-muted-foreground">({interiorType === 'interior' ? 'helps scale furniture' : 'helps scale elements'})</span></Label>
                           <Select value={interiorRoomSize} onValueChange={setInteriorRoomSize}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -1342,11 +1344,14 @@ export default function Generate() {
                       {/* Furniture Style & Lighting Mood */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Furniture Style <span className="text-xs text-muted-foreground">(optional)</span></Label>
-                          <Select value={interiorFurnitureStyle} onValueChange={setInteriorFurnitureStyle} disabled={interiorFurnitureHandling === 'Keep & Restyle'}>
-                            <SelectTrigger className={interiorFurnitureHandling === 'Keep & Restyle' ? 'opacity-50' : ''}><SelectValue /></SelectTrigger>
+                          <Label>{interiorType === 'interior' ? 'Furniture Style' : 'Outdoor Style'} <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                          <Select value={interiorFurnitureStyle} onValueChange={setInteriorFurnitureStyle} disabled={interiorType === 'interior' && interiorFurnitureHandling === 'Keep & Restyle'}>
+                            <SelectTrigger className={interiorType === 'interior' && interiorFurnitureHandling === 'Keep & Restyle' ? 'opacity-50' : ''}><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {['Match Design Style', 'Modern Minimalist', 'Mid-Century Modern', 'Scandinavian', 'Industrial', 'Traditional / Classic', 'Bohemian / Eclectic', 'Art Deco', 'Japandi', 'Coastal / Hampton'].map(s => (
+                              {(interiorType === 'interior'
+                                ? ['Match Design Style', 'Modern Minimalist', 'Mid-Century Modern', 'Scandinavian', 'Industrial', 'Traditional / Classic', 'Bohemian / Eclectic', 'Art Deco', 'Japandi', 'Coastal / Hampton']
+                                : ['Match Design Style', 'Modern', 'Tropical', 'Mediterranean', 'Rustic', 'Contemporary', 'Coastal', 'Desert / Arid', 'Japanese Garden', 'English Garden']
+                              ).map(s => (
                                 <SelectItem key={s} value={s}>{s}</SelectItem>
                               ))}
                             </SelectContent>
@@ -1357,7 +1362,10 @@ export default function Generate() {
                           <Select value={interiorLightingMood} onValueChange={setInteriorLightingMood}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {['Keep Original', 'Warm & Cozy', 'Bright & Airy', 'Dramatic / Moody', 'Natural Daylight', 'Soft Evening / Golden Hour'].map(l => (
+                              {(interiorType === 'interior'
+                                ? ['Keep Original', 'Warm & Cozy', 'Bright & Airy', 'Dramatic / Moody', 'Natural Daylight', 'Soft Evening / Golden Hour']
+                                : ['Keep Original', 'Golden Hour Glow', 'Bright Daylight', 'Dramatic Twilight', 'Soft Overcast', 'Night / Uplighting']
+                              ).map(l => (
                                 <SelectItem key={l} value={l}>{l}</SelectItem>
                               ))}
                             </SelectContent>
