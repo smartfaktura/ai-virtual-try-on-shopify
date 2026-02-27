@@ -358,6 +358,8 @@ export default function Generate() {
   // Reset key pieces when room type changes (but NOT design notes)
   useEffect(() => {
     setInteriorKeyPieces([]);
+    setInteriorRoomLength('');
+    setInteriorRoomWidth('');
   }, [interiorRoomType]);
 
   // When empty room is toggled on, force "Replace All"
