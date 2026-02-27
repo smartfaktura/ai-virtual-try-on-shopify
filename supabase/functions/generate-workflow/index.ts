@@ -352,9 +352,16 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       ? `\nDESIGNER NOTES: ${designNotes}`
       : '';
 
-    // Key furniture pieces constraint
+    // Key furniture pieces constraint — with anti-substitution rules
     const keyPiecesBlock = keyPieces.length > 0
-      ? `\nREQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: ${keyPieces.join(', ')}. Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.`
+      ? `\nREQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: ${keyPieces.join(', ')}.
+Do NOT substitute, upgrade, or resize ANY specified piece.
+A 'Single Bed' means a narrow single bed (90cm wide), NOT a double, queen, or king.
+A 'Small Desk' means a compact desk, NOT a full-size office desk.
+A 'Sofa Bed' means a sofa that converts to a bed, NOT a regular sofa or a standalone bed.
+A 'Twin Beds' means TWO separate narrow beds, NOT one large bed.
+If the specified piece has a size qualifier (single, small, compact, twin), that size is MANDATORY — do NOT upgrade it.
+Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.`
       : '';
 
     interiorBlock = isExterior
