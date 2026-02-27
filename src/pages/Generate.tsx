@@ -227,6 +227,40 @@ export default function Generate() {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const queryClient = useQueryClient();
 
+                      {/* Room Dimensions (optional) */}
+                      <div className="space-y-2">
+                        <Label>Room Dimensions <span className="text-xs text-muted-foreground">(optional — helps AI scale furniture accurately)</span></Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            placeholder={interiorDimensionUnit === 'm' ? 'Length (e.g. 4.5)' : 'Length (e.g. 15)'}
+                            value={interiorRoomLength}
+                            onChange={e => setInteriorRoomLength(e.target.value)}
+                            className="flex-1"
+                            min="0"
+                            step="0.1"
+                          />
+                          <span className="text-muted-foreground text-sm">×</span>
+                          <Input
+                            type="number"
+                            placeholder={interiorDimensionUnit === 'm' ? 'Width (e.g. 3.2)' : 'Width (e.g. 10)'}
+                            value={interiorRoomWidth}
+                            onChange={e => setInteriorRoomWidth(e.target.value)}
+                            className="flex-1"
+                            min="0"
+                            step="0.1"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0 w-12"
+                            onClick={() => setInteriorDimensionUnit(u => u === 'm' ? 'ft' : 'm')}
+                          >
+                            {interiorDimensionUnit}
+                          </Button>
+                        </div>
+                      </div>
 
   // Workflow generation config shortcuts
   const workflowConfig = activeWorkflow?.generation_config ?? null;
