@@ -703,6 +703,15 @@ serve(async (req) => {
       wall_color: body.wall_color,
       flooring_preference: body.flooring_preference,
       interior_type: body.interior_type,
+      furniture_style: body.furniture_style,
+      lighting_mood: body.lighting_mood,
+      furniture_handling: body.furniture_handling,
+      room_size: body.room_size,
+      key_pieces: body.key_pieces,
+      design_notes: body.design_notes,
+      color_palette_preference: body.color_palette_preference,
+      time_of_day: body.time_of_day,
+      staging_purpose: body.staging_purpose,
     };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;
