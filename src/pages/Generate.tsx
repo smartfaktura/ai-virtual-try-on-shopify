@@ -71,6 +71,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { TryOnUploadGuide } from '@/components/app/TryOnUploadGuide';
 import { FramingSelector } from '@/components/app/FramingSelector';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { detectDefaultFraming } from '@/lib/framingUtils';
 type UserProduct = Tables<'user_products'>;
 
@@ -280,6 +281,8 @@ export default function Generate() {
   const [interiorColorPalette, setInteriorColorPalette] = useState('');
   const [interiorTimeOfDay, setInteriorTimeOfDay] = useState('As Photographed');
   const [interiorPurpose, setInteriorPurpose] = useState('');
+  const [interiorIsEmptyRoom, setInteriorIsEmptyRoom] = useState(false);
+  const [interiorCeilingHeight, setInteriorCeilingHeight] = useState('Standard');
 
   const ROOM_FURNITURE_PRESETS: Record<string, string[]> = {
     'Living Room': ['Sofa', 'Sectional', 'Coffee Table', 'TV Console', 'Bookshelf', 'Side Table', 'Kitchen Island', 'Bar Cart', 'Floor Lamp', 'Area Rug'],
@@ -341,16 +344,23 @@ export default function Generate() {
   useEffect(() => {
     setInteriorRoomType('');
     setInteriorKeyPieces([]);
-    setInteriorDesignNotes('');
     setInteriorColorPalette('');
     setInteriorTimeOfDay('As Photographed');
+    setInteriorIsEmptyRoom(false);
+    setInteriorCeilingHeight('Standard');
   }, [interiorType]);
 
-  // Reset key pieces when room type changes
+  // Reset key pieces when room type changes (but NOT design notes)
   useEffect(() => {
     setInteriorKeyPieces([]);
-    setInteriorDesignNotes('');
   }, [interiorRoomType]);
+
+  // When empty room is toggled on, force "Replace All"
+  useEffect(() => {
+    if (interiorIsEmptyRoom) {
+      setInteriorFurnitureHandling('Replace All');
+    }
+  }, [interiorIsEmptyRoom]);
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
@@ -656,6 +666,8 @@ export default function Generate() {
       color_palette_preference: isInteriorDesign && interiorColorPalette ? interiorColorPalette : undefined,
       time_of_day: isInteriorDesign && interiorTimeOfDay !== 'As Photographed' ? interiorTimeOfDay : undefined,
       staging_purpose: isInteriorDesign && interiorPurpose ? interiorPurpose : undefined,
+      is_empty_room: isInteriorDesign ? interiorIsEmptyRoom : undefined,
+      ceiling_height: isInteriorDesign && interiorCeilingHeight !== 'Standard' ? interiorCeilingHeight : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
@@ -1223,6 +1235,17 @@ export default function Generate() {
                         </Select>
                       </div>
 
+                      {/* Empty Room Toggle */}
+                      {interiorType === 'interior' && (
+                        <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+                          <div>
+                            <Label className="text-sm font-medium">Empty Room</Label>
+                            <p className="text-xs text-muted-foreground">Room has no furniture — stage from scratch</p>
+                          </div>
+                          <Switch checked={interiorIsEmptyRoom} onCheckedChange={setInteriorIsEmptyRoom} />
+                        </div>
+                      )}
+
                       {/* Furniture Handling */}
                       <div className="space-y-2">
                         <Label>Furniture <span className="text-xs text-muted-foreground">(how to handle existing pieces)</span></Label>
@@ -1231,16 +1254,20 @@ export default function Generate() {
                             { value: 'Keep & Restyle', label: 'Keep & Restyle', desc: 'Keep pieces, update style' },
                             { value: 'Replace All', label: 'Replace All', desc: 'Fully restage the room' },
                             { value: 'Keep Layout, Swap Style', label: 'Keep Layout', desc: 'Same layout, new pieces' },
-                          ].map(opt => (
+                          ].map(opt => {
+                            const isDisabledByEmpty = interiorIsEmptyRoom && opt.value !== 'Replace All';
+                            return (
                             <button
                               key={opt.value}
                               type="button"
+                              disabled={isDisabledByEmpty}
                               onClick={() => {
                                 setInteriorFurnitureHandling(opt.value);
                                 if (opt.value === 'Keep & Restyle') setInteriorFurnitureStyle('Match Design Style');
                               }}
                               className={cn(
                                 'rounded-lg border-2 p-3 text-left transition-colors',
+                                isDisabledByEmpty && 'opacity-40 cursor-not-allowed',
                                 interiorFurnitureHandling === opt.value
                                   ? 'border-primary bg-primary/5'
                                   : 'border-border hover:border-primary/40'
@@ -1249,22 +1276,39 @@ export default function Generate() {
                               <span className="text-sm font-medium block">{opt.label}</span>
                               <span className="text-xs text-muted-foreground">{opt.desc}</span>
                             </button>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 
-                      {/* Room Size */}
-                      <div className="space-y-2">
-                        <Label>Room Size <span className="text-xs text-muted-foreground">(helps scale furniture realistically)</span></Label>
-                        <Select value={interiorRoomSize} onValueChange={setInteriorRoomSize}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Small">Small (under 10 sqm / 100 sqft)</SelectItem>
-                            <SelectItem value="Medium">Medium (10–20 sqm / 100–200 sqft)</SelectItem>
-                            <SelectItem value="Large">Large (20–40 sqm / 200–400 sqft)</SelectItem>
-                            <SelectItem value="Very Large">Very Large (40+ sqm / 400+ sqft)</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      {/* Room Size + Ceiling Height */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Room Size <span className="text-xs text-muted-foreground">(helps scale furniture)</span></Label>
+                          <Select value={interiorRoomSize} onValueChange={setInteriorRoomSize}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Small">Small (under 10 sqm / 100 sqft)</SelectItem>
+                              <SelectItem value="Medium">Medium (10–20 sqm / 100–200 sqft)</SelectItem>
+                              <SelectItem value="Large">Large (20–40 sqm / 200–400 sqft)</SelectItem>
+                              <SelectItem value="Very Large">Very Large (40+ sqm / 400+ sqft)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {interiorType === 'interior' && (
+                        <div className="space-y-2">
+                          <Label>Ceiling Height <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                          <Select value={interiorCeilingHeight} onValueChange={setInteriorCeilingHeight}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Low">Low (under 2.4m / 8ft)</SelectItem>
+                              <SelectItem value="Standard">Standard (2.4–2.7m / 8–9ft)</SelectItem>
+                              <SelectItem value="High">High (2.7m+ / 9ft+)</SelectItem>
+                              <SelectItem value="Double Height">Double Height (5m+ / 16ft+)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        )}
                       </div>
 
                       {/* Wall Color & Flooring (interior only) */}
@@ -2191,6 +2235,10 @@ export default function Generate() {
                     <div
                       onClick={() => {
                         setSelectedVariationIndices(prev => {
+                          // Interior design: single-select only
+                          if (isInteriorDesign) {
+                            return prev.has(i) ? new Set() : new Set([i]);
+                          }
                           const next = new Set(prev);
                           if (next.has(i)) { next.delete(i); }
                           else {
@@ -2554,8 +2602,8 @@ export default function Generate() {
                       <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="standard">Standard (4 credits/img)</SelectItem>
-                          <SelectItem value="high">High (10 credits/img)</SelectItem>
+                          <SelectItem value="standard">Standard (8 credits/img)</SelectItem>
+                          <SelectItem value="high">High (16 credits/img)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -2587,10 +2635,10 @@ export default function Generate() {
                 <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
                   <div>
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedVariationIndices.size} scene{selectedVariationIndices.size !== 1 ? 's' : ''}
+                     <p className="text-xs text-muted-foreground">
+                      {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                       {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                      {' '}× {quality === 'high' ? 10 : 4} credits
+                      {' '}× {quality === 'high' ? 16 : 8} credits
                     </p>
                   </div>
                   {balance >= creditCost ? (
@@ -2799,6 +2847,16 @@ export default function Generate() {
                     <Download className="w-3.5 h-3.5 mr-1.5" /> Download All
                   </Button>
                   <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => setCurrentStep('settings')}>Adjust</Button>
+                  {isInteriorDesign && (
+                    <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => {
+                      setGeneratedImages([]);
+                      setSelectedForPublish(new Set());
+                      setSelectedVariationIndices(new Set());
+                      setCurrentStep('settings');
+                    }}>
+                      <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Try Another Style
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); }}>Start Over</Button>
                 </div>
               </div>

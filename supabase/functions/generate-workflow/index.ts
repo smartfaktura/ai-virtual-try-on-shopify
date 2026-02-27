@@ -130,10 +130,17 @@ interface WorkflowRequest {
   wall_color?: string;
   flooring_preference?: string;
   interior_type?: 'interior' | 'exterior';
+  furniture_style?: string;
+  lighting_mood?: string;
+  furniture_handling?: string;
+  room_size?: string;
+  key_pieces?: string[];
   design_notes?: string;
   color_palette_preference?: string;
   time_of_day?: string;
   staging_purpose?: string;
+  is_empty_room?: boolean;
+  ceiling_height?: string;
   model?: {
     name: string;
     gender: string;
@@ -270,10 +277,13 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const colorPalettePreference = (product as unknown as Record<string, unknown>).color_palette_preference as string || '';
     const timeOfDay = (product as unknown as Record<string, unknown>).time_of_day as string || '';
     const stagingPurpose = (product as unknown as Record<string, unknown>).staging_purpose as string || '';
+    const isEmptyRoom = (product as unknown as Record<string, unknown>).is_empty_room as boolean || false;
+    const ceilingHeight = (product as unknown as Record<string, unknown>).ceiling_height as string || '';
+    const hasKeyPieces = keyPieces.length > 0;
     const fullRoomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
-    // For Keep modes, strip furniture-specific suggestions to avoid overriding the actual photo
+    // When key_pieces are specified (ANY mode), strip furniture-specific suggestions to avoid conflict
     const isKeepMode = furnitureHandling === 'Keep & Restyle' || furnitureHandling === 'Keep Layout, Swap Style';
-    const roomDesc = isKeepMode
+    const roomDesc = (isKeepMode || hasKeyPieces)
       ? (roomTypeKey ? `a ${roomTypeKey.toLowerCase()} space` : 'a residential room')
       : fullRoomDesc;
 
@@ -299,6 +309,21 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       roomSizeBlock = `\nROOM SIZE: This is a LARGE room (20–40 sqm). Standard to generous furniture sizing is appropriate. Ensure the room doesn't look empty — use area rugs, accent chairs, or decor to fill the space naturally.`;
     }
     // 'Very Large' = no constraint needed
+
+    // Ceiling height constraint
+    let ceilingHeightBlock = '';
+    if (ceilingHeight === 'Low') {
+      ceilingHeightBlock = `\nCEILING HEIGHT (CRITICAL): This room has LOW ceilings (under 2.4m / 8ft). Use ONLY low-profile furniture: platform beds instead of four-poster, low-back sofas, no tall bookcases or armoires. Avoid anything that would visually crowd the vertical space. Horizontal lines preferred over vertical.`;
+    } else if (ceilingHeight === 'High') {
+      ceilingHeightBlock = `\nCEILING HEIGHT: This room has HIGH ceilings (2.7m+ / 9ft+). Furniture can be taller and more substantial. Consider floor-to-ceiling curtains, tall shelving, and vertical decor to utilize the height naturally.`;
+    } else if (ceilingHeight === 'Double Height') {
+      ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
+    }
+
+    // Empty room instruction
+    const emptyRoomBlock = isEmptyRoom
+      ? `\nEMPTY ROOM (CRITICAL): This room is CURRENTLY COMPLETELY EMPTY — there is NO existing furniture at all. Stage it entirely from scratch with appropriate furniture for this room type and design style. Fill the space naturally without overcrowding.`
+      : '';
 
     // Staging purpose instruction
     let stagingPurposeBlock = '';
@@ -343,8 +368,10 @@ ${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
       : `\nROOM CONTEXT:
 This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
+${emptyRoomBlock}
 ${furnitureHandlingBlock}
 ${roomSizeBlock}
+${ceilingHeightBlock}
 ${keyPiecesBlock}
 ${furnitureRealismBlock}
 ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
@@ -400,6 +427,10 @@ CRITICAL REQUIREMENTS:
 6. NEVER block doorways, hallways, corridors, or room entrances with furniture. All passage areas must remain fully clear and walkable.
 7. Do NOT place furniture in front of windows, radiators, air vents, electrical panels, or fire exits.
 8. Maintain realistic traffic flow — leave clear walking paths between furniture groupings (minimum ~60 cm / 2 ft clearance).
+9. Do NOT mirror or flip the room horizontally — left wall stays left, right wall stays right.
+10. Do NOT change the size, shape, or position of ANY window, door, or architectural opening.
+11. Do NOT add or remove walls, columns, beams, or structural elements.
+12. The perspective vanishing point must remain identical to the source photo — no rotation, no tilt correction.
 
 ${allNegatives ? `AVOID: furniture blocking doorways, blocked hallways, obstructed entrances, furniture in front of windows, unrealistic furniture placement. ${allNegatives}` : "AVOID: furniture blocking doorways, blocked hallways, obstructed entrances, furniture in front of windows, unrealistic furniture placement."}`
     : `${processedTemplate}
@@ -735,6 +766,8 @@ serve(async (req) => {
       color_palette_preference: body.color_palette_preference,
       time_of_day: body.time_of_day,
       staging_purpose: body.staging_purpose,
+      is_empty_room: body.is_empty_room,
+      ceiling_height: body.ceiling_height,
     };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;
