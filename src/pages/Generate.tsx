@@ -1362,7 +1362,10 @@ export default function Generate() {
                           <Select value={interiorLightingMood} onValueChange={setInteriorLightingMood}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {['Keep Original', 'Warm & Cozy', 'Bright & Airy', 'Dramatic / Moody', 'Natural Daylight', 'Soft Evening / Golden Hour'].map(l => (
+                              {(interiorType === 'interior'
+                                ? ['Keep Original', 'Warm & Cozy', 'Bright & Airy', 'Dramatic / Moody', 'Natural Daylight', 'Soft Evening / Golden Hour']
+                                : ['Keep Original', 'Golden Hour Glow', 'Bright Daylight', 'Dramatic Twilight', 'Soft Overcast', 'Night / Uplighting']
+                              ).map(l => (
                                 <SelectItem key={l} value={l}>{l}</SelectItem>
                               ))}
                             </SelectContent>
