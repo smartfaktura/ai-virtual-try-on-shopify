@@ -349,11 +349,17 @@ export default function Generate() {
     setInteriorCeilingHeight('Standard');
   }, [interiorType]);
 
-  // Reset key pieces when room type changes
+  // Reset key pieces when room type changes (but NOT design notes)
   useEffect(() => {
     setInteriorKeyPieces([]);
-    setInteriorDesignNotes('');
   }, [interiorRoomType]);
+
+  // When empty room is toggled on, force "Replace All"
+  useEffect(() => {
+    if (interiorIsEmptyRoom) {
+      setInteriorFurnitureHandling('Replace All');
+    }
+  }, [interiorIsEmptyRoom]);
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
