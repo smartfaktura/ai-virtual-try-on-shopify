@@ -170,7 +170,7 @@ export default function Generate() {
           return { name: f.name, url: urlData.publicUrl, created_at: f.created_at };
         });
     },
-    enabled: !!user?.id && !!isInteriorDesign,
+    enabled: !!user?.id && activeWorkflow?.name === 'Interior / Exterior Staging',
   });
 
   const [currentStep, setCurrentStep] = useState<Step>('source');
