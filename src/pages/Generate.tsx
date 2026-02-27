@@ -333,14 +333,20 @@ export default function Generate() {
     }
   }, [isInteriorDesign]);
 
-  // Reset room type when switching interior/exterior
+  // Reset room type and key pieces when switching interior/exterior
   useEffect(() => {
     if (interiorType === 'interior') {
       setInteriorRoomType('Living Room');
     } else {
       setInteriorRoomType('Front Facade');
     }
+    setInteriorKeyPieces([]);
   }, [interiorType]);
+
+  // Reset key pieces when room type changes
+  useEffect(() => {
+    setInteriorKeyPieces([]);
+  }, [interiorRoomType]);
 
   // When workflow is loaded, set generation mode and defaults
   useEffect(() => {
