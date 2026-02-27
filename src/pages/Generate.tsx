@@ -276,6 +276,10 @@ export default function Generate() {
   const [interiorFurnitureHandling, setInteriorFurnitureHandling] = useState('Keep & Restyle');
   const [interiorRoomSize, setInteriorRoomSize] = useState('Medium');
   const [interiorKeyPieces, setInteriorKeyPieces] = useState<string[]>([]);
+  const [interiorDesignNotes, setInteriorDesignNotes] = useState('');
+  const [interiorColorPalette, setInteriorColorPalette] = useState('');
+  const [interiorTimeOfDay, setInteriorTimeOfDay] = useState('As Photographed');
+  const [interiorPurpose, setInteriorPurpose] = useState('');
 
   const ROOM_FURNITURE_PRESETS: Record<string, string[]> = {
     'Living Room': ['Sofa', 'Sectional', 'Coffee Table', 'TV Console', 'Bookshelf', 'Side Table', 'Kitchen Island', 'Bar Cart', 'Floor Lamp', 'Area Rug'],
