@@ -1301,6 +1301,17 @@ export default function Generate() {
                               <SelectItem value="Very Large">Very Large (40+ sqm / 400+ sqft)</SelectItem>
                             </SelectContent>
                           </Select>
+                          {/* Exact Room Dimensions */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Exact Dimensions <span className="text-xs">(optional)</span></Label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 4.5m x 3.2m or 15ft x 10ft"
+                              value={interiorRoomDimensions}
+                              onChange={e => setInteriorRoomDimensions(e.target.value)}
+                              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            />
+                          </div>
                         </div>
                         {interiorType === 'interior' && (
                         <div className="space-y-2">
@@ -1314,6 +1325,17 @@ export default function Generate() {
                               <SelectItem value="Double Height">Double Height (5m+ / 16ft+)</SelectItem>
                             </SelectContent>
                           </Select>
+                          {/* Exact Ceiling Height */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Exact Height <span className="text-xs">(optional)</span></Label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 2.8m or 9.5ft"
+                              value={interiorExactCeilingHeight}
+                              onChange={e => setInteriorExactCeilingHeight(e.target.value)}
+                              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            />
+                          </div>
                         </div>
                         )}
                       </div>
