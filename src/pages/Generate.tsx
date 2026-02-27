@@ -339,12 +339,11 @@ export default function Generate() {
 
   // Reset room type and key pieces when switching interior/exterior
   useEffect(() => {
-    if (interiorType === 'interior') {
-      setInteriorRoomType('Living Room');
-    } else {
-      setInteriorRoomType('Front Facade');
-    }
+    setInteriorRoomType('');
     setInteriorKeyPieces([]);
+    setInteriorDesignNotes('');
+    setInteriorColorPalette('');
+    setInteriorTimeOfDay('As Photographed');
   }, [interiorType]);
 
   // Reset key pieces when room type changes
