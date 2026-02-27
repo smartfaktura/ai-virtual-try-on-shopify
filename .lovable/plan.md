@@ -1,70 +1,69 @@
 
-## Fix Upscale Feature: Function, UI, and State Management
 
-### Issues Found
+## Improve Interior/Exterior Staging with Room-Specific Furniture Presets
 
-1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
-   - The image URL in `generation_jobs.results` array never changes
-   - The `quality` field is never set to `"upscaled"`
-   - On page reload, the original image shows again
-   - The "Enhance to PRO HD" button always reappears
+### The Problem
+The AI doesn't know what specific furniture belongs in each room. It guesses based on the room type name, which leads to mistakes like placing a double bed in a small guest room that should have a sofa bed, or missing a kitchen island in a living room that has one.
 
-2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
+### Solution: Optional "Key Pieces" Selector Per Room Type
 
-3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
+Add a new optional UI section called **"Key Furniture & Features"** that appears after Room Type selection. Each room type gets its own curated list of furniture items the user can toggle on/off. These selections are passed to the AI prompt as explicit instructions.
 
-4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
+### How It Works
 
-5. **No separator** -- Buttons section needs visual separation.
+1. User selects "Kids Room (Boy)" as room type
+2. A chip/tag selector appears with room-appropriate items: `Single Bed`, `Bunk Bed`, `Study Desk`, `Bookshelf`, `Toy Storage`, `Bean Bag`, `Wall Shelves`
+3. User picks: `Single Bed`, `Study Desk`, `Bookshelf`
+4. The AI prompt receives: "This room MUST contain: a single bed, a study desk, a bookshelf. Do NOT add furniture types not listed here."
 
----
+This prevents the AI from guessing and adding wrong furniture.
 
-### Changes
+### Room-Specific Preset Lists
 
-#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
+| Room Type | Available Pieces |
+|-----------|-----------------|
+| Living Room | Sofa, Sectional, Coffee Table, TV Console, Bookshelf, Side Table, Kitchen Island, Bar Cart, Floor Lamp, Area Rug |
+| Bedroom (Master) | King Bed, Queen Bed, Nightstands, Dresser, Vanity, Armchair, Floor Mirror |
+| Bedroom (Guest) | Double Bed, Single Bed, Sofa Bed, Nightstand, Small Desk, Armchair |
+| Kids Room (Boy/Girl) | Single Bed, Bunk Bed, Loft Bed, Study Desk, Bookshelf, Toy Storage, Bean Bag, Wall Shelves |
+| Kids Room (Twins) | Twin Beds, Bunk Bed, Shared Desk, Individual Nightstands, Toy Storage |
+| Baby Nursery | Crib, Changing Table, Rocking Chair, Dresser, Wall Shelves, Storage Baskets |
+| Kitchen | Kitchen Island, Bar Stools, Dining Nook, Open Shelving, Pendant Lights |
+| Dining Room | Dining Table (4-seat), Dining Table (6-seat), Sideboard, Display Cabinet, Chandelier |
+| Home Office | Desk, Ergonomic Chair, Bookshelf, Filing Cabinet, Monitor Stand, Floor Lamp |
+| Bathroom | Vanity, Freestanding Tub, Shower, Storage Cabinet, Mirror, Towel Rack |
+| Exterior types | Lounge Chairs, Dining Set, Planters, Fire Pit, Pergola, Outdoor Rug |
 
-- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
-- After uploading the upscaled image, update `generation_jobs`:
-  - Replace the specific URL in the `results` JSONB array
-  - Set `quality` to `"upscaled"`
-- Keep the existing freestyle update logic
+### UI Design
 
-#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
+- Appears as a collapsible section titled **"Key Furniture & Features"** with subtitle "(optional - helps the AI pick the right pieces)"
+- Uses toggle chips/badges (similar to existing `NegativesChipSelector` pattern)
+- Multi-select: user picks any combination
+- Empty selection = AI decides (current behavior, no regression)
+- Only shows for the selected room type
 
-**Button redesign:**
-- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
-- Same height as download button (`h-12` instead of `h-14`)
-- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
-- Add a separator line between the Download button and secondary actions
-
-**Loading messages:**
-- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
-- Cycle every 4 seconds while `upscaling` is true
-
-**Already upscaled handling:**
-- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
-
----
-
-### Technical Details
-
-**Edge function sourceId parsing:**
-```text
-// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
-// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
-// Split on last hyphen to get UUID and index
-```
-
-**Generation jobs DB update:**
-```text
-// Fetch current results array
-// Replace results[index] with the new upscaled URL
-// Update quality to "upscaled"
-```
-
-### Files to Edit
+### Files to Change
 
 | File | Change |
 |------|--------|
-| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
-| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
+| `src/pages/Generate.tsx` | Add `interiorKeyPieces` state (string array), add `ROOM_FURNITURE_PRESETS` map, render chip selector UI after Room Type, pass `key_pieces` in payload |
+| `supabase/functions/generate-workflow/index.ts` | Read `key_pieces` from product payload, inject explicit furniture list into prompt when provided |
+
+### Prompt Injection (Backend)
+
+When `key_pieces` is provided and non-empty:
+```
+REQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: [list].
+Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.
+```
+
+When empty (no selection): current behavior, no change.
+
+### Technical Details
+
+- New state: `const [interiorKeyPieces, setInteriorKeyPieces] = useState<string[]>([])`
+- Reset key pieces when room type changes via `useEffect`
+- Pass as `key_pieces: isInteriorDesign ? interiorKeyPieces : undefined` in the generation payload
+- Backend reads `key_pieces` array from product object and builds a constraint block
+- The constraint block is injected AFTER the room context block and BEFORE the furniture realism block for correct priority
+
