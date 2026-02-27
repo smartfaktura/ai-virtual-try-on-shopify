@@ -36,6 +36,7 @@ interface VariationItem {
   instruction: string;
   aspect_ratio?: string;
   category?: string;
+  scope?: string;
 }
 
 // Room Type Descriptions for Interior Design workflow
