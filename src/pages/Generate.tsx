@@ -1036,6 +1036,8 @@ export default function Generate() {
           </CardContent></Card>
         )}
 
+        {/* Upload Step for Interior Design — show room details below upload */}
+
         {/* Upload Step */}
         {currentStep === 'upload' && (
           <Card><CardContent className="p-5 space-y-5">
