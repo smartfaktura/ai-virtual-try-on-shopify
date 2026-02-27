@@ -101,7 +101,7 @@ export function UploadSourceCard({
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
               <Loader2 className="w-4 h-4 animate-spin" />
               <Sparkles className="w-4 h-4 text-primary/60" />
-              {isRoom ? 'AI analyzing room…' : 'AI analyzing product…'}
+              {isRoom ? 'AI detecting room details…' : 'AI analyzing product…'}
             </div>
           ) : (
             <>

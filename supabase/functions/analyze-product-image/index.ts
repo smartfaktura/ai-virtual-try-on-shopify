@@ -42,10 +42,17 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: `Analyze this product image. Return a JSON object with these fields:
-- "title": Short product name (e.g. "Black High-Waist Yoga Leggings", "Lavender Soy Candle", "Wireless Bluetooth Earbuds")
-- "productType": A short descriptive category label (e.g. "Leggings", "Scented Candle", "Face Serum", "Wireless Earbuds", "Dog Harness", "Desk Lamp")
-- "description": 10-20 word description of color, material, style, and key features
+                text: `Analyze this image. It could be a product photo OR a room/building/space photo.
+
+If it's a PRODUCT, return:
+- "title": Short product name (e.g. "Black High-Waist Yoga Leggings", "Lavender Soy Candle")
+- "productType": Short category (e.g. "Leggings", "Scented Candle", "Face Serum")
+- "description": 10-20 word description of color, material, style, key features
+
+If it's a ROOM, BUILDING, or SPACE, return:
+- "title": Descriptive room/space name (e.g. "Modern Open-Plan Living Room", "Sunny Master Bedroom", "Victorian Brick Facade")
+- "productType": Space type (e.g. "Living Room", "Bedroom", "Kitchen", "Front Facade", "Office")
+- "description": 10-20 word description of the space style, lighting, notable features
 
 Return ONLY the JSON object, no markdown or explanation.`,
               },
