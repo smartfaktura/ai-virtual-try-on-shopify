@@ -823,6 +823,8 @@ serve(async (req) => {
       staging_purpose: body.staging_purpose,
       is_empty_room: body.is_empty_room,
       ceiling_height: body.ceiling_height,
+      room_dimensions: body.room_dimensions,
+      exact_ceiling_height: body.exact_ceiling_height,
     };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;
