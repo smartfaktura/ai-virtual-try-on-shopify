@@ -1,70 +1,50 @@
 
-## Fix Upscale Feature: Function, UI, and State Management
 
-### Issues Found
+## Fix Image Display Ratio + Add Room Size Constraints
 
-1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
-   - The image URL in `generation_jobs.results` array never changes
-   - The `quality` field is never set to `"upscaled"`
-   - On page reload, the original image shows again
-   - The "Enhance to PRO HD" button always reappears
+### Problem 1: Generated images cropped to 3:4
+All generated images are forced into `aspect-[3/4] object-cover`, cutting off parts of the image. The actual aspect ratio is only visible when clicking to open the lightbox.
 
-2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
-
-3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
-
-4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
-
-5. **No separator** -- Buttons section needs visual separation.
+### Problem 2: Unrealistic furniture for small rooms
+The AI places large furniture (e.g., king-size bed) in a small office room because there's no concept of room size in the prompt. A 6 sqm room cannot fit a double bed, but the AI doesn't know that.
 
 ---
 
-### Changes
+### Fix 1: Show images in their natural aspect ratio
 
-#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
+**File: `src/pages/Generate.tsx` (line 2616)**
 
-- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
-- After uploading the upscaled image, update `generation_jobs`:
-  - Replace the specific URL in the `results` JSONB array
-  - Set `quality` to `"upscaled"`
-- Keep the existing freestyle update logic
+Change the image class from `aspect-[3/4] object-cover` to `w-full object-contain` so images display at their native proportions. Add a background color so there's no awkward empty space.
 
-#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
+### Fix 2: Add "Room Size" selector to Room Details
 
-**Button redesign:**
-- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
-- Same height as download button (`h-12` instead of `h-14`)
-- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
-- Add a separator line between the Download button and secondary actions
+**File: `src/pages/Generate.tsx`**
 
-**Loading messages:**
-- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
-- Cycle every 4 seconds while `upscaling` is true
+Add a new **Room Size** dropdown to the Room Details card with these options:
+- Small (under 10 sqm / 100 sqft)
+- Medium (10-20 sqm / 100-200 sqft)
+- Large (20-40 sqm / 200-400 sqft)
+- Very Large (40+ sqm / 400+ sqft)
 
-**Already upscaled handling:**
-- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
+Default: "Medium"
 
----
+This gets passed as `room_size` in the generation payload.
 
-### Technical Details
+### Fix 3: Use room size in prompt to enforce realistic furniture
 
-**Edge function sourceId parsing:**
-```text
-// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
-// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
-// Split on last hyphen to get UUID and index
-```
+**File: `supabase/functions/generate-workflow/index.ts`**
 
-**Generation jobs DB update:**
-```text
-// Fetch current results array
-// Replace results[index] with the new upscaled URL
-// Update quality to "upscaled"
-```
+Read `room_size` from the product payload and inject a size-aware constraint block:
+
+- **Small**: "This is a SMALL room. Use ONLY compact, space-saving furniture. No king/queen beds, large sectionals, or oversized pieces. A single bed or small desk is the maximum. Leave ample walking space."
+- **Medium**: "This is a MEDIUM-sized room. Use appropriately scaled furniture. Double bed maximum for bedrooms. Avoid oversized pieces."
+- **Large/Very Large**: Standard furniture sizing is fine.
+
+This block goes into the CRITICAL REQUIREMENTS section of the interior prompt to strongly guide the AI.
 
 ### Files to Edit
 
 | File | Change |
 |------|--------|
-| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
-| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
+| `src/pages/Generate.tsx` | Fix image display aspect ratio; add Room Size state + UI selector; pass in payload |
+| `supabase/functions/generate-workflow/index.ts` | Read `room_size`, add size-constraint block to interior prompt |
