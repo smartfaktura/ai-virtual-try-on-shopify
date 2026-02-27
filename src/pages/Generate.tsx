@@ -1344,11 +1344,14 @@ export default function Generate() {
                       {/* Furniture Style & Lighting Mood */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Furniture Style <span className="text-xs text-muted-foreground">(optional)</span></Label>
-                          <Select value={interiorFurnitureStyle} onValueChange={setInteriorFurnitureStyle} disabled={interiorFurnitureHandling === 'Keep & Restyle'}>
-                            <SelectTrigger className={interiorFurnitureHandling === 'Keep & Restyle' ? 'opacity-50' : ''}><SelectValue /></SelectTrigger>
+                          <Label>{interiorType === 'interior' ? 'Furniture Style' : 'Outdoor Style'} <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                          <Select value={interiorFurnitureStyle} onValueChange={setInteriorFurnitureStyle} disabled={interiorType === 'interior' && interiorFurnitureHandling === 'Keep & Restyle'}>
+                            <SelectTrigger className={interiorType === 'interior' && interiorFurnitureHandling === 'Keep & Restyle' ? 'opacity-50' : ''}><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {['Match Design Style', 'Modern Minimalist', 'Mid-Century Modern', 'Scandinavian', 'Industrial', 'Traditional / Classic', 'Bohemian / Eclectic', 'Art Deco', 'Japandi', 'Coastal / Hampton'].map(s => (
+                              {(interiorType === 'interior'
+                                ? ['Match Design Style', 'Modern Minimalist', 'Mid-Century Modern', 'Scandinavian', 'Industrial', 'Traditional / Classic', 'Bohemian / Eclectic', 'Art Deco', 'Japandi', 'Coastal / Hampton']
+                                : ['Match Design Style', 'Modern', 'Tropical', 'Mediterranean', 'Rustic', 'Contemporary', 'Coastal', 'Desert / Arid', 'Japanese Garden', 'English Garden']
+                              ).map(s => (
                                 <SelectItem key={s} value={s}>{s}</SelectItem>
                               ))}
                             </SelectContent>
