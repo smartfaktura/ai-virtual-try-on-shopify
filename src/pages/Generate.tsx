@@ -1234,6 +1234,17 @@ export default function Generate() {
                         </Select>
                       </div>
 
+                      {/* Empty Room Toggle */}
+                      {interiorType === 'interior' && (
+                        <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+                          <div>
+                            <Label className="text-sm font-medium">Empty Room</Label>
+                            <p className="text-xs text-muted-foreground">Room has no furniture — stage from scratch</p>
+                          </div>
+                          <Switch checked={interiorIsEmptyRoom} onCheckedChange={setInteriorIsEmptyRoom} />
+                        </div>
+                      )}
+
                       {/* Furniture Handling */}
                       <div className="space-y-2">
                         <Label>Furniture <span className="text-xs text-muted-foreground">(how to handle existing pieces)</span></Label>
@@ -1242,16 +1253,20 @@ export default function Generate() {
                             { value: 'Keep & Restyle', label: 'Keep & Restyle', desc: 'Keep pieces, update style' },
                             { value: 'Replace All', label: 'Replace All', desc: 'Fully restage the room' },
                             { value: 'Keep Layout, Swap Style', label: 'Keep Layout', desc: 'Same layout, new pieces' },
-                          ].map(opt => (
+                          ].map(opt => {
+                            const isDisabledByEmpty = interiorIsEmptyRoom && opt.value !== 'Replace All';
+                            return (
                             <button
                               key={opt.value}
                               type="button"
+                              disabled={isDisabledByEmpty}
                               onClick={() => {
                                 setInteriorFurnitureHandling(opt.value);
                                 if (opt.value === 'Keep & Restyle') setInteriorFurnitureStyle('Match Design Style');
                               }}
                               className={cn(
                                 'rounded-lg border-2 p-3 text-left transition-colors',
+                                isDisabledByEmpty && 'opacity-40 cursor-not-allowed',
                                 interiorFurnitureHandling === opt.value
                                   ? 'border-primary bg-primary/5'
                                   : 'border-border hover:border-primary/40'
@@ -1260,7 +1275,8 @@ export default function Generate() {
                               <span className="text-sm font-medium block">{opt.label}</span>
                               <span className="text-xs text-muted-foreground">{opt.desc}</span>
                             </button>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
 
