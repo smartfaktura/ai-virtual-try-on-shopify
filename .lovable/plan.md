@@ -1,70 +1,46 @@
 
-## Fix Upscale Feature: Function, UI, and State Management
 
-### Issues Found
+## Add "Keep Existing Furniture" Option for Interior Staging
 
-1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
-   - The image URL in `generation_jobs.results` array never changes
-   - The `quality` field is never set to `"upscaled"`
-   - On page reload, the original image shows again
-   - The "Enhance to PRO HD" button always reappears
+### Problem
+When generating interior staging, the AI completely replaces all furniture (e.g., turning an office with desk + sofa into a bedroom). Users want the option to keep their existing furniture layout and only change the styling/decor, or to fully restage with new furniture.
 
-2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
-
-3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
-
-4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
-
-5. **No separator** -- Buttons section needs visual separation.
-
----
+### Solution
+Add a **Furniture Handling** selector with three options:
+- **Keep & Restyle** -- Keep existing furniture in place, only change styling, colors, textures, and decor accessories
+- **Replace All** -- Completely restage the room with new furniture (current behavior)
+- **Keep Layout, Swap Style** -- Keep the same furniture arrangement/types but swap to the selected design style
 
 ### Changes
 
-#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
+**File: `src/pages/Generate.tsx`**
+- Add new state: `interiorFurnitureHandling` (default: `"Keep & Restyle"`)
+- Add a new selector in the Room Details card, positioned before Furniture Style. This is a prominent choice since it fundamentally changes the output
+- Pass `furniture_handling` in the generation payload
+- When "Keep & Restyle" is selected, auto-set Furniture Style to disabled (grayed out) since existing furniture is preserved
 
-- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
-- After uploading the upscaled image, update `generation_jobs`:
-  - Replace the specific URL in the `results` JSONB array
-  - Set `quality` to `"upscaled"`
-- Keep the existing freestyle update logic
+**File: `supabase/functions/generate-workflow/index.ts`**
+- Read the new `furniture_handling` field from the product payload
+- Add conditional prompt logic in the interior block:
+  - **Keep & Restyle**: Add instructions like "KEEP all existing furniture exactly as shown -- same pieces, same positions. Only update their styling, upholstery, colors, and textures to match the design style. Add appropriate decor and accessories."
+  - **Replace All**: Current behavior (no change needed -- this is the default prompt)
+  - **Keep Layout, Swap Style**: Add instructions like "Maintain the same furniture LAYOUT and types (e.g., desk stays a desk, sofa stays a sofa) but replace them with pieces in the selected design style. Keep the same spatial arrangement."
 
-#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
+### UI Layout in Room Details Card
 
-**Button redesign:**
-- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
-- Same height as download button (`h-12` instead of `h-14`)
-- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
-- Add a separator line between the Download button and secondary actions
-
-**Loading messages:**
-- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
-- Cycle every 4 seconds while `upscaling` is true
-
-**Already upscaled handling:**
-- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
-
----
-
-### Technical Details
-
-**Edge function sourceId parsing:**
 ```text
-// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
-// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
-// Split on last hyphen to get UUID and index
+Room Type:        [Bedroom / Office / ...]
+Furniture:        [Keep & Restyle] [Replace All] [Keep Layout, Swap Style]
+Wall Color:       [Keep Original / ...]    Flooring: [Keep Original / ...]
+Furniture Style:  [Match Design Style / ...]  Lighting Mood: [Keep Original / ...]
 ```
 
-**Generation jobs DB update:**
-```text
-// Fetch current results array
-// Replace results[index] with the new upscaled URL
-// Update quality to "upscaled"
-```
+The Furniture selector will use a radio-group style (3 buttons) for clear visibility since it's the most impactful choice.
 
 ### Files to Edit
 
 | File | Change |
 |------|--------|
-| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
-| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
+| `src/pages/Generate.tsx` | Add `interiorFurnitureHandling` state, UI selector, pass in payload |
+| `supabase/functions/generate-workflow/index.ts` | Read `furniture_handling`, add conditional prompt blocks |
+
