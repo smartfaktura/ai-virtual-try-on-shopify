@@ -289,13 +289,12 @@ export default function Generate() {
     'Patio / Outdoor Living', 'Balcony / Terrace', 'Garage',
   ];
 
-  // Auto-skip source step for interior design (no product selection)
+  // Auto-set scratch source type for interior design (upload-based)
   useEffect(() => {
-    if (isInteriorDesign && currentStep === 'source') {
+    if (isInteriorDesign) {
       setSourceType('scratch');
-      setCurrentStep('upload');
     }
-  }, [isInteriorDesign, currentStep]);
+  }, [isInteriorDesign]);
 
   // Reset room type when switching interior/exterior
   useEffect(() => {
