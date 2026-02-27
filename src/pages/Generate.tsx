@@ -605,6 +605,7 @@ export default function Generate() {
       interior_type: isInteriorDesign ? interiorType : undefined,
       furniture_style: isInteriorDesign ? interiorFurnitureStyle : undefined,
       lighting_mood: isInteriorDesign ? interiorLightingMood : undefined,
+      furniture_handling: isInteriorDesign ? interiorFurnitureHandling : undefined,
     };
 
     // Attach model data for selfie/UGC workflows
