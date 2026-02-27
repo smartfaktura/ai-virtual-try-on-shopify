@@ -38,6 +38,32 @@ interface VariationItem {
   category?: string;
 }
 
+// Room Type Descriptions for Interior Design workflow
+const ROOM_TYPE_DESCRIPTIONS: Record<string, string> = {
+  'Living Room': 'a spacious living room with comfortable seating, coffee table, entertainment area, and ambient lighting',
+  'Bedroom (Master)': 'a master bedroom with king/queen bed, nightstands, dresser, and serene sleeping environment',
+  'Bedroom (Guest)': 'a welcoming guest bedroom with queen/double bed, simple nightstand, and hospitality touches',
+  'Kids Room (Girl)': 'a girls bedroom with age-appropriate bed, study desk, storage, and playful feminine touches',
+  'Kids Room (Boy)': 'a boys bedroom with age-appropriate bed, study desk, storage, and playful masculine touches',
+  'Kids Room (Twins/Shared)': 'a shared kids room with twin beds or bunk beds, shared storage, individual study spaces, and balanced design',
+  'Baby Nursery (Girl)': 'a baby girl nursery with crib, changing table, rocking chair, soft lighting, and gentle feminine palette',
+  'Baby Nursery (Boy)': 'a baby boy nursery with crib, changing table, rocking chair, soft lighting, and gentle masculine palette',
+  'Kitchen': 'a functional kitchen with countertops, appliance awareness, dining prep area, and organized storage',
+  'Dining Room': 'a dining room with dining table and chairs, sideboard, centerpiece, and ambient dining lighting',
+  'Bathroom (Master)': 'a master bathroom with vanity styling, towel arrangement, accessories, and spa-like atmosphere',
+  'Bathroom (Guest)': 'a guest bathroom with clean vanity styling, fresh towels, and welcoming accessories',
+  'Home Office / Work Room': 'a home office with desk, ergonomic chair, shelving, task lighting, and productive atmosphere',
+  'Walk-in Closet': 'a walk-in closet with organized shelving, hanging space, accessories display, and soft lighting',
+  'Hallway / Entryway': 'an entryway/hallway with console table, mirror, coat hooks, shoe storage, and welcoming decor',
+  'Patio / Outdoor Living': 'an outdoor patio with weather-appropriate seating, dining area, planters, and outdoor lighting',
+  'Balcony / Terrace': 'a balcony/terrace with compact seating, planters, small table, and cozy outdoor atmosphere',
+  'Laundry Room': 'a laundry room with organized storage, folding area, baskets, and functional bright lighting',
+  'Storage Room / Utility': 'a utility/storage room with organized shelving, labeled containers, and efficient use of space',
+  'Garage': 'a garage with organized tool storage, workbench, floor coating, and efficient wall-mounted solutions',
+  'Basement / Rec Room': 'a basement recreation room with comfortable seating, entertainment area, and warm lighting',
+  'Exterior / Facade': 'building exterior with landscaping, outdoor lighting, pathway, and curb appeal elements',
+};
+
 // UGC Product Interaction Mapping
 const PRODUCT_INTERACTIONS: Record<string, string> = {
   'skincare': 'applying to their skin or showing the product texture on the back of their hand',
