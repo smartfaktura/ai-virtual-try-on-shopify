@@ -766,6 +766,8 @@ serve(async (req) => {
       color_palette_preference: body.color_palette_preference,
       time_of_day: body.time_of_day,
       staging_purpose: body.staging_purpose,
+      is_empty_room: body.is_empty_room,
+      ceiling_height: body.ceiling_height,
     };
 
     const totalToGenerate = variationsToGenerate.length * angleInstructions.length;
