@@ -349,6 +349,8 @@ export default function Generate() {
     setInteriorTimeOfDay('As Photographed');
     setInteriorIsEmptyRoom(false);
     setInteriorCeilingHeight('Standard');
+    setInteriorRoomDimensions('');
+    setInteriorExactCeilingHeight('');
   }, [interiorType]);
 
   // Reset key pieces when room type changes (but NOT design notes)
