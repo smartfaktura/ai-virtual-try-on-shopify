@@ -1322,7 +1322,7 @@ export default function Generate() {
                       </div>
 
                       {/* Key Furniture & Features (optional) */}
-                      {ROOM_FURNITURE_PRESETS[interiorRoomType] && (
+                      {interiorRoomType && ROOM_FURNITURE_PRESETS[interiorRoomType] && (
                         <div className="space-y-2">
                           <Label>Key Furniture & Features <span className="text-xs text-muted-foreground">(optional — helps the AI pick the right pieces)</span></Label>
                           <div className="flex flex-wrap gap-2">
@@ -1356,6 +1356,53 @@ export default function Generate() {
                           )}
                         </div>
                       )}
+
+                      {/* Color Palette */}
+                      <div className="space-y-2">
+                        <Label>Color Palette <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <div className="flex flex-wrap gap-2">
+                          {['Neutral / Earth Tones', 'Cool & Calming', 'Warm & Inviting', 'Monochrome', 'Bold & Vibrant', 'Pastel Soft'].map(palette => (
+                            <button
+                              key={palette}
+                              type="button"
+                              onClick={() => setInteriorColorPalette(interiorColorPalette === palette ? '' : palette)}
+                              className={cn(
+                                'px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
+                                interiorColorPalette === palette
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-card border-border hover:border-primary hover:bg-primary/5'
+                              )}
+                            >
+                              {palette}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Time of Day / Natural Light */}
+                      <div className="space-y-2">
+                        <Label>Natural Light / Time of Day <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <Select value={interiorTimeOfDay} onValueChange={setInteriorTimeOfDay}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {['As Photographed', 'Morning Light', 'Midday Bright', 'Golden Hour', 'Blue Hour / Twilight', 'Overcast Soft'].map(t => (
+                              <SelectItem key={t} value={t}>{t}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Design Notes */}
+                      <div className="space-y-2">
+                        <Label>Design Notes <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <Textarea
+                          placeholder="e.g. client prefers warm Japandi feel, no curtains, maximize natural light, shutters only..."
+                          value={interiorDesignNotes}
+                          onChange={e => setInteriorDesignNotes(e.target.value)}
+                          className="min-h-[60px]"
+                        />
+                        <p className="text-xs text-muted-foreground">Add specific instructions for the AI designer</p>
+                      </div>
                     </div>
                   </CardContent></Card>
                 )}
