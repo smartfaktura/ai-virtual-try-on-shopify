@@ -62,6 +62,14 @@ const ROOM_TYPE_DESCRIPTIONS: Record<string, string> = {
   'Garage': 'a garage with organized tool storage, workbench, floor coating, and efficient wall-mounted solutions',
   'Basement / Rec Room': 'a basement recreation room with comfortable seating, entertainment area, and warm lighting',
   'Exterior / Facade': 'building exterior with landscaping, outdoor lighting, pathway, and curb appeal elements',
+  // Exterior types
+  'Front Facade': 'the front face of a building with landscaping, outdoor lighting, pathway, and strong curb appeal',
+  'Backyard': 'a backyard space with patio seating, lawn area, garden beds, and outdoor entertaining features',
+  'Garden': 'a landscaped garden with flower beds, pathways, water features, and decorative plantings',
+  'Pool Area': 'a swimming pool area with lounge chairs, poolside landscaping, and outdoor lighting',
+  'Driveway': 'the driveway and front approach with pavers or concrete, bordering plants, and outdoor lighting',
+  'Rooftop Terrace': 'a rooftop terrace with weather-resistant seating, planters, privacy screens, and ambient lighting',
+  'Entrance / Porch': 'a welcoming entrance/porch with seating, potted plants, lighting fixtures, and decorative elements',
 };
 
 // UGC Product Interaction Mapping
