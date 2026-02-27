@@ -314,6 +314,10 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     } else if (roomSize === 'Large') {
       roomSizeBlock = `\nROOM SIZE: This is a LARGE room (20–40 sqm). Standard to generous furniture sizing is appropriate. Ensure the room doesn't look empty — use area rugs, accent chairs, or decor to fill the space naturally.`;
     }
+    // Exact room dimensions override
+    if (roomDimensions) {
+      roomSizeBlock += `\nEXACT ROOM DIMENSIONS: ${roomDimensions}. Scale ALL furniture precisely to these real-world measurements. This overrides the approximate room size above.`;
+    }
     // 'Very Large' = no constraint needed
 
     // Ceiling height constraint — interior only (skip for exterior to prevent stale values)
