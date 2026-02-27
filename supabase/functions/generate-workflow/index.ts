@@ -141,6 +141,7 @@ interface WorkflowRequest {
   staging_purpose?: string;
   is_empty_room?: boolean;
   ceiling_height?: string;
+  room_dimensions?: string;
   model?: {
     name: string;
     gender: string;
@@ -279,6 +280,7 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     const stagingPurpose = (product as unknown as Record<string, unknown>).staging_purpose as string || '';
     const isEmptyRoom = (product as unknown as Record<string, unknown>).is_empty_room as boolean || false;
     const ceilingHeight = (product as unknown as Record<string, unknown>).ceiling_height as string || '';
+    const roomDimensions = (product as unknown as Record<string, unknown>).room_dimensions as string || '';
     const hasKeyPieces = keyPieces.length > 0;
     const fullRoomDesc = ROOM_TYPE_DESCRIPTIONS[roomTypeKey] || 'a residential room with appropriate furniture';
     // When key_pieces are specified (ANY mode), strip furniture-specific suggestions to avoid conflict
@@ -295,7 +297,9 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       furnitureHandlingBlock = `\nFURNITURE HANDLING (CRITICAL): ANALYZE the uploaded photo. Identify each furniture piece and its EXACT type. Replace with a same-TYPE piece in the "${variation.label}" style — a sofa bed becomes a styled sofa bed (NOT a double bed), a desk stays a desk, a compact chair stays a compact chair. Do NOT upgrade furniture categories. Maintain the same spatial arrangement and traffic flow.`;
     } else {
       // Replace All mode — explicit removal instruction
-      furnitureHandlingBlock = `\nFURNITURE HANDLING (CRITICAL): COMPLETELY REMOVE every single piece of existing furniture visible in the uploaded photo. Remove ALL tables, chairs, sofas, beds, shelves, desks, cabinets, rugs, lamps, and any other furnishings currently in the room. The room should first be treated as EMPTY — bare walls and floor only. Then stage it from scratch with entirely NEW furniture appropriate for this room type and the "${variation.label}" design style. NOTHING from the original photo's furniture should remain. If you can still see the original table, sofa, or any piece — you have failed this instruction.`;
+      furnitureHandlingBlock = hasKeyPieces
+        ? `\nFURNITURE HANDLING (CRITICAL): COMPLETELY REMOVE every single piece of existing furniture visible in the uploaded photo. Remove ALL tables, chairs, sofas, beds, shelves, desks, cabinets, rugs, lamps, and any other furnishings currently in the room. The room should first be treated as EMPTY — bare walls and floor only. Then stage it from scratch using ONLY the key pieces specified in the REQUIRED FURNITURE section as major furniture items, styled in the "${variation.label}" design style. Do NOT add other large furniture items beyond what is listed. NOTHING from the original photo's furniture should remain.`
+        : `\nFURNITURE HANDLING (CRITICAL): COMPLETELY REMOVE every single piece of existing furniture visible in the uploaded photo. Remove ALL tables, chairs, sofas, beds, shelves, desks, cabinets, rugs, lamps, and any other furnishings currently in the room. The room should first be treated as EMPTY — bare walls and floor only. Then stage it from scratch with entirely NEW furniture appropriate for this room type and the "${variation.label}" design style. NOTHING from the original photo's furniture should remain. If you can still see the original table, sofa, or any piece — you have failed this instruction.`;
     }
 
     // Universal furniture realism constraint for ALL modes
@@ -321,6 +325,11 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     } else if (ceilingHeight === 'Double Height') {
       ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
     }
+
+    // Room dimensions constraint (overrides generic room size when provided)
+    const roomDimensionsBlock = roomDimensions
+      ? `\nROOM DIMENSIONS (CRITICAL): This room measures ${roomDimensions}. Scale ALL furniture to fit realistically within these exact dimensions. Ensure walking paths of at least 60cm (2ft) remain between furniture pieces and walls. Do NOT place oversized furniture that would not physically fit in this space.`
+      : '';
 
     // Empty room instruction
     const emptyRoomBlock = isEmptyRoom
@@ -352,9 +361,16 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
       ? `\nDESIGNER NOTES: ${designNotes}`
       : '';
 
-    // Key furniture pieces constraint
+    // Key furniture pieces constraint — with anti-substitution rules
     const keyPiecesBlock = keyPieces.length > 0
-      ? `\nREQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: ${keyPieces.join(', ')}. Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.`
+      ? `\nREQUIRED FURNITURE (CRITICAL): This room MUST contain EXACTLY these pieces: ${keyPieces.join(', ')}.
+Do NOT substitute, upgrade, or resize ANY specified piece.
+A 'Single Bed' means a narrow single bed (90cm wide), NOT a double, queen, or king.
+A 'Small Desk' means a compact desk, NOT a full-size office desk.
+A 'Sofa Bed' means a sofa that converts to a bed, NOT a regular sofa or a standalone bed.
+A 'Twin Beds' means TWO separate narrow beds, NOT one large bed.
+If the specified piece has a size qualifier (single, small, compact, twin), that size is MANDATORY — do NOT upgrade it.
+Do NOT add major furniture items beyond this list. Minor decor accessories (pillows, plants, small lamps) are allowed, but no additional large furniture.`
       : '';
 
     interiorBlock = isExterior
@@ -372,7 +388,7 @@ This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
 ${emptyRoomBlock}
 ${furnitureHandlingBlock}
-${roomSizeBlock}
+${roomDimensionsBlock || roomSizeBlock}
 ${ceilingHeightBlock}
 ${keyPiecesBlock}
 ${furnitureRealismBlock}
