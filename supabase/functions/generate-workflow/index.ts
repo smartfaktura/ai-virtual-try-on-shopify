@@ -310,6 +310,21 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
     }
     // 'Very Large' = no constraint needed
 
+    // Ceiling height constraint
+    let ceilingHeightBlock = '';
+    if (ceilingHeight === 'Low') {
+      ceilingHeightBlock = `\nCEILING HEIGHT (CRITICAL): This room has LOW ceilings (under 2.4m / 8ft). Use ONLY low-profile furniture: platform beds instead of four-poster, low-back sofas, no tall bookcases or armoires. Avoid anything that would visually crowd the vertical space. Horizontal lines preferred over vertical.`;
+    } else if (ceilingHeight === 'High') {
+      ceilingHeightBlock = `\nCEILING HEIGHT: This room has HIGH ceilings (2.7m+ / 9ft+). Furniture can be taller and more substantial. Consider floor-to-ceiling curtains, tall shelving, and vertical decor to utilize the height naturally.`;
+    } else if (ceilingHeight === 'Double Height') {
+      ceilingHeightBlock = `\nCEILING HEIGHT: This room has DOUBLE-HEIGHT ceilings (5m+ / 16ft+). Scale furniture generously. Use oversized art, dramatic pendant lights, and tall plants. The space should feel grand, not empty.`;
+    }
+
+    // Empty room instruction
+    const emptyRoomBlock = isEmptyRoom
+      ? `\nEMPTY ROOM (CRITICAL): This room is CURRENTLY COMPLETELY EMPTY — there is NO existing furniture at all. Stage it entirely from scratch with appropriate furniture for this room type and design style. Fill the space naturally without overcrowding.`
+      : '';
+
     // Staging purpose instruction
     let stagingPurposeBlock = '';
     if (stagingPurpose === 'real-estate') {
@@ -353,8 +368,10 @@ ${stagingPurposeBlock}${colorPaletteBlock}${timeOfDayBlock}${designNotesBlock}
       : `\nROOM CONTEXT:
 This is ${roomDesc}.
 Stage this room with furniture, decor, and accessories appropriate for this room type and the "${variation.label}" design style.
+${emptyRoomBlock}
 ${furnitureHandlingBlock}
 ${roomSizeBlock}
+${ceilingHeightBlock}
 ${keyPiecesBlock}
 ${furnitureRealismBlock}
 ${wallColor && wallColor !== 'Keep Original' ? `\nWALL COLOR OVERRIDE: Paint/change the walls to ${wallColor}. Apply this color consistently to all visible wall surfaces.` : '\nWALL COLOR: Keep the original wall color/finish as shown in the photo.'}
