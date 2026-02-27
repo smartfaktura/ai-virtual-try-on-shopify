@@ -1183,11 +1183,38 @@ export default function Generate() {
                       <p className="text-sm text-muted-foreground">Specify the space type and optional preferences</p>
                     </div>
                     <div className="space-y-4">
+                      {/* Staging Purpose */}
+                      <div className="space-y-2">
+                        <Label>Staging Purpose <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { id: 'real-estate', label: 'Real Estate Listing' },
+                            { id: 'design-portfolio', label: 'Design Portfolio' },
+                            { id: 'airbnb', label: 'Airbnb / Rental' },
+                            { id: 'personal', label: 'Personal Inspiration' },
+                          ].map(p => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => setInteriorPurpose(interiorPurpose === p.id ? '' : p.id)}
+                              className={cn(
+                                'px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
+                                interiorPurpose === p.id
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-card border-border hover:border-primary hover:bg-primary/5'
+                              )}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       {/* Room / Space Type */}
                       <div className="space-y-2">
-                        <Label>{interiorType === 'interior' ? 'Room Type' : 'Exterior Area'}</Label>
+                        <Label>{interiorType === 'interior' ? 'Room Type' : 'Exterior Area'} <span className="text-destructive">*</span></Label>
                         <Select value={interiorRoomType} onValueChange={setInteriorRoomType}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder="Select room type..." /></SelectTrigger>
                           <SelectContent>
                             {(interiorType === 'interior' ? INTERIOR_ROOM_TYPES : EXTERIOR_ROOM_TYPES).map(rt => (
                               <SelectItem key={rt} value={rt}>{rt}</SelectItem>
