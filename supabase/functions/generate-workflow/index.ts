@@ -281,7 +281,26 @@ ${themeNotes ? `Additional direction: ${themeNotes}` : ""}\n`
     ...(brandProfile?.do_not_rules || []),
   ].filter(Boolean).join('. ');
 
-  const prompt = `${processedTemplate}
+  // For interior design workflow, replace the product-centric prompt with room-centric one
+  const prompt = isInteriorWorkflow
+    ? `${processedTemplate}
+${interiorBlock}
+VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
+${variation.instruction}
+
+${compositionRules ? `COMPOSITION RULES:\n${compositionRules}` : ""}
+
+${brandLines.length > 0 ? `BRAND GUIDELINES:\n${brandLines.join("\n")}` : ""}
+
+CRITICAL REQUIREMENTS:
+1. The room architecture MUST remain EXACTLY as shown in [PRODUCT IMAGE] — same windows, doors, walls, angles, perspective.
+2. The camera viewpoint must NOT change at all.
+3. Ultra high resolution, photorealistic quality, no AI artifacts, proper shadows and lighting.
+4. This specific variation must clearly match the "${variation.label}" interior design style described above.
+5. All furniture must have correct perspective and scale for the room.
+
+${allNegatives ? `AVOID: ${allNegatives}` : ""}`
+    : `${processedTemplate}
 ${themeBlock}
 PRODUCT DETAILS:
 - Product: ${product.title}
