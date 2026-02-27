@@ -75,12 +75,10 @@ export function UploadSourceCard({
     if (validationError) { setError(validationError); return; }
     setError(null);
     const previewUrl = URL.createObjectURL(file);
-    const productInfo = { title: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '), productType: '', description: '' };
+    const productInfo = { title: isRoom ? 'Untitled Room' : file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '), productType: '', description: '' };
     onUpload({ file, previewUrl, productInfo });
-    if (!isRoom) {
-      analyzeProduct(file, productInfo);
-    }
-  }, [onUpload, analyzeProduct]);
+    analyzeProduct(file, productInfo);
+  }, [onUpload, analyzeProduct, isRoom]);
 
   const handleDrop = useCallback((e: React.DragEvent) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleFile(file); }, [handleFile]);
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file) handleFile(file); }, [handleFile]);
@@ -103,7 +101,7 @@ export function UploadSourceCard({
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
               <Loader2 className="w-4 h-4 animate-spin" />
               <Sparkles className="w-4 h-4 text-primary/60" />
-              {isRoom ? 'AI analyzing room…' : 'AI analyzing product…'}
+              {isRoom ? 'AI detecting room details…' : 'AI analyzing product…'}
             </div>
           ) : (
             <>

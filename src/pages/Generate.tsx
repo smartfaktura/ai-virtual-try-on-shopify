@@ -1076,7 +1076,7 @@ export default function Generate() {
                               file: new File([], upload.name),
                               previewUrl: upload.url,
                               uploadedUrl: upload.url,
-                              productInfo: { title: upload.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').replace(/^\d+-\w+\s*/, ''), productType: '', description: '' },
+                              productInfo: { title: isInteriorDesign ? 'Untitled Room' : upload.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').replace(/^\d+-\w+\s*/, ''), productType: '', description: '' },
                             });
                           }}
                           className="aspect-square rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors bg-muted"
