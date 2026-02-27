@@ -71,6 +71,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { TryOnUploadGuide } from '@/components/app/TryOnUploadGuide';
 import { FramingSelector } from '@/components/app/FramingSelector';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { detectDefaultFraming } from '@/lib/framingUtils';
 type UserProduct = Tables<'user_products'>;
 
