@@ -1,30 +1,29 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Allow Queuing Multiple Workflows + Better Status Feedback
 
-### Issues Found
+### Problem
+The UI blocks new workflow generations with a red error toast when another is already running (line 605-608 in `Generate.tsx`). The backend already supports multiple concurrent/queued jobs (pro plan allows 4 concurrent), so this is purely a UI-side restriction that creates a bad experience.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**1. `src/pages/Generate.tsx` — Remove the `isQueueProcessing` guard (lines 604-608)**
 
-### Plan
+Remove the early-return block that shows "Please wait for your current generation to finish." The backend RPC (`enqueue_generation`) already enforces proper per-plan concurrency limits and returns appropriate errors (429 with `max_concurrent`) when truly exceeded. The `useGenerationQueue` hook already handles 429 responses with user-friendly toasts.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+The hook will switch to tracking the new job. The previous job continues processing server-side and is visible via the `GlobalGenerationBar` on other pages and the activity feed on the Workflows page.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**2. `src/hooks/useGenerationQueue.ts` — Reset before new enqueue**
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+When `enqueue()` is called while an old job is still active, stop polling the old job before starting the new one. The old job's progress is already covered by the `GlobalGenerationBar`. Add `stopPolling()` at the start of the `enqueue` function before the fetch call.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### Result
+- Users can queue multiple workflows back-to-back
+- Backend enforces actual concurrency limits per plan
+- If the limit is truly exceeded, the backend returns a proper error and the hook shows a descriptive toast
+- The `GlobalGenerationBar` provides visibility into all running jobs across pages
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files changed — 2
+- `src/pages/Generate.tsx` — Remove the `isQueueProcessing` early-return guard
+- `src/hooks/useGenerationQueue.ts` — Stop old polling when a new job is enqueued
 
