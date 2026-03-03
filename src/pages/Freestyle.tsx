@@ -178,8 +178,6 @@ export default function Freestyle() {
   const removeSourceImage = useCallback(() => {
     setSourceImage(null);
     setSourceImagePreview(null);
-    setSelectedProduct(null);
-    setProductSourced(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
