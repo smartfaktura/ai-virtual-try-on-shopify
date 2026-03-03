@@ -492,7 +492,7 @@ export function FreestyleSettingsChips({
         {polishChip}
 
         <div className="flex-1" />
-        {imageCountStepper}
+        {maxImageCount > 1 && imageCountStepper}
       </div>
     </TooltipProvider>
   );
