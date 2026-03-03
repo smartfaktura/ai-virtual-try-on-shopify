@@ -360,6 +360,7 @@ export default function Freestyle() {
     const queuePayload = {
       prompt: finalPrompt,
       sourceImage: sourceImageUrl,
+      productImage: productImageUrl,
       modelImage: modelImageUrl,
       sceneImage: sceneImageUrl,
       aspectRatio,

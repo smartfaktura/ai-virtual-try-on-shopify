@@ -526,6 +526,7 @@ async function generateImage(
 function buildContentArray(
   prompt: string,
   sourceImage?: string,
+  productImage?: string,
   modelImage?: string,
   sceneImage?: string,
 ): ContentItem[] {
@@ -534,9 +535,21 @@ function buildContentArray(
   // Main prompt text first
   content.push({ type: "text", text: prompt });
 
-  // Images with concise labels (Try-On style — instructions are in the prompt)
-  if (sourceImage) {
+  // Product image (from selected product) — always labeled [PRODUCT IMAGE]
+  if (productImage) {
     content.push({ type: "text", text: "[PRODUCT IMAGE]" });
+    content.push({ type: "image_url", image_url: { url: productImage } });
+  }
+
+  // Source/reference image (user-uploaded) — labeled based on whether product also exists
+  if (sourceImage) {
+    if (productImage) {
+      // Both present: source is the reference/inspiration image
+      content.push({ type: "text", text: "[REFERENCE IMAGE]" });
+    } else {
+      // No product selected: source acts as the product image (backward compat)
+      content.push({ type: "text", text: "[PRODUCT IMAGE]" });
+    }
     content.push({ type: "image_url", image_url: { url: sourceImage } });
   }
 
