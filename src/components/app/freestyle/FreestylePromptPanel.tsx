@@ -80,7 +80,7 @@ export function FreestylePromptPanel({
   aspectRatio, onAspectRatioChange,
   quality, onQualityChange,
   polishPrompt, onPolishChange,
-  imageCount, onImageCountChange,
+  
   stylePresets, onStylePresetsChange,
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
