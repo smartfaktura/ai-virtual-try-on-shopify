@@ -188,6 +188,7 @@ function buildVariationPrompt(
   ugcMood?: string,
   theme?: string,
   themeNotes?: string,
+  aspectRatio?: string,
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
