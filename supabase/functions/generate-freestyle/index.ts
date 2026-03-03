@@ -760,6 +760,7 @@ serve(async (req) => {
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
       hasSourceImage: !!body.sourceImage,
+      hasProductImage: !!body.productImage,
       hasModelImage: !!body.modelImage,
       hasSceneImage: !!body.sceneImage,
       hasModelContext: !!body.modelContext,
