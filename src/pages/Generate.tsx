@@ -1108,7 +1108,9 @@ export default function Generate() {
   const workflowImageCount = hasWorkflowConfig ? selectedVariationIndices.size * angleMultiplier : parseInt(imageCount);
   const extraProductCount = isFlatLay && selectedFlatLayProductIds.size > 1 ? selectedFlatLayProductIds.size - 1 : 0;
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
-  const creditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * (quality === 'high' ? 16 : 8) : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 16 : 8) + extraProductCredits : parseInt(imageCount) * (quality === 'high' ? 16 : 8));
+  const multiProductCount = isMultiProductMode ? productQueue.length : 1;
+  const singleProductCreditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * (quality === 'high' ? 16 : 8) : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 16 : 8) + extraProductCredits : parseInt(imageCount) * (quality === 'high' ? 16 : 8));
+  const creditCost = singleProductCreditCost * multiProductCount;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 
@@ -2292,7 +2294,7 @@ export default function Generate() {
             <Card><CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  {sourceType === 'scratch' ? 'Uploaded Image' : isFlatLay && selectedFlatLayProductIds.size > 1 ? `Selected Products (${selectedFlatLayProductIds.size})` : 'Selected Product'}
+                  {sourceType === 'scratch' ? 'Uploaded Image' : isFlatLay && selectedFlatLayProductIds.size > 1 ? `Selected Products (${selectedFlatLayProductIds.size})` : isMultiProductMode ? `Selected Products (${productQueue.length})` : 'Selected Product'}
                 </span>
                 <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
               </div>
@@ -2304,6 +2306,17 @@ export default function Generate() {
                         <img src={up.image_url || '/placeholder.svg'} alt={up.title} className="w-full h-full object-cover" />
                       </div>
                       <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{up.title}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : isMultiProductMode ? (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {productQueue.map(p => (
+                    <div key={p.id} className="flex-shrink-0 w-[72px]">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
+                        <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{p.title}</p>
                     </div>
                   ))}
                 </div>
@@ -2898,6 +2911,7 @@ export default function Generate() {
                   <div>
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                      <p className="text-xs text-muted-foreground">
+                      {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                       {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                       {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
                       {' '}× {quality === 'high' ? 16 : 8} credits
@@ -2928,7 +2942,7 @@ export default function Generate() {
                     disabled={selectedVariationIndices.size === 0}
                     className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
                   >
-                    {balance >= creditCost ? (isInteriorDesign ? 'Generate 1 Image' : `Generate ${selectedVariationIndices.size} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
+                    {balance >= creditCost ? (isInteriorDesign ? 'Generate 1 Image' : `Generate ${workflowImageCount * multiProductCount} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
                   </Button>
                 </div>
               </>
