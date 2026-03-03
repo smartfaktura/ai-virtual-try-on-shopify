@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import type { Product, ModelProfile, TryOnPose, Template } from '@/types';
 import type {
   BulkGenerationConfig,
@@ -159,7 +160,7 @@ export function useBulkGeneration({ models, poses, templates }: UseBulkGeneratio
     });
   }, [saveCheckpoint]);
 
-  // Process a single item in the queue
+  // Process a single item in the queue via enqueue-generation
   const processQueueItem = useCallback(async (
     item: BulkQueueItem,
     config: BulkGenerationConfig,
@@ -168,22 +169,20 @@ export function useBulkGeneration({ models, poses, templates }: UseBulkGeneratio
     // Update status to converting
     updateQueueItem(item.productId, { status: 'converting', progress: 10 });
     
-    // Convert image to base64
+    // Convert product image to base64
     const base64Image = await convertImageToBase64(item.sourceImageUrl);
     
     if (signal.aborted) throw new Error('Cancelled');
     
     // Update status to generating
     updateQueueItem(item.productId, { status: 'generating', progress: 30 });
-    
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
-    
-    if (!SUPABASE_URL) {
-      throw new Error('Supabase URL not configured');
-    }
 
-    // Virtual Try-On mode
+    // Build the payload for the queue based on mode
+    let jobType: string;
+    let payload: Record<string, unknown>;
+    const creditsPerImage = config.mode === 'virtual-try-on' ? 8 : 4;
+    const creditsCost = config.imageCount * creditsPerImage;
+
     if (config.mode === 'virtual-try-on' && config.modelId && config.poseId) {
       const model = models.find(m => m.modelId === config.modelId);
       const pose = poses.find(p => p.poseId === config.poseId);
@@ -198,59 +197,100 @@ export function useBulkGeneration({ models, poses, templates }: UseBulkGeneratio
       if (signal.aborted) throw new Error('Cancelled');
       
       updateQueueItem(item.productId, { progress: 50 });
-      
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-tryon`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(SUPABASE_ANON_KEY && { Authorization: `Bearer ${SUPABASE_ANON_KEY}` }),
+
+      jobType = 'tryon';
+      payload = {
+        product: {
+          title: item.product.title,
+          description: item.product.description,
+          productType: item.product.productType,
+          imageUrl: base64Image,
         },
-        body: JSON.stringify({
-          product: {
-            title: item.product.title,
-            description: item.product.description,
-            productType: item.product.productType,
-            imageUrl: base64Image,
-          },
-          model: {
-            name: model.name,
-            gender: model.gender,
-            ethnicity: model.ethnicity,
-            bodyType: model.bodyType,
-            ageRange: model.ageRange,
-            imageUrl: base64ModelImage,
-          },
-          pose: {
-            name: pose.name,
-            description: pose.promptHint || pose.description,
-            category: pose.category,
-          },
-          aspectRatio: config.aspectRatio,
-          imageCount: config.imageCount,
-        }),
-        signal,
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Generation failed (${response.status})`);
-      }
-      
-      const result = await response.json();
-      return result.images || [];
+        model: {
+          name: model.name,
+          gender: model.gender,
+          ethnicity: model.ethnicity,
+          bodyType: model.bodyType,
+          ageRange: model.ageRange,
+          imageUrl: base64ModelImage,
+        },
+        pose: {
+          name: pose.name,
+          description: pose.promptHint || pose.description,
+          category: pose.category,
+        },
+        aspectRatio: config.aspectRatio,
+        imageCount: config.imageCount,
+      };
+    } else {
+      // Product-only mode through workflow queue
+      jobType = 'workflow';
+      payload = {
+        product: {
+          title: item.product.title,
+          description: item.product.description,
+          productType: item.product.productType,
+          imageUrl: base64Image,
+        },
+        template_id: config.templateId,
+        aspectRatio: config.aspectRatio,
+        imageCount: config.imageCount,
+        quality: config.quality,
+      };
     }
+
+    // Enqueue via the secure queue (uses authenticated user's JWT automatically)
+    const { data, error } = await supabase.rpc('enqueue_generation', {
+      p_user_id: (await supabase.auth.getUser()).data.user?.id || '',
+      p_job_type: jobType,
+      p_payload: payload as never,
+      p_credits_cost: creditsCost,
+    });
+
+    if (error) throw new Error(error.message);
     
-    // Product-only mode (mock for now - would integrate with actual template generation)
-    await delay(2000); // Simulate API call
-    
-    // Return mock generated images based on template category
-    const template = templates.find(t => t.templateId === config.templateId);
-    const mockImages = Array(config.imageCount).fill(null).map((_, i) => 
-      `https://images.unsplash.com/photo-${1523275335684 + i * 1000}-37898b6baf30?w=800&h=800&fit=crop`
-    );
-    
-    return mockImages;
-  }, [models, poses, templates, updateQueueItem]);
+    const queueResult = data as unknown as { error?: string; job_id?: string };
+    if (queueResult.error) throw new Error(queueResult.error);
+    if (!queueResult.job_id) throw new Error('No job ID returned from queue');
+
+    updateQueueItem(item.productId, { progress: 60 });
+
+    // Poll for job completion
+    const jobId = queueResult.job_id;
+    const pollStart = Date.now();
+    const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+    const POLL_INTERVAL_MS = 3000;
+
+    while (Date.now() - pollStart < POLL_TIMEOUT_MS) {
+      if (signal.aborted) throw new Error('Cancelled');
+
+      await delay(POLL_INTERVAL_MS);
+
+      const { data: jobData, error: jobError } = await supabase
+        .from('generation_queue')
+        .select('status, result, error_message')
+        .eq('id', jobId)
+        .single();
+
+      if (jobError) throw new Error(jobError.message);
+
+      if (jobData.status === 'completed') {
+        const result = jobData.result as { images?: string[] } | null;
+        return result?.images || [];
+      }
+
+      if (jobData.status === 'failed') {
+        throw new Error(jobData.error_message || 'Generation failed');
+      }
+
+      // Update progress while polling
+      const elapsed = Date.now() - pollStart;
+      const pollProgress = Math.min(60 + (elapsed / POLL_TIMEOUT_MS) * 35, 95);
+      updateQueueItem(item.productId, { progress: Math.round(pollProgress) });
+    }
+
+    throw new Error('Generation timed out');
+  }, [models, poses, updateQueueItem]);
 
   // Main queue processor
   const processQueue = useCallback(async () => {
