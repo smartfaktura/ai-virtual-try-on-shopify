@@ -400,7 +400,7 @@ export default function Freestyle() {
   const refreshImagesRef = useRef(refreshImages);
   const refreshBalanceRef = useRef(refreshBalance);
   const resetQueueRef = useRef(resetQueue);
-  const promptRef = useRef(prompt);
+  useEffect(() => { promptRef.current = prompt; }, [prompt]);
   useEffect(() => { refreshImagesRef.current = refreshImages; }, [refreshImages]);
   useEffect(() => { refreshBalanceRef.current = refreshBalance; }, [refreshBalance]);
   useEffect(() => { resetQueueRef.current = resetQueue; }, [resetQueue]);
