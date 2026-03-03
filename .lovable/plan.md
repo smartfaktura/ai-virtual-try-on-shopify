@@ -1,19 +1,30 @@
 
 
-## Update AI Creative Pick Card to Brand Colors
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The AI Creative Pick card currently uses violet/fuchsia/amber gradient (`from-violet-500 via-fuchsia-500 to-amber-400`). The VOVV brand palette is deep navy (`hsl(222, 30%, 25%)` / `#0f172a` / `#1e293b`) with warm stone accents.
+### Issues Found
 
-### Change — `src/pages/Generate.tsx` (line 2527)
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-Replace the gradient on the AI Creative Pick card background:
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**Before:** `bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400`
+### Plan
 
-**After:** `bg-gradient-to-br from-slate-800 via-slate-700 to-slate-500`
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-This uses the brand's deep navy tones — sophisticated, dark, and aligned with the studio-infrastructure aesthetic. The white sparkle icon and "AI PICKS" text will have strong contrast against the dark background, maintaining readability.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Files changed — 1
-- `src/pages/Generate.tsx` — Update gradient colors on AI Creative Pick card (1 line)
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

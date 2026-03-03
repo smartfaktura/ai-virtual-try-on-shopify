@@ -2524,7 +2524,7 @@ export default function Generate() {
                             loading="lazy"
                           />
                         ) : v.label === 'AI Creative Pick' ? (
-                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 relative overflow-hidden">
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 via-slate-700 to-slate-500 relative overflow-hidden">
                             <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_25%,rgba(255,255,255,0.3)_50%,transparent_75%)] bg-[length:250%_100%] animate-shimmer" />
                             <Sparkles className="w-8 h-8 text-white drop-shadow-lg relative z-10" />
                             <span className="text-[10px] font-bold text-white/90 mt-1.5 relative z-10 tracking-wide">AI PICKS</span>
