@@ -1,12 +1,16 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Compass } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { DiscoverCard, type DiscoverItem } from '@/components/app/DiscoverCard';
 import { PublicDiscoverDetailModal } from '@/components/app/PublicDiscoverDetailModal';
+import { DiscoverDetailModal } from '@/components/app/DiscoverDetailModal';
 import { useDiscoverPresets } from '@/hooks/useDiscoverPresets';
-import { useFeaturedItems } from '@/hooks/useFeaturedItems';
+import { useFeaturedItems, useToggleFeatured } from '@/hooks/useFeaturedItems';
+import { useSavedItems } from '@/hooks/useSavedItems';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useAuth } from '@/contexts/AuthContext';
 import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -81,8 +85,12 @@ function useColumnCount() {
 
 export default function PublicDiscover() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
-  const { featuredMap } = useFeaturedItems();
+  const { featuredMap, isFeatured } = useFeaturedItems();
+  const toggleFeatured = useToggleFeatured();
+  const { isSaved, toggleSave } = useSavedItems();
+  const { isAdmin } = useIsAdmin();
   const columnCount = useColumnCount();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -103,6 +111,31 @@ export default function PublicDiscover() {
   });
 
   const customScenePoses = useMemo(() => customScenes.map(toTryOnPose), [customScenes]);
+
+  // Track views when modal opens (for logged-in users)
+  useEffect(() => {
+    if (selectedItem && user) {
+      supabase.from('discover_item_views').insert({
+        item_type: selectedItem.type,
+        item_id: getItemId(selectedItem),
+      }).then();
+    }
+  }, [selectedItem, user]);
+
+  // Fetch view count for selected item
+  const { data: viewCount } = useQuery({
+    queryKey: ['discover-view-count', selectedItem?.type, selectedItem ? getItemId(selectedItem) : null],
+    queryFn: async () => {
+      if (!selectedItem) return 0;
+      const { count } = await supabase
+        .from('discover_item_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('item_type', selectedItem.type)
+        .eq('item_id', getItemId(selectedItem));
+      return count ?? 0;
+    },
+    enabled: !!selectedItem && !!user,
+  });
 
   // Build unified feed
   const allItems = useMemo<DiscoverItem[]>(() => {
@@ -170,6 +203,37 @@ export default function PublicDiscover() {
       })
       .slice(0, 9);
   }, [allItems, selectedItem]);
+
+  // Handlers for authenticated users
+  const handleUseItem = useCallback((item: DiscoverItem) => {
+    if (item.type === 'scene') {
+      navigate(`/app/freestyle?scene=${item.data.poseId}`);
+    } else {
+      const params = new URLSearchParams({
+        prompt: item.data.prompt,
+        ratio: item.data.aspect_ratio,
+        quality: item.data.quality,
+      });
+      navigate(`/app/freestyle?${params.toString()}`);
+    }
+  }, [navigate]);
+
+  const handleSearchSimilar = useCallback((item: DiscoverItem) => {
+    setSelectedItem(null);
+    // Simple: just filter by same category
+    setSelectedCategory(getItemCategory(item));
+  }, []);
+
+  const handleToggleSave = useCallback(() => {
+    if (!selectedItem) return;
+    toggleSave.mutate({ itemType: selectedItem.type, itemId: getItemId(selectedItem) });
+  }, [selectedItem, toggleSave]);
+
+  const handleToggleFeatured = useCallback(() => {
+    if (!selectedItem) return;
+    const itemId = getItemId(selectedItem);
+    toggleFeatured.mutate({ itemType: selectedItem.type, itemId, currentlyFeatured: isFeatured(selectedItem.type, itemId) });
+  }, [selectedItem, toggleFeatured, isFeatured]);
 
   return (
     <PageLayout>
@@ -244,14 +308,24 @@ export default function PublicDiscover() {
               <div className="flex gap-1">
                 {columns.map((col, colIdx) => (
                   <div key={colIdx} className="flex-1 flex flex-col gap-1">
-                    {col.map((item) => (
-                      <DiscoverCard
-                        key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
-                        item={item}
-                        onClick={() => setSelectedItem(item)}
-                        hideLabels
-                      />
-                    ))}
+                    {col.map((item) => {
+                      const itemId = getItemId(item);
+                      return (
+                        <DiscoverCard
+                          key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
+                          item={item}
+                          onClick={() => setSelectedItem(item)}
+                          hideLabels
+                          {...(user ? {
+                            isSaved: isSaved(item.type, itemId),
+                            onToggleSave: () => toggleSave.mutate({ itemType: item.type, itemId }),
+                            isFeatured: isFeatured(item.type, itemId),
+                            isAdmin,
+                            onToggleFeatured: () => toggleFeatured.mutate({ itemType: item.type, itemId, currentlyFeatured: isFeatured(item.type, itemId) }),
+                          } : {})}
+                        />
+                      );
+                    })}
                   </div>
                 ))}
               </div>
@@ -259,14 +333,32 @@ export default function PublicDiscover() {
           })()
         )}
 
-        {/* Detail modal */}
-        <PublicDiscoverDetailModal
-          item={selectedItem}
-          open={!!selectedItem}
-          onClose={() => setSelectedItem(null)}
-          relatedItems={relatedItems}
-          onSelectRelated={setSelectedItem}
-        />
+        {/* Detail modal — auth-aware */}
+        {user ? (
+          <DiscoverDetailModal
+            item={selectedItem}
+            open={!!selectedItem}
+            onClose={() => setSelectedItem(null)}
+            onUseItem={handleUseItem}
+            onSearchSimilar={handleSearchSimilar}
+            relatedItems={relatedItems}
+            onSelectRelated={setSelectedItem}
+            isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
+            onToggleSave={handleToggleSave}
+            viewCount={viewCount ?? undefined}
+            isAdmin={isAdmin}
+            isFeatured={selectedItem ? isFeatured(selectedItem.type, getItemId(selectedItem)) : false}
+            onToggleFeatured={handleToggleFeatured}
+          />
+        ) : (
+          <PublicDiscoverDetailModal
+            item={selectedItem}
+            open={!!selectedItem}
+            onClose={() => setSelectedItem(null)}
+            relatedItems={relatedItems}
+            onSelectRelated={setSelectedItem}
+          />
+        )}
       </div>
     </PageLayout>
   );
