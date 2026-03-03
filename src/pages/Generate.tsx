@@ -2312,7 +2312,12 @@ export default function Generate() {
                           else {
                             // Free user cap
                             if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
-                              toast.error(`Free plan: up to ${FREE_SCENE_LIMIT} scenes. Upgrade for more.`);
+                              toast.error(`Free plan allows 1 scene per generation. Upgrade to unlock more.`);
+                              return prev;
+                            }
+                            // Paid user cap
+                            if (!isFreeUser && next.size >= PAID_SCENE_LIMIT) {
+                              toast.error(`Maximum ${PAID_SCENE_LIMIT} scenes per generation.`);
                               return prev;
                             }
                             next.add(i);
