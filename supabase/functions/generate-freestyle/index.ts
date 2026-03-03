@@ -139,7 +139,7 @@ function polishUserPrompt(
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
-      const num = context.hasSource ? 2 : 1;
+      const num = [context.hasProduct || context.hasSource, context.hasSource && context.hasProduct].filter(Boolean).length + 1;
       const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view', 'side_profile'];
       if (framing && noFaceFramings.includes(framing)) {
         parts.push(`${num}. MODEL: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`);
