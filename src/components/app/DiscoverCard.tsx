@@ -82,7 +82,7 @@ export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured,
       </div>
 
       {/* Scene badge */}
-      {isScene && (
+      {isScene && !hideLabels && (
         <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/50 backdrop-blur-sm text-white text-[10px] font-medium">
           Scene
         </div>

@@ -132,7 +132,7 @@ export function PublicDiscoverDetailModal({
             </Button>
 
             <p className="text-xs text-center text-muted-foreground/60">
-              Create a free account to use prompts, scenes and generate AI fashion photography
+              Sign up to access prompts, scenes and generate AI fashion photography
             </p>
 
             {/* More like this */}
