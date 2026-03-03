@@ -68,6 +68,7 @@ export default function Freestyle() {
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const handleContentBlocked = useCallback((jobId: string, reason: string) => {
