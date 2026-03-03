@@ -1,70 +1,111 @@
 
-## Fix Upscale Feature: Function, UI, and State Management
 
-### Issues Found
+## Strengthen Terms of Service and Privacy Policy for AI Image Generation
 
-1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
-   - The image URL in `generation_jobs.results` array never changes
-   - The `quality` field is never set to `"upscaled"`
-   - On page reload, the original image shows again
-   - The "Enhance to PRO HD" button always reappears
+### Research Findings
 
-2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
+After examining Midjourney, HeadshotPro, and PhotoGPT's legal terms, here are the key patterns every serious AI image platform uses to protect themselves:
 
-3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
+**1. User bears ALL responsibility for uploads AND outputs**
+- PhotoGPT (strongest example): "The Customer is solely and exclusively responsible for all Generations, including: (i) the decision to create such Generations; (ii) any use, distribution, publication, display, commercialization, or sharing; (iii) ensuring Generations do not infringe any third-party IP, privacy, or publicity rights; (iv) any claims or liability arising from third parties"
+- Midjourney: "You are responsible for Your use of the service. If You harm someone else or get into a dispute with someone else, we will not be involved."
 
-4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
+**2. Upload warranties (user must confirm they have rights)**
+- HeadshotPro requires users to warrant they own all uploaded content, have obtained consent from depicted individuals, and that content doesn't infringe third-party rights
+- PhotoGPT requires explicit written consent from anyone depicted in uploaded content
 
-5. **No separator** -- Buttons section needs visual separation.
+**3. Full indemnification clause**
+- All three platforms require users to indemnify the platform against any claims arising from their uploads, generations, or use of the service
 
----
+**4. IP status disclaimer for AI-generated content**
+- PhotoGPT explicitly states: "The intellectual property status of AI-generated content is legally evolving and unsettled" and makes no warranties about copyrightability
 
-### Changes
+**5. No editorial control disclaimer**
+- PhotoGPT: "provides generation tools only, exercises no editorial control over Generations, and has no obligation to review, monitor, or screen Generations"
 
-#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
+**6. Unauthorized likeness prohibition**
+- Both PhotoGPT and HeadshotPro prohibit generating recognizable likenesses without consent
 
-- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
-- After uploading the upscaled image, update `generation_jobs`:
-  - Replace the specific URL in the `results` JSONB array
-  - Set `quality` to `"upscaled"`
-- Keep the existing freestyle update logic
+### What Your Current Terms Are Missing
 
-#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
+Your current Terms of Service are a basic template. They lack:
+- User responsibility for generated outputs (only a vague "review before commercial use" line)
+- Upload warranties (no requirement to confirm rights)
+- Indemnification clause (completely absent)
+- AI content IP disclaimer (absent)
+- Reference image / likeness protections (absent)
+- "Tool provider, not content creator" framing (absent)
+- Prohibited content details (very thin list)
 
-**Button redesign:**
-- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
-- Same height as download button (`h-12` instead of `h-14`)
-- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
-- Add a separator line between the Download button and secondary actions
+### Plan: Rewrite Terms of Service
 
-**Loading messages:**
-- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
-- Cycle every 4 seconds while `upscaling` is true
+The Terms of Service page will be significantly expanded with the following new/strengthened sections:
 
-**Already upscaled handling:**
-- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
+**Section 3 (Service Description)** -- Add "tool provider" framing:
+- VOVV.AI provides AI-powered generation tools only. We do not exercise editorial control over content you create and have no obligation to review, monitor, or screen your outputs.
 
----
+**Section 5 (Acceptable Use)** -- Expand significantly:
+- Add: no generating unauthorized likenesses of real people without consent
+- Add: no creating deepfakes, deceptive media, or content designed to mislead
+- Add: no uploading copyrighted/trademarked material you don't have rights to
+- Add: no generating content that violates any person's privacy, publicity, or moral rights
 
-### Technical Details
+**New Section: "Your Uploads -- Representations and Warranties"**
+- You represent and warrant that you own or have all necessary rights, licenses, consents, and permissions for all content you upload
+- If your uploads contain recognizable likenesses of individuals, you have obtained their explicit written consent
+- Your uploads do not infringe any third-party IP, privacy, publicity, or moral rights
+- You have full authority to grant the licenses described in these Terms
+- VOVV.AI does not verify uploads and relies entirely on your representations
 
-**Edge function sourceId parsing:**
-```text
-// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
-// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
-// Split on last hyphen to get UUID and index
-```
+**New Section: "Your Responsibility for Generated Content"**
+- You are solely and exclusively responsible for ALL generated content (Generations), including:
+  - The decision to create such content
+  - Any use, distribution, publication, display, commercialization, or sharing
+  - Ensuring outputs do not infringe third-party rights
+  - Any claims, damages, or liability arising from third parties' exposure to your outputs
+  - Compliance with all applicable laws when distributing outputs
+- VOVV.AI provides generation tools only, exercises no editorial control, and bears no responsibility for how outputs are used after creation
 
-**Generation jobs DB update:**
-```text
-// Fetch current results array
-// Replace results[index] with the new upscaled URL
-// Update quality to "upscaled"
-```
+**New Section: "Intellectual Property Status of AI-Generated Content"**
+- The IP status of AI-generated content is legally evolving and unsettled
+- Certain jurisdictions may not recognize copyright for AI-generated content
+- VOVV.AI makes no representations about copyrightability of outputs
+- Users seeking IP protection should consult independent legal counsel
 
-### Files to Edit
+**New Section: "Indemnification"**
+- You shall indemnify and hold harmless VOVV.AI from any claims, damages, liabilities, losses, costs, and expenses arising from:
+  - Your use of the Service
+  - Any content you upload or generate
+  - Violation of any law or these Terms
+  - Infringement of any third-party rights
+  - Any breach of your representations and warranties
+  - Distribution, publication, or commercialization of your generated content
+
+**Strengthen Section 8 (Limitation of Liability)**
+- Make it clearer with ALL CAPS formatting (industry standard for enforceability)
+- Add: "in no event shall VOVV.AI be liable for any claims arising from your Generations"
+- Cap total liability at amount paid in 12 months (keep existing) or $10 (PhotoGPT model)
+
+**New Section: "DMCA and Takedowns"**
+- Contact address for copyright claims
+- Counter-notification process
+
+**Update Section 9 (Disclaimer of Warranties)**
+- Add explicit disclaimers about accuracy of AI outputs, resemblance to real people/brands, and fitness for commercial use
+
+### Privacy Policy Updates
+
+Minor additions:
+- Add a line in "AI Training" section reinforcing that reference images are processed only to provide the Service and are never shared with third parties
+- Add mention that VOVV.AI does not verify or validate the rights status of uploaded content
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
-| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
+| `src/pages/TermsOfService.tsx` | Major rewrite -- expand from 13 sections to ~18 sections with all protections above |
+| `src/pages/PrivacyPolicy.tsx` | Minor updates -- strengthen AI Training section, add upload disclaimer |
+
+### Important Disclaimer
+These changes follow industry best practices from Midjourney, HeadshotPro, and PhotoGPT. However, this is still template content -- I strongly recommend having a lawyer review the final terms before going live, as legal requirements vary by jurisdiction.
+
