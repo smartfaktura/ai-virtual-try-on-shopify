@@ -76,14 +76,14 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const tokenStr = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(tokenStr);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(tokenStr);
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ error: "Authentication required" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
     const { schedule_id } = await req.json();
     if (!schedule_id) {

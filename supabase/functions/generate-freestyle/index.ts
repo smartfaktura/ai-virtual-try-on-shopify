@@ -638,7 +638,7 @@ serve(async (req) => {
     if (isQueueInternal && body.user_id) {
       userId = body.user_id;
     } else {
-      userId = getUserIdFromJwt(req.headers.get("authorization"));
+      userId = await getAuthUserId(req.headers.get("authorization"));
     }
 
     if (!userId) {
