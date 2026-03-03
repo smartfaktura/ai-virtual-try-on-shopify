@@ -40,6 +40,7 @@ import TermsOfService from '@/pages/TermsOfService';
 import CookiePolicy from '@/pages/CookiePolicy';
 import Team from '@/pages/Team';
 import ResetPassword from '@/pages/ResetPassword';
+import PublicDiscover from '@/pages/PublicDiscover';
 
 const queryClient = new QueryClient();
 
