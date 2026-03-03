@@ -1,70 +1,51 @@
 
-## Fix Upscale Feature: Function, UI, and State Management
 
-### Issues Found
+## Security Audit: Generation Pipeline — Final Verification
 
-1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
-   - The image URL in `generation_jobs.results` array never changes
-   - The `quality` field is never set to `"upscaled"`
-   - On page reload, the original image shows again
-   - The "Enhance to PRO HD" button always reappears
+### VERDICT: SECURE
 
-2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
+All generation paths are properly protected. Here is the complete security analysis:
 
-3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
+### Layer 1: Worker Functions (generate-freestyle, generate-tryon, generate-workflow)
+- All three **reject direct calls** with 403 ("Direct access not allowed")
+- Internal queue calls require both `x-queue-internal: true` header AND `Authorization: Bearer SERVICE_ROLE_KEY`
+- No client-side code calls these functions directly anymore
 
-4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
+### Layer 2: Queue Entry (enqueue-generation)
+- Uses cryptographic `getUser(token)` JWT verification — no anonymous access
+- Validates `jobType` against whitelist (`tryon`, `freestyle`, `workflow`)
+- All three client-side callers (`useGenerationQueue`, `useGenerationBatch`, `useBulkGeneration`) pass the user's session token
 
-5. **No separator** -- Buttons section needs visual separation.
+### Layer 3: SQL-Level Protection (enqueue_generation function)
+- **Credit check**: Atomic `FOR UPDATE` lock prevents race conditions; rejects if balance < cost
+- **Burst rate limit**: Max jobs per 60 seconds (Free=3, Starter=4, Growth=6, Pro=10, Enterprise=20)
+- **Concurrent job limit**: Free=1, Starter=2, Growth=3, Pro=4, Enterprise=6
+- **Hourly rate limit**: Free=10, Starter=50, Growth=100, Pro=999 (checked in edge function)
+- **Atomic credit deduction**: Credits deducted in same transaction as job insert — no double-spend
 
----
+### Layer 4: Queue Processing (process-queue)
+- Only accepts calls with `SERVICE_ROLE_KEY` in Authorization header
+- Stale job cleanup with 5-minute timeout + automatic credit refund
+- Fire-and-forget dispatch prevents queue blocking
 
-### Changes
+### Layer 5: Database RLS
+- `generation_queue`: Users can only SELECT their own jobs and UPDATE only `queued` status jobs (cancel)
+- Users cannot INSERT directly into generation_queue (must go through RPC)
+- `profiles.credits_balance` modifications happen only in SECURITY DEFINER functions
 
-#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
+### Attack Scenarios — All Blocked
 
-- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
-- After uploading the upscaled image, update `generation_jobs`:
-  - Replace the specific URL in the `results` JSONB array
-  - Set `quality` to `"upscaled"`
-- Keep the existing freestyle update logic
+| Attack | Protection |
+|--------|-----------|
+| Free user spams generations | Burst limit (3/min), hourly limit (10/hr), concurrent limit (1), credit check (20 credits total) |
+| Direct call to generate-freestyle | 403 rejected — queue-only |
+| Replay/forge JWT | `getUser()` does server-side cryptographic verification |
+| Race condition on credits | `FOR UPDATE` row lock in SQL |
+| Bypass via anon key | `getUser()` rejects non-user tokens |
+| Client-side credit manipulation | Credits deducted server-side in SECURITY DEFINER function |
+| DDoS via bulk requests | Burst + hourly + concurrent limits all enforced atomically |
 
-#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
+### No Issues Found
 
-**Button redesign:**
-- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
-- Same height as download button (`h-12` instead of `h-14`)
-- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
-- Add a separator line between the Download button and secondary actions
+The generation pipeline has comprehensive defense-in-depth security. No changes needed.
 
-**Loading messages:**
-- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
-- Cycle every 4 seconds while `upscaling` is true
-
-**Already upscaled handling:**
-- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
-
----
-
-### Technical Details
-
-**Edge function sourceId parsing:**
-```text
-// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
-// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
-// Split on last hyphen to get UUID and index
-```
-
-**Generation jobs DB update:**
-```text
-// Fetch current results array
-// Replace results[index] with the new upscaled URL
-// Update quality to "upscaled"
-```
-
-### Files to Edit
-
-| File | Change |
-|------|--------|
-| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
-| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
