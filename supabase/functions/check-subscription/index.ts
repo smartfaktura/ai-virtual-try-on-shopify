@@ -151,7 +151,13 @@ serve(async (req) => {
     const activeSub = subscriptions.data.find(s => s.status === "active" || s.status === "trialing");
     const cancelingSub = subscriptions.data.find(s => s.status === "active" && s.cancel_at_period_end);
 
-    let plan = "free";
+    // Read current DB plan as fallback
+    const { data: currentProfile } = await supabaseAdmin.from("profiles")
+      .select("plan")
+      .eq("user_id", userId)
+      .single();
+
+    let plan = currentProfile?.plan || "free";
     let subscriptionStatus = "none";
     let subscriptionId: string | null = null;
     let periodEnd: string | null = null;
