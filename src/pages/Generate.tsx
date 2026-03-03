@@ -2996,6 +2996,30 @@ export default function Generate() {
               </p>
             </div>
 
+            {/* Multi-product progress banner */}
+            {isMultiProductMode && (
+              <div className="w-full max-w-md space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">
+                    Product {currentProductIndex + 1} of {productQueue.length}: {productQueue[currentProductIndex]?.title}
+                  </span>
+                  <span className="text-muted-foreground">{multiProductResults.size} completed</span>
+                </div>
+                <Progress value={(currentProductIndex / productQueue.length) * 100} className="h-2" />
+                <div className="flex flex-wrap gap-1">
+                  {productQueue.map((p, idx) => (
+                    <Badge
+                      key={p.id}
+                      variant={idx < currentProductIndex ? 'default' : idx === currentProductIndex ? 'secondary' : 'outline'}
+                      className="text-[10px]"
+                    >
+                      {idx < currentProductIndex ? '✓' : idx === currentProductIndex ? '⏳' : '○'} {p.title}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Batch progress - enhanced */}
             {batchState && batchState.totalJobs > 1 && (
               <div className="w-full max-w-md space-y-3">
