@@ -243,7 +243,7 @@ export function useBulkGeneration({ models, poses, templates }: UseBulkGeneratio
     const { data, error } = await supabase.rpc('enqueue_generation', {
       p_user_id: (await supabase.auth.getUser()).data.user?.id || '',
       p_job_type: jobType,
-      p_payload: payload as unknown as Record<string, unknown>,
+      p_payload: payload as never,
       p_credits_cost: creditsCost,
     });
 
