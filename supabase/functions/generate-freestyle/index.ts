@@ -128,7 +128,7 @@ function polishUserPrompt(
 
     if (context.hasSource) {
       const dimNote = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
-      parts.push(`1. PRODUCT: The item must match [PRODUCT IMAGE] in design, color, and material. Show it naturally in the scene with correct lighting and shadows.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${dimNote}`);
+      parts.push(`1. PRODUCT: Identify the product from [PRODUCT IMAGE] — its shape, material, color, texture, and brand details. Create a NEW photograph of this exact product with a fresh angle, creative composition, and professional lighting. Do NOT replicate the reference photo's framing or camera angle. Preserve the product's identity but reimagine the visual.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${dimNote}`);
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
