@@ -384,7 +384,7 @@ export default function Freestyle() {
       // Update balance from server response
       setBalanceFromServer(enqueueResult.newBalance);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
