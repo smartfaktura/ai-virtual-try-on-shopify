@@ -24,6 +24,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
+  const [discoverModalOpen, setDiscoverModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
