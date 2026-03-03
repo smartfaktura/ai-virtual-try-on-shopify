@@ -15,14 +15,6 @@ import { FinalCTA } from '@/components/landing/FinalCTA';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
 export default function Landing() {
-  const { user, isLoading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && user) {
-      navigate('/app', { replace: true });
-    }
-  }, [user, isLoading, navigate]);
 
   return (
     <div className="min-h-screen bg-background text-foreground scroll-smooth">
