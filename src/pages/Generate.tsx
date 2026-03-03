@@ -1716,7 +1716,28 @@ export default function Generate() {
                      } else {
                        setCurrentStep('template');
                      }
-                  } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
+                  } else {
+                    // Multi-product: queue them and start with the first one
+                    setProductQueue(selected);
+                    setCurrentProductIndex(0);
+                    setMultiProductResults(new Map());
+                    const product = selected[0];
+                    setSelectedProduct(product);
+                    if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
+                    const cat = detectProductCategory(product);
+                    if (cat) setSelectedCategory(cat);
+                    if (brandProfiles.length > 0) {
+                      setCurrentStep('brand-profile');
+                    } else if (uiConfig?.show_model_picker) {
+                      setCurrentStep('model');
+                    } else if (isClothingProduct(product)) {
+                      setCurrentStep('mode');
+                    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+                      setCurrentStep('settings');
+                    } else {
+                      setCurrentStep('template');
+                    }
+                  }
                 }
               }}>
                 {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? 'Continue' : isFlatLay ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
