@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Square, RectangleHorizontal, ChevronDown,
-  Minus, Plus, Wand2, Image as ImageIcon,
+  Wand2,
   Smartphone, Camera, Lock, Palette, SlidersHorizontal, Sparkles,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -69,8 +69,6 @@ interface FreestyleSettingsChipsProps {
   onQualityChange: (q: 'standard' | 'high') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
-  imageCount: number;
-  onImageCountChange: (count: number) => void;
   stylePresets: string[];
   onStylePresetsChange: (ids: string[]) => void;
   selectedBrandProfile: BrandProfile | null;
@@ -90,7 +88,6 @@ interface FreestyleSettingsChipsProps {
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
   hasModelSelected?: boolean;
-  maxImageCount?: number;
 }
 
 export function FreestyleSettingsChips({
@@ -102,7 +99,7 @@ export function FreestyleSettingsChips({
   aspectRatio, onAspectRatioChange,
   quality, onQualityChange,
   polishPrompt, onPolishChange,
-  imageCount, onImageCountChange,
+  
   stylePresets, onStylePresetsChange,
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
@@ -110,7 +107,6 @@ export function FreestyleSettingsChips({
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   hasModelSelected = false,
-  maxImageCount = 4,
 }: FreestyleSettingsChipsProps) {
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
@@ -275,27 +271,6 @@ export function FreestyleSettingsChips({
     </HoverCard>
   );
 
-  const imageCountStepper = (
-    <div className="inline-flex items-center gap-1 h-8 px-2.5 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 flex-shrink-0">
-      <button
-        onClick={() => onImageCountChange(Math.max(1, imageCount - 1))}
-        disabled={imageCount <= 1}
-        className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors"
-      >
-        <Minus className="w-3 h-3" />
-      </button>
-      <span className="w-5 text-center tabular-nums">{imageCount}</span>
-      <button
-        onClick={() => onImageCountChange(Math.min(maxImageCount, imageCount + 1))}
-        disabled={imageCount >= maxImageCount}
-        className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors"
-      >
-        <Plus className="w-3 h-3" />
-      </button>
-      <ImageIcon className="w-3.5 h-3.5 ml-0.5" />
-    </div>
-  );
-
   const presetsChip = (
     <Popover open={presetsPopoverOpen} onOpenChange={setPresetsPopoverOpen}>
       <PopoverTrigger asChild>
@@ -379,7 +354,6 @@ export function FreestyleSettingsChips({
               {aspectRatioChip}
               {qualityChip}
               {cameraStyleChip}
-              {maxImageCount > 1 && imageCountStepper}
               <CollapsibleTrigger asChild>
                 <button className={cn(
                   'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
@@ -491,8 +465,6 @@ export function FreestyleSettingsChips({
         {cameraStyleChip}
         {polishChip}
 
-        <div className="flex-1" />
-        {maxImageCount > 1 && imageCountStepper}
       </div>
     </TooltipProvider>
   );

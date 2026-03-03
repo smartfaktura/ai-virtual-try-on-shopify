@@ -43,8 +43,6 @@ interface FreestylePromptPanelProps {
   onQualityChange: (q: 'standard' | 'high') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
-  imageCount: number;
-  onImageCountChange: (count: number) => void;
   stylePresets: string[];
   onStylePresetsChange: (ids: string[]) => void;
   selectedBrandProfile: BrandProfile | null;
@@ -65,7 +63,6 @@ interface FreestylePromptPanelProps {
   onFramingPopoverChange: (open: boolean) => void;
   onFileDrop?: (file: File) => void;
   creditBalance?: number;
-  maxImageCount?: number;
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -83,7 +80,7 @@ export function FreestylePromptPanel({
   aspectRatio, onAspectRatioChange,
   quality, onQualityChange,
   polishPrompt, onPolishChange,
-  imageCount, onImageCountChange,
+  
   stylePresets, onStylePresetsChange,
   selectedBrandProfile, onBrandProfileSelect, brandProfilePopoverOpen, onBrandProfilePopoverChange,
   brandProfiles, isLoadingBrandProfiles,
@@ -92,7 +89,6 @@ export function FreestylePromptPanel({
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
   creditBalance,
-  maxImageCount,
   isCollapsed,
   onToggleCollapse,
 }: FreestylePromptPanelProps) {
@@ -256,7 +252,6 @@ export function FreestylePromptPanel({
               aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
               quality={quality} onQualityChange={onQualityChange}
               polishPrompt={polishPrompt} onPolishChange={onPolishChange}
-              imageCount={imageCount} onImageCountChange={onImageCountChange}
               stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
               selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
               brandProfilePopoverOpen={brandProfilePopoverOpen} onBrandProfilePopoverChange={onBrandProfilePopoverChange}
@@ -267,7 +262,6 @@ export function FreestylePromptPanel({
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
               hasModelSelected={!!selectedModel}
-              maxImageCount={maxImageCount}
             />
           </div>
 
@@ -328,10 +322,10 @@ export function FreestylePromptPanel({
                         {showInsufficientCredits
                           ? `You need ${creditCost - (creditBalance ?? 0)} more credits to generate`
                           : selectedModel && selectedScene
-                            ? `${creditCost} credits: Model + Scene (15/image) × ${imageCount}`
+                            ? `${creditCost} credits: Model + Scene (15/image)`
                             : selectedModel
-                              ? `${creditCost} credits: Model reference (12/image) × ${imageCount}`
-                              : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'} × ${imageCount}`}
+                              ? `${creditCost} credits: Model reference (12/image)`
+                              : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'}`}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

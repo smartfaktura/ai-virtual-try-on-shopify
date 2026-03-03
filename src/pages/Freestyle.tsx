@@ -47,7 +47,7 @@ export default function Freestyle() {
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
   const [quality, setQuality] = useState<'standard' | 'high'>('standard');
   const [polishPrompt, setPolishPrompt] = useState(true);
-  const [imageCount, setImageCount] = useState(1);
+  
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<UserProduct | null>(null);
@@ -138,10 +138,10 @@ export default function Freestyle() {
   const hasModel = !!selectedModel;
   const hasScene = !!selectedScene;
   const creditCost = hasModel && hasScene
-    ? imageCount * 15
+    ? 15
     : hasModel
-      ? imageCount * 12
-      : imageCount * (quality === 'high' ? 10 : 4);
+      ? 12
+      : (quality === 'high' ? 10 : 4);
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
   const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
   const hasEnoughCredits = balance >= creditCost;
@@ -354,7 +354,7 @@ export default function Freestyle() {
       modelImage: modelImageUrl,
       sceneImage: sceneImageUrl,
       aspectRatio,
-      imageCount,
+      imageCount: 1,
       quality,
       polishPrompt,
       modelContext,
@@ -370,10 +370,10 @@ export default function Freestyle() {
     const enqueueResult = await enqueue({
       jobType: 'freestyle',
       payload: queuePayload,
-      imageCount,
+      imageCount: 1,
       quality,
     }, {
-      imageCount,
+      imageCount: 1,
       quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
@@ -384,7 +384,7 @@ export default function Freestyle() {
       // Update balance from server response
       setBalanceFromServer(enqueueResult.newBalance);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, imageCount, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
@@ -474,9 +474,6 @@ export default function Freestyle() {
     aspectRatio: img.aspectRatio,
   }));
 
-  const isFreeUser = plan === 'free';
-  const maxImageCount = isFreeUser ? 1 : 4;
-
   const panelProps = {
     prompt,
     onPromptChange: setPrompt,
@@ -510,8 +507,6 @@ export default function Freestyle() {
     onQualityChange: setQuality,
     polishPrompt,
     onPolishChange: setPolishPrompt,
-    imageCount,
-    onImageCountChange: setImageCount,
     stylePresets,
     onStylePresetsChange: setStylePresets,
     selectedBrandProfile,
@@ -533,7 +528,6 @@ export default function Freestyle() {
     onFramingPopoverChange: setFramingPopoverOpen,
     isCollapsed: isPromptCollapsed,
     onToggleCollapse: () => setIsPromptCollapsed(prev => !prev),
-    maxImageCount,
   };
 
   return (
@@ -565,7 +559,7 @@ export default function Freestyle() {
               onExpand={openLightbox}
               onDelete={handleDelete}
               onCopyPrompt={setPrompt}
-              generatingCount={(isLoading || isSaving || isProcessing) ? imageCount : 0}
+              generatingCount={(isLoading || isSaving || isProcessing) ? 1 : 0}
               generatingProgress={isSaving ? 100 : 0}
               generatingAspectRatio={aspectRatio}
               blockedEntries={blockedEntries}
