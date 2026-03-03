@@ -223,6 +223,16 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
       {modelModalUrl && (
         <AddModelModal open={!!modelModalUrl} onClose={() => setModelModalUrl(null)} imageUrl={modelModalUrl} />
       )}
+      {discoverModalOpen && item && (
+        <AddToDiscoverModal
+          open={discoverModalOpen}
+          onClose={() => setDiscoverModalOpen(false)}
+          imageUrl={item.imageUrl}
+          prompt={item.prompt || ''}
+          aspectRatio={item.aspectRatio}
+          quality={item.quality}
+        />
+      )}
     </>
   );
 }
