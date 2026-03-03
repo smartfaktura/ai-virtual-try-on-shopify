@@ -53,7 +53,7 @@ export default function Freestyle() {
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<UserProduct | null>(null);
   const [productPopoverOpen, setProductPopoverOpen] = useState(false);
-  const [productSourced, setProductSourced] = useState(false);
+  // productSourced removed — product and reference image are now independent
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [stylePresets, setStylePresets] = useState<string[]>([]);
@@ -165,8 +165,6 @@ export default function Freestyle() {
     setSourceImagePreview(previewUrl);
     const base64 = await convertImageToBase64(previewUrl);
     setSourceImage(base64);
-    setSelectedProduct(null);
-    setProductSourced(false);
   }, []);
 
   const handleFileDrop = useCallback(async (file: File) => {
@@ -174,40 +172,27 @@ export default function Freestyle() {
     setSourceImagePreview(previewUrl);
     const base64 = await convertImageToBase64(previewUrl);
     setSourceImage(base64);
-    setSelectedProduct(null);
-    setProductSourced(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
   const removeSourceImage = useCallback(() => {
     setSourceImage(null);
     setSourceImagePreview(null);
-    setSelectedProduct(null);
-    setProductSourced(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
   const handleProductSelect = useCallback(async (product: UserProduct | null) => {
     if (!product) {
-      if (productSourced) {
-        setSourceImage(null);
-        setSourceImagePreview(null);
-        setProductSourced(false);
-      }
       setSelectedProduct(null);
       return;
     }
     setSelectedProduct(product);
-    setSourceImagePreview(product.image_url);
-    setProductSourced(true);
-    const base64 = await convertImageToBase64(product.image_url);
-    setSourceImage(base64);
 
-    // Auto-detect framing
+    // Auto-detect framing based on product type
     const { detectDefaultFraming } = await import('@/lib/framingUtils');
     const detected = detectDefaultFraming(product.product_type, product.tags || []);
     if (detected) setFraming(detected);
-  }, [productSourced]);
+  }, []);
 
   // Helper: upload a base64 image to generation-inputs bucket, return storage path URL
   const uploadImageToStorage = useCallback(async (base64Data: string, prefix: string): Promise<string> => {
@@ -250,10 +235,12 @@ export default function Freestyle() {
     }
 
     // Upload images to storage instead of embedding base64 in payload
+    // Priority: user-uploaded reference image > product image as fallback
     let sourceImageUrl: string | undefined;
-    if (sourceImage) {
+    const effectiveSourceImage = sourceImage || (selectedProduct ? selectedProduct.image_url : null);
+    if (effectiveSourceImage) {
       try {
-        sourceImageUrl = await uploadImageToStorage(sourceImage, 'source');
+        sourceImageUrl = await uploadImageToStorage(effectiveSourceImage, 'source');
       } catch (err) {
         console.error('Failed to upload source image:', err);
         const { toast } = await import('sonner');
