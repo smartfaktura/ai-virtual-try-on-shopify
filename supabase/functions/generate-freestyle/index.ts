@@ -689,7 +689,7 @@ serve(async (req) => {
       );
     }
 
-    if (!body.prompt?.trim() && !body.sourceImage && !body.modelImage && !body.sceneImage) {
+    if (!body.prompt?.trim() && !body.sourceImage && !body.productImage && !body.modelImage && !body.sceneImage) {
       return new Response(
         JSON.stringify({ error: "Please provide a prompt or select at least one reference (product, model, or scene)" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
