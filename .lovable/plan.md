@@ -1,46 +1,30 @@
 
 
-## Fix Workflow Activity Statuses + Add Global Generation Progress Bar
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Issue 1: Both Jobs Showing "Processing"
-Looking at the screenshot, both workflow generations show "PROCESSING" badges. The system processes jobs sequentially (MAX_IMAGES_PER_JOB = 1), but when a batch group has multiple jobs, the `WorkflowActivityCard` shows "Processing" if `group.processingCount > 0`. However, these are two *separate* batch groups (different products/workflows), so the badge should correctly reflect each group's status independently.
+### Issues Found
 
-The real issue is that `WorkflowActivityCard` line 138 shows `{isProcessing ? 'Processing' : 'Queued'}` where `isProcessing = group.processingCount > 0`. If both groups genuinely have `processing` status jobs in the DB, the display is technically correct but confusing. The `process-queue` function may be picking up both jobs concurrently. This is a backend behavior issue — but on the UI side, we can show a more nuanced status: if a group has *both* queued and processing jobs, show the breakdown.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**However**, the more actionable fix: the badge should show per-group status. If one group is all `processing` and another is all `queued`, they should show different badges. The current code already does this — if both show "Processing", both genuinely have that DB status. The fix should be in the subtitle text, showing "Queued" for groups that are purely queued vs "Generating" for processing ones.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-After re-reading: the user says "it should show one is waiting for queue another generating." The DB likely has both as `processing` because the queue processor picked them both up. This is expected behavior with the current backend. No UI-only fix can change the actual DB status. We'll skip this sub-issue as it's backend-level.
+### Plan
 
-### Issue 2: Global Generation Progress Bar (Main Feature)
-When the user navigates away from the Workflows or Generate page, they lose all visibility into running generations. This is a critical UX gap.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**Solution**: Add a persistent, minimizable progress bar at the bottom of the `AppShell` that shows active generation jobs across all pages. It will:
-- Poll for active jobs (queued/processing) globally
-- Show a compact bar with workflow name, status, and progress
-- Include a "View Results" button linking to `/app/workflows`
-- Auto-dismiss when jobs complete (with a brief "Complete!" state)
-- Only appear when not on `/app/workflows` or `/app/generate` pages (where dedicated UI already exists)
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Changes
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**1. New component: `src/components/app/GlobalGenerationBar.tsx`**
-- Polls `generation_queue` for the user's active jobs (queued/processing) every 5s using react-query
-- Groups them using existing `groupJobsIntoBatches`
-- Renders a fixed-bottom bar with:
-  - Workflow name + product name
-  - Status badge (Processing / Queued)  
-  - Elapsed time counter
-  - Compact progress indicator
-  - "View in Workflows →" button
-  - Dismiss/minimize button
-- Shows a brief toast-like "Complete!" state when jobs finish, with "View Results" link
-- Hidden on `/app/workflows` and `/app/generate` pages (already have dedicated activity UI)
-- Stores dismissed state in a ref so it reappears for new jobs
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-**2. `src/components/app/AppShell.tsx`**
-- Import and render `<GlobalGenerationBar />` after `<StudioChat />` inside the main layout
-
-### Files changed — 2
-- `src/components/app/GlobalGenerationBar.tsx` (new) — Persistent bottom bar showing active generation progress
-- `src/components/app/AppShell.tsx` — Add `<GlobalGenerationBar />` to the layout
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
