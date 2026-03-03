@@ -3081,6 +3081,25 @@ export default function Generate() {
                     );
                   })}
                 </div>
+
+                {/* Embedded batch/job progress for multi-product */}
+                {batchState && batchState.totalJobs > 1 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Image {Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of {batchState.totalJobs}</span>
+                      <span>{batchState.readyImages} images ready</span>
+                    </div>
+                    {batchState.failedJobs > 0 && (
+                      <p className="text-xs text-amber-600">{batchState.failedJobs} batch{batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded</p>
+                    )}
+                  </div>
+                )}
+                {activeJob && (
+                  <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
+                )}
+                {!activeJob && (!batchState || batchState.totalJobs <= 1) && (
+                  <Progress value={0} className="h-2 animate-pulse" />
+                )}
               </div>
             )}
 
