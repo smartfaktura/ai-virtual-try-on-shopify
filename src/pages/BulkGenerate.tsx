@@ -11,6 +11,7 @@ import { BulkSettingsCard } from '@/components/app/BulkSettingsCard';
 import { BulkProgressTracker } from '@/components/app/BulkProgressTracker';
 import { BulkResultsView } from '@/components/app/BulkResultsView';
 import { useBulkGeneration } from '@/hooks/useBulkGeneration';
+import { useCredits } from '@/contexts/CreditContext';
 import { mockProducts, mockTemplates, mockModels, mockTryOnPoses, mockShop } from '@/data/mockData';
 import type { BulkGenerationConfig } from '@/types/bulk';
 import type { Product } from '@/types';
@@ -22,6 +23,8 @@ type BulkStep = 'select' | 'settings' | 'processing' | 'results';
 export default function BulkGenerate() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { plan } = useCredits();
+  const isFreeUser = plan === 'free';
 
   const passedProducts = (location.state as { selectedProducts?: Product[] })?.selectedProducts;
   const hasPassedProducts = passedProducts && passedProducts.length >= 2;
@@ -159,6 +162,7 @@ export default function BulkGenerate() {
             models={mockModels}
             poses={mockTryOnPoses}
             creditsBalance={mockShop.creditsBalance}
+            isFreeUser={isFreeUser}
           />
         )}
 

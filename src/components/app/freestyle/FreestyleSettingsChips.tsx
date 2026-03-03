@@ -90,6 +90,7 @@ interface FreestyleSettingsChipsProps {
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
   hasModelSelected?: boolean;
+  maxImageCount?: number;
 }
 
 export function FreestyleSettingsChips({
@@ -109,6 +110,7 @@ export function FreestyleSettingsChips({
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   hasModelSelected = false,
+  maxImageCount = 4,
 }: FreestyleSettingsChipsProps) {
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
@@ -284,8 +286,8 @@ export function FreestyleSettingsChips({
       </button>
       <span className="w-5 text-center tabular-nums">{imageCount}</span>
       <button
-        onClick={() => onImageCountChange(Math.min(4, imageCount + 1))}
-        disabled={imageCount >= 4}
+        onClick={() => onImageCountChange(Math.min(maxImageCount, imageCount + 1))}
+        disabled={imageCount >= maxImageCount}
         className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors"
       >
         <Plus className="w-3 h-3" />

@@ -69,7 +69,7 @@ export default function Freestyle() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
+  const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue();
   const isLoading = isEnqueuing || isProcessing;
   const { user } = useAuth();
@@ -474,6 +474,9 @@ export default function Freestyle() {
     aspectRatio: img.aspectRatio,
   }));
 
+  const isFreeUser = plan === 'free';
+  const maxImageCount = isFreeUser ? 1 : 4;
+
   const panelProps = {
     prompt,
     onPromptChange: setPrompt,
@@ -530,6 +533,7 @@ export default function Freestyle() {
     onFramingPopoverChange: setFramingPopoverOpen,
     isCollapsed: isPromptCollapsed,
     onToggleCollapse: () => setIsPromptCollapsed(prev => !prev),
+    maxImageCount,
   };
 
   return (

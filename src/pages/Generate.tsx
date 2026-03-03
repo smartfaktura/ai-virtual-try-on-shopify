@@ -2015,9 +2015,9 @@ export default function Generate() {
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="1">1 image</SelectItem>
-                          <SelectItem value="2">2 images</SelectItem>
-                          <SelectItem value="3">3 images</SelectItem>
-                          <SelectItem value="4">4 images</SelectItem>
+                          {!isFreeUser && <SelectItem value="2">2 images</SelectItem>}
+                          {!isFreeUser && <SelectItem value="3">3 images</SelectItem>}
+                          {!isFreeUser && <SelectItem value="4">4 images</SelectItem>}
                         </SelectContent>
                       </Select>
                     </div>
@@ -2785,9 +2785,9 @@ export default function Generate() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">1 image</SelectItem>
-                      <SelectItem value="2">2 images</SelectItem>
-                      <SelectItem value="3">3 images</SelectItem>
-                      <SelectItem value="4">4 images</SelectItem>
+                      {!isFreeUser && <SelectItem value="2">2 images</SelectItem>}
+                      {!isFreeUser && <SelectItem value="3">3 images</SelectItem>}
+                      {!isFreeUser && <SelectItem value="4">4 images</SelectItem>}
                     </SelectContent>
                   </Select>
                 </div>

@@ -65,6 +65,7 @@ interface FreestylePromptPanelProps {
   onFramingPopoverChange: (open: boolean) => void;
   onFileDrop?: (file: File) => void;
   creditBalance?: number;
+  maxImageCount?: number;
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -91,6 +92,7 @@ export function FreestylePromptPanel({
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
   creditBalance,
+  maxImageCount,
   isCollapsed,
   onToggleCollapse,
 }: FreestylePromptPanelProps) {
@@ -265,6 +267,7 @@ export function FreestylePromptPanel({
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
               hasModelSelected={!!selectedModel}
+              maxImageCount={maxImageCount}
             />
           </div>
 
