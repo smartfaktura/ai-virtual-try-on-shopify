@@ -906,7 +906,8 @@ serve(async (req) => {
             prompt,
             referenceImages,
             model,
-            LOVABLE_API_KEY
+            LOVABLE_API_KEY,
+            aspectRatio
           );
 
           if (imageUrl) {
