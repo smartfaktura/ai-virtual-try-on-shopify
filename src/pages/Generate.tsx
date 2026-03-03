@@ -2871,16 +2871,24 @@ export default function Generate() {
               </p>
             </div>
 
-            {/* Batch progress */}
+            {/* Batch progress - enhanced */}
             {batchState && batchState.totalJobs > 1 && (
-              <div className="w-full max-w-md space-y-2">
+              <div className="w-full max-w-md space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Batch {batchState.completedJobs + batchState.failedJobs} of {batchState.totalJobs}</span>
+                  <span className="font-medium">
+                    {batchState.allDone
+                      ? `All ${batchState.totalJobs} batches complete`
+                      : `Image ${Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...`}
+                  </span>
                   <span className="text-muted-foreground">{batchState.readyImages} images ready</span>
                 </div>
                 <Progress value={(batchState.completedJobs + batchState.failedJobs) / batchState.totalJobs * 100} className="h-2" />
                 {batchState.failedJobs > 0 && (
                   <p className="text-xs text-amber-600">{batchState.failedJobs} batch{batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded</p>
+                )}
+                {/* Show active job indicator within batch */}
+                {activeJob && (
+                  <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
                 )}
               </div>
             )}

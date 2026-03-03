@@ -1,56 +1,30 @@
 
 
-## Fix: Batch Progress Missing Time Estimates
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-When generation splits into multiple batches (e.g., 3 jobs), the UI shows only a bare "Batch 0 of 3 / 0 images ready" with a plain progress bar. There's no time estimate, no elapsed timer, no team messages — all the rich feedback from `QueuePositionIndicator` is hidden because it's only rendered for single-job generations (lines 2888-2896 are gated by `!batchState || batchState.totalJobs <= 1`).
+### Issues Found
 
-### Fix
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**`src/pages/Generate.tsx`** — Enhance batch progress section (lines 2874-2886):
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-1. **Add time estimate** — Calculate total estimated time based on batch count × per-job estimate (~70-100s for Pro model). Show "Est. ~3-6 min" and elapsed timer, matching the single-job indicator style.
+### Plan
 
-2. **Show active job indicator** — Find the currently processing job from `batchState.jobs` and display a mini `QueuePositionIndicator` for it below the batch progress bar. This gives users the familiar spinning loader, elapsed time, and team messages for the job currently in progress.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-3. **Better batch label** — Change "Batch 0 of 3" to "Image 1 of 3 generating..." with a completed count, so users understand progress in terms of results, not abstract batches.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-4. **Add rotating team member** — Reuse the team avatar row from `QueuePositionIndicator` so the batch view feels equally polished.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### Implementation detail
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-```tsx
-{/* Batch progress - enhanced */}
-{batchState && batchState.totalJobs > 1 && (
-  <div className="w-full max-w-md space-y-3">
-    {/* Batch header with time estimate */}
-    <div className="flex items-center justify-between text-sm">
-      <span className="font-medium">
-        Image {batchState.completedJobs + 1} of {batchState.totalJobs}
-        {!batchState.allDone && ' generating...'}
-      </span>
-      <span className="text-muted-foreground">{batchState.readyImages} images ready</span>
-    </div>
-    <Progress value={...} className="h-2" />
-    
-    {/* Time estimate + elapsed (new) */}
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-      <span>Est. ~{lowEst}-{highEst} seconds per image</span>
-      <span>·</span>
-      <span className="font-mono">{elapsed}s elapsed</span>
-    </div>
-    
-    {/* Active job QueuePositionIndicator (new) */}
-    {activeJob && <QueuePositionIndicator job={activeJob} />}
-    
-    {/* Failed count */}
-    {batchState.failedJobs > 0 && <p className="text-xs text-amber-600">...</p>}
-  </div>
-)}
-```
-
-Also remove the `(!batchState || batchState.totalJobs <= 1)` gate so the `QueuePositionIndicator` can render alongside batch progress when an `activeJob` exists.
-
-### Files changed — 1
-- `src/pages/Generate.tsx`
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
