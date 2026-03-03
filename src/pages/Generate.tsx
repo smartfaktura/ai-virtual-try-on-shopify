@@ -602,10 +602,7 @@ export default function Generate() {
 
   const handleWorkflowGenerate = async () => {
     try {
-    if (isQueueProcessing) {
-      toast.error('Please wait for your current generation to finish before starting another.');
-      return;
-    }
+    // Allow queuing multiple workflows — backend enforces per-plan concurrency limits
     if (!selectedProduct && !scratchUpload) return;
     let sourceImageUrl = '';
     let productData: { title: string; productType: string; description: string; dimensions?: string } = { title: '', productType: '', description: '' };
