@@ -70,7 +70,16 @@ export default function Freestyle() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
-  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue();
+  const handleContentBlocked = useCallback((jobId: string, reason: string) => {
+    setBlockedEntries(prev => [{
+      id: crypto.randomUUID(),
+      prompt: promptRef.current,
+      reason,
+    }, ...prev]);
+  }, []);
+  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue({
+    onContentBlocked: handleContentBlocked,
+  });
   const isLoading = isEnqueuing || isProcessing;
   const { user } = useAuth();
 
