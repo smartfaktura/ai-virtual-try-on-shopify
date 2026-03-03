@@ -2911,6 +2911,7 @@ export default function Generate() {
                   <div>
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                      <p className="text-xs text-muted-foreground">
+                      {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                       {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                       {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
                       {' '}× {quality === 'high' ? 16 : 8} credits
