@@ -546,7 +546,7 @@ async function generateImage(
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
-    { type: "text", text: aspectRatio ? `${prompt}\n\nOutput aspect ratio: ${aspectRatio}` : prompt },
+    { type: "text", text: aspectRatio ? `MANDATORY OUTPUT FORMAT: Generate this image at EXACTLY ${aspectRatio} aspect ratio. This is a hard constraint — do NOT match the reference image dimensions.\n\n${prompt}` : prompt },
   ];
   for (const img of referenceImages) {
     contentParts.push({
