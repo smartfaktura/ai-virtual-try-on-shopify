@@ -251,6 +251,15 @@ function ImageCard({
         )}
       </div>
       <div className="flex items-center gap-2">
+        {onAddToDiscover && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onAddToDiscover(img); }}
+            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-emerald-500/40 transition-colors"
+            title="Add to Discover"
+          >
+            <Globe className="w-4 h-4" />
+          </button>
+        )}
         {onShareToDiscover && (
           <button
             onClick={(e) => { e.stopPropagation(); onShareToDiscover(img); }}
