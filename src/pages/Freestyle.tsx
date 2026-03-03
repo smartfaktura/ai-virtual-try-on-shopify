@@ -235,10 +235,12 @@ export default function Freestyle() {
     }
 
     // Upload images to storage instead of embedding base64 in payload
+    // Priority: user-uploaded reference image > product image as fallback
     let sourceImageUrl: string | undefined;
-    if (sourceImage) {
+    const effectiveSourceImage = sourceImage || (selectedProduct ? selectedProduct.image_url : null);
+    if (effectiveSourceImage) {
       try {
-        sourceImageUrl = await uploadImageToStorage(sourceImage, 'source');
+        sourceImageUrl = await uploadImageToStorage(effectiveSourceImage, 'source');
       } catch (err) {
         console.error('Failed to upload source image:', err);
         const { toast } = await import('sonner');
