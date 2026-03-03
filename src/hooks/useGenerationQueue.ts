@@ -23,6 +23,7 @@ export interface QueueJob {
   created_at: string;
   started_at: string | null;
   completed_at: string | null;
+  job_type?: string;
   generationMeta?: GenerationMeta;
 }
 
