@@ -421,7 +421,9 @@ export default function Freestyle() {
           prompt: promptRef.current,
           reason: result.blockReason || 'This prompt was flagged by our content safety system.',
         }, ...prev]);
+        refreshBalanceRef.current();
         resetQueueRef.current();
+        toast('Credits refunded', { description: 'Your prompt was flagged — credits have been returned to your balance.' });
       } else {
         // Delay to ensure DB write has propagated, then refetch
         setTimeout(() => {
