@@ -14,7 +14,7 @@ export default function PrivacyPolicy() {
             <h1 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight mb-4">
               Privacy Policy
             </h1>
-            <p className="text-sm text-muted-foreground">Last updated: February 2026</p>
+            <p className="text-sm text-muted-foreground">Last updated: March 2026</p>
           </div>
 
           <div className="prose prose-sm max-w-none text-muted-foreground [&_h2]:text-foreground [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:text-foreground [&_h3]:font-medium [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:mb-4 [&_p]:leading-relaxed [&_ul]:mb-4 [&_ul]:space-y-1 [&_li]:ml-4">
@@ -38,9 +38,13 @@ export default function PrivacyPolicy() {
             <p>
               When you upload product images, we store those images securely to provide the generation service. We also store metadata such as product titles, descriptions, and tags you provide.
             </p>
+            <h3>Uploaded Reference Materials</h3>
+            <p>
+              When you upload reference images, model photos, or other visual materials, we store and process them solely for the purpose of providing the Service. <strong>VOVV.AI does not verify, validate, or screen the rights status of any uploaded content.</strong> You are solely responsible for ensuring you have the necessary rights and permissions for all content you upload (see our Terms of Service for full details).
+            </p>
             <h3>Generated Content</h3>
             <p>
-              Images and videos generated through our Service are stored in your account. You retain full ownership of all generated content.
+              Images and videos generated through our Service are stored in your account. You retain full ownership of all generated content, subject to the intellectual property considerations described in our Terms of Service.
             </p>
             <h3>Usage Data</h3>
             <p>
@@ -54,7 +58,7 @@ export default function PrivacyPolicy() {
               <li>• To generate images and videos based on your inputs</li>
               <li>• To communicate with you about updates, security alerts, and support</li>
               <li>• To monitor usage patterns and optimize performance</li>
-              <li>• To detect, prevent, and address technical issues and fraud</li>
+              <li>• To detect, prevent, and address technical issues, fraud, and violations of our Terms of Service</li>
             </ul>
 
             <h2>4. Data Sharing</h2>
@@ -67,9 +71,12 @@ export default function PrivacyPolicy() {
               <li>• <strong>Business transfers</strong> in the event of a merger, acquisition, or asset sale</li>
             </ul>
 
-            <h2>5. AI Training</h2>
+            <h2>5. AI Training and Data Processing</h2>
             <p>
-              Your uploaded product images and generated content are <strong>never</strong> used to train our AI models. Your visual data is used solely to provide the Service to you.
+              Your uploaded product images, reference materials, and generated content are <strong>never</strong> used to train our AI models or any third-party AI models. Your visual data is processed solely to provide the Service to you and is not shared with any third party for AI training purposes.
+            </p>
+            <p>
+              Reference images you upload are processed in real-time to generate outputs and are stored only within your account. We do not aggregate, repurpose, or redistribute any user-uploaded visual content.
             </p>
 
             <h2>6. Data Security</h2>
