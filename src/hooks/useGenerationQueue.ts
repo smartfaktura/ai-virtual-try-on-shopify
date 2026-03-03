@@ -42,6 +42,10 @@ interface EnqueueResult {
   creditsCost: number;
 }
 
+interface UseGenerationQueueOptions {
+  onContentBlocked?: (jobId: string, reason: string) => void;
+}
+
 interface UseGenerationQueueReturn {
   enqueue: (params: EnqueueParams, meta?: GenerationMeta) => Promise<EnqueueResult | null>;
   activeJob: QueueJob | null;
