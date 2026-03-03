@@ -89,7 +89,6 @@ export function FreestylePromptPanel({
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   onFileDrop,
   creditBalance,
-  maxImageCount,
   isCollapsed,
   onToggleCollapse,
 }: FreestylePromptPanelProps) {
