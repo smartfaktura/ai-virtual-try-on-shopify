@@ -235,17 +235,28 @@ export default function Freestyle() {
     }
 
     // Upload images to storage instead of embedding base64 in payload
-    // Priority: user-uploaded reference image > product image as fallback
+    // sourceImage = user-uploaded reference image (independent)
+    // productImage = selected product's image (independent)
     let sourceImageUrl: string | undefined;
-    const effectiveSourceImage = sourceImage || (selectedProduct ? selectedProduct.image_url : null);
-    if (effectiveSourceImage) {
+    if (sourceImage) {
       try {
-        sourceImageUrl = await uploadImageToStorage(effectiveSourceImage, 'source');
+        sourceImageUrl = await uploadImageToStorage(sourceImage, 'source');
       } catch (err) {
         console.error('Failed to upload source image:', err);
-        const { toast } = await import('sonner');
         toast.error('Failed to upload source image. Please try again.');
         return;
+      }
+    }
+
+    let productImageUrl: string | undefined;
+    if (selectedProduct) {
+      try {
+        productImageUrl = selectedProduct.image_url.startsWith('data:')
+          ? await uploadImageToStorage(selectedProduct.image_url, 'product')
+          : selectedProduct.image_url;
+      } catch (err) {
+        console.error('Failed to upload product image:', err);
+        // Non-fatal — continue without product image
       }
     }
 
@@ -349,6 +360,7 @@ export default function Freestyle() {
     const queuePayload = {
       prompt: finalPrompt,
       sourceImage: sourceImageUrl,
+      productImage: productImageUrl,
       modelImage: modelImageUrl,
       sceneImage: sceneImageUrl,
       aspectRatio,

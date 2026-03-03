@@ -37,6 +37,7 @@ interface BrandProfileContext {
 interface FreestyleRequest {
   prompt: string;
   sourceImage?: string;
+  productImage?: string;
   modelImage?: string;
   sceneImage?: string;
   aspectRatio: string;
@@ -106,7 +107,7 @@ CRITICAL — DO NOT include any of the following:
 // ── Context-aware prompt polish ───────────────────────────────────────────
 function polishUserPrompt(
   rawPrompt: string,
-  context: { hasSource: boolean; hasModel: boolean; hasScene: boolean },
+  context: { hasSource: boolean; hasProduct: boolean; hasModel: boolean; hasScene: boolean },
   brandProfile?: BrandProfileContext,
   userNegatives?: string[],
   modelContext?: string,
@@ -118,7 +119,7 @@ function polishUserPrompt(
   const isSelfie = detectSelfieIntent(rawPrompt);
 
   // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
-  const refCount = [context.hasSource, context.hasModel, context.hasScene].filter(Boolean).length;
+  const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
   if (refCount >= 2 && !isSelfie) {
     const parts: string[] = [
       `Professional photography: ${rawPrompt}`,
@@ -126,13 +127,19 @@ function polishUserPrompt(
       "REQUIREMENTS:",
     ];
 
-    if (context.hasSource) {
+    if (context.hasProduct) {
       const dimNote = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
       parts.push(`1. PRODUCT: Identify the product from [PRODUCT IMAGE] — its shape, material, color, texture, and brand details. Create a NEW photograph of this exact product with a fresh angle, creative composition, and professional lighting. Do NOT replicate the reference photo's framing or camera angle. Preserve the product's identity but reimagine the visual.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${dimNote}`);
+      if (context.hasSource) {
+        const refNum = [context.hasProduct, context.hasModel].filter(Boolean).length + 1;
+        parts.push(`${refNum}. REFERENCE: Use [REFERENCE IMAGE] as visual/style/scene inspiration. Place the product in a similar setting, mood, or style as shown in the reference — but keep the product identity from [PRODUCT IMAGE].`);
+      }
+    } else if (context.hasSource) {
+      parts.push(`1. PRODUCT: Identify the product from [PRODUCT IMAGE] — its shape, material, color, texture, and brand details. Create a NEW photograph of this exact product with a fresh angle, creative composition, and professional lighting. Do NOT replicate the reference photo's framing or camera angle. Preserve the product's identity but reimagine the visual.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : ""}`);
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
-      const num = context.hasSource ? 2 : 1;
+      const num = [context.hasProduct || context.hasSource, context.hasSource && context.hasProduct].filter(Boolean).length + 1;
       const noFaceFramings = ['hand_wrist', 'lower_body', 'back_view', 'side_profile'];
       if (framing && noFaceFramings.includes(framing)) {
         parts.push(`${num}. MODEL: Match the skin tone, body type, and physical characteristics of the person in [MODEL IMAGE]${identityDetails}. Face is not visible in this framing. Ignore any person in the product image.`);
@@ -141,7 +148,7 @@ function polishUserPrompt(
       }
     }
     if (context.hasScene) {
-      const num = [context.hasSource, context.hasModel].filter(Boolean).length + 1;
+      const num = [context.hasProduct || context.hasSource, context.hasSource && context.hasProduct, context.hasModel].filter(Boolean).length + 1;
       parts.push(`${num}. SCENE: Use [SCENE IMAGE] as the environment. Consistent lighting and perspective throughout.`);
     }
 
@@ -242,11 +249,17 @@ function polishUserPrompt(
   }
 
   // Product / source image layer
-  if (context.hasSource) {
+  const hasProductImage = context.hasProduct || context.hasSource;
+  if (hasProductImage) {
     const dimLayer = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
     layers.push(
       `PRODUCT IDENTITY: Identify the product from [PRODUCT IMAGE] — its exact shape, material, color, texture, and any brand details. Create a NEW professional photograph of this exact product. Preserve the product's identity (design, colors, proportions) but do NOT replicate the reference photo's composition, camera angle, or lighting setup. Reimagine it with fresh creative direction.${dimLayer}`
     );
+    if (context.hasSource && context.hasProduct) {
+      layers.push(
+        "REFERENCE INSPIRATION: Use [REFERENCE IMAGE] as visual/style/scene inspiration. The product should be placed in a similar setting, mood, or style as shown in the reference image — but keep the product identity strictly from [PRODUCT IMAGE]."
+      );
+    }
     if (isSelfie) {
       layers.push(
         "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
@@ -525,6 +538,7 @@ async function generateImage(
 function buildContentArray(
   prompt: string,
   sourceImage?: string,
+  productImage?: string,
   modelImage?: string,
   sceneImage?: string,
 ): ContentItem[] {
@@ -533,9 +547,21 @@ function buildContentArray(
   // Main prompt text first
   content.push({ type: "text", text: prompt });
 
-  // Images with concise labels (Try-On style — instructions are in the prompt)
-  if (sourceImage) {
+  // Product image (from selected product) — always labeled [PRODUCT IMAGE]
+  if (productImage) {
     content.push({ type: "text", text: "[PRODUCT IMAGE]" });
+    content.push({ type: "image_url", image_url: { url: productImage } });
+  }
+
+  // Source/reference image (user-uploaded) — labeled based on whether product also exists
+  if (sourceImage) {
+    if (productImage) {
+      // Both present: source is the reference/inspiration image
+      content.push({ type: "text", text: "[REFERENCE IMAGE]" });
+    } else {
+      // No product selected: source acts as the product image (backward compat)
+      content.push({ type: "text", text: "[PRODUCT IMAGE]" });
+    }
     content.push({ type: "image_url", image_url: { url: sourceImage } });
   }
 
@@ -663,7 +689,7 @@ serve(async (req) => {
       );
     }
 
-    if (!body.prompt?.trim() && !body.sourceImage && !body.modelImage && !body.sceneImage) {
+    if (!body.prompt?.trim() && !body.sourceImage && !body.productImage && !body.modelImage && !body.sceneImage) {
       return new Response(
         JSON.stringify({ error: "Please provide a prompt or select at least one reference (product, model, or scene)" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -685,6 +711,7 @@ serve(async (req) => {
 
     const polishContext = {
       hasSource: !!body.sourceImage,
+      hasProduct: !!body.productImage,
       hasModel: !!body.modelImage,
       hasScene: !!body.sceneImage,
     };
@@ -720,7 +747,7 @@ serve(async (req) => {
 
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
 
-    const refCount = [body.sourceImage, body.modelImage, body.sceneImage].filter(Boolean).length;
+    const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage].filter(Boolean).length;
     const hasModelImage = !!body.modelImage;
     const aiModel = hasModelImage
       ? "google/gemini-3-pro-image-preview"
@@ -733,6 +760,7 @@ serve(async (req) => {
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
       hasSourceImage: !!body.sourceImage,
+      hasProductImage: !!body.productImage,
       hasModelImage: !!body.modelImage,
       hasSceneImage: !!body.sceneImage,
       hasModelContext: !!body.modelContext,
@@ -771,6 +799,7 @@ serve(async (req) => {
         const contentArray = buildContentArray(
           promptWithVariation,
           body.sourceImage,
+          body.productImage,
           body.modelImage,
           body.sceneImage,
         );
