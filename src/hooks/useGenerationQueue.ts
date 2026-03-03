@@ -23,6 +23,7 @@ export interface QueueJob {
   created_at: string;
   started_at: string | null;
   completed_at: string | null;
+  job_type?: string;
   generationMeta?: GenerationMeta;
 }
 
@@ -92,7 +93,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       const token = session?.session?.access_token || SUPABASE_KEY;
 
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=id,status,result,error_message,created_at,started_at,completed_at,priority_score`,
+        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=id,status,result,error_message,created_at,started_at,completed_at,priority_score,job_type`,
         {
           headers: {
             apikey: SUPABASE_KEY,
@@ -109,13 +110,14 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       const job: QueueJob = {
         id: row.id,
         status: row.status,
-        position: 0, // Will be calculated if queued
+        position: 0,
         priority: row.priority_score,
         result: row.result,
         error_message: row.error_message,
         created_at: row.created_at,
         started_at: row.started_at,
         completed_at: row.completed_at,
+        job_type: row.job_type,
       };
 
       // Calculate position if still queued (count jobs ahead: lower priority_score, or same score but earlier created_at)
@@ -213,7 +215,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       const token = session?.session?.access_token || SUPABASE_KEY;
 
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1&select=id,status,priority_score,error_message,created_at,started_at,completed_at`,
+        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1&select=id,status,priority_score,error_message,created_at,started_at,completed_at,job_type`,
         {
           headers: {
             apikey: SUPABASE_KEY,
@@ -237,6 +239,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         created_at: row.created_at,
         started_at: row.started_at,
         completed_at: row.completed_at,
+        job_type: row.job_type,
       });
       jobIdRef.current = row.id;
       pollJobStatus(row.id);

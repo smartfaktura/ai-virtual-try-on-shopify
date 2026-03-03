@@ -1,8 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Sparkles, Loader2, Camera, X as XIcon } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
@@ -40,6 +42,7 @@ function getProductModelInteraction(productType: string): string {
 }
 
 export default function Freestyle() {
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
@@ -562,7 +565,28 @@ export default function Freestyle() {
           <>
             {activeJob && isProcessing && (
               <div className="px-3 lg:px-1 pt-1 pb-2">
-                <QueuePositionIndicator job={activeJob} onCancel={() => resetQueue()} />
+                {activeJob.job_type === 'workflow' ? (
+                  <div className="flex flex-col gap-2 p-3 sm:p-4 rounded-xl bg-primary/5 border border-primary/20">
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">Workflow generation in progress…</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Results will appear on the Workflows page
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={() => navigate('/app/workflows')}>
+                        View in Workflows <ArrowRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                    <Progress value={(() => {
+                      const elapsed = (Date.now() - new Date(activeJob.created_at).getTime()) / 1000;
+                      return Math.min(95, (elapsed / 120) * 100);
+                    })()} className="h-1.5" />
+                  </div>
+                ) : (
+                  <QueuePositionIndicator job={activeJob} onCancel={() => resetQueue()} />
+                )}
               </div>
             )}
             <FreestyleGallery
