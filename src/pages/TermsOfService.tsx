@@ -98,8 +98,8 @@ export default function TermsOfService() {
             <h2>13. Contact Us</h2>
             <p>
               Questions about these Terms? Contact us at{' '}
-              <a href="mailto:legal@vovv.ai" className="text-primary hover:underline">
-                legal@vovv.ai
+              <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">
+                hello@vovv.ai
               </a>
               .
             </p>

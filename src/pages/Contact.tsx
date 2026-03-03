@@ -128,8 +128,8 @@ export default function Contact() {
                 <CardContent className="pt-6">
                   <Mail className="w-8 h-8 text-primary mb-3" />
                   <h3 className="font-semibold text-foreground mb-1">Email Us</h3>
-                  <a href="mailto:support@vovv.ai" className="text-sm text-primary hover:underline">
-                    support@vovv.ai
+                  <a href="mailto:hello@vovv.ai" className="text-sm text-primary hover:underline">
+                    hello@vovv.ai
                   </a>
                 </CardContent>
               </Card>

@@ -119,8 +119,8 @@ export default function CookiePolicy() {
             <h2>7. Contact Us</h2>
             <p>
               Questions about our use of cookies? Contact us at{' '}
-              <a href="mailto:legal@vovv.ai" className="text-primary hover:underline">
-                legal@vovv.ai
+              <a href="mailto:hello@vovv.ai" className="text-primary hover:underline">
+                hello@vovv.ai
               </a>
               .
             </p>

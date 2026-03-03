@@ -149,7 +149,7 @@ export default function Careers() {
             <p className="text-sm text-muted-foreground mb-4">
               We're always looking for exceptional people. Send us your resume and tell us how you'd contribute.
             </p>
-            <Button variant="outline" className="rounded-full" onClick={() => window.location.href = 'mailto:careers@vovv.ai'}>
+            <Button variant="outline" className="rounded-full" onClick={() => window.location.href = 'mailto:hello@vovv.ai'}>
               Send Open Application
             </Button>
           </div>

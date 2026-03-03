@@ -43,7 +43,7 @@ const faqCategories = [
       },
       {
         q: 'Do you offer refunds?',
-        a: 'We offer refunds for unused credit packs purchased within the last 14 days. Monthly plan charges are non-refundable, but you can cancel anytime to prevent future charges. Contact support@vovv.ai for refund requests.',
+        a: 'We offer refunds for unused credit packs purchased within the last 14 days. Monthly plan charges are non-refundable, but you can cancel anytime to prevent future charges. Contact hello@vovv.ai for refund requests.',
       },
     ],
   },
