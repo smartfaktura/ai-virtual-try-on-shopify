@@ -711,6 +711,7 @@ serve(async (req) => {
 
     const polishContext = {
       hasSource: !!body.sourceImage,
+      hasProduct: !!body.productImage,
       hasModel: !!body.modelImage,
       hasScene: !!body.sceneImage,
     };
