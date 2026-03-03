@@ -538,13 +538,14 @@ async function generateImage(
   prompt: string,
   referenceImages: Array<{ url: string; label: string }>,
   aiModel: string,
-  apiKey: string
+  apiKey: string,
+  aspectRatio?: string
 ): Promise<string | null> {
   const maxRetries = 2;
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
-    { type: "text", text: prompt },
+    { type: "text", text: aspectRatio ? `${prompt}\n\nOutput aspect ratio: ${aspectRatio}` : prompt },
   ];
   for (const img of referenceImages) {
     contentParts.push({
@@ -572,6 +573,7 @@ async function generateImage(
               },
             ],
             modalities: ["image", "text"],
+            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
         }
       );
@@ -852,7 +854,7 @@ serve(async (req) => {
 
     for (let i = 0; i < variationsToGenerate.length; i++) {
       const variation = variationsToGenerate[i];
-      const aspectRatio = getAspectRatioForVariation(config, variation);
+      const aspectRatio = (body as Record<string, unknown>).aspectRatio as string || getAspectRatioForVariation(config, variation);
 
       for (let a = 0; a < angleInstructions.length; a++) {
         const angle = angleInstructions[a];
@@ -904,7 +906,8 @@ serve(async (req) => {
             prompt,
             referenceImages,
             model,
-            LOVABLE_API_KEY
+            LOVABLE_API_KEY,
+            aspectRatio
           );
 
           if (imageUrl) {
