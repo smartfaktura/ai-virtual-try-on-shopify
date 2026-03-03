@@ -2885,48 +2885,36 @@ export default function Generate() {
         {/* Results */}
         {currentStep === 'results' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
-            <Card><CardContent className="p-5 space-y-3">
-              <Badge variant="secondary">{isInteriorDesign ? 'Staged from your photo' : sourceType === 'scratch' ? 'Generated from uploaded image' : (isFlatLay && selectedFlatLayProductIds.size > 1 ? `Publishing to · ${selectedFlatLayProductIds.size} products` : 'Publishing to')}</Badge>
-              {isFlatLay && selectedFlatLayProductIds.size > 1 ? (
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
-                    <div key={up.id} className="flex-shrink-0 w-[72px]">
-                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
-                        <img src={up.image_url || '/placeholder.svg'} alt={up.title} className="w-full h-full object-cover" />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{up.title}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
-                    <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
-                    <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? scratchUpload?.productInfo.productType : selectedProduct?.vendor}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent></Card>
-
-            {/* Generation Details Summary */}
             <Card>
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground">Generation Details</h3>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {activeWorkflow?.name || (isInteriorDesign ? 'Interior Staging' : sourceType === 'scratch' ? 'Image Generation' : 'Generation Summary')}
+                  </h3>
                   {activeWorkflow && (
-                    <Badge variant="secondary" className="text-[10px]">{activeWorkflow.name}</Badge>
+                    <Badge variant="secondary" className="text-[10px]">Workflow</Badge>
                   )}
                 </div>
+
+                {/* Reference thumbnails row */}
                 <div className="flex gap-4 overflow-x-auto pb-1">
-                  {(selectedProduct || scratchUpload) && (
+                  {isFlatLay && selectedFlatLayProductIds.size > 1 ? (
+                    userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
+                      <div key={up.id} className="flex-shrink-0 text-center">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
+                          <img src={up.image_url || '/placeholder.svg'} alt={up.title} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Product</p>
+                        <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{up.title}</p>
+                      </div>
+                    ))
+                  ) : (selectedProduct || scratchUpload) && (
                     <div className="flex-shrink-0 text-center">
                       <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
                         <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="Product" className="w-full h-full object-cover" />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1 max-w-[64px] truncate">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Product</p>
+                      <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
                     </div>
                   )}
                   {selectedModel && (
@@ -2934,7 +2922,8 @@ export default function Generate() {
                       <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
                         <img src={selectedModel.previewUrl} alt={selectedModel.name} className="w-full h-full object-cover" />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1 max-w-[64px] truncate">{selectedModel.name}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Model</p>
+                      <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{selectedModel.name}</p>
                     </div>
                   )}
                   {selectedPose && (
@@ -2942,10 +2931,13 @@ export default function Generate() {
                       <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
                         <img src={selectedPose.previewUrl} alt={selectedPose.name} className="w-full h-full object-cover" />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1 max-w-[64px] truncate">{selectedPose.name}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Scene</p>
+                      <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{selectedPose.name}</p>
                     </div>
                   )}
                 </div>
+
+                {/* Settings chips */}
                 <div className="flex flex-wrap gap-1.5">
                   <Badge variant="outline" className="text-[10px] font-normal">Aspect: {aspectRatio}</Badge>
                   <Badge variant="outline" className="text-[10px] font-normal">Quality: {quality === 'high' ? 'High' : 'Standard'}</Badge>
@@ -2954,6 +2946,8 @@ export default function Generate() {
                     <Badge variant="outline" className="text-[10px] font-normal">Brand: {selectedBrandProfile.name}</Badge>
                   )}
                 </div>
+
+                {/* Variation labels */}
                 {workflowVariationLabels.length > 0 && (
                   <div className="space-y-1">
                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Variations</p>
