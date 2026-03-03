@@ -854,7 +854,7 @@ serve(async (req) => {
 
     for (let i = 0; i < variationsToGenerate.length; i++) {
       const variation = variationsToGenerate[i];
-      const aspectRatio = getAspectRatioForVariation(config, variation);
+      const aspectRatio = (body as Record<string, unknown>).aspectRatio as string || getAspectRatioForVariation(config, variation);
 
       for (let a = 0; a < angleInstructions.length; a++) {
         const angle = angleInstructions[a];
