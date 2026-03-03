@@ -3059,7 +3059,7 @@ export default function Generate() {
                       variant={idx < currentProductIndex ? 'default' : idx === currentProductIndex ? 'secondary' : 'outline'}
                       className="text-[10px]"
                     >
-                      {idx < currentProductIndex ? '✓' : idx === currentProductIndex ? '⏳' : '○'} {p.title}
+                      {idx < currentProductIndex ? 'Done' : idx === currentProductIndex ? '...' : '—'} {p.title}
                     </Badge>
                   ))}
                 </div>
