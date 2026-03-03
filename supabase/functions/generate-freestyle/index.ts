@@ -148,7 +148,7 @@ function polishUserPrompt(
       }
     }
     if (context.hasScene) {
-      const num = [context.hasSource, context.hasModel].filter(Boolean).length + 1;
+      const num = [context.hasProduct || context.hasSource, context.hasSource && context.hasProduct, context.hasModel].filter(Boolean).length + 1;
       parts.push(`${num}. SCENE: Use [SCENE IMAGE] as the environment. Consistent lighting and perspective throughout.`);
     }
 
