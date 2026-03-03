@@ -9,6 +9,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
+import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
