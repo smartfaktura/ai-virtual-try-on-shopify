@@ -188,6 +188,7 @@ function buildVariationPrompt(
   ugcMood?: string,
   theme?: string,
   themeNotes?: string,
+  aspectRatio?: string,
 ): string {
   const brandLines: string[] = [];
   if (brandProfile) {
@@ -504,11 +505,12 @@ ${compositionRules ? `COMPOSITION RULES:\n${compositionRules}` : ""}
 ${brandLines.length > 0 ? `BRAND GUIDELINES:\n${brandLines.join("\n")}` : ""}
 
 CRITICAL REQUIREMENTS:
-1. The product MUST look EXACTLY like [PRODUCT IMAGE] — preserve 100% accurate packaging, labels, colors, branding, shape, and materials.
-2. All text on packaging must be perfectly legible.
-3. Ultra high resolution, professional quality, no AI artifacts.
-4. This specific variation must clearly match the "${variation.label}" direction described above.
-${model ? `5. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
+1. The output image MUST be ${aspectRatio} aspect ratio. Do NOT inherit or match the reference image dimensions — this is a hard constraint.
+2. The product MUST look EXACTLY like [PRODUCT IMAGE] — preserve 100% accurate packaging, labels, colors, branding, shape, and materials.
+3. All text on packaging must be perfectly legible.
+4. Ultra high resolution, professional quality, no AI artifacts.
+5. This specific variation must clearly match the "${variation.label}" direction described above.
+${model ? `6. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
 
 ${allNegatives ? `AVOID: ${allNegatives}` : ""}`;
 
@@ -545,7 +547,7 @@ async function generateImage(
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
-    { type: "text", text: aspectRatio ? `${prompt}\n\nOutput aspect ratio: ${aspectRatio}` : prompt },
+    { type: "text", text: aspectRatio ? `MANDATORY OUTPUT FORMAT: Generate this image at EXACTLY ${aspectRatio} aspect ratio. This is a hard constraint — do NOT match the reference image dimensions.\n\n${prompt}` : prompt },
   ];
   for (const img of referenceImages) {
     contentParts.push({
@@ -881,6 +883,7 @@ serve(async (req) => {
             body.ugc_mood,
             body.theme,
             body.theme_notes,
+            aspectRatio,
           );
 
           console.log(
