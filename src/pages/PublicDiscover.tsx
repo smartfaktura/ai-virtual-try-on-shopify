@@ -249,6 +249,7 @@ export default function PublicDiscover() {
                         key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
                         item={item}
                         onClick={() => setSelectedItem(item)}
+                        hideLabels
                       />
                     ))}
                   </div>

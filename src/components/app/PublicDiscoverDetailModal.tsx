@@ -89,9 +89,6 @@ export function PublicDiscoverDetailModal({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
                   {category}
                 </p>
-                {!isPreset && (
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">· Scene</span>
-                )}
               </div>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
               {isPreset && (
@@ -130,12 +127,12 @@ export function PublicDiscoverDetailModal({
               onClick={() => navigate('/auth')}
               className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
             >
-              Sign Up Free to Use This
+              Create account for free to generate results like this
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
 
             <p className="text-xs text-center text-muted-foreground/60">
-              Create a free account to use prompts, scenes and generate AI fashion photography
+              Sign up to access prompts, scenes and generate AI fashion photography
             </p>
 
             {/* More like this */}
