@@ -245,7 +245,7 @@ function polishUserPrompt(
   if (context.hasSource) {
     const dimLayer = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
     layers.push(
-      `PRODUCT ACCURACY: The product must match the reference image in design, color, and material. Show it naturally with correct lighting and shadows — it should look photographed, not composited.${dimLayer}`
+      `PRODUCT IDENTITY: Identify the product from [PRODUCT IMAGE] — its exact shape, material, color, texture, and any brand details. Create a NEW professional photograph of this exact product. Preserve the product's identity (design, colors, proportions) but do NOT replicate the reference photo's composition, camera angle, or lighting setup. Reimagine it with fresh creative direction.${dimLayer}`
     );
     if (isSelfie) {
       layers.push(
@@ -255,7 +255,7 @@ function polishUserPrompt(
     // Product-only framing (no model involved)
     if (!context.hasModel) {
       layers.push(
-        "FRAMING: Center the product with balanced negative space on all sides. The product should occupy 50-70% of the frame with no cropping of edges."
+        "FRAMING: Use a creative product photography angle — overhead, 45-degree, low-angle, or dramatic perspective. Professional composition with intentional negative space. Do NOT simply center the product straight-on like the reference."
       );
     }
   }

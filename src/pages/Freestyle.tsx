@@ -299,7 +299,7 @@ export default function Freestyle() {
         parts.push(`High-end product photography of "${selectedProduct.title}"`);
         if (selectedProduct.product_type) parts.push(`(${selectedProduct.product_type})`);
       } else if (sourceImage) {
-        parts.push("Professional photo based on the provided reference image");
+        parts.push("Create a new professional product photograph featuring the item shown in the reference image. Use a fresh angle, creative composition, and professional lighting");
       }
 
       // Model context
