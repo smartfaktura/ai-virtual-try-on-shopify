@@ -2413,7 +2413,11 @@ export default function Generate() {
                     </p>
                   )}
                   {!isInteriorDesign && isFreeUser && (
-                    <p className="text-xs text-amber-600 mt-0.5">Free plan: up to {FREE_SCENE_LIMIT} scenes. <button className="underline font-medium" onClick={openBuyModal}>Upgrade for more</button></p>
+                    <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-[hsl(222,30%,15%)] px-3 py-1.5">
+                      <span className="text-[11px] text-white/80">Free plan: 1 scene per generation.</span>
+                      <button className="text-[11px] font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors" onClick={openBuyModal}>Upgrade to any plan</button>
+                      <span className="text-[11px] text-white/80">to unlock up to 3.</span>
+                    </div>
                   )}
                 </div>
                 {isAdmin && (
