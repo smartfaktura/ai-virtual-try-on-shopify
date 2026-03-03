@@ -89,9 +89,6 @@ export function PublicDiscoverDetailModal({
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
                   {category}
                 </p>
-                {!isPreset && (
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary/70">· Scene</span>
-                )}
               </div>
               <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight">{title}</h2>
               {isPreset && (
