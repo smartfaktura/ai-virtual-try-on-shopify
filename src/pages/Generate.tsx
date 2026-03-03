@@ -3056,16 +3056,30 @@ export default function Generate() {
                   <span className="text-muted-foreground">{multiProductResults.size} completed</span>
                 </div>
                 <Progress value={(currentProductIndex / productQueue.length) * 100} className="h-2" />
-                <div className="flex flex-wrap gap-1">
-                  {productQueue.map((p, idx) => (
-                    <Badge
-                      key={p.id}
-                      variant={idx < currentProductIndex ? 'default' : idx === currentProductIndex ? 'secondary' : 'outline'}
-                      className="text-[10px]"
-                    >
-                      {idx < currentProductIndex ? 'Done' : idx === currentProductIndex ? '...' : '—'} {p.title}
-                    </Badge>
-                  ))}
+                <div className="flex flex-wrap gap-1.5">
+                  {productQueue.map((p, idx) => {
+                    const thumb = p.images?.[0]?.url;
+                    const isDone = idx < currentProductIndex;
+                    const isCurrent = idx === currentProductIndex;
+                    return (
+                      <div
+                        key={p.id}
+                        className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] transition-all ${
+                          isDone ? 'border-primary/30 bg-primary/5' :
+                          isCurrent ? 'border-primary bg-primary/10 ring-1 ring-primary/30' :
+                          'border-border bg-muted/30 opacity-60'
+                        }`}
+                      >
+                        {thumb ? (
+                          <img src={thumb} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-muted flex-shrink-0" />
+                        )}
+                        <span className="truncate max-w-[120px]">{p.title}</span>
+                        {isDone && <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
