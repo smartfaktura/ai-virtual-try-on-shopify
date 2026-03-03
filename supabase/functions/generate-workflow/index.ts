@@ -249,7 +249,11 @@ Arrange ALL products together in a cohesive flat lay composition. Each product s
   // Prop style control for flat lay — prevents AI from adding extra commercial products
   let propStyleBlock = "";
   if (propStyle === 'clean' || (!propStyle && additionalProducts !== undefined)) {
-    propStyleBlock = `\nCRITICAL COMPOSITION RULE: Show ONLY the selected products on the surface. Do NOT add any extra items, props, accessories, or commercial products. The surface should contain ONLY the products provided — nothing else. No watches, cameras, electronics, bags, or any item not explicitly listed above.\n`;
+    propStyleBlock = `\nCRITICAL COMPOSITION RULE (OVERRIDE ALL OTHER INSTRUCTIONS):
+Show ONLY the selected products on the surface — NOTHING ELSE.
+IGNORE any mention of props, accents, flowers, botanicals, accessories, decorative items, or styling elements in the variation description above.
+The surface must contain ONLY the provided products. Zero additional items. No gold accents, no flowers, no ceramics, no leaves, no ribbons, no hardware, no decorative objects of any kind.
+This overrides everything — the variation description is for the SURFACE STYLE only, not for props.\n`;
   } else if (propStyle === 'decorated') {
     propStyleBlock = `\nCOMPOSITION RULE: You may add ONLY abstract/decorative styling elements around the products: natural textures, dried flowers, fabric swatches, paper, abstract shapes, ribbons. NEVER add extra commercial products like watches, cameras, electronics, earbuds, bags, or any item that could be mistaken for the user's own product.\n`;
   }
@@ -498,7 +502,7 @@ ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realist
 ${product.description ? `- Description: ${product.description}` : ""}
 ${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
-${variation.instruction}
+${propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' ')}
 
 ${compositionRules ? `COMPOSITION RULES:\n${compositionRules}` : ""}
 
