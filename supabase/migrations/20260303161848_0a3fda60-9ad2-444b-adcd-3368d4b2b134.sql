@@ -1,0 +1,1 @@
+UPDATE profiles SET plan = 'pro', credits_balance = GREATEST(credits_balance, 4500) WHERE user_id = 'fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc'
