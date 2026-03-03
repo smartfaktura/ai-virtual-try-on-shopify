@@ -42,6 +42,7 @@ function getProductModelInteraction(productType: string): string {
 }
 
 export default function Freestyle() {
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
   const [sourceImage, setSourceImage] = useState<string | null>(null);
   const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
