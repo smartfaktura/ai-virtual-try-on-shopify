@@ -286,8 +286,8 @@ export function FreestyleSettingsChips({
       </button>
       <span className="w-5 text-center tabular-nums">{imageCount}</span>
       <button
-        onClick={() => onImageCountChange(Math.min(4, imageCount + 1))}
-        disabled={imageCount >= 4}
+        onClick={() => onImageCountChange(Math.min(maxImageCount, imageCount + 1))}
+        disabled={imageCount >= maxImageCount}
         className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-muted-foreground/10 disabled:opacity-30 transition-colors"
       >
         <Plus className="w-3 h-3" />
