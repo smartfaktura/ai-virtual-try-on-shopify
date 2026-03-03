@@ -1,70 +1,51 @@
 
-## Fix Upscale Feature: Function, UI, and State Management
 
-### Issues Found
+## Fix: `getClaims is not a function` Breaking All Edge Functions
 
-1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
-   - The image URL in `generation_jobs.results` array never changes
-   - The `quality` field is never set to `"upscaled"`
-   - On page reload, the original image shows again
-   - The "Enhance to PRO HD" button always reappears
+### Root Cause
+The security hardening introduced `supabase.auth.getClaims(token)` across 15 edge functions, but **`getClaims()` does not exist** in the `@supabase/supabase-js` versions used in these functions (most pin `@2.49.1`, some use `@2`). This breaks all generation, authentication, and AI-calling functions.
 
-2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
+### Fix
+Replace all `getClaims(token)` calls with `getUser(token)` — which is universally available, does **server-side cryptographic JWT verification**, and returns the user object.
 
-3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
+The pattern change is mechanical across all files:
 
-4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
+```typescript
+// BEFORE (broken)
+const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+if (claimsError || !claimsData?.claims) { /* 401 */ }
+const userId = claimsData.claims.sub;
 
-5. **No separator** -- Buttons section needs visual separation.
-
----
-
-### Changes
-
-#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
-
-- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
-- After uploading the upscaled image, update `generation_jobs`:
-  - Replace the specific URL in the `results` JSONB array
-  - Set `quality` to `"upscaled"`
-- Keep the existing freestyle update logic
-
-#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
-
-**Button redesign:**
-- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
-- Same height as download button (`h-12` instead of `h-14`)
-- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
-- Add a separator line between the Download button and secondary actions
-
-**Loading messages:**
-- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
-- Cycle every 4 seconds while `upscaling` is true
-
-**Already upscaled handling:**
-- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
-
----
-
-### Technical Details
-
-**Edge function sourceId parsing:**
-```text
-// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
-// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
-// Split on last hyphen to get UUID and index
+// AFTER (working)
+const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
+if (userError || !user) { /* 401 */ }
+const userId = user.id;
 ```
 
-**Generation jobs DB update:**
-```text
-// Fetch current results array
-// Replace results[index] with the new upscaled URL
-// Update quality to "upscaled"
-```
+### Additionally: Remove insecure `getUserIdFromJwt` fallback
+`generate-freestyle` and `generate-tryon` still use the insecure `atob`-based `getUserIdFromJwt` as fallback for direct (non-queue) calls. Replace those with `getUser()` too.
 
-### Files to Edit
+### All 15 Files to Update
 
 | File | Change |
 |------|--------|
-| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
-| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
+| `enqueue-generation/index.ts` | `getClaims` → `getUser` |
+| `generate-freestyle/index.ts` | `getClaims` → `getUser` + remove `getUserIdFromJwt`, add `getUser` for direct calls |
+| `generate-tryon/index.ts` | `getClaims` → `getUser` + remove `getUserIdFromJwt`, add `getUser` for direct calls |
+| `generate-workflow/index.ts` | Add `getUser` auth for direct (non-queue) calls |
+| `trigger-creative-drop/index.ts` | `getClaims` → `getUser` |
+| `retry-queue/index.ts` | `getClaims` → `getUser` |
+| `describe-discover-metadata/index.ts` | `getClaims` → `getUser` |
+| `generate-scene-previews/index.ts` | `getClaims` → `getUser` |
+| `describe-image/index.ts` | `getClaims` → `getUser` |
+| `studio-chat/index.ts` | `getClaims` → `getUser` |
+| `analyze-product-image/index.ts` | `getClaims` → `getUser` |
+| `create-model-from-image/index.ts` | `getClaims` → `getUser` |
+| `create-scene-from-image/index.ts` | `getClaims` → `getUser` |
+| `check-subscription/index.ts` | `getClaims` → `getUser` |
+| `create-checkout/index.ts` | `getClaims` → `getUser` |
+| `mobile-upload/index.ts` | `getClaims` → `getUser` (2 occurrences) |
+| `import-product/index.ts` | `getClaims` → `getUser` |
+
+All 15+ functions will be redeployed after the fix.
+
