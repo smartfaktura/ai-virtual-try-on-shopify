@@ -127,9 +127,15 @@ function polishUserPrompt(
       "REQUIREMENTS:",
     ];
 
-    if (context.hasSource) {
+    if (context.hasProduct) {
       const dimNote = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
       parts.push(`1. PRODUCT: Identify the product from [PRODUCT IMAGE] — its shape, material, color, texture, and brand details. Create a NEW photograph of this exact product with a fresh angle, creative composition, and professional lighting. Do NOT replicate the reference photo's framing or camera angle. Preserve the product's identity but reimagine the visual.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${dimNote}`);
+      if (context.hasSource) {
+        const refNum = [context.hasProduct, context.hasModel].filter(Boolean).length + 1;
+        parts.push(`${refNum}. REFERENCE: Use [REFERENCE IMAGE] as visual/style/scene inspiration. Place the product in a similar setting, mood, or style as shown in the reference — but keep the product identity from [PRODUCT IMAGE].`);
+      }
+    } else if (context.hasSource) {
+      parts.push(`1. PRODUCT: Identify the product from [PRODUCT IMAGE] — its shape, material, color, texture, and brand details. Create a NEW photograph of this exact product with a fresh angle, creative composition, and professional lighting. Do NOT replicate the reference photo's framing or camera angle. Preserve the product's identity but reimagine the visual.${context.hasModel ? " Use ONLY the product from this image — IGNORE any person or mannequin shown." : ""}${productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : ""}`);
     }
     if (context.hasModel) {
       const identityDetails = modelContext ? ` (${modelContext})` : "";
