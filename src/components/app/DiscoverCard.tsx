@@ -17,9 +17,10 @@ interface DiscoverCardProps {
   isFeatured?: boolean;
   isAdmin?: boolean;
   onToggleFeatured?: (e: React.MouseEvent) => void;
+  hideLabels?: boolean;
 }
 
-export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured }: DiscoverCardProps) {
+export function DiscoverCard({ item, onClick, isSaved, onToggleSave, isFeatured, isAdmin, onToggleFeatured, hideLabels }: DiscoverCardProps) {
   const imageUrl = item.type === 'preset' ? item.data.image_url : item.data.previewUrl;
   const isScene = item.type === 'scene';
 
