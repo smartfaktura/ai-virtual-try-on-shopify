@@ -61,7 +61,7 @@ export function LandingNav() {
           {navLinks.map((link) => (
             <button
               key={link.href}
-              onClick={() => handleNavClick(link.href)}
+              onClick={() => handleNavClick(link)}
               className="text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {link.label}
