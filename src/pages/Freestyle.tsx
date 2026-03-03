@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
