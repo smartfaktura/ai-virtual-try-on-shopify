@@ -354,7 +354,7 @@ export default function Freestyle() {
       modelImage: modelImageUrl,
       sceneImage: sceneImageUrl,
       aspectRatio,
-      imageCount,
+      imageCount: 1,
       quality,
       polishPrompt,
       modelContext,
