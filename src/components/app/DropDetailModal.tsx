@@ -188,7 +188,7 @@ export function DropDetailModal({ open, onClose, drop }: DropDetailModalProps) {
                         className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-background/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={e => {
                           e.stopPropagation();
-                          downloadSingleImage(img.url, `image_${idx + 1}.jpg`);
+                          downloadSingleImage(img.url, `image_${idx + 1}.png`);
                         }}
                       >
                         <Download className="w-3 h-3" />
