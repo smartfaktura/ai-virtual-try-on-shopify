@@ -249,11 +249,17 @@ function polishUserPrompt(
   }
 
   // Product / source image layer
-  if (context.hasSource) {
+  const hasProductImage = context.hasProduct || context.hasSource;
+  if (hasProductImage) {
     const dimLayer = productDimensions ? ` Product dimensions: ${productDimensions} — render at realistic scale relative to the model.` : "";
     layers.push(
       `PRODUCT IDENTITY: Identify the product from [PRODUCT IMAGE] — its exact shape, material, color, texture, and any brand details. Create a NEW professional photograph of this exact product. Preserve the product's identity (design, colors, proportions) but do NOT replicate the reference photo's composition, camera angle, or lighting setup. Reimagine it with fresh creative direction.${dimLayer}`
     );
+    if (context.hasSource && context.hasProduct) {
+      layers.push(
+        "REFERENCE INSPIRATION: Use [REFERENCE IMAGE] as visual/style/scene inspiration. The product should be placed in a similar setting, mood, or style as shown in the reference image — but keep the product identity strictly from [PRODUCT IMAGE]."
+      );
+    }
     if (isSelfie) {
       layers.push(
         "PRODUCT INTERACTION (SELFIE): The person should hold or display the product in a natural, casual way — as if showing it to a friend on a video call. Product held near the face or chest, relaxed grip, naturally integrated into the selfie frame. NOT floating, stiff, or posed like a catalog shot."
