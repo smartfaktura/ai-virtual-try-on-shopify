@@ -530,6 +530,7 @@ export default function Freestyle() {
     onFramingPopoverChange: setFramingPopoverOpen,
     isCollapsed: isPromptCollapsed,
     onToggleCollapse: () => setIsPromptCollapsed(prev => !prev),
+    maxImageCount,
   };
 
   return (
