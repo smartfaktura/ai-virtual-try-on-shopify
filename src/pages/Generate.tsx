@@ -725,9 +725,15 @@ export default function Generate() {
         setCurrentStep('settings');
       }
     }
+    } catch (err) {
+      console.error('Workflow generation failed:', err);
+      toast.error('Something went wrong starting the generation. Please try again.');
+      setCurrentStep('settings');
+    }
   };
 
   const handleTryOnConfirmGenerate = async () => {
+    try {
     if (!selectedModel || !selectedPose) return;
     let sourceImageUrl = '';
     let productData: { title: string; productType: string; description: string } | null = null;
