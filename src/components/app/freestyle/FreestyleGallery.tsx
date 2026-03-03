@@ -432,6 +432,15 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           sourceGenerationId={shareImg.id}
         />
       )}
+      {addToDiscoverImg && (
+        <AddToDiscoverModal
+          open={!!addToDiscoverImg}
+          onClose={() => setAddToDiscoverImg(null)}
+          imageUrl={addToDiscoverImg.url}
+          prompt={addToDiscoverImg.prompt}
+          aspectRatio={addToDiscoverImg.aspectRatio}
+        />
+      )}
     </>
   );
 
