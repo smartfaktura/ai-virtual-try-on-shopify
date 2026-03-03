@@ -3176,7 +3176,7 @@ export default function Generate() {
                       <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Try Another Style
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); }}>Start Over</Button>
+                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); setProductQueue([]); setCurrentProductIndex(0); setMultiProductResults(new Map()); }}>Start Over</Button>
                 </div>
               </div>
 
