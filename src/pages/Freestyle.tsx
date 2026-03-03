@@ -172,8 +172,6 @@ export default function Freestyle() {
     setSourceImagePreview(previewUrl);
     const base64 = await convertImageToBase64(previewUrl);
     setSourceImage(base64);
-    setSelectedProduct(null);
-    setProductSourced(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
