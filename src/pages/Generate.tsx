@@ -3103,8 +3103,8 @@ export default function Generate() {
               </div>
             )}
 
-            {/* Batch progress - enhanced */}
-            {batchState && batchState.totalJobs > 1 && (
+            {/* Batch progress - enhanced (hidden in multi-product mode) */}
+            {batchState && batchState.totalJobs > 1 && !isMultiProductMode && (
               <div className="w-full max-w-md space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">
