@@ -255,6 +255,8 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     }
 
     setIsEnqueuing(true);
+    // Stop polling any previous job — GlobalGenerationBar tracks all active jobs
+    stopPolling();
 
     try {
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
