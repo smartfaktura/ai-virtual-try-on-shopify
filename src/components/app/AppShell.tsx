@@ -315,6 +315,9 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Studio Team Chat */}
       <StudioChat />
+
+      {/* Global Generation Progress */}
+      <GlobalGenerationBar />
     </div>
   );
 }
