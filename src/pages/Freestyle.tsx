@@ -138,10 +138,10 @@ export default function Freestyle() {
   const hasModel = !!selectedModel;
   const hasScene = !!selectedScene;
   const creditCost = hasModel && hasScene
-    ? imageCount * 15
+    ? 15
     : hasModel
-      ? imageCount * 12
-      : imageCount * (quality === 'high' ? 10 : 4);
+      ? 12
+      : (quality === 'high' ? 10 : 4);
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
   const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
   const hasEnoughCredits = balance >= creditCost;
