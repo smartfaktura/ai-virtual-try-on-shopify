@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Square, RectangleHorizontal, ChevronDown,
-  Minus, Plus, Wand2, Image as ImageIcon,
+  Wand2,
   Smartphone, Camera, Lock, Palette, SlidersHorizontal, Sparkles,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
