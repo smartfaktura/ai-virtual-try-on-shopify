@@ -561,6 +561,8 @@ async function completeQueueJob(
   requestedCount: number,
   errors: string[],
   payload: Record<string, unknown>,
+  contentBlocked: boolean = false,
+  blockReason: string | null = null,
 ) {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -569,13 +571,23 @@ async function completeQueueJob(
   const generatedCount = images.length;
 
   if (generatedCount === 0) {
-    await supabase.from("generation_queue").update({
-      status: "failed",
-      error_message: errors.join("; ") || "Failed to generate any images",
-      completed_at: new Date().toISOString(),
-    }).eq("id", jobId);
+    // Content blocked: mark as completed with contentBlocked flag so UI shows the blocked card
+    if (contentBlocked) {
+      const result = { images: [], generatedCount: 0, requestedCount, contentBlocked: true, blockReason };
+      await supabase.from("generation_queue").update({
+        status: "completed",
+        result,
+        completed_at: new Date().toISOString(),
+      }).eq("id", jobId);
+    } else {
+      await supabase.from("generation_queue").update({
+        status: "failed",
+        error_message: errors.join("; ") || "Failed to generate any images",
+        completed_at: new Date().toISOString(),
+      }).eq("id", jobId);
+    }
     await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
-    console.log(`[generate-freestyle] Refunded ${creditsReserved} credits for failed job ${jobId}`);
+    console.log(`[generate-freestyle] Refunded ${creditsReserved} credits for ${contentBlocked ? "blocked" : "failed"} job ${jobId}`);
     return;
   }
 
