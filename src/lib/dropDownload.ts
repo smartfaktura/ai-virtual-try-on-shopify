@@ -14,7 +14,7 @@ function getExtensionFromContentType(contentType: string | null): string {
   if (ct.includes('image/webp')) return '.webp';
   if (ct.includes('image/gif')) return '.gif';
   if (ct.includes('image/jpeg') || ct.includes('image/jpg')) return '.jpg';
-  return '.jpg';
+  return '.png';
 }
 
 export async function downloadDropAsZip(

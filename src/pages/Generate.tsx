@@ -855,7 +855,7 @@ export default function Generate() {
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = `generated-image-${index + 1}.jpg`;
+      link.download = `generated-image-${index + 1}.png`;
       link.click();
       URL.revokeObjectURL(blobUrl);
       toast.success('Image downloaded');

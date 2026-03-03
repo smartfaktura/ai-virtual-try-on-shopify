@@ -219,7 +219,7 @@ export function DropDetailModal({ open, onClose, drop }: DropDetailModalProps) {
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
         onNavigate={setLightboxIndex}
-        onDownload={(idx) => downloadSingleImage(images[idx].url, `image_${idx + 1}.jpg`)}
+        onDownload={(idx) => downloadSingleImage(images[idx].url, `image_${idx + 1}.png`)}
       />
     </>
   );
