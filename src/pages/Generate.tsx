@@ -602,6 +602,10 @@ export default function Generate() {
 
   const handleWorkflowGenerate = async () => {
     try {
+    if (isQueueProcessing) {
+      toast.error('Please wait for your current generation to finish before starting another.');
+      return;
+    }
     if (!selectedProduct && !scratchUpload) return;
     let sourceImageUrl = '';
     let productData: { title: string; productType: string; description: string; dimensions?: string } = { title: '', productType: '', description: '' };
@@ -3059,7 +3063,7 @@ export default function Generate() {
                       variant={idx < currentProductIndex ? 'default' : idx === currentProductIndex ? 'secondary' : 'outline'}
                       className="text-[10px]"
                     >
-                      {idx < currentProductIndex ? '✓' : idx === currentProductIndex ? '⏳' : '○'} {p.title}
+                      {idx < currentProductIndex ? 'Done' : idx === currentProductIndex ? '...' : '—'} {p.title}
                     </Badge>
                   ))}
                 </div>
