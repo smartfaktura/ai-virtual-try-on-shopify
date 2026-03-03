@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Sparkles, Loader2, Camera, X as XIcon } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
