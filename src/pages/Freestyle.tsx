@@ -474,9 +474,6 @@ export default function Freestyle() {
     aspectRatio: img.aspectRatio,
   }));
 
-  const isFreeUser = plan === 'free';
-  const maxImageCount = isFreeUser ? 1 : 4;
-
   const panelProps = {
     prompt,
     onPromptChange: setPrompt,
