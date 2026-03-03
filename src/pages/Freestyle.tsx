@@ -183,25 +183,16 @@ export default function Freestyle() {
 
   const handleProductSelect = useCallback(async (product: UserProduct | null) => {
     if (!product) {
-      if (productSourced) {
-        setSourceImage(null);
-        setSourceImagePreview(null);
-        setProductSourced(false);
-      }
       setSelectedProduct(null);
       return;
     }
     setSelectedProduct(product);
-    setSourceImagePreview(product.image_url);
-    setProductSourced(true);
-    const base64 = await convertImageToBase64(product.image_url);
-    setSourceImage(base64);
 
-    // Auto-detect framing
+    // Auto-detect framing based on product type
     const { detectDefaultFraming } = await import('@/lib/framingUtils');
     const detected = detectDefaultFraming(product.product_type, product.tags || []);
     if (detected) setFraming(detected);
-  }, [productSourced]);
+  }, []);
 
   // Helper: upload a base64 image to generation-inputs bucket, return storage path URL
   const uploadImageToStorage = useCallback(async (base64Data: string, prefix: string): Promise<string> => {
