@@ -1,70 +1,36 @@
 
-## Fix Upscale Feature: Function, UI, and State Management
 
-### Issues Found
+## Merge "Publishing to" + "Generation Details" into One Unified Summary Card
 
-1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
-   - The image URL in `generation_jobs.results` array never changes
-   - The `quality` field is never set to `"upscaled"`
-   - On page reload, the original image shows again
-   - The "Enhance to PRO HD" button always reappears
+The current results page has two separate cards — "Publishing to" (showing the product) and "Generation Details" (showing model, scene, settings). This feels disjointed. They should be one cohesive card that tells the full story of the generation.
 
-2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
+### Design
 
-3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
-
-4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
-
-5. **No separator** -- Buttons section needs visual separation.
-
----
-
-### Changes
-
-#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
-
-- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
-- After uploading the upscaled image, update `generation_jobs`:
-  - Replace the specific URL in the `results` JSONB array
-  - Set `quality` to `"upscaled"`
-- Keep the existing freestyle update logic
-
-#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
-
-**Button redesign:**
-- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
-- Same height as download button (`h-12` instead of `h-14`)
-- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
-- Add a separator line between the Download button and secondary actions
-
-**Loading messages:**
-- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
-- Cycle every 4 seconds while `upscaling` is true
-
-**Already upscaled handling:**
-- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
-
----
-
-### Technical Details
-
-**Edge function sourceId parsing:**
 ```text
-// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
-// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
-// Split on last hyphen to get UUID and index
+┌──────────────────────────────────────────────┐
+│ Virtual Try-On Set                    Badge  │
+│                                              │
+│ ┌──────┐  ┌──────┐  ┌──────┐                │
+│ │ prod │  │model │  │scene │                │
+│ │ img  │  │ img  │  │ img  │                │
+│ └──────┘  └──────┘  └──────┘                │
+│ Product    Model     Scene                   │
+│ "Ring"    "Charlotte" "Studio Profile"       │
+│                                              │
+│ 1:1 · High · Brand: X                       │
+└──────────────────────────────────────────────┘
 ```
 
-**Generation jobs DB update:**
-```text
-// Fetch current results array
-// Replace results[index] with the new upscaled URL
-// Update quality to "upscaled"
-```
+### Changes — `src/pages/Generate.tsx`
 
-### Files to Edit
+1. **Delete** the first "Publishing to" card (lines 2888-2912) and the separate "Generation Details" card (lines 2914-2968).
 
-| File | Change |
-|------|--------|
-| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
-| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
+2. **Replace** with a single card:
+   - Header: workflow name (e.g. "Virtual Try-On Set") or fallback "Generation Summary" — as a bold title, with workflow badge on the right if applicable.
+   - Reference thumbnails row: product (always shown), model (if used), scene/pose (if used) — same 48×48 thumbnails, but product is now here instead of in a separate card. For flat-lay multi-product, show all product thumbnails in this same row.
+   - Settings chips row: aspect ratio, quality, framing, brand profile — same badges.
+   - Variation labels (if any) — same as current.
+   - No "Publishing to" label, no "Generation Details" label — the card title and thumbnails are self-explanatory.
+
+This is purely a restructure of existing JSX within a single file. No new state, no new imports needed.
+
