@@ -378,6 +378,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const adminSceneHandler = isAdmin ? (url: string) => setSceneModalUrl(url) : undefined;
   const adminModelHandler = isAdmin ? (url: string) => setModelModalUrl(url) : undefined;
   const shareHandler = (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => setShareImg(img);
+  const addToDiscoverHandler = isAdmin ? (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => setAddToDiscoverImg(img) : undefined;
 
   const generatingCards = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
