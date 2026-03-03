@@ -42,6 +42,10 @@ interface EnqueueResult {
   creditsCost: number;
 }
 
+interface UseGenerationQueueOptions {
+  onContentBlocked?: (jobId: string, reason: string) => void;
+}
+
 interface UseGenerationQueueReturn {
   enqueue: (params: EnqueueParams, meta?: GenerationMeta) => Promise<EnqueueResult | null>;
   activeJob: QueueJob | null;
@@ -52,7 +56,8 @@ interface UseGenerationQueueReturn {
   lastCompletedAt: string | null;
 }
 
-export function useGenerationQueue(): UseGenerationQueueReturn {
+export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGenerationQueueReturn {
+  const { onContentBlocked } = options || {};
   const { user } = useAuth();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
@@ -175,7 +180,18 @@ export function useGenerationQueue(): UseGenerationQueueReturn {
         }
 
         if (job.status === 'failed') {
-          toast.error(job.error_message || 'Generation failed. Credits have been refunded.');
+          const msg = (job.error_message || '').toLowerCase();
+          const isContentBlocked = /content|safety|policy|prohibited|blocked|nsfw|inappropriate/.test(msg);
+
+          if (isContentBlocked && onContentBlocked) {
+            onContentBlocked(job.id, job.error_message || 'This prompt was flagged by our content safety system.');
+          } else if (/timed?\s*out|timeout/.test(msg)) {
+            toast.error('⏱ Generation timed out. Your credits have been refunded.');
+          } else if (/rate.?limit|concurrent|too many/.test(msg)) {
+            toast.error('Too many generations at once. Your credits have been refunded.');
+          } else {
+            toast.error('Generation failed. Your credits have been refunded — try again.');
+          }
         }
       }
     };

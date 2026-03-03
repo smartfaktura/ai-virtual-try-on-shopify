@@ -68,9 +68,19 @@ export default function Freestyle() {
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
-  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue();
+  const handleContentBlocked = useCallback((jobId: string, reason: string) => {
+    setBlockedEntries(prev => [{
+      id: crypto.randomUUID(),
+      prompt: promptRef.current,
+      reason,
+    }, ...prev]);
+  }, []);
+  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue({
+    onContentBlocked: handleContentBlocked,
+  });
   const isLoading = isEnqueuing || isProcessing;
   const { user } = useAuth();
 
@@ -390,7 +400,7 @@ export default function Freestyle() {
   const refreshImagesRef = useRef(refreshImages);
   const refreshBalanceRef = useRef(refreshBalance);
   const resetQueueRef = useRef(resetQueue);
-  const promptRef = useRef(prompt);
+  useEffect(() => { promptRef.current = prompt; }, [prompt]);
   useEffect(() => { refreshImagesRef.current = refreshImages; }, [refreshImages]);
   useEffect(() => { refreshBalanceRef.current = refreshBalance; }, [refreshBalance]);
   useEffect(() => { resetQueueRef.current = resetQueue; }, [resetQueue]);
