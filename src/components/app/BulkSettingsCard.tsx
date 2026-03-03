@@ -27,6 +27,7 @@ interface BulkSettingsCardProps {
   models: ModelProfile[];
   poses: TryOnPose[];
   creditsBalance: number;
+  isFreeUser?: boolean;
 }
 
 export function BulkSettingsCard({

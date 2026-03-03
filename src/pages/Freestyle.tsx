@@ -69,7 +69,7 @@ export default function Freestyle() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { balance, openBuyModal, setBalanceFromServer, refreshBalance } = useCredits();
+  const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue();
   const isLoading = isEnqueuing || isProcessing;
   const { user } = useAuth();
