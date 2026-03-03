@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import type { Product, ModelProfile, TryOnPose, Template } from '@/types';
 import type {
   BulkGenerationConfig,
