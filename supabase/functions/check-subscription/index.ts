@@ -79,19 +79,19 @@ serve(async (req) => {
     // Find Stripe customer
     const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     if (customers.data.length === 0) {
-      logStep("No Stripe customer found — free plan");
-      // Update profile to ensure it's on free plan
-      await supabaseAdmin.from("profiles").update({
-        subscription_status: "none",
-        stripe_customer_id: null,
-        stripe_subscription_id: null,
-        current_period_end: null,
-      }).eq("user_id", userId);
+      logStep("No Stripe customer found — using DB plan as fallback");
+      const { data: profile } = await supabaseAdmin.from("profiles")
+        .select("credits_balance, plan")
+        .eq("user_id", userId)
+        .single();
+
+      const currentPlan = profile?.plan || "free";
+      logStep("Returning DB plan", { plan: currentPlan });
 
       return new Response(JSON.stringify({
-        plan: "free",
+        plan: currentPlan,
         subscription_status: "none",
-        credits_balance: null,
+        credits_balance: profile?.credits_balance ?? 0,
         current_period_end: null,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
