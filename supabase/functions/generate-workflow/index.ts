@@ -723,6 +723,25 @@ serve(async (req) => {
 
     const body: WorkflowRequest & { user_id?: string; job_id?: string; credits_reserved?: number } = await req.json();
 
+    // Authenticate direct (non-queue) calls
+    if (!isQueueInternal) {
+      if (!authHeaderRaw?.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ error: "Authentication required" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const supabaseAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeaderRaw } },
+      });
+      const token = authHeaderRaw.replace("Bearer ", "");
+      const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: "Authentication required" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (!body.workflow_id || !body.product) {
       return new Response(
         JSON.stringify({

@@ -36,15 +36,15 @@ Deno.serve(async (req) => {
       });
 
       const token = authHeader.replace("Bearer ", "");
-      const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-      if (claimsError || !claimsData?.claims) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      if (userError || !user) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const userId = claimsData.claims.sub as string;
+      const userId = user.id;
 
       // Generate a secure random session token
       const array = new Uint8Array(32);
@@ -191,8 +191,8 @@ Deno.serve(async (req) => {
       });
 
       const token = authHeader.replace("Bearer ", "");
-      const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-      if (claimsError || !claimsData?.claims) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      if (userError || !user) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -224,7 +224,7 @@ Deno.serve(async (req) => {
       // If the specific token is still pending, check if ANY other session
       // for this user was recently uploaded (handles session mismatch on remount)
       if (session.status === "pending") {
-        const userId = claimsData.claims.sub as string;
+        const userId = user.id;
         const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
         const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
