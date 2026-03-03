@@ -239,6 +239,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         created_at: row.created_at,
         started_at: row.started_at,
         completed_at: row.completed_at,
+        job_type: row.job_type,
       });
       jobIdRef.current = row.id;
       pollJobStatus(row.id);
