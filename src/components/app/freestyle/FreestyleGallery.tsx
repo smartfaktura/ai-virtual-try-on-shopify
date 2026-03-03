@@ -179,6 +179,7 @@ function ImageCard({
   onAddAsScene,
   onAddAsModel,
   onShareToDiscover,
+  onAddToDiscover,
   className,
   natural,
 }: {
@@ -191,6 +192,7 @@ function ImageCard({
   onAddAsScene?: (imageUrl: string) => void;
   onAddAsModel?: (imageUrl: string) => void;
   onShareToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
+  onAddToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
   className?: string;
   natural?: boolean;
 }) {
