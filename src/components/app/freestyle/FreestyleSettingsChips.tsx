@@ -88,7 +88,6 @@ interface FreestyleSettingsChipsProps {
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
   hasModelSelected?: boolean;
-  maxImageCount?: number;
 }
 
 export function FreestyleSettingsChips({
