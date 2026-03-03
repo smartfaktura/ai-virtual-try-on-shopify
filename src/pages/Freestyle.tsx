@@ -165,8 +165,6 @@ export default function Freestyle() {
     setSourceImagePreview(previewUrl);
     const base64 = await convertImageToBase64(previewUrl);
     setSourceImage(base64);
-    setSelectedProduct(null);
-    setProductSourced(false);
   }, []);
 
   const handleFileDrop = useCallback(async (file: File) => {
