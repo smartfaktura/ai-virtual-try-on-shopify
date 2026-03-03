@@ -586,7 +586,6 @@ export default function Freestyle() {
                 )}
               </div>
             )}
-            )}
             <FreestyleGallery
               images={galleryImages}
               onDownload={handleDownload}
