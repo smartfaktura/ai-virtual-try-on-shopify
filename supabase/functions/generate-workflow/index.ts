@@ -504,11 +504,12 @@ ${compositionRules ? `COMPOSITION RULES:\n${compositionRules}` : ""}
 ${brandLines.length > 0 ? `BRAND GUIDELINES:\n${brandLines.join("\n")}` : ""}
 
 CRITICAL REQUIREMENTS:
-1. The product MUST look EXACTLY like [PRODUCT IMAGE] — preserve 100% accurate packaging, labels, colors, branding, shape, and materials.
-2. All text on packaging must be perfectly legible.
-3. Ultra high resolution, professional quality, no AI artifacts.
-4. This specific variation must clearly match the "${variation.label}" direction described above.
-${model ? `5. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
+1. The output image MUST be ${aspectRatio} aspect ratio. Do NOT inherit or match the reference image dimensions — this is a hard constraint.
+2. The product MUST look EXACTLY like [PRODUCT IMAGE] — preserve 100% accurate packaging, labels, colors, branding, shape, and materials.
+3. All text on packaging must be perfectly legible.
+4. Ultra high resolution, professional quality, no AI artifacts.
+5. This specific variation must clearly match the "${variation.label}" direction described above.
+${model ? `6. The person MUST match [MODEL IMAGE] exactly — same face, same identity. This is non-negotiable.` : ""}
 
 ${allNegatives ? `AVOID: ${allNegatives}` : ""}`;
 
