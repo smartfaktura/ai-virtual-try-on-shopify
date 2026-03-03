@@ -219,6 +219,13 @@ export default function Generate() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedForPublish, setSelectedForPublish] = useState<Set<number>>(new Set());
 
+  // Multi-product queue state
+  const [productQueue, setProductQueue] = useState<Product[]>([]);
+  const [currentProductIndex, setCurrentProductIndex] = useState(0);
+  const [multiProductResults, setMultiProductResults] = useState<Map<string, { images: string[]; labels: string[] }>>(new Map());
+  const [multiProductAutoAdvancing, setMultiProductAutoAdvancing] = useState(false);
+  const isMultiProductMode = productQueue.length > 1;
+
   
   const [tryOnConfirmModalOpen, setTryOnConfirmModalOpen] = useState(false);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
