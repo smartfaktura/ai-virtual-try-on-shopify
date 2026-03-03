@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navLinks = [
+  { label: 'Discover', href: '/discover', isRoute: true },
   { label: 'Team', href: '#team' },
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Pricing', href: '#pricing' },
@@ -23,10 +24,19 @@ export function LandingNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (link: typeof navLinks[number]) => {
     setMobileOpen(false);
-    const el = document.querySelector(href);
-    el?.scrollIntoView({ behavior: 'smooth' });
+    if ('isRoute' in link && link.isRoute) {
+      navigate(link.href);
+      return;
+    }
+    // Only scroll if we're on the landing page
+    if (window.location.pathname === '/' || window.location.pathname === '/landing') {
+      const el = document.querySelector(link.href);
+      el?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/' + link.href);
+    }
   };
 
   return (
@@ -51,7 +61,7 @@ export function LandingNav() {
           {navLinks.map((link) => (
             <button
               key={link.href}
-              onClick={() => handleNavClick(link.href)}
+              onClick={() => handleNavClick(link)}
               className="text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground transition-colors"
             >
               {link.label}
@@ -87,7 +97,7 @@ export function LandingNav() {
             {navLinks.map((link) => (
               <button
                 key={link.href}
-                onClick={() => handleNavClick(link.href)}
+                onClick={() => handleNavClick(link)}
                 className="text-left text-sm font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors py-3"
               >
                 {link.label}

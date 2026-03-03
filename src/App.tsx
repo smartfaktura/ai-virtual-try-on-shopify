@@ -40,6 +40,7 @@ import TermsOfService from '@/pages/TermsOfService';
 import CookiePolicy from '@/pages/CookiePolicy';
 import Team from '@/pages/Team';
 import ResetPassword from '@/pages/ResetPassword';
+import PublicDiscover from '@/pages/PublicDiscover';
 
 const queryClient = new QueryClient();
 
@@ -57,8 +58,9 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/discover" element={<PublicDiscover />} />
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
-            
+
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
