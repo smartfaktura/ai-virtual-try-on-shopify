@@ -2222,15 +2222,16 @@ export default function Generate() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (selectedVariationIndices.size === (isFreeUser ? Math.min(FREE_SCENE_LIMIT, variationStrategy?.variations.length || 0) : variationStrategy?.variations.length)) {
+                    const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT;
+                    const currentMax = Math.min(maxSelect, variationStrategy?.variations.length || 0);
+                    if (selectedVariationIndices.size === currentMax) {
                       setSelectedVariationIndices(new Set());
                     } else {
-                      const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : (variationStrategy?.variations.length || 0);
-                      setSelectedVariationIndices(new Set(variationStrategy?.variations.slice(0, maxSelect).map((_, i) => i)));
+                      setSelectedVariationIndices(new Set(variationStrategy?.variations.slice(0, currentMax).map((_, i) => i)));
                     }
                   }}
                 >
-                  {selectedVariationIndices.size === variationStrategy?.variations.length ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : 'Select All'}
+                  {selectedVariationIndices.size > 0 ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : `Select ${PAID_SCENE_LIMIT}`}
                 </Button>
                 )}
               </div>
