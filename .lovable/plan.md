@@ -1,70 +1,73 @@
 
-## Fix Upscale Feature: Function, UI, and State Management
 
-### Issues Found
+## Public Discover Page -- Unsplash/Pexels-Style Browse Feed
 
-1. **Generation images never marked as upscaled in database** -- The edge function only updates `freestyle_generations` records. For generation images, no DB update happens, so:
-   - The image URL in `generation_jobs.results` array never changes
-   - The `quality` field is never set to `"upscaled"`
-   - On page reload, the original image shows again
-   - The "Enhance to PRO HD" button always reappears
+### Overview
 
-2. **Item ID mismatch** -- Library items for generation jobs use composite IDs like `73ae96a7-...-0` (job ID + result index). The edge function receives this but can't match it to any DB row. Need to parse the real job ID and result index.
+Create a public `/discover` route that shows the same masonry grid of scenes and presets, accessible to anyone without logging in. When a visitor clicks any action (Use Scene, Generate Prompt, Save, etc.), they get redirected to `/auth` to register/login first. After auth, they land in the app.
 
-3. **Button styling** -- Orange/amber gradient doesn't feel premium. Needs to match download button size (h-12) and use a different color scheme.
+### Key Changes
 
-4. **No loading feedback** -- Just shows "Enhancing..." with a spinner. Should show rotating VOVV.AI team messages.
+#### 1. Database: Allow Anonymous Read Access to Presets and Scenes
 
-5. **No separator** -- Buttons section needs visual separation.
+Currently `discover_presets` and `custom_scenes` require authenticated users to read. We need to add RLS policies allowing anonymous (public) SELECT access:
 
----
+- `discover_presets`: Add policy "Anyone can view discover presets" for `anon` role
+- `custom_scenes`: Add policy "Anyone can view active scenes publicly" for `anon` role with `is_active = true`
 
-### Changes
+(`discover_item_views` already allows public inserts and reads -- no change needed.)
 
-#### 1. Fix Edge Function (`supabase/functions/upscale-image/index.ts`)
+#### 2. New Page: `src/pages/PublicDiscover.tsx`
 
-- Parse composite `sourceId` for generation type: split `"jobId-index"` to get the actual job UUID and result index
-- After uploading the upscaled image, update `generation_jobs`:
-  - Replace the specific URL in the `results` JSONB array
-  - Set `quality` to `"upscaled"`
-- Keep the existing freestyle update logic
+A simplified version of the existing Discover page that:
+- Uses the `PageLayout` wrapper (LandingNav + LandingFooter) for consistent public branding
+- Renders the same masonry grid with `DiscoverCard` components (no save/featured overlays for anonymous users)
+- Has search + category filter chips (same as the authenticated version)
+- Shows a detail modal when clicking a card, but replaces all action buttons ("Use Prompt", "Use Scene", "Generate Prompt", "Save", "Similar") with a single **"Sign up free to use this"** CTA that navigates to `/auth`
+- No admin features, no save/featured toggles, no view tracking for anonymous users
 
-#### 2. Redesign Button and Add Loading Messages (`src/components/app/LibraryDetailModal.tsx`)
+#### 3. New Component: `src/components/app/PublicDiscoverDetailModal.tsx`
 
-**Button redesign:**
-- Change from amber/orange gradient to a violet/indigo gradient (`from-violet-500 to-indigo-600`) -- premium feel, distinct from the dark download button
-- Same height as download button (`h-12` instead of `h-14`)
-- Remove the "AI-powered upscale" subtitle -- keep it clean with just "Enhance to PRO HD" and "4 CR" badge
-- Add a separator line between the Download button and secondary actions
+A stripped-down version of `DiscoverDetailModal` that:
+- Shows the image, title, category, description, tags (read-only)
+- Replaces all action buttons with a single prominent "Sign Up Free to Use" button linking to `/auth`
+- No "Generate Prompt", "Copy", "Save", "Similar" buttons
+- Still shows "More like this" related items grid (read-only, clicking opens same modal for that item)
 
-**Loading messages:**
-- Add rotating status messages during enhancement: "VOVV.AI team is enhancing...", "Adding extra detail...", "Almost there...", etc.
-- Cycle every 4 seconds while `upscaling` is true
+#### 4. Routing
 
-**Already upscaled handling:**
-- The `isUpscaled` check already works (`item.quality === 'upscaled' || !!upscaledUrl`), but generation items never get `quality: 'upscaled'` -- the edge function fix above resolves this
-
----
-
-### Technical Details
-
-**Edge function sourceId parsing:**
+Add a public route in `App.tsx`:
 ```text
-// sourceId for generation: "73ae96a7-d484-4290-ba50-e92290375ad8-0"
-// Need to extract: jobId = "73ae96a7-d484-4290-ba50-e92290375ad8", index = 0
-// Split on last hyphen to get UUID and index
+<Route path="/discover" element={<PublicDiscover />} />
 ```
+This sits alongside other public routes like `/about`, `/blog`, etc.
 
-**Generation jobs DB update:**
-```text
-// Fetch current results array
-// Replace results[index] with the new upscaled URL
-// Update quality to "upscaled"
-```
+#### 5. Navigation
 
-### Files to Edit
+Add "Discover" link to the `LandingNav` component's `navLinks` array, pointing to `/discover` (full page navigation, not an anchor scroll).
 
-| File | Change |
+#### 6. Reuse Hooks
+
+- `useDiscoverPresets` -- already works, just needs the RLS policy change for anon access
+- `useCustomScenes` -- same, needs RLS policy change
+- `mockTryOnPoses` -- static data, works anywhere
+
+### Files to Create / Change
+
+| File | Action |
 |------|--------|
-| `supabase/functions/upscale-image/index.ts` | Parse composite sourceId, update generation_jobs results array and quality |
-| `src/components/app/LibraryDetailModal.tsx` | Violet button, same h-12 size, separator, rotating loading messages, remove subtitle |
+| Database migration | Add anon SELECT policies for `discover_presets` and `custom_scenes` |
+| `src/pages/PublicDiscover.tsx` | **New** -- public discover page |
+| `src/components/app/PublicDiscoverDetailModal.tsx` | **New** -- read-only detail modal with auth CTA |
+| `src/App.tsx` | Add `/discover` public route |
+| `src/components/landing/LandingNav.tsx` | Add "Discover" nav link |
+
+### UX Flow
+
+1. Visitor lands on `/discover` (or clicks "Discover" in top nav)
+2. Sees the full masonry grid of scenes and presets with search + category filters
+3. Clicks any card -- detail modal opens showing image, title, description, tags
+4. All action buttons replaced with a single "Sign Up Free to Use" CTA
+5. Clicking CTA navigates to `/auth`
+6. After registration and login, user lands in `/app` where they can use the full authenticated Discover page
+
