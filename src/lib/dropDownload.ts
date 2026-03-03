@@ -8,7 +8,7 @@ export interface DropImage {
 }
 
 function getExtensionFromContentType(contentType: string | null): string {
-  if (!contentType) return '.jpg';
+  if (!contentType) return '.png';
   const ct = contentType.toLowerCase();
   if (ct.includes('image/png')) return '.png';
   if (ct.includes('image/webp')) return '.webp';
