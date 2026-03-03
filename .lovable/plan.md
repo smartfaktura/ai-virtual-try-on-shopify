@@ -1,30 +1,59 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix: "Products Only" Still Shows Props in Flat Lay Set
 
-### Issues Found
+### Root Cause
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+The Flat Lay Set's variation instructions in the database **hardcode prop descriptions** directly into each scene. For example:
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+- **Marble Luxe**: "Product arranged with **gold accents, fresh flowers, and premium accessories**"
+- **Natural Wood**: "Product with **dried botanicals, linen textile, ceramic dish**"
+- **Concrete Industrial**: "Product arranged with **metallic accents, geometric objects**"
 
-### Plan
+When the user selects "Products Only" (`prop_style: 'clean'`), the edge function adds a `propStyleBlock` saying "Do NOT add any extra items" — but the variation instruction explicitly asks for props. The AI sees two contradicting instructions and follows the more specific one (the variation instruction with named props).
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Fix — Two-pronged approach
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**1. Edge function: Strip props from variation instructions when `prop_style === 'clean'`**
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**File: `supabase/functions/generate-workflow/index.ts`** — In `buildVariationPrompt`, when `propStyle === 'clean'`, post-process the variation instruction to remove prop-related phrases before injecting it into the prompt. Also strengthen the `propStyleBlock` with more forceful, repeated language.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+```typescript
+// When clean mode, strip prop mentions from variation instruction
+let variationInstruction = variation.instruction;
+if (propStyle === 'clean') {
+  // Remove phrases like "with gold accents, fresh flowers, and premium accessories"
+  // Remove "Product with natural elements — dried botanicals, linen textile, ceramic dish"
+  variationInstruction = variationInstruction
+    .replace(/\.\s*Product (arranged )?with[\s\S]*$/i, '.')
+    .replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware))[\w\s,—–-]*/gi, '')
+    .trim();
+}
+```
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+Also strengthen the `propStyleBlock`:
+```
+CRITICAL COMPOSITION RULE (OVERRIDE ALL OTHER INSTRUCTIONS): 
+Show ONLY the selected products on the surface — NOTHING ELSE. 
+IGNORE any mention of props, accents, flowers, botanicals, accessories, 
+or decorative items in the variation description above. 
+The surface must contain ONLY the provided products. 
+Zero additional items. This overrides everything.
+```
+
+**2. Database migration: Add clean/decorated variants to each instruction**
+
+Update the Flat Lay Set workflow's variation instructions to separate surface description from prop description using a clear delimiter, making the stripping more reliable. Each instruction becomes two parts:
+- Surface description (always used)
+- Prop suggestions (only used when `prop_style === 'decorated'`)
+
+Example for Marble Luxe:
+- Before: `"White or gray marble surface. Product arranged with gold accents, fresh flowers, and premium accessories. Luxury, aspirational mood."`
+- After: `"White or gray marble surface. Luxury, aspirational mood. ||PROPS|| Gold accents, fresh flowers, and premium accessories arranged around the product."`
+
+Then in the edge function, when `propStyle === 'clean'`, strip everything after `||PROPS||`.
+
+### Files changed — 1 file + 1 migration
+- `supabase/functions/generate-workflow/index.ts` — Strip props from variation instructions when clean mode; strengthen no-props directive
+- Database migration — Restructure Flat Lay Set variation instructions with `||PROPS||` delimiter
 
