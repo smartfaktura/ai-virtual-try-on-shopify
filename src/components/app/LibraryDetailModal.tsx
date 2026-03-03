@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, Camera, User, X, Sparkles } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
+import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 
@@ -23,6 +24,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
+  const [discoverModalOpen, setDiscoverModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
@@ -201,6 +203,12 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                     >
                       <User className="w-3.5 h-3.5" /> Add as Model
                     </button>
+                    <button
+                      onClick={() => setDiscoverModalOpen(true)}
+                      className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
+                    >
+                      <Globe className="w-3.5 h-3.5" /> Add to Discover
+                    </button>
                   </div>
                 </div>
               )}
@@ -214,6 +222,16 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
       )}
       {modelModalUrl && (
         <AddModelModal open={!!modelModalUrl} onClose={() => setModelModalUrl(null)} imageUrl={modelModalUrl} />
+      )}
+      {discoverModalOpen && item && (
+        <AddToDiscoverModal
+          open={discoverModalOpen}
+          onClose={() => setDiscoverModalOpen(false)}
+          imageUrl={item.imageUrl}
+          prompt={item.prompt || ''}
+          aspectRatio={item.aspectRatio}
+          quality={item.quality}
+        />
       )}
     </>
   );

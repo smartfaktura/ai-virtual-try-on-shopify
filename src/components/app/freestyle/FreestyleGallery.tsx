@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send } from 'lucide-react';
+import { Download, Trash2, Copy, ShieldAlert, X, Pencil, Camera, User, Wand2, Send, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { Progress } from '@/components/ui/progress';
@@ -9,6 +9,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
+import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
 
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
@@ -178,6 +179,7 @@ function ImageCard({
   onAddAsScene,
   onAddAsModel,
   onShareToDiscover,
+  onAddToDiscover,
   className,
   natural,
 }: {
@@ -190,6 +192,7 @@ function ImageCard({
   onAddAsScene?: (imageUrl: string) => void;
   onAddAsModel?: (imageUrl: string) => void;
   onShareToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
+  onAddToDiscover?: (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => void;
   className?: string;
   natural?: boolean;
 }) {
@@ -248,6 +251,15 @@ function ImageCard({
         )}
       </div>
       <div className="flex items-center gap-2">
+        {onAddToDiscover && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onAddToDiscover(img); }}
+            className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center text-white hover:bg-emerald-500/40 transition-colors"
+            title="Add to Discover"
+          >
+            <Globe className="w-4 h-4" />
+          </button>
+        )}
         {onShareToDiscover && (
           <button
             onClick={(e) => { e.stopPropagation(); onShareToDiscover(img); }}
@@ -343,6 +355,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
+  const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ url: string; prompt: string; aspectRatio?: string } | null>(null);
 
   const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0;
 
@@ -365,6 +378,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const adminSceneHandler = isAdmin ? (url: string) => setSceneModalUrl(url) : undefined;
   const adminModelHandler = isAdmin ? (url: string) => setModelModalUrl(url) : undefined;
   const shareHandler = (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => setShareImg(img);
+  const addToDiscoverHandler = isAdmin ? (img: { id: string; url: string; prompt: string; aspectRatio?: string }) => setAddToDiscoverImg(img) : undefined;
 
   const generatingCards = generatingCount > 0
     ? Array.from({ length: generatingCount }, (_, i) => (
@@ -395,6 +409,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
       onAddAsScene={adminSceneHandler}
       onAddAsModel={adminModelHandler}
       onShareToDiscover={shareHandler}
+      onAddToDiscover={addToDiscoverHandler}
       natural={natural}
     />
   ));
@@ -415,6 +430,15 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           prompt={shareImg.prompt}
           aspectRatio={shareImg.aspectRatio}
           sourceGenerationId={shareImg.id}
+        />
+      )}
+      {addToDiscoverImg && (
+        <AddToDiscoverModal
+          open={!!addToDiscoverImg}
+          onClose={() => setAddToDiscoverImg(null)}
+          imageUrl={addToDiscoverImg.url}
+          prompt={addToDiscoverImg.prompt}
+          aspectRatio={addToDiscoverImg.aspectRatio}
         />
       )}
     </>
