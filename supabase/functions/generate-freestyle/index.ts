@@ -747,7 +747,7 @@ serve(async (req) => {
 
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
 
-    const refCount = [body.sourceImage, body.modelImage, body.sceneImage].filter(Boolean).length;
+    const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage].filter(Boolean).length;
     const hasModelImage = !!body.modelImage;
     const aiModel = hasModelImage
       ? "google/gemini-3-pro-image-preview"
