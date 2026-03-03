@@ -43,8 +43,6 @@ interface FreestylePromptPanelProps {
   onQualityChange: (q: 'standard' | 'high') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
-  imageCount: number;
-  onImageCountChange: (count: number) => void;
   stylePresets: string[];
   onStylePresetsChange: (ids: string[]) => void;
   selectedBrandProfile: BrandProfile | null;
