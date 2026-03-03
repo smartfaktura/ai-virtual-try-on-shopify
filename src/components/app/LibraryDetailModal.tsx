@@ -203,6 +203,12 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                     >
                       <User className="w-3.5 h-3.5" /> Add as Model
                     </button>
+                    <button
+                      onClick={() => setDiscoverModalOpen(true)}
+                      className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all"
+                    >
+                      <Globe className="w-3.5 h-3.5" /> Add to Discover
+                    </button>
                   </div>
                 </div>
               )}
