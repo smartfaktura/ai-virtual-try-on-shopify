@@ -219,6 +219,13 @@ export default function Generate() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedForPublish, setSelectedForPublish] = useState<Set<number>>(new Set());
 
+  // Multi-product queue state
+  const [productQueue, setProductQueue] = useState<Product[]>([]);
+  const [currentProductIndex, setCurrentProductIndex] = useState(0);
+  const [multiProductResults, setMultiProductResults] = useState<Map<string, { images: string[]; labels: string[] }>>(new Map());
+  const [multiProductAutoAdvancing, setMultiProductAutoAdvancing] = useState(false);
+  const isMultiProductMode = productQueue.length > 1;
+
   
   const [tryOnConfirmModalOpen, setTryOnConfirmModalOpen] = useState(false);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
@@ -797,22 +804,107 @@ export default function Generate() {
     if (activeJob.status === 'completed' && activeJob.result) {
       const result = activeJob.result as { images?: string[]; variations?: Array<{ label: string }> };
       if (result.images && result.images.length > 0) {
-        setGeneratedImages(result.images);
-        setWorkflowVariationLabels(result.variations?.map(v => v.label) || []);
-        setGeneratingProgress(100);
-        setCurrentStep('results');
-        toast.success(`Generated ${result.images.length} images!`);
-        refreshBalance();
-        queryClient.invalidateQueries({ queryKey: ['library'] });
-        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-        resetQueue();
+        // If multi-product mode, store results and advance
+        if (isMultiProductMode) {
+          const currentProduct = productQueue[currentProductIndex];
+          setMultiProductResults(prev => {
+            const next = new Map(prev);
+            next.set(currentProduct.id, { images: result.images!, labels: result.variations?.map(v => v.label) || [] });
+            return next;
+          });
+          refreshBalance();
+          resetQueue();
+          
+          // Check if there are more products
+          if (currentProductIndex < productQueue.length - 1) {
+            setMultiProductAutoAdvancing(true);
+            const nextIdx = currentProductIndex + 1;
+            setCurrentProductIndex(nextIdx);
+            const nextProduct = productQueue[nextIdx];
+            setSelectedProduct(nextProduct);
+            if (nextProduct.images.length > 0) setSelectedSourceImages(new Set([nextProduct.images[0].id]));
+            // Auto-trigger after a short delay
+            setTimeout(() => {
+              setMultiProductAutoAdvancing(false);
+              handleWorkflowGenerate();
+            }, 1500);
+          } else {
+            // All done — aggregate results
+            const allImages: string[] = [];
+            const allLabels: string[] = [];
+            const finalResults = new Map(multiProductResults);
+            finalResults.set(currentProduct.id, { images: result.images!, labels: result.variations?.map(v => v.label) || [] });
+            for (const product of productQueue) {
+              const r = finalResults.get(product.id);
+              if (r) {
+                allImages.push(...r.images);
+                allLabels.push(...r.labels.map(l => `${product.title} — ${l}`));
+              }
+            }
+            setGeneratedImages(allImages);
+            setWorkflowVariationLabels(allLabels);
+            setGeneratingProgress(100);
+            setCurrentStep('results');
+            toast.success(`Generated ${allImages.length} images for ${productQueue.length} products!`);
+            queryClient.invalidateQueries({ queryKey: ['library'] });
+            queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+          }
+        } else {
+          setGeneratedImages(result.images);
+          setWorkflowVariationLabels(result.variations?.map(v => v.label) || []);
+          setGeneratingProgress(100);
+          setCurrentStep('results');
+          toast.success(`Generated ${result.images.length} images!`);
+          refreshBalance();
+          queryClient.invalidateQueries({ queryKey: ['library'] });
+          queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+          resetQueue();
+        }
       }
     }
     if (activeJob.status === 'failed') {
-      toast.error(activeJob.error_message || 'Generation failed. Credits refunded.');
-      setCurrentStep('settings');
-      refreshBalance();
-      resetQueue();
+      if (isMultiProductMode) {
+        const currentProduct = productQueue[currentProductIndex];
+        toast.error(`Failed for "${currentProduct.title}". Credits refunded. Moving to next...`);
+        refreshBalance();
+        resetQueue();
+        
+        if (currentProductIndex < productQueue.length - 1) {
+          const nextIdx = currentProductIndex + 1;
+          setCurrentProductIndex(nextIdx);
+          const nextProduct = productQueue[nextIdx];
+          setSelectedProduct(nextProduct);
+          if (nextProduct.images.length > 0) setSelectedSourceImages(new Set([nextProduct.images[0].id]));
+          setTimeout(() => handleWorkflowGenerate(), 1500);
+        } else {
+          // All done with failures
+          const allImages: string[] = [];
+          const allLabels: string[] = [];
+          for (const product of productQueue) {
+            const r = multiProductResults.get(product.id);
+            if (r) {
+              allImages.push(...r.images);
+              allLabels.push(...r.labels.map(l => `${product.title} — ${l}`));
+            }
+          }
+          if (allImages.length > 0) {
+            setGeneratedImages(allImages);
+            setWorkflowVariationLabels(allLabels);
+            setGeneratingProgress(100);
+            setCurrentStep('results');
+            toast.warning(`Completed with some failures. ${allImages.length} images generated.`);
+          } else {
+            toast.error('All products failed. Credits refunded.');
+            setCurrentStep('settings');
+          }
+          queryClient.invalidateQueries({ queryKey: ['library'] });
+        }
+      } else {
+        toast.error(activeJob.error_message || 'Generation failed. Credits refunded.');
+        setCurrentStep('settings');
+        refreshBalance();
+        resetQueue();
+      }
     }
   }, [activeJob, refreshBalance, resetQueue]);
 
@@ -821,19 +913,63 @@ export default function Generate() {
     if (!batchState) return;
     if (batchState.allDone) {
       if (batchState.aggregatedImages.length > 0) {
-        setGeneratedImages(batchState.aggregatedImages);
-        setWorkflowVariationLabels(batchState.aggregatedLabels);
-        setGeneratingProgress(100);
-        setCurrentStep('results');
-        if (batchState.hasPartialFailure) {
-          toast.warning(`Generated ${batchState.aggregatedImages.length} images. ${batchState.failedJobs} batch${batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded for those.`);
+        if (isMultiProductMode) {
+          const currentProduct = productQueue[currentProductIndex];
+          setMultiProductResults(prev => {
+            const next = new Map(prev);
+            next.set(currentProduct.id, { images: batchState.aggregatedImages, labels: batchState.aggregatedLabels });
+            return next;
+          });
+          refreshBalance();
+          resetBatch();
+          
+          if (currentProductIndex < productQueue.length - 1) {
+            setMultiProductAutoAdvancing(true);
+            const nextIdx = currentProductIndex + 1;
+            setCurrentProductIndex(nextIdx);
+            const nextProduct = productQueue[nextIdx];
+            setSelectedProduct(nextProduct);
+            if (nextProduct.images.length > 0) setSelectedSourceImages(new Set([nextProduct.images[0].id]));
+            setTimeout(() => {
+              setMultiProductAutoAdvancing(false);
+              handleWorkflowGenerate();
+            }, 1500);
+          } else {
+            // All done — aggregate
+            const allImages: string[] = [];
+            const allLabels: string[] = [];
+            const finalResults = new Map(multiProductResults);
+            finalResults.set(currentProduct.id, { images: batchState.aggregatedImages, labels: batchState.aggregatedLabels });
+            for (const product of productQueue) {
+              const r = finalResults.get(product.id);
+              if (r) {
+                allImages.push(...r.images);
+                allLabels.push(...r.labels.map(l => `${product.title} — ${l}`));
+              }
+            }
+            setGeneratedImages(allImages);
+            setWorkflowVariationLabels(allLabels);
+            setGeneratingProgress(100);
+            setCurrentStep('results');
+            toast.success(`Generated ${allImages.length} images for ${productQueue.length} products!`);
+            queryClient.invalidateQueries({ queryKey: ['library'] });
+            queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+          }
         } else {
-          toast.success(`Generated ${batchState.aggregatedImages.length} images!`);
+          setGeneratedImages(batchState.aggregatedImages);
+          setWorkflowVariationLabels(batchState.aggregatedLabels);
+          setGeneratingProgress(100);
+          setCurrentStep('results');
+          if (batchState.hasPartialFailure) {
+            toast.warning(`Generated ${batchState.aggregatedImages.length} images. ${batchState.failedJobs} batch${batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded for those.`);
+          } else {
+            toast.success(`Generated ${batchState.aggregatedImages.length} images!`);
+          }
+          refreshBalance();
+          queryClient.invalidateQueries({ queryKey: ['library'] });
+          queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+          resetBatch();
         }
-        refreshBalance();
-        queryClient.invalidateQueries({ queryKey: ['library'] });
-        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-        resetBatch();
       } else {
         // All batches failed
         toast.error('All generation batches failed. Credits have been refunded.');
@@ -1709,7 +1845,28 @@ export default function Generate() {
                      } else {
                        setCurrentStep('template');
                      }
-                  } else navigate('/app/generate/bulk', { state: { selectedProducts: selected } });
+                  } else {
+                    // Multi-product: queue them and start with the first one
+                    setProductQueue(selected);
+                    setCurrentProductIndex(0);
+                    setMultiProductResults(new Map());
+                    const product = selected[0];
+                    setSelectedProduct(product);
+                    if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
+                    const cat = detectProductCategory(product);
+                    if (cat) setSelectedCategory(cat);
+                    if (brandProfiles.length > 0) {
+                      setCurrentStep('brand-profile');
+                    } else if (uiConfig?.show_model_picker) {
+                      setCurrentStep('model');
+                    } else if (isClothingProduct(product)) {
+                      setCurrentStep('mode');
+                    } else if (uiConfig?.skip_template && hasWorkflowConfig) {
+                      setCurrentStep('settings');
+                    } else {
+                      setCurrentStep('template');
+                    }
+                  }
                 }
               }}>
                 {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? 'Continue' : isFlatLay ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
@@ -2883,6 +3040,30 @@ export default function Generate() {
               </p>
             </div>
 
+            {/* Multi-product progress banner */}
+            {isMultiProductMode && (
+              <div className="w-full max-w-md space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">
+                    Product {currentProductIndex + 1} of {productQueue.length}: {productQueue[currentProductIndex]?.title}
+                  </span>
+                  <span className="text-muted-foreground">{multiProductResults.size} completed</span>
+                </div>
+                <Progress value={(currentProductIndex / productQueue.length) * 100} className="h-2" />
+                <div className="flex flex-wrap gap-1">
+                  {productQueue.map((p, idx) => (
+                    <Badge
+                      key={p.id}
+                      variant={idx < currentProductIndex ? 'default' : idx === currentProductIndex ? 'secondary' : 'outline'}
+                      className="text-[10px]"
+                    >
+                      {idx < currentProductIndex ? '✓' : idx === currentProductIndex ? '⏳' : '○'} {p.title}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Batch progress - enhanced */}
             {batchState && batchState.totalJobs > 1 && (
               <div className="w-full max-w-md space-y-3">
@@ -3039,7 +3220,7 @@ export default function Generate() {
                       <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Try Another Style
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); }}>Start Over</Button>
+                  <Button variant="outline" size="sm" className="min-h-[44px] sm:min-h-0" onClick={() => { setCurrentStep('source'); setSelectedProduct(null); setScratchUpload(null); setSelectedTemplate(null); setGeneratedImages([]); setSelectedForPublish(new Set()); setProductQueue([]); setCurrentProductIndex(0); setMultiProductResults(new Map()); }}>Start Over</Button>
                 </div>
               </div>
 

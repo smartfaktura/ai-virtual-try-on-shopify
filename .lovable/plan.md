@@ -1,40 +1,30 @@
 
 
-## Fix: Multi-Product Workflow — Use Same Generation Flow Instead of Bulk Page
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-When selecting 2+ products in any workflow (e.g., Product Listing Set), line 1712 navigates to `/app/generate/bulk` — a separate, old page using mock data and a completely different flow. The user wants multi-product selection to simply run the **same workflow generation** sequentially for each product, staying on the Generate page.
+### Issues Found
 
-### Approach
-Instead of routing to the bulk page, treat multi-product selection as a **product queue**: pick the first product as active, continue through the normal workflow steps (brand → settings → generate), and after each product completes, automatically advance to the next product and re-trigger generation with the same settings.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Changes — `src/pages/Generate.tsx`
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**1. Add multi-product queue state**
-```tsx
-const [productQueue, setProductQueue] = useState<Product[]>([]);
-const [currentProductIndex, setCurrentProductIndex] = useState(0);
-```
+### Plan
 
-**2. Replace bulk navigation (line 1712)**
-Instead of `navigate('/app/generate/bulk', ...)`, store all selected products in `productQueue`, set the first one as `selectedProduct`, and proceed through the normal workflow steps (same logic as the single-product path on lines 1695-1711).
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**3. Auto-advance after generation completes**
-When a generation result arrives (in the existing `useEffect` that watches `activeJob` or `batchState` completion), check if `productQueue` has more items. If so:
-- Increment `currentProductIndex`
-- Set the next product as `selectedProduct`
-- Auto-trigger `handleWorkflowGenerate()` again with the same settings
-- Show a progress indicator: "Product 2 of 5 — Generating..."
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**4. Add multi-product progress banner**
-When `productQueue.length > 1`, show a small banner above the generating view:
-```
-Generating for: Product Name (2 of 5) • 1 completed • 0 failed
-```
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**5. Collect results across products**
-Store per-product results in a `Map<string, GenerationResult[]>` so the results step shows all generated images grouped by product, reusing the existing results UI.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Files changed — 1
-- `src/pages/Generate.tsx` — Add product queue state, replace bulk navigation, auto-advance on completion, add multi-product progress indicator
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
