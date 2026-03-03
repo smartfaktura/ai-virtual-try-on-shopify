@@ -206,6 +206,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     if (!user) return;
 
     const restoreActiveJob = async () => {
+      if (jobIdRef.current) return; // Already tracking a job, don't restore
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const { data: session } = await supabase.auth.getSession();
