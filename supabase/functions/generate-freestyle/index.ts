@@ -119,7 +119,7 @@ function polishUserPrompt(
   const isSelfie = detectSelfieIntent(rawPrompt);
 
   // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
-  const refCount = [context.hasSource, context.hasModel, context.hasScene].filter(Boolean).length;
+  const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
   if (refCount >= 2 && !isSelfie) {
     const parts: string[] = [
       `Professional photography: ${rawPrompt}`,
