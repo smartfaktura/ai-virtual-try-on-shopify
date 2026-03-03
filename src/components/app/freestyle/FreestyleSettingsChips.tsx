@@ -379,7 +379,7 @@ export function FreestyleSettingsChips({
               {aspectRatioChip}
               {qualityChip}
               {cameraStyleChip}
-              {imageCountStepper}
+              {maxImageCount > 1 && imageCountStepper}
               <CollapsibleTrigger asChild>
                 <button className={cn(
                   'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
