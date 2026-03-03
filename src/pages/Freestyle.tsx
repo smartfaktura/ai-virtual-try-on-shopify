@@ -53,7 +53,7 @@ export default function Freestyle() {
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<UserProduct | null>(null);
   const [productPopoverOpen, setProductPopoverOpen] = useState(false);
-  const [productSourced, setProductSourced] = useState(false);
+  // productSourced removed — product and reference image are now independent
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [stylePresets, setStylePresets] = useState<string[]>([]);
