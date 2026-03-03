@@ -913,19 +913,63 @@ export default function Generate() {
     if (!batchState) return;
     if (batchState.allDone) {
       if (batchState.aggregatedImages.length > 0) {
-        setGeneratedImages(batchState.aggregatedImages);
-        setWorkflowVariationLabels(batchState.aggregatedLabels);
-        setGeneratingProgress(100);
-        setCurrentStep('results');
-        if (batchState.hasPartialFailure) {
-          toast.warning(`Generated ${batchState.aggregatedImages.length} images. ${batchState.failedJobs} batch${batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded for those.`);
+        if (isMultiProductMode) {
+          const currentProduct = productQueue[currentProductIndex];
+          setMultiProductResults(prev => {
+            const next = new Map(prev);
+            next.set(currentProduct.id, { images: batchState.aggregatedImages, labels: batchState.aggregatedLabels });
+            return next;
+          });
+          refreshBalance();
+          resetBatch();
+          
+          if (currentProductIndex < productQueue.length - 1) {
+            setMultiProductAutoAdvancing(true);
+            const nextIdx = currentProductIndex + 1;
+            setCurrentProductIndex(nextIdx);
+            const nextProduct = productQueue[nextIdx];
+            setSelectedProduct(nextProduct);
+            if (nextProduct.images.length > 0) setSelectedSourceImages(new Set([nextProduct.images[0].id]));
+            setTimeout(() => {
+              setMultiProductAutoAdvancing(false);
+              handleWorkflowGenerate();
+            }, 1500);
+          } else {
+            // All done — aggregate
+            const allImages: string[] = [];
+            const allLabels: string[] = [];
+            const finalResults = new Map(multiProductResults);
+            finalResults.set(currentProduct.id, { images: batchState.aggregatedImages, labels: batchState.aggregatedLabels });
+            for (const product of productQueue) {
+              const r = finalResults.get(product.id);
+              if (r) {
+                allImages.push(...r.images);
+                allLabels.push(...r.labels.map(l => `${product.title} — ${l}`));
+              }
+            }
+            setGeneratedImages(allImages);
+            setWorkflowVariationLabels(allLabels);
+            setGeneratingProgress(100);
+            setCurrentStep('results');
+            toast.success(`Generated ${allImages.length} images for ${productQueue.length} products!`);
+            queryClient.invalidateQueries({ queryKey: ['library'] });
+            queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+          }
         } else {
-          toast.success(`Generated ${batchState.aggregatedImages.length} images!`);
+          setGeneratedImages(batchState.aggregatedImages);
+          setWorkflowVariationLabels(batchState.aggregatedLabels);
+          setGeneratingProgress(100);
+          setCurrentStep('results');
+          if (batchState.hasPartialFailure) {
+            toast.warning(`Generated ${batchState.aggregatedImages.length} images. ${batchState.failedJobs} batch${batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded for those.`);
+          } else {
+            toast.success(`Generated ${batchState.aggregatedImages.length} images!`);
+          }
+          refreshBalance();
+          queryClient.invalidateQueries({ queryKey: ['library'] });
+          queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+          resetBatch();
         }
-        refreshBalance();
-        queryClient.invalidateQueries({ queryKey: ['library'] });
-        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-        resetBatch();
       } else {
         // All batches failed
         toast.error('All generation batches failed. Credits have been refunded.');
