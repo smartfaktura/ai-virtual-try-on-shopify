@@ -40,7 +40,8 @@ import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
 const MAX_IMAGES_PER_JOB = 4;
-const FREE_SCENE_LIMIT = 3;
+const FREE_SCENE_LIMIT = 1;
+const PAID_SCENE_LIMIT = 3;
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
@@ -2221,15 +2222,16 @@ export default function Generate() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (selectedVariationIndices.size === (isFreeUser ? Math.min(FREE_SCENE_LIMIT, variationStrategy?.variations.length || 0) : variationStrategy?.variations.length)) {
+                    const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT;
+                    const currentMax = Math.min(maxSelect, variationStrategy?.variations.length || 0);
+                    if (selectedVariationIndices.size === currentMax) {
                       setSelectedVariationIndices(new Set());
                     } else {
-                      const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : (variationStrategy?.variations.length || 0);
-                      setSelectedVariationIndices(new Set(variationStrategy?.variations.slice(0, maxSelect).map((_, i) => i)));
+                      setSelectedVariationIndices(new Set(variationStrategy?.variations.slice(0, currentMax).map((_, i) => i)));
                     }
                   }}
                 >
-                  {selectedVariationIndices.size === variationStrategy?.variations.length ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : 'Select All'}
+                  {selectedVariationIndices.size > 0 ? 'Deselect All' : isFreeUser ? `Select ${FREE_SCENE_LIMIT}` : `Select ${PAID_SCENE_LIMIT}`}
                 </Button>
                 )}
               </div>
@@ -2310,7 +2312,12 @@ export default function Generate() {
                           else {
                             // Free user cap
                             if (isFreeUser && next.size >= FREE_SCENE_LIMIT) {
-                              toast.error(`Free plan: up to ${FREE_SCENE_LIMIT} scenes. Upgrade for more.`);
+                              toast.error(`Free plan allows 1 scene per generation. Upgrade to unlock more.`);
+                              return prev;
+                            }
+                            // Paid user cap
+                            if (!isFreeUser && next.size >= PAID_SCENE_LIMIT) {
+                              toast.error(`Maximum ${PAID_SCENE_LIMIT} scenes per generation.`);
                               return prev;
                             }
                             next.add(i);
@@ -2397,7 +2404,7 @@ export default function Generate() {
                       {selectedVariationIndices.size === 0 ? (
                         <span className="text-destructive font-medium">Select at least 1 scene to continue</span>
                       ) : (
-                        <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : variationStrategy?.variations.length} scenes selected
+                        <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT} scenes selected
                           {workflowImageCount > MAX_IMAGES_PER_JOB && (
                             <span className="ml-1 text-muted-foreground">· Will split into {Math.ceil(selectedVariationIndices.size / Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier)))} batches</span>
                           )}
@@ -2406,7 +2413,11 @@ export default function Generate() {
                     </p>
                   )}
                   {!isInteriorDesign && isFreeUser && (
-                    <p className="text-xs text-amber-600 mt-0.5">Free plan: up to {FREE_SCENE_LIMIT} scenes. <button className="underline font-medium" onClick={openBuyModal}>Upgrade for more</button></p>
+                    <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-[hsl(222,30%,15%)] px-3 py-1.5">
+                      <span className="text-[11px] text-white/80">Free plan: 1 scene per generation.</span>
+                      <button className="text-[11px] font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors" onClick={openBuyModal}>Upgrade to any plan</button>
+                      <span className="text-[11px] text-white/80">to unlock up to 3.</span>
+                    </div>
                   )}
                 </div>
                 {isAdmin && (
