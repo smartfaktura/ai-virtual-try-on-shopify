@@ -549,7 +549,7 @@ export default function Settings() {
                 <Button variant="outline" className="w-full" onClick={() => window.open('https://vovv.ai/docs', '_blank')}>
                   <HelpCircle className="w-4 h-4 mr-2" /> Documentation
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.open('mailto:support@vovv.ai', '_blank')}>
+                <Button variant="outline" className="w-full" onClick={() => window.open('mailto:hello@vovv.ai', '_blank')}>
                   <MessageSquare className="w-4 h-4 mr-2" /> Contact Support
                 </Button>
                 <Button variant="outline" className="w-full" onClick={() => window.open('https://vovv.ai/faq', '_blank')}>

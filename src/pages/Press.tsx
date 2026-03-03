@@ -153,10 +153,10 @@ export default function Press() {
             For interviews, commentary, or media partnerships, reach out to our communications team.
           </p>
           <a
-            href="mailto:press@vovv.ai"
+            href="mailto:hello@vovv.ai"
             className="text-primary font-medium hover:underline"
           >
-            press@vovv.ai
+            hello@vovv.ai
           </a>
         </div>
       </section>
