@@ -1,48 +1,30 @@
 
 
-## Show Product Thumbnails in Generation Queue Badges
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Change — `src/pages/Generate.tsx` (lines 3059-3069)
+### Issues Found
 
-Replace the text-only badges with thumbnail chips that show each product's first image alongside its title and status.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**Before:** Plain badges with `"Done"`, `"..."`, `"—"` text prefixes
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**After:** Each badge includes a small product thumbnail (20x20px rounded) from `p.images[0]?.url`, with a status indicator:
-- Completed products: green checkmark overlay on thumbnail
-- Current product: pulsing ring/border highlight
-- Pending products: dimmed/opacity-reduced
+### Plan
 
-```tsx
-<div className="flex flex-wrap gap-1.5">
-  {productQueue.map((p, idx) => {
-    const thumb = p.images?.[0]?.url;
-    const isDone = idx < currentProductIndex;
-    const isCurrent = idx === currentProductIndex;
-    return (
-      <div
-        key={p.id}
-        className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] transition-all ${
-          isDone ? 'border-primary/30 bg-primary/5' :
-          isCurrent ? 'border-primary bg-primary/10 ring-1 ring-primary/30' :
-          'border-border bg-muted/30 opacity-60'
-        }`}
-      >
-        {thumb ? (
-          <img src={thumb} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
-        ) : (
-          <div className="w-5 h-5 rounded-full bg-muted flex-shrink-0" />
-        )}
-        <span className="truncate max-w-[120px]">{p.title}</span>
-        {isDone && <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />}
-      </div>
-    );
-  })}
-</div>
-```
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-`CheckCircle` is already imported in the file.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Files changed — 1
-- `src/pages/Generate.tsx` — Replace text badges with thumbnail chips in multi-product queue
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
