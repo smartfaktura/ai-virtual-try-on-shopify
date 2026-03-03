@@ -2404,7 +2404,7 @@ export default function Generate() {
                       {selectedVariationIndices.size === 0 ? (
                         <span className="text-destructive font-medium">Select at least 1 scene to continue</span>
                       ) : (
-                        <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : variationStrategy?.variations.length} scenes selected
+                        <>{selectedVariationIndices.size} of {isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT} scenes selected
                           {workflowImageCount > MAX_IMAGES_PER_JOB && (
                             <span className="ml-1 text-muted-foreground">· Will split into {Math.ceil(selectedVariationIndices.size / Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier)))} batches</span>
                           )}
