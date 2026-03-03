@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { X, Send, Tag } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Send, Tag, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useSubmitToDiscover } from '@/hooks/useDiscoverSubmissions';
+import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORIES = [
   'cinematic', 'commercial', 'photography', 'styling', 'ads', 'lifestyle',
@@ -32,7 +34,34 @@ export function SubmitToDiscoverModal({
   const [category, setCategory] = useState<string>('lifestyle');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
   const submitMutation = useSubmitToDiscover();
+
+  // Auto-fill with AI when modal opens
+  useEffect(() => {
+    if (!open) return;
+    setTitle('');
+    setCategory('lifestyle');
+    setTags([]);
+    setTagInput('');
+    setAiLoading(true);
+
+    supabase.functions
+      .invoke('describe-discover-metadata', {
+        body: { imageUrl, prompt },
+      })
+      .then(({ data, error }) => {
+        if (error || !data) {
+          console.warn('AI auto-fill failed:', error);
+          return;
+        }
+        if (data.title) setTitle(data.title);
+        if (data.category && CATEGORIES.includes(data.category)) setCategory(data.category);
+        if (data.tags && Array.isArray(data.tags)) setTags(data.tags.slice(0, 5));
+      })
+      .catch(() => {})
+      .finally(() => setAiLoading(false));
+  }, [open, imageUrl, prompt]);
 
   if (!open) return null;
 
@@ -81,7 +110,15 @@ export function SubmitToDiscoverModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3">
-          <h3 className="text-lg font-semibold text-foreground">Share to Discover</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-foreground">Share to Discover</h3>
+            {aiLoading && (
+              <span className="flex items-center gap-1 text-[10px] text-primary font-medium animate-pulse">
+                <Sparkles className="w-3 h-3" />
+                AI filling...
+              </span>
+            )}
+          </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
@@ -101,12 +138,16 @@ export function SubmitToDiscoverModal({
           {/* Title */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Title *</label>
-            <Input
-              value={title}
-              onChange={e => setTitle(e.target.value.slice(0, 60))}
-              placeholder="Give it a catchy title..."
-              className="rounded-xl h-11"
-            />
+            {aiLoading ? (
+              <Skeleton className="h-11 w-full rounded-xl" />
+            ) : (
+              <Input
+                value={title}
+                onChange={e => setTitle(e.target.value.slice(0, 60))}
+                placeholder="Give it a catchy title..."
+                className="rounded-xl h-11"
+              />
+            )}
             <p className="text-[10px] text-muted-foreground/50 text-right">{title.length}/60</p>
           </div>
 
@@ -134,39 +175,49 @@ export function SubmitToDiscoverModal({
           {/* Tags */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tags (optional)</label>
-            <div className="flex gap-2">
-              <Input
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                placeholder="Add a tag..."
-                className="rounded-xl h-10 flex-1"
-                disabled={tags.length >= 5}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddTag}
-                disabled={!tagInput.trim() || tags.length >= 5}
-                className="rounded-xl h-10 px-3"
-              >
-                <Tag className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
-                  >
-                    #{tag}
-                    <button onClick={() => handleRemoveTag(tag)} className="hover:text-primary/70">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
+            {aiLoading ? (
+              <div className="flex gap-1.5">
+                <Skeleton className="h-7 w-16 rounded-full" />
+                <Skeleton className="h-7 w-20 rounded-full" />
+                <Skeleton className="h-7 w-14 rounded-full" />
               </div>
+            ) : (
+              <>
+                <div className="flex gap-2">
+                  <Input
+                    value={tagInput}
+                    onChange={e => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    placeholder="Add a tag..."
+                    className="rounded-xl h-10 flex-1"
+                    disabled={tags.length >= 5}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddTag}
+                    disabled={!tagInput.trim() || tags.length >= 5}
+                    className="rounded-xl h-10 px-3"
+                  >
+                    <Tag className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {tags.map(tag => (
+                      <span
+                        key={tag}
+                        className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                      >
+                        #{tag}
+                        <button onClick={() => handleRemoveTag(tag)} className="hover:text-primary/70">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
             <p className="text-[10px] text-muted-foreground/50">{tags.length}/5 tags</p>
           </div>
@@ -174,7 +225,7 @@ export function SubmitToDiscoverModal({
           {/* Submit */}
           <Button
             onClick={handleSubmit}
-            disabled={!title.trim() || submitMutation.isPending}
+            disabled={!title.trim() || submitMutation.isPending || aiLoading}
             className="w-full h-12 rounded-xl text-sm font-medium"
           >
             <Send className="w-4 h-4 mr-2" />
