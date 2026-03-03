@@ -799,6 +799,7 @@ serve(async (req) => {
         const contentArray = buildContentArray(
           promptWithVariation,
           body.sourceImage,
+          body.productImage,
           body.modelImage,
           body.sceneImage,
         );
