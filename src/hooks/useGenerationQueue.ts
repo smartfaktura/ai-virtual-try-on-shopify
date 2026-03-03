@@ -56,7 +56,8 @@ interface UseGenerationQueueReturn {
   lastCompletedAt: string | null;
 }
 
-export function useGenerationQueue(): UseGenerationQueueReturn {
+export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGenerationQueueReturn {
+  const { onContentBlocked } = options || {};
   const { user } = useAuth();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
