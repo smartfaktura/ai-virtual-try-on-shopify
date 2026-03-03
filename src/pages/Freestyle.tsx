@@ -507,8 +507,6 @@ export default function Freestyle() {
     onQualityChange: setQuality,
     polishPrompt,
     onPolishChange: setPolishPrompt,
-    imageCount,
-    onImageCountChange: setImageCount,
     stylePresets,
     onStylePresetsChange: setStylePresets,
     selectedBrandProfile,
