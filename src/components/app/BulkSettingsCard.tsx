@@ -38,6 +38,7 @@ export function BulkSettingsCard({
   models,
   poses,
   creditsBalance,
+  isFreeUser = false,
 }: BulkSettingsCardProps) {
   const [mode, setMode] = useState<GenerationMode>('product-only');
   const [templateId, setTemplateId] = useState<string>(templates[0]?.templateId || '');
