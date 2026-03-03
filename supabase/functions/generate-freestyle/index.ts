@@ -615,6 +615,14 @@ serve(async (req) => {
     && authHeader === `Bearer ${serviceRoleKey}`;
 
   try {
+    // SECURITY: Only allow internal queue calls — reject direct access
+    if (!isQueueInternal) {
+      return new Response(
+        JSON.stringify({ error: "Direct access not allowed. Use the generation queue." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(
@@ -634,12 +642,7 @@ serve(async (req) => {
 
     const body: FreestyleRequest & { job_id?: string; credits_reserved?: number } = await req.json();
 
-    let userId: string | null;
-    if (isQueueInternal && body.user_id) {
-      userId = body.user_id;
-    } else {
-      userId = await getAuthUserId(req.headers.get("authorization"));
-    }
+    const userId = body.user_id;
 
     if (!userId) {
       return new Response(
