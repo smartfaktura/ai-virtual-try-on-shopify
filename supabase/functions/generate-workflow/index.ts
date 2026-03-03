@@ -502,7 +502,7 @@ ${product.dimensions ? `- Dimensions: ${product.dimensions} -- render at realist
 ${product.description ? `- Description: ${product.description}` : ""}
 ${modelBlock}${additionalProductsBlock}${stylingBlock}${propStyleBlock}${ugcBlock}
 VARIATION ${variationIndex + 1} of ${totalVariations}: "${variation.label}"
-${variation.instruction}
+${propStyle === 'clean' ? variation.instruction.split('||PROPS||')[0].replace(/\.\s*Product (arranged |displayed )?with[\s\S]*$/i, '.').replace(/with\s+([\w\s,]+(?:accents|props|accessories|elements|objects|botanicals|flowers|leaves|textile|ceramics?|hardware|palms|ribbon))[\w\s,—–\-]*/gi, '').trim() : variation.instruction.split('||PROPS||').join(' ')}
 
 ${compositionRules ? `COMPOSITION RULES:\n${compositionRules}` : ""}
 
