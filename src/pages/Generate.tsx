@@ -783,6 +783,11 @@ export default function Generate() {
     } else {
       setCurrentStep('settings');
     }
+    } catch (err) {
+      console.error('Try-on generation failed:', err);
+      toast.error('Something went wrong starting the generation. Please try again.');
+      setCurrentStep('settings');
+    }
   };
 
   // Watch queue job completion to transition to results
