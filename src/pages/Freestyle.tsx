@@ -560,7 +560,7 @@ export default function Freestyle() {
               onExpand={openLightbox}
               onDelete={handleDelete}
               onCopyPrompt={setPrompt}
-              generatingCount={(isLoading || isSaving || isProcessing) ? imageCount : 0}
+              generatingCount={(isLoading || isSaving || isProcessing) ? 1 : 0}
               generatingProgress={isSaving ? 100 : 0}
               generatingAspectRatio={aspectRatio}
               blockedEntries={blockedEntries}
