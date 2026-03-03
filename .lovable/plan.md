@@ -1,40 +1,30 @@
 
 
-## Fix: Product + Reference Image Generation Quality
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Root Cause
+### Issues Found
 
-Two issues are causing poor results when both a product and reference image are provided:
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-1. **Wrong AI model**: When the job goes through the queue (`isQueueInternal = true`), the model selection always falls to `google/gemini-2.5-flash-image` (line 754-755) — regardless of how many reference images are present. The flash model struggles with multi-image instructions, often reproducing the reference image instead of compositing the product into it. The pro model (`gemini-3-pro-image-preview`) is only used when a model/person image is present.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-2. **Weak prompt differentiation**: The condensed prompt path (lines 130-136) instructs the AI about both images, but the instruction to "keep the product identity from [PRODUCT IMAGE]" isn't emphatic enough for the flash model. The AI often latches onto the reference image and ignores or under-represents the product.
+### Plan
 
-### Fix
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**`supabase/functions/generate-freestyle/index.ts`** — 2 changes:
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-1. **Upgrade model selection** (lines 750-758): When both `productImage` AND `sourceImage` are present (multi-reference product task), use `gemini-3-pro-image-preview` instead of flash — same as model-image tasks. This ensures the AI can properly handle two distinct images with different roles.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-```
-// Current: always flash for queue-internal
-isQueueInternal ? "google/gemini-2.5-flash-image"
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-// Fixed: pro when both product + reference are present
-const hasDualProductRef = !!body.productImage && !!body.sourceImage;
-const aiModel = (hasModelImage || hasDualProductRef)
-  ? "google/gemini-3-pro-image-preview"
-  : isQueueInternal
-    ? "google/gemini-2.5-flash-image"
-    : ...
-```
-
-2. **Strengthen condensed prompt** (lines 130-136): Add explicit ordering and emphasis so the AI treats the product as the hero and the reference as background/style guidance only.
-
-Update the reference instruction to be more explicit:
-- "Do NOT reproduce or recreate [REFERENCE IMAGE]. It is ONLY for setting/mood/style inspiration."
-- "The final image must prominently feature the exact product from [PRODUCT IMAGE] as the hero subject."
-
-### Files changed — 1
-- `supabase/functions/generate-freestyle/index.ts`
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
