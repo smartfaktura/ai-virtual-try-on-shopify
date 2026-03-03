@@ -3156,7 +3156,17 @@ export default function Generate() {
 
                 {/* Reference thumbnails row */}
                 <div className="flex gap-4 overflow-x-auto pb-1">
-                  {isFlatLay && selectedFlatLayProductIds.size > 1 ? (
+                  {isMultiProductMode && productQueue.length > 1 ? (
+                    productQueue.map(p => (
+                      <div key={p.id} className="flex-shrink-0 text-center">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
+                          <img src={p.images?.[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Product</p>
+                        <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{p.title}</p>
+                      </div>
+                    ))
+                  ) : isFlatLay && selectedFlatLayProductIds.size > 1 ? (
                     userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
                       <div key={up.id} className="flex-shrink-0 text-center">
                         <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
