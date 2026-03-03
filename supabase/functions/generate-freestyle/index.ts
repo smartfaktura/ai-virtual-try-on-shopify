@@ -107,7 +107,7 @@ CRITICAL — DO NOT include any of the following:
 // ── Context-aware prompt polish ───────────────────────────────────────────
 function polishUserPrompt(
   rawPrompt: string,
-  context: { hasSource: boolean; hasModel: boolean; hasScene: boolean },
+  context: { hasSource: boolean; hasProduct: boolean; hasModel: boolean; hasScene: boolean },
   brandProfile?: BrandProfileContext,
   userNegatives?: string[],
   modelContext?: string,
