@@ -224,7 +224,7 @@ Deno.serve(async (req) => {
       // If the specific token is still pending, check if ANY other session
       // for this user was recently uploaded (handles session mismatch on remount)
       if (session.status === "pending") {
-        const userId = claimsData.claims.sub as string;
+        const userId = user.id;
         const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
         const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
