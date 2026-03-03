@@ -110,13 +110,14 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       const job: QueueJob = {
         id: row.id,
         status: row.status,
-        position: 0, // Will be calculated if queued
+        position: 0,
         priority: row.priority_score,
         result: row.result,
         error_message: row.error_message,
         created_at: row.created_at,
         started_at: row.started_at,
         completed_at: row.completed_at,
+        job_type: row.job_type,
       };
 
       // Calculate position if still queued (count jobs ahead: lower priority_score, or same score but earlier created_at)
