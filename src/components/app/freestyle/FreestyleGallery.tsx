@@ -128,40 +128,54 @@ function ContentBlockedCard({
   onEditPrompt?: (prompt: string) => void;
   className?: string;
 }) {
+  const [crew] = useState(() => STUDIO_CREW[Math.floor(Math.random() * STUDIO_CREW.length)]);
+
   return (
     <div
       className={cn(
-        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-5 px-8',
-        'border border-border/30 min-h-[300px] w-full h-full',
-        'bg-gradient-to-br from-muted/50 via-muted/70 to-muted/50',
+        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-3 sm:gap-4 px-6',
+        'w-full',
+        'bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]',
         className,
       )}
+      style={{ aspectRatio: '1/1' }}
     >
-      <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center border border-border/40">
-        <ShieldAlert className="w-5 h-5 text-muted-foreground/50" />
+      {/* Avatar with subtle glow */}
+      <div className="relative">
+        <div className="absolute -inset-1.5 rounded-full bg-red-500/15 animate-[pulse_3s_ease-in-out_infinite]" />
+        <img
+          src={crew.avatar}
+          alt={crew.name}
+          className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-white/20"
+        />
       </div>
 
-      <div className="text-center space-y-1.5 max-w-[240px]">
-        <h3 className="text-sm font-medium text-foreground/70">Couldn't generate</h3>
-        <p className="text-xs text-muted-foreground/50 leading-relaxed">Content policy · try rephrasing</p>
+      {/* Copy */}
+      <div className="text-center space-y-1.5 max-w-[220px]">
+        <p className="text-xs sm:text-sm font-medium text-white/80">
+          {crew.name} couldn't create this
+        </p>
+        <p className="text-[10px] sm:text-xs text-white/40 leading-relaxed">
+          Your prompt was flagged by our content policy. Credits have been refunded.
+        </p>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Actions */}
+      <div className="flex flex-col items-center gap-2 mt-1">
         {onEditPrompt && (
           <button
             onClick={() => onEditPrompt(entry.prompt)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium bg-foreground/5 text-foreground/60 hover:bg-foreground/10 transition-colors border border-border/30"
+            className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold bg-white text-[#0f172a] hover:bg-white/90 transition-colors shadow-md"
           >
             <Pencil className="w-3 h-3" />
-            Rephrase
+            Rephrase prompt
           </button>
         )}
         {onDismiss && (
           <button
             onClick={() => onDismiss(entry.id)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground/50 hover:text-muted-foreground/70 hover:bg-foreground/5 transition-colors"
+            className="text-[10px] sm:text-xs text-white/30 hover:text-white/50 transition-colors"
           >
-            <X className="w-3 h-3" />
             Dismiss
           </button>
         )}
