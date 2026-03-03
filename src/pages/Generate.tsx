@@ -2942,7 +2942,7 @@ export default function Generate() {
                     disabled={selectedVariationIndices.size === 0}
                     className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
                   >
-                    {balance >= creditCost ? (isInteriorDesign ? 'Generate 1 Image' : `Generate ${selectedVariationIndices.size} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
+                    {balance >= creditCost ? (isInteriorDesign ? 'Generate 1 Image' : `Generate ${workflowImageCount * multiProductCount} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
                   </Button>
                 </div>
               </>
