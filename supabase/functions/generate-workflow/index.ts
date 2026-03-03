@@ -883,6 +883,7 @@ serve(async (req) => {
             body.ugc_mood,
             body.theme,
             body.theme_notes,
+            aspectRatio,
           );
 
           console.log(
