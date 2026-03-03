@@ -322,10 +322,10 @@ export function FreestylePromptPanel({
                         {showInsufficientCredits
                           ? `You need ${creditCost - (creditBalance ?? 0)} more credits to generate`
                           : selectedModel && selectedScene
-                            ? `${creditCost} credits: Model + Scene (15/image) × ${imageCount}`
+                            ? `${creditCost} credits: Model + Scene (15/image)`
                             : selectedModel
-                              ? `${creditCost} credits: Model reference (12/image) × ${imageCount}`
-                              : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'} × ${imageCount}`}
+                              ? `${creditCost} credits: Model reference (12/image)`
+                              : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'}`}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
