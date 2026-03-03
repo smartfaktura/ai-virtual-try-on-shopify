@@ -704,7 +704,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const isQueueInternal = req.headers.get("x-queue-internal") === "true";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const authHeaderRaw = req.headers.get("authorization");
+  const isQueueInternal = req.headers.get("x-queue-internal") === "true"
+    && authHeaderRaw === `Bearer ${serviceRoleKey}`;
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
