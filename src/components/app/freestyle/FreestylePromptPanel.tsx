@@ -267,6 +267,7 @@ export function FreestylePromptPanel({
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
               hasModelSelected={!!selectedModel}
+              maxImageCount={maxImageCount}
             />
           </div>
 
