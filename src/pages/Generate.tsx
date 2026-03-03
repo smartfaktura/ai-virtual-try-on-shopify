@@ -3081,11 +3081,30 @@ export default function Generate() {
                     );
                   })}
                 </div>
+
+                {/* Embedded batch/job progress for multi-product */}
+                {batchState && batchState.totalJobs > 1 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Image {Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of {batchState.totalJobs}</span>
+                      <span>{batchState.readyImages} images ready</span>
+                    </div>
+                    {batchState.failedJobs > 0 && (
+                      <p className="text-xs text-amber-600">{batchState.failedJobs} batch{batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded</p>
+                    )}
+                  </div>
+                )}
+                {activeJob && (
+                  <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
+                )}
+                {!activeJob && (!batchState || batchState.totalJobs <= 1) && (
+                  <Progress value={0} className="h-2 animate-pulse" />
+                )}
               </div>
             )}
 
-            {/* Batch progress - enhanced */}
-            {batchState && batchState.totalJobs > 1 && (
+            {/* Batch progress - enhanced (hidden in multi-product mode) */}
+            {batchState && batchState.totalJobs > 1 && !isMultiProductMode && (
               <div className="w-full max-w-md space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">
@@ -3106,8 +3125,8 @@ export default function Generate() {
               </div>
             )}
 
-            {/* Single job progress */}
-            {(!batchState || batchState.totalJobs <= 1) && (
+            {/* Single job progress (hidden in multi-product mode) */}
+            {(!batchState || batchState.totalJobs <= 1) && !isMultiProductMode && (
               <div className="w-full max-w-md">
                 {activeJob ? (
                   <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
@@ -3137,7 +3156,17 @@ export default function Generate() {
 
                 {/* Reference thumbnails row */}
                 <div className="flex gap-4 overflow-x-auto pb-1">
-                  {isFlatLay && selectedFlatLayProductIds.size > 1 ? (
+                  {isMultiProductMode && productQueue.length > 1 ? (
+                    productQueue.map(p => (
+                      <div key={p.id} className="flex-shrink-0 text-center">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
+                          <img src={p.images?.[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Product</p>
+                        <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{p.title}</p>
+                      </div>
+                    ))
+                  ) : isFlatLay && selectedFlatLayProductIds.size > 1 ? (
                     userProducts.filter(up => selectedFlatLayProductIds.has(up.id)).map(up => (
                       <div key={up.id} className="flex-shrink-0 text-center">
                         <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">

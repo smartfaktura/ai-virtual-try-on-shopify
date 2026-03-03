@@ -1,44 +1,30 @@
 
 
-## Fix Two Loading Bars & Multi-Product Results Display
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem 1: Two Progress Bars During Generation
+### Issues Found
 
-During multi-product workflow generation, two separate progress sections are rendered simultaneously:
-- **Lines 3049-3085**: Multi-product progress (product thumbnails, product X of Y counter, overall progress bar)
-- **Lines 3087-3107**: Batch progress (image X of Y counter, another progress bar, QueuePositionIndicator)
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-This creates a confusing UX with two stacked loading indicators.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**Fix**: Merge them into a single unified progress section. When in multi-product mode, embed the QueuePositionIndicator and batch image count *inside* the multi-product progress block instead of showing a separate batch section below it. Hide the separate batch progress block when `isMultiProductMode` is true.
+### Plan
 
-Specifically:
-- In the multi-product section (3049-3085), after the thumbnail chips, add the QueuePositionIndicator and batch image counter
-- Change the batch progress condition (line 3088) to: `{batchState && batchState.totalJobs > 1 && !isMultiProductMode && (...)}` 
-- Change the single job condition (line 3110) to also exclude multi-product mode
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Problem 2: Results Page Only Shows One Product
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-When multi-product generation completes, the results summary card (lines 3138-3193) only shows a single product thumbnail (the last `selectedProduct`). It should show ALL products from the queue.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**Fix**: When `isMultiProductMode && productQueue.length > 1`, show all products from `productQueue` as reference thumbnails instead of just the single `selectedProduct`. Replace the single product thumbnail block with a loop over `productQueue`.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-In the reference thumbnails section (lines 3139-3158), add a condition for multi-product mode:
-```tsx
-{isMultiProductMode && productQueue.length > 1 ? (
-  productQueue.map(p => (
-    <div key={p.id} className="flex-shrink-0 text-center">
-      <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
-        <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
-      </div>
-      <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Product</p>
-      <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{p.title}</p>
-    </div>
-  ))
-) : isFlatLay && selectedFlatLayProductIds.size > 1 ? (
-  // ... existing flat lay logic
-```
-
-### Files changed — 1
-- `src/pages/Generate.tsx` — Merge dual progress bars into one; show all products in results summary
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
