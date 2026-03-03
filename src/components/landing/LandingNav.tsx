@@ -24,10 +24,19 @@ export function LandingNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (link: typeof navLinks[number]) => {
     setMobileOpen(false);
-    const el = document.querySelector(href);
-    el?.scrollIntoView({ behavior: 'smooth' });
+    if ('isRoute' in link && link.isRoute) {
+      navigate(link.href);
+      return;
+    }
+    // Only scroll if we're on the landing page
+    if (window.location.pathname === '/' || window.location.pathname === '/landing') {
+      const el = document.querySelector(link.href);
+      el?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/' + link.href);
+    }
   };
 
   return (

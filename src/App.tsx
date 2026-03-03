@@ -58,8 +58,9 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/discover" element={<PublicDiscover />} />
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
-            
+
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
