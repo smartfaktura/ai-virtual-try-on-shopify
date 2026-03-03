@@ -2294,7 +2294,7 @@ export default function Generate() {
             <Card><CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  {sourceType === 'scratch' ? 'Uploaded Image' : isFlatLay && selectedFlatLayProductIds.size > 1 ? `Selected Products (${selectedFlatLayProductIds.size})` : 'Selected Product'}
+                  {sourceType === 'scratch' ? 'Uploaded Image' : isFlatLay && selectedFlatLayProductIds.size > 1 ? `Selected Products (${selectedFlatLayProductIds.size})` : isMultiProductMode ? `Selected Products (${productQueue.length})` : 'Selected Product'}
                 </span>
                 <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
               </div>
@@ -2306,6 +2306,17 @@ export default function Generate() {
                         <img src={up.image_url || '/placeholder.svg'} alt={up.title} className="w-full h-full object-cover" />
                       </div>
                       <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{up.title}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : isMultiProductMode ? (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {productQueue.map(p => (
+                    <div key={p.id} className="flex-shrink-0 w-[72px]">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
+                        <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{p.title}</p>
                     </div>
                   ))}
                 </div>
