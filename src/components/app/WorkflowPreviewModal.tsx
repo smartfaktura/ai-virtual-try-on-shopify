@@ -98,7 +98,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
     const url = signedUrls[selectedIndex];
     if (!url) return;
     try {
-      await downloadSingleImage(url, `${title.replace(/\s+/g, '_')}_${selectedIndex + 1}.jpg`);
+      await downloadSingleImage(url, `${title.replace(/\s+/g, '_')}_${selectedIndex + 1}.png`);
       toast.success('Image downloaded');
     } catch {
       toast.error('Download failed');
