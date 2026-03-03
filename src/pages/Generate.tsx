@@ -594,6 +594,7 @@ export default function Generate() {
   };
 
   const handleWorkflowGenerate = async () => {
+    try {
     if (!selectedProduct && !scratchUpload) return;
     let sourceImageUrl = '';
     let productData: { title: string; productType: string; description: string; dimensions?: string } = { title: '', productType: '', description: '' };
@@ -725,9 +726,15 @@ export default function Generate() {
         setCurrentStep('settings');
       }
     }
+    } catch (err) {
+      console.error('Workflow generation failed:', err);
+      toast.error('Something went wrong starting the generation. Please try again.');
+      setCurrentStep('settings');
+    }
   };
 
   const handleTryOnConfirmGenerate = async () => {
+    try {
     if (!selectedModel || !selectedPose) return;
     let sourceImageUrl = '';
     let productData: { title: string; productType: string; description: string } | null = null;
@@ -775,6 +782,11 @@ export default function Generate() {
     if (enqueueResult) {
       setBalanceFromServer(enqueueResult.newBalance);
     } else {
+      setCurrentStep('settings');
+    }
+    } catch (err) {
+      console.error('Try-on generation failed:', err);
+      toast.error('Something went wrong starting the generation. Please try again.');
       setCurrentStep('settings');
     }
   };
