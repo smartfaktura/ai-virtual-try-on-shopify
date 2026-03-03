@@ -2947,6 +2947,22 @@ export default function Generate() {
                       <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{selectedPose.name}</p>
                     </div>
                   )}
+                  {variationStrategy?.type === 'scene' && selectedVariationIndices.size > 0 && variationStrategy.variations
+                    .filter((_, i) => selectedVariationIndices.has(i))
+                    .map((v, idx) => (
+                      <div key={`scene-${idx}`} className="flex-shrink-0 text-center">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-border bg-muted/30">
+                          {v.preview_url ? (
+                            <img src={v.preview_url} alt={v.label} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-[10px]">Scene</div>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1 max-w-[56px] truncate">Scene</p>
+                        <p className="text-[10px] font-medium mt-0.5 max-w-[56px] truncate">{v.label}</p>
+                      </div>
+                    ))
+                  }
                 </div>
 
                 {/* Settings chips */}
