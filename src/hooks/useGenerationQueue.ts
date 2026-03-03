@@ -215,7 +215,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       const token = session?.session?.access_token || SUPABASE_KEY;
 
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1&select=id,status,priority_score,error_message,created_at,started_at,completed_at`,
+        `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1&select=id,status,priority_score,error_message,created_at,started_at,completed_at,job_type`,
         {
           headers: {
             apikey: SUPABASE_KEY,
