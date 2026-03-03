@@ -370,10 +370,10 @@ export default function Freestyle() {
     const enqueueResult = await enqueue({
       jobType: 'freestyle',
       payload: queuePayload,
-      imageCount,
+      imageCount: 1,
       quality,
     }, {
-      imageCount,
+      imageCount: 1,
       quality,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
