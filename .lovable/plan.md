@@ -1,41 +1,38 @@
 
 
-## Add "AI Creative Pick" Scene as First Option
+## Allow Product + Reference Image Together in Freestyle
 
-### What
-Add a new variation at position 0 in the Product Listing Set workflow's `variation_strategy.variations` array. This scene won't prescribe a specific background — instead, its instruction tells the AI to autonomously choose a unique, high-quality aesthetic setting that best complements the product, varying each time.
+### Problem
+Currently, selecting a product auto-sets the source image preview (from the product's image), and uploading a reference image clears the selected product. They are mutually exclusive because the same `sourceImage` / `sourceImagePreview` state is used for both.
 
-### Database Migration
+### Solution
+Decouple the product selection from the reference image upload so both can coexist. The product chip provides product context (name, type, dimensions) while the uploaded reference image provides additional visual guidance to the AI.
 
-One SQL migration to prepend a new variation to the existing array:
+### Changes
 
-```sql
-UPDATE workflows
-SET generation_config = jsonb_set(
-  generation_config,
-  '{variation_strategy,variations}',
-  (
-    '[{
-      "label": "AI Creative Pick",
-      "category": "Studio Essentials",
-      "instruction": "You are a world-class creative director. Analyze the product and autonomously choose the SINGLE most compelling, unexpected, and aesthetically striking scene that best showcases THIS specific product. Consider the product material, color, shape, and category — then design a unique environment, surface, lighting setup, and mood that creates a premium editorial-quality photograph. Every generation should feel different and surprising: vary between studio setups, textured surfaces, lifestyle contexts, dramatic lighting, creative angles, and artistic compositions. Push creative boundaries while keeping the product as the undeniable hero. Ultra high resolution, magazine-cover quality.",
-      "preview_url": null
-    }]'::jsonb || (generation_config->'variation_strategy'->'variations')
-  )
-)
-WHERE name = 'Product Listing Set';
-```
+**`src/pages/Freestyle.tsx`**
 
-This inserts the new variation at index 0 (before all existing scenes). It has no `preview_url` so the UI will show a fallback/placeholder card.
+1. **`handleFileSelect`** (lines 161-170): Remove `setSelectedProduct(null)` and `setProductSourced(false)` — uploading an image should no longer clear the product.
 
-### Frontend — No code changes needed
+2. **`handleFileDrop`** (lines 172-180): Same — remove the product-clearing lines.
 
-The Generate.tsx scene grid already handles `preview_url: null` with a gradient fallback. The new card will appear first with its label "AI Creative Pick".
+3. **`handleProductSelect`** (lines 190-210): Stop overwriting `sourceImage`/`sourceImagePreview` when a product is selected. Only set `selectedProduct`. Remove `productSourced` tracking entirely since they're now independent.
+   - If no separate reference image is uploaded, the product's own image will still be sent as `sourceImage` during generation (handled in `handleGenerate`).
+
+4. **`removeSourceImage`** (lines 182-188): Only clear `sourceImage`/`sourceImagePreview`, don't touch `selectedProduct`.
+
+5. **`handleGenerate`** (around lines 245-398): Adjust source image logic:
+   - If user uploaded a reference image → use that as `sourceImage`
+   - If no upload but product selected → use product's image as `sourceImage`  
+   - If both → send both (reference image as `sourceImage`, product image available via product context)
+
+6. **Remove `productSourced` state** — no longer needed since the two are independent.
+
+7. **Prompt panel preview**: The uploaded reference image thumbnail appears in the prompt bar. The product chip shows separately. Both visible simultaneously.
 
 ### Result
+Users can select a product (for context: name, type, auto-framing) AND upload a separate reference image (for visual guidance) at the same time. The AI receives both signals for richer generation.
 
-Users see "AI Creative Pick" as the first selectable scene. When selected, the AI gets full creative freedom to design a unique, high-quality aesthetic setting tailored to the product — different every time.
-
-### 1 file changed
-- New SQL migration (database)
+### Files changed — 1 file
+- `src/pages/Freestyle.tsx`
 
