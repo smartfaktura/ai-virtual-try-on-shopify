@@ -47,7 +47,7 @@ export default function Freestyle() {
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
   const [quality, setQuality] = useState<'standard' | 'high'>('standard');
   const [polishPrompt, setPolishPrompt] = useState(true);
-  const [imageCount, setImageCount] = useState(1);
+  
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
   const [scenePopoverOpen, setScenePopoverOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<UserProduct | null>(null);
