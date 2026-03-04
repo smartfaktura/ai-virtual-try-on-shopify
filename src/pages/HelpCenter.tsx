@@ -31,7 +31,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do credits work?',
-        a: 'Each image generation costs credits. Standard quality uses 1 credit per image, HD uses 2 credits, and Ultra uses 3 credits. Video generation costs 5 credits. You receive credits monthly with your plan, and can purchase additional credit packs anytime.',
+        a: 'Each image generation costs credits based on complexity. Standard quality costs 8 credits, High Quality costs 16 credits, with AI model reference 12 credits, model + scene combo 15 credits, and high-complexity (custom model + scene) 20 credits. Virtual Try-On costs 16 credits per image. Video generation costs 30 credits. You receive credits monthly with your plan, and can purchase additional credit packs anytime.',
       },
       {
         q: 'What happens if I run out of credits?',
