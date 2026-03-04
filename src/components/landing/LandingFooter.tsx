@@ -91,9 +91,7 @@ export function LandingFooter() {
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} VOVV.AI. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-muted-foreground">Built with ❤️ for e-commerce brands</span>
-          </div>
+          <span className="text-xs text-muted-foreground">A product by 123Presets</span>
         </div>
       </div>
     </footer>
