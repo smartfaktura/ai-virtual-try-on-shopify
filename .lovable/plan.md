@@ -1,30 +1,24 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Make "Buy Credits" Button a Prominent CTA
 
-### Issues Found
+The "Buy Credits" button currently uses `bg-muted text-muted-foreground` (grey) styling when the user's balance is insufficient. This is counterintuitive — when the user can't afford to generate, the "Buy Credits" button should be the most prominent element, not look disabled.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Change — 1 file
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`src/pages/Generate.tsx`** — Update all 4 instances where `Buy Credits` appears as the button label. When `balance < creditCost`, instead of grey muted styling, use a vibrant primary CTA style:
 
-### Plan
+Replace:
+```
+className={balance < creditCost ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+```
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+With:
+```
+className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
+```
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+Also update the `onClick` handler for these buttons: when `balance < creditCost`, call `openBuyModal()` instead of triggering generation.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+This affects lines ~2339, ~2826, ~2987, and ~3073.
 
