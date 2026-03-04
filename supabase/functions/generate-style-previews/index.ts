@@ -44,16 +44,26 @@ const stylePrompts: Record<string, string> = {
     "Professional exterior photography of an English cottage garden. Charming stone cottage with climbing roses, overflowing herbaceous borders, winding gravel path, rustic wooden gate, foxgloves and delphiniums, weathered stone wall, lush green lawn, bird bath. Soft morning light, country living quality, 1:1 square crop.",
   "Desert Contemporary":
     "Professional exterior architecture photography of a desert contemporary home. Adobe and concrete walls, desert landscaping with agave and prickly pear cacti, natural stone boulders, warm sand tones, covered outdoor living area with fire pit, dramatic mountain backdrop. Golden desert sunset light, architectural digest quality, 1:1 square crop.",
+  "Desert Southwest":
+    "Professional exterior architecture photography of a desert southwest home. Adobe and concrete walls, desert landscaping with agave and prickly pear cacti, natural stone boulders, warm sand tones, covered outdoor living area with fire pit, dramatic mountain backdrop. Golden desert sunset light, architectural digest quality, 1:1 square crop.",
   "Japanese Zen":
     "Professional exterior photography of a Japanese zen garden. Raked gravel patterns, carefully placed natural stones, moss-covered ground, pruned pine trees, wooden engawa veranda, bamboo fence, stone lantern, koi pond with stepping stones, minimalist serene atmosphere. Soft diffused light, architectural digest quality, 1:1 square crop.",
+  "Japanese Zen Garden":
+    "Professional exterior photography of a Japanese zen garden. Raked gravel patterns, carefully placed natural stones, moss-covered ground, pruned pine trees, wooden engawa veranda, bamboo fence, stone lantern, koi pond with stepping stones, minimalist serene atmosphere. Soft diffused light, architectural digest quality, 1:1 square crop.",
   "Rustic Mountain":
+    "Professional exterior architecture photography of a rustic mountain lodge. Natural log and stone construction, large timber beams, wraparound covered porch with Adirondack chairs, pine tree forest backdrop, stone chimney with smoke, warm amber window glow, mountain vista. Crisp golden hour mountain light, architectural digest quality, 1:1 square crop.",
+  "Rustic Mountain Lodge":
     "Professional exterior architecture photography of a rustic mountain lodge. Natural log and stone construction, large timber beams, wraparound covered porch with Adirondack chairs, pine tree forest backdrop, stone chimney with smoke, warm amber window glow, mountain vista. Crisp golden hour mountain light, architectural digest quality, 1:1 square crop.",
   "Coastal Beach House":
     "Professional exterior architecture photography of a coastal beach house. Weathered cedar shingle siding, white trim, large ocean-facing deck with teak furniture, dune grass landscaping, sandy path to beach, nautical rope railings, blue sky with wispy clouds. Bright coastal sunlight, architectural digest quality, 1:1 square crop.",
   "Urban Rooftop":
     "Professional exterior photography of an urban rooftop terrace. Modern planters with ornamental grasses, sleek outdoor sectional sofa, string lights overhead, city skyline panorama, concrete and wood decking, fire table centerpiece, bar cart, potted olive tree. Warm evening twilight with city lights, architectural digest quality, 1:1 square crop.",
+  "Contemporary Urban":
+    "Professional exterior photography of an urban rooftop terrace. Modern planters with ornamental grasses, sleek outdoor sectional sofa, string lights overhead, city skyline panorama, concrete and wood decking, fire table centerpiece, bar cart, potted olive tree. Warm evening twilight with city lights, architectural digest quality, 1:1 square crop.",
   "Classic Colonial":
     "Professional exterior architecture photography of a classic colonial home. Symmetrical white clapboard facade, black shutters, red front door, columned portico, brick pathway, mature shade trees, manicured boxwood hedges, American flag, white picket fence section. Bright clear day, architectural digest quality, 1:1 square crop.",
+  "French Country Estate":
+    "Professional exterior architecture photography of a French country estate. Limestone facade with blue-gray shutters, symmetrical windows, manicured formal garden with boxwood parterre, gravel courtyard, climbing roses on stone walls, wrought iron gate, lavender borders, terracotta roof. Warm afternoon golden light, architectural digest quality, 1:1 square crop.",
 };
 
 serve(async (req) => {
