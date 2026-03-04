@@ -66,6 +66,8 @@ interface FreestylePromptPanelProps {
   // Mobile collapse
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  // Guide highlight
+  highlightedChip?: GuideStepKey | null;
 }
 
 export function FreestylePromptPanel({
