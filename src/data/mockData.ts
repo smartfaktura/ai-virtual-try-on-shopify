@@ -1173,6 +1173,14 @@ const poseStreetwearBasketball = getLandingAssetUrl('poses/pose-streetwear-baske
 const poseStreetwearUnderpass = getLandingAssetUrl('poses/pose-streetwear-underpass.jpg');
 const poseStreetwearNeon = getLandingAssetUrl('poses/pose-streetwear-neon.jpg');
 
+// Female pose previews for poses 025-030 (unique images)
+const poseLifestyleGym = getLandingAssetUrl('poses/pose-lifestyle-gym.jpg');
+const poseStreetwearShopping = getLandingAssetUrl('poses/pose-streetwear-shopping.jpg');
+const poseLifestyleResort = getLandingAssetUrl('poses/pose-lifestyle-resort.jpg');
+const poseEditorialGallery = getLandingAssetUrl('poses/pose-editorial-gallery.jpg');
+const poseLifestyleAutumn = getLandingAssetUrl('poses/pose-lifestyle-autumn.jpg');
+const poseEditorialWarehouse = getLandingAssetUrl('poses/pose-editorial-warehouse.jpg');
+
 // Male pose previews
 const poseStudioFrontMale = getLandingAssetUrl('poses/pose-studio-front-male.jpg');
 const poseStudioProfileMale = getLandingAssetUrl('poses/pose-studio-profile-male.jpg');
