@@ -166,7 +166,13 @@ export default function Settings() {
                 <span className="text-sm font-semibold">{balance} / {creditsTotal === Infinity ? '∞' : creditsTotal}</span>
               </div>
               <Progress value={creditsPercentage} className="h-2" />
-              <p className="text-xs text-muted-foreground">Resets on the 1st of each month</p>
+              <p className="text-xs text-muted-foreground">
+                {subscriptionStatus === 'canceling' && currentPeriodEnd
+                  ? `Access until ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                  : currentPeriodEnd && plan !== 'free'
+                    ? `Resets ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                    : 'Resets on the 1st of each month'}
+              </p>
             </div>
             {plan !== 'free' ? (
               <Button variant="secondary" className="w-full" onClick={openCustomerPortal}>
@@ -239,7 +245,7 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
-              <Button size="lg" onClick={() => handlePlanSelect('enterprise')} className="shrink-0">
+              <Button size="lg" onClick={() => window.location.href = 'mailto:hello@vovv.ai?subject=Enterprise%20Plan%20Inquiry'} className="shrink-0">
                 Contact Sales
               </Button>
             </div>
