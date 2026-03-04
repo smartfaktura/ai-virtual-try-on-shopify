@@ -1,30 +1,45 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add Freestyle First-Time Helper Guide
 
-### Issues Found
+### Concept
+A dismissible, step-by-step tooltip/card guide that appears the first time a user visits the Freestyle page. It highlights the key chips in the prompt bar (Add Product, Model, Scene, Generate) with numbered steps explaining what each does. The user can step through or dismiss entirely, and the dismissed state persists via `localStorage`.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Steps (what the user sees)
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+1. **"Add Your Product"** — "Select the product you want featured in your image"
+2. **"Choose a Model"** — "Pick a specific model to appear in your photo"
+3. **"Set the Scene"** — "Choose a background or environment for the shoot"
+4. **"Write a Prompt & Generate"** — "Describe any extra details, then hit Generate!"
 
-### Plan
+### Design
+- A floating card anchored near the prompt panel (above it on desktop, overlay on mobile)
+- Shows current step number (e.g., "Step 1 of 4"), title, description, and a "Next" / "Got it" button
+- Each step subtly highlights the relevant chip area using a pulsing ring or arrow indicator
+- "Skip guide" link to dismiss immediately
+- Compact, non-blocking — doesn't cover the gallery
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Implementation
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**1. New component: `src/components/app/freestyle/FreestyleGuide.tsx`**
+- Accepts `currentStep`, `onNext`, `onDismiss` props
+- Renders a small card with step content, progress dots, Next/Skip buttons
+- Each step has a `targetLabel` that maps to a chip name for visual emphasis
+- Uses `localStorage` key `freestyle_guide_dismissed` to persist dismissal
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**2. `src/pages/Freestyle.tsx`**
+- Add state: `showGuide` initialized from `localStorage` (show if not dismissed)
+- Add `guideStep` state (0-3)
+- Render `<FreestyleGuide>` above/beside the prompt panel
+- On dismiss: set `localStorage` item and hide
+- Pass a `highlightedChip` prop down to `FreestylePromptPanel` → `FreestyleSettingsChips` to add a subtle pulse ring on the active step's chip
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**3. `src/components/app/freestyle/FreestyleSettingsChips.tsx`**
+- Accept optional `highlightedChip?: string` prop
+- When a chip's key matches `highlightedChip`, add a `ring-2 ring-primary/50 animate-pulse` class to draw attention
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files changed — 3
+- `src/components/app/freestyle/FreestyleGuide.tsx` (new) — Step-by-step helper card
+- `src/pages/Freestyle.tsx` — Guide state management and rendering
+- `src/components/app/freestyle/FreestyleSettingsChips.tsx` — Optional highlight ring on targeted chip
 
