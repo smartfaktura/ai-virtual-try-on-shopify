@@ -11,6 +11,8 @@ import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import type { BlockedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
+import { FreestyleGuide, GUIDE_STEPS } from '@/components/app/freestyle/FreestyleGuide';
+import type { GuideStepKey } from '@/components/app/freestyle/FreestyleGuide';
 import { STYLE_PRESETS } from '@/components/app/freestyle/StylePresetChips';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
@@ -70,6 +72,26 @@ export default function Freestyle() {
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+
+  // First-time guide state
+  const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('freestyle_guide_dismissed'));
+  const [guideStep, setGuideStep] = useState(0);
+
+  const handleGuideNext = useCallback(() => {
+    if (guideStep >= GUIDE_STEPS.length - 1) {
+      setShowGuide(false);
+      localStorage.setItem('freestyle_guide_dismissed', 'true');
+    } else {
+      setGuideStep(s => s + 1);
+    }
+  }, [guideStep]);
+
+  const handleGuideDismiss = useCallback(() => {
+    setShowGuide(false);
+    localStorage.setItem('freestyle_guide_dismissed', 'true');
+  }, []);
+
+  const highlightedChip: GuideStepKey | null = showGuide ? GUIDE_STEPS[guideStep]?.key ?? null : null;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const promptRef = useRef(prompt);
@@ -543,6 +565,7 @@ export default function Freestyle() {
     onFramingPopoverChange: setFramingPopoverOpen,
     isCollapsed: isPromptCollapsed,
     onToggleCollapse: () => setIsPromptCollapsed(prev => !prev),
+    highlightedChip,
   };
 
   return (
@@ -645,6 +668,15 @@ export default function Freestyle() {
                     <XIcon className="w-3 h-3" />
                   </button>
                 </div>
+              </div>
+            )}
+            {showGuide && (
+              <div className="mb-3 flex justify-center lg:justify-start">
+                <FreestyleGuide
+                  currentStep={guideStep}
+                  onNext={handleGuideNext}
+                  onDismiss={handleGuideDismiss}
+                />
               </div>
             )}
             <FreestylePromptPanel {...panelProps} />
