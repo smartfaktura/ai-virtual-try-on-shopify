@@ -21,6 +21,7 @@ const categoryInfo: Record<PoseCategory, { title: string; recommendation: string
   'living-space': { title: 'Living Space', recommendation: 'Best for home & decor products' },
   bathroom: { title: 'Bathroom & Vanity', recommendation: 'Best for skincare & beauty' },
   botanical: { title: 'Botanical', recommendation: 'Best for wellness & natural products' },
+  outdoor: { title: 'Outdoor', recommendation: 'Best for lifestyle & seasonal campaigns' },
 };
 
 export function PoseCategorySection({ category, poses, selectedPoseId, onSelectPose, selectedGender }: PoseCategorySectionProps) {

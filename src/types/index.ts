@@ -140,7 +140,7 @@ export type FramingOption = 'full_body' | 'upper_body' | 'close_up' | 'hand_wris
 export type ModelGender = 'male' | 'female' | 'non-binary';
 export type ModelBodyType = 'slim' | 'athletic' | 'average' | 'plus-size';
 export type ModelAgeRange = 'young-adult' | 'adult' | 'mature';
-export type PoseCategory = 'studio' | 'lifestyle' | 'editorial' | 'streetwear' | 'clean-studio' | 'surface' | 'flat-lay' | 'kitchen' | 'living-space' | 'bathroom' | 'botanical';
+export type PoseCategory = 'studio' | 'lifestyle' | 'editorial' | 'streetwear' | 'clean-studio' | 'surface' | 'flat-lay' | 'kitchen' | 'living-space' | 'bathroom' | 'botanical' | 'outdoor';
 
 export interface ModelProfile {
   modelId: string;

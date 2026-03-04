@@ -1173,6 +1173,14 @@ const poseStreetwearBasketball = getLandingAssetUrl('poses/pose-streetwear-baske
 const poseStreetwearUnderpass = getLandingAssetUrl('poses/pose-streetwear-underpass.jpg');
 const poseStreetwearNeon = getLandingAssetUrl('poses/pose-streetwear-neon.jpg');
 
+// Female pose previews for poses 025-030 (unique images)
+const poseLifestyleGym = getLandingAssetUrl('poses/pose-lifestyle-gym.jpg');
+const poseStreetwearShopping = getLandingAssetUrl('poses/pose-streetwear-shopping.jpg');
+const poseLifestyleResort = getLandingAssetUrl('poses/pose-lifestyle-resort.jpg');
+const poseEditorialGallery = getLandingAssetUrl('poses/pose-editorial-gallery.jpg');
+const poseLifestyleAutumn = getLandingAssetUrl('poses/pose-lifestyle-autumn.jpg');
+const poseEditorialWarehouse = getLandingAssetUrl('poses/pose-editorial-warehouse.jpg');
+
 // Male pose previews
 const poseStudioFrontMale = getLandingAssetUrl('poses/pose-studio-front-male.jpg');
 const poseStudioProfileMale = getLandingAssetUrl('poses/pose-studio-profile-male.jpg');
@@ -1224,6 +1232,21 @@ const showcaseSkincareOilBathroom = getLandingAssetUrl('showcase/skincare-oil-ba
 const showcaseSkincareCreamBotanical = getLandingAssetUrl('showcase/skincare-cream-botanical.jpg');
 const showcaseFashionDressGarden = getLandingAssetUrl('showcase/fashion-dress-garden.jpg');
 const showcaseFashionDressBotanical = getLandingAssetUrl('showcase/fashion-dress-botanical.jpg');
+
+// New scene environment images
+const sceneShadowPlay = getLandingAssetUrl('scenes/scene-shadow-play.jpg');
+const sceneColorBackdrop = getLandingAssetUrl('scenes/scene-color-backdrop.jpg');
+const sceneLinenTextile = getLandingAssetUrl('scenes/scene-linen-textile.jpg');
+const sceneTerrazzo = getLandingAssetUrl('scenes/scene-terrazzo.jpg');
+const sceneBrunchTable = getLandingAssetUrl('scenes/scene-brunch-table.jpg');
+const sceneMidcenturyConsole = getLandingAssetUrl('scenes/scene-midcentury-console.jpg');
+const sceneWindowSill = getLandingAssetUrl('scenes/scene-window-sill.jpg');
+const sceneSpaTowels = getLandingAssetUrl('scenes/scene-spa-towels.jpg');
+const sceneGlassShelf = getLandingAssetUrl('scenes/scene-glass-shelf.jpg');
+const sceneTropicalLeaves = getLandingAssetUrl('scenes/scene-tropical-leaves.jpg');
+const sceneDriedFlowers = getLandingAssetUrl('scenes/scene-dried-flowers.jpg');
+const sceneBeachSand = getLandingAssetUrl('scenes/scene-beach-sand.jpg');
+const sceneStonePath = getLandingAssetUrl('scenes/scene-stone-path.jpg');
 
 export const mockModels: ModelProfile[] = [
   { modelId: 'model_001', name: 'Yuki', gender: 'female', bodyType: 'slim', ethnicity: 'East Asian', ageRange: 'young-adult', previewUrl: modelFemaleSlimAsian },
@@ -1298,12 +1321,12 @@ export const mockTryOnPoses: TryOnPose[] = [
   { poseId: 'pose_022', name: 'Basketball Court', category: 'streetwear', description: 'Athletic casual on basketball court', promptHint: 'Model standing on a basketball court, one foot on a ball or leaning against chain-link fence, athletic casual stance, urban playground vibe', previewUrl: poseStreetwearBasketball, previewUrlMale: poseStreetwearBasketballMale },
   { poseId: 'pose_023', name: 'Industrial Underpass', category: 'streetwear', description: 'Dramatic tunnel with strong shadows', promptHint: 'Model walking through an industrial underpass tunnel, hands in pockets, dramatic overhead lighting creating strong shadows on concrete walls', previewUrl: poseStreetwearUnderpass, previewUrlMale: poseStreetwearUnderpassMale },
   { poseId: 'pose_024', name: 'Night Neon', category: 'streetwear', description: 'Neon-lit night scene with colorful glow', promptHint: 'Model standing under neon signs at night, colorful glow reflecting on skin and clothing, relaxed urban pose with hands in jacket pockets', previewUrl: poseStreetwearNeon, previewUrlMale: poseStreetwearNeonMale },
-  { poseId: 'pose_025', name: 'Gym & Fitness', category: 'lifestyle', description: 'Athletic setting with modern gym', promptHint: 'Model in active stance near gym equipment, confident athletic pose with hands on hips or gripping a weight, natural light streaming into modern fitness space', previewUrl: poseLifestyleRooftop, previewUrlMale: poseLifestyleGymMale },
-  { poseId: 'pose_026', name: 'Shopping District', category: 'streetwear', description: 'Walking through busy shopping area', promptHint: 'Model walking through a busy shopping district carrying bags, mid-stride with a confident smile, storefronts and street energy in background', previewUrl: poseStreetwearStairs, previewUrlMale: poseStreetwearShoppingMale },
-  { poseId: 'pose_027', name: 'Resort Poolside', category: 'lifestyle', description: 'Luxury resort pool with warm light', promptHint: 'Model lounging on a poolside daybed at a luxury resort, relaxed summer pose with sunglasses, warm golden afternoon light reflecting off turquoise water', previewUrl: poseLifestyleBeach, previewUrlMale: poseLifestyleResortMale },
-  { poseId: 'pose_028', name: 'Art Gallery', category: 'editorial', description: 'Contemplative pose in gallery space', promptHint: 'Model standing contemplatively in a white gallery space, looking at an art installation, one hand resting on chin, clean architectural lines', previewUrl: poseEditorialMinimal, previewUrlMale: poseEditorialGalleryMale },
-  { poseId: 'pose_029', name: 'Autumn Park', category: 'lifestyle', description: 'Fall foliage with warm golden tones', promptHint: 'Model walking along a tree-lined park path surrounded by fall foliage, hands in pockets, warm golden tones and soft dappled light filtering through autumn leaves', previewUrl: poseLifestylePark, previewUrlMale: poseLifestyleAutumnMale },
-  { poseId: 'pose_030', name: 'Warehouse Loft', category: 'editorial', description: 'Industrial loft with exposed brick', promptHint: 'Model leaning against exposed brick in a raw industrial loft, arms folded, large windows casting directional light across the space', previewUrl: poseEditorialWindow, previewUrlMale: poseEditorialWarehouseMale },
+  { poseId: 'pose_025', name: 'Gym & Fitness', category: 'lifestyle', description: 'Athletic setting with modern gym', promptHint: 'Model in active stance near gym equipment, confident athletic pose with hands on hips or gripping a weight, natural light streaming into modern fitness space', previewUrl: poseLifestyleGym, previewUrlMale: poseLifestyleGymMale },
+  { poseId: 'pose_026', name: 'Shopping District', category: 'streetwear', description: 'Walking through busy shopping area', promptHint: 'Model walking through a busy shopping district carrying bags, mid-stride with a confident smile, storefronts and street energy in background', previewUrl: poseStreetwearShopping, previewUrlMale: poseStreetwearShoppingMale },
+  { poseId: 'pose_027', name: 'Resort Poolside', category: 'lifestyle', description: 'Luxury resort pool with warm light', promptHint: 'Model lounging on a poolside daybed at a luxury resort, relaxed summer pose with sunglasses, warm golden afternoon light reflecting off turquoise water', previewUrl: poseLifestyleResort, previewUrlMale: poseLifestyleResortMale },
+  { poseId: 'pose_028', name: 'Art Gallery', category: 'editorial', description: 'Contemplative pose in gallery space', promptHint: 'Model standing contemplatively in a white gallery space, looking at an art installation, one hand resting on chin, clean architectural lines', previewUrl: poseEditorialGallery, previewUrlMale: poseEditorialGalleryMale },
+  { poseId: 'pose_029', name: 'Autumn Park', category: 'lifestyle', description: 'Fall foliage with warm golden tones', promptHint: 'Model walking along a tree-lined park path surrounded by fall foliage, hands in pockets, warm golden tones and soft dappled light filtering through autumn leaves', previewUrl: poseLifestyleAutumn, previewUrlMale: poseLifestyleAutumnMale },
+  { poseId: 'pose_030', name: 'Warehouse Loft', category: 'editorial', description: 'Industrial loft with exposed brick', promptHint: 'Model leaning against exposed brick in a raw industrial loft, arms folded, large windows casting directional light across the space', previewUrl: poseEditorialWarehouse, previewUrlMale: poseEditorialWarehouseMale },
   // === PRODUCT ENVIRONMENT SCENES ===
   { poseId: 'scene_001', name: 'White Seamless', category: 'clean-studio', description: 'Pure white infinity backdrop, even lighting, e-commerce ready', promptHint: 'Pure white infinity backdrop, even lighting, e-commerce ready', previewUrl: templateClothingStudio },
   { poseId: 'scene_002', name: 'Gradient Backdrop', category: 'clean-studio', description: 'Smooth gradient background for premium product positioning', promptHint: 'Smooth gradient background for premium product positioning', previewUrl: templateUniversalGradient },
@@ -1323,6 +1346,20 @@ export const mockTryOnPoses: TryOnPose[] = [
   { poseId: 'scene_016', name: 'Bright Bathroom', category: 'bathroom', description: 'Clean, bright bathroom with natural light and botanicals', promptHint: 'Clean, bright bathroom with natural light and botanicals', previewUrl: showcaseSkincareCreamBotanical },
   { poseId: 'scene_017', name: 'Garden Setting', category: 'botanical', description: 'Lush garden environment with natural greenery', promptHint: 'Lush garden environment with natural greenery', previewUrl: showcaseFashionDressGarden },
   { poseId: 'scene_018', name: 'Botanical Arrangement', category: 'botanical', description: 'Styled botanical backdrop with leaves and flowers', promptHint: 'Styled botanical backdrop with leaves and flowers', previewUrl: showcaseFashionDressBotanical },
+  // New scenes
+  { poseId: 'scene_019', name: 'Shadow Play', category: 'clean-studio', description: 'Directional window shadows on clean white surface', promptHint: 'Clean white studio with strong directional window shadows casting geometric patterns, dramatic light and shadow play', previewUrl: sceneShadowPlay },
+  { poseId: 'scene_020', name: 'Color Backdrop', category: 'clean-studio', description: 'Bold solid color background for vibrant product shots', promptHint: 'Bold solid color backdrop, vibrant and clean, modern studio lighting for eye-catching product photography', previewUrl: sceneColorBackdrop },
+  { poseId: 'scene_021', name: 'Linen Textile', category: 'surface', description: 'Natural linen fabric surface with soft texture', promptHint: 'Natural linen textile surface with soft woven texture, warm neutral tones, minimalist product display', previewUrl: sceneLinenTextile },
+  { poseId: 'scene_022', name: 'Terrazzo Surface', category: 'surface', description: 'Modern terrazzo speckled pattern surface', promptHint: 'Modern terrazzo surface with speckled pattern, clean contemporary aesthetic, product photography', previewUrl: sceneTerrazzo },
+  { poseId: 'scene_023', name: 'Modern Brunch Table', category: 'kitchen', description: 'Bright brunch spread with fresh foods and natural light', promptHint: 'Modern brunch table setting with bright natural light, fresh foods and drinks, clean kitchen aesthetic', previewUrl: sceneBrunchTable },
+  { poseId: 'scene_024', name: 'Mid-Century Console', category: 'living-space', description: 'Styled mid-century modern console with warm decor', promptHint: 'Mid-century modern console table styled with decorative objects, warm interior light, living room vignette', previewUrl: sceneMidcenturyConsole },
+  { poseId: 'scene_025', name: 'Window Sill', category: 'living-space', description: 'Bright window sill with natural morning daylight', promptHint: 'Bright window sill with natural morning daylight, clean white frame, warm inviting product display', previewUrl: sceneWindowSill },
+  { poseId: 'scene_026', name: 'Spa Towels', category: 'bathroom', description: 'White spa towels with serene bathroom aesthetic', promptHint: 'White spa towels rolled on clean surface, serene minimal bathroom aesthetic, skincare product display', previewUrl: sceneSpaTowels },
+  { poseId: 'scene_027', name: 'Glass Shelf', category: 'bathroom', description: 'Transparent glass shelf in modern bathroom', promptHint: 'Glass bathroom shelf with transparent shelving, modern clean bathroom interior, organized product display', previewUrl: sceneGlassShelf },
+  { poseId: 'scene_028', name: 'Tropical Leaves', category: 'botanical', description: 'Lush tropical palm and monstera backdrop', promptHint: 'Lush tropical leaves background with monstera and palm fronds, natural green botanical backdrop, bright light', previewUrl: sceneTropicalLeaves },
+  { poseId: 'scene_029', name: 'Dried Flowers', category: 'botanical', description: 'Pampas grass and dried botanical arrangement', promptHint: 'Dried flowers arrangement with pampas grass and dried botanicals, warm muted bohemian tones', previewUrl: sceneDriedFlowers },
+  { poseId: 'scene_030', name: 'Beach Sand', category: 'outdoor', description: 'Sandy beach surface with coastal backdrop', promptHint: 'Sandy beach surface with natural sand texture, gentle waves in background, coastal outdoor setting, bright sunlight', previewUrl: sceneBeachSand },
+  { poseId: 'scene_031', name: 'Stone Path', category: 'outdoor', description: 'Natural stone garden path with moss', promptHint: 'Natural stone garden path with smooth stones and moss, zen garden outdoor aesthetic, soft dappled light', previewUrl: sceneStonePath },
 ];
 
 export const poseCategoryLabels: Record<string, string> = {
@@ -1337,6 +1374,7 @@ export const poseCategoryLabels: Record<string, string> = {
   'living-space': 'Living Space',
   bathroom: 'Bathroom & Vanity',
   botanical: 'Botanical',
+  outdoor: 'Outdoor',
 };
 
 export const bodyTypeLabels: Record<string, string> = {

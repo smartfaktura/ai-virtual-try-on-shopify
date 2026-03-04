@@ -1,49 +1,30 @@
 
 
-## Problem Analysis
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Two issues found in `src/data/mockData.ts`:
+### Issues Found
 
-### 1. Duplicate preview images (the bug)
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-Six poses (pose_025 through pose_030) reuse the same `previewUrl` as earlier poses because no unique female preview images exist for them. They only have unique male variants. This causes visible duplicates in the scene grid:
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-| Pose | Name | Reuses image from |
-|------|------|-------------------|
-| pose_025 | Gym & Fitness | pose_017 (Rooftop City) |
-| pose_026 | Shopping District | pose_010 (Urban Stairs) |
-| pose_027 | Resort Poolside | pose_015 (Beach Sunset) |
-| pose_028 | Art Gallery | pose_009 (Editorial Minimal) |
-| pose_029 | Autumn Park | pose_016 (Park Bench) |
-| pose_030 | Warehouse Loft | pose_018 (Editorial Window) |
+### Plan
 
-**Fix:** Generate 6 unique female preview images for these poses using the AI image generation edge function (`generate-scene-previews`), upload them to the `landing-assets` storage bucket under `poses/`, and update the `previewUrl` references in `mockData.ts`.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### 2. More product environment scenes needed
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-Currently only 18 product scenes (scene_001 to scene_018). Will add ~12 more high-demand scenes across categories most commonly used by e-commerce brands:
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**New scenes to add:**
-- **Clean Studio:** Shadow Play (hard directional shadow), Color Backdrop (solid bold color)
-- **Surface:** Linen Textile, Terrazzo Surface  
-- **Kitchen:** Modern Brunch Table, Wine & Cheese Board
-- **Living Space:** Mid-Century Console, Window Sill
-- **Bathroom:** Spa Towels, Glass Shelf
-- **Botanical:** Tropical Leaves, Dried Flowers
-- **New category — Outdoor:** Beach Sand, Stone Path
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Implementation
-
-**File: `src/data/mockData.ts`**
-
-1. Add 6 new unique female preview image URL variables for the duplicate poses (e.g., `pose-lifestyle-gym.jpg`, `pose-streetwear-shopping.jpg`, etc.)
-2. Update pose_025–030 to reference these new unique URLs
-3. Add ~12–14 new scene entries (scene_019 through scene_032) with descriptive promptHints and preview images sourced from existing landing-assets or new ones
-4. For new scene preview images, reuse existing showcase/template images where appropriate (different scenes can share a general aesthetic image), and for truly new scenes, reference new storage paths
-
-**File: `src/types/index.ts`** — Add 'outdoor' to the `PoseCategory` type if not already present
-
-**File: `src/components/app/PoseCategorySection.tsx`** — Add 'outdoor' category info to `categoryInfo` map
-
-**File: `src/data/mockData.ts`** — Add 'outdoor' label to `poseCategoryLabels`
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
