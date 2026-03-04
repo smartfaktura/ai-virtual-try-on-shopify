@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
@@ -245,6 +245,7 @@ export default function Generate() {
 
   // Selected variation indices for workflow generation
   const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
+  const variationInitRef = useRef<string | null>(null);
   const [workflowVariationLabels, setWorkflowVariationLabels] = useState<string[]>([]);
   const [productAngle, setProductAngle] = useState<'front' | 'front-side' | 'front-back' | 'all'>('front');
   const [sceneFilterCategory, setSceneFilterCategory] = useState<string>('all');
@@ -399,7 +400,8 @@ export default function Generate() {
         setQuality(workflowConfig.fixed_settings.quality as ImageQuality);
       }
       // Start with none selected for scene-type workflows, auto-select all for others
-      if (variationStrategy?.variations?.length) {
+      if (variationStrategy?.variations?.length && variationInitRef.current !== activeWorkflow.id) {
+        variationInitRef.current = activeWorkflow.id;
         if (variationStrategy.type === 'scene') {
           setSelectedVariationIndices(new Set());
         } else {
@@ -414,7 +416,7 @@ export default function Generate() {
         if (matchingTemplate) setSelectedTemplate(matchingTemplate);
       }
     }
-  }, [activeWorkflow, workflowConfig, variationStrategy]);
+  }, [activeWorkflow, workflowConfig]);
 
   // Scroll to top when step changes
   useEffect(() => {

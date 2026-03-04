@@ -1,40 +1,30 @@
 
 
-## Fix: Scenes Reset to 0 on Settings Step
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Root Cause
+### Issues Found
 
-The `useEffect` at line 380-417 has `variationStrategy` as a dependency. Since `variationStrategy` is derived inline (`workflowConfig?.variation_strategy`), it produces a **new object reference** on every render — even when the data hasn't changed. This causes the effect to re-run and execute `setSelectedVariationIndices(new Set())` (line 404), wiping out the user's scene selections when transitioning between phases/steps.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Fix — 1 file
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**`src/pages/Generate.tsx`**
+### Plan
 
-1. **Guard the scene reset** so it only runs once on initial workflow load, not on subsequent re-renders. Add a ref to track whether the initial variation setup has been done:
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-```typescript
-const variationInitRef = useRef<string | null>(null);
-```
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-2. **Update the useEffect** (line 401-408) to only set `selectedVariationIndices` when the workflow ID changes (not on every reference change):
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-```typescript
-// Inside the useEffect at line 380:
-if (variationStrategy?.variations?.length && variationInitRef.current !== activeWorkflow.id) {
-  variationInitRef.current = activeWorkflow.id;
-  if (variationStrategy.type === 'scene') {
-    setSelectedVariationIndices(new Set());
-  } else {
-    setSelectedVariationIndices(new Set(variationStrategy.variations.map((_, i) => i)));
-  }
-}
-```
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-3. **Remove `variationStrategy` from the dependency array** (line 417) since we now guard by workflow ID:
-
-```typescript
-}, [activeWorkflow, workflowConfig]);
-```
-
-This ensures scenes are initialized once when the workflow loads, and never reset when the user navigates between phases (scenes → model → final settings).
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
