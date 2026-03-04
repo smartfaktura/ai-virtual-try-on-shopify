@@ -245,7 +245,7 @@ export default function Settings() {
                   </div>
                 </div>
               </div>
-              <Button size="lg" onClick={() => handlePlanSelect('enterprise')} className="shrink-0">
+              <Button size="lg" onClick={() => window.location.href = 'mailto:hello@vovv.ai?subject=Enterprise%20Plan%20Inquiry'} className="shrink-0">
                 Contact Sales
               </Button>
             </div>
