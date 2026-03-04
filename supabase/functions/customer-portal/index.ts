@@ -50,7 +50,7 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "https://vovvai.lovable.app";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/app/settings?tab=plans`,
+      return_url: `${origin}/app/settings`,
     });
     logStep("Portal session created", { url: portalSession.url });
 
