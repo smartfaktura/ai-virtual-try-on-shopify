@@ -39,6 +39,7 @@ import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
+import { MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 const MAX_IMAGES_PER_JOB = 4;
 const FREE_SCENE_LIMIT = 1;
 const PAID_SCENE_LIMIT = 3;
