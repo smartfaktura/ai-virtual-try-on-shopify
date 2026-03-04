@@ -400,7 +400,8 @@ export default function Generate() {
         setQuality(workflowConfig.fixed_settings.quality as ImageQuality);
       }
       // Start with none selected for scene-type workflows, auto-select all for others
-      if (variationStrategy?.variations?.length) {
+      if (variationStrategy?.variations?.length && variationInitRef.current !== activeWorkflow.id) {
+        variationInitRef.current = activeWorkflow.id;
         if (variationStrategy.type === 'scene') {
           setSelectedVariationIndices(new Set());
         } else {
@@ -415,7 +416,7 @@ export default function Generate() {
         if (matchingTemplate) setSelectedTemplate(matchingTemplate);
       }
     }
-  }, [activeWorkflow, workflowConfig, variationStrategy]);
+  }, [activeWorkflow, workflowConfig]);
 
   // Scroll to top when step changes
   useEffect(() => {
