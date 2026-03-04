@@ -73,6 +73,26 @@ export default function Freestyle() {
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
 
+  // First-time guide state
+  const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('freestyle_guide_dismissed'));
+  const [guideStep, setGuideStep] = useState(0);
+
+  const handleGuideNext = useCallback(() => {
+    if (guideStep >= GUIDE_STEPS.length - 1) {
+      setShowGuide(false);
+      localStorage.setItem('freestyle_guide_dismissed', 'true');
+    } else {
+      setGuideStep(s => s + 1);
+    }
+  }, [guideStep]);
+
+  const handleGuideDismiss = useCallback(() => {
+    setShowGuide(false);
+    localStorage.setItem('freestyle_guide_dismissed', 'true');
+  }, []);
+
+  const highlightedChip: GuideStepKey | null = showGuide ? GUIDE_STEPS[guideStep]?.key ?? null : null;
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
