@@ -245,6 +245,7 @@ export default function Generate() {
 
   // Selected variation indices for workflow generation
   const [selectedVariationIndices, setSelectedVariationIndices] = useState<Set<number>>(new Set());
+  const variationInitRef = useRef<string | null>(null);
   const [workflowVariationLabels, setWorkflowVariationLabels] = useState<string[]>([]);
   const [productAngle, setProductAngle] = useState<'front' | 'front-side' | 'front-back' | 'all'>('front');
   const [sceneFilterCategory, setSceneFilterCategory] = useState<string>('all');
