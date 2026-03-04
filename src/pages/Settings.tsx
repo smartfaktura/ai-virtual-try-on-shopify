@@ -149,23 +149,15 @@ export default function Settings() {
         {/* ─── Current Plan ─── */}
         <Card>
           <CardContent className="p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold">Current Plan</h3>
-                  <Badge className="bg-primary/10 text-primary">{planConfig.name}</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
-                  {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-                </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-semibold">Current Plan</h3>
+                <Badge className="bg-primary/10 text-primary">{planConfig.name}</Badge>
               </div>
-              {(subscriptionStatus === 'active' || subscriptionStatus === 'canceling') && (
-                <Button variant="outline" size="sm" onClick={openCustomerPortal}>
-                  <ExternalLink className="w-4 h-4 mr-1.5" />
-                  Manage Subscription
-                </Button>
-              )}
+              <p className="text-sm text-muted-foreground">
+                {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
+                {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+              </p>
             </div>
             <Separator />
             <div className="space-y-2">
@@ -176,6 +168,19 @@ export default function Settings() {
               <Progress value={creditsPercentage} className="h-2" />
               <p className="text-xs text-muted-foreground">Resets on the 1st of each month</p>
             </div>
+            {plan !== 'free' ? (
+              <Button variant="secondary" className="w-full" onClick={openCustomerPortal}>
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Manage Billing & Invoices
+              </Button>
+            ) : (
+              <button
+                className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-2"
+                onClick={openCustomerPortal}
+              >
+                View past invoices
+              </button>
+            )}
           </CardContent>
         </Card>
 
