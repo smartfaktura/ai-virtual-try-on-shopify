@@ -414,29 +414,35 @@ export function FreestyleSettingsChips({
       <div className="flex items-center gap-1.5 flex-wrap">
         {/* Group 1: References — what goes INTO the image */}
         {uploadButton}
-        <ProductSelectorChip
-          selectedProduct={selectedProduct}
-          open={productPopoverOpen}
-          onOpenChange={onProductPopoverChange}
-          onSelect={onProductSelect}
-          products={products}
-          isLoading={isLoadingProducts}
-          modal={false}
-        />
-        <ModelSelectorChip
-          selectedModel={selectedModel}
-          open={modelPopoverOpen}
-          onOpenChange={onModelPopoverChange}
-          onSelect={onModelSelect}
-          modal={false}
-        />
-        <SceneSelectorChip
-          selectedScene={selectedScene}
-          open={scenePopoverOpen}
-          onOpenChange={onScenePopoverChange}
-          onSelect={onSceneSelect}
-          modal={false}
-        />
+        <div className={cn(highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+          <ProductSelectorChip
+            selectedProduct={selectedProduct}
+            open={productPopoverOpen}
+            onOpenChange={onProductPopoverChange}
+            onSelect={onProductSelect}
+            products={products}
+            isLoading={isLoadingProducts}
+            modal={false}
+          />
+        </div>
+        <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+          <ModelSelectorChip
+            selectedModel={selectedModel}
+            open={modelPopoverOpen}
+            onOpenChange={onModelPopoverChange}
+            onSelect={onModelSelect}
+            modal={false}
+          />
+        </div>
+        <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+          <SceneSelectorChip
+            selectedScene={selectedScene}
+            open={scenePopoverOpen}
+            onOpenChange={onScenePopoverChange}
+            onSelect={onSceneSelect}
+            modal={false}
+          />
+        </div>
 
         {/* Divider */}
         <div className="h-5 w-px bg-border/60 mx-1" />
