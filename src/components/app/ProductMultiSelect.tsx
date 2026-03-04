@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Search, CheckCircle } from 'lucide-react';
+import { Search } from 'lucide-react';
 import type { Product } from '@/types';
 import { MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 import { detectProductCategory, categoryLabels } from '@/lib/categoryUtils';
