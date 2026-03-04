@@ -1,27 +1,30 @@
 
 
-## Fix Duplicate Checkmarks in Product Multi-Select
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-When a product is selected, two indicators appear: a `Checkbox` (top-left) and a `CheckCircle` icon (top-right). This is redundant and visually confusing.
+### Issues Found
 
-### Solution
-Remove the separate `CheckCircle` icon. Keep only the `Checkbox` in the top-left corner but make the selected state more obvious through the card styling itself:
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-- **Remove** line 87: the `CheckCircle` icon on top-right
-- **Improve selected card styling**: stronger border + colored overlay on the image corner
-- **Move checkbox** to overlay on the image (top-left corner with a semi-transparent dark background pill) so it's clearly visible against any image
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Updated card design (selected state):
-- `border-primary` border (keep existing)
-- `bg-primary/5` background (keep existing)  
-- Checkbox stays top-left with a small `bg-white/90 rounded shadow-sm` backing so it's visible on any image
-- No second checkmark anywhere
+### Plan
 
-### Files changed — 1
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**`src/components/app/ProductMultiSelect.tsx`**
-- Remove line 87 (`CheckCircle` icon)
-- Remove `CheckCircle` from imports
-- Add a subtle white backing behind the checkbox for better visibility on images
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
