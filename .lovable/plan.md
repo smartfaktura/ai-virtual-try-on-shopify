@@ -1,30 +1,37 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Studio Chat: Freestyle Pricing & Recommendation Bias
 
-### Issues Found
+### Problems
+1. **Wrong pricing for Freestyle**: The system prompt lists "Standard quality: 8 credits" universally, but Freestyle actually costs **4 credits** (standard) and **10 credits** (high quality) — different from Workflow pricing.
+2. **AI never recommends Freestyle**: Line 107 says "recommend the RIGHT workflow" which biases the AI to only suggest Workflows. Freestyle should be equally recommended when users want creative freedom, custom prompts, or cheaper generation.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes — 1 file
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`supabase/functions/studio-chat/index.ts`** — Update SYSTEM_PROMPT:
 
-### Plan
+#### 1. Split credit pricing into Workflow vs Freestyle sections
+Replace the current flat pricing list with:
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**Freestyle pricing:**
+- Standard quality: **4 credits** per image
+- High quality: **10 credits** per image
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**Workflow pricing:**
+- Standard quality: **8 credits** per image
+- High quality: **16 credits** per image
+- With AI model reference: **12 credits**
+- Model + Scene combo: **15 credits**
+- High-complexity: **20 credits**
+- Virtual Try-On: **16 credits**
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**Video:** 30 credits per video
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+#### 2. Update recommendation instruction
+Change line 107 from "recommend the RIGHT workflow" to instruct the AI to recommend **either Freestyle or the right Workflow** depending on the user's needs:
+- Freestyle → for open creative control, custom prompts, budget-conscious users (starts at just 4 credits)
+- Workflows → for structured, guided generation with specific output styles
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+#### 3. Update the quick estimate
+Change "~5 credits ≈ 1 standard image" to "starting from 4 credits in Freestyle, 8 in Workflows"
 
