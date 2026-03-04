@@ -1233,6 +1233,21 @@ const showcaseSkincareCreamBotanical = getLandingAssetUrl('showcase/skincare-cre
 const showcaseFashionDressGarden = getLandingAssetUrl('showcase/fashion-dress-garden.jpg');
 const showcaseFashionDressBotanical = getLandingAssetUrl('showcase/fashion-dress-botanical.jpg');
 
+// New scene environment images
+const sceneShadowPlay = getLandingAssetUrl('scenes/scene-shadow-play.jpg');
+const sceneColorBackdrop = getLandingAssetUrl('scenes/scene-color-backdrop.jpg');
+const sceneLinenTextile = getLandingAssetUrl('scenes/scene-linen-textile.jpg');
+const sceneTerrazzo = getLandingAssetUrl('scenes/scene-terrazzo.jpg');
+const sceneBrunchTable = getLandingAssetUrl('scenes/scene-brunch-table.jpg');
+const sceneMidcenturyConsole = getLandingAssetUrl('scenes/scene-midcentury-console.jpg');
+const sceneWindowSill = getLandingAssetUrl('scenes/scene-window-sill.jpg');
+const sceneSpaTowels = getLandingAssetUrl('scenes/scene-spa-towels.jpg');
+const sceneGlassShelf = getLandingAssetUrl('scenes/scene-glass-shelf.jpg');
+const sceneTropicalLeaves = getLandingAssetUrl('scenes/scene-tropical-leaves.jpg');
+const sceneDriedFlowers = getLandingAssetUrl('scenes/scene-dried-flowers.jpg');
+const sceneBeachSand = getLandingAssetUrl('scenes/scene-beach-sand.jpg');
+const sceneStonePath = getLandingAssetUrl('scenes/scene-stone-path.jpg');
+
 export const mockModels: ModelProfile[] = [
   { modelId: 'model_001', name: 'Yuki', gender: 'female', bodyType: 'slim', ethnicity: 'East Asian', ageRange: 'young-adult', previewUrl: modelFemaleSlimAsian },
   { modelId: 'model_002', name: 'Amara', gender: 'female', bodyType: 'athletic', ethnicity: 'Black African', ageRange: 'adult', previewUrl: modelFemaleAthleticBlack },
