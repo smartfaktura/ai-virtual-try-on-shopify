@@ -39,6 +39,7 @@ import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { NoCreditsModal } from '@/components/app/NoCreditsModal';
 import { useCredits } from '@/contexts/CreditContext';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
+import { MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 const MAX_IMAGES_PER_JOB = 4;
 const FREE_SCENE_LIMIT = 1;
 const PAID_SCENE_LIMIT = 3;
@@ -1741,39 +1742,63 @@ export default function Generate() {
                 <ProductMultiSelect products={mockProducts} selectedIds={selectedProductIds} onSelectionChange={setSelectedProductIds} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
               )
             ) : activeWorkflow?.uses_tryon ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                {userProducts.map(up => {
-                  const isSelected = selectedProductIds.has(up.id);
-                  return (
-                    <button
-                      key={up.id}
-                      type="button"
-                      onClick={() => setSelectedProductIds(new Set([up.id]))}
-                      className={`flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left ${
-                        isSelected
-                          ? 'border-primary ring-2 ring-primary/30'
-                          : 'border-transparent hover:border-border'
-                      }`}
-                    >
-                      <img src={up.image_url} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
-                      <div className="px-1.5 py-1.5 bg-card">
-                        <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
-                        {up.product_type && (
-                          <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>
+              <div className="space-y-3">
+                {isMirrorSelfie && selectedProductIds.size > 0 && (
+                  <div className="flex gap-2 items-center">
+                    <Badge variant={selectedProductIds.size >= 2 ? 'default' : 'secondary'}>{selectedProductIds.size} selected</Badge>
+                    <span className="text-xs text-muted-foreground">(max {MAX_PRODUCTS_PER_BATCH})</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                  {userProducts.map(up => {
+                    const isSelected = selectedProductIds.has(up.id);
+                    const isDisabled = !isSelected && isMirrorSelfie && selectedProductIds.size >= MAX_PRODUCTS_PER_BATCH;
+                    return (
+                      <button
+                        key={up.id}
+                        type="button"
+                        onClick={() => {
+                          if (isMirrorSelfie) {
+                            const newSet = new Set(selectedProductIds);
+                            if (newSet.has(up.id)) { newSet.delete(up.id); }
+                            else if (newSet.size < MAX_PRODUCTS_PER_BATCH) { newSet.add(up.id); }
+                            setSelectedProductIds(newSet);
+                          } else {
+                            setSelectedProductIds(new Set([up.id]));
+                          }
+                        }}
+                        disabled={isDisabled}
+                        className={`relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left ${
+                          isSelected
+                            ? 'border-primary ring-2 ring-primary/30'
+                            : 'border-transparent hover:border-border'
+                        } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      >
+                        {isMirrorSelfie && (
+                          <div className="absolute top-1.5 left-1.5 z-10 bg-white/90 rounded shadow-sm p-0.5">
+                            <Checkbox checked={isSelected} disabled={isDisabled} />
+                          </div>
                         )}
-                      </div>
-                    </button>
-                  );
-                })}
-                {/* Add New Product card */}
-                <button
-                  type="button"
-                  onClick={() => setShowAddProduct(true)}
-                  className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground"
-                >
-                  <Package className="w-6 h-6 mb-1 opacity-50" />
-                  <span className="text-[10px] font-medium">Add New</span>
-                </button>
+                        <img src={up.image_url} alt={up.title} className="w-full aspect-square object-cover rounded-t-md" />
+                        <div className="px-1.5 py-1.5 bg-card">
+                          <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{up.title}</p>
+                          {up.product_type && (
+                            <p className="text-[9px] text-muted-foreground truncate mt-0.5">{up.product_type}</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {/* Add New Product card */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAddProduct(true)}
+                    className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/40 hover:bg-muted/50 transition-all aspect-square text-muted-foreground"
+                  >
+                    <Package className="w-6 h-6 mb-1 opacity-50" />
+                    <span className="text-[10px] font-medium">Add New</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1795,12 +1820,20 @@ export default function Generate() {
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
               <Button disabled={selectedProductIds.size === 0} onClick={() => {
                 if (activeWorkflow?.uses_tryon) {
-                  const selectedUp = userProducts.find(p => selectedProductIds.has(p.id));
-                  if (selectedUp) {
-                    const product = mapUserProductToProduct(selectedUp);
-                    setSelectedProduct(product);
-                    setSelectedSourceImages(new Set([product.images[0].id]));
-                    setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                  const selectedUps = userProducts.filter(p => selectedProductIds.has(p.id));
+                  if (selectedUps.length > 0) {
+                    const mappedProducts = selectedUps.map(up => mapUserProductToProduct(up));
+                    setSelectedProduct(mappedProducts[0]);
+                    setSelectedSourceImages(new Set([mappedProducts[0].images[0].id]));
+                    if (isMirrorSelfie && mappedProducts.length > 1) {
+                      setProductQueue(mappedProducts);
+                      setCurrentProductIndex(0);
+                      setMultiProductResults(new Map());
+                      setMirrorSettingsPhase('scenes');
+                      setCurrentStep('settings');
+                    } else {
+                      setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                    }
                   }
                 } else {
                   const mappedProducts = userProducts.length > 0
@@ -1872,7 +1905,7 @@ export default function Generate() {
                   }
                 }
               }}>
-                {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? 'Continue' : isFlatLay ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
+                {selectedProductIds.size === 0 ? 'Select at least 1' : isMirrorSelfie ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : activeWorkflow?.uses_tryon ? 'Continue' : isFlatLay ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
               </Button>
             </div>
           </CardContent></Card>
@@ -1965,6 +1998,24 @@ export default function Generate() {
         {currentStep === 'model' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} />
+            {isMultiProductMode && (
+              <Card><CardContent className="p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Selected Products ({productQueue.length})</span>
+                  <Badge variant="secondary">{creditCost} credits total</Badge>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {productQueue.map(p => (
+                    <div key={p.id} className="flex-shrink-0 w-[72px]">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
+                        <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{p.title}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent></Card>
+            )}
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <h2 className="text-base font-semibold">Select a Model</h2>
