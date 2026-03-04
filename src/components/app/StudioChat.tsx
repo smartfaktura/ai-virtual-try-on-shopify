@@ -16,11 +16,11 @@ const avatarZara = getLandingAssetUrl('team/avatar-zara.jpg');
 const STARTER_CHIPS = [
   'What style works for skincare?',
   'Best shots for fashion brands?',
-  'How to make my product stand out?',
+  'How much does it cost?',
 ];
 
 const WELCOME_MESSAGE =
-  "Hey! 👋 Your studio team is here. Tell us about your product and we'll suggest the perfect visual strategy. What are you working on?";
+  "Hey! 👋 The VOVV.AI studio team is here. Tell us about your product and we'll suggest the perfect visual strategy — or ask us about credits, plans, and features. What are you working on?";
 
 export function StudioChat() {
   const [isOpen, setIsOpen] = useState(false);
