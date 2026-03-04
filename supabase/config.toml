@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.describe-discover-metadata]
 verify_jwt = false
+
+[functions.generate-asset-previews]
+verify_jwt = false
