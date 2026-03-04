@@ -11,6 +11,8 @@ import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
 import type { BlockedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
+import { FreestyleGuide, GUIDE_STEPS } from '@/components/app/freestyle/FreestyleGuide';
+import type { GuideStepKey } from '@/components/app/freestyle/FreestyleGuide';
 import { STYLE_PRESETS } from '@/components/app/freestyle/StylePresetChips';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
