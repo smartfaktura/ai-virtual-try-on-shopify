@@ -1859,6 +1859,14 @@ export default function Generate() {
                   if (isMirrorSelfie) {
                     setSelectedProduct(selected[0]);
                     if (selected[0].images.length > 0) setSelectedSourceImages(new Set([selected[0].images[0].id]));
+                    // Initialize multi-product queue if multiple selected
+                    if (selected.length > 1) {
+                      setProductQueue(selected);
+                      setCurrentProductIndex(0);
+                      setMultiProductResults(new Map());
+                    } else {
+                      setProductQueue([]);
+                    }
                     setMirrorSettingsPhase('scenes');
                     setCurrentStep('settings');
                     return;
