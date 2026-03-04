@@ -2984,7 +2984,7 @@ export default function Generate() {
                   <Button
                     onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
                     disabled={selectedVariationIndices.size === 0}
-                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
                   >
                     {balance >= creditCost ? (isInteriorDesign ? 'Generate 1 Image' : `Generate ${workflowImageCount * multiProductCount} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
                   </Button>
