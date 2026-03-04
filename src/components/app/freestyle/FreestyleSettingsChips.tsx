@@ -1,4 +1,5 @@
 import React from 'react';
+import type { GuideStepKey } from './FreestyleGuide';
 import {
   Square, RectangleHorizontal, ChevronDown,
   Wand2,
