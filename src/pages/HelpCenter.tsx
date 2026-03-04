@@ -10,7 +10,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do I create my first product image?',
-        a: 'Upload your product photo in the Products section, then head to Workflows or Generate to choose a style. Select your product, pick a workflow (like Lifestyle or Studio), and hit Generate. Your images will be ready in about 60 seconds.',
+        a: 'Upload your product photo in the Products section, then head to Workflows to choose a style. Select your product, pick a workflow (like Virtual Try-On, Product Listing, or Flat Lay), and hit Generate. Your images will be ready in about 60 seconds.',
       },
       {
         q: 'What image formats are supported for uploads?',
