@@ -1,30 +1,40 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Problem
 
-### Issues Found
+The 6 pose images and 13 scene images were created as local placeholder binary files in `src/assets/` but the code references them via `getLandingAssetUrl()` which resolves to the `landing-assets` Supabase storage bucket. These images were never actually uploaded to the bucket, so they display as broken/low-quality placeholders.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+## Solution: Generate and Upload High-Quality Previews
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+Create a new edge function that generates photorealistic preview images using `google/gemini-3-pro-image-preview` (the highest quality image model available) and uploads them directly to the `landing-assets` storage bucket where the code already expects them.
 
-### Plan
+### 1. New Edge Function: `generate-asset-previews`
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**File: `supabase/functions/generate-asset-previews/index.ts`**
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+- Accepts a list of asset paths and their generation prompts
+- Uses `google/gemini-3-pro-image-preview` for maximum quality
+- Uploads each generated image to the `landing-assets` bucket at the exact path the code expects (e.g., `poses/pose-lifestyle-gym.jpg`, `scenes/scene-shadow-play.jpg`)
+- Processes in batches of 2-3 to avoid timeouts
+- Returns progress so it can be called multiple times to complete all images
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+Prompts will be crafted for each image:
+- **Pose images** (6): Full-body fashion model photography in specific settings (gym, shopping district, resort, gallery, autumn park, warehouse loft)
+- **Scene images** (13): Product-only environment photography (shadow play, color backdrop, linen textile, terrazzo, brunch table, mid-century console, window sill, spa towels, glass shelf, tropical leaves, dried flowers, beach sand, stone path)
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### 2. Admin trigger in the app
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**File: `src/pages/Settings.tsx`** (or a temporary admin action)
+
+Add a button (visible to admins only) that calls the edge function in batches until all 19 images are generated and uploaded. Shows progress as each batch completes.
+
+### 3. Clean up local placeholders
+
+Remove the 19 placeholder files from `src/assets/poses/` and `src/assets/scenes/` since they're not used by the code (code uses `getLandingAssetUrl` pointing to cloud storage).
+
+### Files changed
+- **New:** `supabase/functions/generate-asset-previews/index.ts` — edge function to generate and upload images
+- **Edit:** `supabase/config.toml` — register the new function
+- **Edit:** `src/pages/Settings.tsx` — add admin "Regenerate Previews" button
+- **Delete:** 19 local placeholder files in `src/assets/poses/` and `src/assets/scenes/`
 
