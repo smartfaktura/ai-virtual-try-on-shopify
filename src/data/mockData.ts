@@ -1374,6 +1374,7 @@ export const poseCategoryLabels: Record<string, string> = {
   'living-space': 'Living Space',
   bathroom: 'Bathroom & Vanity',
   botanical: 'Botanical',
+  outdoor: 'Outdoor',
 };
 
 export const bodyTypeLabels: Record<string, string> = {
