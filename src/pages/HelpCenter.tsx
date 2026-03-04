@@ -72,8 +72,8 @@ const faqCategories = [
     name: 'Image Quality',
     questions: [
       {
-        q: 'What\'s the difference between Standard, HD, and Ultra quality?',
-        a: 'Standard (1 credit) generates 1024×1024 images suitable for social media and web listings. HD (2 credits) produces 1536×1536 images ideal for hero banners and marketing materials. Ultra (3 credits) creates 2048×2048 images perfect for print and large-format displays.',
+        q: 'What\'s the difference between Standard and High Quality?',
+        a: 'Standard (8 credits) uses Gemini Flash for fast generation suitable for social media and web listings. High Quality (16 credits) uses Gemini Pro for higher detail and realism — ideal for hero banners, marketing materials, and large-format displays. You can also upscale images from the Library for even higher resolution.',
       },
       {
         q: 'My generated images don\'t look right. What can I do?',

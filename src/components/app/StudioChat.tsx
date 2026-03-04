@@ -106,8 +106,8 @@ export function StudioChat() {
               </Avatar>
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight">Studio Team</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">Your creative advisors</p>
+              <p className="text-sm font-semibold leading-tight">VOVV.AI Studio</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Your creative team</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
