@@ -89,6 +89,7 @@ interface FreestyleSettingsChipsProps {
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
   hasModelSelected?: boolean;
+  highlightedChip?: GuideStepKey | null;
 }
 
 export function FreestyleSettingsChips({
