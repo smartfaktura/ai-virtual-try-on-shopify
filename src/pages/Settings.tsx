@@ -397,6 +397,39 @@ export default function Settings() {
             {isSaving ? 'Saving…' : 'Save Settings'}
           </Button>
         </div>
+
+        {/* ─── Admin: Asset Preview Generation ─── */}
+        {isAdmin && (
+          <>
+            <Separator />
+            <Card>
+              <CardContent className="p-5 space-y-4">
+                <div>
+                  <h2 className="text-base font-semibold">Asset Preview Generation</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Generate high-quality AI preview images for poses and scenes using Gemini 3 Pro
+                  </p>
+                </div>
+                {isGenerating && (
+                  <div className="space-y-2">
+                    <Progress value={(genProgress.processed / genProgress.total) * 100} className="h-2" />
+                    <p className="text-xs text-muted-foreground">
+                      {genProgress.processed} / {genProgress.total} assets generated
+                    </p>
+                  </div>
+                )}
+                <Button
+                  onClick={handleGenerateAssetPreviews}
+                  disabled={isGenerating}
+                  variant="secondary"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+                  {isGenerating ? 'Generating…' : 'Regenerate All Previews'}
+                </Button>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </PageHeader>
 
