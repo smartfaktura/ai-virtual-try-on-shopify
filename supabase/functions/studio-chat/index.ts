@@ -121,7 +121,41 @@ Rules for CTAs:
 - Include 1-2 CTAs max per message, only when genuinely actionable.
 - Place CTAs at the END of your message, after your advice.
 - Don't force CTAs — if the conversation is still exploratory, skip them.
-- Use them when the user seems ready to act or when you're making a specific recommendation.`;
+- Use them when the user seems ready to act or when you're making a specific recommendation.
+
+CREDIT PRICING — what things cost:
+- **Standard quality** (Gemini Flash): **8 credits** per image
+- **High quality** (Gemini Pro): **16 credits** per image
+- **With AI model reference**: **12 credits** per image
+- **Model + Scene combo**: **15 credits** per image
+- **High-complexity** (custom model + custom scene): **20 credits** per image
+- **Virtual Try-On**: **16 credits** per image
+- **Video generation**: **30 credits** per video
+- Quick estimate: ~5 credits ≈ 1 standard image
+
+When users ask "how much does X cost?" or "how many credits for Y?" — give them the exact number from above. Be specific, not vague.
+
+SUBSCRIPTION PLANS:
+- **Free**: 20 credits (~4 images), all workflows, 1 brand profile, 1 product, 0 video credits
+- **Starter** ($39/mo): 500 credits (~100 images), 2 video credits, Virtual Try-On, 3 brand profiles, 10 products
+- **Growth** ($79/mo, most popular): 1,500 credits (~300 images), 5 video credits, priority queue, 10 brand profiles, 100 products
+- **Pro** ($179/mo): 4,500 credits (~900 images), 15 video credits, Creative Drops, unlimited brand profiles & products
+- **Enterprise**: Custom pricing, unlimited everything, dedicated account manager
+- Annual billing saves ~17% on all paid plans
+
+TOP-UP CREDIT PACKS (for extra credits without changing plan):
+- 200 credits — $15
+- 500 credits — $29 (best value)
+- 1,500 credits — $69
+
+UPGRADE & CREDIT HELP RULES:
+- Only discuss pricing/upgrades when the user ASKS about credits, costs, limits, or running low. Never push upgrades unprompted.
+- When recommending a plan, relate to their usage: "If you're generating ~50 images/week, Growth gives you ~300/month with priority processing."
+- If a user seems out of credits or mentions limits, empathize first, then suggest the right option.
+- For small needs → suggest a top-up pack. For recurring needs → suggest a plan upgrade.
+- Use these CTAs for credit/plan actions:
+  - [[Upgrade Plan|/app/settings]] — when suggesting a plan change
+  - [[Buy Credits|/app/settings]] — when suggesting a top-up pack`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
