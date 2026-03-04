@@ -7,15 +7,38 @@ export type ChatMessage = {
 };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/studio-chat`;
+const MAX_MESSAGES = 30;
+const COOLDOWN_MS = 2000;
 
 export function useStudioChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isThrottled, setIsThrottled] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const lastSentRef = useRef<number>(0);
 
   const sendMessage = useCallback(async (input: string) => {
-    const userMsg: ChatMessage = { role: 'user', content: input };
-    const updatedMessages = [...messages, userMsg];
+    // Cooldown check
+    const now = Date.now();
+    if (now - lastSentRef.current < COOLDOWN_MS) {
+      return;
+    }
+
+    // Message cap check
+    if (messages.length >= MAX_MESSAGES) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: "We've had a great conversation! 🎨 To keep things running smoothly, please start a new chat to continue. Just hit the clear button above!" },
+      ]);
+      return;
+    }
+
+    lastSentRef.current = now;
+    setIsThrottled(true);
+    setTimeout(() => setIsThrottled(false), COOLDOWN_MS);
+
+    const userMsg: ChatMessage = { role: 'user', content: input.slice(0, 2000) };
+    const updatedMessages = [...messages, userMsg].slice(-MAX_MESSAGES);
     setMessages(updatedMessages);
     setIsLoading(true);
 
@@ -144,5 +167,5 @@ export function useStudioChat() {
     setIsLoading(false);
   }, []);
 
-  return { messages, isLoading, sendMessage, cancelStream, clearChat };
+  return { messages, isLoading, isThrottled, sendMessage, cancelStream, clearChat };
 }
