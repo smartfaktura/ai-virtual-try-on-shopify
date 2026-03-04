@@ -1,33 +1,30 @@
 
 
-## Stripe Setup Audit & Mobile Fix
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Current Status: What's Working
+### Issues Found
 
-The Stripe integration is fully set up:
-- **Subscriptions**: `create-checkout` edge function handles both subscription and one-time payment checkout sessions
-- **Subscription sync**: `check-subscription` runs on login and every 60 seconds, syncs plan/credits from Stripe to database
-- **Cancellation/Management**: `customer-portal` edge function creates a Stripe billing portal session where users can cancel, change payment method, or switch plans
-- **Credit packs**: One-time purchases with fulfillment tracking via checkout session metadata
-- **UI**: Settings page has plan selection, billing period toggle (monthly/annual), credit pack purchase, and `PlanChangeDialog` that routes to checkout or portal
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-Everything is properly wired. No missing pieces for subscription lifecycle.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Problem: Mobile Popup Blocking
+### Plan
 
-The checkout and customer portal both use `window.open(data.url, '_blank')`. On mobile browsers (Safari, Chrome), popup blockers prevent `window.open` when it's not in the **direct synchronous call stack** of a user gesture. Since the flow is:
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-1. User taps button (gesture)
-2. `await supabase.functions.invoke(...)` (async network call -- gesture context lost)
-3. `window.open(url, '_blank')` -- **BLOCKED** by mobile browser
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Fix
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-Replace `window.open(url, '_blank')` with `window.location.href = url` for both `startCheckout` and `openCustomerPortal` in `CreditContext.tsx`. This navigates the current tab instead of opening a new one, which is never blocked by popup blockers and is actually a better UX on mobile (no tab juggling). Stripe's success/cancel URLs already redirect back to the app.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Files changed -- 1
-
-**`src/contexts/CreditContext.tsx`**
-- Line 149: Change `window.open(data.url, '_blank')` to `window.location.href = data.url` (startCheckout)
-- Line 162: Change `window.open(data.url, '_blank')` to `window.location.href = data.url` (openCustomerPortal)
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
