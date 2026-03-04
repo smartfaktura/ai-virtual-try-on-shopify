@@ -2336,7 +2336,7 @@ export default function Generate() {
                   <Button variant="outline" onClick={() => setCurrentStep('template')}>Back</Button>
                   <Button
                     onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
-                    className={balance < creditCost ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                    className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
                   >
                     {balance >= creditCost ? `Generate ${imageCount} Images` : 'Buy Credits'}
                   </Button>
@@ -2823,7 +2823,7 @@ export default function Generate() {
                   <Button
                     onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
                     disabled={selectedVariationIndices.size === 0}
-                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
                   >
                     {balance >= creditCost ? `Generate ${selectedVariationIndices.size} Flat Lay Images` : 'Buy Credits'}
                   </Button>
@@ -2984,7 +2984,7 @@ export default function Generate() {
                   <Button
                     onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
                     disabled={selectedVariationIndices.size === 0}
-                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                    className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
                   >
                     {balance >= creditCost ? (isInteriorDesign ? 'Generate 1 Image' : `Generate ${workflowImageCount * multiProductCount} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
                   </Button>
@@ -3070,7 +3070,7 @@ export default function Generate() {
               <Button variant="outline" onClick={() => setCurrentStep('pose')}>Back</Button>
               <Button
                 onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
-                className={balance < creditCost ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
               >
                 {balance >= creditCost ? `Generate ${imageCount} Try-On Images` : 'Buy Credits'}
               </Button>
