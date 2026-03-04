@@ -69,11 +69,13 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Parse optional body for resuming from a specific style
+    // Parse body - process a single index or batch of 3
+    let batchSize = 3;
     let startFrom = 0;
     try {
       const body = await req.json();
-      if (body.start_from) startFrom = body.start_from;
+      if (typeof body.start_from === "number") startFrom = body.start_from;
+      if (typeof body.batch_size === "number") batchSize = Math.min(body.batch_size, 5);
     } catch { /* no body is fine */ }
 
     // Fetch current workflow
@@ -89,7 +91,9 @@ serve(async (req) => {
     const variations = config.variation_strategy.variations as any[];
     const results: { label: string; status: string; url?: string }[] = [];
 
-    for (let idx = startFrom; idx < variations.length; idx++) {
+    const endIdx = Math.min(startFrom + batchSize, variations.length);
+
+    for (let idx = startFrom; idx < endIdx; idx++) {
       const v = variations[idx];
       const prompt = stylePrompts[v.label];
       if (!prompt) {
@@ -97,7 +101,6 @@ serve(async (req) => {
         continue;
       }
 
-      // Skip if already has a preview_url
       if (v.preview_url) {
         results.push({ label: v.label, status: "already_has_preview", url: v.preview_url });
         continue;
@@ -105,114 +108,78 @@ serve(async (req) => {
 
       console.log(`[${idx + 1}/${variations.length}] Generating: ${v.label}...`);
 
-      try {
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-3-pro-image-preview",
-            messages: [{ role: "user", content: prompt }],
-            modalities: ["image", "text"],
-          }),
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-pro-image-preview",
+          messages: [{ role: "user", content: prompt }],
+          modalities: ["image", "text"],
+        }),
+      });
+
+      if (!aiResponse.ok) {
+        const errText = await aiResponse.text();
+        console.error(`AI error for ${v.label}:`, aiResponse.status, errText);
+        results.push({ label: v.label, status: `ai_error_${aiResponse.status}` });
+        continue;
+      }
+
+      const aiData = await aiResponse.json();
+      const imageDataUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+      if (!imageDataUrl) {
+        results.push({ label: v.label, status: "no_image_returned" });
+        continue;
+      }
+
+      const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
+      const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+      const mimeMatch = imageDataUrl.match(/^data:image\/(\w+);/);
+      const ext = mimeMatch ? mimeMatch[1] : "png";
+      const slug = v.label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
+      const fileName = `styles/${slug}.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from("landing-assets")
+        .upload(fileName, imageBytes, {
+          contentType: `image/${ext}`,
+          upsert: true,
         });
 
-        if (!aiResponse.ok) {
-          const errText = await aiResponse.text();
-          console.error(`AI error for ${v.label}:`, aiResponse.status, errText);
-          results.push({ label: v.label, status: `ai_error_${aiResponse.status}` });
-
-          // If rate limited, save progress and return
-          if (aiResponse.status === 429) {
-            // Save what we have so far
-            await supabase
-              .from("workflows")
-              .update({ generation_config: config })
-              .eq("id", WORKFLOW_ID);
-
-            return new Response(
-              JSON.stringify({
-                partial: true,
-                completed: results.length,
-                total: variations.length,
-                resume_from: idx,
-                results,
-                message: "Rate limited. Call again with start_from to resume.",
-              }),
-              { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
-          continue;
-        }
-
-        const aiData = await aiResponse.json();
-        const imageDataUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-        if (!imageDataUrl) {
-          results.push({ label: v.label, status: "no_image_returned" });
-          continue;
-        }
-
-        // Decode and upload
-        const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, "");
-        const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
-        const mimeMatch = imageDataUrl.match(/^data:image\/(\w+);/);
-        const ext = mimeMatch ? mimeMatch[1] : "png";
-        const slug = v.label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
-        const fileName = `styles/${slug}.${ext}`;
-
-        const { error: uploadErr } = await supabase.storage
-          .from("landing-assets")
-          .upload(fileName, imageBytes, {
-            contentType: `image/${ext}`,
-            upsert: true,
-          });
-
-        if (uploadErr) {
-          console.error(`Upload error for ${v.label}:`, uploadErr);
-          results.push({ label: v.label, status: "upload_failed" });
-          continue;
-        }
-
-        const { data: publicUrlData } = supabase.storage
-          .from("landing-assets")
-          .getPublicUrl(fileName);
-
-        const publicUrl = publicUrlData.publicUrl;
-
-        // Update variation in config
-        variations[idx].preview_url = publicUrl;
-        results.push({ label: v.label, status: "success", url: publicUrl });
-
-        console.log(`✅ ${v.label}: ${publicUrl}`);
-
-        // Small delay to avoid rate limits
-        await new Promise((r) => setTimeout(r, 2000));
-      } catch (genErr) {
-        console.error(`Error generating ${v.label}:`, genErr);
-        results.push({ label: v.label, status: "error" });
+      if (uploadErr) {
+        console.error(`Upload error for ${v.label}:`, uploadErr);
+        results.push({ label: v.label, status: "upload_failed" });
+        continue;
       }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("landing-assets")
+        .getPublicUrl(fileName);
+
+      variations[idx].preview_url = publicUrlData.publicUrl;
+      results.push({ label: v.label, status: "success", url: publicUrlData.publicUrl });
+      console.log(`✅ ${v.label}: ${publicUrlData.publicUrl}`);
     }
 
-    // Save updated config with all preview_urls
+    // Save updated config
     config.variation_strategy.variations = variations;
-    const { error: updateErr } = await supabase
+    await supabase
       .from("workflows")
       .update({ generation_config: config })
       .eq("id", WORKFLOW_ID);
 
-    if (updateErr) {
-      console.error("Failed to update workflow:", updateErr);
-      throw new Error(`Failed to save: ${updateErr.message}`);
-    }
+    const remaining = variations.length - endIdx;
 
     return new Response(
       JSON.stringify({
-        partial: false,
-        completed: results.filter((r) => r.status === "success").length,
-        total: variations.length,
+        completed: results.filter((r) => r.status === "success" || r.status === "already_has_preview").length,
+        processed_range: `${startFrom}-${endIdx - 1}`,
+        remaining,
+        next_start_from: remaining > 0 ? endIdx : null,
         results,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
