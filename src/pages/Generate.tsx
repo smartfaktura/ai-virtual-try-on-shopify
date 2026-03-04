@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
