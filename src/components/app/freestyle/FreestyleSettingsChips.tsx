@@ -319,29 +319,35 @@ export function FreestyleSettingsChips({
           {/* Row 1: Assets + Creative — OUTSIDE Collapsible */}
           <div className="flex items-center gap-2 flex-wrap">
             {uploadButton}
-            <ProductSelectorChip
-              selectedProduct={selectedProduct}
-              open={productPopoverOpen}
-              onOpenChange={onProductPopoverChange}
-              onSelect={onProductSelect}
-              products={products}
-              isLoading={isLoadingProducts}
-              modal={isMobile}
-            />
-            <ModelSelectorChip
-              selectedModel={selectedModel}
-              open={modelPopoverOpen}
-              onOpenChange={onModelPopoverChange}
-              onSelect={onModelSelect}
-              modal={isMobile}
-            />
-            <SceneSelectorChip
-              selectedScene={selectedScene}
-              open={scenePopoverOpen}
-              onOpenChange={onScenePopoverChange}
-              onSelect={onSceneSelect}
-              modal={isMobile}
-            />
+            <div className={cn(highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+              <ProductSelectorChip
+                selectedProduct={selectedProduct}
+                open={productPopoverOpen}
+                onOpenChange={onProductPopoverChange}
+                onSelect={onProductSelect}
+                products={products}
+                isLoading={isLoadingProducts}
+                modal={isMobile}
+              />
+            </div>
+            <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+              <ModelSelectorChip
+                selectedModel={selectedModel}
+                open={modelPopoverOpen}
+                onOpenChange={onModelPopoverChange}
+                onSelect={onModelSelect}
+                modal={isMobile}
+              />
+            </div>
+            <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+              <SceneSelectorChip
+                selectedScene={selectedScene}
+                open={scenePopoverOpen}
+                onOpenChange={onScenePopoverChange}
+                onSelect={onSceneSelect}
+                modal={isMobile}
+              />
+            </div>
             <FramingSelectorChip
               framing={framing}
               onFramingChange={onFramingChange}
