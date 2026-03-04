@@ -1,30 +1,42 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Enhance Studio Chat with Pricing, Credits & Upgrade Knowledge
 
-### Issues Found
+### Problem
+The AI assistant has no knowledge of credit costs, subscription plans, pricing, or how to help users with credit-related questions. It can't suggest upgrades or explain what things cost.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes — 1 file
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`supabase/functions/studio-chat/index.ts`** — Expand `SYSTEM_PROMPT` with three new knowledge sections:
 
-### Plan
+#### 1. Credit Pricing Table
+Add exact per-image credit costs so the AI can answer "how much does X cost?":
+- Standard quality: **4 credits** per image
+- High quality (Pro model): **10 credits** per image
+- With AI model: **12 credits** per image
+- Model + Scene: **15 credits** per image
+- Virtual Try-On: **8 credits** per image
+- Video generation: **70-90 credits** per video (5s), double for 10s
+- Rule of thumb: ~5 credits = 1 image (for estimates)
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+#### 2. Subscription Plans
+Add plan details so the AI can recommend upgrades contextually:
+- **Free**: 20 credits, all workflows, 1 brand profile, 1 product
+- **Starter** ($39/mo): 500 credits (~100 images), Try-On, 3 profiles, 10 products
+- **Growth** ($79/mo, most popular): 1,500 credits (~300 images), priority queue, 10 profiles, 100 products
+- **Pro** ($179/mo): 4,500 credits (~900 images), Creative Drops, unlimited profiles & products
+- **Enterprise**: Custom pricing, unlimited, dedicated account manager
+- Annual billing saves 17%
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+#### 3. Top-Up Packs
+- 200 credits — $15
+- 500 credits — $29 (best value)
+- 1,500 credits — $69
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+#### 4. Upgrade CTA & Credit Help Rules
+Add behavioral instructions:
+- When a user mentions running low on credits, being out of credits, or asks about pricing → explain costs and suggest the right plan or top-up
+- Add CTA: `[[Upgrade Plan|/app/settings]]` for plan changes, `[[Buy Credits|/app/settings]]` for top-ups
+- Never push upgrades unprompted — only when the user asks about pricing, credits, or limits
+- When recommending a plan, compare to their implied usage (e.g., "if you generate ~50 images/week, Growth gives you 300/month")
 
