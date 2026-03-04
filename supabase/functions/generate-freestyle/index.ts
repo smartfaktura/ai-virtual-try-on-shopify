@@ -706,7 +706,18 @@ serve(async (req) => {
     }
 
     if (body.stylePresets && body.stylePresets.length > 0) {
-      enrichedPrompt = `${enrichedPrompt}\n\nStyle direction: ${body.stylePresets.join(", ")}`;
+      if (body.cameraStyle === 'natural') {
+        // Filter out keywords that conflict with Natural camera style (deep DOF, no grain)
+        const conflicting = ['shallow depth of field', 'bokeh', 'film grain'];
+        const filtered = body.stylePresets.filter((kw: string) =>
+          !conflicting.some(c => kw.toLowerCase().includes(c))
+        );
+        if (filtered.length > 0) {
+          enrichedPrompt = `${enrichedPrompt}\n\nStyle direction: ${filtered.join(", ")}`;
+        }
+      } else {
+        enrichedPrompt = `${enrichedPrompt}\n\nStyle direction: ${body.stylePresets.join(", ")}`;
+      }
     }
 
     const polishContext = {
