@@ -93,6 +93,7 @@ export function FreestylePromptPanel({
   creditBalance,
   isCollapsed,
   onToggleCollapse,
+  highlightedChip,
 }: FreestylePromptPanelProps) {
   const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
