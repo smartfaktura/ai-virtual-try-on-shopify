@@ -2597,11 +2597,11 @@ export default function Generate() {
                       )}
                     </p>
                   )}
-                  {!isInteriorDesign && isFreeUser && (
+                  {isFreeUser && (
                     <div className="mt-2 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
                       <Lock className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                       <p className="text-xs text-muted-foreground">
-                        Free plan: 1 scene per generation.{' '}
+                        Free plan: 1 {isInteriorDesign ? 'style' : 'scene'} per generation.{' '}
                         <button onClick={openBuyModal} className="text-primary font-semibold hover:underline">Upgrade</button>
                         {' '}to unlock up to 3.
                       </p>

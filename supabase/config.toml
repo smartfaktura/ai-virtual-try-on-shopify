@@ -18,6 +18,9 @@ verify_jwt = false
 [functions.generate-workflow-preview]
 verify_jwt = false
 
+[functions.generate-style-previews]
+verify_jwt = false
+
 [functions.generate-workflow]
 verify_jwt = false
 
