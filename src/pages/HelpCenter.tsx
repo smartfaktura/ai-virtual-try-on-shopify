@@ -60,7 +60,7 @@ const faqCategories = [
       },
       {
         q: 'Can I generate images in bulk?',
-        a: 'Yes! Use Bulk Generate to create images for multiple products at once. Select your products, choose workflows, set your quality and count preferences, and let VOVV.AI process them all. You can track progress in the Jobs section.',
+        a: 'Yes! Workflows support batch generation for multiple products at once. Select your products, choose a workflow, set your quality and count preferences, and let VOVV.AI process them all. You can track progress in the Workflows activity section.',
       },
       {
         q: 'What are Creative Drops?',
