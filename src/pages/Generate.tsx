@@ -1998,6 +1998,24 @@ export default function Generate() {
         {currentStep === 'model' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
             <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} />
+            {isMultiProductMode && (
+              <Card><CardContent className="p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Selected Products ({productQueue.length})</span>
+                  <Badge variant="secondary">{creditCost} credits total</Badge>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {productQueue.map(p => (
+                    <div key={p.id} className="flex-shrink-0 w-[72px]">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
+                        <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{p.title}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent></Card>
+            )}
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <h2 className="text-base font-semibold">Select a Model</h2>
