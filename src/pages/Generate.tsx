@@ -3070,7 +3070,7 @@ export default function Generate() {
               <Button variant="outline" onClick={() => setCurrentStep('pose')}>Back</Button>
               <Button
                 onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
-                className={balance < creditCost ? 'bg-muted text-muted-foreground hover:bg-muted' : ''}
+                className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
               >
                 {balance >= creditCost ? `Generate ${imageCount} Try-On Images` : 'Buy Credits'}
               </Button>
