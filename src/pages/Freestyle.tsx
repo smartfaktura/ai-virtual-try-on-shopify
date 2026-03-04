@@ -670,6 +670,15 @@ export default function Freestyle() {
                 </div>
               </div>
             )}
+            {showGuide && (
+              <div className="mb-3 flex justify-center lg:justify-start">
+                <FreestyleGuide
+                  currentStep={guideStep}
+                  onNext={handleGuideNext}
+                  onDismiss={handleGuideDismiss}
+                />
+              </div>
+            )}
             <FreestylePromptPanel {...panelProps} />
           </div>
         </div>
