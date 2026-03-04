@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Building2, Check, ExternalLink } from 'lucide-react';
+import { Building2, Check, ExternalLink, RefreshCw } from 'lucide-react';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { PlanCard } from '@/components/app/PlanCard';
 import { CreditPackCard } from '@/components/app/CreditPackCard';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { pricingPlans, creditPacks } from '@/data/mockData';
 import { toast } from 'sonner';
