@@ -40,7 +40,12 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 export default function Settings() {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
+
+  // Asset preview generation state (admin only)
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [genProgress, setGenProgress] = useState({ processed: 0, total: 19 });
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
