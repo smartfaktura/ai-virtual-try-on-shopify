@@ -27,7 +27,7 @@ export function StudioChat() {
   const [input, setInput] = useState('');
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { messages, isLoading, sendMessage, clearChat } = useStudioChat();
+  const { messages, isLoading, isThrottled, sendMessage, clearChat } = useStudioChat();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
