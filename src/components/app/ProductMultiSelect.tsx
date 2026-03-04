@@ -81,10 +81,9 @@ export function ProductMultiSelect({ products, selectedIds, onSelectionChange, s
           return (
             <div key={product.id} onClick={() => !isDisabled && handleToggle(product.id)}
               className={`relative rounded-lg border-2 p-2 cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'} ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''} ${isIncompatible ? 'grayscale' : ''}`}>
-              <div className="absolute top-1 left-1 z-10">
+              <div className="absolute top-1.5 left-1.5 z-10 bg-white/90 rounded shadow-sm p-0.5">
                 <Checkbox checked={isSelected} disabled={isDisabled} onCheckedChange={() => handleToggle(product.id)} />
               </div>
-              {isSelected && <div className="absolute top-1 right-1 z-10 text-primary"><CheckCircle className="w-4 h-4" /></div>}
               <div className="aspect-square rounded overflow-hidden mb-2 bg-muted">
                 {product.images[0] ? <img src={product.images[0].url} alt={product.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>}
               </div>
