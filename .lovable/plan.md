@@ -1,27 +1,30 @@
 
 
-## Fix Grey Space on Interior/Exterior Staging Images in Library
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Root Cause
+### Issues Found
 
-`LibraryImageCard` applies a **fixed aspect-ratio CSS class** to the card container based on the `ratio` field from `generation_jobs`. Interior/Exterior Staging generates images at the **source photo's native dimensions** (random ratios like 4:3, 3:2, etc.) — but `getAspectClass()` maps any unrecognized ratio to the default `aspect-[3/4]`. The image itself renders at natural size (`h-auto`), so it doesn't fill the taller 3:4 container → grey gap.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Fix — 2 files
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**1. `src/components/app/LibraryImageCard.tsx`**
-- Remove the fixed `getAspectClass()` from the card container. In a masonry column layout, cards should size naturally based on image content.
-- Change the image to `w-full h-auto` (already is) but remove the container's forced aspect ratio.
-- Keep the aspect ratio only on the `ShimmerImage` placeholder so the shimmer still has height before the image loads.
+### Plan
 
-Specifically:
-- Remove `getAspectClass(item.aspectRatio)` from the container div's className
-- The container should just be `relative rounded-lg overflow-hidden cursor-pointer bg-muted transition-all` — no forced aspect ratio
-- The ShimmerImage already handles its own placeholder aspect ratio, so shimmer still works
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**2. `src/components/ui/shimmer-image.tsx`**
-- Currently the wrapper drops `aspectRatio` once loaded (`!loaded ? { aspectRatio } : undefined`). This is correct — once the image loads, the natural dimensions take over and no grey space appears.
-- No changes needed here — it already handles this correctly.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Result
-Cards in the masonry grid will size to their actual image dimensions. Standard workflow images (1:1, 3:4, 9:16) still look correct because those images have those exact ratios. Interior/Exterior images render at their true dimensions with no grey padding.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
