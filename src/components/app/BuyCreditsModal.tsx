@@ -13,7 +13,7 @@ import type { PricingPlan } from '@/types';
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
 
 export function BuyCreditsModal() {
-  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, startCheckout } = useCredits();
+  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, startCheckout, openCustomerPortal } = useCredits();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'topup' | 'upgrade'>(() => plan === 'free' ? 'upgrade' : 'topup');
@@ -53,9 +53,13 @@ export function BuyCreditsModal() {
 
   const handleDialogConfirm = () => {
     if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
-      const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
-      if (priceId) {
-        startCheckout(priceId, 'subscription');
+      if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+        openCustomerPortal();
+      } else {
+        const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+        if (priceId) {
+          startCheckout(priceId, 'subscription');
+        }
       }
     }
     setDialogOpen(false);
