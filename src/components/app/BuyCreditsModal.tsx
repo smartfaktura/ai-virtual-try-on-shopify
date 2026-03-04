@@ -53,9 +53,13 @@ export function BuyCreditsModal() {
 
   const handleDialogConfirm = () => {
     if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
-      const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
-      if (priceId) {
-        startCheckout(priceId, 'subscription');
+      if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+        openCustomerPortal();
+      } else {
+        const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+        if (priceId) {
+          startCheckout(priceId, 'subscription');
+        }
       }
     }
     setDialogOpen(false);

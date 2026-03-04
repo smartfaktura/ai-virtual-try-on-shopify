@@ -136,13 +136,17 @@ export default function Settings() {
 
   const handleDialogConfirm = () => {
     if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
-      const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
-      if (priceId) {
-        startCheckout(priceId, 'subscription');
+      if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+        // User already has a subscription — use portal to change plan
+        openCustomerPortal();
+      } else {
+        // No existing subscription — create new checkout
+        const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+        if (priceId) {
+          startCheckout(priceId, 'subscription');
+        }
       }
-    } else if (dialogMode === 'cancel') {
-      openCustomerPortal();
-    } else if (dialogMode === 'reactivate') {
+    } else if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
       openCustomerPortal();
     }
     setDialogOpen(false);
