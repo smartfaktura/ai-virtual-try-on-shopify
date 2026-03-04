@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Building2, Check, ExternalLink } from 'lucide-react';
+import { Building2, Check, ExternalLink, RefreshCw } from 'lucide-react';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { PlanCard } from '@/components/app/PlanCard';
 import { CreditPackCard } from '@/components/app/CreditPackCard';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { pricingPlans, creditPacks } from '@/data/mockData';
 import { toast } from 'sonner';
@@ -39,7 +40,12 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 export default function Settings() {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
+
+  // Asset preview generation state (admin only)
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [genProgress, setGenProgress] = useState({ processed: 0, total: 19 });
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
@@ -139,6 +145,46 @@ export default function Settings() {
     const pack = creditPacks.find(p => p.packId === packId);
     if (pack?.stripePriceId) {
       startCheckout(pack.stripePriceId, 'payment');
+    }
+  };
+
+  const handleGenerateAssetPreviews = async () => {
+    setIsGenerating(true);
+    setGenProgress({ processed: 0, total: 19 });
+    let nextIndex: number | null = 0;
+
+    try {
+      while (nextIndex !== null) {
+        const { data, error } = await supabase.functions.invoke('generate-asset-previews', {
+          body: { start_index: nextIndex, batch_size: 2 },
+        });
+
+        if (error) {
+          toast.error(`Generation failed: ${error.message}`);
+          break;
+        }
+
+        setGenProgress({ processed: data.processed, total: data.total });
+
+        const failed = data.results?.filter((r: any) => !r.success) || [];
+        if (failed.length > 0) {
+          failed.forEach((f: any) => toast.error(`Failed: ${f.path} — ${f.error}`));
+        }
+
+        const succeeded = data.results?.filter((r: any) => r.success) || [];
+        if (succeeded.length > 0) {
+          toast.success(`Generated ${succeeded.map((s: any) => s.path.split('/').pop()).join(', ')}`);
+        }
+
+        nextIndex = data.next_index;
+      }
+
+      toast.success('All asset previews generated!');
+    } catch (err) {
+      toast.error('Generation process failed');
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -351,6 +397,39 @@ export default function Settings() {
             {isSaving ? 'Saving…' : 'Save Settings'}
           </Button>
         </div>
+
+        {/* ─── Admin: Asset Preview Generation ─── */}
+        {isAdmin && (
+          <>
+            <Separator />
+            <Card>
+              <CardContent className="p-5 space-y-4">
+                <div>
+                  <h2 className="text-base font-semibold">Asset Preview Generation</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Generate high-quality AI preview images for poses and scenes using Gemini 3 Pro
+                  </p>
+                </div>
+                {isGenerating && (
+                  <div className="space-y-2">
+                    <Progress value={(genProgress.processed / genProgress.total) * 100} className="h-2" />
+                    <p className="text-xs text-muted-foreground">
+                      {genProgress.processed} / {genProgress.total} assets generated
+                    </p>
+                  </div>
+                )}
+                <Button
+                  onClick={handleGenerateAssetPreviews}
+                  disabled={isGenerating}
+                  variant="secondary"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+                  {isGenerating ? 'Generating…' : 'Regenerate All Previews'}
+                </Button>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </PageHeader>
 
