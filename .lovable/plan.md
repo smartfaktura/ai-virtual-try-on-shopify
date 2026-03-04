@@ -1,58 +1,30 @@
 
 
-## Secure Studio Chat Against Abuse
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Current Security Status
-- **Auth**: JWT validation via `supabase.auth.getUser()` — only registered users can call it. This is correct.
-- **Rate limiting**: NONE. A logged-in user or bot with stolen credentials can fire thousands of requests per minute, each consuming AI credits.
-- **Input validation**: NONE. No limit on message count, message length, or payload size.
+### Issues Found
 
-### Vulnerabilities
-1. **No per-user rate limit** — authenticated user can spam unlimited requests
-2. **No message history cap** — client sends full conversation history; 100+ messages = massive token cost per request
-3. **No message length limit** — single message could be 100KB of text, inflating token usage
-4. **Client controls message array** — attacker could inject fake assistant messages or manipulate history
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
 ### Plan
 
-#### 1. Add server-side rate limiting in `supabase/functions/studio-chat/index.ts`
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-Use in-memory rate limiting (Map with user_id → timestamps). Limits:
-- **20 messages per 5 minutes** per user (generous for real use, blocks bots)
-- **60 messages per hour** per user (prevents sustained abuse)
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-```typescript
-const rateLimits = new Map<string, number[]>();
-const MAX_PER_5MIN = 20;
-const MAX_PER_HOUR = 60;
-```
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-Clean up old entries on each request to prevent memory leaks.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-#### 2. Add input validation in the same edge function
-
-- **Max 30 messages** in conversation history (trim older messages, keep system prompt fresh)
-- **Max 2000 characters** per individual message
-- **Max total payload ~50KB** — reject oversized requests early
-- Strip any messages that aren't `role: 'user' | 'assistant'` (prevent system prompt injection)
-
-#### 3. Add client-side throttle in `src/hooks/useStudioChat.ts`
-
-- Disable send button while loading (already done via `isLoading`)
-- Add a **2-second cooldown** between sends to prevent accidental rapid-fire
-- Cap conversation at 30 messages client-side with a "Start new chat" prompt
-
-### Files Changed — 2
-
-**`supabase/functions/studio-chat/index.ts`**:
-- Add in-memory rate limiter (per user_id, sliding window)
-- Add input validation (message count cap, length cap, role sanitization)
-- Return 429 with friendly message when rate limited
-
-**`src/hooks/useStudioChat.ts`**:
-- Add 2-second cooldown between sends
-- Cap conversation at 30 messages with auto-suggestion to clear
-
-### Why In-Memory Rate Limiting Is Sufficient
-Edge functions on Lovable Cloud run as single instances with warm starts. An in-memory Map provides effective rate limiting without needing a database table. If the function cold-starts, the rate limit resets — this is acceptable since cold starts are infrequent and the primary goal is blocking sustained abuse, not perfect accounting.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

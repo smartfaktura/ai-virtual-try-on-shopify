@@ -7,6 +7,72 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// --- Rate Limiting ---
+const rateLimits = new Map<string, number[]>();
+const MAX_PER_5MIN = 20;
+const MAX_PER_HOUR = 60;
+const FIVE_MIN_MS = 5 * 60 * 1000;
+const ONE_HOUR_MS = 60 * 60 * 1000;
+
+function checkRateLimit(userId: string): string | null {
+  const now = Date.now();
+  const timestamps = (rateLimits.get(userId) || []).filter(t => now - t < ONE_HOUR_MS);
+  
+  const last5min = timestamps.filter(t => now - t < FIVE_MIN_MS);
+  if (last5min.length >= MAX_PER_5MIN) {
+    return "You're sending messages too quickly. Please wait a couple of minutes before trying again.";
+  }
+  if (timestamps.length >= MAX_PER_HOUR) {
+    return "You've reached the hourly message limit. Please take a short break and try again later.";
+  }
+
+  timestamps.push(now);
+  rateLimits.set(userId, timestamps);
+
+  // Cleanup: remove users with no recent activity (prevent memory leak)
+  if (rateLimits.size > 500) {
+    for (const [uid, ts] of rateLimits) {
+      if (ts.every(t => now - t > ONE_HOUR_MS)) rateLimits.delete(uid);
+    }
+  }
+
+  return null;
+}
+
+// --- Input Validation ---
+const MAX_MESSAGES = 30;
+const MAX_MESSAGE_LENGTH = 2000;
+const MAX_PAYLOAD_BYTES = 50 * 1024; // 50KB
+
+function validateAndSanitize(body: unknown): { messages: { role: string; content: string }[] } | { error: string } {
+  if (!body || typeof body !== "object" || !("messages" in (body as Record<string, unknown>))) {
+    return { error: "Invalid request body" };
+  }
+
+  const raw = (body as Record<string, unknown>).messages;
+  if (!Array.isArray(raw)) return { error: "Messages must be an array" };
+
+  // Strip to only user/assistant roles (prevent system prompt injection)
+  const sanitized = raw
+    .filter((m: unknown) => {
+      if (!m || typeof m !== "object") return false;
+      const msg = m as Record<string, unknown>;
+      return (msg.role === "user" || msg.role === "assistant") && typeof msg.content === "string";
+    })
+    .map((m: unknown) => {
+      const msg = m as Record<string, unknown>;
+      return {
+        role: msg.role as string,
+        content: (msg.content as string).slice(0, MAX_MESSAGE_LENGTH),
+      };
+    })
+    .slice(-MAX_MESSAGES); // Keep only the most recent messages
+
+  if (sanitized.length === 0) return { error: "No valid messages provided" };
+
+  return { messages: sanitized };
+}
+
 const SYSTEM_PROMPT = `You are the brandframe.ai Studio Team — creative pros helping e-commerce brands create stunning AI product photography.
 
 Your team: Sophia Chen (photographer), Kenji Nakamura (art director), Zara Williams (fashion stylist), Luna Park (set designer), Max Rivera (retoucher), Sienna O'Brien (brand strategist), Omar Hassan (food & product), Leo Durand (streetwear), Amara Okafor (beauty & skincare), Yuki Tanaka (tech).
@@ -46,6 +112,15 @@ serve(async (req) => {
   }
 
   try {
+    // Check payload size early
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength) > MAX_PAYLOAD_BYTES) {
+      return new Response(
+        JSON.stringify({ error: "Message too long. Please shorten your conversation and try again." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
@@ -70,7 +145,25 @@ serve(async (req) => {
       );
     }
 
-    const { messages } = await req.json();
+    // Rate limit check
+    const rateLimitError = checkRateLimit(user.id);
+    if (rateLimitError) {
+      return new Response(
+        JSON.stringify({ error: rateLimitError }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Parse and validate input
+    const body = await req.json();
+    const validated = validateAndSanitize(body);
+    if ("error" in validated) {
+      return new Response(
+        JSON.stringify({ error: validated.error }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
@@ -88,7 +181,7 @@ serve(async (req) => {
           model: "google/gemini-3-flash-preview",
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
-            ...messages,
+            ...validated.messages,
           ],
           stream: true,
         }),

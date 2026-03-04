@@ -27,7 +27,7 @@ export function StudioChat() {
   const [input, setInput] = useState('');
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { messages, isLoading, sendMessage, clearChat } = useStudioChat();
+  const { messages, isLoading, isThrottled, sendMessage, clearChat } = useStudioChat();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -204,7 +204,7 @@ export function StudioChat() {
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isLoading || isThrottled}
               className="p-2.5 rounded-xl bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-colors flex-shrink-0"
             >
               <Send className="w-4 h-4" />
