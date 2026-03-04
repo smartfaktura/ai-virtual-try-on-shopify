@@ -706,7 +706,18 @@ serve(async (req) => {
     }
 
     if (body.stylePresets && body.stylePresets.length > 0) {
-      enrichedPrompt = `${enrichedPrompt}\n\nStyle direction: ${body.stylePresets.join(", ")}`;
+      if (body.cameraStyle === 'natural') {
+        // Filter out keywords that conflict with Natural camera style (deep DOF, no grain)
+        const conflicting = ['shallow depth of field', 'bokeh', 'film grain'];
+        const filtered = body.stylePresets.filter((kw: string) =>
+          !conflicting.some(c => kw.toLowerCase().includes(c))
+        );
+        if (filtered.length > 0) {
+          enrichedPrompt = `${enrichedPrompt}\n\nStyle direction: ${filtered.join(", ")}`;
+        }
+      } else {
+        enrichedPrompt = `${enrichedPrompt}\n\nStyle direction: ${body.stylePresets.join(", ")}`;
+      }
     }
 
     const polishContext = {
@@ -741,6 +752,23 @@ serve(async (req) => {
       }
       if (body.cameraStyle === "natural") {
         unpolished += `\n\nCAMERA RENDERING STYLE — NATURAL (iPhone): Shot on a latest-generation iPhone. Ultra-sharp details across the entire frame with deep depth of field (everything in focus, minimal bokeh). True-to-life, unedited color reproduction — no color grading, no warm/cool push. Natural ambient lighting only. The image should feel authentic and unprocessed.`;
+      }
+      // Framing instructions for unpolished path
+      if (body.framing) {
+        const hasModel = !!body.modelImage;
+        const framingPrompts: Record<string, string> = {
+          full_body: `FRAMING: Full body shot, head to toe. Show the complete outfit and full figure.${hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`,
+          upper_body: `FRAMING: Upper body shot, from the waist up. Focus on the torso and face area.${hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+          close_up: `FRAMING: Close-up portrait from the shoulders upward, emphasizing fine product details.${hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+          hand_wrist: `FRAMING: Show only the hand and wrist area. The product should be naturally worn on the wrist or hand. Do NOT include the face.${hasModel ? ' The hand/wrist must match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
+          neck_shoulders: `FRAMING: Jewelry display framing — product shown on the collarbone area, cropped from just above the shoulders to below the collarbones.${hasModel ? ' Match the exact skin tone of the person in [MODEL IMAGE].' : ''}`,
+          lower_body: `FRAMING: Lower body shot from the hips to the feet. Focus on the legs and footwear area.${hasModel ? ' Match body type and skin tone of [MODEL IMAGE].' : ''}`,
+          back_view: `FRAMING: Back view showing the product from behind. The subject should be facing away from the camera.${hasModel ? ' Match the body of [MODEL IMAGE].' : ''}`,
+          side_profile: `FRAMING: Side profile view focusing on the ear and jawline area. The product should be clearly visible on or near the ear.${hasModel ? ' Match the exact appearance of the person in [MODEL IMAGE].' : ''}`,
+        };
+        if (framingPrompts[body.framing]) {
+          unpolished += `\n\n${framingPrompts[body.framing]}`;
+        }
       }
       finalPrompt = unpolished;
     }
