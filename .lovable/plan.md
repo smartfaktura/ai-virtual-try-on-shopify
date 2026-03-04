@@ -1,30 +1,62 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Problem: Downgrade Creates a New Subscription Instead of Modifying the Existing One
 
-### Issues Found
+### Current Behavior
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+When a user confirms a **downgrade** (e.g., Pro -> Growth, or Pro -> Free), `handleDialogConfirm` in Settings.tsx (line 138-141) calls `startCheckout(priceId, 'subscription')`. This creates a **brand new Stripe Checkout session** — meaning the user would end up with **two active subscriptions** instead of having their existing one modified.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+The same issue exists in `BuyCreditsModal.tsx` (line 54-58).
 
-### Plan
+Only `cancel` and `reactivate` correctly route to `openCustomerPortal()`.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### What Should Happen
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+- **Upgrade**: Should also modify the existing subscription, not create a new one. Stripe Customer Portal handles this, or a dedicated edge function can use `stripe.subscriptions.update()`.
+- **Downgrade**: Same — modify existing subscription, not create new.
+- **Cancel / Reactivate**: Already correct — uses Customer Portal.
+- **New subscription** (from Free): `startCheckout` is correct here since there's no existing subscription to modify.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### Fix
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**Simplest approach**: Route upgrade/downgrade for users who already have an active subscription through `openCustomerPortal()`, which natively handles plan changes, proration, and downgrades. Only use `startCheckout` when the user has no existing subscription (i.e., going from Free to a paid plan).
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Changes — 2 files
+
+**`src/pages/Settings.tsx`** — Update `handleDialogConfirm`:
+```typescript
+const handleDialogConfirm = () => {
+  if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
+    if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+      // User already has a subscription — use portal to change plan
+      openCustomerPortal();
+    } else {
+      // No existing subscription — create new checkout
+      const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+      if (priceId) {
+        startCheckout(priceId, 'subscription');
+      }
+    }
+  } else if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
+    openCustomerPortal();
+  }
+  setDialogOpen(false);
+};
+```
+
+**`src/components/app/BuyCreditsModal.tsx`** — Apply the same logic to `handleDialogConfirm` there.
+
+### Why This Works
+
+The Stripe Customer Portal already supports:
+- Switching between plans (upgrade/downgrade)
+- Proration handling
+- Schedule downgrades at period end
+- Cancellation and reactivation
+
+This avoids creating duplicate subscriptions and ensures Stripe handles all the billing logic correctly.
+
+### Prerequisite
+
+The Stripe Customer Portal must be configured in the Stripe Dashboard to allow plan switching. The user should verify this is enabled at [Stripe Portal settings](https://dashboard.stripe.com/settings/billing/portal).
 
