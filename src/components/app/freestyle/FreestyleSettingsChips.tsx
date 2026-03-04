@@ -109,6 +109,7 @@ export function FreestyleSettingsChips({
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
   hasModelSelected = false,
+  highlightedChip,
 }: FreestyleSettingsChipsProps) {
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
