@@ -10,7 +10,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do I create my first product image?',
-        a: 'Upload your product photo in the Products section, then head to Workflows or Generate to choose a style. Select your product, pick a workflow (like Lifestyle or Studio), and hit Generate. Your images will be ready in about 60 seconds.',
+        a: 'Upload your product photo in the Products section, then head to Workflows to choose a style. Select your product, pick a workflow (like Virtual Try-On, Product Listing, or Flat Lay), and hit Generate. Your images will be ready in about 60 seconds.',
       },
       {
         q: 'What image formats are supported for uploads?',
@@ -31,7 +31,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do credits work?',
-        a: 'Each image generation costs credits. Standard quality uses 1 credit per image, HD uses 2 credits, and Ultra uses 3 credits. Video generation costs 5 credits. You receive credits monthly with your plan, and can purchase additional credit packs anytime.',
+        a: 'Each image generation costs credits based on complexity. Standard quality costs 8 credits, High Quality costs 16 credits, with AI model reference 12 credits, model + scene combo 15 credits, and high-complexity (custom model + scene) 20 credits. Virtual Try-On costs 16 credits per image. Video generation costs 30 credits. You receive credits monthly with your plan, and can purchase additional credit packs anytime.',
       },
       {
         q: 'What happens if I run out of credits?',
@@ -60,7 +60,7 @@ const faqCategories = [
       },
       {
         q: 'Can I generate images in bulk?',
-        a: 'Yes! Use Bulk Generate to create images for multiple products at once. Select your products, choose workflows, set your quality and count preferences, and let VOVV.AI process them all. You can track progress in the Jobs section.',
+        a: 'Yes! Workflows support batch generation for multiple products at once. Select your products, choose a workflow, set your quality and count preferences, and let VOVV.AI process them all. You can track progress in the Workflows activity section.',
       },
       {
         q: 'What are Creative Drops?',
@@ -72,8 +72,8 @@ const faqCategories = [
     name: 'Image Quality',
     questions: [
       {
-        q: 'What\'s the difference between Standard, HD, and Ultra quality?',
-        a: 'Standard (1 credit) generates 1024×1024 images suitable for social media and web listings. HD (2 credits) produces 1536×1536 images ideal for hero banners and marketing materials. Ultra (3 credits) creates 2048×2048 images perfect for print and large-format displays.',
+        q: 'What\'s the difference between Standard and High Quality?',
+        a: 'Standard (8 credits) uses Gemini Flash for fast generation suitable for social media and web listings. High Quality (16 credits) uses Gemini Pro for higher detail and realism — ideal for hero banners, marketing materials, and large-format displays. You can also upscale images from the Library for even higher resolution.',
       },
       {
         q: 'My generated images don\'t look right. What can I do?',
