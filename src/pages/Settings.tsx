@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { HelpCircle, MessageSquare, Building2, Check } from 'lucide-react';
+import { Building2, Check, ExternalLink } from 'lucide-react';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { PageHeader } from '@/components/app/PageHeader';
 import { PlanCard } from '@/components/app/PlanCard';
 import { CreditPackCard } from '@/components/app/CreditPackCard';
@@ -25,10 +18,6 @@ import { pricingPlans, creditPacks } from '@/data/mockData';
 import { toast } from 'sonner';
 
 interface UserSettings {
-  defaultQuality: 'standard' | 'high';
-  publishMode: 'add' | 'replace';
-  autoPublish: boolean;
-  restrictPromptEditing: boolean;
   emailOnComplete: boolean;
   emailOnFailed: boolean;
   emailLowCredits: boolean;
@@ -39,10 +28,6 @@ interface UserSettings {
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
-  defaultQuality: 'standard',
-  publishMode: 'add',
-  autoPublish: false,
-  restrictPromptEditing: true,
   emailOnComplete: true,
   emailOnFailed: true,
   emailLowCredits: true,
@@ -137,10 +122,8 @@ export default function Settings() {
   const handleDialogConfirm = () => {
     if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
       if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
-        // User already has a subscription — use portal to change plan
         openCustomerPortal();
       } else {
-        // No existing subscription — create new checkout
         const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
         if (priceId) {
           startCheckout(priceId, 'subscription');
@@ -177,6 +160,12 @@ export default function Settings() {
                   {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
                 </p>
               </div>
+              {(subscriptionStatus === 'active' || subscriptionStatus === 'canceling') && (
+                <Button variant="outline" size="sm" onClick={openCustomerPortal}>
+                  <ExternalLink className="w-4 h-4 mr-1.5" />
+                  Manage Subscription
+                </Button>
+              )}
             </div>
             <Separator />
             <div className="space-y-2">
@@ -342,116 +331,6 @@ export default function Settings() {
                   </div>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ─── Download & Export ─── */}
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h2 className="text-base font-semibold">Download & Export Defaults</h2>
-              <p className="text-sm text-muted-foreground">Configure how generated images are exported</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Default Export Mode</Label>
-              <Select value={settings.publishMode} onValueChange={v => updateSetting('publishMode', v as 'add' | 'replace')}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="add">Download individually</SelectItem>
-                  <SelectItem value="replace">Download as ZIP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-start space-x-2">
-              <Checkbox id="autoDownload" checked={settings.autoPublish} onCheckedChange={v => updateSetting('autoPublish', !!v)} />
-              <div>
-                <Label htmlFor="autoDownload">Auto-download successful generations</Label>
-                <p className="text-xs text-muted-foreground">Automatically download images when generation completes</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ─── AI Model Settings ─── */}
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h2 className="text-base font-semibold">AI Model Settings</h2>
-              <p className="text-sm text-muted-foreground">Configure the AI image generation model</p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">Standard:</span>
-                <Badge variant="secondary">Gemini 2.5 Flash</Badge>
-                <span className="text-xs text-muted-foreground">Fast, good quality</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm">High:</span>
-                <Badge className="bg-primary/10 text-primary hover:bg-primary/10">Gemini 3 Pro</Badge>
-                <span className="text-xs text-muted-foreground">Best quality, slower</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Default Quality Mode</Label>
-              <Select value={settings.defaultQuality} onValueChange={v => updateSetting('defaultQuality', v as 'standard' | 'high')}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="standard">Standard — 8 credits/img</SelectItem>
-                  <SelectItem value="high">High (Pro Model) — 16 credits/img</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ─── Team & Permissions ─── */}
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h2 className="text-base font-semibold">Team & Permissions</h2>
-              <p className="text-sm text-muted-foreground">Control access to advanced features</p>
-            </div>
-            <div className="flex items-start space-x-2">
-              <Checkbox id="restrictPrompt" checked={settings.restrictPromptEditing} onCheckedChange={v => updateSetting('restrictPromptEditing', !!v)} />
-              <div>
-                <Label htmlFor="restrictPrompt">Restrict prompt editing to admins only</Label>
-                <p className="text-xs text-muted-foreground">Only admin users can edit prompts directly</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ─── Help & Support ─── */}
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h2 className="text-base font-semibold">Help & Support</h2>
-              <p className="text-sm text-muted-foreground">Get help and learn more about the app</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button variant="outline" className="w-full" onClick={() => window.open('https://vovv.ai/docs', '_blank')}>
-                <HelpCircle className="w-4 h-4 mr-2" /> Documentation
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => window.open('mailto:hello@vovv.ai', '_blank')}>
-                <MessageSquare className="w-4 h-4 mr-2" /> Contact Support
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => window.open('https://vovv.ai/faq', '_blank')}>
-                <HelpCircle className="w-4 h-4 mr-2" /> FAQ
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ─── About ─── */}
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h2 className="text-base font-semibold">About</h2>
-                <Badge variant="secondary">v1.2.0</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">VOVV.AI — AI-powered product photography</p>
             </div>
           </CardContent>
         </Card>
