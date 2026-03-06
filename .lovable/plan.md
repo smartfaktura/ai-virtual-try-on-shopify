@@ -1,30 +1,43 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add Freestyle Studio Showcase Section to Landing Page
 
-### Issues Found
+Create a new animated section on the landing page that demonstrates the Freestyle Studio experience — showing prompt typing, chip selections (model, scene, style), and generated results in an engaging, interactive demo.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### New Component
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`src/components/landing/FreestyleShowcaseSection.tsx`**
 
-### Plan
+An animated mock-up of the Freestyle Studio interface that auto-plays through a demo sequence:
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+1. **Simulated prompt bar** — A typewriter effect types out a creative prompt (e.g., "Editorial portrait in golden hour light, wearing our summer collection...")
+2. **Animated chip selections** — Chips light up sequentially to simulate selecting: Model (e.g., "Sofia"), Scene (e.g., "Rooftop Terrace"), Style (e.g., "Editorial"), Aspect Ratio (e.g., "4:5")
+3. **Generate button pulse** — The "Generate" button activates with a shimmer/pulse
+4. **Result reveal** — A grid of 3-4 result cards fade/scale in, showing the "output" with labels
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+Layout:
+- Left side: text block with headline ("Your Creative Studio. No Limits."), subtitle explaining Freestyle, feature bullets (custom prompts, mix models + scenes, style presets, any aspect ratio), and CTA button
+- Right side: the animated demo mockup (styled like a simplified version of the real UI — rounded card with prompt textarea, chip row, generate button, and result thumbnails)
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+The animation loops on a ~10s cycle using `useEffect` timers + CSS transitions. No real images needed — use gradient placeholder cards for "results" with labels.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### Landing Page Integration
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**`src/pages/Landing.tsx`** — Insert `<FreestyleShowcaseSection />` after `<HowItWorks />` and before `<ProductCategoryShowcase />`, since Freestyle is the primary creation mode and should appear prominently.
+
+### Animation Sequence (auto-looping)
+
+```text
+[0s]   Empty prompt bar, chips inactive
+[0.5s] Typewriter starts: "Editorial portrait, golden hour..."
+[3s]   Prompt done → Model chip highlights "Sofia"
+[4s]   Scene chip highlights "Rooftop Terrace"
+[5s]   Style chip highlights "Editorial"
+[6s]   Generate button pulses
+[7s]   Result cards fade in one by one (staggered 200ms)
+[9s]   Hold results
+[10s]  Reset → loop
+```
+
+Uses existing animation utilities (`animate-fade-in`, `animate-scale-in`) plus a custom typewriter via `useState`/`useEffect` — similar pattern to the hero's `useTypewriter` hook.
 
