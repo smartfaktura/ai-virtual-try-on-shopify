@@ -108,7 +108,7 @@ export function StudioTeamSection() {
           </button>
           <button
             onClick={() => scroll('right')}
-            className={`absolute -right-2 sm:-right-5 top-[35%] -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
+            className={`absolute -right-2 sm:-right-5 top-[35%] -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-card border border-border shadow-md hidden sm:flex items-center justify-center transition-all ${
               canScrollRight
                 ? 'opacity-100 hover:bg-accent hover:shadow-lg'
                 : 'opacity-0 pointer-events-none'
