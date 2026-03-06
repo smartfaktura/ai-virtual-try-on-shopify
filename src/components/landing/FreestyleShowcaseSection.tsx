@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Sparkles, User, Camera, Palette, RatioIcon, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,22 +33,22 @@ const FEATURES = [
 ];
 
 export function FreestyleShowcaseSection() {
+  const [cycle, setCycle] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [chips, setChips] = useState<ChipState>({ model: false, scene: false, style: false, ratio: false });
   const [generating, setGenerating] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [visibleResults, setVisibleResults] = useState<number[]>([]);
 
-  const reset = useCallback(() => {
+  useEffect(() => {
+    // Reset state
     setTypedText('');
     setChips({ model: false, scene: false, style: false, ratio: false });
     setGenerating(false);
     setShowResults(false);
     setVisibleResults([]);
-  }, []);
 
-  useEffect(() => {
-    reset();
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
     // Typewriter
     let charIdx = 0;
@@ -62,80 +62,34 @@ export function FreestyleShowcaseSection() {
     }, 35);
 
     // Chips
-    const chipTimers = CHIPS.map(chip =>
-      setTimeout(() => setChips(prev => ({ ...prev, [chip.key]: true })), chip.delay)
-    );
+    CHIPS.forEach(chip => {
+      timers.push(setTimeout(() => setChips(prev => ({ ...prev, [chip.key]: true })), chip.delay));
+    });
 
     // Generate pulse
-    const genTimer = setTimeout(() => setGenerating(true), 6200);
+    timers.push(setTimeout(() => setGenerating(true), 6200));
 
     // Results
-    const resultTimer = setTimeout(() => {
+    timers.push(setTimeout(() => {
       setGenerating(false);
       setShowResults(true);
-    }, 7200);
+    }, 7200));
 
-    const revealTimers = RESULT_CARDS.map((_, i) =>
-      setTimeout(() => setVisibleResults(prev => [...prev, i]), 7400 + i * 250)
-    );
+    RESULT_CARDS.forEach((_, i) => {
+      timers.push(setTimeout(() => setVisibleResults(prev => [...prev, i]), 7400 + i * 250));
+    });
 
-    // Cycle
-    const cycleTimer = setTimeout(() => reset(), CYCLE_MS);
+    // Loop
+    timers.push(setTimeout(() => setCycle(c => c + 1), CYCLE_MS));
 
     return () => {
       clearInterval(typeTimer);
-      chipTimers.forEach(clearTimeout);
-      clearTimeout(genTimer);
-      clearTimeout(resultTimer);
-      revealTimers.forEach(clearTimeout);
-      clearTimeout(cycleTimer);
+      timers.forEach(clearTimeout);
     };
-  }, [reset]);
-
-  // Re-trigger cycle
-  useEffect(() => {
-    if (typedText === '' && !showResults) {
-      const t = setTimeout(() => {
-        // re-run by forcing remount via key change — handled by parent or self
-        let charIdx = 0;
-        const typeTimer = setInterval(() => {
-          if (charIdx < PROMPT_TEXT.length) {
-            charIdx++;
-            setTypedText(PROMPT_TEXT.slice(0, charIdx));
-          } else {
-            clearInterval(typeTimer);
-          }
-        }, 35);
-
-        const chipTimers = CHIPS.map(chip =>
-          setTimeout(() => setChips(prev => ({ ...prev, [chip.key]: true })), chip.delay)
-        );
-        const genTimer = setTimeout(() => setGenerating(true), 6200);
-        const resultTimer = setTimeout(() => {
-          setGenerating(false);
-          setShowResults(true);
-        }, 7200);
-        const revealTimers = RESULT_CARDS.map((_, i) =>
-          setTimeout(() => setVisibleResults(prev => [...prev, i]), 7400 + i * 250)
-        );
-        const cycleTimer = setTimeout(() => reset(), CYCLE_MS);
-
-        return () => {
-          clearInterval(typeTimer);
-          chipTimers.forEach(clearTimeout);
-          clearTimeout(genTimer);
-          clearTimeout(resultTimer);
-          revealTimers.forEach(clearTimeout);
-          clearTimeout(cycleTimer);
-        };
-      }, 500);
-      return () => clearTimeout(t);
-    }
-  }, [typedText, showResults, reset]);
+  }, [cycle]);
 
   return (
     <section className="py-20 md:py-28 bg-background relative overflow-hidden">
-      {/* Subtle glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
@@ -174,7 +128,7 @@ export function FreestyleShowcaseSection() {
           {/* Right — Animated Demo */}
           <div className="relative">
             <div className="rounded-2xl border border-border/60 bg-card shadow-xl overflow-hidden">
-              {/* Mock header */}
+              {/* Mock window chrome */}
               <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 bg-muted/30">
                 <div className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
                 <div className="w-2.5 h-2.5 rounded-full bg-status-warning/60" />
@@ -214,7 +168,7 @@ export function FreestyleShowcaseSection() {
                 </div>
 
                 {/* Generate button */}
-                <button
+                <div
                   className={cn(
                     'w-full h-9 rounded-lg text-xs font-semibold transition-all duration-500 flex items-center justify-center gap-2',
                     generating
@@ -235,7 +189,7 @@ export function FreestyleShowcaseSection() {
                       Generate
                     </>
                   )}
-                </button>
+                </div>
 
                 {/* Results grid */}
                 <div className={cn('grid grid-cols-3 gap-2 transition-all duration-500', showResults ? 'opacity-100' : 'opacity-0')}>
