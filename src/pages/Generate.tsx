@@ -830,7 +830,11 @@ export default function Generate() {
             // Auto-trigger after a short delay
             setTimeout(() => {
               setMultiProductAutoAdvancing(false);
-              handleWorkflowGenerate();
+              if (activeWorkflow?.uses_tryon) {
+                handleTryOnConfirmGenerate();
+              } else {
+                handleWorkflowGenerate();
+              }
             }, 1500);
           } else {
             // All done — aggregate results
