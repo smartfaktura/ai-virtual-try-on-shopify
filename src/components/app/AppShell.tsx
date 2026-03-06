@@ -11,6 +11,7 @@ import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
 import { GlobalGenerationBar } from '@/components/app/GlobalGenerationBar';
 import { toast } from '@/hooks/use-toast';
+import { useCredits } from '@/contexts/CreditContext';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
