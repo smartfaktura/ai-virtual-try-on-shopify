@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Upload, Target, Images, ArrowRight, Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,33 @@ const sceneUrban = getLandingAssetUrl('hero/hero-output-urban.jpg');
 const modelThumb = getLandingAssetUrl('hero/hero-model-blonde.jpg');
 const envThumb = getLandingAssetUrl('hero/hero-scene-yoga.jpg');
 
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.unobserve(el);
+        }
+      },
+      { threshold }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return { ref, inView };
+}
+
+const baseTransition = 'transition-all duration-700 ease-out';
+const hidden = 'opacity-0 translate-y-8';
+const visible = 'opacity-100 translate-y-0';
+
 function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt: string; label: string; isResult?: boolean }) {
   const [hovered, setHovered] = useState(false);
 
@@ -29,7 +56,6 @@ function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt:
       </div>
       <span className={`text-[9px] ${isResult ? 'text-primary font-medium' : 'text-muted-foreground'}`}>{label}</span>
 
-      {/* Hover popup */}
       <div
         className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 pointer-events-none transition-all duration-200 ease-out"
         style={{
@@ -48,11 +74,23 @@ function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt:
 
 export function HowItWorks() {
   const navigate = useNavigate();
+  const header = useInView(0.2);
+  const step1Text = useInView();
+  const step1Card = useInView();
+  const step2Text = useInView();
+  const step2Card = useInView();
+  const step3Text = useInView();
+  const step3Card = useInView();
+  const ctaRef = useInView(0.3);
 
   return (
     <section id="how-it-works" className="py-20 sm:py-28 bg-muted/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        {/* Header */}
+        <div
+          ref={header.ref}
+          className={`text-center mb-16 ${baseTransition} ${header.inView ? visible : hidden}`}
+        >
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
             Three Steps to Automated Product Visuals
           </h2>
@@ -64,21 +102,26 @@ export function HowItWorks() {
         <div className="space-y-16 lg:space-y-20 mb-14">
           {/* Step 1 — Upload Your Product */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div>
+            <div
+              ref={step1Text.ref}
+              className={`${baseTransition} ${step1Text.inView ? visible : hidden}`}
+            >
               <div className="flex items-center gap-3 mb-4">
-                <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center">01</span>
+                <span
+                  className={`w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center transition-transform duration-500 ${step1Text.inView ? 'scale-100' : 'scale-0'}`}
+                >01</span>
                 <h3 className="text-2xl font-bold text-foreground">Upload Your Product</h3>
               </div>
               <p className="text-muted-foreground leading-relaxed mb-6">
                 Drag & drop your product image or import from your product library. Works with any product type — clothing, cosmetics, food, home goods, and more.
               </p>
-              {/* Platform logos */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-muted-foreground mr-1">Auto-import from:</span>
-                {['Shopify', 'Wix', 'WooCommerce', 'BigCommerce', 'Squarespace'].map((platform) => (
+                {['Shopify', 'Wix', 'WooCommerce', 'BigCommerce', 'Squarespace'].map((platform, i) => (
                   <span
                     key={platform}
-                    className="inline-flex items-center px-2.5 py-1 rounded-full bg-card border border-border text-[11px] font-medium text-muted-foreground"
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full bg-card border border-border text-[11px] font-medium text-muted-foreground ${baseTransition} ${step1Text.inView ? visible : hidden}`}
+                    style={{ transitionDelay: step1Text.inView ? `${400 + i * 60}ms` : '0ms' }}
                   >
                     {platform}
                   </span>
@@ -86,11 +129,13 @@ export function HowItWorks() {
               </div>
             </div>
 
-            {/* Upload card visual */}
-            <div className="flex justify-center">
+            <div
+              ref={step1Card.ref}
+              className={`flex justify-center ${baseTransition} ${step1Card.inView ? visible : hidden}`}
+              style={{ transitionDelay: step1Card.inView ? '150ms' : '0ms' }}
+            >
               <div className="w-full max-w-sm">
                 <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                  {/* Upload area */}
                   <div className="p-4 border-b border-border">
                     <div className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center gap-3 bg-muted/20">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -101,7 +146,6 @@ export function HowItWorks() {
                       </p>
                     </div>
                   </div>
-                  {/* Uploaded product preview */}
                   <div className="p-3 flex items-center gap-3">
                     <div className="w-14 h-14 rounded-lg overflow-hidden border border-border shrink-0">
                       <img src={cropTopProduct} alt="White Crop Top" className="w-full h-full object-cover object-top" />
@@ -122,9 +166,14 @@ export function HowItWorks() {
 
           {/* Step 2 — Choose What You're Creating */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div className="lg:order-2">
+            <div
+              ref={step2Text.ref}
+              className={`lg:order-2 ${baseTransition} ${step2Text.inView ? visible : hidden}`}
+            >
               <div className="flex items-center gap-3 mb-4">
-                <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center">02</span>
+                <span
+                  className={`w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center transition-transform duration-500 ${step2Text.inView ? 'scale-100' : 'scale-0'}`}
+                >02</span>
                 <h3 className="text-2xl font-bold text-foreground">Choose What You're Creating</h3>
               </div>
               <p className="text-muted-foreground leading-relaxed mb-6">
@@ -132,11 +181,13 @@ export function HowItWorks() {
               </p>
             </div>
 
-            {/* Workflow selector visual */}
-            <div className="flex justify-center lg:order-1">
+            <div
+              ref={step2Card.ref}
+              className={`flex justify-center lg:order-1 ${baseTransition} ${step2Card.inView ? visible : hidden}`}
+              style={{ transitionDelay: step2Card.inView ? '150ms' : '0ms' }}
+            >
               <div className="w-full max-w-sm">
                 <div className="rounded-2xl border border-border bg-card shadow-sm">
-                  {/* Selection row */}
                   <div className="p-3 border-b border-border rounded-t-2xl">
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Your Selection</p>
                     <div className="flex items-center gap-2">
@@ -149,7 +200,6 @@ export function HowItWorks() {
                       <HoverPreview src={outcomeImage} alt="Result" label="Result" isResult />
                     </div>
                   </div>
-                  {/* Generate button */}
                   <div className="p-3 rounded-b-2xl">
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1.5">
@@ -179,9 +229,14 @@ export function HowItWorks() {
 
           {/* Step 3 — Get a Visual Set */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div>
+            <div
+              ref={step3Text.ref}
+              className={`${baseTransition} ${step3Text.inView ? visible : hidden}`}
+            >
               <div className="flex items-center gap-3 mb-4">
-                <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center">03</span>
+                <span
+                  className={`w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center transition-transform duration-500 ${step3Text.inView ? 'scale-100' : 'scale-0'}`}
+                >03</span>
                 <h3 className="text-2xl font-bold text-foreground">Get a Visual Set</h3>
               </div>
               <p className="text-muted-foreground leading-relaxed mb-6">
@@ -189,8 +244,11 @@ export function HowItWorks() {
               </p>
             </div>
 
-            {/* Visual set grid */}
-            <div className="flex justify-center">
+            <div
+              ref={step3Card.ref}
+              className={`flex justify-center ${baseTransition} ${step3Card.inView ? visible : hidden}`}
+              style={{ transitionDelay: step3Card.inView ? '150ms' : '0ms' }}
+            >
               <div className="w-full max-w-sm">
                 <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                   <div className="p-3 border-b border-border flex items-center justify-between">
@@ -208,7 +266,11 @@ export function HowItWorks() {
                   <div className="p-2">
                     <div className="grid grid-cols-3 gap-1.5">
                       {[sceneStudio, sceneCoffee, sceneBeach, scenePark, sceneRooftop, sceneUrban].map((scene, i) => (
-                        <div key={i} className="rounded-md overflow-hidden border border-border aspect-[4/5]">
+                        <div
+                          key={i}
+                          className={`rounded-md overflow-hidden border border-border aspect-[4/5] ${baseTransition} ${step3Card.inView ? visible : hidden}`}
+                          style={{ transitionDelay: step3Card.inView ? `${250 + i * 80}ms` : '0ms' }}
+                        >
                           <img
                             src={scene}
                             alt={`Scene ${i + 1}`}
@@ -224,7 +286,10 @@ export function HowItWorks() {
           </div>
         </div>
 
-        <div className="text-center">
+        <div
+          ref={ctaRef.ref}
+          className={`text-center ${baseTransition} ${ctaRef.inView ? visible : hidden}`}
+        >
           <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate('/auth')}>
             Try It Free
             <ArrowRight className="w-4 h-4" />
