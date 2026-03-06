@@ -69,12 +69,11 @@ function MultiProductThumbs({ products }: { products: Product[] }) {
 
   return (
     <div className="relative flex items-center">
-      <div className="flex -space-x-3">
-        {products.slice(0, visibleCount).map((p, i) => (
+      <div className="flex gap-1.5">
+        {products.slice(0, visibleCount).map((p) => (
           <div
             key={p.id}
-            className="w-14 h-14 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 border-primary bg-card flex-shrink-0 relative"
-            style={{ zIndex: visibleCount - i }}
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 border-primary bg-card flex-shrink-0"
           >
             {p.images[0]?.url ? (
               <img src={p.images[0].url} alt={p.title} className="w-full h-full object-cover" />
