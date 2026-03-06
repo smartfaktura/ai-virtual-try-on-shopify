@@ -157,15 +157,32 @@ export function HowItWorks() {
                       </p>
                     </div>
                   </div>
-                  <div className="p-3 flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-lg overflow-hidden border border-border shrink-0">
+                  <div className="p-3 flex items-center gap-3 relative overflow-hidden">
+                    <div
+                      className="w-14 h-14 rounded-lg overflow-hidden border border-border shrink-0"
+                      style={step1Card.inView ? {
+                        animation: 'drag-drop-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both',
+                      } : { opacity: 0 }}
+                    >
                       <img src={cropTopProduct} alt="White Crop Top" className="w-full h-full object-cover object-top" />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div
+                      className="flex-1 min-w-0 transition-all duration-500"
+                      style={step1Card.inView ? {
+                        opacity: 1, transform: 'translateX(0)',
+                        transitionDelay: '900ms',
+                      } : { opacity: 0, transform: 'translateX(-8px)' }}
+                    >
                       <p className="text-sm font-semibold text-foreground truncate">White Crop Top</p>
                       <p className="text-[11px] text-muted-foreground">Clothing · Activewear</p>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div
+                      className="flex items-center gap-1 shrink-0 transition-all duration-500"
+                      style={step1Card.inView ? {
+                        opacity: 1, transform: 'scale(1)',
+                        transitionDelay: '1100ms',
+                      } : { opacity: 0, transform: 'scale(0.8)' }}
+                    >
                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                       <span className="text-[10px] font-medium text-primary">Ready</span>
                     </div>
