@@ -1871,7 +1871,7 @@ export default function Generate() {
                 <h2 className="text-base font-semibold">
                    {isFlatLay ? 'Select Products for Flat Lay'
                      : isMirrorSelfie ? 'Select Product(s) for Mirror Selfie'
-                     : activeWorkflow?.uses_tryon ? 'Select a Clothing Item' : 'Select Product(s)'}
+                    : activeWorkflow?.uses_tryon ? 'Select Clothing Item(s)' : 'Select Product(s)'}
                  </h2>
                  <p className="text-sm text-muted-foreground">
                    {isFlatLay
@@ -1879,7 +1879,7 @@ export default function Generate() {
                      : isMirrorSelfie
                      ? 'Choose the product(s) your model will wear or hold in the mirror selfie'
                      : activeWorkflow?.uses_tryon
-                     ? 'Choose the clothing item you want to try on a model.'
+                     ? 'Choose one or more clothing items to try on a model.'
                      : 'Choose one or multiple products. 2+ products will use bulk generation.'}
                  </p>
               </div>
