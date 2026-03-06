@@ -1151,7 +1151,6 @@ export default function Generate() {
   const handlePublishClick = () => {
     if (selectedForPublish.size === 0) { toast.error('Please select at least one image to download'); return; }
     selectedForPublish.forEach(idx => handleDownloadImage(idx));
-    toast.success(`${selectedForPublish.size} image(s) downloaded!`);
     navigate('/app/library');
   };
   const handlePublish = (mode: 'add' | 'replace') => {
