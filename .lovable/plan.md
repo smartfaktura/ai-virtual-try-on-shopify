@@ -1,30 +1,39 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add "Submit to Discover" for All Users
 
-### Issues Found
+The goal is to let every authenticated user submit their generated images to the Discover feed for review, with a chance to win up to 10,000 credits. Currently, only admins see "Add to Discover" in the Library modal, and the Freestyle gallery already has a Share button but the lightbox does not.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### What exists today
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+| Surface | Admin "Add to Discover" | User "Submit to Discover" |
+|---|---|---|
+| Freestyle gallery cards | Yes (Globe icon) | Yes (Send icon) |
+| Freestyle lightbox | No | No |
+| Library detail modal | Yes (admin section) | **No** |
 
-### Plan
+The `SubmitToDiscoverModal` component and `useSubmitToDiscover` hook already exist and work. The `discover_submissions` table is already in place.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Changes
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**1. Library Detail Modal** (`src/components/app/LibraryDetailModal.tsx`)
+- Import `SubmitToDiscoverModal` and `Send` icon
+- Add a new section **above** the admin section (visible to ALL authenticated users) with a styled card:
+  - Headline: "Share to Discover"
+  - Subtitle: "Submit your best generations and win up to 10,000 credits"
+  - A pill-shaped button with Send icon: "Submit for Review"
+- Clicking opens the existing `SubmitToDiscoverModal` pre-filled with the image's data
+- Style: subtle gradient card with `bg-primary/5 border border-primary/10 rounded-xl`, matching the luxury aesthetic
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**2. Freestyle Lightbox** (`src/components/app/ImageLightbox.tsx`)
+- Add optional `onShare` callback prop
+- Render a new "Share" pill button in the bottom action bar (Send icon, same frosted-glass style as Download/Copy Prompt)
+- Wire it up in `src/pages/Freestyle.tsx` where `ImageLightbox` is used — the callback opens `SubmitToDiscoverModal` for the current image
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**3. Freestyle Lightbox integration** (`src/pages/Freestyle.tsx`)
+- Add state for `shareImg` (same pattern as FreestyleGallery)
+- Pass `onShare` to `ImageLightbox` that sets the share image
+- Render `SubmitToDiscoverModal` when `shareImg` is set
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+No database or edge function changes needed — the submission table and review flow already exist.
 
