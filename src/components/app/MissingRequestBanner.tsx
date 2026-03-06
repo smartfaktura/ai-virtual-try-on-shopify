@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { MessageSquarePlus, Loader2, Check } from 'lucide-react';
+import { MessageSquarePlus, Loader2, Check, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,16 +72,32 @@ export function MissingRequestBanner({
   }
 
   return (
-    <div className={`rounded-lg border border-dashed border-border/60 bg-muted/30 ${compact ? 'p-2' : 'p-3 sm:p-4'}`}>
+    <div className={cn(
+      'rounded-lg transition-colors',
+      compact && !expanded
+        ? 'border border-primary/20 bg-primary/[0.06] hover:bg-primary/[0.12] cursor-pointer p-2.5'
+        : compact
+          ? 'border border-primary/20 bg-primary/[0.06] p-2.5'
+          : 'border border-dashed border-border/60 bg-muted/30 p-3 sm:p-4'
+    )}>
       {!expanded ? (
         <button
           onClick={() => setExpanded(true)}
-          className="flex items-center gap-2 w-full text-left group"
+          className="flex items-center justify-between gap-2 w-full text-left group"
         >
-          <MessageSquarePlus className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-muted-foreground/60 shrink-0 group-hover:text-primary transition-colors`} />
-          <p className={`${compact ? 'text-[10px]' : 'text-xs'} text-muted-foreground group-hover:text-foreground transition-colors leading-snug`}>
-            {title || defaultTitle}
-          </p>
+          <div className="flex items-center gap-2">
+            <MessageSquarePlus className={cn(
+              'shrink-0 transition-colors',
+              compact ? 'w-3.5 h-3.5 text-primary/60 group-hover:text-primary' : 'w-4 h-4 text-muted-foreground/60 group-hover:text-primary'
+            )} />
+            <p className={cn(
+              'transition-colors leading-snug',
+              compact ? 'text-[11px] font-medium text-primary/70 group-hover:text-primary' : 'text-xs text-muted-foreground group-hover:text-foreground'
+            )}>
+              {title || defaultTitle}
+            </p>
+          </div>
+          {compact && <ChevronRight className="w-3.5 h-3.5 text-primary/40 group-hover:text-primary/70 shrink-0 transition-colors" />}
         </button>
       ) : (
         <div className="space-y-2">
