@@ -12,6 +12,7 @@ export interface ActiveJob {
   credits_reserved?: number;
   job_type?: string | null;
   quality?: string | null;
+  batch_id?: string | null;
 }
 
 export interface BatchGroup {
