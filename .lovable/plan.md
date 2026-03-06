@@ -1,23 +1,30 @@
 
 
-## Fix Feedback Banner UX
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Two issues to address:
+### Issues Found
 
-### 1. Textarea expand/collapse has no animation
-Currently uses conditional rendering (`{selectedType && ...}`) which causes an instant show/hide. Fix: wrap the textarea section in a CSS transition container with `overflow-hidden` and animated `max-height` / `opacity`, or use a `grid-rows` animation trick for smooth expand/collapse.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### 2. X button makes the banner disappear permanently
-The X sets `sessionStorage` and the component returns `null` — the banner is gone for the session with no way to get it back. This feels abrupt.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**Fix**: Instead of fully removing the banner, the X button should collapse it into a minimal one-liner: just the icon + "Help us improve VOVV.AI" + a small "Share feedback" link to re-expand. Only after submitting feedback does it fully auto-dismiss.
+### Plan
 
-### Changes — single file
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**`src/components/app/FeedbackBanner.tsx`**:
-- Add `collapsed` state (default false). X button sets `collapsed = true` instead of dismissing.
-- When collapsed: show a compact single-line banner with "Share feedback" text button to expand back.
-- Wrap the type chips + textarea section in a div with `transition-all duration-300` and animated height (using `grid` row trick: `grid-rows-[0fr]` → `grid-rows-[1fr]`).
-- After successful submission, auto-dismiss fully (sessionStorage).
-- Add `overflow-hidden` on the animated container to prevent content flash.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

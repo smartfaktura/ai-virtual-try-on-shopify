@@ -19,17 +19,13 @@ export function FeedbackBanner() {
   const { user } = useAuth();
   const location = useLocation();
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(DISMISS_KEY) === 'true');
+  const [collapsed, setCollapsed] = useState(false);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   if (dismissed || !user) return null;
-
-  const handleDismiss = () => {
-    sessionStorage.setItem(DISMISS_KEY, 'true');
-    setDismissed(true);
-  };
 
   const handleSubmit = async () => {
     if (!message.trim() || !selectedType) return;
@@ -47,13 +43,14 @@ export function FeedbackBanner() {
     }
     setSubmitted(true);
     setTimeout(() => {
-      handleDismiss();
+      sessionStorage.setItem(DISMISS_KEY, 'true');
+      setDismissed(true);
     }, 2500);
   };
 
   if (submitted) {
     return (
-      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-3">
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
           <Check className="w-4 h-4 text-primary" />
         </div>
@@ -65,8 +62,28 @@ export function FeedbackBanner() {
     );
   }
 
+  // Collapsed: minimal one-liner
+  if (collapsed) {
+    return (
+      <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 flex items-center justify-between gap-3 animate-fade-in">
+        <div className="flex items-center gap-3 min-w-0">
+          <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
+          <p className="text-sm text-muted-foreground">Help us improve VOVV.AI</p>
+        </div>
+        <button
+          onClick={() => setCollapsed(false)}
+          className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
+        >
+          Share feedback
+        </button>
+      </div>
+    );
+  }
+
+  const isExpanded = !!selectedType;
+
   return (
-    <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 sm:p-4 space-y-3">
+    <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 sm:p-4 space-y-3 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -76,7 +93,7 @@ export function FeedbackBanner() {
             <p className="text-xs text-muted-foreground hidden sm:block">Share a bug report, feature request, or general feedback</p>
           </div>
         </div>
-        <button onClick={handleDismiss} className="opacity-60 hover:opacity-100 transition-opacity shrink-0">
+        <button onClick={() => setCollapsed(true)} className="opacity-60 hover:opacity-100 transition-opacity shrink-0">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -103,29 +120,34 @@ export function FeedbackBanner() {
         })}
       </div>
 
-      {/* Textarea + submit (visible when type selected) */}
-      {selectedType && (
-        <div className="space-y-2">
-          <Textarea
-            placeholder="Tell us more…"
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            className="min-h-[72px] text-sm bg-background"
-            maxLength={1000}
-          />
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">{message.length}/1000</span>
-            <Button
-              size="sm"
-              onClick={handleSubmit}
-              disabled={!message.trim() || submitting}
-              className="rounded-full font-semibold px-5"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Feedback'}
-            </Button>
+      {/* Animated expand for textarea */}
+      <div
+        className="grid transition-all duration-300 ease-out"
+        style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}
+      >
+        <div className="overflow-hidden">
+          <div className="space-y-2 pt-0.5">
+            <Textarea
+              placeholder="Tell us more…"
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              className="min-h-[72px] text-sm bg-background"
+              maxLength={1000}
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{message.length}/1000</span>
+              <Button
+                size="sm"
+                onClick={handleSubmit}
+                disabled={!message.trim() || submitting}
+                className="rounded-full font-semibold px-5"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Feedback'}
+              </Button>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
