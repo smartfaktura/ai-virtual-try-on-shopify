@@ -35,6 +35,7 @@ const FEATURES = [
 ];
 
 export function FreestyleShowcaseSection() {
+  const navigate = useNavigate();
   const [cycle, setCycle] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [chips, setChips] = useState<ChipState>({ model: false, scene: false, style: false, ratio: false });
