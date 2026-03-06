@@ -1154,7 +1154,7 @@ export default function Generate() {
     navigate('/app/library');
   };
   const handlePublish = (mode: 'add' | 'replace') => {
-    toast.success(`${selectedForPublish.size} image(s) downloaded!`);
+    
     setPublishModalOpen(false);
     navigate('/app/library');
   };
