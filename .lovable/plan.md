@@ -1,30 +1,52 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Redesign FreestyleShowcaseSection to Match App UI and VOVV.AI Branding
 
-### Issues Found
+The current showcase animation uses generic gradient placeholders and simplified chips that don't reflect the actual Freestyle app experience. The section also uses a plain `bg-background` that doesn't match the warm stone / elevated branding of other landing sections.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`src/components/landing/FreestyleShowcaseSection.tsx`** — Full rewrite
 
-### Plan
+#### 1. Match the actual Freestyle app UI structure
+- Redesign the animated demo to mirror the real prompt panel: textarea area at top, divider, chips row below, divider, generate button bar at bottom — matching `FreestylePromptPanel.tsx`
+- Chips should show **thumbnail images** when selected (like the real app chips do) — a small round avatar for model, a square thumbnail for product, and scene thumbnail
+- Add a **Product** chip (with `Package` icon) that animates to show a product thumbnail + name (e.g., "Cropped Tee")
+- Keep Model and Scene chips, but show real thumbnails from `getLandingAssetUrl()` when activated
+- Remove the generic "Style" and "Ratio" chips — they don't match what the app prominently shows
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+#### 2. Show real images instead of gradient placeholders
+- Use `getLandingAssetUrl()` for product input image, model thumbnail, scene thumbnail
+- Use `getLandingAssetUrl()` for the 3 result images — reference existing hero output images (e.g., `hero-output-studio.jpg`, `hero-output-park.jpg`, `hero-output-coffee.jpg`)
+- Result cards should use `ShimmerImage` with proper aspect ratio and labels
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+#### 3. Animation sequence (matching real workflow)
+1. **Typewriter** types the prompt (0-3s)
+2. **Product chip** activates — shows product thumbnail + "Cropped Tee" (3s)
+3. **Model chip** activates — shows model avatar + "Sofia" (4s)
+4. **Scene chip** activates — shows scene thumbnail + "Rooftop" (5s)
+5. **Generate button** lights up and pulses (6s)
+6. **Progress bar** appears at top of panel (6.5s)
+7. **3 result images** appear staggered below with real photos (7.5s+)
+8. Loop after ~12s
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+#### 4. Brand-consistent section styling
+- Change section background from `bg-background` to the warm stone pattern used elsewhere: `bg-[#faf9f8]` or use the subtle radial gradient glow
+- Add subtle top/bottom border like other showcase sections
+- Use the same badge/pill styling as `ProductCategoryShowcase` and `ModelShowcaseSection` for the section label
+- Ensure the heading typography uses the tight tracking (`tracking-tight`) consistent with other sections
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+#### 5. Panel design improvements
+- Remove the fake macOS window chrome (red/yellow/green dots) — it looks generic and doesn't match VOVV.AI's clean aesthetic
+- Instead use a minimal header bar with "Freestyle Studio" label + sparkle icon, matching the app's actual top bar
+- Panel should use `rounded-2xl border border-border/60 bg-card shadow-xl` (keep this)
+- Add the progress bar animation at the top of the panel during "generating" phase (like the real app's `h-[2px] bg-primary animate-pulse-slide`)
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+#### 6. Result images section
+- Show results in a 3-column grid below the panel (not inside it) to give them more space
+- Each result card: `ShimmerImage` + small label overlay at bottom
+- Staggered fade-in animation on reveal
+
+### Files changed
+- `src/components/landing/FreestyleShowcaseSection.tsx` — full rewrite with real assets, app-matching UI, branded styling
 
