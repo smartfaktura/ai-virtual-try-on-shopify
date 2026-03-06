@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const footerLinks = {
   Product: [
@@ -29,17 +29,6 @@ const footerLinks = {
 };
 
 export function LandingFooter() {
-  const location = useLocation();
-
-  const handleProductLink = (to: string) => {
-    if (location.pathname === '/' || location.pathname === '/landing') {
-      const hash = to.replace('/', '');
-      const el = document.querySelector(hash);
-      el?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      window.location.href = to;
-    }
-  };
 
   return (
     <footer className="border-t border-border bg-card">
@@ -62,24 +51,15 @@ export function LandingFooter() {
           {Object.entries(footerLinks).map(([heading, links]) => (
             <div key={heading}>
               <h4 className="text-sm font-semibold text-foreground mb-3">{heading}</h4>
-              <ul className="space-y-2">
+              <ul className="space-y-0">
                 {links.map((link) => (
                   <li key={link.label}>
-                    {heading === 'Product' ? (
-                      <button
-                        onClick={() => handleProductLink(link.to)}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {link.label}
-                      </button>
-                    ) : (
-                      <Link
-                        to={link.to}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {link.label}
-                      </Link>
-                    )}
+                    <Link
+                      to={link.to}
+                      className="block py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
