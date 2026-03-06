@@ -187,7 +187,28 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     });
   }, [images.length, analyzeImage]);
 
-  const handleDrop = useCallback(
+  // Clipboard paste support (Cmd+V / Ctrl+V)
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const imageFiles: File[] = [];
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) imageFiles.push(file);
+        }
+      }
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        addFiles(imageFiles);
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [addFiles]);
+
+
     (e: React.DragEvent) => {
       e.preventDefault();
       setDragActive(false);
