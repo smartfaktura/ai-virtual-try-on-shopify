@@ -11,7 +11,6 @@ import { ProductImageGallery } from './ProductImageGallery';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface UserProduct {
   id: string;
