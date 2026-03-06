@@ -893,125 +893,32 @@ export default function Generate() {
     }
   };
 
-  // Watch queue job completion to transition to results
+  // Watch queue job completion to transition to results (single-product only)
   useEffect(() => {
     if (!activeJob) return;
+    // Multi-product uses its own polling, skip here
+    if (multiProductJobIds.size > 0) return;
     if (activeJob.status === 'completed' && activeJob.result) {
       const result = activeJob.result as { images?: string[]; variations?: Array<{ label: string }> };
       if (result.images && result.images.length > 0) {
-        // If multi-product mode, store results and advance
-        if (isMultiProductMode) {
-          const currentProduct = productQueue[currentProductIndex];
-          setMultiProductResults(prev => {
-            const next = new Map(prev);
-            next.set(currentProduct.id, { images: result.images!, labels: result.variations?.map(v => v.label) || [] });
-            return next;
-          });
-          refreshBalance();
-          resetQueue();
-          
-          // Check if there are more products
-          if (currentProductIndex < productQueue.length - 1) {
-            setMultiProductAutoAdvancing(true);
-            const nextIdx = currentProductIndex + 1;
-            setCurrentProductIndex(nextIdx);
-            const nextProduct = productQueue[nextIdx];
-            setSelectedProduct(nextProduct);
-            if (nextProduct.images.length > 0) setSelectedSourceImages(new Set([nextProduct.images[0].id]));
-            // Auto-trigger after a short delay
-            setTimeout(() => {
-              setMultiProductAutoAdvancing(false);
-              if (activeWorkflow?.uses_tryon) {
-                handleTryOnConfirmGenerate();
-              } else {
-                handleWorkflowGenerate();
-              }
-            }, 1500);
-          } else {
-            // All done — aggregate results
-            const allImages: string[] = [];
-            const allLabels: string[] = [];
-            const finalResults = new Map(multiProductResults);
-            finalResults.set(currentProduct.id, { images: result.images!, labels: result.variations?.map(v => v.label) || [] });
-            for (const product of productQueue) {
-              const r = finalResults.get(product.id);
-              if (r) {
-                allImages.push(...r.images);
-                allLabels.push(...r.labels.map(l => `${product.title} — ${l}`));
-              }
-            }
-            setGeneratedImages(allImages);
-            setWorkflowVariationLabels(allLabels);
-            setGeneratingProgress(100);
-            setCurrentStep('results');
-            toast.success(`Generated ${allImages.length} images for ${productQueue.length} products!`);
-            queryClient.invalidateQueries({ queryKey: ['library'] });
-            queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-          }
-        } else {
-          setGeneratedImages(result.images);
-          setWorkflowVariationLabels(result.variations?.map(v => v.label) || []);
-          setGeneratingProgress(100);
-          setCurrentStep('results');
-          toast.success(`Generated ${result.images.length} images!`);
-          refreshBalance();
-          queryClient.invalidateQueries({ queryKey: ['library'] });
-          queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-          resetQueue();
-        }
+        setGeneratedImages(result.images);
+        setWorkflowVariationLabels(result.variations?.map(v => v.label) || []);
+        setGeneratingProgress(100);
+        setCurrentStep('results');
+        toast.success(`Generated ${result.images.length} images!`);
+        refreshBalance();
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+        resetQueue();
       }
     }
     if (activeJob.status === 'failed') {
-      if (isMultiProductMode) {
-        const currentProduct = productQueue[currentProductIndex];
-        toast.error(`Failed for "${currentProduct.title}". Credits refunded. Moving to next...`);
-        refreshBalance();
-        resetQueue();
-        
-        if (currentProductIndex < productQueue.length - 1) {
-          const nextIdx = currentProductIndex + 1;
-          setCurrentProductIndex(nextIdx);
-          const nextProduct = productQueue[nextIdx];
-          setSelectedProduct(nextProduct);
-          if (nextProduct.images.length > 0) setSelectedSourceImages(new Set([nextProduct.images[0].id]));
-          setTimeout(() => {
-            if (activeWorkflow?.uses_tryon) {
-              handleTryOnConfirmGenerate();
-            } else {
-              handleWorkflowGenerate();
-            }
-          }, 1500);
-        } else {
-          // All done with failures
-          const allImages: string[] = [];
-          const allLabels: string[] = [];
-          for (const product of productQueue) {
-            const r = multiProductResults.get(product.id);
-            if (r) {
-              allImages.push(...r.images);
-              allLabels.push(...r.labels.map(l => `${product.title} — ${l}`));
-            }
-          }
-          if (allImages.length > 0) {
-            setGeneratedImages(allImages);
-            setWorkflowVariationLabels(allLabels);
-            setGeneratingProgress(100);
-            setCurrentStep('results');
-            toast.warning(`Completed with some failures. ${allImages.length} images generated.`);
-          } else {
-            toast.error('All products failed. Credits refunded.');
-            setCurrentStep('settings');
-          }
-          queryClient.invalidateQueries({ queryKey: ['library'] });
-        }
-      } else {
-        toast.error(activeJob.error_message || 'Generation failed. Credits refunded.');
-        setCurrentStep('settings');
-        refreshBalance();
-        resetQueue();
-      }
+      toast.error(activeJob.error_message || 'Generation failed. Credits refunded.');
+      setCurrentStep('settings');
+      refreshBalance();
+      resetQueue();
     }
-  }, [activeJob, refreshBalance, resetQueue]);
+  }, [activeJob, refreshBalance, resetQueue, multiProductJobIds.size]);
 
   // Watch batch completion
   useEffect(() => {
