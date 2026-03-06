@@ -883,7 +883,13 @@ export default function Generate() {
           const nextProduct = productQueue[nextIdx];
           setSelectedProduct(nextProduct);
           if (nextProduct.images.length > 0) setSelectedSourceImages(new Set([nextProduct.images[0].id]));
-          setTimeout(() => handleWorkflowGenerate(), 1500);
+          setTimeout(() => {
+            if (activeWorkflow?.uses_tryon) {
+              handleTryOnConfirmGenerate();
+            } else {
+              handleWorkflowGenerate();
+            }
+          }, 1500);
         } else {
           // All done with failures
           const allImages: string[] = [];
