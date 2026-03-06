@@ -432,6 +432,17 @@ export default function Settings() {
             </Card>
           </>
         )}
+
+        {/* Admin: User Feedback */}
+        {isAdmin && (
+          <>
+            <Separator />
+            <AdminFeedbackPanel />
+          </>
+        )}
+
+        {/* Feedback Banner */}
+        <FeedbackBanner />
       </div>
     </PageHeader>
 

@@ -503,6 +503,9 @@ export default function Dashboard() {
 
       {/* Upcoming Drops */}
       <UpcomingDropsCard />
+
+      {/* Feedback Banner */}
+      <FeedbackBanner />
     </div>
   );
 }
