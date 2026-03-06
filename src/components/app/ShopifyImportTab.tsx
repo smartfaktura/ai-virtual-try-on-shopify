@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ShoppingBag, Loader2, Check, AlertCircle, ExternalLink, Search } from 'lucide-react';
+import { ShoppingBag, Loader2, Check, AlertCircle, ExternalLink, Search, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ interface ShopifyListProduct {
 }
 
 type Step = 'connect' | 'select' | 'importing' | 'done';
+const MAX_SHOPIFY_BATCH = 100;
 
 export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabProps) {
   const { user } = useAuth();
@@ -76,20 +77,23 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     }
   };
 
+  const atLimit = selectedIds.size >= MAX_SHOPIFY_BATCH;
+
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
-      else next.add(id);
+      else if (next.size < MAX_SHOPIFY_BATCH) next.add(id);
       return next;
     });
   };
 
   const toggleAll = () => {
-    if (selectedIds.size === filteredProducts.length) {
+    if (selectedIds.size > 0 && selectedIds.size === filteredProducts.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredProducts.map((p) => p.id)));
+      const toSelect = filteredProducts.slice(0, MAX_SHOPIFY_BATCH).map((p) => p.id);
+      setSelectedIds(new Set(toSelect));
     }
   };
 
@@ -227,6 +231,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
   // Select step
   if (step === 'select') {
     const allSelected = filteredProducts.length > 0 && selectedIds.size === filteredProducts.length;
+    const selectAllDisabled = filteredProducts.length > MAX_SHOPIFY_BATCH && selectedIds.size === 0;
 
     return (
       <div className="space-y-4">
@@ -250,22 +255,30 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
             checked={allSelected}
             onCheckedChange={toggleAll}
             id="select-all"
+            disabled={selectAllDisabled}
           />
-          <Label htmlFor="select-all" className="text-xs cursor-pointer">
-            Select all ({filteredProducts.length})
+          <Label htmlFor="select-all" className={`text-xs cursor-pointer ${selectAllDisabled ? 'text-muted-foreground/60' : ''}`}>
+            {filteredProducts.length <= MAX_SHOPIFY_BATCH
+              ? `Select all (${filteredProducts.length})`
+              : `Select first ${MAX_SHOPIFY_BATCH}`}
           </Label>
-          {selectedIds.size > 0 && (
-            <span className="text-xs text-primary font-medium ml-auto">
-              {selectedIds.size} selected
-            </span>
-          )}
+          <span className={`text-xs font-medium ml-auto ${atLimit ? 'text-amber-500' : 'text-primary'}`}>
+            {selectedIds.size}/{MAX_SHOPIFY_BATCH}
+          </span>
         </div>
+
+        {products.length > MAX_SHOPIFY_BATCH && (
+          <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
+            <span>Maximum {MAX_SHOPIFY_BATCH} products per import. You can import more in additional batches.</span>
+          </div>
+        )}
 
         <div className="max-h-[320px] overflow-y-auto space-y-1 -mx-1 px-1">
           {filteredProducts.map((product) => (
             <label
               key={product.id}
-              className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors"
+              className={`flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors ${atLimit && !selectedIds.has(product.id) ? 'opacity-40 pointer-events-none' : ''}`}
             >
               <Checkbox
                 checked={selectedIds.has(product.id)}

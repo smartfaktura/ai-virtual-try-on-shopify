@@ -1,36 +1,30 @@
 
 
-## Analysis
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The Shopify import tab (`ShopifyImportTab.tsx`) already has a proper multi-step wizard:
-1. **Connect** — enter store domain + token
-2. **Select** — browse/search products, check ones to import
-3. **Importing** — progress bar
-4. **Done** — summary
+### Issues Found
 
-However, it's missing the **100-product-per-batch limit**. Currently:
-- "Select All" selects every product with no cap
-- No visual counter showing `X/100` selection limit
-- No messaging explaining the 100-product batch limit
-- Individual toggles don't prevent exceeding the limit
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-## Plan
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**File: `src/components/app/ShopifyImportTab.tsx`**
+### Plan
 
-Changes to the selection step only:
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-1. **Add a constant** `MAX_SHOPIFY_BATCH = 100` at the top of the file
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-2. **Cap `toggleSelect`** — prevent adding when `selectedIds.size >= 100`
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-3. **Cap `toggleAll`** — only select first 100 of filtered products; disable the "Select All" checkbox when total filtered products exceed 100 (show tooltip or note explaining why)
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-4. **Add a selection counter badge** — show `{selectedIds.size}/100` next to the "selected" text so users always see how close they are to the limit
-
-5. **Disable unchecked product rows** visually (reduced opacity) when 100 are already selected
-
-6. **Add a small info note** below the counter when products exceed 100: "Maximum 100 products per import. You can import more in additional batches."
-
-No database or edge function changes needed — the backend already processes in batches of 10.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
