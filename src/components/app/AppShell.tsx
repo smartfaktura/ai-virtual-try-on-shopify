@@ -330,7 +330,7 @@ export function AppShell({ children }: AppShellProps) {
             <button
               onClick={openBuyModal}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border transition-colors',
+                'flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-full border transition-colors',
                 isEmpty
                   ? 'bg-destructive/20 border-destructive/30 text-destructive'
                   : isLow
@@ -338,8 +338,19 @@ export function AppShell({ children }: AppShellProps) {
                     : 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 hover:bg-white/10'
               )}
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="text-xs font-semibold">{balance}</span>
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="text-xs font-semibold">{balance}</span>
+              </div>
+              <div className="w-full h-1 rounded-full bg-white/[0.15] overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all duration-500',
+                    isEmpty ? 'bg-destructive' : isLow ? 'bg-amber-400' : 'bg-primary'
+                  )}
+                  style={{ width: `${Math.min(100, Math.max(5, (balance / 20) * 100))}%` }}
+                />
+              </div>
             </button>
             <button
               onClick={() => setSidebarOpen(true)}
