@@ -3193,7 +3193,11 @@ export default function Generate() {
             <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
               <div>
                 <p className="text-sm font-semibold">Virtual Try-On: {creditCost} credits</p>
-                <p className="text-xs text-muted-foreground">{parseInt(imageCount)} image{parseInt(imageCount) > 1 ? 's' : ''} × {quality === 'high' ? 16 : 8} credits each</p>
+                <p className="text-xs text-muted-foreground">
+                  {isMultiProductMode
+                    ? `${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''} × ${multiProductCount} product${multiProductCount > 1 ? 's' : ''} × ${quality === 'high' ? 16 : 8} credits each`
+                    : `${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''} × ${quality === 'high' ? 16 : 8} credits each`}
+                </p>
               </div>
               {balance >= creditCost ? (
                 <p className="text-sm text-muted-foreground">{balance} credits available</p>
