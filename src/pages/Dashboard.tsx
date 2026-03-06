@@ -25,6 +25,7 @@ import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
 import { workflowScenes } from '@/components/app/workflowAnimationData';
 import { Badge } from '@/components/ui/badge';
+import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 
 /* ── Inline card with IntersectionObserver for animations ── */
 function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (id: string) => void }) {
