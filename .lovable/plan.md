@@ -1,30 +1,34 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Make "Missing a scene/model?" Banners More Clickable
 
-### Issues Found
+### Problem
+The `MissingRequestBanner` in both Scene and Model selector popovers looks like a passive notification — dashed border, muted colors, small text. Users don't realize it's clickable. The Scene selector also hides it at the bottom behind scroll.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Solution
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`src/components/app/MissingRequestBanner.tsx`** — When `compact` is true, restyle the collapsed state as a clear interactive button:
+- Replace dashed border + muted background with a solid, slightly elevated style: `bg-primary/8 border-primary/20 border-solid hover:bg-primary/15`
+- Add a right-arrow chevron (`ChevronRight` icon) to signal clickability
+- Make the text slightly bolder and use `text-primary/70` instead of `text-muted-foreground`
+- Add `cursor-pointer` and a subtle hover transition
+- Keep the expanded (textarea) and submitted states unchanged
 
-### Plan
+**`src/components/app/freestyle/SceneSelectorChip.tsx`** — Move `MissingRequestBanner` outside the scrollable `max-h-72` div so it's always visible at the bottom of the popover (like the Model selector already does visually).
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**`src/components/app/freestyle/ModelSelectorChip.tsx`** — Same treatment: ensure the banner sits outside the scrollable grid area so it's pinned at the bottom.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### Visual result (collapsed compact state)
+```text
+┌─────────────────────────────────────────────┐
+│  ⊞  Missing a model? Tell us, we'll    ›   │
+│     create it in 1–2 business days.         │
+└─────────────────────────────────────────────┘
+```
+Solid border, primary-tinted background, chevron arrow — clearly a button.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files changed
+- `src/components/app/MissingRequestBanner.tsx` — restyle compact collapsed state
+- `src/components/app/freestyle/SceneSelectorChip.tsx` — move banner outside scroll area
+- `src/components/app/freestyle/ModelSelectorChip.tsx` — move banner outside scroll area
 
