@@ -45,6 +45,7 @@ import WorkflowsFeature from '@/pages/features/WorkflowsFeature';
 import VirtualTryOnFeature from '@/pages/features/VirtualTryOnFeature';
 import CreativeDropsFeature from '@/pages/features/CreativeDropsFeature';
 import BrandProfilesFeature from '@/pages/features/BrandProfilesFeature';
+import Pricing from '@/pages/Pricing';
 
 const queryClient = new QueryClient();
 
