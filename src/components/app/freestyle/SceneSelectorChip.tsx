@@ -5,6 +5,7 @@ import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 
 interface SceneSelectorChipProps {
   selectedScene: TryOnPose | null;
@@ -131,6 +132,10 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
               </div>
             );
           })}
+
+          <div className="mt-1">
+            <MissingRequestBanner category="scene" compact />
+          </div>
         </div>
       </PopoverContent>
     </Popover>

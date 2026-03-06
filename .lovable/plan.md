@@ -1,26 +1,30 @@
 
 
-## "Missing Something?" Request Banners
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Add small inline request banners at the end of model/scene selector grids (in Freestyle popovers) and at the bottom of the Workflows page catalog.
+### Issues Found
 
-### What it looks like
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-A compact, subtle card at the bottom of each list:
-- **Model selector popover** (`ModelSelectorChip.tsx`): Below the model grid — "Missing a model? Tell us, we'll create it in 1–2 business days."
-- **Scene selector popover** (`SceneSelectorChip.tsx`): Below the scene grid — "Missing a scene? Tell us, we'll create it in 1–2 business days."
-- **Workflows page** (`Workflows.tsx`): After the workflow catalog cards — "Missing a feature or workflow? Let us know what you need."
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-Each banner: small `MessageSquarePlus` icon, one-liner text, and a "Request" button that opens a compact inline form (or reuses the existing `feedback` table with type auto-set to `feature`). Clicking "Request" expands a tiny textarea inline + submit. On submit, inserts into the existing `feedback` table with `type = 'feature'` and a tag in the message like `[model-request]` / `[scene-request]` / `[workflow-request]` so admins can filter.
+### Plan
 
-### Files
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-| Action | File | Change |
-|--------|------|--------|
-| New | `src/components/app/MissingRequestBanner.tsx` | Reusable compact banner with configurable title/placeholder, submits to `feedback` table |
-| Edit | `src/components/app/freestyle/ModelSelectorChip.tsx` | Add `<MissingRequestBanner />` after the model grid (inside the popover) |
-| Edit | `src/components/app/freestyle/SceneSelectorChip.tsx` | Add `<MissingRequestBanner />` after the scene grid (inside the popover) |
-| Edit | `src/pages/Workflows.tsx` | Add `<MissingRequestBanner />` after the workflow catalog |
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-No database changes needed — reuses the existing `feedback` table.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

@@ -5,6 +5,7 @@ import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import type { ModelProfile } from '@/types';
 import { useCustomModels } from '@/hooks/useCustomModels';
+import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 
 interface ModelSelectorChipProps {
   selectedModel: ModelProfile | null;
@@ -144,6 +145,10 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
               No models match these filters
             </p>
           )}
+        </div>
+
+        <div className="mt-2">
+          <MissingRequestBanner category="model" compact />
         </div>
       </PopoverContent>
     </Popover>
