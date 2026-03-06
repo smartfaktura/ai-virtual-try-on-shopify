@@ -11,6 +11,7 @@ import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
 import { GlobalGenerationBar } from '@/components/app/GlobalGenerationBar';
 import { toast } from '@/hooks/use-toast';
+import { useCredits } from '@/contexts/CreditContext';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -43,6 +44,7 @@ export function AppShell({ children }: AppShellProps) {
   const { user, signOut } = useAuth();
   const { isAdmin, isRealAdmin } = useIsAdmin();
   const { isAdminView, toggleAdminView } = useAdminView();
+  const { balance, isLow, isEmpty, openBuyModal } = useCredits();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch { return false; }
@@ -179,15 +181,31 @@ export function AppShell({ children }: AppShellProps) {
         {/* Credits */}
         <div className={cn('border-t border-white/[0.06] pt-4', isCollapsed ? 'px-2 pb-2' : 'px-4 pb-3')}>
           {isCollapsed ? (
-            <button
-              onClick={() => navigate('/app/settings')}
-              className="flex justify-center w-full"
-              title="Upgrade plan"
-            >
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors">
-                <ArrowUpRight className="w-3.5 h-3.5 text-sidebar-foreground/70" />
-              </div>
-            </button>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={openBuyModal}
+                className="flex flex-col items-center gap-1"
+                title={`${balance} credits`}
+              >
+                <div className={cn(
+                  'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
+                  isEmpty ? 'bg-destructive/20' : 'bg-primary/20 hover:bg-primary/30'
+                )}>
+                  <Sparkles className={cn('w-3.5 h-3.5', isEmpty ? 'text-destructive' : 'text-sidebar-foreground/70')} />
+                </div>
+                <span className={cn(
+                  'text-[10px] font-bold',
+                  isEmpty ? 'text-destructive' : 'text-sidebar-foreground/50'
+                )}>{balance}</span>
+              </button>
+              <button
+                onClick={() => navigate('/app/settings')}
+                title="Upgrade plan"
+                className="text-sidebar-foreground/30 hover:text-sidebar-foreground/60 transition-colors"
+              >
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           ) : (
             <CreditIndicator />
           )}
@@ -295,12 +313,29 @@ export function AppShell({ children }: AppShellProps) {
             </div>
             <span className="font-bold text-lg text-sidebar-foreground tracking-tight">VOVV.AI</span>
           </div>
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-xl text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/[0.06] transition-colors"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Credit pill */}
+            <button
+              onClick={openBuyModal}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border transition-colors',
+                isEmpty
+                  ? 'bg-destructive/20 border-destructive/30 text-destructive'
+                  : isLow
+                    ? 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 animate-pulse'
+                    : 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 hover:bg-white/10'
+              )}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-xs font-semibold">{balance}</span>
+            </button>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-xl text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/[0.06] transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
