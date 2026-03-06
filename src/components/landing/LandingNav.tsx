@@ -106,7 +106,7 @@ export function LandingNav() {
             <div className="pt-3">
               <Button
                 size="sm"
-                className="rounded-full w-full font-semibold"
+                className="rounded-full w-full font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
                 onClick={() => navigate(user ? '/app' : '/auth')}
               >
                 {user ? 'My Dashboard' : 'Start Free'}
