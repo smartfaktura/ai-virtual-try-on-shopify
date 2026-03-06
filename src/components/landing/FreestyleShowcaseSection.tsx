@@ -165,7 +165,7 @@ export function FreestyleShowcaseSection() {
                     <div
                       key={chip.key}
                       className={cn(
-                        'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[11px] font-medium border transition-all duration-500',
+                        'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[11px] font-medium border transition-[color,background-color,border-color,transform] duration-500',
                         active
                           ? 'border-primary/40 bg-primary/10 text-primary scale-105'
                           : 'border-border/50 bg-muted/30 text-muted-foreground/50',
