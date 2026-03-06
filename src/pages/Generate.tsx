@@ -920,77 +920,146 @@ export default function Generate() {
     }
   }, [activeJob, refreshBalance, resetQueue, multiProductJobIds.size]);
 
-  // Watch batch completion
+  // Watch batch completion (single-product only)
   useEffect(() => {
     if (!batchState) return;
+    if (multiProductJobIds.size > 0) return;
     if (batchState.allDone) {
       if (batchState.aggregatedImages.length > 0) {
-        if (isMultiProductMode) {
-          const currentProduct = productQueue[currentProductIndex];
-          setMultiProductResults(prev => {
-            const next = new Map(prev);
-            next.set(currentProduct.id, { images: batchState.aggregatedImages, labels: batchState.aggregatedLabels });
-            return next;
-          });
-          refreshBalance();
-          resetBatch();
-          
-          if (currentProductIndex < productQueue.length - 1) {
-            setMultiProductAutoAdvancing(true);
-            const nextIdx = currentProductIndex + 1;
-            setCurrentProductIndex(nextIdx);
-            const nextProduct = productQueue[nextIdx];
-            setSelectedProduct(nextProduct);
-            if (nextProduct.images.length > 0) setSelectedSourceImages(new Set([nextProduct.images[0].id]));
-            setTimeout(() => {
-              setMultiProductAutoAdvancing(false);
-              handleWorkflowGenerate();
-            }, 1500);
-          } else {
-            // All done — aggregate
-            const allImages: string[] = [];
-            const allLabels: string[] = [];
-            const finalResults = new Map(multiProductResults);
-            finalResults.set(currentProduct.id, { images: batchState.aggregatedImages, labels: batchState.aggregatedLabels });
-            for (const product of productQueue) {
-              const r = finalResults.get(product.id);
-              if (r) {
-                allImages.push(...r.images);
-                allLabels.push(...r.labels.map(l => `${product.title} — ${l}`));
-              }
-            }
-            setGeneratedImages(allImages);
-            setWorkflowVariationLabels(allLabels);
-            setGeneratingProgress(100);
-            setCurrentStep('results');
-            toast.success(`Generated ${allImages.length} images for ${productQueue.length} products!`);
-            queryClient.invalidateQueries({ queryKey: ['library'] });
-            queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-          }
+        setGeneratedImages(batchState.aggregatedImages);
+        setWorkflowVariationLabels(batchState.aggregatedLabels);
+        setGeneratingProgress(100);
+        setCurrentStep('results');
+        if (batchState.hasPartialFailure) {
+          toast.warning(`Generated ${batchState.aggregatedImages.length} images. ${batchState.failedJobs} batch${batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded for those.`);
         } else {
-          setGeneratedImages(batchState.aggregatedImages);
-          setWorkflowVariationLabels(batchState.aggregatedLabels);
-          setGeneratingProgress(100);
-          setCurrentStep('results');
-          if (batchState.hasPartialFailure) {
-            toast.warning(`Generated ${batchState.aggregatedImages.length} images. ${batchState.failedJobs} batch${batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded for those.`);
-          } else {
-            toast.success(`Generated ${batchState.aggregatedImages.length} images!`);
-          }
-          refreshBalance();
-          queryClient.invalidateQueries({ queryKey: ['library'] });
-          queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
-          resetBatch();
+          toast.success(`Generated ${batchState.aggregatedImages.length} images!`);
         }
+        refreshBalance();
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+        resetBatch();
       } else {
-        // All batches failed
         toast.error('All generation batches failed. Credits have been refunded.');
         setCurrentStep('settings');
         refreshBalance();
         resetBatch();
       }
     }
-  }, [batchState, refreshBalance, resetBatch]);
+  }, [batchState, refreshBalance, resetBatch, multiProductJobIds.size]);
+
+  // Multi-product upfront polling: watch all enqueued job IDs
+  useEffect(() => {
+    if (multiProductJobIds.size === 0) return;
+    // Cleanup on unmount
+    return () => {
+      if (multiProductPollingRef.current) {
+        clearInterval(multiProductPollingRef.current);
+        multiProductPollingRef.current = null;
+      }
+    };
+  }, [multiProductJobIds.size]);
+
+  useEffect(() => {
+    if (multiProductJobIds.size === 0) return;
+
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const jobIds = Array.from(multiProductJobIds.values());
+
+    const poll = async () => {
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token || SUPABASE_KEY;
+
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${jobIds.join(',')})\&select=id,status,result,error_message,completed_at`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) return;
+      const rows = await res.json() as Array<{ id: string; status: string; result: { images?: string[]; variations?: Array<{ label: string }> } | null; error_message: string | null; completed_at: string | null }>;
+
+      // Build a map of job results
+      const completedResults = new Map<string, { images: string[]; labels: string[] }>();
+      let allTerminal = true;
+      let completedCount = 0;
+      let failedCount = 0;
+
+      for (const row of rows) {
+        if (row.status === 'completed' && row.result?.images) {
+          completedCount++;
+          // Find the product for this job
+          for (const [prodId, jobId] of multiProductJobIds.entries()) {
+            if (jobId === row.id) {
+              completedResults.set(prodId, {
+                images: row.result.images,
+                labels: row.result.variations?.map(v => v.label) || [],
+              });
+            }
+          }
+        } else if (row.status === 'failed' || row.status === 'cancelled') {
+          failedCount++;
+        } else {
+          allTerminal = false;
+        }
+      }
+
+      // Update progress
+      const totalJobs = multiProductJobIds.size;
+      const doneCount = completedCount + failedCount;
+      setGeneratingProgress(Math.round((doneCount / totalJobs) * 100));
+      setCurrentProductIndex(doneCount);
+      setMultiProductResults(completedResults);
+
+      if (allTerminal) {
+        // Stop polling
+        if (multiProductPollingRef.current) {
+          clearInterval(multiProductPollingRef.current);
+          multiProductPollingRef.current = null;
+        }
+
+        // Aggregate results
+        const allImages: string[] = [];
+        const allLabels: string[] = [];
+        for (const product of productQueue) {
+          const r = completedResults.get(product.id);
+          if (r) {
+            allImages.push(...r.images);
+            allLabels.push(...r.labels.map(l => `${product.title} — ${l}`));
+          }
+        }
+
+        if (allImages.length > 0) {
+          setGeneratedImages(allImages);
+          setWorkflowVariationLabels(allLabels);
+          setGeneratingProgress(100);
+          setCurrentStep('results');
+          if (failedCount > 0) {
+            toast.warning(`Completed with ${failedCount} failure${failedCount > 1 ? 's' : ''}. ${allImages.length} images generated.`);
+          } else {
+            toast.success(`Generated ${allImages.length} images for ${productQueue.length} products!`);
+          }
+        } else {
+          toast.error('All products failed. Credits refunded.');
+          setCurrentStep('settings');
+        }
+        refreshBalance();
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+        queryClient.invalidateQueries({ queryKey: ['recent-creations'] });
+        setMultiProductJobIds(new Map());
+      }
+    };
+
+    // Poll immediately, then every 3 seconds
+    poll();
+    multiProductPollingRef.current = setInterval(poll, 3000);
+
+    return () => {
+      if (multiProductPollingRef.current) {
+        clearInterval(multiProductPollingRef.current);
+        multiProductPollingRef.current = null;
+      }
+    };
+  }, [multiProductJobIds, productQueue, refreshBalance, queryClient]);
 
   const handlePublishClick = () => {
     if (selectedForPublish.size === 0) { toast.error('Please select at least one image to download'); return; }
