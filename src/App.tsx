@@ -72,6 +72,7 @@ const App = () => (
             <Route path="/features/virtual-try-on" element={<VirtualTryOnFeature />} />
             <Route path="/features/creative-drops" element={<CreativeDropsFeature />} />
             <Route path="/features/brand-profiles" element={<BrandProfilesFeature />} />
+            <Route path="/pricing" element={<Pricing />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
