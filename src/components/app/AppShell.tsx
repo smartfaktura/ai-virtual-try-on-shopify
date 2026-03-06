@@ -181,15 +181,31 @@ export function AppShell({ children }: AppShellProps) {
         {/* Credits */}
         <div className={cn('border-t border-white/[0.06] pt-4', isCollapsed ? 'px-2 pb-2' : 'px-4 pb-3')}>
           {isCollapsed ? (
-            <button
-              onClick={() => navigate('/app/settings')}
-              className="flex justify-center w-full"
-              title="Upgrade plan"
-            >
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors">
-                <ArrowUpRight className="w-3.5 h-3.5 text-sidebar-foreground/70" />
-              </div>
-            </button>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                onClick={openBuyModal}
+                className="flex flex-col items-center gap-1"
+                title={`${balance} credits`}
+              >
+                <div className={cn(
+                  'w-8 h-8 rounded-lg flex items-center justify-center transition-colors',
+                  isEmpty ? 'bg-destructive/20' : 'bg-primary/20 hover:bg-primary/30'
+                )}>
+                  <Sparkles className={cn('w-3.5 h-3.5', isEmpty ? 'text-destructive' : 'text-sidebar-foreground/70')} />
+                </div>
+                <span className={cn(
+                  'text-[10px] font-bold',
+                  isEmpty ? 'text-destructive' : 'text-sidebar-foreground/50'
+                )}>{balance}</span>
+              </button>
+              <button
+                onClick={() => navigate('/app/settings')}
+                title="Upgrade plan"
+                className="text-sidebar-foreground/30 hover:text-sidebar-foreground/60 transition-colors"
+              >
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           ) : (
             <CreditIndicator />
           )}
