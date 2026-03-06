@@ -613,6 +613,93 @@ export default function Generate() {
     try {
     // Allow queuing multiple workflows — backend enforces per-plan concurrency limits
     if (!selectedProduct && !scratchUpload) return;
+
+    // Multi-product upfront enqueue for workflow mode
+    if (isMultiProductMode) {
+      setCurrentStep('generating');
+      setGeneratingProgress(0);
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
+
+      const needsModel = uiConfig?.show_model_picker && selectedModel;
+      const jobMap = new Map<string, string>();
+      let lastBalance: number | null = null;
+
+      for (const product of productQueue) {
+        const sourceImage = product.images[0];
+        const sourceImageUrl = sourceImage?.url || '';
+        if (!sourceImageUrl) continue;
+
+        const originalUp = userProducts.find(up => up.id === product.id);
+        const productData = { title: product.title, productType: product.productType, description: product.description, dimensions: originalUp?.dimensions || undefined };
+
+        const [base64Image, base64ModelImage] = await Promise.all([
+          convertImageToBase64(sourceImageUrl),
+          needsModel ? convertImageToBase64(selectedModel!.previewUrl) : Promise.resolve(undefined),
+        ]);
+
+        const payload: Record<string, unknown> = {
+          workflow_id: activeWorkflow!.id,
+          product: { ...productData, imageUrl: base64Image },
+          product_name: product.title,
+          brand_profile: selectedBrandProfile ? {
+            tone: selectedBrandProfile.tone, background_style: selectedBrandProfile.background_style,
+            lighting_style: selectedBrandProfile.lighting_style, color_temperature: selectedBrandProfile.color_temperature,
+            brand_keywords: selectedBrandProfile.brand_keywords, color_palette: selectedBrandProfile.color_palette,
+            target_audience: selectedBrandProfile.target_audience, do_not_rules: selectedBrandProfile.do_not_rules,
+            composition_bias: selectedBrandProfile.composition_bias, preferred_scenes: selectedBrandProfile.preferred_scenes,
+            photography_reference: selectedBrandProfile.photography_reference,
+          } : undefined,
+          selected_variations: selectedVariationIndices.size > 0 ? Array.from(selectedVariationIndices) : undefined,
+          product_angles: productAngle !== 'front' ? productAngle : undefined,
+          quality, aspectRatio,
+          framing: framing || undefined,
+          ugc_mood: isSelfieUgc ? ugcMood : undefined,
+        };
+        if (needsModel && base64ModelImage) {
+          payload.model = {
+            name: selectedModel!.name, gender: selectedModel!.gender, ethnicity: selectedModel!.ethnicity,
+            bodyType: selectedModel!.bodyType, ageRange: selectedModel!.ageRange, imageUrl: base64ModelImage,
+          };
+        }
+
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            jobType: 'workflow',
+            payload,
+            imageCount: workflowImageCount,
+            quality,
+            additionalProductCount: 0,
+            hasModel: !!needsModel,
+            hasScene: false,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          jobMap.set(product.id, result.jobId);
+          lastBalance = result.newBalance;
+        } else {
+          const err = await response.json().catch(() => ({}));
+          toast.error(err.error || `Failed to queue "${product.title}"`);
+        }
+      }
+
+      if (jobMap.size === 0) {
+        toast.error('Could not queue any products');
+        setCurrentStep('settings');
+        return;
+      }
+      if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setMultiProductJobIds(jobMap);
+      toast.success(`Queued ${jobMap.size} product${jobMap.size > 1 ? 's' : ''} for generation`);
+      return;
+    }
+
     let sourceImageUrl = '';
     let productData: { title: string; productType: string; description: string; dimensions?: string } = { title: '', productType: '', description: '' };
     if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
