@@ -1,53 +1,73 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, User, Camera, Palette, RatioIcon, Play } from 'lucide-react';
+import { Sparkles, User, Camera, Package, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { cn } from '@/lib/utils';
 
 const PROMPT_TEXT = 'Editorial portrait in golden hour light, wearing our summer collection on a rooftop terrace...';
-const CYCLE_MS = 11000;
-
-interface ChipState {
-  model: boolean;
-  scene: boolean;
-  style: boolean;
-  ratio: boolean;
-}
+const CYCLE_MS = 12000;
 
 const CHIPS = [
-  { key: 'model' as const, icon: User, label: 'Sofia', delay: 3000 },
-  { key: 'scene' as const, icon: Camera, label: 'Rooftop Terrace', delay: 4000 },
-  { key: 'style' as const, icon: Palette, label: 'Editorial', delay: 5000 },
-  { key: 'ratio' as const, icon: RatioIcon, label: '4:5', delay: 5500 },
+  {
+    key: 'product' as const,
+    icon: Package,
+    label: 'Cropped Tee',
+    thumb: getLandingAssetUrl('hero/hero-product-tshirt.jpg'),
+    delay: 3000,
+  },
+  {
+    key: 'model' as const,
+    icon: User,
+    label: 'Sofia',
+    thumb: getLandingAssetUrl('hero/hero-model-blonde.jpg'),
+    delay: 4000,
+    round: true,
+  },
+  {
+    key: 'scene' as const,
+    icon: Camera,
+    label: 'Rooftop',
+    thumb: getLandingAssetUrl('hero/hero-scene-yoga.jpg'),
+    delay: 5000,
+  },
 ];
 
 const RESULT_CARDS = [
-  { label: 'Warm tones', gradient: 'from-amber-500/60 to-orange-400/40' },
-  { label: 'Golden hour', gradient: 'from-yellow-400/50 to-rose-400/40' },
-  { label: 'Soft shadows', gradient: 'from-rose-400/50 to-purple-400/40' },
+  { label: 'Studio Portrait', src: getLandingAssetUrl('hero/hero-output-studio.jpg') },
+  { label: 'Coffee Shop', src: getLandingAssetUrl('hero/hero-output-coffee.jpg') },
+  { label: 'Rooftop Editorial', src: getLandingAssetUrl('hero/hero-output-rooftop.jpg') },
 ];
 
 const FEATURES = [
   'Write any creative prompt',
-  'Mix models, scenes & styles',
+  'Mix models, scenes & products',
   'Apply brand presets instantly',
-  'Generate in any aspect ratio',
+  'Generate studio-quality images',
 ];
+
+type ChipKey = 'product' | 'model' | 'scene';
 
 export function FreestyleShowcaseSection() {
   const navigate = useNavigate();
   const [cycle, setCycle] = useState(0);
   const [typedText, setTypedText] = useState('');
-  const [chips, setChips] = useState<ChipState>({ model: false, scene: false, style: false, ratio: false });
+  const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({
+    product: false,
+    model: false,
+    scene: false,
+  });
   const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [visibleResults, setVisibleResults] = useState<number[]>([]);
 
   useEffect(() => {
-    // Reset state
     setTypedText('');
-    setChips({ model: false, scene: false, style: false, ratio: false });
+    setActiveChips({ product: false, model: false, scene: false });
     setGenerating(false);
+    setProgress(0);
     setShowResults(false);
     setVisibleResults([]);
 
@@ -62,28 +82,42 @@ export function FreestyleShowcaseSection() {
       } else {
         clearInterval(typeTimer);
       }
-    }, 35);
+    }, 30);
 
-    // Chips
-    CHIPS.forEach(chip => {
-      timers.push(setTimeout(() => setChips(prev => ({ ...prev, [chip.key]: true })), chip.delay));
+    // Chips activate sequentially
+    CHIPS.forEach((chip) => {
+      timers.push(
+        setTimeout(
+          () => setActiveChips((prev) => ({ ...prev, [chip.key]: true })),
+          chip.delay,
+        ),
+      );
     });
 
-    // Generate pulse
-    timers.push(setTimeout(() => setGenerating(true), 6200));
+    // Generate phase
+    timers.push(setTimeout(() => setGenerating(true), 6000));
+
+    // Progress bar animation
+    timers.push(setTimeout(() => setProgress(30), 6200));
+    timers.push(setTimeout(() => setProgress(65), 6600));
+    timers.push(setTimeout(() => setProgress(100), 7000));
 
     // Results
-    timers.push(setTimeout(() => {
-      setGenerating(false);
-      setShowResults(true);
-    }, 7200));
+    timers.push(
+      setTimeout(() => {
+        setGenerating(false);
+        setShowResults(true);
+      }, 7500),
+    );
 
     RESULT_CARDS.forEach((_, i) => {
-      timers.push(setTimeout(() => setVisibleResults(prev => [...prev, i]), 7400 + i * 250));
+      timers.push(
+        setTimeout(() => setVisibleResults((prev) => [...prev, i]), 7700 + i * 300),
+      );
     });
 
     // Loop
-    timers.push(setTimeout(() => setCycle(c => c + 1), CYCLE_MS));
+    timers.push(setTimeout(() => setCycle((c) => c + 1), CYCLE_MS));
 
     return () => {
       clearInterval(typeTimer);
@@ -92,8 +126,9 @@ export function FreestyleShowcaseSection() {
   }, [cycle]);
 
   return (
-    <section className="py-20 md:py-28 bg-background relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+    <section className="py-20 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
+      {/* Warm radial glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -103,22 +138,26 @@ export function FreestyleShowcaseSection() {
               <Sparkles className="w-3.5 h-3.5" />
               Freestyle Studio
             </div>
+
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-[1.1]">
               Your Creative Studio.{' '}
               <span className="text-primary">No Limits.</span>
             </h2>
+
             <p className="text-muted-foreground text-base md:text-lg max-w-md leading-relaxed">
-              Write any prompt, pick a model and scene, apply your brand style — and watch
-              studio-quality images appear in seconds. Complete creative freedom, zero photography overhead.
+              Write any prompt, pick a model and scene, attach your product — and watch
+              studio-quality images appear in seconds.
             </p>
+
             <ul className="space-y-2.5">
-              {FEATURES.map(f => (
+              {FEATURES.map((f) => (
                 <li key={f} className="flex items-center gap-2.5 text-sm text-foreground/80">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                   {f}
                 </li>
               ))}
             </ul>
+
             <Button
               size="lg"
               className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
@@ -132,60 +171,88 @@ export function FreestyleShowcaseSection() {
           {/* Right — Animated Demo */}
           <div className="relative">
             <div className="rounded-2xl border border-border/60 bg-card shadow-xl overflow-hidden">
-              {/* Mock window chrome */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 bg-muted/30">
-                <div className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
-                <div className="w-2.5 h-2.5 rounded-full bg-status-warning/60" />
-                <div className="w-2.5 h-2.5 rounded-full bg-status-success/60" />
-                <span className="ml-2 text-[10px] text-muted-foreground font-medium tracking-wide uppercase">Freestyle Studio</span>
+              {/* Progress bar (generating phase) */}
+              <div
+                className={cn(
+                  'h-[2px] transition-all duration-500 rounded-t-2xl',
+                  generating ? 'bg-primary' : 'bg-transparent',
+                )}
+                style={{ width: generating ? `${progress}%` : '0%' }}
+              />
+
+              {/* Header */}
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/40">
+                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs text-muted-foreground font-medium tracking-wide">
+                  Freestyle Studio
+                </span>
               </div>
 
               <div className="p-4 space-y-3">
-                {/* Prompt area */}
-                <div className="rounded-xl border border-border/50 bg-background p-3 min-h-[72px]">
+                {/* Prompt textarea */}
+                <div className="rounded-xl border border-border/50 bg-background p-3 min-h-[68px]">
                   <p className="text-sm text-foreground/90 leading-relaxed">
                     {typedText}
                     <span className="inline-block w-[2px] h-4 bg-primary ml-0.5 animate-pulse align-text-bottom" />
                   </p>
                 </div>
 
+                {/* Divider */}
+                <div className="h-px bg-border/40" />
+
                 {/* Chips row */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {CHIPS.map(chip => {
+                <div className="flex items-center gap-2 flex-wrap">
+                  {CHIPS.map((chip) => {
                     const Icon = chip.icon;
-                    const active = chips[chip.key];
+                    const active = activeChips[chip.key];
                     return (
                       <div
                         key={chip.key}
                         className={cn(
-                          'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[11px] font-medium border transition-all duration-500',
+                          'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[11px] font-medium border transition-all duration-500',
                           active
                             ? 'border-primary/40 bg-primary/10 text-primary scale-105'
-                            : 'border-border/50 bg-muted/30 text-muted-foreground/50'
+                            : 'border-border/50 bg-muted/30 text-muted-foreground/50',
                         )}
                       >
-                        <Icon className="w-3 h-3" />
-                        {active ? chip.label : chip.key.charAt(0).toUpperCase() + chip.key.slice(1)}
+                        {active ? (
+                          <img
+                            src={chip.thumb}
+                            alt={chip.label}
+                            className={cn(
+                              'w-5 h-5 object-cover',
+                              chip.round ? 'rounded-full' : 'rounded',
+                            )}
+                          />
+                        ) : (
+                          <Icon className="w-3.5 h-3.5" />
+                        )}
+                        {active
+                          ? chip.label
+                          : chip.key.charAt(0).toUpperCase() + chip.key.slice(1)}
                       </div>
                     );
                   })}
                 </div>
 
+                {/* Divider */}
+                <div className="h-px bg-border/40" />
+
                 {/* Generate button */}
-                <div
+                <button
                   className={cn(
                     'w-full h-9 rounded-lg text-xs font-semibold transition-all duration-500 flex items-center justify-center gap-2',
                     generating
                       ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-[1.02]'
                       : showResults
                         ? 'bg-primary/80 text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
+                        : 'bg-muted text-muted-foreground',
                   )}
                 >
                   {generating ? (
                     <>
                       <div className="w-3.5 h-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                      Generating...
+                      Generating…
                     </>
                   ) : (
                     <>
@@ -193,28 +260,40 @@ export function FreestyleShowcaseSection() {
                       Generate
                     </>
                   )}
-                </div>
-
-                {/* Results grid */}
-                <div className={cn('grid grid-cols-3 gap-2 transition-all duration-500', showResults ? 'opacity-100' : 'opacity-0')}>
-                  {RESULT_CARDS.map((card, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        'rounded-lg overflow-hidden transition-all duration-500',
-                        visibleResults.includes(i)
-                          ? 'opacity-100 translate-y-0 scale-100'
-                          : 'opacity-0 translate-y-3 scale-95'
-                      )}
-                    >
-                      <div className={cn('aspect-[4/5] bg-gradient-to-br', card.gradient)} />
-                      <div className="px-2 py-1.5 bg-muted/50">
-                        <p className="text-[9px] text-muted-foreground font-medium truncate">{card.label}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                </button>
               </div>
+            </div>
+
+            {/* Results grid — below the panel */}
+            <div
+              className={cn(
+                'grid grid-cols-3 gap-3 mt-4 transition-all duration-500',
+                showResults ? 'opacity-100' : 'opacity-0 pointer-events-none',
+              )}
+            >
+              {RESULT_CARDS.map((card, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    'rounded-xl overflow-hidden border border-border/50 bg-card shadow-md transition-all duration-500',
+                    visibleResults.includes(i)
+                      ? 'opacity-100 translate-y-0 scale-100'
+                      : 'opacity-0 translate-y-4 scale-95',
+                  )}
+                >
+                  <ShimmerImage
+                    src={card.src}
+                    alt={card.label}
+                    aspectRatio="4/5"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="px-2.5 py-1.5 bg-card">
+                    <p className="text-[10px] text-muted-foreground font-medium truncate">
+                      {card.label}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
