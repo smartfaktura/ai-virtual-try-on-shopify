@@ -750,9 +750,94 @@ export default function Generate() {
     }
   };
 
+  // Helper: enqueue a single try-on job via direct fetch (used for multi-product upfront)
+  const enqueueTryOnForProduct = async (product: Product, token: string): Promise<{ jobId: string; newBalance: number } | null> => {
+    if (!selectedModel || !selectedPose) return null;
+    const selectedImageId = Array.from(selectedSourceImages)[0];
+    const sourceImage = product.images.find(img => img.id === selectedImageId);
+    const sourceImageUrl = sourceImage?.url || product.images[0]?.url || '';
+    if (!sourceImageUrl) return null;
+
+    const [base64ProductImage, base64ModelImage, base64SceneImage] = await Promise.all([
+      convertImageToBase64(sourceImageUrl),
+      convertImageToBase64(selectedModel.previewUrl),
+      selectedPose.previewUrl ? convertImageToBase64(selectedPose.previewUrl) : Promise.resolve(undefined),
+    ]);
+
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        jobType: 'tryon',
+        payload: {
+          product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
+          model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
+          pose: { name: selectedPose.name, description: selectedPose.promptHint || selectedPose.description, category: selectedPose.category, imageUrl: base64SceneImage },
+          aspectRatio, imageCount: parseInt(imageCount),
+          framing: framing || undefined,
+          workflow_id: activeWorkflow?.id || null,
+          product_id: product.id || null,
+          product_name: product.title,
+          brand_profile_id: selectedBrandProfileId || null,
+        },
+        imageCount: parseInt(imageCount),
+        quality,
+        hasModel: true,
+        hasScene: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      if (response.status === 402) {
+        toast.error(`Not enough credits for "${product.title}"`);
+      } else if (response.status === 429) {
+        toast.error(err.message || `Rate limit reached for "${product.title}"`);
+      } else {
+        toast.error(err.error || `Failed to queue "${product.title}"`);
+      }
+      return null;
+    }
+    return response.json();
+  };
+
   const handleTryOnConfirmGenerate = async () => {
     try {
     if (!selectedModel || !selectedPose) return;
+
+    // Multi-product upfront enqueue
+    if (isMultiProductMode) {
+      setTryOnConfirmModalOpen(false);
+      setCurrentStep('generating');
+      setGeneratingProgress(0);
+
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
+
+      const jobMap = new Map<string, string>();
+      let lastBalance: number | null = null;
+      for (const product of productQueue) {
+        const result = await enqueueTryOnForProduct(product, token);
+        if (result) {
+          jobMap.set(product.id, result.jobId);
+          lastBalance = result.newBalance;
+        }
+      }
+
+      if (jobMap.size === 0) {
+        toast.error('Could not queue any products');
+        setCurrentStep('settings');
+        return;
+      }
+      if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setMultiProductJobIds(jobMap);
+      toast.success(`Queued ${jobMap.size} product${jobMap.size > 1 ? 's' : ''} for generation`);
+      return;
+    }
+
+    // Single product path (unchanged)
     let sourceImageUrl = '';
     let productData: { title: string; productType: string; description: string } | null = null;
     if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
