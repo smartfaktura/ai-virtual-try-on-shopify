@@ -1,30 +1,39 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Show User Email in Admin Feedback Panel
 
-### Issues Found
+### Problem
+The admin panel currently shows a truncated `user_id` (e.g., `fe45fd27…`). The `profiles` table has `email` but its RLS only allows users to read their own profile, so admins can't query it directly for other users.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Solution
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+1. **New database function** — Create a `SECURITY DEFINER` function `get_user_emails_for_admin` that accepts an array of user_ids and returns `{user_id, email}` pairs, but only if the caller is an admin.
 
-### Plan
+2. **Update AdminFeedbackPanel** — After fetching feedback items, collect unique `user_id`s and call the new function via `supabase.rpc()`. Build a lookup map and display email instead of truncated ID.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Changes
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+| Action | Location | Detail |
+|--------|----------|--------|
+| Migration | DB function | `get_user_emails_for_admin(uuid[])` — security definer, checks `has_role(auth.uid(), 'admin')`, returns `user_id, email` from profiles |
+| Edit | `AdminFeedbackPanel.tsx` | After fetching items, call RPC to get emails; display email in each feedback row instead of truncated user_id |
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### DB Function
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+```sql
+CREATE OR REPLACE FUNCTION public.get_user_emails_for_admin(p_user_ids uuid[])
+RETURNS TABLE(user_id uuid, email text)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT p.user_id, p.email
+  FROM public.profiles p
+  WHERE p.user_id = ANY(p_user_ids)
+    AND public.has_role(auth.uid(), 'admin'::app_role);
+$$;
+```
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### UI Change
+
+Replace `{item.user_id?.slice(0, 8)}…` with the resolved email (fallback to truncated ID if not found). Fetch emails in a separate `useQuery` keyed on the item user_ids.
 
