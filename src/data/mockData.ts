@@ -1404,7 +1404,7 @@ export const pricingPlans: PricingPlan[] = [
       '1 Brand Profile',
       '1 product upload',
     ],
-    ctaText: 'Current Plan',
+    ctaText: 'Get Started Free',
   },
   {
     planId: 'starter',
@@ -1431,10 +1431,10 @@ export const pricingPlans: PricingPlan[] = [
     credits: 1500,
     features: [
       'Priority queue',
+      'Creative Drops',
       'Video Generation (coming soon)',
       '10 Brand Profiles',
       'Up to 100 products',
-      'All workflows',
     ],
     highlighted: true,
     badge: 'Most Popular',
