@@ -83,7 +83,7 @@ export function FeedbackBanner() {
   const isExpanded = !!selectedType;
 
   return (
-    <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 sm:p-4 space-y-3 animate-fade-in">
+    <div ref={containerRef} className="bg-primary/5 border border-primary/20 rounded-xl p-3 sm:p-4 space-y-3 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
