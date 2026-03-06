@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 const footerLinks = {
   Product: [
     { label: 'Workflows', to: '/features/workflows' },
-    { label: 'Pricing', to: '/#pricing' },
+    { label: 'Pricing', to: '/pricing' },
     { label: 'Virtual Try-On', to: '/features/virtual-try-on' },
     { label: 'Creative Drops', to: '/features/creative-drops' },
     { label: 'Brand Profiles', to: '/features/brand-profiles' },
