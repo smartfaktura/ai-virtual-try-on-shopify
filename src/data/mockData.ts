@@ -1404,7 +1404,7 @@ export const pricingPlans: PricingPlan[] = [
       '1 Brand Profile',
       '1 product upload',
     ],
-    ctaText: 'Current Plan',
+    ctaText: 'Get Started Free',
   },
   {
     planId: 'starter',
