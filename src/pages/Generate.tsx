@@ -830,7 +830,11 @@ export default function Generate() {
             // Auto-trigger after a short delay
             setTimeout(() => {
               setMultiProductAutoAdvancing(false);
-              handleWorkflowGenerate();
+              if (activeWorkflow?.uses_tryon) {
+                handleTryOnConfirmGenerate();
+              } else {
+                handleWorkflowGenerate();
+              }
             }, 1500);
           } else {
             // All done — aggregate results
@@ -879,7 +883,13 @@ export default function Generate() {
           const nextProduct = productQueue[nextIdx];
           setSelectedProduct(nextProduct);
           if (nextProduct.images.length > 0) setSelectedSourceImages(new Set([nextProduct.images[0].id]));
-          setTimeout(() => handleWorkflowGenerate(), 1500);
+          setTimeout(() => {
+            if (activeWorkflow?.uses_tryon) {
+              handleTryOnConfirmGenerate();
+            } else {
+              handleWorkflowGenerate();
+            }
+          }, 1500);
         } else {
           // All done with failures
           const allImages: string[] = [];
@@ -1745,7 +1755,7 @@ export default function Generate() {
               )
             ) : activeWorkflow?.uses_tryon ? (
               <div className="space-y-3">
-                {isMirrorSelfie && selectedProductIds.size > 0 && (
+                {!isFreeUser && selectedProductIds.size > 0 && (
                   <div className="flex gap-2 items-center">
                     <Badge variant={selectedProductIds.size >= 2 ? 'default' : 'secondary'}>{selectedProductIds.size} selected</Badge>
                     <span className="text-xs text-muted-foreground">(max {MAX_PRODUCTS_PER_BATCH})</span>
@@ -1753,14 +1763,15 @@ export default function Generate() {
                 )}
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                   {userProducts.map(up => {
+                    const canMultiSelect = !isFreeUser;
                     const isSelected = selectedProductIds.has(up.id);
-                    const isDisabled = !isSelected && isMirrorSelfie && selectedProductIds.size >= MAX_PRODUCTS_PER_BATCH;
+                    const isDisabled = !isSelected && canMultiSelect && selectedProductIds.size >= MAX_PRODUCTS_PER_BATCH;
                     return (
                       <button
                         key={up.id}
                         type="button"
                         onClick={() => {
-                          if (isMirrorSelfie) {
+                          if (canMultiSelect) {
                             const newSet = new Set(selectedProductIds);
                             if (newSet.has(up.id)) { newSet.delete(up.id); }
                             else if (newSet.size < MAX_PRODUCTS_PER_BATCH) { newSet.add(up.id); }
@@ -1776,7 +1787,7 @@ export default function Generate() {
                             : 'border-transparent hover:border-border'
                         } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
                       >
-                        {isMirrorSelfie && (
+                        {canMultiSelect && (
                           <div className="absolute top-1.5 left-1.5 z-10 bg-white/90 rounded shadow-sm p-0.5">
                             <Checkbox checked={isSelected} disabled={isDisabled} />
                           </div>
@@ -1827,12 +1838,16 @@ export default function Generate() {
                     const mappedProducts = selectedUps.map(up => mapUserProductToProduct(up));
                     setSelectedProduct(mappedProducts[0]);
                     setSelectedSourceImages(new Set([mappedProducts[0].images[0].id]));
-                    if (isMirrorSelfie && mappedProducts.length > 1) {
+                    if (mappedProducts.length > 1) {
                       setProductQueue(mappedProducts);
                       setCurrentProductIndex(0);
                       setMultiProductResults(new Map());
-                      setMirrorSettingsPhase('scenes');
-                      setCurrentStep('settings');
+                      if (isMirrorSelfie) {
+                        setMirrorSettingsPhase('scenes');
+                        setCurrentStep('settings');
+                      } else {
+                        setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                      }
                     } else {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     }
@@ -1915,7 +1930,7 @@ export default function Generate() {
                   }
                 }
               }}>
-                {selectedProductIds.size === 0 ? 'Select at least 1' : isMirrorSelfie ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : activeWorkflow?.uses_tryon ? 'Continue' : isFlatLay ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
+                {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : isFlatLay ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
               </Button>
             </div>
           </CardContent></Card>
