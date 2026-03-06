@@ -53,12 +53,26 @@ export function StudioTeamSection() {
     };
   }, []);
 
+  const touchResumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleMouseEnter = useCallback(() => {
     isHoveredRef.current = true;
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     isHoveredRef.current = false;
+  }, []);
+
+  const handleTouchStart = useCallback(() => {
+    isHoveredRef.current = true;
+    if (touchResumeRef.current) clearTimeout(touchResumeRef.current);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchResumeRef.current) clearTimeout(touchResumeRef.current);
+    touchResumeRef.current = setTimeout(() => {
+      isHoveredRef.current = false;
+    }, 4000);
   }, []);
 
   return (
@@ -83,7 +97,7 @@ export function StudioTeamSection() {
           {/* Navigation arrows */}
           <button
             onClick={() => scroll('left')}
-            className={`absolute -left-2 sm:-left-5 top-[35%] -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
+            className={`absolute -left-2 sm:-left-5 top-[35%] -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-card border border-border shadow-md hidden sm:flex items-center justify-center transition-all ${
               canScrollLeft
                 ? 'opacity-100 hover:bg-accent hover:shadow-lg'
                 : 'opacity-0 pointer-events-none'
@@ -94,7 +108,7 @@ export function StudioTeamSection() {
           </button>
           <button
             onClick={() => scroll('right')}
-            className={`absolute -right-2 sm:-right-5 top-[35%] -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
+            className={`absolute -right-2 sm:-right-5 top-[35%] -translate-y-1/2 z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-card border border-border shadow-md hidden sm:flex items-center justify-center transition-all ${
               canScrollRight
                 ? 'opacity-100 hover:bg-accent hover:shadow-lg'
                 : 'opacity-0 pointer-events-none'
@@ -108,8 +122,10 @@ export function StudioTeamSection() {
           <div
             ref={scrollRef}
             onScroll={updateScrollState}
-            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className="flex gap-5 overflow-x-auto pb-4"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
           >
             {TEAM_MEMBERS.map((member) => (
               <div
