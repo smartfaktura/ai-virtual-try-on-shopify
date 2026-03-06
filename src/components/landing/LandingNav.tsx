@@ -8,7 +8,7 @@ const navLinks = [
   { label: 'Discover', href: '/discover', isRoute: true },
   { label: 'Team', href: '#team' },
   { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Pricing', href: '#pricing' },
+  { label: 'Pricing', href: '/pricing', isRoute: true },
   { label: 'FAQ', href: '#faq' },
 ];
 
