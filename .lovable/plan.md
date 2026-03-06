@@ -1,30 +1,30 @@
 
 
-## Problem: Batch Jobs Not Grouped in Activity
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-When generating 2 variations, each variation becomes a separate queue job (MAX_IMAGES_PER_JOB = 1). The batch grouping in `batchGrouping.ts` groups jobs by matching `workflow_id` + `product_name` within a **5-second window**. But since jobs are enqueued **sequentially** (each `await`s the edge function response), if the edge function takes >5 seconds, the second job falls outside the grouping window and appears as a separate activity entry — or doesn't group at all.
+### Issues Found
 
-Additionally, the activity card doesn't show variation count info (e.g., "2 images" or "1 of 2") for single-appearing jobs.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Fix
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**1. Add a `batch_id` to the payload** (`useGenerationBatch.ts`)
-- Generate a unique `batch_id` (e.g., `crypto.randomUUID()`) before the enqueue loop
-- Include it in each chunk's payload so all jobs from the same user action share the same identifier
+### Plan
 
-**2. Update batch grouping** (`batchGrouping.ts`)  
-- Group by `batch_id` first (if present in payload), falling back to the current time-window heuristic
-- This guarantees jobs from the same generation are always grouped regardless of enqueue timing
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**3. Extract `batch_id` in Workflows page** (`Workflows.tsx`)
-- Read `batch_id` from `payload` when mapping active/completed/failed jobs into `ActiveJob`
-- Pass it through to the grouping function
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**4. Update `ActiveJob` interface** (`batchGrouping.ts`)
-- Add optional `batch_id?: string` field
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### Files changed
-- `src/hooks/useGenerationBatch.ts` — add `batch_id` to chunk payloads
-- `src/lib/batchGrouping.ts` — group by `batch_id` when available; update `ActiveJob` interface
-- `src/pages/Workflows.tsx` — extract `batch_id` from payload when mapping jobs
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

@@ -181,6 +181,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
 
     toast.info(`Splitting into ${chunks.length} generation batch${chunks.length > 1 ? 'es' : ''}...`);
 
+    const batchId = crypto.randomUUID();
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
     const { data: session } = await supabase.auth.getSession();
     const token = session?.session?.access_token;
@@ -204,6 +205,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
       const chunkPayload = {
         ...payload,
         selected_variations: chunk,
+        batch_id: batchId,
       };
 
       try {

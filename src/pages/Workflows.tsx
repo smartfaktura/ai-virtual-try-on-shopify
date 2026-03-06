@@ -70,6 +70,7 @@ export default function Workflows() {
             credits_reserved: j.credits_reserved ?? 0,
             job_type: j.job_type ?? null,
             quality: (p?.quality as string) ?? null,
+            batch_id: (p?.batch_id as string) ?? null,
           };
         });
     },
@@ -108,6 +109,7 @@ export default function Workflows() {
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
             job_type: j.job_type ?? null,
             quality: (p?.quality as string) ?? null,
+            batch_id: (p?.batch_id as string) ?? null,
           };
         });
     },
@@ -147,6 +149,7 @@ export default function Workflows() {
             product_name: ((p?.product as Record<string, unknown>)?.title as string) ?? null,
             job_type: j.job_type ?? null,
             quality: (p?.quality as string) ?? null,
+            batch_id: (p?.batch_id as string) ?? null,
           };
         });
     },
