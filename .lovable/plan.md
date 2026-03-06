@@ -1,24 +1,30 @@
 
 
-## Unify Product Selection Style for Non-Try-On Workflows
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Apply the same clean product grid UI used in try-on workflows to non-try-on workflows (Product Listing Set, Flat Lay Set, etc.).
+### Issues Found
 
-### Problem
-Non-try-on workflows use the old `ProductMultiSelect` component with a different card style, while try-on workflows have a nicer UI with search toolbar, grid/list toggle, circular checkmarks, and cleaner cards.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Changes in `src/pages/Generate.tsx`
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**Lines 2089-2103** — Replace the `ProductMultiSelect` fallback with the same UI pattern used for try-on workflows (lines 1911-2087):
+### Plan
 
-- Same search toolbar with `Search` icon input, Select All, Clear buttons
-- Same grid/list view toggle
-- Same selection badge row
-- Same grid card style: circular checkmarks that appear on hover, clean image + title layout
-- Same "Add New" dashed card at the end
-- Reuse the same `tryOnSearchQuery` state (or add a parallel one) and `productViewMode` toggle
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-The key difference: map `userProducts` through `mapUserProductToProduct` for selection tracking (since non-try-on uses `Product` type), but render using the same visual layout.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-This replaces the `ProductMultiSelect` component usage entirely for this page, keeping it consistent across all workflow types.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
