@@ -66,6 +66,12 @@ const App = () => (
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
 
 
+            {/* Feature pages */}
+            <Route path="/features/workflows" element={<WorkflowsFeature />} />
+            <Route path="/features/virtual-try-on" element={<VirtualTryOnFeature />} />
+            <Route path="/features/creative-drops" element={<CreativeDropsFeature />} />
+            <Route path="/features/brand-profiles" element={<BrandProfilesFeature />} />
+
             {/* Company pages */}
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
