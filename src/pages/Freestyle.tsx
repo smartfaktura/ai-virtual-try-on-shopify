@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
