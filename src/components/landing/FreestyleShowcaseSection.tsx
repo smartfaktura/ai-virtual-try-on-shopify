@@ -228,7 +228,7 @@ export function FreestyleShowcaseSection() {
               <div
                 key={i}
                 className={cn(
-                  'rounded-xl overflow-hidden border border-border/50 bg-card shadow-md transition-all duration-500',
+                  'rounded-xl overflow-hidden border border-border/50 bg-card shadow-md transition-[opacity,transform] duration-500 will-change-[opacity,transform]',
                   visibleResults.includes(i)
                     ? 'opacity-100 translate-y-0 scale-100'
                     : 'opacity-0 translate-y-4 scale-95',
