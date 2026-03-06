@@ -1934,6 +1934,7 @@ export default function Generate() {
                     </div>
                   );
                 })()}
+              </div>
             ) : (
               <div className="space-y-3">
                 <ProductMultiSelect
