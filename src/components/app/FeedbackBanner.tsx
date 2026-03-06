@@ -93,7 +93,7 @@ export function FeedbackBanner() {
             <p className="text-xs text-muted-foreground hidden sm:block">Share a bug report, feature request, or general feedback</p>
           </div>
         </div>
-        <button onClick={() => setCollapsed(true)} className="opacity-60 hover:opacity-100 transition-opacity shrink-0">
+        <button onClick={() => { setCollapsed(true); sessionStorage.setItem(COLLAPSED_KEY, 'true'); }} className="opacity-60 hover:opacity-100 transition-opacity shrink-0">
           <X className="w-4 h-4" />
         </button>
       </div>
