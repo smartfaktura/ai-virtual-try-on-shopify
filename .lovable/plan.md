@@ -1,31 +1,30 @@
 
 
-## Improve Product Selection UX for Try-On Workflows
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Changes to `src/pages/Generate.tsx`
+### Issues Found
 
-**1. Add search bar** — Add an `Input` with search icon above the product grid. Filter `userProducts` by title/product_type matching the search query. Import `Input` from `@/components/ui/input` and `Search` icon (already imported as it's not — need to check, but lucide icons are available).
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**2. Add toolbar row** with:
-- Search input (left, flex-1)
-- Select All / Clear All buttons (right)
-- Grid/List view toggle (two icon buttons: `LayoutGrid` + `List` icons from lucide)
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**3. Add view mode state** — `const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid')`
+### Plan
 
-**4. Improve checkbox styling** — Replace the floating `bg-white/90 rounded shadow-sm p-0.5` box with a cleaner overlay: semi-transparent dark overlay in the top-left corner with a white checkbox icon, only visible on hover or when selected. Use a gradient overlay approach:
-- Always show a subtle top-left gradient overlay on the card
-- Show a check circle icon (filled primary when selected, outline when hovered)
-- Remove the boxy white container look
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**5. List view** — When `productViewMode === 'list'`, render products as horizontal rows instead of grid cards:
-- Each row: small thumbnail (48×48), title, product type, checkbox on the right
-- Compact, scannable format for users with many products
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**6. Select All / Clear All logic**:
-- "Select All" selects all visible (filtered) products up to `MAX_PRODUCTS_PER_BATCH`
-- "Clear" deselects all
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### Scope
-All changes in `src/pages/Generate.tsx` only — the try-on product section (lines ~1756-1815). No new components needed.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
