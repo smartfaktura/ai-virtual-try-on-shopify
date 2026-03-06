@@ -1,30 +1,35 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Inline Feedback Banner — Simple, Non-Floating
 
-### Issues Found
+Instead of a floating widget, add a small inline feedback banner section on key pages. It follows the same pattern as `LowCreditsBanner` — a dismissible inline card that sits naturally in the page flow.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Where it goes
+- **Dashboard** — below the onboarding checklist / metrics area
+- **Settings** — bottom of the page
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### What it looks like
+A subtle branded card (matching the existing `LowCreditsBanner` style — `rounded-xl`, `border`, muted background):
+- `MessageSquarePlus` icon + "Help us improve VOVV.AI" title
+- Short subtitle: "Share a bug report, feature request, or general feedback"
+- 3 small type chips (Bug / Feature / General) — clicking one opens a simple inline textarea + submit
+- Dismissible per session (localStorage)
+- After submit: success state with "Thanks! We read every submission." then auto-collapse
 
-### Plan
+### Database
+- New `feedback` table: `id`, `user_id`, `type` (bug/feature/general), `message`, `page_url`, `status` (new/reviewed/planned/done), `admin_notes`, `created_at`
+- RLS: users insert + read own; admins read + update all
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Admin view
+- New section on Settings page (admin-only): simple table of feedback entries with status filter tabs and inline status dropdown to update
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### Files
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+| Action | File |
+|--------|------|
+| New | `src/components/app/FeedbackBanner.tsx` — inline collapsible feedback card |
+| New | `src/components/app/AdminFeedbackPanel.tsx` — admin table in Settings |
+| Edit | `src/pages/Dashboard.tsx` — add `<FeedbackBanner />` |
+| Edit | `src/pages/Settings.tsx` — add `<FeedbackBanner />` + admin panel |
+| Migration | Create `feedback` table with RLS |
 
