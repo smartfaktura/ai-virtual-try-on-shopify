@@ -23,6 +23,7 @@ interface ShopifyListProduct {
 }
 
 type Step = 'connect' | 'select' | 'importing' | 'done';
+const MAX_SHOPIFY_BATCH = 100;
 
 export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabProps) {
   const { user } = useAuth();
