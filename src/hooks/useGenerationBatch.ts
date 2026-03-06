@@ -205,6 +205,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
       const chunkPayload = {
         ...payload,
         selected_variations: chunk,
+        batch_id: batchId,
       };
 
       try {

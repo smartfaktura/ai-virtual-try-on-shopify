@@ -51,6 +51,43 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   );
 
+  // First pass: group by batch_id
+  const batchIdMap = new Map<string, ActiveJob[]>();
+  for (const job of sorted) {
+    if (job.batch_id) {
+      const existing = batchIdMap.get(job.batch_id) || [];
+      existing.push(job);
+      batchIdMap.set(job.batch_id, existing);
+      used.add(job.id);
+    }
+  }
+
+  for (const [batchId, batch] of batchIdMap) {
+    const anchor = batch[0];
+    const completedCount = batch.filter((j) => j.status === 'completed').length;
+    const failedCount = batch.filter((j) => j.status === 'failed').length;
+    const processingCount = batch.filter((j) => j.status === 'processing').length;
+    const queuedCount = batch.filter((j) => j.status === 'queued').length;
+
+    groups.push({
+      key: `batch-${batchId}`,
+      workflow_id: anchor.workflow_id,
+      workflow_name: anchor.workflow_name,
+      product_name: anchor.product_name ?? null,
+      jobs: batch,
+      totalCount: batch.length,
+      completedCount,
+      processingCount,
+      queuedCount,
+      failedCount,
+      allCompleted: completedCount + failedCount === batch.length && completedCount > 0,
+      created_at: anchor.created_at,
+      job_type: anchor.job_type ?? null,
+      quality: anchor.quality ?? null,
+    });
+  }
+
+  // Second pass: fallback time-window grouping for jobs without batch_id
   for (let i = 0; i < sorted.length; i++) {
     if (used.has(sorted[i].id)) continue;
 
