@@ -1,30 +1,50 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Social Login Post-Auth Issues Analysis
 
-### Issues Found
+After tracing through the code, here are the findings:
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Issue 1: Social login redirect works correctly (no bug)
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+The OAuth flow sets `redirect_uri` to `/app`. When the user returns after social login:
+- `AuthContext.onAuthStateChange` fires with the new session
+- `ProtectedRoute` checks `profiles.onboarding_completed` (defaults to `false`)
+- User is correctly redirected to `/onboarding`
 
-### Plan
+This is working as designed. After onboarding, users reach the dashboard.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Issue 2: `display_name` not saved to profile for social users
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+The `handle_new_user` trigger only inserts `user_id`, `email`, and `credits_balance`. For social login (Google/Apple), the user's name is available in `NEW.raw_user_meta_data->>'full_name'` or `'name'`, but the trigger ignores it. This means the Dashboard greets social users with "Welcome, there" instead of their actual name.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**Fix**: Update the `handle_new_user` trigger to extract display_name from OAuth metadata:
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.profiles (user_id, email, credits_balance, display_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    20,
+    COALESCE(
+      NEW.raw_user_meta_data->>'display_name',
+      NEW.raw_user_meta_data->>'full_name',
+      NEW.raw_user_meta_data->>'name',
+      split_part(NEW.email, '@', 1)
+    )
+  );
+  RETURN NEW;
+END;
+$$;
+```
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### Issue 3: Old product images using expired signed URLs
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+Some older products (created in February) have `image_url` values with signed tokens (`?token=eyJ...`). The `product-uploads` bucket is **public**, so these signed URLs are unnecessary. However, if the tokens expire, the URLs may still work since the bucket is public (Supabase serves public bucket files regardless of token validity). This is likely **not a real issue** since public buckets serve files without auth.
+
+### Recommended Changes
+
+1. **Database migration**: Update `handle_new_user` trigger to capture OAuth display name
+2. **No code changes needed** for the redirect flow -- it works correctly
 
