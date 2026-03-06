@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Send, Trophy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Trophy } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface ImageLightboxProps {
