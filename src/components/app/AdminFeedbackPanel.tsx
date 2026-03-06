@@ -64,6 +64,20 @@ export function AdminFeedbackPanel() {
     },
   });
 
+  const userIds = [...new Set(items.map((i: any) => i.user_id).filter(Boolean))];
+  const { data: emailMap = {} } = useQuery({
+    queryKey: ['admin-feedback-emails', userIds.join(',')],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_user_emails_for_admin' as any, { p_user_ids: userIds });
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data as any[])?.forEach((r: any) => { map[r.user_id] = r.email; });
+      return map;
+    },
+    enabled: userIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase.from('feedback' as any).update({ status }).eq('id', id);
@@ -199,9 +213,9 @@ export function AdminFeedbackPanel() {
                       <p className="text-sm text-foreground">{cleanMessage(item.message)}</p>
 
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1" title={item.user_id}>
                           <User className="w-3 h-3" />
-                          {item.user_id?.slice(0, 8)}…
+                          {emailMap[item.user_id] || `${item.user_id?.slice(0, 8)}…`}
                         </span>
                         {item.page_url && <span>Page: {item.page_url}</span>}
                       </div>
