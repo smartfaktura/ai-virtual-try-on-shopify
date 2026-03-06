@@ -111,7 +111,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
     try {
       if (signedUrls.length === 1) {
         await downloadSingleImage(signedUrls[0], `${title.replace(/\s+/g, '_')}.png`);
-        toast.success('Image downloaded');
+        
       } else {
         const images = signedUrls.map((url, i) => ({
           url,
