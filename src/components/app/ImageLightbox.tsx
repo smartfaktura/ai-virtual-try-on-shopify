@@ -168,13 +168,6 @@ export function ImageLightbox({
               Share
             </button>
           )}
-        </div>
-        {onShare && (
-          <div className="flex items-center justify-center gap-2 mt-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md">
-            <Trophy className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-xs text-white/50">Share to Discover — win up to 10,000 credits each month</span>
-          </div>
-        )}
           {onDelete && (
             <button
               onClick={() => onDelete(currentIndex)}
@@ -185,6 +178,12 @@ export function ImageLightbox({
             </button>
           )}
         </div>
+        {onShare && (
+          <div className="flex items-center justify-center gap-2 mt-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md">
+            <Trophy className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs text-muted-foreground">Share to Discover — win up to 10,000 credits each month</span>
+          </div>
+        )}
       </div>
     </div>
   );
