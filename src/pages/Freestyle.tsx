@@ -62,6 +62,7 @@ export default function Freestyle() {
   // productSourced removed — product and reference image are now independent
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [shareImageIndex, setShareImageIndex] = useState<number | null>(null);
   const [stylePresets, setStylePresets] = useState<string[]>([]);
   const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
