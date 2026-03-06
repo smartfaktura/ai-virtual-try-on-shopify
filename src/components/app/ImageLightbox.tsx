@@ -170,10 +170,13 @@ export function ImageLightbox({
           )}
         </div>
         {onShare && (
-          <div className="flex items-center justify-center gap-2 mt-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md">
-            <Trophy className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs text-muted-foreground">Share to Discover — win up to 10,000 credits each month</span>
-          </div>
+          <button
+            onClick={() => onShare(currentIndex)}
+            className="flex items-center justify-center gap-2 mt-3 px-5 py-2.5 rounded-full bg-primary/20 hover:bg-primary/30 backdrop-blur-md transition-colors cursor-pointer"
+          >
+            <Trophy className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Share to Discover — win up to 10,000 credits each month</span>
+          </button>
         )}
       </div>
     </div>
