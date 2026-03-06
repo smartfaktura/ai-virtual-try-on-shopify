@@ -93,6 +93,8 @@ export function HowItWorks() {
   const ctaRef = useInView(0.3);
 
   return (
+    <>
+    <style>{dragDropKeyframes}</style>
     <section id="how-it-works" className="py-20 sm:py-28 bg-muted/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
