@@ -1,24 +1,30 @@
 
 
-## Enhance Admin Feedback Panel in Settings
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The `AdminFeedbackPanel` already exists in Settings and renders for admins. It shows feedback items with status filtering and status updates. I'll enhance it to be more comprehensive and useful for reviewing all requests including model/scene/workflow requests from the `MissingRequestBanner`.
+### Issues Found
 
-### Enhancements
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**`src/components/app/AdminFeedbackPanel.tsx`**:
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-1. **Type filter chips** — Add a second row of filter chips for type (`bug`, `feature`, `general`) so admins can quickly find feature requests vs bugs
-2. **Request tag parsing** — Parse `[model-request]`, `[scene-request]`, `[workflow-request]` prefixes from messages and show them as colored badges, making content requests easy to spot
-3. **Admin notes** — Add an inline editable notes field per item (uses existing `admin_notes` column in the feedback table) so admins can jot down internal context
-4. **Better layout** — Show user email (join or display user_id), increase max height, add item count in header
-5. **Collapsible section** — Wrap in a collapsible so it doesn't take too much space when not needed
+### Plan
 
-### Files
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-| File | Change |
-|------|--------|
-| `src/components/app/AdminFeedbackPanel.tsx` | Add type filtering, request tag badges, inline admin notes editing, improved layout |
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-No database or migration changes needed — `admin_notes` column already exists on the `feedback` table.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
