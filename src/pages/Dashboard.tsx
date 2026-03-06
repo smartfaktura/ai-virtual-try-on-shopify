@@ -301,6 +301,9 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Feedback Banner */}
+        <FeedbackBanner />
       </div>
     );
   }
