@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ImageLightbox } from '@/components/app/ImageLightbox';
+import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
@@ -61,6 +62,7 @@ export default function Freestyle() {
   // productSourced removed — product and reference image are now independent
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [shareImageIndex, setShareImageIndex] = useState<number | null>(null);
   const [stylePresets, setStylePresets] = useState<string[]>([]);
   const [selectedBrandProfile, setSelectedBrandProfile] = useState<BrandProfile | null>(null);
   const [brandProfilePopoverOpen, setBrandProfilePopoverOpen] = useState(false);
@@ -685,23 +687,38 @@ export default function Freestyle() {
       </div>
 
       {savedImages.length > 0 && (
-        <ImageLightbox
-          images={savedImages.map(i => i.url)}
-          currentIndex={lightboxIndex}
-          open={lightboxOpen}
-          onClose={() => setLightboxOpen(false)}
-          onNavigate={setLightboxIndex}
-          onDownload={(idx) => handleDownload(savedImages[idx].url, idx)}
-          onDelete={(idx) => {
-            handleDelete(savedImages[idx].id);
-            setLightboxOpen(false);
-          }}
-          onCopyPrompt={(idx) => {
-            setPrompt(savedImages[idx].prompt);
-            setLightboxOpen(false);
-            import('sonner').then(({ toast }) => toast.success('Prompt copied to editor'));
-          }}
-        />
+        <>
+          <ImageLightbox
+            images={savedImages.map(i => i.url)}
+            currentIndex={lightboxIndex}
+            open={lightboxOpen}
+            onClose={() => setLightboxOpen(false)}
+            onNavigate={setLightboxIndex}
+            onDownload={(idx) => handleDownload(savedImages[idx].url, idx)}
+            onDelete={(idx) => {
+              handleDelete(savedImages[idx].id);
+              setLightboxOpen(false);
+            }}
+            onCopyPrompt={(idx) => {
+              setPrompt(savedImages[idx].prompt);
+              setLightboxOpen(false);
+              import('sonner').then(({ toast }) => toast.success('Prompt copied to editor'));
+            }}
+            onShare={(idx) => {
+              setShareImageIndex(idx);
+              setLightboxOpen(false);
+            }}
+          />
+          {shareImageIndex !== null && (
+            <SubmitToDiscoverModal
+              open
+              onClose={() => setShareImageIndex(null)}
+              imageUrl={savedImages[shareImageIndex].url}
+              prompt={savedImages[shareImageIndex].prompt}
+              aspectRatio={savedImages[shareImageIndex].aspectRatio}
+            />
+          )}
+        </>
       )}
     </div>
   );

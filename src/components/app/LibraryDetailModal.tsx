@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -11,6 +11,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
+import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 
@@ -25,6 +26,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const [discoverModalOpen, setDiscoverModalOpen] = useState(false);
+  const [submitDiscoverOpen, setSubmitDiscoverOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
@@ -184,6 +186,24 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 </>
               )}
 
+              {/* Share to Discover — visible to all authenticated users */}
+              <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Share to Discover</h3>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Submit your best generations and win up to 10,000 credits
+                </p>
+                <button
+                  onClick={() => setSubmitDiscoverOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  Submit for Review
+                </button>
+              </div>
+
               {/* Admin actions */}
               {isAdmin && (
                 <div className="pt-5 border-t border-border/30">
@@ -227,6 +247,16 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
         <AddToDiscoverModal
           open={discoverModalOpen}
           onClose={() => setDiscoverModalOpen(false)}
+          imageUrl={item.imageUrl}
+          prompt={item.prompt || ''}
+          aspectRatio={item.aspectRatio}
+          quality={item.quality}
+        />
+      )}
+      {submitDiscoverOpen && item && (
+        <SubmitToDiscoverModal
+          open={submitDiscoverOpen}
+          onClose={() => setSubmitDiscoverOpen(false)}
           imageUrl={item.imageUrl}
           prompt={item.prompt || ''}
           aspectRatio={item.aspectRatio}

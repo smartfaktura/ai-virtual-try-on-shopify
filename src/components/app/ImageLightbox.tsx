@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Send } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +14,7 @@ interface ImageLightboxProps {
   onDownload?: (index: number) => void;
   onDelete?: (index: number) => void;
   onCopyPrompt?: (index: number) => void;
+  onShare?: (index: number) => void;
   selectedIndices?: Set<number>;
   productName?: string;
 }
@@ -29,6 +30,7 @@ export function ImageLightbox({
   onDownload,
   onDelete,
   onCopyPrompt,
+  onShare,
   selectedIndices = new Set(),
   productName,
 }: ImageLightboxProps) {
@@ -155,6 +157,15 @@ export function ImageLightbox({
             >
               <ClipboardCopy className="w-4 h-4" />
               Copy Prompt
+            </button>
+          )}
+          {onShare && (
+            <button
+              onClick={() => onShare(currentIndex)}
+              className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+            >
+              <Send className="w-4 h-4" />
+              Share
             </button>
           )}
           {onDelete && (
