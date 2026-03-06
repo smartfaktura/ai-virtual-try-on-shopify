@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Send } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, ClipboardCopy, Send, Trophy } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 
@@ -178,6 +178,12 @@ export function ImageLightbox({
             </button>
           )}
         </div>
+        {onShare && (
+          <div className="flex items-center justify-center gap-2 mt-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-md">
+            <Trophy className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs text-muted-foreground">Share to Discover — win up to 10,000 credits each month</span>
+          </div>
+        )}
       </div>
     </div>
   );
