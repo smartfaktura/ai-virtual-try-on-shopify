@@ -4,6 +4,7 @@ import { HeroSection } from '@/components/landing/HeroSection';
 import { StudioTeamSection } from '@/components/landing/StudioTeamSection';
 
 import { HowItWorks } from '@/components/landing/HowItWorks';
+import { FreestyleShowcaseSection } from '@/components/landing/FreestyleShowcaseSection';
 import { ProductCategoryShowcase } from '@/components/landing/ProductCategoryShowcase';
 import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
 import { EnvironmentShowcaseSection } from '@/components/landing/EnvironmentShowcaseSection';
