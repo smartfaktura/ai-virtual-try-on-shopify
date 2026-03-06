@@ -36,7 +36,7 @@ const steps = [
   {
     number: '03',
     title: 'Get Consistent Results',
-    description: 'Every image matches your visual identity — whether it's a social ad, product page hero, or email campaign banner.',
+    description: "Every image matches your visual identity — whether it's a social ad, product page hero, or email campaign banner.",
   },
 ];
 
