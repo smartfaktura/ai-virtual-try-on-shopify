@@ -208,7 +208,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     return () => document.removeEventListener('paste', handlePaste);
   }, [addFiles]);
 
-
+  const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setDragActive(false);
