@@ -99,6 +99,7 @@ export default function PublicDiscover() {
   // Fetch custom scenes publicly (no auth required with new RLS)
   const { data: customScenes = [] } = useQuery({
     queryKey: ['public-custom-scenes'],
+    staleTime: 10 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('custom_scenes' as any)

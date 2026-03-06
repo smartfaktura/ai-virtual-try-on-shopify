@@ -47,7 +47,14 @@ import CreativeDropsFeature from '@/pages/features/CreativeDropsFeature';
 import BrandProfilesFeature from '@/pages/features/BrandProfilesFeature';
 import Pricing from '@/pages/Pricing';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
