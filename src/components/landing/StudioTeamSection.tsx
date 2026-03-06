@@ -53,12 +53,26 @@ export function StudioTeamSection() {
     };
   }, []);
 
+  const touchResumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleMouseEnter = useCallback(() => {
     isHoveredRef.current = true;
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     isHoveredRef.current = false;
+  }, []);
+
+  const handleTouchStart = useCallback(() => {
+    isHoveredRef.current = true;
+    if (touchResumeRef.current) clearTimeout(touchResumeRef.current);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchResumeRef.current) clearTimeout(touchResumeRef.current);
+    touchResumeRef.current = setTimeout(() => {
+      isHoveredRef.current = false;
+    }, 4000);
   }, []);
 
   return (
