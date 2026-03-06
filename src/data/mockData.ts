@@ -1432,9 +1432,11 @@ export const pricingPlans: PricingPlan[] = [
     annualPrice: 756,
     credits: 1500,
     features: [
+      'Batch generation (3 scenes)',
+      'Freestyle generation',
+      'All Models & Scenes',
       'Priority queue',
       'Creative Drops',
-      'Video Generation (coming soon)',
       '10 Brand Profiles',
       'Up to 100 products',
     ],
