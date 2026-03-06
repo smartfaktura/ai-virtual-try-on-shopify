@@ -145,6 +145,10 @@ export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect,
             </p>
           )}
         </div>
+
+        <div className="mt-2">
+          <MissingRequestBanner category="model" compact />
+        </div>
       </PopoverContent>
     </Popover>
   );

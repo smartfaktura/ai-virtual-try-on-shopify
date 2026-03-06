@@ -131,6 +131,10 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
               </div>
             );
           })}
+
+          <div className="mt-1">
+            <MissingRequestBanner category="scene" compact />
+          </div>
         </div>
       </PopoverContent>
     </Popover>
