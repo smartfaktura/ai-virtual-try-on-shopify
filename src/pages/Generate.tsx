@@ -1828,12 +1828,16 @@ export default function Generate() {
                     const mappedProducts = selectedUps.map(up => mapUserProductToProduct(up));
                     setSelectedProduct(mappedProducts[0]);
                     setSelectedSourceImages(new Set([mappedProducts[0].images[0].id]));
-                    if (isMirrorSelfie && mappedProducts.length > 1) {
+                    if (mappedProducts.length > 1) {
                       setProductQueue(mappedProducts);
                       setCurrentProductIndex(0);
                       setMultiProductResults(new Map());
-                      setMirrorSettingsPhase('scenes');
-                      setCurrentStep('settings');
+                      if (isMirrorSelfie) {
+                        setMirrorSettingsPhase('scenes');
+                        setCurrentStep('settings');
+                      } else {
+                        setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
+                      }
                     } else {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     }
