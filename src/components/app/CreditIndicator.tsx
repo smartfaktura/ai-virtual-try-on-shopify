@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/contexts/CreditContext';
 
 export function CreditIndicator() {
-  const { balance, plan, planConfig, openBuyModal } = useCredits();
+  const { balance, plan, planConfig, openBuyModal, isLow, isCritical, isEmpty } = useCredits();
   const navigate = useNavigate();
 
+  
   const monthlyCredits = planConfig.monthlyCredits;
   const hasBonus = balance > monthlyCredits && monthlyCredits !== Infinity;
   const usagePercent = monthlyCredits === Infinity
@@ -15,6 +16,14 @@ export function CreditIndicator() {
       : Math.min(100, Math.max(3, (balance / monthlyCredits) * 100));
 
   const isFree = plan === 'free';
+
+  const barColor = isEmpty
+    ? 'bg-destructive shadow-[0_0_8px_hsl(var(--destructive)/0.5)]'
+    : isCritical
+      ? 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.4)]'
+      : isLow
+        ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.35)]'
+        : 'bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.4)]';
 
   return (
     <div className="p-3 rounded-xl bg-white/[0.06] space-y-3">
@@ -61,11 +70,9 @@ export function CreditIndicator() {
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 w-full rounded-full bg-white/[0.08] overflow-hidden">
+      <div className="h-2 w-full rounded-full bg-white/[0.15] overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${
-            hasBonus ? 'bg-primary' : 'bg-primary/70'
-          }`}
+          className={`h-full rounded-full transition-all duration-500 ${barColor}`}
           style={{ width: `${usagePercent}%` }}
         />
       </div>

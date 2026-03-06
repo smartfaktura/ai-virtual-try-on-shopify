@@ -184,7 +184,7 @@ export function AppShell({ children }: AppShellProps) {
             <div className="flex flex-col items-center gap-2">
               <button
                 onClick={openBuyModal}
-                className="flex flex-col items-center gap-1"
+                className="flex flex-col items-center gap-1.5"
                 title={`${balance} credits`}
               >
                 <div className={cn(
@@ -197,6 +197,18 @@ export function AppShell({ children }: AppShellProps) {
                   'text-[10px] font-bold',
                   isEmpty ? 'text-destructive' : 'text-sidebar-foreground/50'
                 )}>{balance}</span>
+                {/* Mini progress bar */}
+                <div className="w-8 h-1.5 rounded-full bg-white/[0.15] overflow-hidden">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all duration-500',
+                      isEmpty ? 'bg-destructive shadow-[0_0_6px_hsl(var(--destructive)/0.5)]'
+                        : isLow ? 'bg-amber-400 shadow-[0_0_4px_rgba(251,191,36,0.35)]'
+                        : 'bg-primary shadow-[0_0_4px_hsl(var(--primary)/0.4)]'
+                    )}
+                    style={{ width: `${Math.min(100, Math.max(5, (balance / 20) * 100))}%` }}
+                  />
+                </div>
               </button>
               <button
                 onClick={() => navigate('/app/settings')}
@@ -318,7 +330,7 @@ export function AppShell({ children }: AppShellProps) {
             <button
               onClick={openBuyModal}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border transition-colors',
+                'flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-full border transition-colors',
                 isEmpty
                   ? 'bg-destructive/20 border-destructive/30 text-destructive'
                   : isLow
@@ -326,8 +338,19 @@ export function AppShell({ children }: AppShellProps) {
                     : 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 hover:bg-white/10'
               )}
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="text-xs font-semibold">{balance}</span>
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="text-xs font-semibold">{balance}</span>
+              </div>
+              <div className="w-full h-1 rounded-full bg-white/[0.15] overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all duration-500',
+                    isEmpty ? 'bg-destructive' : isLow ? 'bg-amber-400' : 'bg-primary'
+                  )}
+                  style={{ width: `${Math.min(100, Math.max(5, (balance / 20) * 100))}%` }}
+                />
+              </div>
             </button>
             <button
               onClick={() => setSidebarOpen(true)}

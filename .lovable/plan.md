@@ -1,25 +1,30 @@
 
 
-## Improve Credit Progress Bar Visibility
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The current progress bar is nearly invisible — it uses `bg-white/[0.08]` track with `bg-primary/70` fill on a dark sidebar, making it extremely hard to see (as shown in the screenshot).
+### Issues Found
 
-### Changes
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**`src/components/app/CreditIndicator.tsx`** (desktop expanded sidebar)
-- Increase progress bar height from `h-1.5` to `h-2`
-- Brighten the track background from `bg-white/[0.08]` to `bg-white/[0.15]`
-- Use full `bg-primary` for the fill instead of `bg-primary/70`
-- Add a subtle glow/shadow on the fill bar for better contrast: `shadow-[0_0_6px_rgba(var(--primary-rgb),0.4)]`
-- Add color coding: green-ish primary when healthy, amber when low, red when critical/empty
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**`src/components/app/AppShell.tsx`** — collapsed sidebar credit section (lines 182-211)
-- Add a mini progress bar beneath the balance number in collapsed state, using the same improved styling
+### Plan
 
-**`src/components/app/AppShell.tsx`** — mobile header credit pill (lines 317-331)
-- Add a tiny progress bar (h-1) inside the pill below the text, giving mobile users a quick visual of remaining credits
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Files changed
-- `src/components/app/CreditIndicator.tsx` — brighter, taller progress bar with status colors
-- `src/components/app/AppShell.tsx` — add mini progress bars to collapsed sidebar and mobile header pill
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
