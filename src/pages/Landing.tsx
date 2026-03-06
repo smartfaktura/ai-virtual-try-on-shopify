@@ -26,6 +26,7 @@ export default function Landing() {
         <StudioTeamSection />
         
         <HowItWorks />
+        <FreestyleShowcaseSection />
         
         <ProductCategoryShowcase />
         <ModelShowcaseSection />
