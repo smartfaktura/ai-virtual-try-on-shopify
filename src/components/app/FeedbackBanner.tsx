@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { MessageSquarePlus, X, Bug, Lightbulb, MessageCircle, Check, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { MessageSquarePlus, Bug, Lightbulb, MessageCircle, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -13,32 +14,21 @@ const FEEDBACK_TYPES = [
   { value: 'general', label: 'General', icon: MessageCircle },
 ] as const;
 
-const COLLAPSED_KEY = 'vovv-feedback-collapsed';
-
 export function FeedbackBanner() {
   const { user } = useAuth();
   const location = useLocation();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [collapsed, setCollapsed] = useState(() => sessionStorage.getItem(COLLAPSED_KEY) === 'true');
+  const [open, setOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    if (!collapsed || selectedType) {
-      setTimeout(() => {
-        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 100);
-    }
-  }, [collapsed, selectedType]);
 
   if (!user) return null;
 
   const handleSubmit = async () => {
     if (!message.trim() || !selectedType) return;
     setSubmitting(true);
-    const { error } = await supabase.from('feedback' as any).insert({
+    const { error } = await supabase.from('feedback').insert({
       user_id: user.id,
       type: selectedType,
       message: message.trim(),
@@ -52,111 +42,110 @@ export function FeedbackBanner() {
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
-      setCollapsed(true);
-      sessionStorage.setItem(COLLAPSED_KEY, 'true');
-    }, 2500);
+      setOpen(false);
+      resetForm();
+    }, 2000);
   };
 
-  if (submitted) {
-    return (
-      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-          <Check className="w-4 h-4 text-primary" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-foreground">Thanks! We read every submission.</p>
-          <p className="text-xs text-muted-foreground">Your feedback helps us make VOVV.AI better.</p>
-        </div>
-      </div>
-    );
-  }
+  const resetForm = () => {
+    setSelectedType(null);
+    setMessage('');
+  };
 
-  // Collapsed: minimal one-liner
-  if (collapsed) {
-    return (
-      <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 flex items-center justify-between gap-3 animate-fade-in">
-        <div className="flex items-center gap-3 min-w-0">
-          <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
-          <p className="text-sm text-muted-foreground">Help us improve VOVV.AI</p>
-        </div>
-        <button
-          onClick={() => setCollapsed(false)}
-          className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
-        >
-          Share feedback
-        </button>
-      </div>
-    );
-  }
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      resetForm();
+      setSubmitted(false);
+    }
+  };
 
   const isExpanded = !!selectedType;
 
   return (
-    <div ref={containerRef} className="bg-primary/5 border border-primary/20 rounded-xl p-3 sm:p-4 space-y-3 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <MessageSquarePlus className="h-5 w-5 shrink-0 text-primary" />
-          <div className="min-w-0">
-            <p className="font-semibold text-sm text-foreground">Help us improve VOVV.AI</p>
-            <p className="text-xs text-muted-foreground hidden sm:block">Share a bug report, feature request, or general feedback</p>
-          </div>
-        </div>
-        <button onClick={() => { setCollapsed(true); sessionStorage.setItem(COLLAPSED_KEY, 'true'); }} className="opacity-60 hover:opacity-100 transition-opacity shrink-0">
-          <X className="w-4 h-4" />
-        </button>
+    <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3 min-w-0">
+        <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
+        <p className="text-sm text-muted-foreground">Help us improve VOVV.AI</p>
       </div>
-
-      {/* Type chips */}
-      <div className="flex gap-2 flex-wrap">
-        {FEEDBACK_TYPES.map(t => {
-          const Icon = t.icon;
-          const active = selectedType === t.value;
-          return (
-            <button
-              key={t.value}
-              onClick={() => setSelectedType(active ? null : t.value)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors border ${
-                active
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background text-foreground border-border hover:border-primary/40'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Animated expand for textarea */}
-      <div
-        className="grid transition-all duration-300 ease-out"
-        style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}
-      >
-        <div className="overflow-hidden">
-          <div className="space-y-2 pt-0.5">
-            <Textarea
-              placeholder="Tell us more…"
-              value={message}
-              onChange={e => setMessage(e.target.value)}
-              className="min-h-[72px] text-sm bg-background"
-              maxLength={1000}
-            />
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{message.length}/1000</span>
-              <Button
-                size="sm"
-                onClick={handleSubmit}
-                disabled={!message.trim() || submitting}
-                className="rounded-full font-semibold px-5"
-              >
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Feedback'}
-              </Button>
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
+          <button className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap">
+            Share feedback
+          </button>
+        </PopoverTrigger>
+        <PopoverContent side="top" align="end" className="w-80 p-4 space-y-3">
+          {submitted ? (
+            <div className="flex items-center gap-3 py-2">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <Check className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Thanks! We read every submission.</p>
+                <p className="text-xs text-muted-foreground">Your feedback helps us make VOVV.AI better.</p>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
+                <p className="font-semibold text-sm text-foreground">Share feedback</p>
+              </div>
+
+              {/* Type chips */}
+              <div className="flex gap-2 flex-wrap">
+                {FEEDBACK_TYPES.map(t => {
+                  const Icon = t.icon;
+                  const active = selectedType === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      onClick={() => setSelectedType(active ? null : t.value)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors border ${
+                        active
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-foreground border-border hover:border-primary/40'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Animated expand for textarea */}
+              <div
+                className="grid transition-all duration-300 ease-out"
+                style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}
+              >
+                <div className="overflow-hidden">
+                  <div className="space-y-2 pt-0.5">
+                    <Textarea
+                      placeholder="Tell us more…"
+                      value={message}
+                      onChange={e => setMessage(e.target.value)}
+                      className="min-h-[72px] text-sm bg-background"
+                      maxLength={1000}
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{message.length}/1000</span>
+                      <Button
+                        size="sm"
+                        onClick={handleSubmit}
+                        disabled={!message.trim() || submitting}
+                        className="rounded-full font-semibold px-5"
+                      >
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Feedback'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
