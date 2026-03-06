@@ -13,19 +13,18 @@ const FEEDBACK_TYPES = [
   { value: 'general', label: 'General', icon: MessageCircle },
 ] as const;
 
-const DISMISS_KEY = 'vovv-feedback-dismissed';
+const COLLAPSED_KEY = 'vovv-feedback-collapsed';
 
 export function FeedbackBanner() {
   const { user } = useAuth();
   const location = useLocation();
-  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(DISMISS_KEY) === 'true');
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => sessionStorage.getItem(COLLAPSED_KEY) === 'true');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  if (dismissed || !user) return null;
+  if (!user) return null;
 
   const handleSubmit = async () => {
     if (!message.trim() || !selectedType) return;
