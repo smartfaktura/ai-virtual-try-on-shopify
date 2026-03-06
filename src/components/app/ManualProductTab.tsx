@@ -571,22 +571,21 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             <Label htmlFor="product-desc" className="text-xs font-medium">
               Description
             </Label>
-            {isAnalyzing && !hasManualEdits.current.description ? (
-              <Skeleton className="h-[52px] w-full rounded-md" />
-            ) : (
-              <Textarea
-                id="product-desc"
-                placeholder="Brief description…"
-                value={description}
-                onChange={(e) => {
-                  setDescription(e.target.value);
-                  hasManualEdits.current.description = true;
-                }}
-                maxLength={500}
-                rows={2}
-                className="resize-none min-h-0"
-              />
-            )}
+            <Textarea
+              id="product-desc"
+              placeholder={isAnalyzing && !hasManualEdits.current.description ? "Analyzing…" : "Brief description…"}
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                hasManualEdits.current.description = true;
+              }}
+              maxLength={500}
+              rows={2}
+              className={cn(
+                'resize-none min-h-0 transition-all duration-300',
+                isAnalyzing && !hasManualEdits.current.description && 'animate-pulse ring-1 ring-primary/30'
+              )}
+            />
           </div>
 
           <div className="space-y-1">
