@@ -278,7 +278,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
           {filteredProducts.map((product) => (
             <label
               key={product.id}
-              className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors"
+              className={`flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors ${atLimit && !selectedIds.has(product.id) ? 'opacity-40 pointer-events-none' : ''}`}
             >
               <Checkbox
                 checked={selectedIds.has(product.id)}
