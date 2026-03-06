@@ -29,17 +29,6 @@ const footerLinks = {
 };
 
 export function LandingFooter() {
-  const location = useLocation();
-
-  const handleProductLink = (to: string) => {
-    if (location.pathname === '/' || location.pathname === '/landing') {
-      const hash = to.replace('/', '');
-      const el = document.querySelector(hash);
-      el?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      window.location.href = to;
-    }
-  };
 
   return (
     <footer className="border-t border-border bg-card">
