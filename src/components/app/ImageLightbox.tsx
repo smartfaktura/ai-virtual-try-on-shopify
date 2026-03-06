@@ -30,6 +30,7 @@ export function ImageLightbox({
   onDownload,
   onDelete,
   onCopyPrompt,
+  onShare,
   selectedIndices = new Set(),
   productName,
 }: ImageLightboxProps) {
