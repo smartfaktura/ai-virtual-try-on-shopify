@@ -44,6 +44,7 @@ export function AppShell({ children }: AppShellProps) {
   const { user, signOut } = useAuth();
   const { isAdmin, isRealAdmin } = useIsAdmin();
   const { isAdminView, toggleAdminView } = useAdminView();
+  const { balance, isLow, isEmpty, openBuyModal } = useCredits();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch { return false; }
