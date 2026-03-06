@@ -1,31 +1,30 @@
 
 
-## Fix Mobile Animation Lag in Freestyle Showcase
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Root causes
+### Issues Found
 
-1. **Typewriter fires 30ms interval** -- ~90 characters = ~90 state updates + re-renders in 2.7 seconds. Each re-render repaints the entire component tree on mobile.
-2. **`transition-all`** used on chips, generate button, result cards, and progress bar -- transitions every CSS property including expensive layout ones (padding, border, etc.).
-3. **Progress bar animates `width`** -- triggers layout recalculation on each frame. Should use `transform: scaleX()` which is GPU-composited.
-4. **`blur-3xl` background** -- 800px blurred circle is expensive to composite on low-end mobile GPUs.
-5. **Result cards animate `translate-y` + `scale` + `opacity` simultaneously** with `transition-all`, causing redundant style recalcs.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Fixes in `src/components/landing/FreestyleShowcaseSection.tsx`
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**1. Batch typewriter updates** -- Change interval from 30ms to 50ms and type 2 characters per tick. Cuts state updates in half (~45 renders instead of ~90) with similar visual speed.
+### Plan
 
-**2. Replace `transition-all` with specific properties everywhere:**
-- Chips: `transition-[color,background-color,border-color,transform]`
-- Generate button: `transition-[color,background-color,box-shadow,transform]`
-- Result cards: `transition-[opacity,transform]`
-- Results grid container: `transition-opacity`
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**3. GPU-accelerate progress bar** -- Use `transform: scaleX()` with `origin-left` instead of animating `width`. Set full width always, animate scale.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**4. Reduce background blur on mobile** -- Change `blur-3xl` to `blur-2xl` and reduce the circle size to `w-[500px] h-[500px]` on mobile via responsive classes.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**5. Add `will-change` to result cards** -- Hint the browser to promote them to compositor layers before animation starts.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Files changed
-- `src/components/landing/FreestyleShowcaseSection.tsx`
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

@@ -69,12 +69,12 @@ export function FreestyleShowcaseSection() {
     let charIdx = 0;
     const typeTimer = setInterval(() => {
       if (charIdx < PROMPT_TEXT.length) {
-        charIdx++;
+        charIdx = Math.min(charIdx + 2, PROMPT_TEXT.length);
         setTypedText(PROMPT_TEXT.slice(0, charIdx));
       } else {
         clearInterval(typeTimer);
       }
-    }, 30);
+    }, 50);
 
     CHIPS.forEach((chip) => {
       timers.push(
@@ -113,7 +113,7 @@ export function FreestyleShowcaseSection() {
 
   return (
     <section className="py-20 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[800px] md:h-[800px] bg-primary/[0.04] rounded-full blur-2xl md:blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10 max-w-4xl">
         {/* Centered header */}
@@ -137,13 +137,15 @@ export function FreestyleShowcaseSection() {
         <div className="relative">
           <div className="rounded-2xl border border-border/60 bg-card shadow-xl overflow-hidden">
             {/* Progress bar */}
-            <div
-              className={cn(
-                'h-[2px] transition-all duration-500 rounded-t-2xl',
-                generating ? 'bg-primary' : 'bg-transparent',
-              )}
-              style={{ width: generating ? `${progress}%` : '0%' }}
-            />
+            <div className="h-[2px] rounded-t-2xl overflow-hidden">
+              <div
+                className={cn(
+                  'h-full w-full origin-left transition-transform duration-300',
+                  generating ? 'bg-primary' : 'bg-transparent',
+                )}
+                style={{ transform: `scaleX(${generating ? progress / 100 : 0})` }}
+              />
+            </div>
 
             <div className="p-4 md:p-5">
               {/* Prompt area */}
@@ -163,7 +165,7 @@ export function FreestyleShowcaseSection() {
                     <div
                       key={chip.key}
                       className={cn(
-                        'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[11px] font-medium border transition-all duration-500',
+                        'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[11px] font-medium border transition-[color,background-color,border-color,transform] duration-500',
                         active
                           ? 'border-primary/40 bg-primary/10 text-primary scale-105'
                           : 'border-border/50 bg-muted/30 text-muted-foreground/50',
@@ -191,7 +193,7 @@ export function FreestyleShowcaseSection() {
                 {/* Generate button inline */}
                 <button
                   className={cn(
-                    'ml-auto h-8 px-4 rounded-lg text-xs font-semibold transition-all duration-500 flex items-center gap-2',
+                    'ml-auto h-8 px-4 rounded-lg text-xs font-semibold transition-[color,background-color,box-shadow,transform] duration-500 flex items-center gap-2',
                     generating
                       ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-[1.02]'
                       : showResults
@@ -218,7 +220,7 @@ export function FreestyleShowcaseSection() {
           {/* Results grid */}
           <div
             className={cn(
-              'grid grid-cols-3 gap-3 mt-4 transition-all duration-500',
+              'grid grid-cols-3 gap-3 mt-4 transition-opacity duration-500',
               showResults ? 'opacity-100' : 'opacity-0 pointer-events-none',
             )}
           >
@@ -226,7 +228,7 @@ export function FreestyleShowcaseSection() {
               <div
                 key={i}
                 className={cn(
-                  'rounded-xl overflow-hidden border border-border/50 bg-card shadow-md transition-all duration-500',
+                  'rounded-xl overflow-hidden border border-border/50 bg-card shadow-md transition-[opacity,transform] duration-500 will-change-[opacity,transform]',
                   visibleResults.includes(i)
                     ? 'opacity-100 translate-y-0 scale-100'
                     : 'opacity-0 translate-y-4 scale-95',
