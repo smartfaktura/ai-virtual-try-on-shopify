@@ -49,7 +49,7 @@ export function LandingNav() {
         }`}
       >
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2 group">
+        <button onClick={() => navigate('/')} className="flex items-center gap-2 group">
           <div className="w-8 h-8 rounded-xl bg-[hsl(222,30%,25%)] flex items-center justify-center">
             <span className="text-sidebar-foreground font-bold text-sm">V</span>
           </div>
