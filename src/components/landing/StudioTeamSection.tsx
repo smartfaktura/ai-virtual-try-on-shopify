@@ -143,7 +143,7 @@ export function StudioTeamSection() {
                       muted
                       loop
                       playsInline
-                      preload="none"
+                      preload="metadata"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
