@@ -195,9 +195,12 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Submit your best generations and win up to 10,000 credits
                 </p>
+                <p className="text-[10px] text-muted-foreground/60 leading-relaxed italic">
+                  Each month we randomly select winners from submissions and award up to 10,000 credits.
+                </p>
                 <button
                   onClick={() => setSubmitDiscoverOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-medium border border-primary/30 bg-transparent text-primary hover:bg-primary/10 transition-colors"
                 >
                   <Send className="w-3.5 h-3.5" />
                   Submit for Review
