@@ -159,15 +159,6 @@ export function ImageLightbox({
               Copy Prompt
             </button>
           )}
-          {onShare && (
-            <button
-              onClick={() => onShare(currentIndex)}
-              className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
-            >
-              <Send className="w-4 h-4" />
-              Share
-            </button>
-          )}
           {onDelete && (
             <button
               onClick={() => onDelete(currentIndex)}
