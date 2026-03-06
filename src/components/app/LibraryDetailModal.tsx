@@ -11,6 +11,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
+import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 
