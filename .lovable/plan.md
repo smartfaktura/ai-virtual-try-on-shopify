@@ -1,32 +1,30 @@
 
 
-## Optimize Freestyle Lightbox for Mobile
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problems
-1. **Action buttons overflow horizontally** — 6 buttons in a single row get clipped on small screens (visible in the screenshot)
-2. **Share/contest incentive invisible** — the "Win up to 10,000 credits" message is in a hover tooltip, which doesn't work on mobile (no hover state)
+### Issues Found
 
-### Solution
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**Responsive action bar layout in `ImageLightbox.tsx`:**
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-- **Mobile (< 768px):** Reorganize into a 2-row layout:
-  - **Top row:** Primary actions as icon-only circular buttons (Select, Download, Copy Prompt, Regenerate, Delete) — compact, all visible
-  - **Bottom row:** Share gets a **promoted, full-width pill** with Trophy icon + "Share & Win up to 10,000 credits" text — makes the contest incentive always visible, no tooltip needed
-- **Desktop:** Keep current layout unchanged (horizontal row with labels)
+### Plan
 
-- Reduce image `max-h` on mobile from `80vh` to `65vh` to make room for the 2-row action bar
-- Navigation arrows: smaller on mobile (`w-9 h-9` instead of `w-12 h-12`), positioned closer to edges
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Share button promotion (mobile)
-Instead of a generic "Share" + hidden tooltip, the mobile Share button becomes:
-```text
-┌──────────────────────────────────┐
-│  🏆  Share & Win up to 10K credits  │
-└──────────────────────────────────┘
-```
-Gold/amber accent (`bg-amber-500/20 text-amber-300`) to draw the eye — the contest value prop is immediately visible.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Files changed
-- `src/components/app/ImageLightbox.tsx` — responsive mobile layout with `useIsMobile()`, 2-row action bar, promoted Share CTA
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
