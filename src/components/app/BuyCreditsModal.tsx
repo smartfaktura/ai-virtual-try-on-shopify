@@ -213,7 +213,7 @@ export function BuyCreditsModal() {
                       <span className={`inline-flex rounded-full text-[9px] font-bold px-1.5 py-0.5 leading-none ${
                         billingPeriod === 'annual' ? 'bg-white/25 text-white' : 'bg-emerald-500/20 text-emerald-700'
                       }`}>
-                        SAVE 17%
+                        SAVE 20%
                       </span>
                     </button>
                   </div>
