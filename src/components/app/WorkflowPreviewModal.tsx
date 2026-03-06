@@ -99,7 +99,6 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
     if (!url) return;
     try {
       await downloadSingleImage(url, `${title.replace(/\s+/g, '_')}_${selectedIndex + 1}.png`);
-      toast.success('Image downloaded');
     } catch {
       toast.error('Download failed');
     }
