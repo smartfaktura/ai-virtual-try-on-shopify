@@ -119,13 +119,14 @@ export function FreestyleShowcaseSection() {
                 </li>
               ))}
             </ul>
-            <a
-              href="/auth"
-              className="inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+            <Button
+              size="lg"
+              className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
+              onClick={() => navigate('/auth')}
             >
               Try Freestyle Free
               <Sparkles className="w-4 h-4" />
-            </a>
+            </Button>
           </div>
 
           {/* Right — Animated Demo */}
