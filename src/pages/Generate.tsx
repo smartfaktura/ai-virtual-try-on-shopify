@@ -3135,7 +3135,7 @@ export default function Generate() {
 
         {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (
           <div className="space-y-4">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Selected Model & Scene</span>
