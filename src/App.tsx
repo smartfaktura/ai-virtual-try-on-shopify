@@ -41,6 +41,10 @@ import CookiePolicy from '@/pages/CookiePolicy';
 import Team from '@/pages/Team';
 import ResetPassword from '@/pages/ResetPassword';
 import PublicDiscover from '@/pages/PublicDiscover';
+import WorkflowsFeature from '@/pages/features/WorkflowsFeature';
+import VirtualTryOnFeature from '@/pages/features/VirtualTryOnFeature';
+import CreativeDropsFeature from '@/pages/features/CreativeDropsFeature';
+import BrandProfilesFeature from '@/pages/features/BrandProfilesFeature';
 
 const queryClient = new QueryClient();
 
