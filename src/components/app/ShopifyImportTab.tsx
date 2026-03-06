@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ShoppingBag, Loader2, Check, AlertCircle, ExternalLink, Search } from 'lucide-react';
+import { ShoppingBag, Loader2, Check, AlertCircle, ExternalLink, Search, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
