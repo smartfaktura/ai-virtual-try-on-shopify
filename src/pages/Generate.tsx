@@ -1173,7 +1173,7 @@ export default function Generate() {
       link.download = `generated-image-${index + 1}.png`;
       link.click();
       URL.revokeObjectURL(blobUrl);
-      toast.success('Image downloaded');
+      
     } catch {
       toast.error('Download failed');
     }
