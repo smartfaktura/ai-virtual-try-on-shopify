@@ -1,30 +1,32 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add scroll-triggered animations to How It Works steps
 
-### Issues Found
+Subtle animations that reveal each step as the user scrolls down, guiding the eye through the flow.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Approach
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+Use **Intersection Observer** via a small custom hook to detect when each step enters the viewport, then apply staggered fade-in + slide-up animations. No design changes -- just motion.
 
-### Plan
+### Animations per step
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+| Element | Effect |
+|---|---|
+| **Step text block** (number + title + description) | Fade in + slide up from 30px below |
+| **Step card** (upload card, selector card, grid card) | Fade in + slide up with ~150ms delay after text |
+| **Step 3 grid images** | Staggered reveal -- each image fades in with 80ms delay between them |
+| **Step number badges** (01, 02, 03) | Subtle scale-in when visible |
+| **Platform chips** (Step 1) | Staggered fade-in, 50ms apart |
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### Implementation
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**`src/components/landing/HowItWorks.tsx`**
+- Add a `useInView` hook (inline, using `IntersectionObserver` with `threshold: 0.15`, `triggerOnce: true`)
+- Wrap each step's text and card in a div with `ref` from the hook
+- Apply conditional classes: `opacity-0 translate-y-8` by default, transitioning to `opacity-100 translate-y-0` when in view
+- Use inline `transitionDelay` for staggered elements (cards, grid images, chips)
+- Step 3 scene images get individual staggered delays (0ms, 80ms, 160ms, etc.)
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files changed
+- `src/components/landing/HowItWorks.tsx` -- add intersection observer logic and transition classes
 
