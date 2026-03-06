@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Download, RefreshCw, X, Check, Trash2, Clipb
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ImageLightboxProps {
   images: string[];
@@ -37,6 +38,7 @@ export function ImageLightbox({
 }: ImageLightboxProps) {
   const currentImage = images[currentIndex];
   const isSelected = selectedIndices.has(currentIndex);
+  const isMobile = useIsMobile();
 
   const handlePrevious = useCallback(() => {
     const newIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
@@ -48,7 +50,6 @@ export function ImageLightbox({
     onNavigate(newIndex);
   }, [currentIndex, images.length, onNavigate]);
 
-  // Global keyboard handler
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -65,6 +66,9 @@ export function ImageLightbox({
   const counter = productName
     ? `${currentIndex + 1} / ${images.length} · ${productName}`
     : `${currentIndex + 1} / ${images.length}`;
+
+  const iconBtnClass = 'w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/80 hover:bg-white/20 hover:text-white transition-colors';
+  const deleteBtnClass = 'w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -94,100 +98,164 @@ export function ImageLightbox({
         <>
           <button
             onClick={handlePrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+            className={cn(
+              'absolute left-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors',
+              isMobile ? 'w-9 h-9' : 'w-12 h-12 left-4'
+            )}
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
           </button>
           <button
             onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+            className={cn(
+              'absolute right-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors',
+              isMobile ? 'w-9 h-9' : 'w-12 h-12 right-4'
+            )}
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
           </button>
         </>
       )}
 
-      {/* Main image */}
-      <div className="relative z-10 flex flex-col items-center max-w-[90vw] max-h-[90vh] animate-in zoom-in-95 fade-in duration-200">
+      {/* Main image + actions */}
+      <div className={cn(
+        'relative z-10 flex flex-col items-center animate-in zoom-in-95 fade-in duration-200',
+        isMobile ? 'max-w-[94vw] max-h-[90vh] px-1' : 'max-w-[90vw] max-h-[90vh]'
+      )}>
         <ShimmerImage
           key={currentIndex}
           src={currentImage}
           alt={`Generated image ${currentIndex + 1}`}
-          className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl shadow-black/40"
-          wrapperClassName="flex items-center justify-center max-w-full max-h-[80vh]"
+          className={cn(
+            'max-w-full object-contain rounded-xl shadow-2xl shadow-black/40',
+            isMobile ? 'max-h-[60vh]' : 'max-h-[80vh]'
+          )}
+          wrapperClassName={cn(
+            'flex items-center justify-center max-w-full',
+            isMobile ? 'max-h-[60vh]' : 'max-h-[80vh]'
+          )}
         />
 
-        {/* Bottom action bar */}
-        <TooltipProvider delayDuration={300}>
-          <div className="flex items-center gap-2 mt-5">
-            {onSelect && (
-              <button
-                onClick={() => onSelect(currentIndex)}
-                className={cn(
-                  'flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium transition-colors backdrop-blur-md',
-                  isSelected
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'
-                )}
-              >
-                {isSelected ? <Check className="w-4 h-4" /> : null}
-                {isSelected ? 'Selected' : 'Select'}
-              </button>
-            )}
-            {onDownload && (
-              <button
-                onClick={() => onDownload(currentIndex)}
-                className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
-              >
-                <Download className="w-4 h-4" />
-                Download
-              </button>
-            )}
-            {onRegenerate && (
-              <button
-                onClick={() => onRegenerate(currentIndex)}
-                className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Regenerate
-              </button>
-            )}
-            {onCopyPrompt && (
-              <button
-                onClick={() => onCopyPrompt(currentIndex)}
-                className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
-              >
-                <ClipboardCopy className="w-4 h-4" />
-                Copy Prompt
-              </button>
-            )}
-            {onDelete && (
-              <button
-                onClick={() => onDelete(currentIndex)}
-                className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors backdrop-blur-md"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
-            )}
+        {/* Action bar */}
+        {isMobile ? (
+          /* ── Mobile: icon-only row + promoted Share pill ── */
+          <div className="flex flex-col items-center gap-3 mt-4 w-full">
+            <div className="flex items-center justify-center gap-3">
+              {onSelect && (
+                <button
+                  onClick={() => onSelect(currentIndex)}
+                  className={cn(
+                    iconBtnClass,
+                    isSelected && 'bg-primary text-primary-foreground hover:bg-primary/80'
+                  )}
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+              )}
+              {onDownload && (
+                <button onClick={() => onDownload(currentIndex)} className={iconBtnClass}>
+                  <Download className="w-4 h-4" />
+                </button>
+              )}
+              {onCopyPrompt && (
+                <button onClick={() => onCopyPrompt(currentIndex)} className={iconBtnClass}>
+                  <ClipboardCopy className="w-4 h-4" />
+                </button>
+              )}
+              {onRegenerate && (
+                <button onClick={() => onRegenerate(currentIndex)} className={iconBtnClass}>
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              )}
+              {onDelete && (
+                <button onClick={() => onDelete(currentIndex)} className={deleteBtnClass}>
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
             {onShare && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onShare(currentIndex)}
-                    className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
-                  >
-                    <Trophy className="w-4 h-4" />
-                    Share
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-sm">
-                  Win up to 10,000 credits each month
-                </TooltipContent>
-              </Tooltip>
+              <button
+                onClick={() => onShare(currentIndex)}
+                className="w-full max-w-xs flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-colors backdrop-blur-md"
+              >
+                <Trophy className="w-4 h-4" />
+                Share & Win up to 10K credits
+              </button>
             )}
           </div>
-        </TooltipProvider>
+        ) : (
+          /* ── Desktop: original horizontal bar with labels ── */
+          <TooltipProvider delayDuration={300}>
+            <div className="flex items-center gap-2 mt-5">
+              {onSelect && (
+                <button
+                  onClick={() => onSelect(currentIndex)}
+                  className={cn(
+                    'flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium transition-colors backdrop-blur-md',
+                    isSelected
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'
+                  )}
+                >
+                  {isSelected ? <Check className="w-4 h-4" /> : null}
+                  {isSelected ? 'Selected' : 'Select'}
+                </button>
+              )}
+              {onDownload && (
+                <button
+                  onClick={() => onDownload(currentIndex)}
+                  className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </button>
+              )}
+              {onRegenerate && (
+                <button
+                  onClick={() => onRegenerate(currentIndex)}
+                  className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Regenerate
+                </button>
+              )}
+              {onCopyPrompt && (
+                <button
+                  onClick={() => onCopyPrompt(currentIndex)}
+                  className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+                >
+                  <ClipboardCopy className="w-4 h-4" />
+                  Copy Prompt
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={() => onDelete(currentIndex)}
+                  className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors backdrop-blur-md"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              )}
+              {onShare && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => onShare(currentIndex)}
+                      className="flex items-center gap-2 h-10 px-5 rounded-full text-sm font-medium bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors backdrop-blur-md"
+                    >
+                      <Trophy className="w-4 h-4" />
+                      Share
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-sm">
+                    Win up to 10,000 credits each month
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          </TooltipProvider>
+        )}
       </div>
     </div>
   );
