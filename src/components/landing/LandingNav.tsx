@@ -54,7 +54,7 @@ export function LandingNav() {
             <span className="text-sidebar-foreground font-bold text-sm">V</span>
           </div>
           <span className="font-bold text-lg text-sidebar-foreground tracking-tight">VOVV.AI</span>
-        </a>
+        </button>
 
         {/* Desktop links */}
         <div className="hidden lg:flex items-center gap-8">
