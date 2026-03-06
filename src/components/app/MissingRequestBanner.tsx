@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { MessageSquarePlus, Loader2, Check } from 'lucide-react';
+import { MessageSquarePlus, Loader2, Check, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
