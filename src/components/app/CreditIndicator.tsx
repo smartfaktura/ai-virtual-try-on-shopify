@@ -6,7 +6,7 @@ export function CreditIndicator() {
   const { balance, plan, planConfig, openBuyModal, isLow, isCritical, isEmpty } = useCredits();
   const navigate = useNavigate();
 
-  const { isLow, isCritical, isEmpty } = useCredits();
+  
   const monthlyCredits = planConfig.monthlyCredits;
   const hasBonus = balance > monthlyCredits && monthlyCredits !== Infinity;
   const usagePercent = monthlyCredits === Infinity
