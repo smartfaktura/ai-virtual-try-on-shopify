@@ -41,6 +41,10 @@ import CookiePolicy from '@/pages/CookiePolicy';
 import Team from '@/pages/Team';
 import ResetPassword from '@/pages/ResetPassword';
 import PublicDiscover from '@/pages/PublicDiscover';
+import WorkflowsFeature from '@/pages/features/WorkflowsFeature';
+import VirtualTryOnFeature from '@/pages/features/VirtualTryOnFeature';
+import CreativeDropsFeature from '@/pages/features/CreativeDropsFeature';
+import BrandProfilesFeature from '@/pages/features/BrandProfilesFeature';
 
 const queryClient = new QueryClient();
 
@@ -61,6 +65,12 @@ const App = () => (
             <Route path="/discover" element={<PublicDiscover />} />
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
 
+
+            {/* Feature pages */}
+            <Route path="/features/workflows" element={<WorkflowsFeature />} />
+            <Route path="/features/virtual-try-on" element={<VirtualTryOnFeature />} />
+            <Route path="/features/creative-drops" element={<CreativeDropsFeature />} />
+            <Route path="/features/brand-profiles" element={<BrandProfilesFeature />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
