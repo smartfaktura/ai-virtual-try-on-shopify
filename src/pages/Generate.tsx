@@ -3215,7 +3215,7 @@ export default function Generate() {
                 onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
                 className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
               >
-                {balance >= creditCost ? `Generate ${imageCount} Try-On Images` : 'Buy Credits'}
+                {balance >= creditCost ? `Generate ${parseInt(imageCount) * multiProductCount} Try-On Images` : 'Buy Credits'}
               </Button>
             </div>
           </div>
