@@ -113,7 +113,7 @@ export function FreestyleShowcaseSection() {
 
   return (
     <section className="py-20 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[800px] md:h-[800px] bg-primary/[0.04] rounded-full blur-2xl md:blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10 max-w-4xl">
         {/* Centered header */}
