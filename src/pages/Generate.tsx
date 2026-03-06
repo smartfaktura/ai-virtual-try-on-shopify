@@ -180,6 +180,8 @@ export default function Generate() {
   const [currentStep, setCurrentStep] = useState<Step>('source');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [tryOnSearchQuery, setTryOnSearchQuery] = useState('');
+  const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
   const [sourceType, setSourceType] = useState<GenerationSourceType>('product');
