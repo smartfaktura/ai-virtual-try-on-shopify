@@ -1,30 +1,33 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add Inline Credit Balance to Mobile Header
 
-### Issues Found
+### Problem
+On mobile, users can't see their credit balance without opening the sidebar. There's no quick path to top up or upgrade.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Solution
+Add a compact, tappable credit pill to the **mobile top bar** (between logo and hamburger menu). Tapping it opens the Buy Credits modal. No floating elements — it's part of the existing fixed header bar.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Design
 
-### Plan
+```text
+Mobile header (existing):
+┌─────────────────────────────────────┐
+│ [V] VOVV.AI    ⚡42    ☰           │
+└─────────────────────────────────────┘
+                  ^^^
+          New: compact credit pill
+```
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+- Small pill: Sparkles icon + balance number (e.g. "42")
+- Subtle `bg-white/[0.06]` background, rounded
+- On tap → opens `buyModal` (same as the `+` button in sidebar CreditIndicator)
+- When balance is 0: pill turns `bg-destructive/20` with red-tinted text
+- When low: pill pulses subtly
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### Also: Desktop sidebar collapsed state
+Currently when sidebar is collapsed, the credit section just shows an upgrade arrow. Add the balance number below it so it's always visible.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files Changed
+- `src/components/app/AppShell.tsx` — add credit pill to mobile header bar, update collapsed sidebar credit display
 
