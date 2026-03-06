@@ -64,7 +64,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('Image downloaded');
+      
     } catch {
       toast.error('Download failed');
     }

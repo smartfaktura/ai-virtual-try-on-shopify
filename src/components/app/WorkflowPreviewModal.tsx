@@ -119,7 +119,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
           scene_name: `image_${i + 1}`,
         }));
         await downloadDropAsZip(images, title, (pct) => setDownloadPct(pct));
-        toast.success(`${signedUrls.length} images downloaded`);
+        
       }
     } catch {
       toast.error('Download failed');

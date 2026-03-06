@@ -1182,7 +1182,7 @@ export default function Generate() {
     for (let idx = 0; idx < generatedImages.length; idx++) {
       await handleDownloadImage(idx);
     }
-    toast.success(`${generatedImages.length} images downloaded`);
+    
   };
   const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 
