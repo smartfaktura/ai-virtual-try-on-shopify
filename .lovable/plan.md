@@ -1,30 +1,42 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix: Replace auto-scroll with a Popover for feedback
 
-### Issues Found
+The current approach — expanding inline then forcing `scrollIntoView` — feels jarring and buggy. The root issue is that an inline banner at the bottom of a scrollable page will always fight with viewport positioning.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Solution
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+Replace the inline expand behavior with a **Popover** that opens upward from the collapsed banner. This way:
+- No scrolling occurs at all
+- The form floats above the banner, always visible
+- Dismissing works naturally (click outside or X button)
 
-### Plan
+### Changes to `src/components/app/FeedbackBanner.tsx`
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+1. **Remove** the `useEffect` with `scrollIntoView` and the `containerRef`
+2. **Remove** the `collapsed` state toggle to expanded inline view
+3. **Wrap** the collapsed banner's "Share feedback" button with a `Popover` trigger
+4. **Move** the expanded form (header, type chips, textarea, submit) into a `PopoverContent` with `side="top"` and `align="end"`
+5. The collapsed banner always stays as-is — clicking "Share feedback" opens the popover above it
+6. On successful submit, close the popover and show the inline "Thanks" confirmation briefly
+7. Keep all existing logic (type selection, message, submit to database, submitted state)
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### Layout
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+```text
+                    ┌─────────────────────────┐
+                    │ Help us improve VOVV.AI  │
+                    │ [Bug] [Feature] [General]│
+                    │ ┌─────────────────────┐  │
+                    │ │ Tell us more…        │  │
+                    │ └─────────────────────┘  │
+                    │        [Send Feedback]   │
+                    └─────────────────────────┘
+  ┌───────────────────────────────────────────────┐
+  │ 💬 Help us improve VOVV.AI    [Share feedback]│  ← always visible
+  └───────────────────────────────────────────────┘
+```
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### File changed
+- `src/components/app/FeedbackBanner.tsx`
 
