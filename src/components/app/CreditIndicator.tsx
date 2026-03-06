@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/contexts/CreditContext';
 
 export function CreditIndicator() {
-  const { balance, plan, planConfig, openBuyModal } = useCredits();
+  const { balance, plan, planConfig, openBuyModal, isLow, isCritical, isEmpty } = useCredits();
   const navigate = useNavigate();
 
   const { isLow, isCritical, isEmpty } = useCredits();
