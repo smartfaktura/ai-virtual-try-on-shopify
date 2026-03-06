@@ -137,13 +137,15 @@ export function FreestyleShowcaseSection() {
         <div className="relative">
           <div className="rounded-2xl border border-border/60 bg-card shadow-xl overflow-hidden">
             {/* Progress bar */}
-            <div
-              className={cn(
-                'h-[2px] transition-all duration-500 rounded-t-2xl',
-                generating ? 'bg-primary' : 'bg-transparent',
-              )}
-              style={{ width: generating ? `${progress}%` : '0%' }}
-            />
+            <div className="h-[2px] rounded-t-2xl overflow-hidden">
+              <div
+                className={cn(
+                  'h-full w-full origin-left transition-transform duration-300',
+                  generating ? 'bg-primary' : 'bg-transparent',
+                )}
+                style={{ transform: `scaleX(${generating ? progress / 100 : 0})` }}
+              />
+            </div>
 
             <div className="p-4 md:p-5">
               {/* Prompt area */}
