@@ -193,7 +193,7 @@ export function FreestyleShowcaseSection() {
                 {/* Generate button inline */}
                 <button
                   className={cn(
-                    'ml-auto h-8 px-4 rounded-lg text-xs font-semibold transition-all duration-500 flex items-center gap-2',
+                    'ml-auto h-8 px-4 rounded-lg text-xs font-semibold transition-[color,background-color,box-shadow,transform] duration-500 flex items-center gap-2',
                     generating
                       ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-[1.02]'
                       : showResults
