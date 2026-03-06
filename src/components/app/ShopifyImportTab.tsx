@@ -77,20 +77,23 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     }
   };
 
+  const atLimit = selectedIds.size >= MAX_SHOPIFY_BATCH;
+
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
-      else next.add(id);
+      else if (next.size < MAX_SHOPIFY_BATCH) next.add(id);
       return next;
     });
   };
 
   const toggleAll = () => {
-    if (selectedIds.size === filteredProducts.length) {
+    if (selectedIds.size > 0 && selectedIds.size === filteredProducts.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredProducts.map((p) => p.id)));
+      const toSelect = filteredProducts.slice(0, MAX_SHOPIFY_BATCH).map((p) => p.id);
+      setSelectedIds(new Set(toSelect));
     }
   };
 
