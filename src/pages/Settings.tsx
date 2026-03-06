@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Building2, Check, ExternalLink, RefreshCw } from 'lucide-react';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
+import { FeedbackBanner } from '@/components/app/FeedbackBanner';
+import { AdminFeedbackPanel } from '@/components/app/AdminFeedbackPanel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -430,6 +432,17 @@ export default function Settings() {
             </Card>
           </>
         )}
+
+        {/* Admin: User Feedback */}
+        {isAdmin && (
+          <>
+            <Separator />
+            <AdminFeedbackPanel />
+          </>
+        )}
+
+        {/* Feedback Banner */}
+        <FeedbackBanner />
       </div>
     </PageHeader>
 
