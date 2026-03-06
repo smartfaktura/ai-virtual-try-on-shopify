@@ -20,6 +20,7 @@ export function useSavedItems() {
 
   const { data: savedItems = [] } = useQuery({
     queryKey: ['saved-discover-items', userId],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       if (!userId) return [];
       const { data, error } = await supabase

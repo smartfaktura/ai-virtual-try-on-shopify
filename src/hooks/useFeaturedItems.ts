@@ -16,6 +16,7 @@ export function useFeaturedItems() {
 
   const query = useQuery({
     queryKey: ['featured-items'],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('featured_items' as any)

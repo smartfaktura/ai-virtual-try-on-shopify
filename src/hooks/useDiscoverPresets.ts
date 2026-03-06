@@ -40,6 +40,7 @@ export function useDiscoverPresets() {
 
   return useQuery({
     queryKey: ['discover-presets'],
+    staleTime: 10 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('discover_presets')
