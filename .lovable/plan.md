@@ -1,30 +1,23 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Enable Multi-Product Selection for Virtual Try-On Workflows
 
-### Issues Found
+### Problem
+Currently, the Virtual Try-On product grid only allows selecting one product at a time (unless it's Mirror Selfie). The multi-product queue infrastructure already exists in the codebase — it just needs to be wired up for try-on workflows.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`src/pages/Generate.tsx`** — Three areas to modify:
 
-### Plan
+**1. Product grid (lines ~1746-1803)**: Remove the `isMirrorSelfie` guard so ALL `uses_tryon` workflows allow multi-select with checkboxes. Paid users can select up to `MAX_PRODUCTS_PER_BATCH` (20); free users limited to 1.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**2. Product step "Continue" handler (lines ~1824-1838)**: When multiple try-on products are selected, set up `productQueue` (same as Mirror Selfie already does), then proceed to brand-profile → model → scene flow as normal with the first product.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**3. Job completion handler (lines ~808-866)**: When a try-on job completes in multi-product mode, auto-advance to the next product by calling `handleTryOnConfirmGenerate()` (not `handleWorkflowGenerate()`). Same pattern for failure handler (lines ~869-912).
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+This means:
+- The product grid shows checkboxes and a "X selected" badge for all try-on workflows (not just Mirror Selfie)
+- User picks model + scene once, then the system runs try-on for each product sequentially
+- Progress banner shows "Product X of Y" (already built)
+- Results aggregate into one gallery with product-name labels (already built)
 
