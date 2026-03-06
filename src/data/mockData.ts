@@ -1400,7 +1400,8 @@ export const pricingPlans: PricingPlan[] = [
     credits: 20,
     features: [
       'All workflows',
-      'High quality images',
+      'Freestyle generation',
+      'All Models & Scenes',
       '1 Brand Profile',
       '1 product upload',
     ],
