@@ -18,11 +18,20 @@ const COLLAPSED_KEY = 'vovv-feedback-collapsed';
 export function FeedbackBanner() {
   const { user } = useAuth();
   const location = useLocation();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [collapsed, setCollapsed] = useState(() => sessionStorage.getItem(COLLAPSED_KEY) === 'true');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!collapsed || selectedType) {
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    }
+  }, [collapsed, selectedType]);
 
   if (!user) return null;
 
