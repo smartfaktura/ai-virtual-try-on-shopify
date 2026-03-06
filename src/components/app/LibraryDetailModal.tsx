@@ -253,6 +253,16 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
           quality={item.quality}
         />
       )}
+      {submitDiscoverOpen && item && (
+        <SubmitToDiscoverModal
+          open={submitDiscoverOpen}
+          onClose={() => setSubmitDiscoverOpen(false)}
+          imageUrl={item.imageUrl}
+          prompt={item.prompt || ''}
+          aspectRatio={item.aspectRatio}
+          quality={item.quality}
+        />
+      )}
     </>
   );
 }
