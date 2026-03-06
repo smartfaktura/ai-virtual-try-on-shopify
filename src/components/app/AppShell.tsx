@@ -184,7 +184,7 @@ export function AppShell({ children }: AppShellProps) {
             <div className="flex flex-col items-center gap-2">
               <button
                 onClick={openBuyModal}
-                className="flex flex-col items-center gap-1"
+                className="flex flex-col items-center gap-1.5"
                 title={`${balance} credits`}
               >
                 <div className={cn(
@@ -197,6 +197,18 @@ export function AppShell({ children }: AppShellProps) {
                   'text-[10px] font-bold',
                   isEmpty ? 'text-destructive' : 'text-sidebar-foreground/50'
                 )}>{balance}</span>
+                {/* Mini progress bar */}
+                <div className="w-8 h-1.5 rounded-full bg-white/[0.15] overflow-hidden">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all duration-500',
+                      isEmpty ? 'bg-destructive shadow-[0_0_6px_hsl(var(--destructive)/0.5)]'
+                        : isLow ? 'bg-amber-400 shadow-[0_0_4px_rgba(251,191,36,0.35)]'
+                        : 'bg-primary shadow-[0_0_4px_hsl(var(--primary)/0.4)]'
+                    )}
+                    style={{ width: `${Math.min(100, Math.max(5, (balance / 20) * 100))}%` }}
+                  />
+                </div>
               </button>
               <button
                 onClick={() => navigate('/app/settings')}
