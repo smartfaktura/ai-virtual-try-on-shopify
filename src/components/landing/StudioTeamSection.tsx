@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { TEAM_MEMBERS } from '@/data/teamData';
 
 export function StudioTeamSection() {
+  const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
