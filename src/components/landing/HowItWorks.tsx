@@ -42,6 +42,15 @@ const baseTransition = 'transition-all duration-700 ease-out';
 const hidden = 'opacity-0 translate-y-8';
 const visible = 'opacity-100 translate-y-0';
 
+const dragDropKeyframes = `
+@keyframes drag-drop-in {
+  0% { opacity: 0; transform: translateY(-40px) rotate(3deg) scale(0.95); filter: drop-shadow(0 8px 20px rgba(0,0,0,0.15)); }
+  60% { opacity: 1; transform: translateY(2px) rotate(-0.5deg) scale(1.02); }
+  80% { transform: translateY(-1px) rotate(0deg) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 0 0 transparent); }
+}
+`;
+
 function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt: string; label: string; isResult?: boolean }) {
   const [hovered, setHovered] = useState(false);
 
@@ -84,6 +93,8 @@ export function HowItWorks() {
   const ctaRef = useInView(0.3);
 
   return (
+    <>
+    <style>{dragDropKeyframes}</style>
     <section id="how-it-works" className="py-20 sm:py-28 bg-muted/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -146,15 +157,32 @@ export function HowItWorks() {
                       </p>
                     </div>
                   </div>
-                  <div className="p-3 flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-lg overflow-hidden border border-border shrink-0">
+                  <div className="p-3 flex items-center gap-3 relative overflow-hidden">
+                    <div
+                      className="w-14 h-14 rounded-lg overflow-hidden border border-border shrink-0"
+                      style={step1Card.inView ? {
+                        animation: 'drag-drop-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both',
+                      } : { opacity: 0 }}
+                    >
                       <img src={cropTopProduct} alt="White Crop Top" className="w-full h-full object-cover object-top" />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div
+                      className="flex-1 min-w-0 transition-all duration-500"
+                      style={step1Card.inView ? {
+                        opacity: 1, transform: 'translateX(0)',
+                        transitionDelay: '900ms',
+                      } : { opacity: 0, transform: 'translateX(-8px)' }}
+                    >
                       <p className="text-sm font-semibold text-foreground truncate">White Crop Top</p>
                       <p className="text-[11px] text-muted-foreground">Clothing · Activewear</p>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div
+                      className="flex items-center gap-1 shrink-0 transition-all duration-500"
+                      style={step1Card.inView ? {
+                        opacity: 1, transform: 'scale(1)',
+                        transitionDelay: '1100ms',
+                      } : { opacity: 0, transform: 'scale(0.8)' }}
+                    >
                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                       <span className="text-[10px] font-medium text-primary">Ready</span>
                     </div>
@@ -191,13 +219,36 @@ export function HowItWorks() {
                   <div className="p-3 border-b border-border rounded-t-2xl">
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Your Selection</p>
                     <div className="flex items-center gap-2">
-                      <HoverPreview src={cropTopProduct} alt="Product" label="Product" />
-                      <Plus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <HoverPreview src={modelThumb} alt="Model" label="Model" />
-                      <Plus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <HoverPreview src={envThumb} alt="Scene" label="Scene" />
-                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <HoverPreview src={outcomeImage} alt="Result" label="Result" isResult />
+                      {[
+                        { type: 'preview', src: cropTopProduct, alt: 'Product', label: 'Product', delay: 0 },
+                        { type: 'icon', icon: 'plus', delay: 300 },
+                        { type: 'preview', src: modelThumb, alt: 'Model', label: 'Model', delay: 500 },
+                        { type: 'icon', icon: 'plus', delay: 800 },
+                        { type: 'preview', src: envThumb, alt: 'Scene', label: 'Scene', delay: 1000 },
+                        { type: 'icon', icon: 'arrow', delay: 1300 },
+                        { type: 'preview', src: outcomeImage, alt: 'Result', label: 'Result', isResult: true, delay: 1500 },
+                      ].map((item, i) => (
+                        <div
+                          key={i}
+                          className="transition-all duration-500 ease-out"
+                          style={step2Card.inView ? {
+                            opacity: 1,
+                            transform: 'translateY(0) scale(1)',
+                            transitionDelay: `${item.delay}ms`,
+                          } : {
+                            opacity: 0,
+                            transform: 'translateY(6px) scale(0.9)',
+                          }}
+                        >
+                          {item.type === 'preview' ? (
+                            <HoverPreview src={item.src!} alt={item.alt!} label={item.label!} isResult={item.isResult} />
+                          ) : item.icon === 'plus' ? (
+                            <Plus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          ) : (
+                            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <div className="p-3 rounded-b-2xl">
@@ -297,5 +348,6 @@ export function HowItWorks() {
         </div>
       </div>
     </section>
+    </>
   );
 }
