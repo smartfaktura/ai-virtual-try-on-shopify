@@ -220,7 +220,7 @@ export function FreestyleShowcaseSection() {
           {/* Results grid */}
           <div
             className={cn(
-              'grid grid-cols-3 gap-3 mt-4 transition-all duration-500',
+              'grid grid-cols-3 gap-3 mt-4 transition-opacity duration-500',
               showResults ? 'opacity-100' : 'opacity-0 pointer-events-none',
             )}
           >
