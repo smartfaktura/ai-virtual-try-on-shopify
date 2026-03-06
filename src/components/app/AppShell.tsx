@@ -297,12 +297,29 @@ export function AppShell({ children }: AppShellProps) {
             </div>
             <span className="font-bold text-lg text-sidebar-foreground tracking-tight">VOVV.AI</span>
           </div>
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-xl text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/[0.06] transition-colors"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Credit pill */}
+            <button
+              onClick={openBuyModal}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border transition-colors',
+                isEmpty
+                  ? 'bg-destructive/20 border-destructive/30 text-destructive'
+                  : isLow
+                    ? 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 animate-pulse'
+                    : 'bg-white/[0.06] border-white/10 text-sidebar-foreground/70 hover:bg-white/10'
+              )}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-xs font-semibold">{balance}</span>
+            </button>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-xl text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/[0.06] transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
