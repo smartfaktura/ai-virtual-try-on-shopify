@@ -529,20 +529,20 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             <Label htmlFor="product-type" className="text-xs font-medium">
               Product Type
             </Label>
-            {isAnalyzing && !hasManualEdits.current.productType ? (
-              <Skeleton className="h-9 w-full rounded-md" />
-            ) : (
-              <Input
-                id="product-type"
-                placeholder="e.g. Sneakers, Face Serum…"
-                value={productType}
-                onChange={(e) => {
-                  setProductType(e.target.value);
-                  hasManualEdits.current.productType = true;
-                }}
-                maxLength={100}
-              />
-            )}
+            <Input
+              id="product-type"
+              placeholder={isAnalyzing && !hasManualEdits.current.productType ? "Analyzing…" : "e.g. Sneakers, Face Serum…"}
+              value={productType}
+              onChange={(e) => {
+                setProductType(e.target.value);
+                hasManualEdits.current.productType = true;
+              }}
+              maxLength={100}
+              className={cn(
+                'transition-all duration-300',
+                isAnalyzing && !hasManualEdits.current.productType && 'animate-pulse ring-1 ring-primary/30'
+              )}
+            />
           </div>
         </div>
 
