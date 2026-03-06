@@ -1745,7 +1745,7 @@ export default function Generate() {
               )
             ) : activeWorkflow?.uses_tryon ? (
               <div className="space-y-3">
-                {isMirrorSelfie && selectedProductIds.size > 0 && (
+                {!isFreeUser && selectedProductIds.size > 0 && (
                   <div className="flex gap-2 items-center">
                     <Badge variant={selectedProductIds.size >= 2 ? 'default' : 'secondary'}>{selectedProductIds.size} selected</Badge>
                     <span className="text-xs text-muted-foreground">(max {MAX_PRODUCTS_PER_BATCH})</span>
@@ -1753,14 +1753,15 @@ export default function Generate() {
                 )}
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                   {userProducts.map(up => {
+                    const canMultiSelect = !isFreeUser;
                     const isSelected = selectedProductIds.has(up.id);
-                    const isDisabled = !isSelected && isMirrorSelfie && selectedProductIds.size >= MAX_PRODUCTS_PER_BATCH;
+                    const isDisabled = !isSelected && canMultiSelect && selectedProductIds.size >= MAX_PRODUCTS_PER_BATCH;
                     return (
                       <button
                         key={up.id}
                         type="button"
                         onClick={() => {
-                          if (isMirrorSelfie) {
+                          if (canMultiSelect) {
                             const newSet = new Set(selectedProductIds);
                             if (newSet.has(up.id)) { newSet.delete(up.id); }
                             else if (newSet.size < MAX_PRODUCTS_PER_BATCH) { newSet.add(up.id); }
@@ -1776,7 +1777,7 @@ export default function Generate() {
                             : 'border-transparent hover:border-border'
                         } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
                       >
-                        {isMirrorSelfie && (
+                        {canMultiSelect && (
                           <div className="absolute top-1.5 left-1.5 z-10 bg-white/90 rounded shadow-sm p-0.5">
                             <Checkbox checked={isSelected} disabled={isDisabled} />
                           </div>
