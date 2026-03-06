@@ -1,29 +1,30 @@
 
 
-## Compact "Share to Discover" Button with Tooltip
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Move the Share to Discover from a separate banner below the action bar into a compact button inline with the other action buttons (Download, Copy Prompt, Delete). Use a tooltip to show the contest details on hover.
+### Issues Found
 
-### Changes in `src/components/app/ImageLightbox.tsx`
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-1. **Remove the separate `onShare` block below the action bar** (lines ~172-180) — the standalone banner with Trophy icon and long text.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-2. **Add a compact button inside the action bar** (after Delete button, ~line 170), matching the same style as other buttons (`bg-white/10 text-white/80 hover:bg-white/20`):
-   ```
-   <Tooltip>
-     <TooltipTrigger asChild>
-       <button onClick={onShare(currentIndex)} className="...same as other buttons...">
-         <Trophy className="w-4 h-4" />
-         Share
-       </button>
-     </TooltipTrigger>
-     <TooltipContent>Win up to 10,000 credits each month</TooltipContent>
-   </Tooltip>
-   ```
+### Plan
 
-3. **Wrap the bottom action bar** in a `<TooltipProvider>` so the tooltip works.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-4. **Import** `Tooltip, TooltipTrigger, TooltipContent, TooltipProvider` from `@/components/ui/tooltip`.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-Result: A clean, inline "Share" button with Trophy icon that matches the other buttons, with contest info revealed on hover via tooltip.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
