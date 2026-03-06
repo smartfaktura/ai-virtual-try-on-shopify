@@ -219,13 +219,36 @@ export function HowItWorks() {
                   <div className="p-3 border-b border-border rounded-t-2xl">
                     <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Your Selection</p>
                     <div className="flex items-center gap-2">
-                      <HoverPreview src={cropTopProduct} alt="Product" label="Product" />
-                      <Plus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <HoverPreview src={modelThumb} alt="Model" label="Model" />
-                      <Plus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <HoverPreview src={envThumb} alt="Scene" label="Scene" />
-                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      <HoverPreview src={outcomeImage} alt="Result" label="Result" isResult />
+                      {[
+                        { type: 'preview', src: cropTopProduct, alt: 'Product', label: 'Product', delay: 0 },
+                        { type: 'icon', icon: 'plus', delay: 300 },
+                        { type: 'preview', src: modelThumb, alt: 'Model', label: 'Model', delay: 500 },
+                        { type: 'icon', icon: 'plus', delay: 800 },
+                        { type: 'preview', src: envThumb, alt: 'Scene', label: 'Scene', delay: 1000 },
+                        { type: 'icon', icon: 'arrow', delay: 1300 },
+                        { type: 'preview', src: outcomeImage, alt: 'Result', label: 'Result', isResult: true, delay: 1500 },
+                      ].map((item, i) => (
+                        <div
+                          key={i}
+                          className="transition-all duration-500 ease-out"
+                          style={step2Card.inView ? {
+                            opacity: 1,
+                            transform: 'translateY(0) scale(1)',
+                            transitionDelay: `${item.delay}ms`,
+                          } : {
+                            opacity: 0,
+                            transform: 'translateY(6px) scale(0.9)',
+                          }}
+                        >
+                          {item.type === 'preview' ? (
+                            <HoverPreview src={item.src!} alt={item.alt!} label={item.label!} isResult={item.isResult} />
+                          ) : item.icon === 'plus' ? (
+                            <Plus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          ) : (
+                            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <div className="p-3 rounded-b-2xl">
