@@ -1,29 +1,30 @@
 
 
-## Fix Multi-Product Try-On Settings Step
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Three bugs on the settings step when multiple products are selected:
+### Issues Found
 
-### 1. Preview shows only one product thumbnail
-**`src/components/app/TryOnPreview.tsx`** — Add `products?: Product[]` prop. When provided (multi-product mode), show a stacked/scrollable row of product thumbnails instead of a single `Thumb`. Show count badge like "3 products".
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### 2. Button says "Generate 1 Try-On Images" instead of total
-**`src/pages/Generate.tsx` line ~3214** — Change from `Generate ${imageCount} Try-On Images` to account for multi-product: `Generate ${parseInt(imageCount) * multiProductCount} Try-On Images`.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### 3. Credit breakdown shows "1 image × 16 credits" ignoring product count
-**`src/pages/Generate.tsx` lines ~3195-3196** — Update the credit summary text to show total across all products:
-- When multi-product: `"{imageCount} images × {productCount} products × {creditsPerImage} credits"`
-- Display `creditCost` (which already correctly multiplies by `multiProductCount` on line 1130)
+### Plan
 
-### Changes
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**`src/components/app/TryOnPreview.tsx`**:
-- Add optional `products` prop (array of Products for multi-product mode)
-- When `products` has >1 items, render a mini stack of product thumbnails with a count badge instead of a single thumbnail
-- Update description to mention product count
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**`src/pages/Generate.tsx`** (settings step, lines ~3193-3216):
-- Fix button label: `Generate ${parseInt(imageCount) * multiProductCount} Try-On Images`
-- Fix credit breakdown text to show per-product and total math
-- Pass `productQueue` to `TryOnPreview` when in multi-product mode (also update the other TryOnPreview instances on model/pose steps)
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

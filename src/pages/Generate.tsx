@@ -2144,7 +2144,7 @@ export default function Generate() {
         {/* Model Selection */}
         {currentStep === 'model' && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             {isMultiProductMode && (
               <Card><CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
@@ -2203,7 +2203,7 @@ export default function Generate() {
         {/* Pose Selection */}
         {currentStep === 'pose' && selectedModel && (
           <div className="space-y-4">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
                 <h2 className="text-base font-semibold">Select a Scene</h2>
@@ -3135,7 +3135,7 @@ export default function Generate() {
 
         {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (
           <div className="space-y-4">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Selected Model & Scene</span>
@@ -3193,7 +3193,11 @@ export default function Generate() {
             <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
               <div>
                 <p className="text-sm font-semibold">Virtual Try-On: {creditCost} credits</p>
-                <p className="text-xs text-muted-foreground">{parseInt(imageCount)} image{parseInt(imageCount) > 1 ? 's' : ''} × {quality === 'high' ? 16 : 8} credits each</p>
+                <p className="text-xs text-muted-foreground">
+                  {isMultiProductMode
+                    ? `${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''} × ${multiProductCount} product${multiProductCount > 1 ? 's' : ''} × ${quality === 'high' ? 16 : 8} credits each`
+                    : `${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''} × ${quality === 'high' ? 16 : 8} credits each`}
+                </p>
               </div>
               {balance >= creditCost ? (
                 <p className="text-sm text-muted-foreground">{balance} credits available</p>
@@ -3211,7 +3215,7 @@ export default function Generate() {
                 onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
                 className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
               >
-                {balance >= creditCost ? `Generate ${imageCount} Try-On Images` : 'Buy Credits'}
+                {balance >= creditCost ? `Generate ${parseInt(imageCount) * multiProductCount} Try-On Images` : 'Buy Credits'}
               </Button>
             </div>
           </div>
