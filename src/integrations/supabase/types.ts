@@ -1033,6 +1033,13 @@ export type Database = {
         Args: { p_item_id: string; p_item_type: string }
         Returns: number
       }
+      get_user_emails_for_admin: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
