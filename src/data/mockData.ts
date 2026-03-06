@@ -1431,10 +1431,10 @@ export const pricingPlans: PricingPlan[] = [
     credits: 1500,
     features: [
       'Priority queue',
+      'Creative Drops',
       'Video Generation (coming soon)',
       '10 Brand Profiles',
       'Up to 100 products',
-      'All workflows',
     ],
     highlighted: true,
     badge: 'Most Popular',

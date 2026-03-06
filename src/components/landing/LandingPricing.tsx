@@ -143,11 +143,6 @@ export function LandingPricing() {
           </div>
         )}
 
-        <div className="mt-14 text-center">
-          <p className="text-sm text-muted-foreground">
-            All plans include unlimited Brand Profiles and workflow access.
-          </p>
-        </div>
       </div>
     </section>
   );
