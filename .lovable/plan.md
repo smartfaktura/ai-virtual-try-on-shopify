@@ -1,33 +1,30 @@
 
 
-## Unify All Landing Page CTA Buttons
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Two CTA buttons don't match the established pill-style branding used across Hero, HowItWorks, CreativeDrops, and FinalCTA sections.
+### Issues Found
 
-### Current inconsistencies
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-| Section | Issue |
-|---|---|
-| **FreestyleShowcaseSection** | Raw `<a>` tag, `rounded-lg`, small (`h-11`), no shadow |
-| **StudioTeamSection** | `<Button size="lg">` with default classes, no `rounded-full`, no shadow, no padding |
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Target style (matches Hero/HowItWorks/FinalCTA)
+### Plan
 
-```
-rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25
-```
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Changes
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**`src/components/landing/FreestyleShowcaseSection.tsx`** (lines 119-125)
-- Replace raw `<a>` with `<Button size="lg">` using `onClick={() => navigate('/auth')}`
-- Apply standard pill CTA classes: `rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25`
-- Add `useNavigate` import and hook
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**`src/components/landing/StudioTeamSection.tsx`** (lines 173-178)
-- Update the Button to use standard pill CTA classes: `rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25`
-- Switch from `asChild` + `<a>` to `onClick={() => navigate('/auth')}` for consistency
-- Add `useNavigate` import and hook
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-Two files changed, consistent branding across all landing page CTAs.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sparkles, User, Camera, Palette, RatioIcon, Play } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const PROMPT_TEXT = 'Editorial portrait in golden hour light, wearing our summer collection on a rooftop terrace...';
@@ -33,6 +35,7 @@ const FEATURES = [
 ];
 
 export function FreestyleShowcaseSection() {
+  const navigate = useNavigate();
   const [cycle, setCycle] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [chips, setChips] = useState<ChipState>({ model: false, scene: false, style: false, ratio: false });
@@ -116,13 +119,14 @@ export function FreestyleShowcaseSection() {
                 </li>
               ))}
             </ul>
-            <a
-              href="/auth"
-              className="inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+            <Button
+              size="lg"
+              className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
+              onClick={() => navigate('/auth')}
             >
               Try Freestyle Free
               <Sparkles className="w-4 h-4" />
-            </a>
+            </Button>
           </div>
 
           {/* Right — Animated Demo */}
