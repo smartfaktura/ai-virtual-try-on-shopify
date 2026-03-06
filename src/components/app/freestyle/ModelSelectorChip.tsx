@@ -5,6 +5,7 @@ import { mockModels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import type { ModelProfile } from '@/types';
 import { useCustomModels } from '@/hooks/useCustomModels';
+import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 
 interface ModelSelectorChipProps {
   selectedModel: ModelProfile | null;
