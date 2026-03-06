@@ -42,6 +42,15 @@ const baseTransition = 'transition-all duration-700 ease-out';
 const hidden = 'opacity-0 translate-y-8';
 const visible = 'opacity-100 translate-y-0';
 
+const dragDropKeyframes = `
+@keyframes drag-drop-in {
+  0% { opacity: 0; transform: translateY(-40px) rotate(3deg) scale(0.95); filter: drop-shadow(0 8px 20px rgba(0,0,0,0.15)); }
+  60% { opacity: 1; transform: translateY(2px) rotate(-0.5deg) scale(1.02); }
+  80% { transform: translateY(-1px) rotate(0deg) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 0 0 transparent); }
+}
+`;
+
 function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt: string; label: string; isResult?: boolean }) {
   const [hovered, setHovered] = useState(false);
 
