@@ -42,8 +42,9 @@ export function FeedbackBanner() {
     }
     setSubmitted(true);
     setTimeout(() => {
-      sessionStorage.setItem(DISMISS_KEY, 'true');
-      setDismissed(true);
+      setSubmitted(false);
+      setCollapsed(true);
+      sessionStorage.setItem(COLLAPSED_KEY, 'true');
     }, 2500);
   };
 
