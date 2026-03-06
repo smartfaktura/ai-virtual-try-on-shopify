@@ -213,9 +213,9 @@ export function AdminFeedbackPanel() {
                       <p className="text-sm text-foreground">{cleanMessage(item.message)}</p>
 
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1" title={item.user_id}>
                           <User className="w-3 h-3" />
-                          {item.user_id?.slice(0, 8)}…
+                          {emailMap[item.user_id] || `${item.user_id?.slice(0, 8)}…`}
                         </span>
                         {item.page_url && <span>Page: {item.page_url}</span>}
                       </div>
