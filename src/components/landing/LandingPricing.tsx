@@ -39,9 +39,11 @@ export function LandingPricing() {
               }`}
             >
               Annual
-              <span className="ml-1.5 text-xs text-primary font-bold">Save 20%</span>
             </button>
           </div>
+          <span className="ml-3 inline-flex items-center rounded-full bg-primary/10 text-primary text-xs font-bold px-3 py-1">
+            Save 20%
+          </span>
         </div>
 
         {/* Main plans — 4 columns on lg, but only non-enterprise */}
