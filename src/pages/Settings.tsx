@@ -252,7 +252,7 @@ export default function Settings() {
               className={`px-4 py-2 text-sm font-medium transition-colors ${billingPeriod === 'annual' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
               onClick={() => setBillingPeriod('annual')}
             >
-              Annual (Save 17%)
+              Annual (Save 20%)
             </button>
           </div>
         </div>
