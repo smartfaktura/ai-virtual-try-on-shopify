@@ -499,9 +499,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         ) : (
           <div
-            className={`rounded-xl p-2 sm:p-3 transition-all duration-200 ${
-              dragActive ? 'bg-primary/5 ring-2 ring-primary/20' : 'bg-muted/20'
-            }`}
+            className={cn(
+              'rounded-2xl p-2 sm:p-3 transition-all duration-300',
+              dragActive ? 'bg-primary/5 ring-2 ring-primary/20 scale-[1.01]' : 'bg-muted/20'
+            )}
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
