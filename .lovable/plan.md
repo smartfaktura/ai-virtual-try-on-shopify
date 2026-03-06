@@ -1,30 +1,29 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Enhance Workflows Feature Landing Page
 
-### Issues Found
-
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
-
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+The current page is generic — just a hero, 3 benefit cards, 3 steps, and a CTA. The user wants each of the 6 actual workflows showcased with engaging descriptions to convert visitors.
 
 ### Plan
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**File: `src/pages/features/WorkflowsFeature.tsx`** — Rewrite to include:
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+1. **Hero** (keep, refine copy) — Headline + subtitle + CTA
+2. **Workflow Showcase Section** (new) — 6 alternating left/right blocks, one per workflow:
+   - **Virtual Try-On Set** — AI-powered try-on on 30+ diverse models, editorial quality, all ratios
+   - **Product Listing Set** — E-commerce ready, 30 scene options, category-aware lighting, marketplace-optimized
+   - **Selfie / UGC Set** — Authentic creator-style content, natural compositions, social proof ready
+   - **Flat Lay Set** — Curated overhead arrangements, styled props, Instagram-ready
+   - **Mirror Selfie Set** — Realistic mirror compositions, phone-in-hand, diverse room environments
+   - **Interior / Exterior Staging** — Transform empty rooms, 12+ design styles, architecture preserved
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+   Each block has: icon, workflow name as heading, 2-line description, 3-4 bullet features (reuse from `featureMap` in WorkflowCard), and a "Try Free" CTA button linking to `/auth`.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+   Layout: alternating image-left/text-right, text-left/image-right pattern. Since we don't have public preview images for all workflows, use icon-based decorative elements with gradient backgrounds instead of images.
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+3. **Why Workflows** (keep existing 3 benefits section)
+4. **How It Works** (keep existing 3 steps)
+5. **Final CTA** (keep, with stronger copy)
+
+All static content — no database queries needed. The workflow names, descriptions, and features are hardcoded matching the DB data and `featureMap`.
 
