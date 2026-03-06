@@ -5,13 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 import { ProductImageGallery } from './ProductImageGallery';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface UserProduct {
   id: string;
@@ -187,6 +186,27 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       reader.readAsDataURL(file);
     });
   }, [images.length, analyzeImage]);
+
+  // Clipboard paste support (Cmd+V / Ctrl+V)
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const imageFiles: File[] = [];
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) imageFiles.push(file);
+        }
+      }
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        addFiles(imageFiles);
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [addFiles]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -434,11 +454,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         ) : images.length === 0 ? (
           <div
-            className={`relative flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-5 sm:py-6 ${
+            className={cn(
+              'relative flex flex-col items-center justify-center rounded-2xl transition-all duration-300 py-6 sm:py-8 cursor-pointer',
               dragActive
-                ? 'bg-primary/5 border-2 border-primary'
-                : 'bg-muted/30 hover:bg-muted/50 border border-dashed border-border'
-            } cursor-pointer`}
+                ? 'bg-primary/8 border-2 border-primary scale-[1.02] shadow-lg shadow-primary/10'
+                : 'bg-muted/30 hover:bg-muted/50 border-2 border-dashed border-border hover:border-muted-foreground/30'
+            )}
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
@@ -447,11 +468,17 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               if (input) input.click();
             }}
           >
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mb-2">
-              <ImagePlus className="w-4 h-4 text-muted-foreground" />
+            <div className={cn(
+              'w-10 h-10 rounded-full flex items-center justify-center mb-2.5 transition-all duration-300',
+              dragActive ? 'bg-primary/15 scale-110' : 'bg-muted'
+            )}>
+              <ImagePlus className={cn(
+                'w-5 h-5 transition-colors duration-300',
+                dragActive ? 'text-primary' : 'text-muted-foreground'
+              )} />
             </div>
             <p className="text-sm text-muted-foreground">
-              Drop images or <span className="text-primary font-medium">browse</span>
+              Drop images, <span className="text-primary font-medium">browse</span>, or paste
             </p>
             <p className="text-[11px] text-muted-foreground/60 mt-1">
               PNG, JPG, WebP · max 10 MB · up to {MAX_IMAGES}
@@ -472,9 +499,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         ) : (
           <div
-            className={`rounded-xl p-2 sm:p-3 transition-all duration-200 ${
-              dragActive ? 'bg-primary/5 ring-2 ring-primary/20' : 'bg-muted/20'
-            }`}
+            className={cn(
+              'rounded-2xl p-2 sm:p-3 transition-all duration-300',
+              dragActive ? 'bg-primary/5 ring-2 ring-primary/20 scale-[1.01]' : 'bg-muted/20'
+            )}
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
@@ -510,40 +538,40 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             <Label htmlFor="product-title" className="text-xs font-medium">
               Product Name <span className="text-destructive">*</span>
             </Label>
-            {isAnalyzing && !hasManualEdits.current.title ? (
-              <Skeleton className="h-9 w-full rounded-md" />
-            ) : (
-              <Input
-                id="product-title"
-                placeholder="e.g. Black Yoga Leggings"
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                  hasManualEdits.current.title = true;
-                }}
-                maxLength={200}
-              />
-            )}
+            <Input
+              id="product-title"
+              placeholder={isAnalyzing && !hasManualEdits.current.title ? "Analyzing…" : "e.g. Black Yoga Leggings"}
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                hasManualEdits.current.title = true;
+              }}
+              maxLength={200}
+              className={cn(
+                'transition-all duration-300',
+                isAnalyzing && !hasManualEdits.current.title && 'animate-pulse ring-1 ring-primary/30'
+              )}
+            />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="product-type" className="text-xs font-medium">
               Product Type
             </Label>
-            {isAnalyzing && !hasManualEdits.current.productType ? (
-              <Skeleton className="h-9 w-full rounded-md" />
-            ) : (
-              <Input
-                id="product-type"
-                placeholder="e.g. Sneakers, Face Serum…"
-                value={productType}
-                onChange={(e) => {
-                  setProductType(e.target.value);
-                  hasManualEdits.current.productType = true;
-                }}
-                maxLength={100}
-              />
-            )}
+            <Input
+              id="product-type"
+              placeholder={isAnalyzing && !hasManualEdits.current.productType ? "Analyzing…" : "e.g. Sneakers, Face Serum…"}
+              value={productType}
+              onChange={(e) => {
+                setProductType(e.target.value);
+                hasManualEdits.current.productType = true;
+              }}
+              maxLength={100}
+              className={cn(
+                'transition-all duration-300',
+                isAnalyzing && !hasManualEdits.current.productType && 'animate-pulse ring-1 ring-primary/30'
+              )}
+            />
           </div>
         </div>
 
@@ -572,22 +600,21 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             <Label htmlFor="product-desc" className="text-xs font-medium">
               Description
             </Label>
-            {isAnalyzing && !hasManualEdits.current.description ? (
-              <Skeleton className="h-[52px] w-full rounded-md" />
-            ) : (
-              <Textarea
-                id="product-desc"
-                placeholder="Brief description…"
-                value={description}
-                onChange={(e) => {
-                  setDescription(e.target.value);
-                  hasManualEdits.current.description = true;
-                }}
-                maxLength={500}
-                rows={2}
-                className="resize-none min-h-0"
-              />
-            )}
+            <Textarea
+              id="product-desc"
+              placeholder={isAnalyzing && !hasManualEdits.current.description ? "Analyzing…" : "Brief description…"}
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                hasManualEdits.current.description = true;
+              }}
+              maxLength={500}
+              rows={2}
+              className={cn(
+                'resize-none min-h-0 transition-all duration-300',
+                isAnalyzing && !hasManualEdits.current.description && 'animate-pulse ring-1 ring-primary/30'
+              )}
+            />
           </div>
 
           <div className="space-y-1">
