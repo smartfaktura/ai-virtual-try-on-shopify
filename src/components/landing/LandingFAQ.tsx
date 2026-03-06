@@ -8,43 +8,43 @@ import {
 const faqs = [
   {
     q: 'Will the images look AI-generated?',
-    a: 'No. Our AI generates studio-quality images indistinguishable from professional photography. Combined with Brand Memory, every image maintains consistent, realistic lighting and composition.',
+    a: 'No. Our AI generates studio-quality images indistinguishable from professional photography. Combined with your Brand Profile, every image maintains consistent, realistic lighting and composition automatically.',
   },
   {
-    q: 'Can I really stop doing photoshoots?',
-    a: 'For most e-commerce visual needs, yes. Brands use VOVV.AI to replace recurring product shoots for ads, listings, and campaigns. You may still want photoshoots for flagship campaigns, but your day-to-day visual output is fully automated.',
+    q: 'What are Workflows?',
+    a: 'Workflows are purpose-built generation pipelines. Choose from six core options — Virtual Try-On, Product Listing, Selfie / UGC, Flat Lay, Mirror Selfie, and Interior / Exterior Staging — each pre-configured with the right prompts, aspect ratios, and model settings for that use case.',
   },
   {
-    q: 'What is a Visual Set?',
-    a: 'A Visual Set is a collection of 6–20 brand-ready images generated from a single product photo. Each set is tied to a workflow — like Product Listing, Virtual Try-On, or Flat Lay — so you get images sized and styled for a specific purpose.',
+    q: 'What is Freestyle?',
+    a: 'Freestyle is our open-ended generation mode. Write any prompt, attach product photos or reference images, apply a Brand Profile and style presets, then generate. It gives you full creative control when none of the standard Workflows fit your vision.',
+  },
+  {
+    q: 'How does Virtual Try-On work?',
+    a: 'Upload a clothing item and choose from our library of 40+ diverse AI models across different ethnicities, body types, and ages. Select a pose, framing, and scene, and the AI generates realistic photos of the model wearing your product.',
   },
   {
     q: 'What are Creative Drops?',
-    a: 'Creative Drops are automated, recurring visual runs. You choose your products, select your workflows, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
+    a: 'Creative Drops are automated, recurring visual runs. You choose your products, select your Workflows, and set a schedule (monthly or biweekly). Fresh visuals arrive on autopilot — no manual work needed. Available on Growth plans and above.',
   },
   {
-    q: 'How is the image quality compared to a real photoshoot?',
-    a: 'Our AI generates studio-quality images that match professional photography for most e-commerce use cases. Combined with your Brand Profile, every image maintains consistent lighting, tone, and composition across your entire catalog.',
+    q: 'How does Brand Profile work?',
+    a: 'When you create a Brand Profile, you set your preferred tone, lighting style, background, color temperature, and composition rules. Every future generation — across Workflows and Freestyle — uses this profile automatically so your visuals stay on-brand without manual adjustments.',
   },
   {
-    q: 'How does Brand Memory work?',
-    a: 'When you create a Brand Profile, you set your preferred tone, lighting style, background, color temperature, and composition rules. Every future generation uses this profile automatically — so your visuals stay on-brand without manual adjustments.',
+    q: 'How many credits does each generation cost?',
+    a: 'Standard Workflow generations cost 8 credits, High Quality and Virtual Try-On cost 16 credits each, and video generations cost 30 credits. Freestyle starts at 4 credits for Standard quality and 10 for High Quality. Your dashboard always shows the exact cost before you generate.',
+  },
+  {
+    q: 'Is there a free trial?',
+    a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to run your first Workflow or try Freestyle and see the quality before committing to a plan.',
   },
   {
     q: 'What image formats and sizes are supported?',
     a: 'We support all common aspect ratios (1:1, 4:5, 16:9, 9:16) and output high-resolution images suitable for e-commerce, social media, ads, and print. You can download in JPEG or PNG format.',
   },
   {
-    q: 'Is there a free trial?',
-    a: 'Every new account gets 20 free credits — no credit card required. That\'s enough to create your first Visual Set and see the quality before committing to a plan.',
-  },
-  {
-    q: 'How does Virtual Try-On work?',
-    a: 'Upload a clothing item and choose from our library of 34 diverse AI models across different ethnicities, body types, and ages. Select a pose and scene, and the AI generates realistic photos of the model wearing your product.',
-  },
-  {
     q: 'Can I cancel my subscription anytime?',
-    a: 'Absolutely. You can cancel, upgrade, or downgrade your plan at any time. There are no long-term contracts or cancellation fees. Unused monthly visuals don\'t roll over, but top-up credits never expire.',
+    a: 'Absolutely. You can cancel, upgrade, or downgrade your plan at any time. There are no long-term contracts or cancellation fees. Unused monthly credits don\'t roll over, but top-up credits never expire.',
   },
 ];
 
