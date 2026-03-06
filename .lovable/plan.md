@@ -1,30 +1,36 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Create Product Landing Pages
 
-### Issues Found
+Create 4 dedicated landing pages for the Product footer links (Workflows, Virtual Try-On, Creative Drops, Brand Profiles). Pricing already scrolls to `/#pricing` which is fine.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+Each page uses the existing `PageLayout` wrapper (LandingNav + LandingFooter) and follows the same pattern as `About.tsx` — hero section, feature highlights, how-it-works steps, and a CTA at the bottom.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Pages to Create
 
-### Plan
+| Page | Route | File |
+|------|-------|------|
+| Workflows | `/features/workflows` | `src/pages/features/Workflows.tsx` |
+| Virtual Try-On | `/features/virtual-try-on` | `src/pages/features/VirtualTryOn.tsx` |
+| Creative Drops | `/features/creative-drops` | `src/pages/features/CreativeDrops.tsx` |
+| Brand Profiles | `/features/brand-profiles` | `src/pages/features/BrandProfiles.tsx` |
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Page Structure (each page)
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+1. **Hero** — Badge icon + headline + subtitle + "Get Started Free" CTA button
+2. **Key Benefits** — 3-column card grid with icons highlighting the main value props
+3. **How It Works** — 3 numbered steps explaining the feature flow
+4. **CTA Section** — Final call-to-action pointing to `/auth`
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### Content per Page
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+- **Workflows**: Automated visual pipelines — upload once, get on-model, lifestyle, flat lay shots. Benefits: no prompts needed, batch processing, consistent brand output.
+- **Virtual Try-On**: See products on real AI models. Benefits: diverse model library, realistic fitting, multiple angles.
+- **Creative Drops**: Monthly curated visual drops. Benefits: fresh content monthly, trending styles, seasonal themes.
+- **Brand Profiles**: Save brand guidelines for consistent output. Benefits: color/style consistency, reusable presets, team sharing.
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Other Changes
+
+- **`src/App.tsx`** — Add 4 new public routes under `/features/*`
+- **`src/components/landing/LandingFooter.tsx`** — Update Product links from `/#features` to the new routes (`/features/workflows`, etc.)
 
