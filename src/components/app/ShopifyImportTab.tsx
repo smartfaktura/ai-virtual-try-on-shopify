@@ -231,6 +231,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
   // Select step
   if (step === 'select') {
     const allSelected = filteredProducts.length > 0 && selectedIds.size === filteredProducts.length;
+    const selectAllDisabled = filteredProducts.length > MAX_SHOPIFY_BATCH && selectedIds.size === 0;
 
     return (
       <div className="space-y-4">
@@ -254,16 +255,24 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
             checked={allSelected}
             onCheckedChange={toggleAll}
             id="select-all"
+            disabled={selectAllDisabled}
           />
-          <Label htmlFor="select-all" className="text-xs cursor-pointer">
-            Select all ({filteredProducts.length})
+          <Label htmlFor="select-all" className={`text-xs cursor-pointer ${selectAllDisabled ? 'text-muted-foreground/60' : ''}`}>
+            {filteredProducts.length <= MAX_SHOPIFY_BATCH
+              ? `Select all (${filteredProducts.length})`
+              : `Select first ${MAX_SHOPIFY_BATCH}`}
           </Label>
-          {selectedIds.size > 0 && (
-            <span className="text-xs text-primary font-medium ml-auto">
-              {selectedIds.size} selected
-            </span>
-          )}
+          <span className={`text-xs font-medium ml-auto ${atLimit ? 'text-amber-500' : 'text-primary'}`}>
+            {selectedIds.size}/{MAX_SHOPIFY_BATCH}
+          </span>
         </div>
+
+        {products.length > MAX_SHOPIFY_BATCH && (
+          <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
+            <span>Maximum {MAX_SHOPIFY_BATCH} products per import. You can import more in additional batches.</span>
+          </div>
+        )}
 
         <div className="max-h-[320px] overflow-y-auto space-y-1 -mx-1 px-1">
           {filteredProducts.map((product) => (
