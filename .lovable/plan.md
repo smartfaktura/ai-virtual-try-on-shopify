@@ -1,20 +1,30 @@
 
 
-## Fix: Auto-scroll into view when feedback banner expands
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The feedback banner sits at the bottom of the page. When clicking "Share feedback" on the collapsed version, it expands but the new content is below the viewport — the user has to manually scroll down.
+### Issues Found
 
-### Fix
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-In `src/components/app/FeedbackBanner.tsx`, add a `useRef` on the expanded banner's container and call `scrollIntoView({ behavior: 'smooth', block: 'nearest' })` after `setCollapsed(false)` (via a short `setTimeout` or `useEffect` reacting to `collapsed` becoming `false`).
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Changes
+### Plan
 
-**`src/components/app/FeedbackBanner.tsx`**
-- Add a `ref` to the expanded banner wrapper div
-- When transitioning from collapsed → expanded, call `ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })` after a brief delay (~100ms) to let the DOM update
-- Same approach when the textarea area expands after selecting a feedback type chip
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Files changed
-- `src/components/app/FeedbackBanner.tsx`
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

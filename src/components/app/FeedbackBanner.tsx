@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MessageSquarePlus, X, Bug, Lightbulb, MessageCircle, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,11 +18,20 @@ const COLLAPSED_KEY = 'vovv-feedback-collapsed';
 export function FeedbackBanner() {
   const { user } = useAuth();
   const location = useLocation();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [collapsed, setCollapsed] = useState(() => sessionStorage.getItem(COLLAPSED_KEY) === 'true');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!collapsed || selectedType) {
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    }
+  }, [collapsed, selectedType]);
 
   if (!user) return null;
 
@@ -83,7 +92,7 @@ export function FeedbackBanner() {
   const isExpanded = !!selectedType;
 
   return (
-    <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 sm:p-4 space-y-3 animate-fade-in">
+    <div ref={containerRef} className="bg-primary/5 border border-primary/20 rounded-xl p-3 sm:p-4 space-y-3 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
