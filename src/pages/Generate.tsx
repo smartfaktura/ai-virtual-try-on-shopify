@@ -1151,11 +1151,10 @@ export default function Generate() {
   const handlePublishClick = () => {
     if (selectedForPublish.size === 0) { toast.error('Please select at least one image to download'); return; }
     selectedForPublish.forEach(idx => handleDownloadImage(idx));
-    toast.success(`${selectedForPublish.size} image(s) downloaded!`);
     navigate('/app/library');
   };
   const handlePublish = (mode: 'add' | 'replace') => {
-    toast.success(`${selectedForPublish.size} image(s) downloaded!`);
+    
     setPublishModalOpen(false);
     navigate('/app/library');
   };
@@ -1174,7 +1173,7 @@ export default function Generate() {
       link.download = `generated-image-${index + 1}.png`;
       link.click();
       URL.revokeObjectURL(blobUrl);
-      toast.success('Image downloaded');
+      
     } catch {
       toast.error('Download failed');
     }
@@ -1183,7 +1182,7 @@ export default function Generate() {
     for (let idx = 0; idx < generatedImages.length; idx++) {
       await handleDownloadImage(idx);
     }
-    toast.success(`${generatedImages.length} images downloaded`);
+    
   };
   const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 

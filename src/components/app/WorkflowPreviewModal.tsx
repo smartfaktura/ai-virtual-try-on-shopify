@@ -99,7 +99,6 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
     if (!url) return;
     try {
       await downloadSingleImage(url, `${title.replace(/\s+/g, '_')}_${selectedIndex + 1}.png`);
-      toast.success('Image downloaded');
     } catch {
       toast.error('Download failed');
     }
@@ -112,7 +111,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
     try {
       if (signedUrls.length === 1) {
         await downloadSingleImage(signedUrls[0], `${title.replace(/\s+/g, '_')}.png`);
-        toast.success('Image downloaded');
+        
       } else {
         const images = signedUrls.map((url, i) => ({
           url,
@@ -120,7 +119,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
           scene_name: `image_${i + 1}`,
         }));
         await downloadDropAsZip(images, title, (pct) => setDownloadPct(pct));
-        toast.success(`${signedUrls.length} images downloaded`);
+        
       }
     } catch {
       toast.error('Download failed');
