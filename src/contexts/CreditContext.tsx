@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
+import { trackPurchase } from '@/lib/fbPixel';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
