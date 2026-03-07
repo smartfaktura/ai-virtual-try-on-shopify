@@ -2,11 +2,16 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 
+interface SignUpResult {
+  data: { user: User | null } | null;
+  error: Error | null;
+}
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, displayName?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -36,8 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, displayName?: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = useCallback(async (email: string, password: string, displayName?: string): Promise<SignUpResult> => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -45,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { display_name: displayName || email.split('@')[0] },
       },
     });
-    return { error: error as Error | null };
+    return { data: data ? { user: data.user as User | null } : null, error: error as Error | null };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
