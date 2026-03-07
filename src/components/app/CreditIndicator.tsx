@@ -7,12 +7,14 @@ export function CreditIndicator() {
   const navigate = useNavigate();
 
   const monthlyCredits = planConfig.monthlyCredits;
-  const hasBonus = balance > monthlyCredits && monthlyCredits !== Infinity;
-  const usagePercent = monthlyCredits === Infinity
+  const isInfinite = monthlyCredits === Infinity;
+  const hasBonus = !isInfinite && balance > monthlyCredits;
+  const bonusAmount = hasBonus ? balance - monthlyCredits : 0;
+
+  const displayTotal = hasBonus ? balance : monthlyCredits;
+  const usagePercent = isInfinite
     ? 100
-    : hasBonus
-      ? 100
-      : Math.min(100, Math.max(3, (balance / monthlyCredits) * 100));
+    : Math.min(100, Math.max(3, (balance / (displayTotal || 1)) * 100));
 
   const isFree = plan === 'free';
 
@@ -46,9 +48,13 @@ export function CreditIndicator() {
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-sm font-bold text-sidebar-foreground">{balance.toLocaleString()}</span>
-            <span className="text-[10px] text-sidebar-foreground/40">
-              / {monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()}
-            </span>
+            {hasBonus ? (
+              <span className="text-[10px] font-medium text-emerald-400">+{bonusAmount.toLocaleString()}</span>
+            ) : (
+              <span className="text-[10px] text-sidebar-foreground/40">
+                / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
+              </span>
+            )}
           </div>
         </div>
         <button
@@ -61,7 +67,7 @@ export function CreditIndicator() {
       </div>
 
       {/* Progress bar */}
-      <div className="h-2.5 w-full rounded-full bg-white/[0.4] overflow-hidden">
+      <div className="h-2.5 w-full rounded-full bg-slate-400/60 overflow-hidden">
         <div
           className="h-full bg-primary transition-all duration-500"
           style={{ width: `${usagePercent}%` }}
