@@ -31,7 +31,7 @@ interface UserSettings {
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
-  emailOnComplete: true,
+  emailOnComplete: false,
   emailOnFailed: true,
   emailLowCredits: true,
   emailWeeklyDigest: false,

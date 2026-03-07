@@ -151,6 +151,37 @@ function lowCreditsEmail(data: { balance?: number; displayName?: string }): stri
   `);
 }
 
+function generationFailedEmail(data: { jobType?: string; errorMessage?: string; displayName?: string }): string {
+  const typeMap: Record<string, string> = {
+    freestyle: "Freestyle",
+    tryon: "Virtual Try-On",
+    workflow: "Workflow",
+  };
+  const typeName = typeMap[data.jobType || "freestyle"] || "Generation";
+  const errorDetail = data.errorMessage || "An unexpected error occurred during image generation.";
+  return emailWrapper(`
+    <h1 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700;color:${BRAND.navy};margin:0 0 16px 0;letter-spacing:-0.02em;">
+      Something went wrong
+    </h1>
+    <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.muted};line-height:1.6;margin:0 0 24px 0;">
+      Your ${typeName} generation couldn't be completed. Don't worry — your credits have been refunded automatically.
+    </p>
+    <div style="background-color:${BRAND.stone};border-radius:8px;padding:20px;margin:0 0 8px 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:4px 0;">Type</td>
+          <td align="right" style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.navy};font-weight:500;padding:4px 0;">${typeName}</td>
+        </tr>
+        <tr>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:4px 0;">Details</td>
+          <td align="right" style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.navy};font-weight:500;padding:4px 0;">${errorDetail.slice(0, 100)}</td>
+        </tr>
+      </table>
+    </div>
+    ${ctaButton("Try Again", "https://vovvai.lovable.app/dashboard")}
+  `);
+}
+
 // ── Handler ───────────────────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -201,6 +232,10 @@ serve(async (req) => {
       case "low_credits":
         subject = "Running low on credits — VOVV.AI";
         html = lowCreditsEmail(data || {});
+        break;
+      case "generation_failed":
+        subject = "Generation failed — VOVV.AI";
+        html = generationFailedEmail(data || {});
         break;
       default:
         return new Response(JSON.stringify({ error: `Unknown email type: ${type}` }), {
