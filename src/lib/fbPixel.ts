@@ -36,3 +36,11 @@ export function trackInitiateCheckout(value?: number, currency = 'USD') {
     });
   }
 }
+
+export function trackCompleteRegistration(method?: string) {
+  if (typeof window.fbq === 'function') {
+    window.fbq('track', 'CompleteRegistration', {
+      ...(method && { content_name: method }),
+    });
+  }
+}
