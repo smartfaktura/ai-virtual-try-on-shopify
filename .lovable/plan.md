@@ -1,30 +1,24 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix: Duplicate Signup Shows Wrong Success Message
 
-### Issues Found
+### Problem
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+When a user signs up with an email that already exists, Supabase returns a **200 OK with no error** (security measure to prevent email enumeration). The response contains a fake user object with an **empty `identities` array**. The current code only checks for `error`, so it falls through to `toast.success('Check your email to confirm your account!')` — misleading the user.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Fix
 
-### Plan
+**1. Update `signUp` in `AuthContext.tsx`**
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+Return the full `data` object alongside `error` so the caller can inspect `data.user.identities`.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**2. Update signup handler in `Auth.tsx`**
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+After a successful signup call, check if `data.user?.identities` is empty. If so, show a different message like "An account with this email already exists. Try signing in instead." and switch to login mode. Only show the confirmation toast when identities are present (genuine new signup).
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files Changed
+| File | Change |
+|------|--------|
+| `src/contexts/AuthContext.tsx` | Return `{ data, error }` from `signUp` |
+| `src/pages/Auth.tsx` | Detect duplicate signup via empty identities array, show appropriate message |
 
