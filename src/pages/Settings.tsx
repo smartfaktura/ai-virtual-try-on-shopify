@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { trackViewContent } from '@/lib/fbPixel';
 import { Building2, Check, ExternalLink, RefreshCw } from 'lucide-react';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
