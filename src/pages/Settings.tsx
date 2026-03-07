@@ -34,7 +34,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   emailOnComplete: false,
   emailOnFailed: true,
   emailLowCredits: true,
-  emailWeeklyDigest: false,
+  
   inAppComplete: true,
   inAppFailed: true,
   inAppTips: true,
