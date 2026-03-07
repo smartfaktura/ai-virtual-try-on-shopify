@@ -208,12 +208,6 @@ export default function Auth() {
             )}
           </div>
 
-          {mode === 'signup' && (
-            <div className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
-              <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
-              <span>20 free credits included with every new account</span>
-            </div>
-          )}
         </div>
       </div>
 
