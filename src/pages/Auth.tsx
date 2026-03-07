@@ -223,9 +223,9 @@ export default function Auth() {
       </div>
       {/* Forgot Password Dialog */}
       <Dialog open={showResetDialog} onOpenChange={(open) => { setShowResetDialog(open); if (!open) setResetSent(false); }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-2xl p-8">
           <DialogHeader>
-            <DialogTitle>{resetSent ? 'Check your inbox' : 'Reset your password'}</DialogTitle>
+            <DialogTitle className="text-xl">{resetSent ? 'Check your inbox' : 'Reset your password'}</DialogTitle>
             <DialogDescription>
               {resetSent
                 ? `We sent a reset link to ${resetEmail}`
@@ -234,14 +234,16 @@ export default function Auth() {
           </DialogHeader>
 
           {resetSent ? (
-            <div className="flex flex-col items-center gap-4 py-4">
-              <CheckCircle2 className="h-12 w-12 text-primary" />
+            <div className="flex flex-col items-center gap-4 py-6">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-primary" />
+              </div>
               <p className="text-sm text-muted-foreground text-center">
                 Didn't receive it? Check your spam folder or try again.
               </p>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full rounded-full"
                 onClick={() => setResetSent(false)}
               >
                 Try another email
@@ -263,28 +265,25 @@ export default function Auth() {
                   setResetSent(true);
                 }
               }}
-              className="space-y-4"
+              className="space-y-5"
             >
-              <div className="space-y-1.5">
-                <Label htmlFor="reset-email">Email</Label>
-                <Input
-                  id="reset-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  required
-                  className="h-11"
-                  autoFocus
-                />
-              </div>
-              <Button type="submit" className="w-full h-11" disabled={resetLoading}>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="Email address"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+                className="rounded-full bg-muted/50 border-0 h-11 px-5"
+                autoFocus
+              />
+              <Button type="submit" className="w-full h-11 rounded-full shadow-sm hover:shadow-md transition-shadow" disabled={resetLoading}>
                 {resetLoading ? 'Sending...' : 'Send reset link'}
               </Button>
               <button
                 type="button"
                 onClick={() => setShowResetDialog(false)}
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mx-auto"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mx-auto py-1 transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back to sign in
