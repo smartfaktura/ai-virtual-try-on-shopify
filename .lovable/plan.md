@@ -1,30 +1,25 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Why tsimkus@inbox.lt Became Admin & How to Fix
 
-### Issues Found
+### Root Cause
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+Both admin entries in the `user_roles` table were created at the **exact same timestamp** (`2026-02-10 09:18:45.232906+00`). This means they were inserted together in a single manual operation (likely during initial setup). There is **no trigger, no code, and no migration** that auto-assigns admin roles — this was a one-time manual data entry that included both accounts by mistake.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+There is no bug to fix in the code. The `useIsAdmin` hook and all admin-gated UI work correctly — they check the `user_roles` table, and both accounts genuinely have the admin role there.
 
-### Plan
+### Fix
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+Remove the admin role from `tsimkus@inbox.lt` via a data operation:
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+```sql
+DELETE FROM public.user_roles
+WHERE user_id = '381b6662-9d63-405e-a43d-172f0db6c3e9'
+  AND role = 'admin';
+```
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+This is a data change (not a schema change), so it uses the insert/data tool. After this, only `info@tsimkus.lt` will have admin access. No code changes needed.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files changed
+- None (database data operation only)
 
