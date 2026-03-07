@@ -44,11 +44,11 @@ export function CreditIndicator() {
           <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
             <Sparkles className="w-3.5 h-3.5 text-sidebar-foreground/70" />
           </div>
-          <div>
-            <p className="text-sm font-bold text-sidebar-foreground leading-tight">{balance}</p>
-            <p className="text-[10px] text-sidebar-foreground/40">
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm font-bold text-sidebar-foreground">{balance.toLocaleString()}</span>
+            <span className="text-[10px] text-sidebar-foreground/40">
               / {monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()}
-            </p>
+            </span>
           </div>
         </div>
         <button
@@ -61,10 +61,10 @@ export function CreditIndicator() {
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 w-full rounded-full bg-white/[0.08] overflow-hidden">
+      <div className="h-2 w-full rounded-full bg-white/[0.12] overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
-            hasBonus ? 'bg-primary' : 'bg-primary/70'
+            hasBonus ? 'bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.4)]' : 'bg-primary'
           }`}
           style={{ width: `${usagePercent}%` }}
         />
