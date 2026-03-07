@@ -44,6 +44,8 @@ const DEFAULT_SETTINGS: UserSettings = {
 export default function Settings() {
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
+
+  useEffect(() => { trackViewContent('Pricing', 'pricing_page'); }, []);
   const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
 
   // Asset preview generation state (admin only)
