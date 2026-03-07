@@ -1,30 +1,23 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix: Forgot Password Dialog Pushed Off-Screen on Mobile
 
-### Issues Found
+### Problem
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+The dialog uses `fixed top-[50%] translate-y-[-50%]` positioning (centered vertically). On mobile, when the keyboard opens, the viewport shrinks but the dialog stays centered relative to the full viewport — pushing the content above the visible area.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Fix
 
-### Plan
+Change the `DialogContent` positioning on mobile to align to the top of the viewport instead of center, so the keyboard doesn't push it off-screen. On desktop (`sm:` and up), keep the centered behavior.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**File: `src/components/ui/dialog.tsx`**
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+Update the `DialogContent` className to use `top-[5%] translate-y-0` on mobile, and `sm:top-[50%] sm:translate-y-[-50%]` on desktop. This keeps the dialog near the top on mobile so the keyboard doesn't clip it, while preserving the centered look on desktop.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+Also add `max-h-[90vh] overflow-y-auto` to ensure the dialog is scrollable if content exceeds viewport.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files Changed
+| File | Change |
+|------|--------|
+| `src/components/ui/dialog.tsx` | Mobile-first positioning: top-aligned on mobile, centered on desktop |
 
