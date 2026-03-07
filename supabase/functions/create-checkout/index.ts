@@ -72,13 +72,21 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "https://vovvai.lovable.app";
     const checkoutMode = mode === "subscription" ? "subscription" : "payment";
 
+    // Look up the price amount so we can pass it to the success URL for tracking
+    const priceObj = await stripe.prices.retrieve(priceId);
+    const priceAmount = priceObj.unit_amount ? (priceObj.unit_amount / 100).toFixed(2) : "0";
+    logStep("Price amount resolved", { priceAmount });
+
+    const defaultSuccessUrl = `${origin}/app/settings?payment=success&amount=${priceAmount}`;
+    const defaultCancelUrl = `${origin}/app/settings?payment=cancelled`;
+
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_email: customerId ? undefined : userEmail,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: checkoutMode as any,
-      success_url: successUrl || `${origin}/app/settings?payment=success`,
-      cancel_url: cancelUrl || `${origin}/app/settings?payment=cancelled`,
+      success_url: successUrl || defaultSuccessUrl,
+      cancel_url: cancelUrl || defaultCancelUrl,
       metadata: {
         user_id: userId,
       },

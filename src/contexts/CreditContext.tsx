@@ -187,11 +187,22 @@ export function CreditProvider({ children }: CreditProviderProps) {
     const payment = params.get('payment');
     if (payment === 'success') {
       toast.success('Payment successful! Your credits are being updated…');
+
+      // Fire Facebook Pixel Purchase event with the checkout amount
+      const amount = params.get('amount');
+      if (amount) {
+        const value = parseFloat(amount);
+        if (!isNaN(value) && value > 0) {
+          trackPurchase(value, 'USD');
+        }
+      }
+
       // Delay to give Stripe time to process
       setTimeout(() => checkSubscription(), 2000);
       // Clean URL
       const url = new URL(window.location.href);
       url.searchParams.delete('payment');
+      url.searchParams.delete('amount');
       window.history.replaceState({}, '', url.toString());
     } else if (payment === 'cancelled') {
       toast.info('Payment cancelled.');
