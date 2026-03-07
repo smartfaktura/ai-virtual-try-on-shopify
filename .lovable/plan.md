@@ -1,50 +1,46 @@
 
 
-## Test Emails and Trigger Explanation
+## Fix Email Notification System — Respect User Preferences + Default Off for Generation Complete
 
-### Testing Issue
+### Problems Found
 
-The `send-email` function is secured with **service role key authentication** — it checks `Authorization: Bearer <SERVICE_ROLE_KEY>`. The testing tool sends the anon key, so it gets rejected with 401. This is correct security behavior (only internal/database calls should send emails).
+1. **Generation complete emails fire unconditionally** — the 3 edge functions (`generate-freestyle`, `generate-tryon`, `generate-workflow`) never check the user's `settings.emailOnComplete` preference before sending. Every single generation triggers an email, which will spam users heavily.
 
-### Plan to Test
+2. **Default should be OFF for generation complete** — as you noted, generation emails should be opt-in, not opt-out. Currently `emailOnComplete: true` by default.
 
-To send all 3 test emails to `hello@vovv.ai`, I need to temporarily relax the auth check to also accept the anon key, send the test emails, then revert. Alternatively, I can add a short-lived test bypass.
+3. **"Generation failed" email exists in settings UI but is never sent** — there's no `generation_failed` template in `send-email` and no failure hook in the generation functions.
 
-**Approach**: Temporarily update the auth check in `send-email/index.ts` to also accept the anon key for testing, fire off the 3 test calls, then immediately revert the auth back to service-role-only.
+4. **Low credits / weekly digest preferences are not checked** — the `deduct_credits()` DB function sends low-credits emails without checking `settings.emailLowCredits`.
 
-### When Each Email Gets Triggered
+### Plan
 
-| Email | Trigger | How |
-|-------|---------|-----|
-| **Welcome** | New user signs up and profile is created | Database trigger `notify_new_user()` fires on `profiles` INSERT → calls `send-email` via `extensions.http_post` with type `welcome` |
-| **Generation Complete** | Any image generation finishes successfully | Edge functions `generate-freestyle`, `generate-tryon`, `generate-workflow` each make a fire-and-forget `fetch()` call to `send-email` with type `generation_complete` after images are saved |
-| **Low Credits** | User's credit balance drops below 10 | Database function `deduct_credits()` checks if balance < 10 and last email was >24h ago (or never sent) → calls `send-email` via `extensions.http_post` with type `low_credits` |
+**1. Change defaults in Settings.tsx**
+- Set `emailOnComplete: false` (opt-in only)
+- Keep `emailLowCredits: true`, `emailOnFailed: true` as defaults
 
-### Rate Limiting
+**2. Update all 3 generation edge functions to check user preferences**
+In `generate-freestyle`, `generate-tryon`, `generate-workflow`:
+- Change the profile query to also select `settings`
+- Only send the email if `settings.emailOnComplete === true`
+- Same pattern: ~3 lines changed per file
 
-- **Welcome**: Once per user (triggered on profile creation, which happens once)
-- **Generation Complete**: Every successful generation (fire-and-forget, non-blocking)
-- **Low Credits**: Maximum once every 24 hours per user (tracked via `last_low_credits_email_at` column on `profiles`)
+**3. Add `generation_failed` email template to `send-email/index.ts`**
+- New template with branded VOVV.AI design: "Something went wrong" heading, job type info, navy CTA "Try Again"
+- Add the `generation_failed` case to the switch statement
 
-### Flow Diagram
+**4. Add failure email hooks to generation functions**
+- In each generation function's error/failure path, check `settings.emailOnFailed` and send `generation_failed` email if enabled
 
-```text
-User signs up
-  → auth.users INSERT
-    → handle_new_user() creates profile
-      → notify_new_user() trigger
-        → HTTP POST to send-email (welcome)
-
-User generates images
-  → generate-freestyle/tryon/workflow completes
-    → fetch() to send-email (generation_complete)
-
-User spends credits
-  → deduct_credits() called
-    → balance < 10 + not emailed in 24h?
-      → HTTP POST to send-email (low_credits)
-```
+**5. Update `deduct_credits()` DB function to respect `emailLowCredits` setting**
+- Migration: modify `deduct_credits()` to read `settings->>'emailLowCredits'` from profiles before firing the low-credits email via `pg_net`
 
 ### Files Changed
-- `supabase/functions/send-email/index.ts` — temporarily allow anon key, test, revert
+| File | Change |
+|------|--------|
+| `src/pages/Settings.tsx` | `emailOnComplete` default → `false` |
+| `supabase/functions/send-email/index.ts` | Add `generation_failed` template |
+| `supabase/functions/generate-freestyle/index.ts` | Check `settings.emailOnComplete` before sending; add failure email |
+| `supabase/functions/generate-tryon/index.ts` | Same |
+| `supabase/functions/generate-workflow/index.ts` | Same |
+| DB migration | Update `deduct_credits()` to check `emailLowCredits` setting |
 
