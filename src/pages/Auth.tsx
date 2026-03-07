@@ -154,19 +154,10 @@ export default function Auth() {
                 {mode === 'login' && (
                   <button
                     type="button"
-                    onClick={async () => {
-                      if (!email.trim()) {
-                        toast.error('Please enter your email first');
-                        return;
-                      }
-                      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: window.location.origin + '/reset-password',
-                      });
-                      if (error) {
-                        toast.error(error.message);
-                      } else {
-                        toast.success('Check your email for a password reset link');
-                      }
+                    onClick={() => {
+                      setResetEmail(email);
+                      setResetSent(false);
+                      setShowResetDialog(true);
                     }}
                     className="text-xs text-primary hover:underline"
                   >
