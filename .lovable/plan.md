@@ -1,37 +1,30 @@
 
 
-## Redesign Credit Indicator in Desktop Sidebar
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Issues from screenshot
-1. **Progress bar nearly invisible** — `h-1.5` with `bg-white/[0.08]` track and `bg-primary/70` fill has almost no contrast against the dark sidebar
-2. **Credits stacked awkwardly** — balance and total on separate lines (`3904` then `/ 4,500`) feels misaligned and wastes vertical space
+### Issues Found
 
-### Changes to `src/components/app/CreditIndicator.tsx`
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**1. Inline credit display** — Put balance and total on one line: `3,904 / 4,500` with the balance bold and the denominator in muted text. Removes the stacked layout.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-```tsx
-<div className="flex items-baseline gap-1">
-  <span className="text-sm font-bold text-sidebar-foreground">{balance.toLocaleString()}</span>
-  <span className="text-[10px] text-sidebar-foreground/40">
-    / {monthlyCredits === Infinity ? '∞' : monthlyCredits.toLocaleString()}
-  </span>
-</div>
-```
+### Plan
 
-**2. Better progress bar** — Increase height to `h-2`, use a more visible track (`bg-white/[0.12]`), and bump fill opacity to full `bg-primary`. Add a subtle inner glow with a gradient overlay for depth.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-```tsx
-<div className="h-2 w-full rounded-full bg-white/[0.12] overflow-hidden">
-  <div
-    className={`h-full rounded-full transition-all duration-500 ${
-      hasBonus ? 'bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.4)]' : 'bg-primary'
-    }`}
-    style={{ width: `${usagePercent}%` }}
-  />
-</div>
-```
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Files changed
-- `src/components/app/CreditIndicator.tsx`
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
