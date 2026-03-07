@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Ruler } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { trackViewContent } from '@/lib/fbPixel';
 
 interface UserProduct {
   id: string;
@@ -43,6 +44,8 @@ export default function Products() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortBy>('newest');
+
+  useEffect(() => { trackViewContent('Products', 'product_library'); }, []);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['user-products'],

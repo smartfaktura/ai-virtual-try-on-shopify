@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { trackViewContent } from '@/lib/fbPixel';
 import { Building2, Check, ExternalLink, RefreshCw } from 'lucide-react';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
@@ -43,6 +44,8 @@ const DEFAULT_SETTINGS: UserSettings = {
 export default function Settings() {
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
+
+  useEffect(() => { trackViewContent('Pricing', 'pricing_page'); }, []);
   const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
 
   // Asset preview generation state (admin only)
