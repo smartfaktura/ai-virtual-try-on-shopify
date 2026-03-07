@@ -64,6 +64,7 @@ const App = () => (
       <AdminViewProvider>
       <CreditProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
