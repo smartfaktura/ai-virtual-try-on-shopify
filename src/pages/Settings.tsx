@@ -24,7 +24,7 @@ interface UserSettings {
   emailOnComplete: boolean;
   emailOnFailed: boolean;
   emailLowCredits: boolean;
-  emailWeeklyDigest: boolean;
+  
   inAppComplete: boolean;
   inAppFailed: boolean;
   inAppTips: boolean;
