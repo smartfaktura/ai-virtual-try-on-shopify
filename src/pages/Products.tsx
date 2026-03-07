@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
+import { trackViewContent } from '@/lib/fbPixel';
 
 interface UserProduct {
   id: string;
