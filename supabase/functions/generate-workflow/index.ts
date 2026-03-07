@@ -719,10 +719,11 @@ async function completeQueueJob(
 
   console.log(`[generate-workflow] ✓ Queue job ${jobId} completed (${generatedCount} images)`);
 
-  // Fire-and-forget: send generation complete email
+  // Fire-and-forget: send generation complete email (only if user opted in)
   try {
-    const { data: profile } = await supabase.from("profiles").select("email, display_name").eq("user_id", userId).single();
-    if (profile?.email) {
+    const { data: profile } = await supabase.from("profiles").select("email, display_name, settings").eq("user_id", userId).single();
+    const settings = (profile?.settings as Record<string, unknown>) || {};
+    if (profile?.email && settings.emailOnComplete === true) {
       fetch(`${supabaseUrl}/functions/v1/send-email`, {
         method: "POST",
         headers: { Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
