@@ -61,11 +61,9 @@ export function CreditIndicator() {
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 w-full rounded-full bg-white/[0.12] overflow-hidden">
+      <div className="h-2.5 w-full rounded-full bg-white/20 overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${
-            hasBonus ? 'bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.4)]' : 'bg-primary'
-          }`}
+          className="h-full rounded-full bg-primary transition-all duration-500"
           style={{ width: `${usagePercent}%` }}
         />
       </div>
