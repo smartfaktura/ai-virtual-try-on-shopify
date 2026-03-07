@@ -1,70 +1,30 @@
 
 
-## Build Branded VOVV.AI Email Notifications
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-**Secret**: `RESEND_API_KEY` is already stored and confirmed.
+### Issues Found
 
-### VOVV.AI Email Brand System
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-All emails will use the exact VOVV.AI design system:
-- **Background**: `#ffffff` white body (email best practice)
-- **Primary text**: `#0f172a` (deep navy — `hsl(222, 47%, 11%)`)
-- **Secondary text**: `#64748b` (muted foreground — `hsl(215, 16%, 47%)`)
-- **Primary button**: `#1e293b` (navy CTA — `hsl(217, 33%, 17%)`) with white text
-- **Accent surface**: `#f5f5f4` (warm stone — `hsl(40, 10%, 98%)`)
-- **Border**: `#e7e5e4` (warm border)
-- **Font**: Inter via Google Fonts (matching the app)
-- **Logo**: "VOVV.AI" wordmark rendered as styled text (Inter Bold, tight tracking)
-- **Layout**: 560px max-width, generous whitespace, minimal single-column
-- **Footer**: "© 2026 VOVV.AI. All rights reserved." with muted text
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-No purple. No generic SaaS look. Pure VOVV.AI navy + warm stone aesthetic.
+### Plan
 
-### Files Changed
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**1. `supabase/functions/send-email/index.ts`** (new)
-- Single edge function accepting `{ type, to, data }`
-- Three email types: `welcome`, `generation_complete`, `low_credits`
-- Each template uses inline-styled HTML with VOVV.AI brand colors
-- Calls Resend API (`POST https://api.resend.com/emails`)
-- From: `VOVV.AI <notifications@vovv.ai>`
-- Authenticated via service role key header check
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**2. Database migration**
-- `CREATE EXTENSION IF NOT EXISTS pg_net`
-- Add `last_low_credits_email_at timestamptz` to `profiles`
-- Create `notify_new_user()` trigger on `profiles` INSERT — fires HTTP call to `send-email` with type `welcome`
-- Update `deduct_credits()` to check if balance drops below 10, and if `last_low_credits_email_at` is null or >24h old, call `send-email` with type `low_credits`
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**3. `supabase/functions/generate-freestyle/index.ts`**
-- After line 641 (successful completion), add fire-and-forget fetch to `send-email` with `generation_complete` type
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-**4. `supabase/functions/generate-tryon/index.ts`**
-- Same pattern — add email call after successful queue job completion
-
-**5. `supabase/functions/generate-workflow/index.ts`**
-- Same pattern — add email call after successful queue job completion
-
-### Email Templates
-
-**Welcome**
-- VOVV.AI wordmark header
-- "Welcome to VOVV.AI" heading in navy
-- Brief copy about getting started with 20 free credits
-- Navy CTA button: "Start Creating"
-- Clean footer
-
-**Generation Complete**
-- VOVV.AI wordmark header
-- "Your images are ready" heading
-- Shows image count and generation type
-- Navy CTA button: "View Results"
-- Clean footer
-
-**Low Credits**
-- VOVV.AI wordmark header
-- "Running low on credits" heading
-- Shows remaining balance
-- Navy CTA button: "Get More Credits"
-- Clean footer
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

@@ -811,6 +811,7 @@ export type Database = {
           email: string
           first_name: string | null
           id: string
+          last_low_credits_email_at: string | null
           last_name: string | null
           onboarding_completed: boolean
           plan: string
@@ -833,6 +834,7 @@ export type Database = {
           email: string
           first_name?: string | null
           id?: string
+          last_low_credits_email_at?: string | null
           last_name?: string | null
           onboarding_completed?: boolean
           plan?: string
@@ -855,6 +857,7 @@ export type Database = {
           email?: string
           first_name?: string | null
           id?: string
+          last_low_credits_email_at?: string | null
           last_name?: string | null
           onboarding_completed?: boolean
           plan?: string
