@@ -639,6 +639,18 @@ async function completeQueueJob(
   }
 
   console.log(`[generate-freestyle] ✓ Queue job ${jobId} completed (${generatedCount} images)`);
+
+  // Fire-and-forget: send generation complete email
+  try {
+    const { data: profile } = await supabase.from("profiles").select("email, display_name").eq("user_id", userId).single();
+    if (profile?.email) {
+      fetch(`${supabaseUrl}/functions/v1/send-email`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "generation_complete", to: profile.email, data: { imageCount: generatedCount, jobType: "freestyle", displayName: profile.display_name } }),
+      }).catch((e) => console.warn("[generate-freestyle] Email send failed:", e.message));
+    }
+  } catch (e) { console.warn("[generate-freestyle] Email lookup failed:", e); }
 }
 
 // ── Request handler ───────────────────────────────────────────────────────
