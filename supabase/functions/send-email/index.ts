@@ -202,6 +202,10 @@ serve(async (req) => {
         subject = "Running low on credits — VOVV.AI";
         html = lowCreditsEmail(data || {});
         break;
+      case "generation_failed":
+        subject = "Generation failed — VOVV.AI";
+        html = generationFailedEmail(data || {});
+        break;
       default:
         return new Response(JSON.stringify({ error: `Unknown email type: ${type}` }), {
           status: 400,
