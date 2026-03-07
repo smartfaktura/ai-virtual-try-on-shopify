@@ -668,6 +668,19 @@ async function completeQueueJob(
     }).eq("id", jobId);
     await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
     console.log(`[generate-workflow] Refunded ${creditsReserved} credits for failed job ${jobId}`);
+
+    // Fire-and-forget: send generation failed email if user opted in
+    try {
+      const { data: profile } = await supabase.from("profiles").select("email, display_name, settings").eq("user_id", userId).single();
+      const settings = (profile?.settings as Record<string, unknown>) || {};
+      if (profile?.email && settings.emailOnFailed !== false) {
+        fetch(`${supabaseUrl}/functions/v1/send-email`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "generation_failed", to: profile.email, data: { jobType: "workflow", errorMessage: errors.join("; "), displayName: profile.display_name } }),
+        }).catch((e) => console.warn("[generate-workflow] Failed email send failed:", e.message));
+      }
+    } catch (e) { console.warn("[generate-workflow] Failed email lookup failed:", e); }
     return;
   }
 
