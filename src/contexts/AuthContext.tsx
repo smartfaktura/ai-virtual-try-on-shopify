@@ -2,6 +2,11 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 
+interface SignUpResult {
+  data: { user: User | null } | null;
+  error: Error | null;
+}
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
