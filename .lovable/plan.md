@@ -1,30 +1,28 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Make Credit Progress Bar Fill Brighter
 
-### Issues Found
+### Problem
+The track (`bg-slate-400/60`) is now nicely visible, but the **fill** uses `bg-primary` which resolves to a dark navy/indigo — nearly the same as the sidebar background. This makes the "used credits" portion appear as a dark stripe sitting on the lighter track.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Fix in `src/components/app/CreditIndicator.tsx` (lines 70-74)
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+Replace the dark `bg-primary` fill with a bright, clearly visible gradient:
 
-### Plan
+```tsx
+<div className="h-2.5 w-full rounded-full bg-slate-400/30 overflow-hidden">
+  <div
+    className="h-full bg-gradient-to-r from-primary via-primary/80 to-violet-400 transition-all duration-500"
+    style={{ width: `${usagePercent}%` }}
+  />
+</div>
+```
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+- **Track**: soften slightly to `bg-slate-400/30` so it doesn't overpower the fill
+- **Fill**: use a gradient (`from-primary via-primary/80 to-violet-400`) — the violet end ensures the bar is always visibly brighter than both the track and the sidebar, even if `--primary` is dark
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+This gives a glowing, clearly distinguishable fill against the lighter track.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### File changed
+- `src/components/app/CreditIndicator.tsx` — progress bar only (lines 70-74)
 
