@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
+import { trackCompleteRegistration } from '@/lib/fbPixel';
 
 interface SignUpResult {
   data: { user: User | null } | null;
@@ -50,6 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { display_name: displayName || email.split('@')[0] },
       },
     });
+    if (!error && data?.user) {
+      trackCompleteRegistration('email');
+    }
     return { data: data ? { user: data.user as User | null } : null, error: error as Error | null };
   }, []);
 
