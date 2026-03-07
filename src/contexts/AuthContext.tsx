@@ -41,8 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, displayName?: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = useCallback(async (email: string, password: string, displayName?: string): Promise<SignUpResult> => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { display_name: displayName || email.split('@')[0] },
       },
     });
-    return { error: error as Error | null };
+    return { data: data ? { user: data.user as User | null } : null, error: error as Error | null };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
