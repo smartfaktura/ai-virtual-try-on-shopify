@@ -1,25 +1,19 @@
 
 
-## Why tsimkus@inbox.lt Became Admin & How to Fix
+## Clean Up Auth Signup Page
 
-### Root Cause
+Two changes to simplify the signup form:
 
-Both admin entries in the `user_roles` table were created at the **exact same timestamp** (`2026-02-10 09:18:45.232906+00`). This means they were inserted together in a single manual operation (likely during initial setup). There is **no trigger, no code, and no migration** that auto-assigns admin roles — this was a one-time manual data entry that included both accounts by mistake.
+### 1. Remove duplicate credits messaging
+- **Line 76**: Keep the subtitle "Start with 20 free credits — no credit card required"
+- **Lines 225-230**: Remove the bottom Sparkles badge ("20 free credits included with every new account") — it says the same thing
 
-There is no bug to fix in the code. The `useIsAdmin` hook and all admin-gated UI work correctly — they check the `user_roles` table, and both accounts genuinely have the admin role there.
+### 2. Remove Display Name field from signup
+- **Lines 133-145**: Remove the display name field entirely from the signup form
+- The `handle_new_user` trigger already falls back to the email prefix as the display name, so no data is lost
+- Users can update their name later in Settings/Profile if needed
+- This reduces signup friction: only Email + Password required
 
-### Fix
-
-Remove the admin role from `tsimkus@inbox.lt` via a data operation:
-
-```sql
-DELETE FROM public.user_roles
-WHERE user_id = '381b6662-9d63-405e-a43d-172f0db6c3e9'
-  AND role = 'admin';
-```
-
-This is a data change (not a schema change), so it uses the insert/data tool. After this, only `info@tsimkus.lt` will have admin access. No code changes needed.
-
-### Files changed
-- None (database data operation only)
+### File changed
+- `src/pages/Auth.tsx`
 
