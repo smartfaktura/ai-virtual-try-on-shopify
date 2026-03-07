@@ -130,20 +130,6 @@ export default function Auth() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {mode === 'signup' && (
-              <div className="space-y-1.5">
-                <Label htmlFor="displayName">Display name</Label>
-                <Input
-                  id="displayName"
-                  type="text"
-                  placeholder="Your name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="h-11"
-                />
-              </div>
-            )}
-
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -222,12 +208,6 @@ export default function Auth() {
             )}
           </div>
 
-          {mode === 'signup' && (
-            <div className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
-              <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
-              <span>20 free credits included with every new account</span>
-            </div>
-          )}
         </div>
       </div>
 
