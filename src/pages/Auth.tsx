@@ -6,8 +6,9 @@ import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Sparkles } from 'lucide-react';
+import { CheckCircle2, ArrowLeft } from 'lucide-react';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
 
@@ -19,6 +20,10 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -149,19 +154,10 @@ export default function Auth() {
                 {mode === 'login' && (
                   <button
                     type="button"
-                    onClick={async () => {
-                      if (!email.trim()) {
-                        toast.error('Please enter your email first');
-                        return;
-                      }
-                      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: window.location.origin + '/reset-password',
-                      });
-                      if (error) {
-                        toast.error(error.message);
-                      } else {
-                        toast.success('Check your email for a password reset link');
-                      }
+                    onClick={() => {
+                      setResetEmail(email);
+                      setResetSent(false);
+                      setShowResetDialog(true);
                     }}
                     className="text-xs text-primary hover:underline"
                   >
@@ -225,6 +221,78 @@ export default function Auth() {
           </p>
         </div>
       </div>
+      {/* Forgot Password Dialog */}
+      <Dialog open={showResetDialog} onOpenChange={(open) => { setShowResetDialog(open); if (!open) setResetSent(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{resetSent ? 'Check your inbox' : 'Reset your password'}</DialogTitle>
+            <DialogDescription>
+              {resetSent
+                ? `We sent a reset link to ${resetEmail}`
+                : "Enter your email and we'll send you a reset link"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {resetSent ? (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <CheckCircle2 className="h-12 w-12 text-primary" />
+              <p className="text-sm text-muted-foreground text-center">
+                Didn't receive it? Check your spam folder or try again.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setResetSent(false)}
+              >
+                Try another email
+              </Button>
+            </div>
+          ) : (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!resetEmail.trim()) return;
+                setResetLoading(true);
+                const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+                  redirectTo: window.location.origin + '/reset-password',
+                });
+                setResetLoading(false);
+                if (error) {
+                  toast.error(error.message);
+                } else {
+                  setResetSent(true);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-1.5">
+                <Label htmlFor="reset-email">Email</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                  className="h-11"
+                  autoFocus
+                />
+              </div>
+              <Button type="submit" className="w-full h-11" disabled={resetLoading}>
+                {resetLoading ? 'Sending...' : 'Send reset link'}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setShowResetDialog(false)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mx-auto"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Back to sign in
+              </button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
