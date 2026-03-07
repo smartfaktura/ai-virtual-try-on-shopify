@@ -363,7 +363,7 @@ export default function Settings() {
                 { key: 'emailOnComplete' as const, label: 'Generation complete', help: 'Receive email when image generation finishes' },
                 { key: 'emailOnFailed' as const, label: 'Generation failed', help: 'Receive email if generation encounters an error' },
                 { key: 'emailLowCredits' as const, label: 'Low credits warning', help: "Get notified when credits drop below 10%" },
-                { key: 'emailWeeklyDigest' as const, label: 'Weekly usage digest', help: 'Weekly summary of generations and credit usage' },
+                
               ] as const).map(n => (
                 <div key={n.key} className="flex items-start space-x-2">
                   <Checkbox id={n.key} checked={settings[n.key]} onCheckedChange={v => updateSetting(n.key, !!v)} />
