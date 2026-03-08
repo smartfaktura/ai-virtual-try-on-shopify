@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/fbPixel';
+import { gtagBeginCheckout, gtagPurchase } from '@/lib/gtag';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
