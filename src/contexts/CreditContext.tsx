@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ImageQuality, GenerationMode } from '@/types';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/fbPixel';
+import { gtagBeginCheckout, gtagPurchase } from '@/lib/gtag';
 
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceling';
 
@@ -137,6 +138,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
 
   const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment') => {
     trackInitiateCheckout();
+    gtagBeginCheckout();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast.error('Please log in to continue.');
@@ -195,6 +197,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         const value = parseFloat(amount);
         if (!isNaN(value) && value > 0) {
           trackPurchase(value, 'USD');
+          gtagPurchase(value, 'USD');
         }
       }
 

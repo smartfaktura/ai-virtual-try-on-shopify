@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 import { trackPageView } from '@/lib/fbPixel';
+import { gtagPageView } from '@/lib/gtag';
 
 export function ScrollToTop() {
   const { pathname } = useLocation();
@@ -11,6 +12,7 @@ export function ScrollToTop() {
       window.scrollTo(0, 0);
     }
     trackPageView();
+    gtagPageView();
   }, [pathname, navType]);
 
   return null;

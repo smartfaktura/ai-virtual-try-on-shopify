@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 import { trackCompleteRegistration } from '@/lib/fbPixel';
+import { gtagSignUp } from '@/lib/gtag';
 
 interface SignUpResult {
   data: { user: User | null } | null;
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (!error && data?.user) {
       trackCompleteRegistration('email');
+      gtagSignUp('email');
     }
     return { data: data ? { user: data.user as User | null } : null, error: error as Error | null };
   }, []);

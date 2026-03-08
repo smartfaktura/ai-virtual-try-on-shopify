@@ -1,43 +1,30 @@
 
 
-## Add Google Analytics (gtag.js) Tracking
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Changes
+### Issues Found
 
-**1. `index.html` — Add gtag.js snippet**
-- Insert the Google tag script (G-ZLDDT9BMQF) in the `<head>`, alongside the existing Meta Pixel snippet.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**2. `src/lib/gtag.ts` — Create GA helper module**
-- Mirror the `fbPixel.ts` pattern with typed helpers:
-  - `gtagPageView()` — fires on SPA route changes
-  - `gtagEvent(action, params)` — generic custom event
-  - `gtagSignUp(method)` — sign_up event
-  - `gtagPurchase(value, currency, transactionId?)` — purchase event
-  - `gtagBeginCheckout(value?, currency?)` — begin_checkout event
-  - `gtagViewItem(itemName, itemCategory, value?)` — view_item event
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**3. `src/components/ScrollToTop.tsx` — Fire GA pageview on navigation**
-- Call `gtagPageView()` alongside existing `trackPageView()`.
+### Plan
 
-**4. `src/contexts/AuthContext.tsx` — Fire sign_up event**
-- Call `gtagSignUp('email')` after successful signup, next to the existing `trackCompleteRegistration`.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**5. `src/contexts/CreditContext.tsx` — Fire begin_checkout and purchase events**
-- In `startCheckout`: call `gtagBeginCheckout()` alongside `trackInitiateCheckout()`.
-- In the payment success handler: call `gtagPurchase(value, 'USD')` alongside `trackPurchase()`.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**6. `src/pages/Products.tsx`, `src/pages/Pricing.tsx`, `src/pages/Settings.tsx` — Fire view_item events**
-- Call `gtagViewItem()` alongside existing `trackViewContent()` calls.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### Files Changed
-| File | Change |
-|------|--------|
-| `index.html` | Add gtag.js snippet |
-| `src/lib/gtag.ts` | New — GA helper functions |
-| `src/components/ScrollToTop.tsx` | Add GA pageview |
-| `src/contexts/AuthContext.tsx` | Add GA sign_up event |
-| `src/contexts/CreditContext.tsx` | Add GA checkout + purchase events |
-| `src/pages/Products.tsx` | Add GA view_item event |
-| `src/pages/Pricing.tsx` | Add GA view_item event |
-| `src/pages/Settings.tsx` | Add GA view_item event |
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
