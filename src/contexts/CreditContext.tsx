@@ -138,6 +138,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
 
   const startCheckout = useCallback(async (priceId: string, mode: 'subscription' | 'payment') => {
     trackInitiateCheckout();
+    gtagBeginCheckout();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast.error('Please log in to continue.');
