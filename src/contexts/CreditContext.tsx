@@ -197,6 +197,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         const value = parseFloat(amount);
         if (!isNaN(value) && value > 0) {
           trackPurchase(value, 'USD');
+          gtagPurchase(value, 'USD');
         }
       }
 

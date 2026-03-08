@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (!error && data?.user) {
       trackCompleteRegistration('email');
+      gtagSignUp('email');
     }
     return { data: data ? { user: data.user as User | null } : null, error: error as Error | null };
   }, []);

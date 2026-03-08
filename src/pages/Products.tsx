@@ -46,7 +46,7 @@ export default function Products() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortBy>('newest');
 
-  useEffect(() => { trackViewContent('Products', 'product_library'); }, []);
+  useEffect(() => { trackViewContent('Products', 'product_library'); gtagViewItem('Products', 'product_library'); }, []);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['user-products'],

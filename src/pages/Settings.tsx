@@ -45,7 +45,7 @@ export default function Settings() {
   const { user } = useAuth();
   const { isAdmin } = useIsAdmin();
 
-  useEffect(() => { trackViewContent('Pricing', 'pricing_page'); }, []);
+  useEffect(() => { trackViewContent('Pricing', 'pricing_page'); gtagViewItem('Settings', 'settings_page'); }, []);
   const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
 
   // Asset preview generation state (admin only)
