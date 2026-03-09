@@ -369,11 +369,11 @@ export default function PublicDiscover() {
           <DiscoverDetailModal
             item={selectedItem}
             open={!!selectedItem}
-            onClose={() => setSelectedItem(null)}
+            onClose={handleClose}
             onUseItem={handleUseItem}
             onSearchSimilar={handleSearchSimilar}
             relatedItems={relatedItems}
-            onSelectRelated={setSelectedItem}
+            onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
             isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
             onToggleSave={handleToggleSave}
             viewCount={viewCount ?? undefined}
@@ -385,9 +385,9 @@ export default function PublicDiscover() {
           <PublicDiscoverDetailModal
             item={selectedItem}
             open={!!selectedItem}
-            onClose={() => setSelectedItem(null)}
+            onClose={handleClose}
             relatedItems={relatedItems}
-            onSelectRelated={setSelectedItem}
+            onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
           />
         )}
       </div>
