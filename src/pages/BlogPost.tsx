@@ -322,8 +322,6 @@ export default function BlogPost() {
                   <ArrowLeft className="w-3.5 h-3.5" /> All articles
                 </Link>
               </div>
-            </div>
-          </div>
         </div>
       </article>
     </PageLayout>
