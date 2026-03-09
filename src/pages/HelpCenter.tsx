@@ -128,6 +128,7 @@ export default function HelpCenter() {
 
   return (
     <PageLayout>
+      <SEOHead title="Help Center — VOVV AI Support & FAQ" description="Find answers to common questions about VOVV AI. Learn about workflows, credits, brand profiles, and getting started with AI product photography." canonical="https://vovvai.lovable.app/help" />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

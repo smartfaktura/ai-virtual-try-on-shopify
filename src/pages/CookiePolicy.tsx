@@ -1,5 +1,6 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { Cookie } from 'lucide-react';
+import { SEOHead } from '@/components/SEOHead';
 
 const cookieTypes = [
   {
