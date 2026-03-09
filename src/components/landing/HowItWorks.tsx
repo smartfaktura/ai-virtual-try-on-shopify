@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Upload, Target, Images, ArrowRight, Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const cropTopProduct = getLandingAssetUrl('hero/hero-product-croptop.jpg');
