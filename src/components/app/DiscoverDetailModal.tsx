@@ -21,6 +21,7 @@ interface DiscoverDetailModalProps {
   isAdmin?: boolean;
   isFeatured?: boolean;
   onToggleFeatured?: () => void;
+  onDelete?: () => void;
 }
 
 export function DiscoverDetailModal({
