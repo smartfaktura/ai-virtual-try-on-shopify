@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEOHead } from '@/components/SEOHead';
 import { Mail, Send, Clock, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
