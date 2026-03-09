@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, Compass, X } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -16,6 +16,7 @@ import { useAdminSubmissions } from '@/hooks/useDiscoverSubmissions';
 import { AdminSubmissionsPanel } from '@/components/app/AdminSubmissionsPanel';
 import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
@@ -186,6 +187,7 @@ function DiscoverLoadingState() {
 
 export default function Discover() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const { isSaved, toggleSave, savedItems } = useSavedItems();
@@ -506,6 +508,13 @@ export default function Discover() {
         isAdmin={isAdmin}
         isFeatured={selectedItem ? isFeatured(selectedItem.type, getItemId(selectedItem)) : false}
         onToggleFeatured={selectedItem ? () => handleToggleFeatured(selectedItem) : undefined}
+        onDelete={selectedItem?.type === 'preset' && isAdmin ? async () => {
+          const { error } = await supabase.from('discover_presets').delete().eq('id', selectedItem.data.id);
+          if (error) { toast.error('Failed to delete'); return; }
+          toast.success('Deleted from Discover');
+          setSelectedItem(null);
+          queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
+        } : undefined}
       />
     </div>
   );
