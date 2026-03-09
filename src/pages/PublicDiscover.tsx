@@ -147,6 +147,33 @@ export default function PublicDiscover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
 
+  // Auto-open item from URL param
+  useEffect(() => {
+    if (!urlItemId || allItems.length === 0) return;
+    const found = allItems.find((item) => {
+      if (urlItemId.startsWith('scene-')) {
+        return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
+      }
+      return item.type === 'preset' && item.data.id === urlItemId;
+    });
+    if (found) setSelectedItem(found);
+  }, [urlItemId, allItems]);
+
+  const getItemUrl = useCallback((item: DiscoverItem): string => {
+    const id = item.type === 'scene' ? `scene-${item.data.poseId}` : item.data.id;
+    return `/discover/${id}`;
+  }, []);
+
+  const handleCardClick = useCallback((item: DiscoverItem) => {
+    navigate(getItemUrl(item), { replace: false });
+    setSelectedItem(item);
+  }, [navigate, getItemUrl]);
+
+  const handleClose = useCallback(() => {
+    setSelectedItem(null);
+    navigate('/discover', { replace: true });
+  }, [navigate]);
+
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
       // Category filter
