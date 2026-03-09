@@ -151,10 +151,19 @@ export default function Blog() {
                 to={`/blog/${post.slug}`}
                 className="block group"
               >
-                <article className="relative h-full border border-border rounded-2xl p-6 sm:p-7 bg-card hover:shadow-md hover:border-primary/20 transition-all overflow-hidden">
-                  {/* Accent strip */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/20 group-hover:bg-primary transition-colors rounded-l-2xl" />
-                  <div className="pl-3">
+                <article className="relative h-full border border-border rounded-2xl bg-card hover:shadow-md hover:border-primary/20 transition-all overflow-hidden">
+                  {/* Card cover image */}
+                  {post.coverImage && (
+                    <div className="w-full aspect-[16/9] overflow-hidden">
+                      <ShimmerImage
+                        src={post.coverImage}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                        aspectRatio="16/9"
+                      />
+                    </div>
+                  )}
+                  <div className="p-6 sm:p-7">
                     <div className="flex flex-wrap items-center gap-3 mb-3">
                       <Badge variant="secondary" className="rounded-full text-xs">
                         {post.category}
