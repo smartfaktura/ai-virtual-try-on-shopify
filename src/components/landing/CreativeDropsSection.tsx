@@ -54,6 +54,7 @@ const bullets = [
 
 export function CreativeDropsSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <section id="creative-drops" className="py-20 sm:py-28 bg-muted/20">

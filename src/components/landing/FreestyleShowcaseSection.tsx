@@ -45,6 +45,7 @@ type ChipKey = 'product' | 'model' | 'scene';
 
 export function FreestyleShowcaseSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [cycle, setCycle] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({

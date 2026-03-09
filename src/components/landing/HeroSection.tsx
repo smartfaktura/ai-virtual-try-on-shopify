@@ -127,6 +127,7 @@ const optimizeOutput = (url: string) => getOptimizedUrl(url, { quality: 70 });
 
 export function HeroSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);

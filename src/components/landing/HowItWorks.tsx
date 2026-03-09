@@ -84,6 +84,7 @@ function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt:
 
 export function HowItWorks() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const header = useInView(0.2);
   const step1Text = useInView();
   const step1Card = useInView();

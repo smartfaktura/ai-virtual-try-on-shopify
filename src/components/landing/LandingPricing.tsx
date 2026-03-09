@@ -7,6 +7,7 @@ import { pricingPlans } from '@/data/mockData';
 
 export function LandingPricing() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [annual, setAnnual] = useState(false);
 
   const mainPlans = pricingPlans.filter((p) => !p.isEnterprise);

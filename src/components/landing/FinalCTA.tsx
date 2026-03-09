@@ -7,6 +7,7 @@ import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
 
 export function FinalCTA() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden">
       {/* Background */}
