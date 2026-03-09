@@ -127,6 +127,7 @@ In blind tests, consumers cannot reliably distinguish modern AI product photos f
     category: 'Virtual Try-On',
     excerpt: 'A customer adds a silk blouse to her cart, scrolls through images on 5 different body types, and buys with confidence. No return. Here\'s the tech behind that moment.',
     tags: ['virtual try-on', 'fashion', 'returns', 'conversion rate', 'virtual try-on for clothing brands', 'reduce fashion returns', 'AI fitting technology'],
+    coverImage: blogImgVirtualTryOn,
     content: `
 ## Meet Sarah. She just bought a dress she'll actually keep.
 
