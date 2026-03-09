@@ -171,8 +171,8 @@ export default function PublicDiscover() {
 
   const handleClose = useCallback(() => {
     setSelectedItem(null);
-    navigate('/discover', { replace: true });
-  }, [navigate]);
+    window.history.replaceState(null, '', '/discover');
+  }, []);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {

@@ -342,8 +342,9 @@ export default function Discover() {
 
   const handleClose = useCallback(() => {
     setSelectedItem(null);
-    navigate('/app/discover', { replace: true });
-  }, [navigate]);
+    window.history.replaceState(null, '', '/app/discover');
+  }, []);
+  
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
