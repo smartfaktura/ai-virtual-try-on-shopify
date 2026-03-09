@@ -1,4 +1,5 @@
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEOHead } from '@/components/SEOHead';
 import { History } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
