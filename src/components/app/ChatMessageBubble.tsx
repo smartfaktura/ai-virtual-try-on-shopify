@@ -1,12 +1,13 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ChatContactForm } from './ChatContactForm';
 
 type ParsedSegment =
   | { type: 'text'; content: string }
   | { type: 'cta'; label: string; route: string };
-
 const CTA_REGEX = /\[\[(.+?)\|(.+?)\]\]/g;
 
 function parseMessageContent(content: string): ParsedSegment[] {
