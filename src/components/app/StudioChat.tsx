@@ -113,6 +113,16 @@ export function StudioChat() {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowContactForm(prev => !prev)}
+              className={cn(
+                "p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors",
+                showContactForm && "bg-muted text-foreground"
+              )}
+              title="Talk to a human"
+            >
+              <UserRound className="w-3.5 h-3.5" />
+            </button>
             {messages.length > 0 && (
               <button
                 onClick={clearChat}
