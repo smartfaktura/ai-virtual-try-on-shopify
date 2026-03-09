@@ -125,7 +125,7 @@ export function GlobalGenerationBar() {
   const processingJobs = visibleActive.reduce((sum, g) => sum + g.processingCount, 0);
 
   return (
-    <div className="hidden sm:block fixed bottom-20 left-4 lg:left-6 z-30 pointer-events-none">
+    <div className="hidden sm:block fixed bottom-20 right-4 lg:right-6 z-30 pointer-events-none">
       <div className="pointer-events-auto w-64">
         {/* Expanded detail list — renders above the pill (hidden on mobile) */}
         {!minimized && (
