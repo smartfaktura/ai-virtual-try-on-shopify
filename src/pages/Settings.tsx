@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { SEOHead } from '@/components/SEOHead';
 import { trackViewContent } from '@/lib/fbPixel';
 import { gtagViewItem } from '@/lib/gtag';
 import { Building2, Check, ExternalLink, RefreshCw } from 'lucide-react';
