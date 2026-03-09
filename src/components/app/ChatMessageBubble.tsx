@@ -34,6 +34,7 @@ interface ChatMessageBubbleProps {
   content: string;
   role: 'user' | 'assistant';
   isStreaming?: boolean;
+  onMinimize?: () => void;
 }
 
 export function ChatMessageBubble({ content, role, isStreaming }: ChatMessageBubbleProps) {
