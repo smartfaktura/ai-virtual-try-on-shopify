@@ -15,6 +15,7 @@ import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEOHead } from '@/components/SEOHead';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface PublicCustomScene {
