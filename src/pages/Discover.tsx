@@ -494,11 +494,11 @@ export default function Discover() {
       <DiscoverDetailModal
         item={selectedItem}
         open={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
+        onClose={handleClose}
         onUseItem={handleUseItem}
         onSearchSimilar={handleSearchSimilar}
         relatedItems={relatedItems}
-        onSelectRelated={setSelectedItem}
+        onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
         isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
         onToggleSave={selectedItem ? () => handleToggleSave(selectedItem) : undefined}
         viewCount={viewCount ?? undefined}
