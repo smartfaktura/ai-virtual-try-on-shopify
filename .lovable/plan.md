@@ -1,30 +1,52 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Make Blog Articles Visually Rich and Engaging
 
-### Issues Found
+The blog pages currently render as plain text walls with minimal visual hierarchy. Here's the plan to make them look polished and magazine-quality.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+---
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Changes
 
-### Plan
+**1. `src/pages/BlogPost.tsx` — Visual overhaul of the article page**
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+- **Hero header with gradient background** — Full-width colored header band behind title/meta with a subtle gradient (using the primary color palette), giving each article a strong visual opening
+- **Author avatar area** — Add a styled author chip with a small VOVV logo icon and "VOVV AI Team" text in a pill shape
+- **Estimated reading progress bar** — A thin colored bar at the top of the page that fills as you scroll, adding interactivity
+- **Enhanced prose styling** — Custom styles for the markdown content:
+  - Styled blockquotes with a colored left border and background
+  - "Key takeaway" sections (bold text starting with "Key takeaway:") get a highlighted card treatment
+  - Tables get alternating row colors and rounded corners
+  - H2 headings get a subtle left accent border
+  - Links styled in primary color with underline on hover
+  - FAQ section at the bottom gets accordion-style visual treatment
+- **Floating share/bookmark sidebar** — Small sticky icons on the left (visible on desktop) for visual polish
+- **Better related posts** — Cards with category badge, gradient hover effect, and proper spacing instead of simple rows
+- **Upgraded CTA section** — Gradient background instead of flat color, with a subtle pattern or glow effect
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**2. `src/pages/Blog.tsx` — Visual overhaul of the listing page**
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+- **Featured first post** — The newest post gets a larger hero-style card with a gradient background and bigger typography
+- **Category filter chips** — Row of clickable category badges at the top to filter posts (client-side, using state)
+- **Card visual upgrade** — Add a colored accent strip on the left edge of each card, subtle gradient on hover, and a numbered post indicator
+- **Newsletter CTA** — Add a styled banner between posts encouraging readers to "Start Free" 
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**3. `src/index.css` — Custom prose/blog styles**
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+- Add custom CSS for blog-specific styling:
+  - `.blog-content blockquote` — Colored left border, muted background
+  - `.blog-content h2` — Left accent border  
+  - `.blog-content table` — Rounded, alternating rows
+  - `.blog-content strong` containing "Key takeaway" — Highlight card
+  - Reading progress bar styles
+
+---
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/pages/BlogPost.tsx` | Hero header, reading progress bar, enhanced prose wrapper, better related posts, upgraded CTA |
+| `src/pages/Blog.tsx` | Featured first post, category filters, visual card upgrade, mid-page CTA |
+| `src/index.css` | Blog-specific prose styles for blockquotes, tables, headings, key takeaways |
 
