@@ -296,7 +296,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "VOVV.AI <notifications@vovv.ai>",
+        from: type === "contact_form" ? "VOVV.AI <hello@vovv.ai>" : "VOVV.AI <notifications@vovv.ai>",
         to: [to],
         subject,
         html,
