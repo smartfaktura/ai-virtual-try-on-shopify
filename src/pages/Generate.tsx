@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { SEOHead } from '@/components/SEOHead';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -1283,6 +1284,7 @@ export default function Generate() {
 
   return (
     <PageHeader title={pageTitle} backAction={{ content: activeWorkflow ? 'Workflows' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}>
+      <SEOHead title="Generate — VOVV AI" description="Generate AI product photography." noindex />
       <div className="space-y-6 overflow-x-hidden">
         <LowCreditsBanner />
 

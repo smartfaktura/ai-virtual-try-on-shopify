@@ -1,8 +1,18 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /app/
+Disallow: /auth
+Disallow: /onboarding
+Disallow: /reset-password
+Disallow: /mobile-upload
 
 User-agent: Bingbot
 Allow: /
+Disallow: /app/
+Disallow: /auth
+Disallow: /onboarding
+Disallow: /reset-password
+Disallow: /mobile-upload
 
 User-agent: Twitterbot
 Allow: /
@@ -12,5 +22,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /app/
+Disallow: /auth
+Disallow: /onboarding
+Disallow: /reset-password
+Disallow: /mobile-upload
 
 Sitemap: https://vovvai.lovable.app/sitemap.xml

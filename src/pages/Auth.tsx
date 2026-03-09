@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { CheckCircle2, ArrowLeft } from 'lucide-react';
+import { SEOHead } from '@/components/SEOHead';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
 
@@ -61,6 +62,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex bg-background">
+      <SEOHead title="Sign In — VOVV AI" description="Sign in or create your VOVV AI account to start generating AI product photography." noindex />
       {/* Left side — Form */}
       <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-24 py-12">
         <div className="w-full max-w-md mx-auto">

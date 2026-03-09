@@ -1,4 +1,5 @@
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEOHead } from '@/components/SEOHead';
 import { History } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -66,6 +67,7 @@ const releases = [
 export default function Changelog() {
   return (
     <PageLayout>
+      <SEOHead title="Changelog — VOVV AI Product Updates" description="A timeline of everything we've shipped. Follow along as VOVV AI builds the future of AI product photography." canonical="https://vovvai.lovable.app/changelog" />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { SEOHead } from '@/components/SEOHead';
 import { trackViewContent } from '@/lib/fbPixel';
 import { gtagViewItem } from '@/lib/gtag';
 import { Building2, Check, ExternalLink, RefreshCw } from 'lucide-react';
@@ -196,6 +197,7 @@ export default function Settings() {
 
   return (
     <>
+    <SEOHead title="Settings — VOVV AI" description="Manage your VOVV AI account settings, plan, and preferences." noindex />
     <PageHeader title="Settings">
       <div className="space-y-6">
         {/* ─── Current Plan ─── */}

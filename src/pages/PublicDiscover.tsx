@@ -15,6 +15,7 @@ import { mockTryOnPoses } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEOHead } from '@/components/SEOHead';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface PublicCustomScene {
@@ -238,6 +239,7 @@ export default function PublicDiscover() {
 
   return (
     <PageLayout>
+      <SEOHead title="Discover AI Photography Presets & Scenes — VOVV AI" description="Browse curated AI fashion photography presets, scenes, and styles. Get inspired and use them in your next product shoot." canonical="https://vovvai.lovable.app/discover" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
         {/* Header */}
         <div className="space-y-2 text-center">
