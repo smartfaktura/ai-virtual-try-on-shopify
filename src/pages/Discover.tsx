@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Compass, X } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/data/teamData';
@@ -186,6 +186,7 @@ function DiscoverLoadingState() {
 
 export default function Discover() {
   const navigate = useNavigate();
+  const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const { isSaved, toggleSave, savedItems } = useSavedItems();
   const { isAdmin } = useIsAdmin();
@@ -232,6 +233,23 @@ export default function Discover() {
     const sceneItems: DiscoverItem[] = [...mockTryOnPoses, ...customScenePoses].map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
+
+  // Auto-open item from URL param
+  useEffect(() => {
+    if (!urlItemId || allItems.length === 0) return;
+    const found = allItems.find((item) => {
+      if (urlItemId.startsWith('scene-')) {
+        return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
+      }
+      return item.type === 'preset' && item.data.id === urlItemId;
+    });
+    if (found) setSelectedItem(found);
+  }, [urlItemId, allItems]);
+
+  const getItemUrl = useCallback((item: DiscoverItem): string => {
+    const id = item.type === 'scene' ? `scene-${item.data.poseId}` : item.data.id;
+    return `/app/discover/${id}`;
+  }, []);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
@@ -318,8 +336,14 @@ export default function Discover() {
   }, [allItems, selectedItem]);
 
   const handleItemClick = (item: DiscoverItem) => {
+    navigate(getItemUrl(item), { replace: false });
     setSelectedItem(item);
   };
+
+  const handleClose = useCallback(() => {
+    setSelectedItem(null);
+    navigate('/app/discover', { replace: true });
+  }, [navigate]);
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
@@ -470,11 +494,11 @@ export default function Discover() {
       <DiscoverDetailModal
         item={selectedItem}
         open={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
+        onClose={handleClose}
         onUseItem={handleUseItem}
         onSearchSimilar={handleSearchSimilar}
         relatedItems={relatedItems}
-        onSelectRelated={setSelectedItem}
+        onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
         isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
         onToggleSave={selectedItem ? () => handleToggleSave(selectedItem) : undefined}
         viewCount={viewCount ?? undefined}

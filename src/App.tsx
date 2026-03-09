@@ -74,6 +74,7 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/discover" element={<PublicDiscover />} />
+            <Route path="/discover/:itemId" element={<PublicDiscover />} />
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
 
 
@@ -122,6 +123,7 @@ const App = () => (
                       <Route path="/library" element={<Jobs />} />
                       <Route path="/library/:id" element={<Jobs />} />
                       <Route path="/discover" element={<Discover />} />
+                      <Route path="/discover/:itemId" element={<Discover />} />
                       <Route path="/templates" element={<Discover />} />
                       <Route path="/templates/:id" element={<Templates />} />
                       <Route path="/jobs" element={<Jobs />} />

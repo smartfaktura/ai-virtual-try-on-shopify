@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Compass } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -86,6 +86,7 @@ function useColumnCount() {
 
 export default function PublicDiscover() {
   const navigate = useNavigate();
+  const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const { featuredMap, isFeatured } = useFeaturedItems();
@@ -145,6 +146,33 @@ export default function PublicDiscover() {
     const sceneItems: DiscoverItem[] = [...mockTryOnPoses, ...customScenePoses].map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
+
+  // Auto-open item from URL param
+  useEffect(() => {
+    if (!urlItemId || allItems.length === 0) return;
+    const found = allItems.find((item) => {
+      if (urlItemId.startsWith('scene-')) {
+        return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
+      }
+      return item.type === 'preset' && item.data.id === urlItemId;
+    });
+    if (found) setSelectedItem(found);
+  }, [urlItemId, allItems]);
+
+  const getItemUrl = useCallback((item: DiscoverItem): string => {
+    const id = item.type === 'scene' ? `scene-${item.data.poseId}` : item.data.id;
+    return `/discover/${id}`;
+  }, []);
+
+  const handleCardClick = useCallback((item: DiscoverItem) => {
+    navigate(getItemUrl(item), { replace: false });
+    setSelectedItem(item);
+  }, [navigate, getItemUrl]);
+
+  const handleClose = useCallback(() => {
+    setSelectedItem(null);
+    navigate('/discover', { replace: true });
+  }, [navigate]);
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
@@ -317,7 +345,7 @@ export default function PublicDiscover() {
                         <DiscoverCard
                           key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
                           item={item}
-                          onClick={() => setSelectedItem(item)}
+                          onClick={() => handleCardClick(item)}
                           hideLabels
                           {...(user ? {
                             isSaved: isSaved(item.type, itemId),
@@ -341,11 +369,11 @@ export default function PublicDiscover() {
           <DiscoverDetailModal
             item={selectedItem}
             open={!!selectedItem}
-            onClose={() => setSelectedItem(null)}
+            onClose={handleClose}
             onUseItem={handleUseItem}
             onSearchSimilar={handleSearchSimilar}
             relatedItems={relatedItems}
-            onSelectRelated={setSelectedItem}
+            onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
             isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
             onToggleSave={handleToggleSave}
             viewCount={viewCount ?? undefined}
@@ -357,9 +385,9 @@ export default function PublicDiscover() {
           <PublicDiscoverDetailModal
             item={selectedItem}
             open={!!selectedItem}
-            onClose={() => setSelectedItem(null)}
+            onClose={handleClose}
             relatedItems={relatedItems}
-            onSelectRelated={setSelectedItem}
+            onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
           />
         )}
       </div>
