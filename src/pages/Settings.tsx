@@ -197,6 +197,7 @@ export default function Settings() {
 
   return (
     <>
+    <SEOHead title="Settings — VOVV AI" description="Manage your VOVV AI account settings, plan, and preferences." noindex />
     <PageHeader title="Settings">
       <div className="space-y-6">
         {/* ─── Current Plan ─── */}

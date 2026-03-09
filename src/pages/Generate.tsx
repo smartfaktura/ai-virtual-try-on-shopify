@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { SEOHead } from '@/components/SEOHead';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
