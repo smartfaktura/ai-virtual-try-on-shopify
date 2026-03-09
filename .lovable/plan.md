@@ -1,30 +1,38 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Contact Form Feedback + Email Delivery
 
-### Issues Found
+### Problem 1: No visible confirmation after sending
+The `ChatContactForm` shows a success state, but `onSent()` fires immediately, which sets `showContactForm(false)` in `StudioChat.tsx` — the success message disappears instantly because the entire form component unmounts.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Problem 2: Email not arriving at hello@vovv.ai
+Edge function logs confirm `send-email` returned success, but the email may not be reaching the inbox. This could be a Resend domain/API key scope issue. We should add better error logging and also inject a confirmation message into the chat so the user has clear feedback regardless.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Changes
 
-### Plan
+**`src/components/app/ChatContactForm.tsx`**
+- Remove the `onSent` callback from the success path — keep the form mounted to show the green success banner
+- Add a delay before calling `onSent` (e.g., 4 seconds) so the user sees the confirmation
+- Or better: don't call `onSent` at all, let the success state persist in the form
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**`src/components/app/StudioChat.tsx`**
+- When contact form is sent successfully, inject a chat message like "✅ Your message has been sent to our team! We'll get back to you within 24 hours." into the messages array
+- Don't immediately hide the contact form on `onSent` — instead keep it showing the success state
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**`src/components/app/ChatContactForm.tsx`** (refined approach)
+- Change `onSent` to pass back the success info so StudioChat can add a confirmation message to the chat
+- After successful send, show the green success banner for 3 seconds, then collapse the form and add a confirmation message to chat
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**`supabase/functions/send-email/index.ts`**
+- Add more detailed error logging for the Resend API response to help diagnose delivery issues
+- Log the full Resend response body on success too (it contains the email ID for tracing)
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**`supabase/functions/send-contact/index.ts`**  
+- Log the full response from `send-email` for better debugging
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Summary of UX flow after fix
+1. User fills form → clicks Send → button shows "Sending..."
+2. On success → green banner appears "Message sent! We'll get back to you within 24 hours"
+3. After 3 seconds → form collapses, a confirmation message appears in chat thread
+4. If error → red error message stays visible with retry option
 
