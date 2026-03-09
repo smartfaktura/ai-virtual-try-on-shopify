@@ -74,6 +74,7 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/discover" element={<PublicDiscover />} />
+            <Route path="/discover/:itemId" element={<PublicDiscover />} />
             <Route path="/upload/:sessionToken" element={<MobileUpload />} />
 
 
