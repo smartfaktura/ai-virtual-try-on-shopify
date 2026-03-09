@@ -344,7 +344,7 @@ export default function Discover() {
     setSelectedItem(null);
     window.history.replaceState(null, '', '/app/discover');
   }, []);
-  }, [navigate]);
+  
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
