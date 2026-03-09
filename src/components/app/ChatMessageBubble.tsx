@@ -72,7 +72,7 @@ export function ChatMessageBubble({ content, role, isStreaming, onMinimize }: Ch
           {navCTAs.map((cta, i) => (
             <button
               key={i}
-              onClick={() => navigate(cta.route)}
+              onClick={() => { navigate(cta.route); onMinimize?.(); }}
               className={cn(
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
                 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'

@@ -164,6 +164,7 @@ export function StudioChat() {
                     content={msg.content}
                     role={msg.role}
                     isStreaming={msg.role === 'assistant' && isLoading && i === displayMessages.length - 1}
+                    onMinimize={() => setIsOpen(false)}
                   />
                 </div>
               </div>
