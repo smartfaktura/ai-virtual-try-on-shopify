@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/JsonLd';
 import { blogPosts } from '@/data/blogPosts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { CalendarDays, Clock, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function Blog() {
