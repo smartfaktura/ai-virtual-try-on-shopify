@@ -29,7 +29,7 @@ export const blogPosts: BlogPost[] = [
     readTime: '9 min read',
     category: 'AI Photography',
     excerpt: 'A DTC skincare brand spent $47,000 on product photos last year — then switched to AI and produced 3x the images for under $2,000. Here\'s exactly how.',
-    tags: ['AI photography', 'e-commerce', 'product images', 'cost saving', 'Shopify product photos', 'Amazon listing images', 'AI photos for Etsy'],
+    coverImage: blogImgAiPhotography,
     content: `
 ## Your product photos are costing you a fortune. They don't have to.
 
