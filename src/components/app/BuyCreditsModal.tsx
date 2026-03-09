@@ -230,7 +230,7 @@ export function BuyCreditsModal() {
                     const credits = typeof p.credits === 'number' ? p.credits : 0;
                     const imageEstimate = credits > 0 ? Math.round(credits / 5) : null;
 
-                    let ctaLabel = targetIdx > currentIdx ? `Get ${p.name}` : `Get ${p.name}`;
+                    let ctaLabel = targetIdx > currentIdx ? `Upgrade to ${p.name}` : targetIdx < currentIdx ? `Downgrade to ${p.name}` : `Get ${p.name}`;
                     if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
                     else if (isCurrent) ctaLabel = 'Current Plan';
                     const isDisabled = isCurrent && subscriptionStatus !== 'canceling';
@@ -239,17 +239,17 @@ export function BuyCreditsModal() {
                       <div
                         key={p.planId}
                         className={`relative rounded-2xl p-4 sm:p-5 flex flex-col transition-all duration-200 ${
-                          p.highlighted
+                          isCurrent
                             ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
-                            : isCurrent
-                              ? 'border border-primary/30 bg-card'
+                            : (p.highlighted && (plan === 'free' || targetIdx > currentIdx))
+                              ? 'border-2 border-primary/60 bg-card'
                               : 'border border-border bg-card hover:shadow-sm'
                         }`}
                       >
                         {/* Name + badges inline */}
                         <div className="flex items-center gap-2 mb-3 flex-wrap">
                           <h4 className="text-base font-semibold">{p.name}</h4>
-                          {p.badge && (
+                          {p.badge && (plan === 'free' || targetIdx > currentIdx) && (
                             <Badge className="bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-2 py-0.5">
                               {p.badge}
                             </Badge>
