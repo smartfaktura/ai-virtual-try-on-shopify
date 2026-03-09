@@ -64,9 +64,18 @@ export function FreestyleGuide({ currentStep, onNext, onDismiss }: FreestyleGuid
               )}
             />
           ))}
-          <span className="ml-auto text-[10px] text-muted-foreground font-medium">
-            {currentStep + 1}/{GUIDE_STEPS.length}
-          </span>
+          <div className="ml-auto flex items-center gap-1.5">
+            <span className="text-[10px] text-muted-foreground font-medium">
+              {currentStep + 1}/{GUIDE_STEPS.length}
+            </span>
+            <button
+              onClick={onDismiss}
+              className="text-muted-foreground/50 hover:text-foreground transition-colors"
+              aria-label="Dismiss guide"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
