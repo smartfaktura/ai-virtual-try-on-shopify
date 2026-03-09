@@ -37,7 +37,7 @@ interface ChatMessageBubbleProps {
   onMinimize?: () => void;
 }
 
-export function ChatMessageBubble({ content, role, isStreaming }: ChatMessageBubbleProps) {
+export function ChatMessageBubble({ content, role, isStreaming, onMinimize }: ChatMessageBubbleProps) {
   const navigate = useNavigate();
   const [showContactForm, setShowContactForm] = useState(false);
 
