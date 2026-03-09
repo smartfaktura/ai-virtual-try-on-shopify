@@ -239,10 +239,10 @@ export function BuyCreditsModal() {
                       <div
                         key={p.planId}
                         className={`relative rounded-2xl p-4 sm:p-5 flex flex-col transition-all duration-200 ${
-                          p.highlighted
+                          isCurrent
                             ? 'border-2 border-primary ring-1 ring-primary/10 bg-card'
-                            : isCurrent
-                              ? 'border border-primary/30 bg-card'
+                            : (p.highlighted && (plan === 'free' || targetIdx > currentIdx))
+                              ? 'border-2 border-primary/60 bg-card'
                               : 'border border-border bg-card hover:shadow-sm'
                         }`}
                       >
