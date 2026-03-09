@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight } from 'lucide-react';
+import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
