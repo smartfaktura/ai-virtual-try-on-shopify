@@ -186,6 +186,7 @@ function DiscoverLoadingState() {
 
 export default function Discover() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const { isSaved, toggleSave, savedItems } = useSavedItems();
