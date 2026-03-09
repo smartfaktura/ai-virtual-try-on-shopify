@@ -2,6 +2,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useEffect, useState, useMemo } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
 import { getBlogPostBySlug, getRelatedPosts } from '@/data/blogPosts';
