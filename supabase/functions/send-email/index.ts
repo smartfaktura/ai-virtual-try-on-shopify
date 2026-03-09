@@ -151,6 +151,47 @@ function lowCreditsEmail(data: { balance?: number; displayName?: string }): stri
   `);
 }
 
+function contactFormEmail(data: { name?: string; email?: string; message?: string; userId?: string }): string {
+  const senderName = data.name || "Unknown";
+  const senderEmail = data.email || "Unknown";
+  const msg = (data.message || "").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br/>");
+  const timestamp = new Date().toUTCString();
+  return emailWrapper(`
+    <h1 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700;color:${BRAND.navy};margin:0 0 16px 0;letter-spacing:-0.02em;">
+      New Contact Form Message
+    </h1>
+    <p style="font-family:'Inter',sans-serif;font-size:15px;color:${BRAND.muted};line-height:1.6;margin:0 0 24px 0;">
+      A user reached out via the Studio Chat contact form.
+    </p>
+    <div style="background-color:${BRAND.stone};border-radius:8px;padding:20px;margin:0 0 8px 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:6px 0;vertical-align:top;width:80px;">Name</td>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.navy};font-weight:500;padding:6px 0;">${senderName}</td>
+        </tr>
+        <tr>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:6px 0;vertical-align:top;">Email</td>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.navy};font-weight:500;padding:6px 0;">
+            <a href="mailto:${senderEmail}" style="color:${BRAND.navy};text-decoration:underline;">${senderEmail}</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:6px 0;vertical-align:top;">User ID</td>
+          <td style="font-family:'Inter',sans-serif;font-size:11px;color:${BRAND.muted};font-weight:400;padding:6px 0;font-family:monospace;">${data.userId || "N/A"}</td>
+        </tr>
+        <tr>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:6px 0;vertical-align:top;">Sent</td>
+          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.navy};font-weight:500;padding:6px 0;">${timestamp}</td>
+        </tr>
+      </table>
+    </div>
+    <div style="background-color:${BRAND.white};border:1px solid ${BRAND.border};border-radius:8px;padding:20px;margin:16px 0 0 0;">
+      <p style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};margin:0 0 8px 0;font-weight:600;">Message</p>
+      <p style="font-family:'Inter',sans-serif;font-size:14px;color:${BRAND.navy};line-height:1.7;margin:0;">${msg}</p>
+    </div>
+  `);
+}
+
 function generationFailedEmail(data: { jobType?: string; errorMessage?: string; displayName?: string }): string {
   const typeMap: Record<string, string> = {
     freestyle: "Freestyle",
@@ -236,6 +277,10 @@ serve(async (req) => {
       case "generation_failed":
         subject = "Generation failed — VOVV.AI";
         html = generationFailedEmail(data || {});
+        break;
+      case "contact_form":
+        subject = `[VOVV.AI Contact] Message from ${(data?.name || "a user")}`;
+        html = contactFormEmail(data || {});
         break;
       default:
         return new Response(JSON.stringify({ error: `Unknown email type: ${type}` }), {

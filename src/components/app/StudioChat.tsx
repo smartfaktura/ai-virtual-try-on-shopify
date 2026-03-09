@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { MessageCircle, X, Send, RotateCcw } from 'lucide-react';
+import { MessageCircle, X, Send, RotateCcw, UserRound } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -7,6 +7,7 @@ import { useStudioChat } from '@/hooks/useStudioChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { ChatMessageBubble } from './ChatMessageBubble';
+import { ChatContactForm } from './ChatContactForm';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
@@ -28,6 +29,7 @@ export function StudioChat() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { messages, isLoading, isThrottled, sendMessage, clearChat } = useStudioChat();
+  const [showContactForm, setShowContactForm] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -111,6 +113,16 @@ export function StudioChat() {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowContactForm(prev => !prev)}
+              className={cn(
+                "p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors",
+                showContactForm && "bg-muted text-foreground"
+              )}
+              title="Talk to a human"
+            >
+              <UserRound className="w-3.5 h-3.5" />
+            </button>
             {messages.length > 0 && (
               <button
                 onClick={clearChat}
@@ -184,6 +196,13 @@ export function StudioChat() {
                     {chip}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Inline contact form */}
+            {showContactForm && (
+              <div className="pt-1">
+                <ChatContactForm onSent={() => setShowContactForm(false)} />
               </div>
             )}
           </div>
