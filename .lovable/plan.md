@@ -1,30 +1,45 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add "Talk to a Human" Contact Form in Studio Chat
 
-### Issues Found
+### Approach
+When the AI detects the user wants to speak with a human (or the user clicks a "Talk to a Human" button), show an inline contact form directly inside the chat panel. On submit, send the message to hello@vovv.ai via the existing `send-email` edge function with a new `contact_form` template.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+#### 1. Edge Function: `send-email/index.ts`
+- Add a `contact_form` email template that sends to `hello@vovv.ai` (not the user)
+- Includes: user's name, email, their message, and timestamp
+- Styled with the existing VOVV.AI brand wrapper
 
-### Plan
+#### 2. AI System Prompt: `studio-chat/index.ts`
+- Add instruction: "If the user wants to talk to a human, contact support, or has a complaint/issue you can't resolve, respond with the special marker `[[CONTACT_HUMAN]]` in your message. This will trigger a contact form in the chat."
+- Add a CTA: `[[Talk to a Human|__contact__]]` for the AI to use
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+#### 3. New Component: `src/components/app/ChatContactForm.tsx`
+- Compact inline form with: Name (pre-filled from profile), Email (pre-filled), Message textarea
+- Submit button sends to `send-email` edge function with type `contact_form`
+- Shows success/error state inline
+- Appears inside the chat message area when triggered
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+#### 4. Update `ChatMessageBubble.tsx`
+- Detect the special `__contact__` route in CTA parsing
+- Instead of navigating, render the `ChatContactForm` inline
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+#### 5. Update `StudioChat.tsx`
+- Add a small "Talk to a Human" icon button in the chat header (next to clear button)
+- Clicking it injects the contact form directly into the chat
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+#### 6. Update `useStudioChat.ts`
+- Add a `sendContactForm` function that calls `send-email` with type `contact_form` and adds a confirmation message to the chat
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### User Flow
+1. User asks to speak with someone → AI responds with "Sure! Fill out the form below" + contact form CTA
+2. OR user clicks the human icon in the chat header → form appears inline
+3. User fills name/email/message → submits
+4. Email sent to hello@vovv.ai with all details
+5. Confirmation message appears in chat: "Message sent! We'll get back to you within 24 hours."
+
+### Technical Detail
+The contact form call goes through the existing `send-email` function (service-role auth). The frontend will call a new thin edge function `send-contact` (or add a client-accessible path to `send-email` for this specific type) since `send-email` requires service-role auth. Simplest approach: create a small `send-contact` edge function that validates the user JWT, then internally calls `send-email` with service-role key.
 
