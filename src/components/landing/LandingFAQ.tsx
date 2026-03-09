@@ -4,6 +4,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { JsonLd } from '@/components/JsonLd';
+import { useMemo } from 'react';
 
 const faqs = [
   {
