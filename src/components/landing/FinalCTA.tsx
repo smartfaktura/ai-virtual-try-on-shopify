@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { ArrowRight, Sparkles, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TEAM_MEMBERS } from '@/data/teamData';
@@ -6,6 +7,7 @@ import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
 
 export function FinalCTA() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden">
       {/* Background */}
@@ -28,7 +30,7 @@ export function FinalCTA() {
           Upload your products, choose your workflows, and let your studio team deliver fresh visuals every month.
         </p>
 
-        <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
+        <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate(user ? '/app' : '/auth')}>
           Get Started Free
           <ArrowRight className="w-5 h-5" />
         </Button>

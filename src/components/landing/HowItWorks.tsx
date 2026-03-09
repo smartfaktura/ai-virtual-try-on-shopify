@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Upload, Target, Images, ArrowRight, Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const cropTopProduct = getLandingAssetUrl('hero/hero-product-croptop.jpg');
@@ -83,6 +84,7 @@ function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt:
 
 export function HowItWorks() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const header = useInView(0.2);
   const step1Text = useInView();
   const step1Card = useInView();
@@ -341,7 +343,7 @@ export function HowItWorks() {
           ref={ctaRef.ref}
           className={`text-center ${baseTransition} ${ctaRef.inView ? visible : hidden}`}
         >
-          <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate('/auth')}>
+          <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate(user ? '/app' : '/auth')}>
             Try It Free
             <ArrowRight className="w-4 h-4" />
           </Button>

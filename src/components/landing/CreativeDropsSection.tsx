@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { ArrowRight, Check, Calendar, Clock, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -53,6 +54,7 @@ const bullets = [
 
 export function CreativeDropsSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <section id="creative-drops" className="py-20 sm:py-28 bg-muted/20">
@@ -81,7 +83,7 @@ export function CreativeDropsSection() {
             <Button
               size="lg"
               className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate(user ? '/app/creative-drops' : '/auth')}
             >
               Set Up Monthly Creative Drops
               <ArrowRight className="w-4 h-4" />

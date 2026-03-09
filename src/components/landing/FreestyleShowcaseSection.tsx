@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Sparkles, User, Camera, Package, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -44,6 +45,7 @@ type ChipKey = 'product' | 'model' | 'scene';
 
 export function FreestyleShowcaseSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [cycle, setCycle] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({
@@ -255,7 +257,7 @@ export function FreestyleShowcaseSection() {
           <Button
             size="lg"
             className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
-            onClick={() => navigate('/auth')}
+            onClick={() => navigate(user ? '/app/freestyle' : '/auth')}
           >
             Try Freestyle Free
             <Sparkles className="w-4 h-4" />
