@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Check, ArrowRight, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { pricingPlans } from '@/data/mockData';
