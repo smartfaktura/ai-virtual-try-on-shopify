@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
 
+const DEFAULT_OG_IMAGE = 'https://vovvai.lovable.app/favicon.png';
+const SITE_URL = 'https://vovvai.lovable.app';
+
 interface SEOHeadProps {
   title: string;
   description: string;
@@ -34,19 +37,28 @@ export function SEOHead({ title, description, canonical, ogImage, ogType = 'webs
     document.title = title;
     setMeta('description', description);
 
+    const resolvedImage = ogImage || DEFAULT_OG_IMAGE;
+    const resolvedUrl = canonical || window.location.href;
+
+    // Open Graph
     setMeta('og:title', title, 'property');
     setMeta('og:description', description, 'property');
     setMeta('og:type', ogType, 'property');
-    if (ogImage) setMeta('og:image', ogImage, 'property');
+    setMeta('og:image', resolvedImage, 'property');
+    setMeta('og:url', resolvedUrl, 'property');
+    setMeta('og:site_name', 'VOVV AI', 'property');
+
     if (canonical) {
-      setMeta('og:url', canonical, 'property');
       setLink('canonical', canonical);
     }
 
+    // Twitter / X
+    setMeta('twitter:card', 'summary_large_image', 'name');
     setMeta('twitter:title', title, 'name');
     setMeta('twitter:description', description, 'name');
-    if (ogImage) setMeta('twitter:image', ogImage, 'name');
+    setMeta('twitter:image', resolvedImage, 'name');
 
+    // Robots
     if (noindex) {
       setMeta('robots', 'noindex, nofollow');
     } else {
