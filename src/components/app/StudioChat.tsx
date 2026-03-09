@@ -7,6 +7,7 @@ import { useStudioChat } from '@/hooks/useStudioChat';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { ChatMessageBubble } from './ChatMessageBubble';
+import { ChatContactForm } from './ChatContactForm';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const avatarSophia = getLandingAssetUrl('team/avatar-sophia.jpg');
