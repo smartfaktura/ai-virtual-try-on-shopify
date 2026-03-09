@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { MessageCircle, X, Send, RotateCcw } from 'lucide-react';
+import { MessageCircle, X, Send, RotateCcw, UserRound } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
