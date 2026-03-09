@@ -115,6 +115,17 @@ export default function Freestyle() {
   const isLoading = isEnqueuing || isProcessing;
   const { user } = useAuth();
 
+  // Detect workflow job completion to show "View Library" banner
+  useEffect(() => {
+    const prev = prevActiveJobRef.current;
+    if (prev && prev.job_type === 'workflow' && prev.status !== 'completed' && !activeJob) {
+      setWorkflowJustCompleted(true);
+      const timer = setTimeout(() => setWorkflowJustCompleted(false), 15000);
+      return () => clearTimeout(timer);
+    }
+    prevActiveJobRef.current = activeJob;
+  }, [activeJob]);
+
   // Pre-fill from Discover page URL params
   useEffect(() => {
     const p = searchParams.get('prompt');
