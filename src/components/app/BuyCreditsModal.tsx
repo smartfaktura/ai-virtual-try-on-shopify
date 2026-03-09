@@ -249,7 +249,7 @@ export function BuyCreditsModal() {
                         {/* Name + badges inline */}
                         <div className="flex items-center gap-2 mb-3 flex-wrap">
                           <h4 className="text-base font-semibold">{p.name}</h4>
-                          {p.badge && (
+                          {p.badge && (plan === 'free' || targetIdx > currentIdx) && (
                             <Badge className="bg-primary text-primary-foreground text-[9px] tracking-widest uppercase px-2 py-0.5">
                               {p.badge}
                             </Badge>
