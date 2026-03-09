@@ -203,6 +203,7 @@ export default function Dashboard() {
   if (isNewUser) {
     return (
       <div className="space-y-6 sm:space-y-10">
+        <SEOHead title="Dashboard — VOVV AI" description="Your AI photography studio dashboard." noindex />
         {/* Welcome — bold, matching landing hero */}
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
