@@ -29,7 +29,7 @@ export function FinalCTA() {
           Upload your products, choose your workflows, and let your studio team deliver fresh visuals every month.
         </p>
 
-        <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate('/auth')}>
+        <Button size="lg" className="rounded-full px-10 py-6 text-base font-semibold gap-2 shadow-xl shadow-primary/25" onClick={() => navigate(user ? '/app' : '/auth')}>
           Get Started Free
           <ArrowRight className="w-5 h-5" />
         </Button>

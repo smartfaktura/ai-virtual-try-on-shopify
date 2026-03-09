@@ -342,7 +342,7 @@ export function HowItWorks() {
           ref={ctaRef.ref}
           className={`text-center ${baseTransition} ${ctaRef.inView ? visible : hidden}`}
         >
-          <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate('/auth')}>
+          <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25" onClick={() => navigate(user ? '/app' : '/auth')}>
             Try It Free
             <ArrowRight className="w-4 h-4" />
           </Button>

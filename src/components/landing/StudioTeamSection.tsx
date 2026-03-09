@@ -177,7 +177,7 @@ export function StudioTeamSection() {
           <Button
             size="lg"
             className="rounded-full px-8 py-6 text-base font-semibold gap-2 shadow-lg shadow-primary/25"
-            onClick={() => navigate('/auth')}
+            onClick={() => navigate(user ? '/team' : '/auth')}
           >
             Meet Your Team <ArrowRight className="w-4 h-4" />
           </Button>
