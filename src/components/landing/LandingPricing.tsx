@@ -61,94 +61,90 @@ export function LandingPricing() {
               ? Math.round(plan.annualPrice / 12)
               : plan.monthlyPrice;
 
+            const planIndex = PLAN_ORDER.indexOf(plan.planId);
+            const isCurrentPlan = !!user && plan.planId === currentPlan;
+            const isHigher = !!user && planIndex > currentPlanIndex;
+            const isLower = !!user && planIndex < currentPlanIndex && planIndex >= 0;
+            const isDisabled = isCurrentPlan && subscriptionStatus !== 'canceling';
+
+            let ctaLabel = plan.ctaText;
+            let ctaRoute = user ? '/app' : '/auth';
+            if (user) {
+              if (isCurrentPlan) {
+                ctaLabel = subscriptionStatus === 'canceling' ? 'Reactivate Plan' : 'Current Plan';
+                ctaRoute = '/app/settings';
+              } else if (isHigher) {
+                ctaLabel = `Upgrade to ${plan.name}`;
+                ctaRoute = '/app/settings';
+              } else if (isLower) {
+                ctaLabel = `Downgrade to ${plan.name}`;
+                ctaRoute = '/app/settings';
+              }
+            }
+
             return (
-              {(() => {
-                const planIndex = PLAN_ORDER.indexOf(plan.planId);
-                const isCurrentPlan = !!user && plan.planId === currentPlan;
-                const isHigher = !!user && planIndex > currentPlanIndex;
-                const isLower = !!user && planIndex < currentPlanIndex && planIndex >= 0;
-                const isDisabled = isCurrentPlan && subscriptionStatus !== 'canceling';
+              <div
+                key={plan.planId}
+                className={`relative rounded-2xl border bg-card p-6 flex flex-col ${
+                  isCurrentPlan
+                    ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
+                    : plan.highlighted && !user
+                      ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
+                      : 'border-border'
+                }`}
+              >
+                {isCurrentPlan ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
+                    Current Plan
+                  </span>
+                ) : plan.badge && !user ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
+                    {plan.badge}
+                  </span>
+                ) : null}
 
-                let ctaLabel = plan.ctaText;
-                let ctaRoute = user ? '/app' : '/auth';
-                if (user) {
-                  if (isCurrentPlan) {
-                    ctaLabel = subscriptionStatus === 'canceling' ? 'Reactivate Plan' : 'Current Plan';
-                    ctaRoute = '/app/settings';
-                  } else if (isHigher) {
-                    ctaLabel = `Upgrade to ${plan.name}`;
-                    ctaRoute = currentPlan === 'free' ? '/app/settings' : '/app/settings';
-                  } else if (isLower) {
-                    ctaLabel = `Downgrade to ${plan.name}`;
-                    ctaRoute = '/app/settings';
-                  }
-                }
-
-                return (
-                  <div
-                    key={plan.planId}
-                    className={`relative rounded-2xl border bg-card p-6 flex flex-col ${
-                      isCurrentPlan
-                        ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
-                        : plan.highlighted && !user
-                          ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
-                          : 'border-border'
-                    }`}
-                  >
-                    {isCurrentPlan ? (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
-                        Current Plan
-                      </span>
-                    ) : plan.badge && !user ? (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
-                        {plan.badge}
-                      </span>
-                    ) : null}
-
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
-                        {isCurrentPlan && subscriptionStatus === 'canceling' && (
-                          <Badge variant="destructive" className="text-[10px]">Canceling</Badge>
-                        )}
-                      </div>
-                      <div className="mt-2">
-                        <span className="text-4xl font-extrabold text-foreground">${price}</span>
-                        <span className="text-muted-foreground text-sm">/mo</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {typeof plan.credits === 'number'
-                          ? `${plan.credits.toLocaleString()} credits/month`
-                          : 'Unlimited visuals'}
-                      </p>
-                      {typeof plan.credits === 'number' && (
-                        <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                          ≈ {Math.round(plan.credits / 5)} images
-                        </p>
-                      )}
-                    </div>
-
-                    <ul className="flex-1 space-y-3 mb-6">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Button
-                      variant={isCurrentPlan || (!user && plan.highlighted) ? 'default' : 'outline'}
-                      className="rounded-full font-semibold w-full gap-2"
-                      disabled={isDisabled}
-                      onClick={() => navigate(ctaRoute)}
-                    >
-                      {ctaLabel}
-                      {!isDisabled && <ArrowRight className="w-4 h-4" />}
-                    </Button>
+                <div className="mb-6">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+                    {isCurrentPlan && subscriptionStatus === 'canceling' && (
+                      <Badge variant="destructive" className="text-[10px]">Canceling</Badge>
+                    )}
                   </div>
-                );
-              })()}
+                  <div className="mt-2">
+                    <span className="text-4xl font-extrabold text-foreground">${price}</span>
+                    <span className="text-muted-foreground text-sm">/mo</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {typeof plan.credits === 'number'
+                      ? `${plan.credits.toLocaleString()} credits/month`
+                      : 'Unlimited visuals'}
+                  </p>
+                  {typeof plan.credits === 'number' && (
+                    <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                      ≈ {Math.round(plan.credits / 5)} images
+                    </p>
+                  )}
+                </div>
+
+                <ul className="flex-1 space-y-3 mb-6">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  variant={isCurrentPlan || (!user && plan.highlighted) ? 'default' : 'outline'}
+                  className="rounded-full font-semibold w-full gap-2"
+                  disabled={isDisabled}
+                  onClick={() => navigate(ctaRoute)}
+                >
+                  {ctaLabel}
+                  {!isDisabled && <ArrowRight className="w-4 h-4" />}
+                </Button>
+              </div>
             );
           })}
         </div>
