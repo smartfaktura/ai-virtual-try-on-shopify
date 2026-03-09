@@ -234,6 +234,23 @@ export default function Discover() {
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
 
+  // Auto-open item from URL param
+  useEffect(() => {
+    if (!urlItemId || allItems.length === 0) return;
+    const found = allItems.find((item) => {
+      if (urlItemId.startsWith('scene-')) {
+        return item.type === 'scene' && item.data.poseId === urlItemId.replace('scene-', '');
+      }
+      return item.type === 'preset' && item.data.id === urlItemId;
+    });
+    if (found) setSelectedItem(found);
+  }, [urlItemId, allItems]);
+
+  const getItemUrl = useCallback((item: DiscoverItem): string => {
+    const id = item.type === 'scene' ? `scene-${item.data.poseId}` : item.data.id;
+    return `/app/discover/${id}`;
+  }, []);
+
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
       // Similar filter
@@ -319,8 +336,14 @@ export default function Discover() {
   }, [allItems, selectedItem]);
 
   const handleItemClick = (item: DiscoverItem) => {
+    navigate(getItemUrl(item), { replace: false });
     setSelectedItem(item);
   };
+
+  const handleClose = useCallback(() => {
+    setSelectedItem(null);
+    navigate('/app/discover', { replace: true });
+  }, [navigate]);
 
   const handleUseItem = (item: DiscoverItem) => {
     if (item.type === 'scene') {
