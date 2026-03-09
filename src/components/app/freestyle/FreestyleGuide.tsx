@@ -47,15 +47,7 @@ export function FreestyleGuide({ currentStep, onNext, onDismiss }: FreestyleGuid
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-3 duration-300">
-      <div className="relative bg-background border border-border/60 rounded-2xl shadow-lg p-4 max-w-sm">
-        {/* Close button */}
-        <button
-          onClick={onDismiss}
-          className="absolute top-3 right-3 text-muted-foreground/50 hover:text-foreground transition-colors"
-          aria-label="Dismiss guide"
-        >
-          <X className="w-4 h-4" />
-        </button>
+      <div className="bg-background border border-border/60 rounded-2xl shadow-lg p-4 max-w-sm">
 
         {/* Step indicator */}
         <div className="flex items-center gap-1.5 mb-3">
