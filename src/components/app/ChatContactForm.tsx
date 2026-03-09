@@ -58,7 +58,7 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
       // Delay the onSent callback so the user sees the success banner
       setTimeout(() => {
         onSent?.(trimEmail);
-      }, 3500);
+      }, 10000);
     } catch (err) {
       setState('error');
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong');
