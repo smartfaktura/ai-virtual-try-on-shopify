@@ -202,7 +202,10 @@ export function StudioChat() {
             {/* Inline contact form */}
             {showContactForm && (
               <div className="pt-1">
-                <ChatContactForm onSent={() => setShowContactForm(false)} />
+                <ChatContactForm onSent={(sentEmail) => {
+                  setShowContactForm(false);
+                  addSystemMessage(`✅ Your message has been sent to our team! We'll get back to you within 24 hours at ${sentEmail}.`);
+                }} />
               </div>
             )}
           </div>
