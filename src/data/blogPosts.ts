@@ -629,6 +629,7 @@ You can regenerate individual products with adjusted settings, try different sce
     category: 'Brand Strategy',
     excerpt: 'One brand\'s product pages had 4 different lighting styles across 600 SKUs. Their Brand Profile fixed it in an afternoon. Here\'s the before-and-after story.',
     tags: ['brand consistency', 'brand profile', 'visual identity', 'AI photography', 'multi-channel branding', 'visual brand guidelines', 'brand recognition'],
+    coverImage: blogImgBrandConsistency,
     content: `
 ## The brand that accidentally had four visual identities
 
