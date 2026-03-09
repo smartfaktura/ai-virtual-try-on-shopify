@@ -342,7 +342,8 @@ export default function Discover() {
 
   const handleClose = useCallback(() => {
     setSelectedItem(null);
-    navigate('/app/discover', { replace: true });
+    window.history.replaceState(null, '', '/app/discover');
+  }, []);
   }, [navigate]);
 
   const handleUseItem = (item: DiscoverItem) => {
