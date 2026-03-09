@@ -373,6 +373,7 @@ Track three metrics: product page conversion rate (aim for 3–5%), click-throug
     category: 'Diversity & Inclusion',
     excerpt: 'When a customer sees your product on someone who looks like them, they buy with confidence. AI makes that possible for every SKU — at zero additional cost.',
     tags: ['diversity', 'AI models', 'inclusive marketing', 'representation', 'Gen Z consumers', 'inclusive e-commerce', 'body-positive imagery'],
+    coverImage: blogImgDiversity,
     content: `
 ## One image changed everything for this brand
 
