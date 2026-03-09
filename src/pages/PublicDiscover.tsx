@@ -345,7 +345,7 @@ export default function PublicDiscover() {
                         <DiscoverCard
                           key={item.type === 'preset' ? `p-${item.data.id}` : `s-${item.data.poseId}`}
                           item={item}
-                          onClick={() => setSelectedItem(item)}
+                          onClick={() => handleCardClick(item)}
                           hideLabels
                           {...(user ? {
                             isSaved: isSaved(item.type, itemId),
