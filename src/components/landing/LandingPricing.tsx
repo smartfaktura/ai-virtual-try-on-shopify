@@ -1,15 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditContext';
 import { Check, ArrowRight, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { pricingPlans } from '@/data/mockData';
+
+const PLAN_ORDER = ['free', 'starter', 'growth', 'pro'];
 
 export function LandingPricing() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { plan: currentPlan, subscriptionStatus } = useCredits();
   const [annual, setAnnual] = useState(false);
 
+  const currentPlanIndex = PLAN_ORDER.indexOf(currentPlan);
   const mainPlans = pricingPlans.filter((p) => !p.isEnterprise);
   const enterprisePlan = pricingPlans.find((p) => p.isEnterprise);
 
