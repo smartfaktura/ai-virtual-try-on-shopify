@@ -86,6 +86,7 @@ function useColumnCount() {
 
 export default function PublicDiscover() {
   const navigate = useNavigate();
+  const { itemId: urlItemId } = useParams<{ itemId: string }>();
   const { user } = useAuth();
   const { data: presets = [], isLoading } = useDiscoverPresets();
   const { featuredMap, isFeatured } = useFeaturedItems();
