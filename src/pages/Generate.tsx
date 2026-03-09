@@ -1284,6 +1284,7 @@ export default function Generate() {
 
   return (
     <PageHeader title={pageTitle} backAction={{ content: activeWorkflow ? 'Workflows' : 'Dashboard', onAction: () => navigate(activeWorkflow ? '/app/workflows' : '/app') }}>
+      <SEOHead title="Generate — VOVV AI" description="Generate AI product photography." noindex />
       <div className="space-y-6 overflow-x-hidden">
         <LowCreditsBanner />
 
