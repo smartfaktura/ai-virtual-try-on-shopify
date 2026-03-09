@@ -287,6 +287,31 @@ export function DiscoverDetailModal({
                   {isFeatured ? 'Unfeature' : 'Feature'}
                 </button>
               )}
+              {isAdmin && onDelete && isPreset && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      className="flex items-center justify-center gap-1.5 h-10 w-10 rounded-xl text-xs font-medium text-destructive bg-destructive/10 backdrop-blur-sm border border-destructive/20 hover:bg-destructive/20 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="z-[300]">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete from Discover?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently remove "{title}" from the Discover feed. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
 
             {/* More like this */}
