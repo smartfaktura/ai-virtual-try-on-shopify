@@ -1,15 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditContext';
 import { Check, ArrowRight, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { pricingPlans } from '@/data/mockData';
+
+const PLAN_ORDER = ['free', 'starter', 'growth', 'pro'];
 
 export function LandingPricing() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { plan: currentPlan, subscriptionStatus } = useCredits();
   const [annual, setAnnual] = useState(false);
 
+  const currentPlanIndex = PLAN_ORDER.indexOf(currentPlan);
   const mainPlans = pricingPlans.filter((p) => !p.isEnterprise);
   const enterprisePlan = pricingPlans.find((p) => p.isEnterprise);
 
@@ -55,23 +61,55 @@ export function LandingPricing() {
               ? Math.round(plan.annualPrice / 12)
               : plan.monthlyPrice;
 
+            const planIndex = PLAN_ORDER.indexOf(plan.planId);
+            const isCurrentPlan = !!user && plan.planId === currentPlan;
+            const isHigher = !!user && planIndex > currentPlanIndex;
+            const isLower = !!user && planIndex < currentPlanIndex && planIndex >= 0;
+            const isDisabled = isCurrentPlan && subscriptionStatus !== 'canceling';
+
+            let ctaLabel = plan.ctaText;
+            let ctaRoute = user ? '/app' : '/auth';
+            if (user) {
+              if (isCurrentPlan) {
+                ctaLabel = subscriptionStatus === 'canceling' ? 'Reactivate Plan' : 'Current Plan';
+                ctaRoute = '/app/settings';
+              } else if (isHigher) {
+                ctaLabel = `Upgrade to ${plan.name}`;
+                ctaRoute = '/app/settings';
+              } else if (isLower) {
+                ctaLabel = `Downgrade to ${plan.name}`;
+                ctaRoute = '/app/settings';
+              }
+            }
+
             return (
               <div
                 key={plan.planId}
                 className={`relative rounded-2xl border bg-card p-6 flex flex-col ${
-                  plan.highlighted
+                  isCurrentPlan
                     ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
-                    : 'border-border'
+                    : plan.highlighted && !user
+                      ? 'border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20'
+                      : 'border-border'
                 }`}
               >
-                {plan.badge && (
+                {isCurrentPlan ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
+                    Current Plan
+                  </span>
+                ) : plan.badge && !user ? (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-full">
                     {plan.badge}
                   </span>
-                )}
+                ) : null}
 
                 <div className="mb-6">
-                  <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+                    {isCurrentPlan && subscriptionStatus === 'canceling' && (
+                      <Badge variant="destructive" className="text-[10px]">Canceling</Badge>
+                    )}
+                  </div>
                   <div className="mt-2">
                     <span className="text-4xl font-extrabold text-foreground">${price}</span>
                     <span className="text-muted-foreground text-sm">/mo</span>
@@ -98,12 +136,13 @@ export function LandingPricing() {
                 </ul>
 
                 <Button
-                  variant={plan.highlighted ? 'default' : 'outline'}
+                  variant={isCurrentPlan || (!user && plan.highlighted) ? 'default' : 'outline'}
                   className="rounded-full font-semibold w-full gap-2"
-                  onClick={() => navigate(user ? '/app' : '/auth')}
+                  disabled={isDisabled}
+                  onClick={() => navigate(ctaRoute)}
                 >
-                  {plan.ctaText}
-                  <ArrowRight className="w-4 h-4" />
+                  {ctaLabel}
+                  {!isDisabled && <ArrowRight className="w-4 h-4" />}
                 </Button>
               </div>
             );
