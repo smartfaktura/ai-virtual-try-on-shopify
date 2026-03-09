@@ -507,6 +507,13 @@ export default function Discover() {
         isAdmin={isAdmin}
         isFeatured={selectedItem ? isFeatured(selectedItem.type, getItemId(selectedItem)) : false}
         onToggleFeatured={selectedItem ? () => handleToggleFeatured(selectedItem) : undefined}
+        onDelete={selectedItem?.type === 'preset' && isAdmin ? async () => {
+          const { error } = await supabase.from('discover_presets').delete().eq('id', selectedItem.data.id);
+          if (error) { toast.error('Failed to delete'); return; }
+          toast.success('Deleted from Discover');
+          setSelectedItem(null);
+          queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
+        } : undefined}
       />
     </div>
   );
