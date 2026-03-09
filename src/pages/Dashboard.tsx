@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { SEOHead } from '@/components/SEOHead';
 import { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Image, Wallet, Package, CalendarClock, ArrowRight, Sparkles, Layers } from 'lucide-react';
