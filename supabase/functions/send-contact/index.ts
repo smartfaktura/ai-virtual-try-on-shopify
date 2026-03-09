@@ -84,14 +84,14 @@ serve(async (req) => {
     const resBody = await res.json();
 
     if (!res.ok) {
-      console.error("[send-contact] send-email error:", JSON.stringify(resBody));
+      console.error("[send-contact] send-email error:", JSON.stringify(resBody), "status:", res.status);
       return new Response(JSON.stringify({ error: "Failed to send message" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log(`[send-contact] ✓ Contact form from ${email} (user: ${user.id})`);
+    console.log(`[send-contact] ✓ Contact form from ${email} (user: ${user.id}), email id: ${resBody.id}`);
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

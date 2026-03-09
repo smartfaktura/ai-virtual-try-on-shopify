@@ -167,5 +167,9 @@ export function useStudioChat() {
     setIsLoading(false);
   }, []);
 
-  return { messages, isLoading, isThrottled, sendMessage, cancelStream, clearChat };
+  const addSystemMessage = useCallback((content: string) => {
+    setMessages(prev => [...prev, { role: 'assistant', content }]);
+  }, []);
+
+  return { messages, isLoading, isThrottled, sendMessage, cancelStream, clearChat, addSystemMessage };
 }
