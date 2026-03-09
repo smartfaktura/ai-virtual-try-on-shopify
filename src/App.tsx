@@ -30,6 +30,7 @@ import VideoGenerate from '@/pages/VideoGenerate';
 import Freestyle from '@/pages/Freestyle';
 import About from '@/pages/About';
 import Blog from '@/pages/Blog';
+import BlogPost from '@/pages/BlogPost';
 import Careers from '@/pages/Careers';
 import Press from '@/pages/Press';
 import HelpCenter from '@/pages/HelpCenter';
