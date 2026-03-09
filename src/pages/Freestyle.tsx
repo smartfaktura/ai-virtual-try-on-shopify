@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { SEOHead } from '@/components/SEOHead';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight } from 'lucide-react';
+import { Sparkles, Loader2, Camera, X as XIcon, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -75,6 +75,8 @@ export default function Freestyle() {
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+  const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
+  const prevActiveJobRef = useRef<typeof activeJob>(null);
 
   // First-time guide state
   const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('freestyle_guide_dismissed'));
@@ -112,6 +114,17 @@ export default function Freestyle() {
   });
   const isLoading = isEnqueuing || isProcessing;
   const { user } = useAuth();
+
+  // Detect workflow job completion to show "View Library" banner
+  useEffect(() => {
+    const prev = prevActiveJobRef.current;
+    if (prev && prev.job_type === 'workflow' && prev.status !== 'completed' && !activeJob) {
+      setWorkflowJustCompleted(true);
+      const timer = setTimeout(() => setWorkflowJustCompleted(false), 15000);
+      return () => clearTimeout(timer);
+    }
+    prevActiveJobRef.current = activeJob;
+  }, [activeJob]);
 
   // Pre-fill from Discover page URL params
   useEffect(() => {
@@ -593,27 +606,50 @@ export default function Freestyle() {
             {activeJob && isProcessing && (
               <div className="px-3 lg:px-1 pt-1 pb-2">
                 {activeJob.job_type === 'workflow' ? (
-                  <div className="flex flex-col gap-2 p-3 sm:p-4 rounded-xl bg-primary/5 border border-primary/20">
-                    <div className="flex items-center gap-3">
-                      <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
+                  <div className="rounded-xl bg-card border border-border/60 shadow-sm overflow-hidden">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">Workflow generation in progress…</p>
+                        <p className="text-sm font-medium text-foreground">Generating images…</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          Results will appear on the Workflows page
+                          Results will appear in your Library when ready
                         </p>
                       </div>
-                      <Button variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={() => navigate('/app/workflows')}>
-                        View in Workflows <ArrowRight className="w-3.5 h-3.5" />
+                      <Button variant="ghost" size="sm" className="shrink-0 gap-1 text-xs text-muted-foreground hover:text-foreground" onClick={() => navigate('/app/workflows')}>
+                        Workflows <ArrowRight className="w-3 h-3" />
                       </Button>
                     </div>
-                    <Progress value={(() => {
-                      const elapsed = (Date.now() - new Date(activeJob.created_at).getTime()) / 1000;
-                      return Math.min(95, (elapsed / 120) * 100);
-                    })()} className="h-1.5" />
+                    <div className="px-4 pb-3">
+                      <Progress value={(() => {
+                        const elapsed = (Date.now() - new Date(activeJob.created_at).getTime()) / 1000;
+                        return Math.min(95, (elapsed / 120) * 100);
+                      })()} className="h-1" />
+                    </div>
                   </div>
                 ) : (
                   <QueuePositionIndicator job={activeJob} onCancel={() => resetQueue()} />
                 )}
+              </div>
+            )}
+            {workflowJustCompleted && (
+              <div className="px-3 lg:px-1 pt-1 pb-2">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-emerald-500/20 shadow-sm">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">Generation complete</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Your images are ready in the Library</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="shrink-0 gap-1.5 text-xs" onClick={() => navigate('/app/library')}>
+                    View Library <ArrowRight className="w-3 h-3" />
+                  </Button>
+                  <button className="shrink-0 text-muted-foreground hover:text-foreground transition-colors" onClick={() => setWorkflowJustCompleted(false)}>
+                    <XIcon className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             )}
             <FreestyleGallery
