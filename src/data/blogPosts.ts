@@ -1,3 +1,10 @@
+import blogImgAiPhotography from '@/assets/blog/ai-product-photography.jpg';
+import blogImgVirtualTryOn from '@/assets/blog/virtual-try-on.jpg';
+import blogImgVisualStrategy from '@/assets/blog/visual-content-strategy.jpg';
+import blogImgDiversity from '@/assets/blog/diverse-representation.jpg';
+import blogImgAutomated from '@/assets/blog/automated-listings.jpg';
+import blogImgBrandConsistency from '@/assets/blog/brand-consistency.jpg';
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -9,6 +16,7 @@ export interface BlogPost {
   excerpt: string;
   tags: string[];
   content: string;
+  coverImage?: string;
 }
 
 export const blogPosts: BlogPost[] = [
