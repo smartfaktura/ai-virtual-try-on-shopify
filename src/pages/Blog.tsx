@@ -1,70 +1,89 @@
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
-import { Newspaper, Send } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { SEOHead } from '@/components/SEOHead';
+import { JsonLd } from '@/components/JsonLd';
+import { blogPosts } from '@/data/blogPosts';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-
-const topics = [
-  'AI Photography',
-  'E-commerce Tips',
-  'Brand Strategy',
-  'Product Styling',
-  'Visual Trends',
-  'Case Studies',
-  'Platform Updates',
-];
+import { CalendarDays, Clock, ArrowRight } from 'lucide-react';
 
 export default function Blog() {
-  const [email, setEmail] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    toast.success('You\'re on the list!', { description: 'We\'ll notify you when we publish our first post.' });
-    setEmail('');
+  const blogListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'VOVV AI Blog',
+    description: 'Insights on AI product photography, visual content strategy, and e-commerce growth.',
+    url: 'https://vovvai.lovable.app/blog',
+    publisher: {
+      '@type': 'Organization',
+      name: 'VOVV AI',
+      url: 'https://vovvai.lovable.app',
+    },
+    blogPost: blogPosts.map((p) => ({
+      '@type': 'BlogPosting',
+      headline: p.title,
+      datePublished: p.publishDate,
+      author: { '@type': 'Organization', name: p.author },
+      url: `https://vovvai.lovable.app/blog/${p.slug}`,
+    })),
   };
 
   return (
     <PageLayout>
-      <section className="py-28 sm:py-36">
-        <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            <Newspaper className="w-4 h-4" />
-            Blog
+      <SEOHead
+        title="VOVV AI Blog — AI Photography, E-commerce Tips & Visual Strategy"
+        description="Insights on AI product photography, visual content strategy, and e-commerce growth from the VOVV AI team."
+        canonical="https://vovvai.lovable.app/blog"
+      />
+      <JsonLd data={blogListJsonLd} />
+
+      <section className="py-20 sm:py-28">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <h1 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight mb-4">
+              Blog
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Insights on AI product photography, visual content strategy, and e-commerce growth.
+            </p>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight mb-4">
-            Coming Soon
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed mb-10">
-            We're crafting in-depth articles on AI-powered product photography, e-commerce visual strategy, and creative workflows. Be the first to read them.
-          </p>
 
-          <form onSubmit={handleSubmit} className="flex gap-2 max-w-md mx-auto mb-10">
-            <Input
-              type="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1"
-              required
-            />
-            <Button type="submit" className="rounded-full px-6 gap-2">
-              <Send className="w-4 h-4" />
-              Notify Me
-            </Button>
-          </form>
-
-          <div>
-            <p className="text-sm text-muted-foreground mb-3">Topics we'll cover</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {topics.map((topic) => (
-                <Badge key={topic} variant="secondary" className="rounded-full">
-                  {topic}
-                </Badge>
-              ))}
-            </div>
+          <div className="space-y-6">
+            {blogPosts.map((post) => (
+              <Link
+                key={post.slug}
+                to={`/blog/${post.slug}`}
+                className="block group"
+              >
+                <article className="border border-border rounded-2xl p-6 sm:p-8 bg-card hover:shadow-md transition-shadow">
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <Badge variant="secondary" className="rounded-full text-xs">
+                      {post.category}
+                    </Badge>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <CalendarDays className="w-3 h-3" />
+                      {new Date(post.publishDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="w-3 h-3" />
+                      {post.readTime}
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-foreground group-hover:text-primary transition-colors mb-2">
+                    {post.title}
+                  </h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                    {post.excerpt}
+                  </p>
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+                    Read article <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </article>
+              </Link>
+            ))}
           </div>
         </div>
       </section>

@@ -4,6 +4,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { JsonLd } from '@/components/JsonLd';
+import { useMemo } from 'react';
 
 const faqs = [
   {
@@ -49,8 +51,19 @@ const faqs = [
 ];
 
 export function LandingFAQ() {
+  const faqJsonLd = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: { '@type': 'Answer', text: faq.a },
+    })),
+  }), []);
+
   return (
     <section id="faq" className="py-20 sm:py-28 bg-muted/20">
+      <JsonLd data={faqJsonLd} />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">

@@ -3,6 +3,7 @@ import { Users, Lightbulb, Heart, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
+import { SEOHead } from '@/components/SEOHead';
 
 const values = [
   {
@@ -35,6 +36,7 @@ const stats = [
 export default function About() {
   return (
     <PageLayout>
+      <SEOHead title="About VOVV AI — The Team Behind AI Product Photography" description="Meet the team building the future of e-commerce visual content with AI-powered photography and automation." canonical="https://vovvai.lovable.app/about" />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

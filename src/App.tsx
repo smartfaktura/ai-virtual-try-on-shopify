@@ -30,6 +30,7 @@ import VideoGenerate from '@/pages/VideoGenerate';
 import Freestyle from '@/pages/Freestyle';
 import About from '@/pages/About';
 import Blog from '@/pages/Blog';
+import BlogPost from '@/pages/BlogPost';
 import Careers from '@/pages/Careers';
 import Press from '@/pages/Press';
 import HelpCenter from '@/pages/HelpCenter';
@@ -86,6 +87,7 @@ const App = () => (
             {/* Company pages */}
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/press" element={<Press />} />
             <Route path="/team" element={<Team />} />

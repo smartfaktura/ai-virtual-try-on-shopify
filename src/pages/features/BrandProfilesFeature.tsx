@@ -3,6 +3,7 @@ import { ArrowRight, Palette, Paintbrush, BookmarkCheck, Users2 } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEOHead } from '@/components/SEOHead';
 
 const benefits = [
   {
@@ -45,6 +46,7 @@ export default function BrandProfilesFeature() {
 
   return (
     <PageLayout>
+      <SEOHead title="Brand Profiles — Consistent AI Photography | VOVV AI" description="Define your brand's visual identity once. Every AI-generated image automatically matches your lighting, colors, composition, and tone." canonical="https://vovvai.lovable.app/features/brand-profiles" />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

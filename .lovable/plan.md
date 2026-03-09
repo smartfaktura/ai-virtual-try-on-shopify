@@ -1,106 +1,30 @@
 
 
-## Comprehensive SEO + Blog Implementation for VOVV.AI
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-This is a large initiative covering three areas: per-page SEO metadata, structured data for Google Rich Results, and a real blog with keyword-optimized posts.
+### Issues Found
 
----
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### 1. SEO Head Component (`src/components/SEOHead.tsx`) — New
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-A reusable component that sets `document.title`, meta description, canonical URL, and Open Graph / Twitter tags per page using direct DOM manipulation (no extra dependency needed).
+### Plan
 
-```text
-<SEOHead
-  title="AI Product Photography for E-commerce | VOVV AI"
-  description="..."
-  canonical="https://vovvai.lovable.app/about"
-  ogImage="..."
-/>
-```
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-Will be added to every public page (Landing, About, Blog, Pricing, Careers, Press, Contact, Help, Features pages, legal pages).
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
----
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### 2. JSON-LD Structured Data
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-Add structured data scripts for Google Rich Results:
-
-- **Landing page**: `Organization` + `WebSite` schema (with SearchAction)
-- **FAQ section**: `FAQPage` schema using existing FAQ data from `LandingFAQ.tsx`
-- **Blog posts**: `Article` + `BreadcrumbList` schema per post
-- **Pricing page**: `Product` schema with pricing tiers
-
-These will be injected via a `<JsonLd>` helper component that appends a `<script type="application/ld+json">` to the document head.
-
----
-
-### 3. Sitemap + Robots.txt
-
-- **`public/sitemap.xml`** — Static sitemap listing all public routes with `lastmod`, `changefreq`, and `priority`
-- **`public/robots.txt`** — Add `Sitemap: https://vovvai.lovable.app/sitemap.xml`
-
----
-
-### 4. Real Blog with SEO-Optimized Posts
-
-Replace the "Coming Soon" blog page with a full blog system using hardcoded post data (no database needed — static content for SEO indexing).
-
-**Blog post data file** (`src/data/blogPosts.ts`):
-- 6 initial posts with targeted keywords, each with: slug, title, metaDescription, publishDate (staggered day-by-day), author, readTime, category, content (markdown), tags
-
-**Target keywords per post:**
-1. "AI product photography for e-commerce" — How AI replaces traditional product shoots
-2. "virtual try-on technology for fashion brands" — How virtual try-on increases conversions
-3. "e-commerce visual content strategy 2026" — Visual strategy guide
-4. "AI model photography diverse representation" — Inclusive model photography
-5. "automated product listing images" — Streamlining listings at scale
-6. "brand consistency AI generated visuals" — Maintaining brand identity with AI
-
-**Blog pages:**
-- **`/blog`** — Post listing with cards showing title, excerpt, date, category, read time
-- **`/blog/:slug`** — Full post page with markdown rendering, Article JSON-LD, breadcrumbs, related posts, and CTA
-
-**New files:**
-| File | Purpose |
-|------|---------|
-| `src/components/SEOHead.tsx` | Reusable per-page meta tags |
-| `src/components/JsonLd.tsx` | JSON-LD structured data injector |
-| `src/data/blogPosts.ts` | 6 SEO-optimized blog posts |
-| `src/pages/Blog.tsx` | Rewritten — post listing page |
-| `src/pages/BlogPost.tsx` | New — individual post page |
-| `public/sitemap.xml` | Static sitemap |
-
-**Modified files:**
-| File | Change |
-|------|--------|
-| `public/robots.txt` | Add Sitemap directive |
-| `index.html` | Add canonical link tag |
-| `src/App.tsx` | Add `/blog/:slug` route |
-| `src/pages/Landing.tsx` | Add SEOHead + Organization/WebSite JSON-LD |
-| `src/pages/About.tsx` | Add SEOHead |
-| `src/pages/Pricing.tsx` | Add SEOHead |
-| `src/pages/Careers.tsx` | Add SEOHead |
-| `src/pages/Contact.tsx` | Add SEOHead |
-| `src/pages/HelpCenter.tsx` | Add SEOHead |
-| `src/pages/Press.tsx` | Add SEOHead |
-| `src/pages/PrivacyPolicy.tsx` | Add SEOHead |
-| `src/pages/TermsOfService.tsx` | Add SEOHead |
-| `src/pages/CookiePolicy.tsx` | Add SEOHead |
-| `src/components/landing/LandingFAQ.tsx` | Add FAQPage JSON-LD |
-| Feature pages (4) | Add SEOHead with targeted titles/descriptions |
-
----
-
-### SEO Titles & Descriptions (examples)
-
-| Page | Title | Description |
-|------|-------|-------------|
-| Landing | VOVV AI — AI Product Photography & Visual Studio for E-commerce | Upload one product photo, get 20 brand-ready visuals for ads, website, and campaigns automatically. |
-| Pricing | Pricing & Plans — VOVV AI | Free credits to start. Scale with flexible plans from Starter to Enterprise. AI product photography pricing. |
-| About | About VOVV AI — The Team Behind AI Product Photography | Meet the team building the future of e-commerce visual content with AI-powered photography and automation. |
-| Blog | VOVV AI Blog — AI Photography, E-commerce Tips & Visual Strategy | Insights on AI product photography, visual content strategy, and e-commerce growth from the VOVV AI team. |
-
-This plan requires no new dependencies — `react-markdown` is already installed for blog post rendering.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

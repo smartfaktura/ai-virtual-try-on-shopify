@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEOHead } from '@/components/SEOHead';
 import { Mail, Send, Clock, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,6 +46,7 @@ export default function Contact() {
 
   return (
     <PageLayout>
+      <SEOHead title="Contact VOVV AI — Get in Touch" description="Have a question about AI product photography? Contact the VOVV AI team for support, partnerships, or feature requests." canonical="https://vovvai.lovable.app/contact" />
       <section className="py-20 sm:py-28">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
