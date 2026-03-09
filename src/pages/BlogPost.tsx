@@ -16,17 +16,22 @@ export default function BlogPost() {
 
   const related = getRelatedPosts(post.slug, 3);
 
+  const defaultImage = 'https://vovvai.lovable.app/favicon.png';
+
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
     description: post.metaDescription,
+    image: defaultImage,
     datePublished: post.publishDate,
+    dateModified: post.publishDate,
     author: { '@type': 'Organization', name: post.author },
     publisher: {
       '@type': 'Organization',
       name: 'VOVV AI',
       url: 'https://vovvai.lovable.app',
+      logo: { '@type': 'ImageObject', url: defaultImage },
     },
     mainEntityOfPage: `https://vovvai.lovable.app/blog/${post.slug}`,
   };
