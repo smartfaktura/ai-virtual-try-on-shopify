@@ -537,7 +537,7 @@ function getAspectRatioForVariation(
 function getModelForQuality(quality: string): string {
   return quality === "high"
     ? "google/gemini-3-pro-image-preview"
-    : "google/gemini-2.5-flash-image";
+    : "google/gemini-3.1-flash-image-preview";
 }
 
 async function generateImage(
