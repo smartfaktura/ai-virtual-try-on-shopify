@@ -235,6 +235,7 @@ The images are pre-generated, so there's zero impact on page speed. They're stan
     category: 'Strategy',
     excerpt: 'The top 10% of e-commerce brands produce 5x more visual content than average — and spend less doing it. Here\'s the exact 4-part framework they follow.',
     tags: ['visual strategy', 'e-commerce', 'content marketing', '2026 trends', 'TikTok Shop product photos', 'product content strategy', 'visual commerce'],
+    coverImage: blogImgVisualStrategy,
     content: `
 ## A tale of two brands
 
