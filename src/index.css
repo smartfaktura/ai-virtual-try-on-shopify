@@ -319,97 +319,222 @@
   }
 }
 
-/* Blog content styles */
-.blog-content blockquote {
-  border-left: 3px solid hsl(var(--primary));
-  background: hsl(var(--muted) / 0.5);
-  border-radius: 0 0.5rem 0.5rem 0;
-  padding: 1rem 1.25rem;
-  margin: 1.5rem 0;
-  font-style: normal;
+/* Blog content styles — magazine layout */
+
+/* Drop cap on first paragraph */
+.blog-content > p:first-of-type::first-letter {
+  float: left;
+  font-size: 3.5rem;
+  line-height: 1;
+  font-weight: 800;
+  color: hsl(var(--primary));
+  margin-right: 0.5rem;
+  margin-top: 0.25rem;
 }
 
-.blog-content blockquote p {
+/* Numbered H2 headings */
+.blog-h2-numbered {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 1.625rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 3rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid hsl(var(--border));
+  position: relative;
+}
+
+.blog-h2-numbered::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.3));
+}
+
+.blog-h2-number {
+  font-family: 'Inter', monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: hsl(var(--primary) / 0.4);
+  flex-shrink: 0;
+  min-width: 1.5rem;
+}
+
+/* H3 pill style */
+.blog-h3-pill {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  background: hsl(var(--muted) / 0.6);
+  border-radius: 0.5rem;
+  display: inline-block;
+}
+
+/* Blockquote with quote icon */
+.blog-blockquote {
+  position: relative;
+  border-left: 4px solid hsl(var(--primary));
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.04), hsl(var(--muted) / 0.5));
+  border-radius: 0 0.75rem 0.75rem 0;
+  padding: 1.5rem 1.5rem 1.5rem 3rem;
+  margin: 2rem 0;
+  font-style: italic;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+.blog-blockquote-icon {
+  position: absolute;
+  top: 1.25rem;
+  left: 0.75rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: hsl(var(--primary) / 0.3);
+}
+
+.blog-blockquote p {
   margin: 0;
 }
 
-.blog-content h2 {
-  padding-left: 0.75rem;
-  border-left: 3px solid hsl(var(--primary));
-  margin-top: 2.5rem;
+/* Callout cards for key takeaways */
+.blog-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: hsl(var(--primary) / 0.06);
+  border: 1px solid hsl(var(--primary) / 0.12);
+  border-left: 4px solid hsl(var(--primary));
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.25rem 1.25rem 1rem;
+  margin: 1.5rem 0;
+  font-size: 0.9375rem;
+  line-height: 1.65;
 }
 
-.blog-content h3 {
-  margin-top: 2rem;
-}
-
-.blog-content table {
-  border-radius: 0.5rem;
-  overflow: hidden;
-  border: 1px solid hsl(var(--border));
-  border-collapse: separate;
-  border-spacing: 0;
-  width: 100%;
-}
-
-.blog-content thead th {
-  background: hsl(var(--muted));
-  font-weight: 600;
-  text-align: left;
-  padding: 0.625rem 0.75rem;
-  font-size: 0.8125rem;
-  border-bottom: 1px solid hsl(var(--border));
-}
-
-.blog-content tbody td {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8125rem;
-  border-bottom: 1px solid hsl(var(--border));
-}
-
-.blog-content tbody tr:nth-child(even) {
-  background: hsl(var(--muted) / 0.3);
-}
-
-.blog-content tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.blog-content a {
+.blog-callout-icon {
+  width: 1.25rem;
+  height: 1.25rem;
   color: hsl(var(--primary));
-  text-decoration: none;
-  font-weight: 500;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
 }
 
-.blog-content a:hover {
-  text-decoration: underline;
-}
-
-.blog-content strong {
+.blog-strong-takeaway {
   color: hsl(var(--foreground));
 }
 
-.blog-content p > strong:first-child:only-child {
-  display: block;
-  background: hsl(var(--primary) / 0.06);
-  border: 1px solid hsl(var(--primary) / 0.12);
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.9375rem;
-  line-height: 1.6;
+/* Table wrapper */
+.blog-table-wrapper {
+  margin: 2rem 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 4px hsl(var(--foreground) / 0.04);
 }
 
-.blog-content hr {
-  border-color: hsl(var(--border));
-  margin: 2rem 0;
+.blog-table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin: 0;
+}
+
+.blog-table-wrapper thead th {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  border-bottom: none;
+}
+
+.blog-table-wrapper tbody td {
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.blog-table-wrapper tbody tr:nth-child(even) {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.blog-table-wrapper tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.blog-table-wrapper tbody tr:hover {
+  background: hsl(var(--muted) / 0.5);
+}
+
+/* Inline code */
+.blog-inline-code {
+  background: hsl(var(--muted));
+  color: hsl(var(--primary));
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-weight: 500;
+}
+
+/* Links */
+.blog-link {
+  color: hsl(var(--primary));
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid hsl(var(--primary) / 0.2);
+  transition: border-color 0.15s;
+}
+
+.blog-link:hover {
+  border-bottom-color: hsl(var(--primary));
+}
+
+/* General prose overrides */
+.blog-content p {
+  margin-bottom: 1.25rem;
 }
 
 .blog-content ul,
 .blog-content ol {
   padding-left: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
 .blog-content li::marker {
   color: hsl(var(--primary));
+}
+
+.blog-content li {
+  margin-bottom: 0.375rem;
+}
+
+.blog-content hr {
+  border-color: hsl(var(--border));
+  margin: 2.5rem 0;
+}
+
+.blog-content strong {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+}
+
+/* Strong-only paragraphs as highlight cards (legacy compat) */
+.blog-content p > strong:first-child:only-child {
+  display: block;
+  background: hsl(var(--primary) / 0.06);
+  border: 1px solid hsl(var(--primary) / 0.12);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
 }
 
