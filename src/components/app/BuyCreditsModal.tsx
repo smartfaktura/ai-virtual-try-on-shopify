@@ -230,7 +230,7 @@ export function BuyCreditsModal() {
                     const credits = typeof p.credits === 'number' ? p.credits : 0;
                     const imageEstimate = credits > 0 ? Math.round(credits / 5) : null;
 
-                    let ctaLabel = targetIdx > currentIdx ? `Get ${p.name}` : `Get ${p.name}`;
+                    let ctaLabel = targetIdx > currentIdx ? `Upgrade to ${p.name}` : targetIdx < currentIdx ? `Downgrade to ${p.name}` : `Get ${p.name}`;
                     if (isCurrent && subscriptionStatus === 'canceling') ctaLabel = 'Reactivate';
                     else if (isCurrent) ctaLabel = 'Current Plan';
                     const isDisabled = isCurrent && subscriptionStatus !== 'canceling';
