@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 /** Pages where dedicated activity UI already exists */
-const HIDDEN_PATHS = ['/app/workflows', '/app/generate'];
+const HIDDEN_PATHS = ['/app/workflows', '/app/generate', '/app/freestyle'];
 
 function elapsedLabel(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
