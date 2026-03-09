@@ -165,9 +165,9 @@ export default function PublicDiscover() {
   }, []);
 
   const handleCardClick = useCallback((item: DiscoverItem) => {
-    navigate(getItemUrl(item), { replace: false });
+    window.history.pushState(null, '', getItemUrl(item));
     setSelectedItem(item);
-  }, [navigate, getItemUrl]);
+  }, [getItemUrl]);
 
   const handleClose = useCallback(() => {
     setSelectedItem(null);
@@ -373,7 +373,7 @@ export default function PublicDiscover() {
             onUseItem={handleUseItem}
             onSearchSimilar={handleSearchSimilar}
             relatedItems={relatedItems}
-            onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
+            onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
             isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
             onToggleSave={handleToggleSave}
             viewCount={viewCount ?? undefined}
@@ -387,7 +387,7 @@ export default function PublicDiscover() {
             open={!!selectedItem}
             onClose={handleClose}
             relatedItems={relatedItems}
-            onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
+            onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
           />
         )}
       </div>
