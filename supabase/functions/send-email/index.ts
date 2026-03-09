@@ -306,14 +306,14 @@ serve(async (req) => {
     const resBody = await res.json();
 
     if (!res.ok) {
-      console.error("[send-email] Resend error:", JSON.stringify(resBody));
+      console.error("[send-email] Resend error:", JSON.stringify(resBody), "status:", res.status);
       return new Response(JSON.stringify({ error: "Failed to send email", details: resBody }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log(`[send-email] ✓ Sent ${type} email to ${to}`);
+    console.log(`[send-email] ✓ Sent ${type} email to ${to} (resend id: ${resBody.id})`);
     return new Response(JSON.stringify({ success: true, id: resBody.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

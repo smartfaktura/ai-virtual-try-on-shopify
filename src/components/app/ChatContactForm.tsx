@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
 interface ChatContactFormProps {
-  onSent?: () => void;
+  onSent?: (email: string) => void;
 }
 
 type FormState = 'idle' | 'sending' | 'sent' | 'error';
@@ -55,7 +55,10 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
       }
 
       setState('sent');
-      onSent?.();
+      // Delay the onSent callback so the user sees the success banner
+      setTimeout(() => {
+        onSent?.(trimEmail);
+      }, 3500);
     } catch (err) {
       setState('error');
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong');
@@ -64,7 +67,7 @@ export function ChatContactForm({ onSent }: ChatContactFormProps) {
 
   if (state === 'sent') {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+      <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 animate-in fade-in duration-300">
         <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
         <p className="text-xs text-foreground">
           Message sent! We'll get back to you within 24 hours at <strong>{email}</strong>.
