@@ -1,5 +1,6 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { Shield } from 'lucide-react';
+import { SEOHead } from '@/components/SEOHead';
 
 export default function PrivacyPolicy() {
   return (
