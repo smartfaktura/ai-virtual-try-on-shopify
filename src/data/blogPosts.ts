@@ -488,6 +488,7 @@ AI model photography complements — not replaces — real representation. It al
     category: 'Automation',
     excerpt: 'One brand processed 3,200 SKU images in a single weekend — with two people and a laptop. Here\'s the exact workflow they followed.',
     tags: ['automation', 'product listings', 'marketplace', 'bulk generation', 'Shopify bulk images', 'Amazon product photos at scale', 'CSV product import'],
+    coverImage: blogImgAutomated,
     content: `
 ## The weekend that replaced a 6-month photography project
 
