@@ -165,9 +165,9 @@ export default function PublicDiscover() {
   }, []);
 
   const handleCardClick = useCallback((item: DiscoverItem) => {
-    navigate(getItemUrl(item), { replace: false });
+    window.history.pushState(null, '', getItemUrl(item));
     setSelectedItem(item);
-  }, [navigate, getItemUrl]);
+  }, [getItemUrl]);
 
   const handleClose = useCallback(() => {
     setSelectedItem(null);

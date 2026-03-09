@@ -336,7 +336,7 @@ export default function Discover() {
   }, [allItems, selectedItem]);
 
   const handleItemClick = (item: DiscoverItem) => {
-    navigate(getItemUrl(item), { replace: false });
+    window.history.pushState(null, '', getItemUrl(item));
     setSelectedItem(item);
   };
 
