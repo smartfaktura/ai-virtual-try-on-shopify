@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star } from 'lucide-react';
+import { Copy, ArrowRight, Heart, Search, Sparkles, Loader2, X, Eye, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { cn } from '@/lib/utils';
