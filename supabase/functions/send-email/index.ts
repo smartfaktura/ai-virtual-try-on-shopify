@@ -278,6 +278,10 @@ serve(async (req) => {
         subject = "Generation failed — VOVV.AI";
         html = generationFailedEmail(data || {});
         break;
+      case "contact_form":
+        subject = `[VOVV.AI Contact] Message from ${(data?.name || "a user")}`;
+        html = contactFormEmail(data || {});
+        break;
       default:
         return new Response(JSON.stringify({ error: `Unknown email type: ${type}` }), {
           status: 400,

@@ -198,6 +198,13 @@ export function StudioChat() {
                 ))}
               </div>
             )}
+
+            {/* Inline contact form */}
+            {showContactForm && (
+              <div className="pt-1">
+                <ChatContactForm onSent={() => setShowContactForm(false)} />
+              </div>
+            )}
           </div>
         </ScrollArea>
 

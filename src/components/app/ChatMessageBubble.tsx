@@ -38,6 +38,7 @@ interface ChatMessageBubbleProps {
 
 export function ChatMessageBubble({ content, role, isStreaming }: ChatMessageBubbleProps) {
   const navigate = useNavigate();
+  const [showContactForm, setShowContactForm] = useState(false);
 
   if (role === 'user') {
     return <span>{content}</span>;
@@ -45,6 +46,12 @@ export function ChatMessageBubble({ content, role, isStreaming }: ChatMessageBub
 
   const segments = parseMessageContent(content);
   const hasCTAs = segments.some((s) => s.type === 'cta');
+  const contactCTAs = segments.filter(
+    (s): s is Extract<ParsedSegment, { type: 'cta' }> => s.type === 'cta' && s.route === '__contact__'
+  );
+  const navCTAs = segments.filter(
+    (s): s is Extract<ParsedSegment, { type: 'cta' }> => s.type === 'cta' && s.route !== '__contact__'
+  );
 
   return (
     <div>
@@ -61,21 +68,38 @@ export function ChatMessageBubble({ content, role, isStreaming }: ChatMessageBub
 
       {hasCTAs && !isStreaming && (
         <div className="flex flex-wrap gap-1.5 mt-2">
-          {segments
-            .filter((s): s is Extract<ParsedSegment, { type: 'cta' }> => s.type === 'cta')
-            .map((cta, i) => (
-              <button
-                key={i}
-                onClick={() => navigate(cta.route)}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                  'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
-                )}
-              >
-                {cta.label}
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            ))}
+          {navCTAs.map((cta, i) => (
+            <button
+              key={i}
+              onClick={() => navigate(cta.route)}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
+              )}
+            >
+              {cta.label}
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          ))}
+          {contactCTAs.map((cta, i) => (
+            <button
+              key={`contact-${i}`}
+              onClick={() => setShowContactForm(true)}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
+              )}
+            >
+              {cta.label}
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {showContactForm && (
+        <div className="mt-2.5">
+          <ChatContactForm onSent={() => setShowContactForm(false)} />
         </div>
       )}
     </div>
