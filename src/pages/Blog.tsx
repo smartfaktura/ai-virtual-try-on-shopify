@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/JsonLd';
 import { blogPosts } from '@/data/blogPosts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { CalendarDays, Clock, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function Blog() {
@@ -93,38 +94,51 @@ export default function Blog() {
           {/* Featured post */}
           {featured && (
             <Link to={`/blog/${featured.slug}`} className="block group mb-10">
-              <article className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/[0.06] via-accent/30 to-card border border-border p-8 sm:p-10 hover:shadow-lg transition-all">
-                <div className="absolute top-4 right-4">
-                  <Badge className="rounded-full text-[10px] bg-primary/10 text-primary border border-primary/20">
-                    Featured
-                  </Badge>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <Badge variant="secondary" className="rounded-full text-xs">
-                    {featured.category}
-                  </Badge>
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <CalendarDays className="w-3 h-3" />
-                    {new Date(featured.publishDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
+              <article className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/[0.06] via-accent/30 to-card border border-border hover:shadow-lg transition-all">
+                {/* Featured cover image */}
+                {featured.coverImage && (
+                  <div className="w-full aspect-[2.2/1] overflow-hidden">
+                    <ShimmerImage
+                      src={featured.coverImage}
+                      alt={featured.title}
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                      aspectRatio="2.2/1"
+                    />
+                  </div>
+                )}
+                <div className="p-8 sm:p-10">
+                  <div className="absolute top-4 right-4">
+                    <Badge className="rounded-full text-[10px] bg-primary/10 text-primary border border-primary/20">
+                      Featured
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <Badge variant="secondary" className="rounded-full text-xs">
+                      {featured.category}
+                    </Badge>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <CalendarDays className="w-3 h-3" />
+                      {new Date(featured.publishDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="w-3 h-3" />
+                      {featured.readTime}
+                    </span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground group-hover:text-primary transition-colors mb-3 leading-tight">
+                    {featured.title}
+                  </h2>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-5 max-w-2xl">
+                    {featured.excerpt}
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+                    Read article <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="w-3 h-3" />
-                    {featured.readTime}
-                  </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground group-hover:text-primary transition-colors mb-3 leading-tight">
-                  {featured.title}
-                </h2>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-5 max-w-2xl">
-                  {featured.excerpt}
-                </p>
-                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-                  Read article <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </span>
               </article>
             </Link>
           )}
@@ -137,10 +151,19 @@ export default function Blog() {
                 to={`/blog/${post.slug}`}
                 className="block group"
               >
-                <article className="relative h-full border border-border rounded-2xl p-6 sm:p-7 bg-card hover:shadow-md hover:border-primary/20 transition-all overflow-hidden">
-                  {/* Accent strip */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/20 group-hover:bg-primary transition-colors rounded-l-2xl" />
-                  <div className="pl-3">
+                <article className="relative h-full border border-border rounded-2xl bg-card hover:shadow-md hover:border-primary/20 transition-all overflow-hidden">
+                  {/* Card cover image */}
+                  {post.coverImage && (
+                    <div className="w-full aspect-[16/9] overflow-hidden">
+                      <ShimmerImage
+                        src={post.coverImage}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                        aspectRatio="16/9"
+                      />
+                    </div>
+                  )}
+                  <div className="p-6 sm:p-7">
                     <div className="flex flex-wrap items-center gap-3 mb-3">
                       <Badge variant="secondary" className="rounded-full text-xs">
                         {post.category}

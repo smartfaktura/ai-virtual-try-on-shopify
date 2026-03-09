@@ -1,48 +1,30 @@
 
 
-## Generate Hero Images for All Blog Articles
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Currently, blog articles have no images at all — just text. Adding a high-quality hero image to each article will dramatically improve engagement.
+### Issues Found
 
-### Approach
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-Use the AI image generation model (`google/gemini-3-pro-image-preview` for highest quality) via an edge function to generate 6 photorealistic hero images — one per blog post. Upload each to the `landing-assets` storage bucket, then wire them into the blog data and layout.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Images to Generate
+### Plan
 
-| Blog Post | Image Concept |
-|-----------|---------------|
-| AI Product Photography for E-commerce | Flat lay of beauty products on marble with dramatic studio lighting, camera and laptop nearby |
-| Virtual Try-On Technology | Fashion model in a bright studio, phone screen showing virtual outfit overlay |
-| E-commerce Visual Content Strategy 2026 | Creative director's desk with multiple product photos spread out, color swatches, mood board |
-| AI Model Photography & Diverse Representation | Grid of diverse models wearing the same outfit in different poses, studio backdrop |
-| Automated Product Listing Images at Scale | Warehouse shelf of products with floating holographic product cards being generated |
-| Brand Consistency with AI-Generated Visuals | Side-by-side product photos showing perfect color/lighting consistency across a brand |
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Changes
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**1. New edge function `supabase/functions/generate-blog-images/index.ts`**
-- Takes a prompt, calls the AI image generation model
-- Converts the base64 result to a file and uploads to `landing-assets/blog/` bucket
-- Returns the public URL
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**2. `src/data/blogPosts.ts`**
-- Add `coverImage?: string` field to the `BlogPost` interface
-- Add the generated image URLs to each blog post entry
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-**3. `src/pages/BlogPost.tsx`**
-- Display the hero image in the header area — full-width with a subtle overlay gradient behind the title
-- Add `loading="lazy"` and use `ShimmerImage` for smooth load
-
-**4. `src/pages/Blog.tsx`**
-- Show cover images on blog listing cards (featured card gets a large image, regular cards get thumbnails)
-
-### Files Changed
-
-| File | Change |
-|------|--------|
-| `supabase/functions/generate-blog-images/index.ts` | New edge function to generate and upload images |
-| `src/data/blogPosts.ts` | Add `coverImage` field and URLs |
-| `src/pages/BlogPost.tsx` | Display hero image in article header |
-| `src/pages/Blog.tsx` | Show cover images on listing cards |
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

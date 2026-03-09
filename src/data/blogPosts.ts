@@ -1,3 +1,10 @@
+import blogImgAiPhotography from '@/assets/blog/ai-product-photography.jpg';
+import blogImgVirtualTryOn from '@/assets/blog/virtual-try-on.jpg';
+import blogImgVisualStrategy from '@/assets/blog/visual-content-strategy.jpg';
+import blogImgDiversity from '@/assets/blog/diverse-representation.jpg';
+import blogImgAutomated from '@/assets/blog/automated-listings.jpg';
+import blogImgBrandConsistency from '@/assets/blog/brand-consistency.jpg';
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -9,6 +16,7 @@ export interface BlogPost {
   excerpt: string;
   tags: string[];
   content: string;
+  coverImage?: string;
 }
 
 export const blogPosts: BlogPost[] = [
@@ -22,6 +30,7 @@ export const blogPosts: BlogPost[] = [
     category: 'AI Photography',
     excerpt: 'A DTC skincare brand spent $47,000 on product photos last year — then switched to AI and produced 3x the images for under $2,000. Here\'s exactly how.',
     tags: ['AI photography', 'e-commerce', 'product images', 'cost saving', 'Shopify product photos', 'Amazon listing images', 'AI photos for Etsy'],
+    coverImage: blogImgAiPhotography,
     content: `
 ## Your product photos are costing you a fortune. They don't have to.
 
@@ -118,6 +127,7 @@ In blind tests, consumers cannot reliably distinguish modern AI product photos f
     category: 'Virtual Try-On',
     excerpt: 'A customer adds a silk blouse to her cart, scrolls through images on 5 different body types, and buys with confidence. No return. Here\'s the tech behind that moment.',
     tags: ['virtual try-on', 'fashion', 'returns', 'conversion rate', 'virtual try-on for clothing brands', 'reduce fashion returns', 'AI fitting technology'],
+    coverImage: blogImgVirtualTryOn,
     content: `
 ## Meet Sarah. She just bought a dress she'll actually keep.
 
@@ -225,6 +235,7 @@ The images are pre-generated, so there's zero impact on page speed. They're stan
     category: 'Strategy',
     excerpt: 'The top 10% of e-commerce brands produce 5x more visual content than average — and spend less doing it. Here\'s the exact 4-part framework they follow.',
     tags: ['visual strategy', 'e-commerce', 'content marketing', '2026 trends', 'TikTok Shop product photos', 'product content strategy', 'visual commerce'],
+    coverImage: blogImgVisualStrategy,
     content: `
 ## A tale of two brands
 
@@ -362,6 +373,7 @@ Track three metrics: product page conversion rate (aim for 3–5%), click-throug
     category: 'Diversity & Inclusion',
     excerpt: 'When a customer sees your product on someone who looks like them, they buy with confidence. AI makes that possible for every SKU — at zero additional cost.',
     tags: ['diversity', 'AI models', 'inclusive marketing', 'representation', 'Gen Z consumers', 'inclusive e-commerce', 'body-positive imagery'],
+    coverImage: blogImgDiversity,
     content: `
 ## One image changed everything for this brand
 
@@ -476,6 +488,7 @@ AI model photography complements — not replaces — real representation. It al
     category: 'Automation',
     excerpt: 'One brand processed 3,200 SKU images in a single weekend — with two people and a laptop. Here\'s the exact workflow they followed.',
     tags: ['automation', 'product listings', 'marketplace', 'bulk generation', 'Shopify bulk images', 'Amazon product photos at scale', 'CSV product import'],
+    coverImage: blogImgAutomated,
     content: `
 ## The weekend that replaced a 6-month photography project
 
@@ -616,6 +629,7 @@ You can regenerate individual products with adjusted settings, try different sce
     category: 'Brand Strategy',
     excerpt: 'One brand\'s product pages had 4 different lighting styles across 600 SKUs. Their Brand Profile fixed it in an afternoon. Here\'s the before-and-after story.',
     tags: ['brand consistency', 'brand profile', 'visual identity', 'AI photography', 'multi-channel branding', 'visual brand guidelines', 'brand recognition'],
+    coverImage: blogImgBrandConsistency,
     content: `
 ## The brand that accidentally had four visual identities
 

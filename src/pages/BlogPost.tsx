@@ -2,6 +2,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useEffect, useState, useMemo } from 'react';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
 import { getBlogPostBySlug, getRelatedPosts } from '@/data/blogPosts';
@@ -129,7 +130,7 @@ export default function BlogPost() {
     '@type': 'Article',
     headline: post.title,
     description: post.metaDescription,
-    image: defaultImage,
+    image: post.coverImage || defaultImage,
     datePublished: post.publishDate,
     dateModified: post.publishDate,
     author: { '@type': 'Organization', name: post.author },
@@ -223,6 +224,22 @@ export default function BlogPost() {
             </div>
           </div>
         </div>
+
+        {/* Hero image */}
+        {post.coverImage && (
+          <div className="max-w-[720px] mx-auto px-4 sm:px-6 -mt-6 sm:-mt-8 relative z-10">
+            <div className="rounded-2xl overflow-hidden border border-border shadow-lg">
+              <ShimmerImage
+                src={post.coverImage}
+                alt={post.title}
+                className="w-full h-auto object-cover"
+                aspectRatio="16/9"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Inline TOC — compact, centered */}
         {headings.length > 2 && (
