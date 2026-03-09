@@ -75,6 +75,8 @@ export default function Freestyle() {
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+  const [workflowJustCompleted, setWorkflowJustCompleted] = useState(false);
+  const prevActiveJobRef = useRef<typeof activeJob>(null);
 
   // First-time guide state
   const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('freestyle_guide_dismissed'));
