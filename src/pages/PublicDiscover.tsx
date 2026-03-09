@@ -387,7 +387,7 @@ export default function PublicDiscover() {
             open={!!selectedItem}
             onClose={handleClose}
             relatedItems={relatedItems}
-            onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
+            onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
           />
         )}
       </div>
