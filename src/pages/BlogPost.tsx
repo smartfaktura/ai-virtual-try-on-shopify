@@ -130,7 +130,7 @@ export default function BlogPost() {
     '@type': 'Article',
     headline: post.title,
     description: post.metaDescription,
-    image: defaultImage,
+    image: post.coverImage || defaultImage,
     datePublished: post.publishDate,
     dateModified: post.publishDate,
     author: { '@type': 'Organization', name: post.author },
