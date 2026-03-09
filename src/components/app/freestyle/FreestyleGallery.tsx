@@ -72,6 +72,7 @@ function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: n
   const [crew] = useState(() => STUDIO_CREW[Math.floor(Math.random() * STUDIO_CREW.length)]);
   const [msgIdx, setMsgIdx] = useState(0);
   const cssRatio = RATIO_MAP[aspectRatio || '1:1'] || '1/1';
+  const isWide = aspectRatio === '16:9' || aspectRatio === '3:2';
 
   useEffect(() => {
     const id = setInterval(() => setMsgIdx(i => (i + 1) % STATUS_MESSAGES.length), 3000);
@@ -81,37 +82,40 @@ function GeneratingCard({ progress = 0, aspectRatio, className }: { progress?: n
   return (
     <div
       className={cn(
-        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-3 sm:gap-5 px-4 sm:px-8',
+        'rounded-xl overflow-hidden flex items-center justify-center',
         'border border-border/30 w-full',
         'bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer',
+        isWide ? 'flex-row gap-4 sm:gap-6 px-6 sm:px-10' : 'flex-col gap-3 sm:gap-5 px-4 sm:px-8',
         className,
       )}
       style={{ aspectRatio: cssRatio }}
     >
       {/* Avatar with glow ring */}
-      <div className="relative">
-        <div className="absolute -inset-1 sm:-inset-1.5 rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]" />
+      <div className="relative flex-shrink-0">
+        <div className={cn('absolute rounded-full bg-primary/20 animate-[pulse_2s_ease-in-out_infinite]', isWide ? '-inset-1' : '-inset-1 sm:-inset-1.5')} />
         <img
           src={crew.avatar}
           alt={crew.name}
-          className="relative w-10 h-10 sm:w-16 sm:h-16 rounded-full object-cover ring-2 ring-primary/40"
+          className={cn('relative rounded-full object-cover ring-2 ring-primary/40', isWide ? 'w-10 h-10' : 'w-10 h-10 sm:w-16 sm:h-16')}
         />
       </div>
 
-      {/* Status text */}
-      <div className="text-center space-y-1.5 min-h-0 sm:min-h-[3.5rem]">
-        <p className="text-xs sm:text-sm font-medium text-foreground/70">
-          {crew.name} is working on this…
-        </p>
-        <p className="text-xs sm:text-sm text-muted-foreground/60 transition-opacity duration-300">
-          {STATUS_MESSAGES[msgIdx]}
-        </p>
-      </div>
+      <div className={cn(isWide ? 'flex flex-col gap-1.5 min-w-0' : 'contents')}>
+        {/* Status text */}
+        <div className={cn('space-y-0.5', isWide ? 'text-left' : 'text-center min-h-0 sm:min-h-[3.5rem] space-y-1.5')}>
+          <p className="text-xs sm:text-sm font-medium text-foreground/70">
+            {crew.name} is working on this…
+          </p>
+          <p className="text-xs sm:text-sm text-muted-foreground/60 transition-opacity duration-300">
+            {STATUS_MESSAGES[msgIdx]}
+          </p>
+        </div>
 
-      {/* Progress bar */}
-      <div className="w-full max-w-[140px] sm:max-w-[200px] space-y-1 sm:space-y-2">
-        <Progress value={progress} className="h-1" />
-        <p className="text-[10px] sm:text-xs text-muted-foreground/40 text-center">Wrapping up shortly</p>
+        {/* Progress bar */}
+        <div className={cn('space-y-1', isWide ? 'w-full max-w-[180px]' : 'w-full max-w-[140px] sm:max-w-[200px] sm:space-y-2')}>
+          <Progress value={progress} className="h-1" />
+          <p className={cn('text-[10px] sm:text-xs text-muted-foreground/40', isWide ? 'text-left' : 'text-center')}>Wrapping up shortly</p>
+        </div>
       </div>
     </div>
   );
