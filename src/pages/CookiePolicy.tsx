@@ -32,6 +32,7 @@ const cookieTypes = [
 export default function CookiePolicy() {
   return (
     <PageLayout>
+      <SEOHead title="Cookie Policy — VOVV AI" description="Learn about the cookies VOVV AI uses and how to manage your cookie preferences." canonical="https://vovvai.lovable.app/cookies" />
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">

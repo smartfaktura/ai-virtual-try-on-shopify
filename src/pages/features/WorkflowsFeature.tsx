@@ -133,6 +133,7 @@ export default function WorkflowsFeature() {
 
   return (
     <PageLayout>
+      <SEOHead title="AI Photography Workflows — VOVV AI" description="Six purpose-built AI photography workflows: Virtual Try-On, Product Listing, Flat Lay, Mirror Selfie, UGC, and Interior Staging. Professional results in 60 seconds." canonical="https://vovvai.lovable.app/features/workflows" />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

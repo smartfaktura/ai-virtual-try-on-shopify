@@ -3,6 +3,7 @@ import { ArrowRight, CalendarDays, Sparkles, TrendingUp, RefreshCw } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEOHead } from '@/components/SEOHead';
 
 const benefits = [
   {
