@@ -3,6 +3,7 @@ import { ArrowRight, Layers, Zap, Palette, Settings2, Users, ShoppingBag, Camera
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageLayout } from '@/components/landing/PageLayout';
+import { SEOHead } from '@/components/SEOHead';
 
 const workflows = [
   {
