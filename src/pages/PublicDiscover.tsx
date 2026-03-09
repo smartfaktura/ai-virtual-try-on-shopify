@@ -373,7 +373,7 @@ export default function PublicDiscover() {
             onUseItem={handleUseItem}
             onSearchSimilar={handleSearchSimilar}
             relatedItems={relatedItems}
-            onSelectRelated={(item) => { navigate(getItemUrl(item), { replace: true }); setSelectedItem(item); }}
+            onSelectRelated={(item) => { window.history.replaceState(null, '', getItemUrl(item)); setSelectedItem(item); }}
             isSaved={selectedItem ? isSaved(selectedItem.type, getItemId(selectedItem)) : false}
             onToggleSave={handleToggleSave}
             viewCount={viewCount ?? undefined}
