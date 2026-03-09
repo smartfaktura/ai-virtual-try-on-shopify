@@ -1,30 +1,50 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Improve All 6 Blog Articles — More Engaging, SEO-Optimized, Interesting
 
-### Issues Found
+The current posts are solid but read like corporate whitepapers — data-heavy but dry. Here's the upgrade plan:
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+---
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Improvements Per Post
 
-### Plan
+**All posts will get:**
+- **Hook opening** — Start with a compelling story, question, or surprising stat instead of jumping straight to "The Problem"
+- **Conversational tone** — Shorter paragraphs, direct "you" address, rhetorical questions, and occasional bold/italic for emphasis
+- **Internal links** — Markdown links to other blog posts and VOVV feature pages (e.g., `/features/virtual-try-on`, `/blog/other-slug`)
+- **More subheadings** — Break long sections into scannable H3s for featured snippets
+- **FAQ section at the bottom** — 2-3 questions per post in a "Frequently Asked Questions" section (boosts FAQ rich results when paired with existing JSON-LD)
+- **Stronger CTA** — End with a specific, action-oriented conclusion instead of generic "the brands that adopt early" language
+- **Real-world examples** — Add hypothetical but realistic brand scenarios (e.g., "A DTC jewelry brand with 800 SKUs...")
+- **Key takeaway box** — A bold summary near the top for skimmers
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**Post-specific enhancements:**
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+| # | Post | Key Improvements |
+|---|------|-----------------|
+| 1 | AI Product Photography | Add ROI calculator example, mention specific platforms (Shopify, Amazon, Etsy), add FAQ |
+| 2 | Virtual Try-On | Add customer journey story, mention sizing confidence, add FAQ |
+| 3 | Visual Content Strategy 2026 | Add quarterly action calendar, mention TikTok Shop trend, add FAQ |
+| 4 | Diverse Representation | Add Gen Z consumer data, mention accessibility, add FAQ |
+| 5 | Automated Listing Images | Add real workflow walkthrough, mention API/CSV import, add FAQ |
+| 6 | Brand Consistency | Add before/after consistency scenario, mention multi-channel ROI, add FAQ |
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+---
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### SEO Enhancements
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+- **Long-tail keyword density** — Naturally weave 2-3 additional keyword variants into each post (e.g., "AI product photos for Shopify", "virtual try-on for clothing brands")
+- **Meta descriptions** — Tighten to exactly 150-160 chars with power words
+- **Excerpt** — Make punchier, frontload the value proposition
+- **Tags** — Add 2-3 more targeted tags per post
+
+---
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/data/blogPosts.ts` | Rewrite all 6 post `content` fields, update `metaDescription`, `excerpt`, and `tags` |
+
+No structural changes needed — just content improvements within the existing data file.
 
