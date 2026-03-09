@@ -224,44 +224,41 @@ export default function BlogPost() {
           </div>
         </div>
 
-        {/* Content with TOC sidebar */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="flex gap-12">
-            {/* TOC sidebar — desktop only */}
-            {headings.length > 2 && (
-              <aside className="hidden xl:block w-56 shrink-0">
-                <div className="sticky top-24">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
-                    <BookOpen className="w-3.5 h-3.5" />
-                    Contents
-                  </p>
-                  <nav className="flex flex-col gap-1">
-                    {headings.map((h, i) => (
-                      <a
-                        key={h.id}
-                        href={`#${h.id}`}
-                        className={`text-[13px] leading-snug py-1.5 px-3 rounded-md transition-all border-l-2 ${
-                          activeHeading === h.id
-                            ? 'border-primary text-foreground bg-primary/5 font-medium'
-                            : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                        }`}
-                      >
-                        <span className="text-muted-foreground/50 mr-1.5 text-[11px] font-mono">
-                          {String(i + 1).padStart(2, '0')}
-                        </span>
-                        <span className="line-clamp-2">{h.text}</span>
-                      </a>
-                    ))}
-                  </nav>
-                </div>
-              </aside>
-            )}
+        {/* Inline TOC — compact, centered */}
+        {headings.length > 2 && (
+          <div className="max-w-[720px] mx-auto px-4 sm:px-6 pt-10 sm:pt-14">
+            <div className="border border-border rounded-xl bg-card/50 p-5 sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
+                <BookOpen className="w-3.5 h-3.5" />
+                In this article
+              </p>
+              <nav className="grid sm:grid-cols-2 gap-1">
+                {headings.map((h, i) => (
+                  <a
+                    key={h.id}
+                    href={`#${h.id}`}
+                    className={`text-[13px] leading-snug py-1.5 px-3 rounded-md transition-all ${
+                      activeHeading === h.id
+                        ? 'text-foreground bg-primary/5 font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    <span className="text-muted-foreground/40 mr-1.5 text-[11px] font-mono">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    {h.text}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          </div>
+        )}
 
-            {/* Main content */}
-            <div className="flex-1 min-w-0 max-w-3xl">
-              <div className="blog-content prose prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight prose-p:leading-[1.8] prose-p:text-[1.0625rem] prose-li:leading-[1.8] prose-li:text-[1.0625rem]">
-                <ReactMarkdown components={markdownComponents}>{post.content}</ReactMarkdown>
-              </div>
+        {/* Centered content */}
+        <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <div className="blog-content prose prose-lg prose-neutral dark:prose-invert max-w-none prose-headings:tracking-tight">
+            <ReactMarkdown components={markdownComponents}>{post.content}</ReactMarkdown>
+          </div>
 
               {/* Tags */}
               <div className="mt-14 pt-8 border-t border-border">
@@ -325,8 +322,6 @@ export default function BlogPost() {
                   <ArrowLeft className="w-3.5 h-3.5" /> All articles
                 </Link>
               </div>
-            </div>
-          </div>
         </div>
       </article>
     </PageLayout>

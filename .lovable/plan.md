@@ -1,34 +1,30 @@
 
 
-## Center the Blog Content and Improve Readability
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The problem: the TOC sidebar pushes content off-center, leaving a large blank space on the right. The content area is too wide and text feels cramped. 
+### Issues Found
 
-### Changes
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**`src/pages/BlogPost.tsx`**
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-- **Remove the side-by-side flex layout** — Drop the `flex gap-12` wrapper that creates the sidebar + content split
-- **Center the content** in a single `max-w-[720px] mx-auto` column (optimal reading width ~65-75 chars per line)
-- **Move TOC inline** — Convert the sidebar TOC into a compact horizontal pill bar or a collapsible section just below the hero, before the content starts (only on desktop, still shows section numbers)
-- **Increase prose font size** — Bump body text to `text-lg` (1.125rem) with generous `leading-relaxed` (1.75 line-height)
-- **Add more vertical breathing room** — Larger margins between sections (H2 gets `mt-14 mb-6`, paragraphs get `mb-6`)
-- **Bigger, bolder H2s** — Increase to `text-2xl sm:text-3xl` with more top margin so sections feel distinct
-- **H3 more distinct** — Increase size and add top margin
+### Plan
 
-**`src/index.css`**
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-- **Increase paragraph font size and spacing** in `.blog-content p` — `font-size: 1.125rem`, `line-height: 1.85`, `margin-bottom: 1.5rem`
-- **Larger H2** — `font-size: 1.75rem` with `margin-top: 3.5rem` and `margin-bottom: 1.5rem`
-- **H3** — `font-size: 1.375rem` with `margin-top: 2.5rem`
-- **List items** — Larger text, more spacing between items
-- **Blockquote** — Larger text (`1.125rem`), more padding
-- **Drop cap** — Keep but refine sizing
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Files Changed
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-| File | Change |
-|------|--------|
-| `src/pages/BlogPost.tsx` | Remove sidebar flex layout, center content in narrow column, move TOC inline above content |
-| `src/index.css` | Increase font sizes, line heights, and spacing for better readability |
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
