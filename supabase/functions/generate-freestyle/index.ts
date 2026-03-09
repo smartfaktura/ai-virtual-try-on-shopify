@@ -809,10 +809,10 @@ serve(async (req) => {
     const aiModel = (hasModelImage || hasDualProductRef)
       ? "google/gemini-3-pro-image-preview"
       : isQueueInternal
-        ? "google/gemini-2.5-flash-image"
+        ? "google/gemini-3.1-flash-image-preview"
         : (body.quality === "high" && refCount < 2)
           ? "google/gemini-3-pro-image-preview"
-          : "google/gemini-2.5-flash-image";
+          : "google/gemini-3.1-flash-image-preview";
 
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
