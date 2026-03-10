@@ -12,15 +12,18 @@ export function StudioTeamSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const isHoveredRef = useRef(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const updateScrollState = () => {
+  // RAF-based smooth auto-scroll
+  const speedRef = useRef(0.5);
+  const targetSpeedRef = useRef(0.5);
+  const rafRef = useRef<number>(0);
+
+  const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 10);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-  };
+  }, []);
 
   const scroll = (direction: 'left' | 'right') => {
     const el = scrollRef.current;
@@ -32,50 +35,44 @@ export function StudioTeamSection() {
     });
   };
 
-  // Auto-scroll effect
+  // Frame-synced auto-scroll with lerped speed
   useEffect(() => {
-    const startAutoScroll = () => {
-      if (intervalRef.current) return;
-      intervalRef.current = setInterval(() => {
-        const el = scrollRef.current;
-        if (!el || isHoveredRef.current) return;
-        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
-          el.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          el.scrollLeft += 1;
-        }
-        updateScrollState();
-      }, 30);
-    };
+    const tick = () => {
+      speedRef.current += (targetSpeedRef.current - speedRef.current) * 0.08;
 
-    startAutoScroll();
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      const el = scrollRef.current;
+      if (el && speedRef.current > 0.01) {
+        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
+          el.scrollTo({ left: 0 });
+          updateScrollState();
+        }
+        el.scrollLeft += speedRef.current;
       }
+      rafRef.current = requestAnimationFrame(tick);
     };
-  }, []);
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [updateScrollState]);
 
   const touchResumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMouseEnter = useCallback(() => {
-    isHoveredRef.current = true;
+    targetSpeedRef.current = 0;
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    isHoveredRef.current = false;
+    targetSpeedRef.current = 0.5;
   }, []);
 
   const handleTouchStart = useCallback(() => {
-    isHoveredRef.current = true;
+    targetSpeedRef.current = 0;
     if (touchResumeRef.current) clearTimeout(touchResumeRef.current);
   }, []);
 
   const handleTouchEnd = useCallback(() => {
     if (touchResumeRef.current) clearTimeout(touchResumeRef.current);
     touchResumeRef.current = setTimeout(() => {
-      isHoveredRef.current = false;
+      targetSpeedRef.current = 0.5;
     }, 4000);
   }, []);
 
