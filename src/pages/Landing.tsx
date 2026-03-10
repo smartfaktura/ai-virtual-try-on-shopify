@@ -3,6 +3,7 @@ import { LandingNav } from '@/components/landing/LandingNav';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
+import { SITE_URL } from '@/lib/constants';
 
 // Lazy-load below-fold sections to reduce initial main-thread work
 const StudioTeamSection = lazy(() => import('@/components/landing/StudioTeamSection').then(m => ({ default: m.StudioTeamSection })));
