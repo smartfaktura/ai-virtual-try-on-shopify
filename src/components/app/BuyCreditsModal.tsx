@@ -348,6 +348,7 @@ export function BuyCreditsModal() {
         currentPlanName={planConfig.name}
         isAnnual={isAnnual}
         currentBalance={balance}
+        hasActiveSubscription={subscriptionStatus === 'active' || subscriptionStatus === 'canceling'}
       />
     </>
   );
