@@ -127,14 +127,14 @@ const codeText = {
 const codeHint = {
   fontFamily: fontStack,
   fontSize: '12px',
-  color: '#94a3b8',
+  color: '#64748b',
   margin: '0 0 28px 0',
   textAlign: 'center' as const,
 }
 const verifyText = {
   fontFamily: fontStack,
   fontSize: '13px',
-  color: '#94a3b8',
+  color: '#64748b',
   textAlign: 'center' as const,
   margin: '0 0 36px 0',
 }
@@ -146,21 +146,22 @@ const verifyLink = {
 const disclaimer = {
   fontFamily: fontStack,
   fontSize: '13px',
-  color: '#94a3b8',
+  color: '#64748b',
   lineHeight: '1.5',
-  margin: '0 0 36px 0',
+  margin: '0 0 40px 0',
 }
 const inlineLink = { color: '#0f172a', textDecoration: 'underline' }
-const footer = { borderTop: '1px solid #f1f5f9', paddingTop: '16px' }
+const footer = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
 const footerCopy = {
   fontFamily: fontStack,
   fontSize: '12px',
-  color: '#94a3b8',
+  color: '#64748b',
   margin: '16px 0 0 0',
+  lineHeight: '1.5',
 }
 const footerSub = {
   fontFamily: fontStack,
   fontSize: '12px',
-  color: '#cbd5e1',
-  margin: '2px 0 0 0',
+  color: '#64748b',
+  margin: '4px 0 0 0',
 }
