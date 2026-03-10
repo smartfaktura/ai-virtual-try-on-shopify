@@ -162,7 +162,9 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     if (!shop.trim() || !session?.access_token) return;
     const cleanShop = `${shop.trim()}.myshopify.com`;
     const baseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/shopify-oauth`;
-    const url = `${baseUrl}?action=authorize&shop=${encodeURIComponent(cleanShop)}&token=${encodeURIComponent(session.access_token)}`;
+    // Pass origin in state so callback redirects to the correct environment
+    const statePayload = JSON.stringify({ token: session.access_token, origin: window.location.origin });
+    const url = `${baseUrl}?action=authorize&shop=${encodeURIComponent(cleanShop)}&token=${encodeURIComponent(statePayload)}`;
     window.location.href = url;
   };
 
@@ -194,7 +196,9 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     if (!search.trim()) return products;
     const q = search.toLowerCase();
     return products.filter(
-      (p) => p.title.toLowerCase().includes(q) || p.product_type.toLowerCase().includes(q)
+      (p) => p.title.toLowerCase().includes(q) ||
+        p.product_type.toLowerCase().includes(q) ||
+        p.tags.some((tag) => tag.toLowerCase().includes(q))
     );
   }, [products, search]);
 
@@ -406,7 +410,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search by name or type…"
+              placeholder="Search by name, type, or tag…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 text-xs"

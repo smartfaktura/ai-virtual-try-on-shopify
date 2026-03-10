@@ -54,7 +54,7 @@ async function listCollections(shop: string, accessToken: string) {
 
   // Fetch custom collections
   let url: string | null =
-    `https://${shop}/admin/api/2024-01/custom_collections.json?fields=id,title,handle&limit=250`;
+    `https://${shop}/admin/api/2025-01/custom_collections.json?fields=id,title,handle&limit=250`;
   while (url) {
     const res = await shopifyFetch(url, accessToken);
     if (!res.ok) break;
@@ -74,7 +74,7 @@ async function listCollections(shop: string, accessToken: string) {
   }
 
   // Fetch smart collections
-  url = `https://${shop}/admin/api/2024-01/smart_collections.json?fields=id,title,handle&limit=250`;
+  url = `https://${shop}/admin/api/2025-01/smart_collections.json?fields=id,title,handle&limit=250`;
   while (url) {
     const res = await shopifyFetch(url, accessToken);
     if (!res.ok) break;
@@ -102,9 +102,9 @@ async function listProducts(shop: string, accessToken: string, collectionId?: nu
   let url: string | null;
 
   if (collectionId) {
-    url = `https://${shop}/admin/api/2024-01/collections/${collectionId}/products.json?fields=id,title,product_type,images,tags&limit=250`;
+    url = `https://${shop}/admin/api/2025-01/collections/${collectionId}/products.json?fields=id,title,product_type,images,tags&limit=250`;
   } else {
-    url = `https://${shop}/admin/api/2024-01/products.json?fields=id,title,product_type,images,tags&limit=250`;
+    url = `https://${shop}/admin/api/2025-01/products.json?fields=id,title,product_type,images,tags&limit=250`;
   }
 
   while (url) {
@@ -155,7 +155,7 @@ async function importProducts(
       }
 
       const res = await shopifyFetch(
-        `https://${shop}/admin/api/2024-01/products/${productId}.json?fields=id,title,product_type,body_html,images,tags`,
+        `https://${shop}/admin/api/2025-01/products/${productId}.json?fields=id,title,product_type,body_html,images,tags`,
         accessToken
       );
       if (!res.ok) {
@@ -361,7 +361,16 @@ Deno.serve(async (req) => {
         );
       }
 
-      const results = await importProducts(cleanShop, access_token, product_ids, userId, supabaseAdmin);
+      // Validate all product_ids are numbers
+      const validIds = product_ids.filter((id: unknown) => typeof id === "number" && Number.isFinite(id) && id > 0);
+      if (validIds.length === 0) {
+        return new Response(
+          JSON.stringify({ error: "Invalid product IDs" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const results = await importProducts(cleanShop, access_token, validIds, userId, supabaseAdmin);
       const imported = results.filter((r) => r.success).length;
       const failed = results.filter((r) => !r.success).length;
 
