@@ -1,30 +1,66 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Reorder Landing Page Model Marquee
 
-### Issues Found
+Reorder both ROW_1 and ROW_2 in `src/components/landing/ModelShowcaseSection.tsx` to follow your preferred sequence, alternating women-men throughout.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### ROW_1 (user's priority models first, then alternating W-M)
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+| Position | Name | Asset file |
+|----------|------|-----------|
+| 1 | Freya | `model-female-average-nordic.jpg` |
+| 2 | Zara | `model-female-athletic-mixed.jpg` |
+| 3 | Anders | `model-male-slim-nordic.jpg` |
+| 4 | Sienna | `model-female-average-irish.jpg` |
+| 5 | Jordan | `models/model-051-jordan.jpg` |
+| 6 | Hannah | `models/model-050-hannah.jpg` |
+| 7 | Kai | `models/model-049-kai.jpg` |
+| 8 | Valeria | `model-female-slim-american-latina.jpg` |
+| 9 | Fatima | `model-female-plussize-middleeast.jpg` |
+| 10 | Akiko | `model-female-plussize-japanese.jpg` |
+| 11 | Olivia | `model-female-athletic-american-brunette.jpg` |
+| 12 | Marcus | `model-male-athletic-black.jpg` |
+| 13 | Isabella | `model-female-plussize-latina.jpg` |
+| 14 | Luca | `model-male-athletic-european.jpg` |
+| 15 | Charlotte | `model-female-mature-european.jpg` |
+| 16 | Tyler | `model-male-slim-american-blonde.jpg` |
+| 17 | Amara | `model-female-plussize-african.jpg` |
+| 18 | Omar | `model-male-slim-middleeast.jpg` |
+| 19 | Priya | `model-female-athletic-indian.jpg` |
+| 20 | Brandon | `model-male-average-american-beard.jpg` |
+| 21 | Natalie | `models/model-054-natalie.jpg` |
+| 22 | Hiro | `model-male-average-asian.jpg` |
 
-### Plan
+### ROW_2 (remaining models, W-M alternating)
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+| Position | Name | Asset file |
+|----------|------|-----------|
+| 1 | Elena | `model-female-athletic-european.jpg` |
+| 2 | Arjun | `model-male-slim-indian.jpg` |
+| 3 | Madison | `model-female-slim-american-blonde.jpg` |
+| 4 | Diego | `model-male-athletic-latino.jpg` |
+| 5 | Sophie | `model-female-average-european.jpg` |
+| 6 | Callum | `model-male-athletic-scottish.jpg` |
+| 7 | Nadia | `model-female-athletic-black.jpg` |
+| 8 | Max | `model-male-plussize-european.jpg` |
+| 9 | Aubrey | `model-female-average-american-redhead.jpg` |
+| 10 | Kenji | `model-male-athletic-japanese.jpg` |
+| 11 | Zoe | `model-female-athletic-american-black.jpg` |
+| 12 | Marco | `model-male-plussize-latino.jpg` |
+| 13 | Niamh | `model-female-athletic-mixed.jpg` |
+| 14 | Kwame | `model-male-plussize-african.jpg` |
+| 15 | Mei | `model-female-slim-chinese.jpg` |
+| 16 | Ryan | `model-male-athletic-american-classic.jpg` |
+| 17 | Aisha | `model-female-average-african.jpg` |
+| 18 | Carlos | `model-male-average-latino.jpg` |
+| 19 | Leila | `model-female-average-middleeast.jpg` |
+| 20 | Erik | `model-male-slim-nordic.jpg` |
+| 21 | Yuki | `model-female-slim-asian.jpg` |
+| 22 | Astrid | `model-female-average-nordic.jpg` |
+| 23 | Emma | `models/model-052-emma.jpg` |
+| 24 | Hana | `model-female-petite-korean.jpg` |
+| 25 | Jamal | `model-male-athletic-mixed.jpg` |
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### File changed
+**`src/components/landing/ModelShowcaseSection.tsx`** — Replace ROW_1 and ROW_2 arrays with the reordered sequences above. No other changes needed.
 
