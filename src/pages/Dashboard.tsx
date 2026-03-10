@@ -438,21 +438,29 @@ export default function Dashboard() {
                 <TableBody>
                   {recentJobs.map(job => {
                     const firstResult = Array.isArray(job.results) ? (job.results as string[])[0] : null;
-                    const thumbUrl = job.user_products?.image_url || firstResult;
+                    const thumbUrl = firstResult || job.user_products?.image_url;
                     const displayUrl = getOptimizedUrl(thumbUrl, { quality: 50 }) || '/placeholder.svg';
+                    const hoverUrl = getOptimizedUrl(thumbUrl, { quality: 70 }) || '/placeholder.svg';
                     return (
                     <TableRow key={job.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0 bg-muted/30">
-                            <img
-                              src={displayUrl}
-                              alt={job.user_products?.title || job.workflows?.name || 'Generation'}
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
+                          <HoverCard openDelay={200}>
+                            <HoverCardTrigger asChild>
+                              <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0 bg-muted/30 cursor-pointer">
+                                <img
+                                  src={displayUrl}
+                                  alt={job.user_products?.title || 'Generation'}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="right" className="w-52 p-1">
+                              <img src={hoverUrl} alt="" className="w-full rounded-md" />
+                            </HoverCardContent>
+                          </HoverCard>
                           <span className="font-medium text-sm">
-                            {job.user_products?.title || job.workflows?.name || 'Freestyle Generation'}
+                            {job.user_products?.title || 'Generation'}
                           </span>
                         </div>
                       </TableCell>
