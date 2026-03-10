@@ -153,10 +153,19 @@ export default function Auth() {
 
   const handleResendSignup = async () => {
     setResendLoading(true);
-    await signUp(email, password);
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
     setResendLoading(false);
+    if (error) {
+      const msg = error.message?.toLowerCase() || '';
+      if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
+        toast.info('Email already sent recently. Please check your inbox and spam folder, or wait a few minutes.');
+      } else {
+        toast.error(error.message);
+      }
+    } else {
+      toast.success('New code sent! Check your inbox.');
+    }
     setResendTimer(30);
-    toast.success('New code sent! Check your inbox.');
   };
 
   const handleResendMagicLink = async () => {
