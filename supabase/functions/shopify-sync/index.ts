@@ -77,15 +77,14 @@ async function listCollections(shop: string, accessToken: string) {
 }
 
 async function listProducts(shop: string, accessToken: string, collectionId?: number) {
-  const products: { id: number; title: string; product_type: string; thumbnail: string }[] = [];
+  const products: { id: number; title: string; product_type: string; thumbnail: string; image_count: number; tags: string[] }[] = [];
 
   let url: string | null;
 
   if (collectionId) {
-    // Fetch products for a specific collection via collects
-    url = `https://${shop}/admin/api/2024-01/collections/${collectionId}/products.json?fields=id,title,product_type,images&limit=250`;
+    url = `https://${shop}/admin/api/2024-01/collections/${collectionId}/products.json?fields=id,title,product_type,images,tags&limit=250`;
   } else {
-    url = `https://${shop}/admin/api/2024-01/products.json?fields=id,title,product_type,images&limit=250`;
+    url = `https://${shop}/admin/api/2024-01/products.json?fields=id,title,product_type,images,tags&limit=250`;
   }
 
   while (url) {
@@ -103,6 +102,8 @@ async function listProducts(shop: string, accessToken: string, collectionId?: nu
         title: p.title,
         product_type: p.product_type || "",
         thumbnail: p.images?.[0]?.src || "",
+        image_count: p.images?.length || 0,
+        tags: p.tags ? p.tags.split(", ").map((t: string) => t.trim()).filter(Boolean) : [],
       });
     }
     const link = res.headers.get("link");
