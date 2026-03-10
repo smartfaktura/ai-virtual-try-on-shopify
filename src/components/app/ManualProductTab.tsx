@@ -37,6 +37,7 @@ interface BatchItem {
   title: string;
   productType: string;
   description: string;
+  dimensions: string;
   isAnalyzing: boolean;
   manualEdits: { title: boolean; productType: boolean; description: boolean };
 }
