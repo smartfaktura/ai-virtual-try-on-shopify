@@ -8,6 +8,8 @@ interface ShimmerImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   wrapperClassName?: string;
   /** Additional wrapper inline styles */
   wrapperStyle?: React.CSSProperties;
+  /** fetchpriority hint for LCP images */
+  fetchPriority?: 'high' | 'low' | 'auto';
 }
 
 /**
