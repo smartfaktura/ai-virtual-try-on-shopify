@@ -51,7 +51,7 @@ export function PlanCard({
   const isDisabled = isCurrentPlan && subscriptionStatus !== 'canceling';
 
   return (
-    <div className={`relative h-full ${plan.highlighted ? 'ring-2 ring-primary rounded-2xl' : ''}`}>
+    <div className={`relative h-full ${isCurrentPlan ? 'ring-2 ring-primary rounded-2xl' : ''}`}>
       {plan.badge && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
           <Badge className="bg-primary text-primary-foreground text-[10px] tracking-wide px-3 py-0.5">
