@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Check, ArrowUpRight } from 'lucide-react';
+import { Wallet, Check, ArrowUpRight, ArrowRight, Sparkles } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
@@ -16,14 +16,21 @@ export function BuyCreditsModal() {
   const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, billingInterval, startCheckout, openCustomerPortal } = useCredits();
   const navigate = useNavigate();
 
+  const effectiveInterval = billingInterval || (plan !== 'free' ? 'monthly' : null);
+  const isPaidUser = plan !== 'free';
+
   const [activeTab, setActiveTab] = useState<'topup' | 'upgrade'>(() => plan === 'free' ? 'upgrade' : 'topup');
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>(billingInterval || 'monthly');
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>(effectiveInterval === 'annual' ? 'annual' : 'monthly');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
 
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
+  const currentPlanData = pricingPlans.find(p => p.planId === plan);
+
+  // Show the focused "switch to annual" card when a monthly paid user toggles to annual
+  const showAnnualSwitchCard = isPaidUser && effectiveInterval === 'monthly' && isAnnual && currentPlanData;
 
   const handlePurchase = (stripePriceId: string | undefined) => {
     if (!stripePriceId) return;
@@ -65,6 +72,15 @@ export function BuyCreditsModal() {
       }
     }
     setDialogOpen(false);
+    closeBuyModal();
+  };
+
+  const handleSwitchToAnnual = () => {
+    if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+      openCustomerPortal();
+    } else if (currentPlanData?.stripePriceIdAnnual) {
+      startCheckout(currentPlanData.stripePriceIdAnnual, 'subscription');
+    }
     closeBuyModal();
   };
 
@@ -190,6 +206,27 @@ export function BuyCreditsModal() {
             {/* === PLANS TAB === */}
             {activeTab === 'upgrade' && (
               <div className="space-y-5">
+
+                {/* Billing status banner for paid users */}
+                {isPaidUser && (
+                  <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-foreground">
+                        You're on <span className="font-semibold">{planConfig.name}</span> — billed {effectiveInterval === 'annual' ? 'annually' : 'monthly'}
+                      </span>
+                    </div>
+                    {effectiveInterval === 'monthly' && (
+                      <button
+                        onClick={handleSwitchToAnnual}
+                        className="text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                      >
+                        Switch to annual & save 20%
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Billing toggle */}
                 <div className="flex justify-center">
                   <div className="flex rounded-full border border-border p-0.5 bg-muted/40">
@@ -220,6 +257,44 @@ export function BuyCreditsModal() {
                     </button>
                   </div>
                 </div>
+
+                {/* Focused "Switch to Annual" card for monthly users viewing annual prices */}
+                {showAnnualSwitchCard && (
+                  <div className="rounded-2xl border-2 border-primary bg-primary/5 p-5 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-semibold text-foreground">Switch your {currentPlanData.name} plan to annual billing</h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Current monthly */}
+                      <div className="rounded-xl border border-border bg-card p-4 text-center space-y-1">
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Current · Monthly</p>
+                        <p className="text-2xl font-bold tracking-tight text-muted-foreground line-through decoration-1">${currentPlanData.monthlyPrice}<span className="text-xs font-normal">/mo</span></p>
+                        <p className="text-xs text-muted-foreground">${currentPlanData.monthlyPrice * 12}/year</p>
+                      </div>
+                      {/* Annual */}
+                      <div className="rounded-xl border-2 border-primary bg-card p-4 text-center space-y-1">
+                        <p className="text-[10px] uppercase tracking-widest text-primary font-medium">Annual</p>
+                        <p className="text-2xl font-bold tracking-tight">${Math.round(currentPlanData.annualPrice / 12)}<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
+                        <p className="text-xs text-muted-foreground">${currentPlanData.annualPrice}/year</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex rounded-full text-xs font-bold px-3 py-1 bg-emerald-500/15 text-emerald-700">
+                        Save ${currentPlanData.monthlyPrice * 12 - currentPlanData.annualPrice}/year
+                      </span>
+                      <Button
+                        onClick={handleSwitchToAnnual}
+                        className="rounded-xl min-h-[44px] px-6 text-sm font-medium"
+                      >
+                        Switch to Annual Billing
+                        <ArrowRight className="w-4 h-4 ml-1.5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Plan cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
