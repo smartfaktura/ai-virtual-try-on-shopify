@@ -1,30 +1,51 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Why Pages Flash on First Visit (and How to Fix It)
 
-### Issues Found
+### Root Cause
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+Every app page (Dashboard, Products, Freestyle, etc.) is **lazy-loaded** with `React.lazy()`, and the `Suspense` wrapper uses `fallback={null}` — meaning while the page JS chunk downloads, the user sees **nothing** (blank content area), then the page pops in. This creates a visible flash on first visit.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+On subsequent visits the chunk is cached, so it feels instant. But first visit = network fetch = flash.
 
-### Plan
+### Is This Good?
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+Lazy loading itself is good for initial load performance (smaller bundle). But the **user experience of the transition is bad** because there's no visual feedback. The sidebar stays, content disappears, then reappears — feels broken.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### Fix
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+Replace `fallback={null}` with a subtle loading skeleton that matches the app layout, so the sidebar persists and the content area shows a shimmer/spinner instead of going blank.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+#### Changes
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**`src/components/app/AppShellLoading.tsx`** (new file)
+- A simple skeleton component: a few rounded shimmer bars matching the typical page header + content area layout
+- Lightweight, no lazy loading needed (bundled with AppShell)
+
+**`src/App.tsx`** — line 71
+```tsx
+// Before
+<Suspense fallback={null}>
+
+// After — wrap the inner app routes with a content-area skeleton
+```
+
+For the **protected `/app/*` routes specifically**, add a second `Suspense` inside `AppShell` so the sidebar stays rendered while only the content area shows the skeleton:
+
+```tsx
+<AppShell>
+  <Suspense fallback={<AppShellLoading />}>
+    <Routes>
+      ...
+    </Routes>
+  </Suspense>
+</AppShell>
+```
+
+The outer `Suspense` (for public routes) can use a simple centered spinner.
+
+This way:
+- Sidebar never disappears during navigation
+- Content area shows a brief skeleton instead of blank
+- No flash of empty content
 
