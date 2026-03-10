@@ -285,6 +285,7 @@ export default function Settings() {
               isCurrentPlan={p.planId === currentPlanId}
               currentPlanId={currentPlanId}
               subscriptionStatus={subscriptionStatus}
+              billingInterval={billingInterval}
               onSelect={handlePlanSelect}
             />
           ))}
