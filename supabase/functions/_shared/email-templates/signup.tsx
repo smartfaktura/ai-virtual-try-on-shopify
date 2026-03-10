@@ -19,6 +19,7 @@ interface SignupEmailProps {
   siteUrl: string
   recipient: string
   confirmationUrl: string
+  token?: string
 }
 
 export const SignupEmail = ({
@@ -26,6 +27,7 @@ export const SignupEmail = ({
   siteUrl,
   recipient,
   confirmationUrl,
+  token,
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head>
@@ -37,13 +39,26 @@ export const SignupEmail = ({
         <Text style={wordmark}>VOVV.AI</Text>
         <Heading style={h1}>Confirm your email</Heading>
         <Text style={text}>
-          Thanks for signing up. Please confirm your email address to activate your account.
+          Thanks for signing up. Use the code below to confirm your email address, or click the button further down.
         </Text>
+
+        {token && (
+          <Section style={codeBox}>
+            <Text style={codeLabel}>Your verification code</Text>
+            <Text style={codeDigits}>{token}</Text>
+          </Section>
+        )}
+
         <Section style={infoBox}>
           <Text style={infoText}>
             Once confirmed, you'll get <strong style={{ color: '#0f172a' }}>20 free credits</strong> to start generating studio-quality product photography.
           </Text>
         </Section>
+
+        {token && (
+          <Text style={orText}>Or click the button below to confirm</Text>
+        )}
+
         <Button style={button} href={confirmationUrl}>
           Confirm Email
         </Button>
@@ -88,6 +103,37 @@ const text = {
   color: '#64748b',
   lineHeight: '1.6',
   margin: '0 0 24px 0',
+}
+const codeBox = {
+  backgroundColor: '#f5f5f4',
+  borderRadius: '12px',
+  padding: '24px',
+  margin: '0 0 24px 0',
+  textAlign: 'center' as const,
+}
+const codeLabel = {
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '12px',
+  fontWeight: 600 as const,
+  color: '#64748b',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.05em',
+  margin: '0 0 8px 0',
+}
+const codeDigits = {
+  fontFamily: "'Courier New', Courier, monospace",
+  fontSize: '36px',
+  fontWeight: 700 as const,
+  color: '#0f172a',
+  letterSpacing: '0.25em',
+  margin: '0',
+}
+const orText = {
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '13px',
+  color: '#64748b',
+  textAlign: 'center' as const,
+  margin: '0',
 }
 const infoBox = {
   backgroundColor: '#f5f5f4',
