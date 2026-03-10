@@ -23,6 +23,8 @@ interface ShopifyListProduct {
   title: string;
   product_type: string;
   thumbnail: string;
+  image_count: number;
+  tags: string[];
 }
 
 interface ShopifyCollection {
