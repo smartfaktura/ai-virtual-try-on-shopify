@@ -136,7 +136,7 @@ async function importProducts(
     for (const productId of batch) {
       try {
         const res = await fetch(
-          `https://${shop}/admin/api/2024-01/products/${productId}.json?fields=id,title,product_type,body_html,images`,
+          `https://${shop}/admin/api/2024-01/products/${productId}.json?fields=id,title,product_type,body_html,images,tags`,
           { headers: { "X-Shopify-Access-Token": accessToken } }
         );
         if (!res.ok) {
