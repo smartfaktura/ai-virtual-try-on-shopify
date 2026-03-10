@@ -275,7 +275,7 @@ export default function Products() {
                       isMobile ? "opacity-100 bg-gradient-to-t from-black/60 via-transparent to-transparent items-end justify-end pb-2 pr-2" : "opacity-0 group-hover:opacity-100"
                     )}>
                       <div className="flex gap-2">
-                        <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
+                        <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => navigate(`/app/products/${product.id}/edit`)}>
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
                         <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => deleteMutation.mutate(product.id)}>
