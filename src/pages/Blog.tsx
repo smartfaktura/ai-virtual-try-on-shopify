@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
+import { SITE_URL } from '@/lib/constants';
 import { blogPosts } from '@/data/blogPosts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
