@@ -1,30 +1,54 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Analysis: Monthly vs Annual Billing Awareness
 
-### Issues Found
+### Current Gaps
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+After examining the full flow, here's what's missing:
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+1. **Backend doesn't track billing interval**: The `check-subscription` edge function knows the price ID (which maps to monthly vs annual) but doesn't return this information to the frontend. It only returns `plan`, `subscription_status`, `credits_balance`, and `current_period_end`.
+
+2. **No billing interval in CreditContext**: The global state has no concept of whether the user's subscription is monthly or annual.
+
+3. **Current Plan card has no interval indicator**: The Settings page shows "credits/month" and renewal date, but never says "Billed monthly" or "Billed annually."
+
+4. **Billing toggle doesn't reflect reality**: The monthly/annual toggle on Settings and BuyCreditsModal always defaults to "monthly" regardless of the user's actual billing interval. A monthly subscriber sees the same default as an annual subscriber.
+
+5. **No "switch to annual" nudge**: A monthly subscriber has no clear path to switch to annual billing and save 20%. They'd have to guess to click "Manage Billing" and find it in the Stripe portal.
+
+---
 
 ### Plan
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+#### 1. Return `billing_interval` from `check-subscription`
+- Add a `PRICE_IS_ANNUAL` set or derive from the existing `PRICE_TO_PLAN` map to classify each price ID as monthly or annual
+- Return `billing_interval: 'monthly' | 'annual' | null` in the response
+- Sync it to the `profiles` table (add `billing_interval` text column via migration)
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+#### 2. Database migration
+- Add `billing_interval` text column to `profiles` table, default `null`
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+#### 3. Update CreditContext
+- Add `billingInterval: 'monthly' | 'annual' | null` to the context
+- Read it from the profile fetch and from `check-subscription` response
+- Expose it to consumers
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+#### 4. Update Settings — Current Plan card
+- Show a badge or line: "Billed monthly" or "Billed annually" next to the plan name
+- For monthly subscribers: add a small "Switch to annual & save 20%" link/button that opens the Stripe billing portal
+- Default the billing period toggle to match the user's actual interval
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+#### 5. Update BuyCreditsModal
+- Default the billing period toggle to match the user's actual interval (instead of always "monthly")
+- For the current plan card, show the actual billing interval
+
+#### 6. Update PlanCard (Settings page)
+- When the card is the current plan, show "Billed monthly" or "Billed annually" subtitle under the price
+
+---
+
+### What stays the same
+- All Stripe checkout/portal logic unchanged
+- Plan selection, upgrade/downgrade flow unchanged  
+- No visual redesign — just adding informational text and a smart default
 
