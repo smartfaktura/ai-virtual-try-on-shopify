@@ -279,6 +279,7 @@ async function handleWebhook(req: Request): Promise<Response> {
 }
 
 Deno.serve(async (req) => {
+  console.log("Webhook request received", { method: req.method, url: req.url })
   const url = new URL(req.url)
 
   // Handle CORS preflight for main endpoint
