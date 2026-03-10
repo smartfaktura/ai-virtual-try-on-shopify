@@ -33,6 +33,11 @@ const ROW_1: ModelCard[] = [
   m('Hiro', 'model-male-average-asian.jpg'),
   m('Camila', 'model-female-athletic-latina.jpg'),
   m('Marco', 'model-male-plussize-latino.jpg'),
+  m('Hannah', 'models/model-050-hannah.jpg'),
+  m('Chris', 'models/model-053-chris.jpg'),
+  m('Natalie', 'models/model-054-natalie.jpg'),
+  m('Daniel', 'models/model-057-daniel.jpg'),
+  m('Sarah', 'models/model-058-sarah.jpg'),
 ];
 
 // 22 unique models in row 2
@@ -58,6 +63,11 @@ const ROW_2: ModelCard[] = [
   m('Astrid', 'model-female-average-nordic.jpg'),
   m('Leila', 'model-female-average-middleeast.jpg'),
   m('Fatima', 'model-female-plussize-middleeast.jpg'),
+  m('Jordan', 'models/model-051-jordan.jpg'),
+  m('Emma', 'models/model-052-emma.jpg'),
+  m('Jake', 'models/model-055-jake.jpg'),
+  m('Megan', 'models/model-056-megan.jpg'),
+  m('Ryan', 'models/model-059-ryan.jpg'),
 ];
 
 function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
@@ -102,7 +112,7 @@ export function ModelShowcaseSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="text-center">
           <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-            44+ AI Models
+            55+ AI Models
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
             Professional Models. Every Look.

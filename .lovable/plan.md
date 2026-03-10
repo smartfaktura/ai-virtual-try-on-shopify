@@ -1,59 +1,30 @@
 
 
-## Add 10 New American/European-Market Models with AI-Generated Previews
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### The 10 New Models
+### Issues Found
 
-| # | Name | Gender | Body Type | Look | Gap Filled |
-|---|------|--------|-----------|------|------------|
-| 1 | **Hannah** | Female | Slim | Classic blonde American | All-American blonde (young) |
-| 2 | **Jordan** | Male | Athletic | African American | Young athletic Black American male |
-| 3 | **Emma** | Female | Average | Brunette American | Girl-next-door everywoman |
-| 4 | **Chris** | Male | Average | Light brown hair American | Everyday American guy |
-| 5 | **Natalie** | Female | Athletic | Mixed race American | Biracial American female |
-| 6 | **Jake** | Male | Plus-size | American | Young plus-size American male |
-| 7 | **Megan** | Female | Plus-size | American redhead | Plus-size American (non-Latina/African) |
-| 8 | **Daniel** | Male | Slim | British | Classic British/European slim |
-| 9 | **Sarah** | Female | Average | American mature | Mature American everywoman |
-| 10 | **Ryan** | Male | Athletic | American classic | Classic American athletic |
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Changes — 3 files
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**1. `supabase/functions/generate-asset-previews/index.ts`**
-- Add 10 new entries to the `ALL_ASSETS` array (indices 19–28) with model portrait prompts
-- Each prompt follows the Sofia benchmark: "Professional headshot portrait, centered head-and-shoulders, symmetrical framing, 85mm lens, sharp focus on face, minimalist light gray background, [specific description]"
-- Storage paths: `models/model-050-hannah.jpg` through `models/model-059-ryan.jpg`
-- Uses `google/gemini-3-pro-image-preview` (already configured)
-- After deploy, trigger from admin panel with `start_index: 19` and `batch_size: 2` (5 batches of 2)
+### Plan
 
-**2. `src/data/mockData.ts`**
-- Add 10 new URL constants (line ~1148): `const model050Hannah = getLandingAssetUrl('models/model-050-hannah.jpg')` etc.
-- Add 10 new entries to `mockModels` array (model_050 through model_059) with proper `ModelProfile` fields
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**3. `src/components/landing/ModelShowcaseSection.tsx`**
-- Update badge text from "44+" to "55+"
-- Add 5 new models to ROW_1, 5 to ROW_2
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Prompt Style (matching existing models)
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-All 10 prompts follow the exact same pattern that produced consistent results for models 035–049:
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-```text
-"Professional headshot portrait of [description]. Perfectly centered 
-head-and-shoulders composition, symmetrical framing, 85mm lens 
-aesthetic with sharp focus on the face, minimalist light gray 
-background, natural skin texture, professional studio lighting, 
-ultra high resolution"
-```
-
-With specific descriptions like:
-- Hannah: "a slim young American woman in her early 20s with long straight blonde hair, blue eyes, warm natural smile"
-- Jordan: "a young athletic African American man in his mid 20s with a short fade haircut, strong jawline, confident expression"
-- etc.
-
-### Execution Flow
-1. Deploy updated edge function
-2. Trigger 5 batches (start_index 19, batch_size 2 each) from admin
-3. Verify images in storage bucket
-4. Deploy frontend updates with new model data and marquee entries
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
