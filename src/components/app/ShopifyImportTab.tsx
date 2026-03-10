@@ -162,9 +162,8 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     if (!shop.trim() || !session?.access_token) return;
     const cleanShop = `${shop.trim()}.myshopify.com`;
     const baseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/shopify-oauth`;
-    // Pass origin in state so callback redirects to the correct environment
-    const statePayload = JSON.stringify({ token: session.access_token, origin: window.location.origin });
-    const url = `${baseUrl}?action=authorize&shop=${encodeURIComponent(cleanShop)}&token=${encodeURIComponent(statePayload)}`;
+    // Pass token and origin as separate params — nonce is generated server-side
+    const url = `${baseUrl}?action=authorize&shop=${encodeURIComponent(cleanShop)}&token=${encodeURIComponent(session.access_token)}&origin=${encodeURIComponent(window.location.origin)}`;
     window.location.href = url;
   };
 
