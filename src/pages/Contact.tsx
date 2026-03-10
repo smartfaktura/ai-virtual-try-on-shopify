@@ -25,7 +25,7 @@ export default function Contact() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from('contact_submissions' as any).insert({
+    const { error } = await supabase.from('contact_submissions').insert({
       name: name.trim().slice(0, 100),
       email: email.trim().slice(0, 255),
       inquiry_type: subject,
