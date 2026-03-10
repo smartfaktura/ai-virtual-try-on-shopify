@@ -48,7 +48,7 @@ export default function Settings() {
   const { isAdmin } = useIsAdmin();
 
   useEffect(() => { trackViewContent('Pricing', 'pricing_page'); gtagViewItem('Settings', 'settings_page'); }, []);
-  const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
+  const { balance, plan, planConfig, subscriptionStatus, currentPeriodEnd, billingInterval, startCheckout, openCustomerPortal } = useCredits();
 
   // Asset preview generation state (admin only)
   const [isGenerating, setIsGenerating] = useState(false);
@@ -61,7 +61,7 @@ export default function Settings() {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>(billingInterval || 'monthly');
 
   const currentPlanId = plan;
   const creditsTotal = planConfig.monthlyCredits;
@@ -207,11 +207,24 @@ export default function Settings() {
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-semibold">Current Plan</h3>
                 <Badge className="bg-primary/10 text-primary">{planConfig.name}</Badge>
+                {plan !== 'free' && billingInterval && (
+                  <Badge variant="outline" className="text-[10px]">
+                    {billingInterval === 'annual' ? 'Billed annually' : 'Billed monthly'}
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
                 {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
               </p>
+              {plan !== 'free' && billingInterval === 'monthly' && (
+                <button
+                  className="text-xs text-primary hover:underline underline-offset-2 mt-1 font-medium"
+                  onClick={openCustomerPortal}
+                >
+                  Switch to annual & save 20% →
+                </button>
+              )}
             </div>
             <Separator />
             <div className="space-y-2">
@@ -272,6 +285,7 @@ export default function Settings() {
               isCurrentPlan={p.planId === currentPlanId}
               currentPlanId={currentPlanId}
               subscriptionStatus={subscriptionStatus}
+              billingInterval={billingInterval}
               onSelect={handlePlanSelect}
             />
           ))}

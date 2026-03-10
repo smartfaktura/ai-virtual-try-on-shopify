@@ -12,16 +12,16 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${d}`);
 };
 
-// Map Stripe price IDs to our plan names and credits
-const PRICE_TO_PLAN: Record<string, { plan: string; credits: number }> = {
+// Map Stripe price IDs to our plan names, credits, and billing interval
+const PRICE_TO_PLAN: Record<string, { plan: string; credits: number; interval: 'monthly' | 'annual' }> = {
   // Monthly
-  "price_1T26oWC8WPO5rhKrKggeWeLh": { plan: "starter", credits: 500 },
-  "price_1T26pOC8WPO5rhKrjBpH0lgw": { plan: "growth", credits: 1500 },
-  "price_1T26psC8WPO5rhKrGbOwmpNy": { plan: "pro", credits: 4500 },
+  "price_1T26oWC8WPO5rhKrKggeWeLh": { plan: "starter", credits: 500, interval: "monthly" },
+  "price_1T26pOC8WPO5rhKrjBpH0lgw": { plan: "growth", credits: 1500, interval: "monthly" },
+  "price_1T26psC8WPO5rhKrGbOwmpNy": { plan: "pro", credits: 4500, interval: "monthly" },
   // Annual
-  "price_1T26pAC8WPO5rhKrvWHK7Lvb": { plan: "starter", credits: 500 },
-  "price_1T26pcC8WPO5rhKr4w4koC4C": { plan: "growth", credits: 1500 },
-  "price_1T26qCC8WPO5rhKrKubiCvsd": { plan: "pro", credits: 4500 },
+  "price_1T26pAC8WPO5rhKrvWHK7Lvb": { plan: "starter", credits: 500, interval: "annual" },
+  "price_1T26pcC8WPO5rhKr4w4koC4C": { plan: "growth", credits: 1500, interval: "annual" },
+  "price_1T26qCC8WPO5rhKrKubiCvsd": { plan: "pro", credits: 4500, interval: "annual" },
 };
 
 // Credit pack price IDs
@@ -161,6 +161,7 @@ serve(async (req) => {
     let subscriptionStatus = "none";
     let subscriptionId: string | null = null;
     let periodEnd: string | null = null;
+    let billingInterval: string | null = null;
 
     if (activeSub) {
       const priceId = activeSub.items.data[0]?.price?.id;
@@ -168,13 +169,14 @@ serve(async (req) => {
 
       if (planInfo) {
         plan = planInfo.plan;
+        billingInterval = planInfo.interval;
       }
 
       subscriptionStatus = cancelingSub ? "canceling" : "active";
       subscriptionId = activeSub.id;
       periodEnd = new Date(activeSub.current_period_end * 1000).toISOString();
 
-      logStep("Active subscription found", { plan, subscriptionStatus, periodEnd });
+      logStep("Active subscription found", { plan, subscriptionStatus, periodEnd, billingInterval });
     } else {
       logStep("No active subscription — free plan");
     }
@@ -186,6 +188,7 @@ serve(async (req) => {
       stripe_subscription_id: subscriptionId,
       current_period_end: periodEnd,
       plan,
+      billing_interval: billingInterval,
     };
 
     await supabaseAdmin.from("profiles").update(updateData).eq("user_id", userId);
@@ -202,6 +205,7 @@ serve(async (req) => {
       subscription_status: subscriptionStatus,
       credits_balance: profile?.credits_balance ?? 0,
       current_period_end: periodEnd,
+      billing_interval: billingInterval,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

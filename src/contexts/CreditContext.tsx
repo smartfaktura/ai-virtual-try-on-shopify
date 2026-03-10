@@ -32,6 +32,7 @@ interface CreditContextValue {
   planConfig: PlanConfig;
   subscriptionStatus: SubscriptionStatus;
   currentPeriodEnd: Date | null;
+  billingInterval: 'monthly' | 'annual' | null;
   
   deductCredits: (amount: number) => void;
   addCredits: (amount: number) => void;
@@ -58,6 +59,7 @@ const defaultValue: CreditContextValue = {
   planConfig: PLAN_CONFIG.free,
   subscriptionStatus: 'none',
   currentPeriodEnd: null,
+  billingInterval: null,
   deductCredits: () => {},
   addCredits: () => {},
   refreshBalance: async () => {},
@@ -83,6 +85,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const [plan, setPlan] = useState('free');
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>('none');
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<Date | null>(null);
+  const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const checkingRef = useRef(false);
@@ -93,12 +96,13 @@ export function CreditProvider({ children }: CreditProviderProps) {
       setPlan('free');
       setSubscriptionStatus('none');
       setCurrentPeriodEnd(null);
+      setBillingInterval(null);
       setIsLoading(false);
       return;
     }
     const { data, error } = await supabase
       .from('profiles')
-      .select('credits_balance, plan, subscription_status, current_period_end')
+      .select('credits_balance, plan, subscription_status, current_period_end, billing_interval')
       .eq('user_id', user.id)
       .single();
     
@@ -107,6 +111,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
       setPlan(data.plan || 'free');
       setSubscriptionStatus((data.subscription_status as SubscriptionStatus) || 'none');
       setCurrentPeriodEnd(data.current_period_end ? new Date(data.current_period_end) : null);
+      setBillingInterval((data as any).billing_interval as 'monthly' | 'annual' | null);
     }
     setIsLoading(false);
   }, [user]);
@@ -128,6 +133,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         if (data.credits_balance !== null && data.credits_balance !== undefined) setBalance(data.credits_balance);
         if (data.current_period_end) setCurrentPeriodEnd(new Date(data.current_period_end));
         else setCurrentPeriodEnd(null);
+        if (data.billing_interval !== undefined) setBillingInterval(data.billing_interval as 'monthly' | 'annual' | null);
       }
     } catch (err) {
       console.error('Failed to check subscription:', err);
@@ -263,6 +269,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         planConfig,
         subscriptionStatus,
         currentPeriodEnd,
+        billingInterval,
         deductCredits,
         addCredits,
         refreshBalance: fetchCredits,

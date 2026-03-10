@@ -12,6 +12,7 @@ interface PlanCardProps {
   isCurrentPlan?: boolean;
   currentPlanId?: string;
   subscriptionStatus?: SubscriptionStatus;
+  billingInterval?: 'monthly' | 'annual' | null;
   onSelect: (planId: string) => void;
   compact?: boolean;
 }
@@ -40,6 +41,7 @@ export function PlanCard({
   isCurrentPlan,
   currentPlanId,
   subscriptionStatus = 'none',
+  billingInterval,
   onSelect,
   compact = false,
 }: PlanCardProps) {
@@ -64,6 +66,11 @@ export function PlanCard({
             <div className="flex items-center justify-between">
               <h3 className={`${compact ? 'text-base' : 'text-lg'} font-bold tracking-tight`}>{plan.name}</h3>
               {isCurrentPlan && <Badge variant="secondary" className="text-[10px]">Current</Badge>}
+              {isCurrentPlan && billingInterval && (
+                <Badge variant="outline" className="text-[10px]">
+                  {billingInterval === 'annual' ? 'Annual' : 'Monthly'}
+                </Badge>
+              )}
             </div>
 
             {plan.isEnterprise ? (
