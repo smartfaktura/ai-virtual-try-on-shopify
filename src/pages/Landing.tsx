@@ -32,10 +32,10 @@ const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'VOVV AI',
-  url: 'https://vovvai.lovable.app',
+  url: SITE_URL,
   potentialAction: {
     '@type': 'SearchAction',
-    target: 'https://vovvai.lovable.app/discover?q={search_term_string}',
+    target: `${SITE_URL}/discover?q={search_term_string}`,
     'query-input': 'required name=search_term_string',
   },
 };
