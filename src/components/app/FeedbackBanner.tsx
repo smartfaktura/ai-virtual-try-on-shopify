@@ -70,9 +70,9 @@ export function FeedbackBanner() {
       </div>
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <button className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap">
+          <Button variant="outline" size="sm" className="rounded-full text-xs font-semibold px-4 h-8">
             Share feedback
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent side="top" align="end" className="w-80 p-4 space-y-3">
           {submitted ? (
