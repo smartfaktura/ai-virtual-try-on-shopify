@@ -698,9 +698,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             <p className="text-sm text-muted-foreground">
               Drop images, <span className="text-primary font-medium">browse</span>, or paste
             </p>
-            <p className="text-[11px] text-muted-foreground/60 mt-1">
-              PNG, JPG, WebP · max 10 MB · drop multiple for batch add (up to {MAX_BATCH})
-            </p>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <Layers className="w-3 h-3 text-muted-foreground/50" />
+              <p className="text-[11px] text-muted-foreground/60">
+                Each image creates a separate product · up to {MAX_BATCH} at once
+              </p>
+            </div>
             <input
               id="dropzone-file-input"
               type="file"
