@@ -161,6 +161,7 @@ serve(async (req) => {
     let subscriptionStatus = "none";
     let subscriptionId: string | null = null;
     let periodEnd: string | null = null;
+    let billingInterval: string | null = null;
 
     if (activeSub) {
       const priceId = activeSub.items.data[0]?.price?.id;
@@ -168,13 +169,14 @@ serve(async (req) => {
 
       if (planInfo) {
         plan = planInfo.plan;
+        billingInterval = planInfo.interval;
       }
 
       subscriptionStatus = cancelingSub ? "canceling" : "active";
       subscriptionId = activeSub.id;
       periodEnd = new Date(activeSub.current_period_end * 1000).toISOString();
 
-      logStep("Active subscription found", { plan, subscriptionStatus, periodEnd });
+      logStep("Active subscription found", { plan, subscriptionStatus, periodEnd, billingInterval });
     } else {
       logStep("No active subscription — free plan");
     }
@@ -186,6 +188,7 @@ serve(async (req) => {
       stripe_subscription_id: subscriptionId,
       current_period_end: periodEnd,
       plan,
+      billing_interval: billingInterval,
     };
 
     await supabaseAdmin.from("profiles").update(updateData).eq("user_id", userId);
