@@ -485,7 +485,7 @@ export default function Auth() {
             {mode === 'signup' ? (
               <>
                 Already have an account?{' '}
-                <button onClick={() => setMode('login')} className="text-primary font-medium hover:underline">
+                <button onClick={() => { setMode('login'); setFormError(null); }} className="text-primary font-medium hover:underline">
                   Sign in
                 </button>
               </>
