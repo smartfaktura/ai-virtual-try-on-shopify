@@ -582,12 +582,18 @@ export default function Auth() {
               }}
               className="space-y-5"
             >
+              {resetError && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  {resetError}
+                </div>
+              )}
               <Input
                 id="reset-email"
                 type="email"
                 placeholder="Email address"
                 value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
+                onChange={(e) => { setResetEmail(e.target.value); setResetError(null); }}
                 required
                 className="rounded-full bg-muted/50 border-0 h-11 px-5"
                 autoFocus
