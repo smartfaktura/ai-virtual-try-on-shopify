@@ -7,6 +7,7 @@ interface TeamAvatarHoverCardProps {
   member: TeamMember;
   children: React.ReactNode;
   side?: 'top' | 'bottom' | 'left' | 'right';
+  sideOffset?: number;
 }
 
 export function TeamAvatarHoverCard({ member, children, side = 'top' }: TeamAvatarHoverCardProps) {
