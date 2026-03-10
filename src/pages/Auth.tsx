@@ -65,7 +65,7 @@ export default function Auth() {
         toast.error('An account with this email already exists. Try signing in instead.');
         setMode('login');
       } else {
-        toast.success('Check your email to confirm your account!');
+        setSignupComplete(true);
       }
     } else {
       const { error } = await signIn(email, password);
