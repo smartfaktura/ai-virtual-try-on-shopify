@@ -1,30 +1,44 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add Magic Link Login + OTP Code Verification on Signup
 
-### Issues Found
+### Overview
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+Two features: (1) passwordless magic link sign-in option, and (2) OTP code entry on the signup confirmation screen so users can verify without leaving the page.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+Both are common practice — magic link login reduces friction for returning users, and inline OTP verification keeps users in-flow instead of forcing a tab switch.
 
-### Plan
+### Changes
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**1. Magic link login option (`src/pages/Auth.tsx`)**
+- Add a "Sign in with email link" button below the password form (or as an alternative login mode)
+- Calls `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + '/app' } })`
+- On success, show a "Check your email" confirmation (similar to signup complete screen) with message "We sent a login link to {email}"
+- No password required — just email
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**2. OTP code input on signup confirmation screen (`src/pages/Auth.tsx`)**
+- On the existing "Check your inbox" screen, add a 6-digit OTP input (using the existing `InputOTP` component)
+- User enters the code from their email → calls `supabase.auth.verifyOtp({ email, token, type: 'signup' })`
+- On success, user is automatically logged in and redirected to `/app`
+- The confirmation link in the email still works as fallback if user closes the page
+- Update copy: "Enter the 6-digit code from your email, or click the link to activate your account"
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**3. Update signup email template (`supabase/functions/_shared/email-templates/signup.tsx`)**
+- Add the `token` prop to the template
+- Display the 6-digit code prominently in a styled box (large monospace digits) above the existing "Confirm Email" button
+- Copy: "Your verification code" with the code, then "Or click the button below to confirm"
+- Both the code and link work — user picks whichever is easier
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**4. Update auth-email-hook (`supabase/functions/auth-email-hook/index.ts`)**
+- The `token` is already passed in `templateProps` — no change needed in the hook itself
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**5. Redeploy edge function**
+- Deploy `auth-email-hook` after template changes
+
+### Technical Details
+
+- `supabase.auth.signInWithOtp()` sends a magic link email using the existing `magiclink` template
+- `supabase.auth.verifyOtp({ email, token, type: 'signup' })` verifies the 6-digit code and creates a session
+- The `InputOTP` component from `input-otp` is already installed and available at `@/components/ui/input-otp`
+- The signup email template already receives `token` from the auth hook — it just isn't displayed yet
 
