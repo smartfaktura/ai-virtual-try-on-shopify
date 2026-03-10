@@ -107,7 +107,7 @@ export function ModelShowcaseSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="text-center">
           <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-            55+ AI Models
+            49+ AI Models
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
             Professional Models. Every Look.

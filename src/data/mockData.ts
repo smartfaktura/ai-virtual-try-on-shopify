@@ -1306,13 +1306,8 @@ export const mockModels: ModelProfile[] = [
   { modelId: 'model_050', name: 'Hannah', gender: 'female', bodyType: 'slim', ethnicity: 'American', ageRange: 'young-adult', previewUrl: model050Hannah },
   { modelId: 'model_051', name: 'Jordan', gender: 'male', bodyType: 'athletic', ethnicity: 'African American', ageRange: 'young-adult', previewUrl: model051Jordan },
   { modelId: 'model_052', name: 'Emma', gender: 'female', bodyType: 'average', ethnicity: 'American', ageRange: 'adult', previewUrl: model052Emma },
-  { modelId: 'model_053', name: 'Chris', gender: 'male', bodyType: 'average', ethnicity: 'American', ageRange: 'adult', previewUrl: model053Chris },
   { modelId: 'model_054', name: 'Natalie', gender: 'female', bodyType: 'athletic', ethnicity: 'Mixed American', ageRange: 'young-adult', previewUrl: model054Natalie },
-  { modelId: 'model_055', name: 'Jake', gender: 'male', bodyType: 'plus-size', ethnicity: 'American', ageRange: 'adult', previewUrl: model055Jake },
-  { modelId: 'model_056', name: 'Megan', gender: 'female', bodyType: 'plus-size', ethnicity: 'American', ageRange: 'young-adult', previewUrl: model056Megan },
-  { modelId: 'model_057', name: 'Daniel', gender: 'male', bodyType: 'slim', ethnicity: 'British', ageRange: 'adult', previewUrl: model057Daniel },
-  { modelId: 'model_058', name: 'Sarah', gender: 'female', bodyType: 'average', ethnicity: 'American', ageRange: 'mature', previewUrl: model058Sarah },
-  { modelId: 'model_059', name: 'Ryan', gender: 'male', bodyType: 'athletic', ethnicity: 'American', ageRange: 'adult', previewUrl: model059Ryan },
+  { modelId: 'model_060', name: 'Valeria', gender: 'female', bodyType: 'slim', ethnicity: 'Latina American', ageRange: 'young-adult', previewUrl: modelFemaleSlimAmericanLatina },
 ];
 
 export const mockTryOnPoses: TryOnPose[] = [
