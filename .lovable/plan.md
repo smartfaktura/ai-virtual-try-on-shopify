@@ -1,30 +1,60 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Current State
 
-### Issues Found
+The Shopify import tab **already supports**:
+- Selective product import (checkboxes, not auto-import-all)
+- Search/filter by product title and product type
+- 100-product batch limit with counter
+- Select All / deselect
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+**What's missing**: Filtering by Shopify **collection** (e.g., "Summer 2026", "Best Sellers"). Currently the edge function fetches ALL products flat — no collection awareness.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+## Plan: Add Collection-Based Filtering
 
-### Plan
+### 1. Update `shopify-sync` edge function
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+Add a new action `"collections"` that fetches all collections from the store:
+```
+GET /admin/api/2024-01/custom_collections.json
+GET /admin/api/2024-01/smart_collections.json
+```
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+Update the `"list"` action to accept an optional `collection_id` parameter. When provided, fetch products from that collection only:
+```
+GET /admin/api/2024-01/collections/{id}/products.json
+```
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### 2. Update `ShopifyImportTab.tsx`
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+- After connecting, first fetch collections list
+- Add a dropdown/filter bar above the product list: "All Products" | collection names
+- When a collection is selected, re-fetch products filtered to that collection
+- Keep the existing text search for further filtering within results
+- Show collection count badges
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### UI Flow
+```text
+[Connected to mystore.myshopify.com]
+                    ↓
+[Load Products] → fetches collections + all products
+                    ↓
+┌─────────────────────────────────────┐
+│ Filter: [All Products ▾]  [Search…] │
+│ Collections: Summer '26 (12) │ ...  │
+├─────────────────────────────────────┤
+│ ☐ Product A          product_type   │
+│ ☑ Product B          product_type   │
+│ ...                                 │
+├─────────────────────────────────────┤
+│           Import Selected (2)       │
+└─────────────────────────────────────┘
+```
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `supabase/functions/shopify-sync/index.ts` | Add `listCollections()` function, add `collections` action, add optional `collection_id` param to `list` action |
+| `src/components/app/ShopifyImportTab.tsx` | Add collection dropdown filter, fetch collections on load, re-fetch products when collection changes |
 
