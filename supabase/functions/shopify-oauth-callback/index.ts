@@ -53,13 +53,13 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: `Bearer ${state}` } } }
     );
 
-    const { data: claimsData, error: claimsErr } = await supabaseUser.auth.getClaims(state);
-    if (claimsErr || !claimsData?.claims) {
-      console.error("JWT validation failed:", claimsErr);
+    const { data: { user }, error: userErr } = await supabaseUser.auth.getUser(state);
+    if (userErr || !user) {
+      console.error("JWT validation failed:", userErr);
       return new Response("Invalid or expired session. Please try connecting again.", { status: 401 });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
     // Save connection using service role
     const supabaseAdmin = createClient(

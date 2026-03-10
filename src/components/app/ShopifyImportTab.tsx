@@ -113,7 +113,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
 
   const handleConnectOAuth = () => {
     if (!shop.trim() || !session?.access_token) return;
-    const cleanShop = shop.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+    const cleanShop = `${shop.trim()}.myshopify.com`;
     const baseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/shopify-oauth`;
     const url = `${baseUrl}?action=authorize&shop=${encodeURIComponent(cleanShop)}&token=${encodeURIComponent(session.access_token)}`;
     window.location.href = url;
@@ -281,14 +281,20 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="shopify-domain">Store domain</Label>
-              <Input
-                id="shopify-domain"
-                placeholder="mystore.myshopify.com"
-                value={shop}
-                onChange={(e) => { setShop(e.target.value); setError(null); }}
-                disabled={isLoading}
-              />
+              <Label htmlFor="shopify-domain">Store name</Label>
+              <div className="flex items-center">
+                <Input
+                  id="shopify-domain"
+                  placeholder="mystore"
+                  value={shop}
+                  onChange={(e) => { setShop(e.target.value.replace(/\.myshopify\.com$/i, '').replace(/[^a-zA-Z0-9-]/g, '')); setError(null); }}
+                  disabled={isLoading}
+                  className="rounded-r-none border-r-0"
+                />
+                <span className="inline-flex items-center px-3 h-9 border border-l-0 border-input rounded-r-md bg-muted text-muted-foreground text-sm whitespace-nowrap">
+                  .myshopify.com
+                </span>
+              </div>
             </div>
 
             {error && (
