@@ -96,6 +96,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
       setPlan('free');
       setSubscriptionStatus('none');
       setCurrentPeriodEnd(null);
+      setBillingInterval(null);
       setIsLoading(false);
       return;
     }
