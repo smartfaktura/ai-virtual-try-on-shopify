@@ -407,6 +407,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           product_type: item.productType || '',
           description: item.description.trim().substring(0, 500),
           image_url: imageUrl,
+          dimensions: item.dimensions.trim() || null,
         } as any);
         if (error) throw new Error(error.message);
         setUploadProgress({ current: i + 1, total: batchItems.length });
