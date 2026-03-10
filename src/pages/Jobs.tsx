@@ -324,6 +324,8 @@ export default function Jobs() {
         onClose={() => setSelectedItem(null)}
       />
 
+      <FeedbackBanner />
+
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <DialogContent>
           <DialogHeader>

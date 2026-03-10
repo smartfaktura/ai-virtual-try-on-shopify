@@ -755,6 +755,7 @@ export default function Freestyle() {
           )}
         </>
       )}
+      <FeedbackBanner />
     </div>
   );
 }
