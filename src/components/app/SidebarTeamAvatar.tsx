@@ -26,7 +26,7 @@ export function SidebarTeamAvatar({ collapsed = false }: SidebarTeamAvatarProps)
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <TeamAvatarHoverCard member={member} side="top">
+              <TeamAvatarHoverCard member={member} side="right" sideOffset={16}>
                 <button className="focus:outline-none">
                   <img
                     src={member.avatar}
