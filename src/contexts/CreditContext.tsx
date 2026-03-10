@@ -111,6 +111,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
       setPlan(data.plan || 'free');
       setSubscriptionStatus((data.subscription_status as SubscriptionStatus) || 'none');
       setCurrentPeriodEnd(data.current_period_end ? new Date(data.current_period_end) : null);
+      setBillingInterval((data as any).billing_interval as 'monthly' | 'annual' | null);
     }
     setIsLoading(false);
   }, [user]);
