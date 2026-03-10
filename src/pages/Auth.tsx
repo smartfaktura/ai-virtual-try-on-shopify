@@ -33,6 +33,8 @@ export default function Auth() {
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const [resendLoading, setResendLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
