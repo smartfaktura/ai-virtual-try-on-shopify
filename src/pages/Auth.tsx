@@ -188,7 +188,12 @@ export default function Auth() {
     });
     setResendLoading(false);
     if (error) {
-      toast.error(error.message);
+      const msg = error.message?.toLowerCase() || '';
+      if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
+        toast.info('Email already sent. Check your inbox and spam folder, or wait a few minutes.');
+      } else {
+        toast.error('Could not resend link. Please try again.');
+      }
     } else {
       setResendTimer(30);
       toast.success('New link sent! Check your inbox.');
