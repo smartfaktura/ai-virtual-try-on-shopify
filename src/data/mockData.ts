@@ -1151,13 +1151,10 @@ const model049Kai = getLandingAssetUrl('models/model-049-kai.jpg');
 const model050Hannah = getLandingAssetUrl('models/model-050-hannah.jpg');
 const model051Jordan = getLandingAssetUrl('models/model-051-jordan.jpg');
 const model052Emma = getLandingAssetUrl('models/model-052-emma.jpg');
-const model053Chris = getLandingAssetUrl('models/model-053-chris.jpg');
 const model054Natalie = getLandingAssetUrl('models/model-054-natalie.jpg');
-const model055Jake = getLandingAssetUrl('models/model-055-jake.jpg');
-const model056Megan = getLandingAssetUrl('models/model-056-megan.jpg');
-const model057Daniel = getLandingAssetUrl('models/model-057-daniel.jpg');
-const model058Sarah = getLandingAssetUrl('models/model-058-sarah.jpg');
-const model059Ryan = getLandingAssetUrl('models/model-059-ryan.jpg');
+
+// Valeria (slim Latina American — was on landing marquee but missing from model selector)
+const modelFemaleSlimAmericanLatina = getLandingAssetUrl('models/model-female-slim-american-latina.jpg');
 
 // Pose preview images via storage
 const poseStudioFront = getLandingAssetUrl('poses/pose-studio-front.jpg');
@@ -1309,13 +1306,8 @@ export const mockModels: ModelProfile[] = [
   { modelId: 'model_050', name: 'Hannah', gender: 'female', bodyType: 'slim', ethnicity: 'American', ageRange: 'young-adult', previewUrl: model050Hannah },
   { modelId: 'model_051', name: 'Jordan', gender: 'male', bodyType: 'athletic', ethnicity: 'African American', ageRange: 'young-adult', previewUrl: model051Jordan },
   { modelId: 'model_052', name: 'Emma', gender: 'female', bodyType: 'average', ethnicity: 'American', ageRange: 'adult', previewUrl: model052Emma },
-  { modelId: 'model_053', name: 'Chris', gender: 'male', bodyType: 'average', ethnicity: 'American', ageRange: 'adult', previewUrl: model053Chris },
   { modelId: 'model_054', name: 'Natalie', gender: 'female', bodyType: 'athletic', ethnicity: 'Mixed American', ageRange: 'young-adult', previewUrl: model054Natalie },
-  { modelId: 'model_055', name: 'Jake', gender: 'male', bodyType: 'plus-size', ethnicity: 'American', ageRange: 'adult', previewUrl: model055Jake },
-  { modelId: 'model_056', name: 'Megan', gender: 'female', bodyType: 'plus-size', ethnicity: 'American', ageRange: 'young-adult', previewUrl: model056Megan },
-  { modelId: 'model_057', name: 'Daniel', gender: 'male', bodyType: 'slim', ethnicity: 'British', ageRange: 'adult', previewUrl: model057Daniel },
-  { modelId: 'model_058', name: 'Sarah', gender: 'female', bodyType: 'average', ethnicity: 'American', ageRange: 'mature', previewUrl: model058Sarah },
-  { modelId: 'model_059', name: 'Ryan', gender: 'male', bodyType: 'athletic', ethnicity: 'American', ageRange: 'adult', previewUrl: model059Ryan },
+  { modelId: 'model_060', name: 'Valeria', gender: 'female', bodyType: 'slim', ethnicity: 'Latina American', ageRange: 'young-adult', previewUrl: modelFemaleSlimAmericanLatina },
 ];
 
 export const mockTryOnPoses: TryOnPose[] = [

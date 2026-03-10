@@ -110,7 +110,7 @@ const ALL_ASSETS: AssetSpec[] = [
     prompt:
       "Natural stone pathway surface with smooth river stones in warm gray and beige tones. Top-down view of the textured stone surface with small green moss between stones. Natural outdoor daylight, ultra high resolution",
   },
-  // ── New model portraits (050–059) ──
+  // ── New model portraits (050–054, kept) ──
   {
     path: "models/model-050-hannah.jpg",
     prompt:
@@ -127,39 +127,25 @@ const ALL_ASSETS: AssetSpec[] = [
       "Professional headshot portrait of an average-build American woman in her late 20s with shoulder-length wavy brown hair, hazel eyes, friendly approachable smile, warm skin tone. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
   },
   {
-    path: "models/model-053-chris.jpg",
-    prompt:
-      "Professional headshot portrait of an average-build American man in his early 30s with short light brown hair, blue-green eyes, clean-shaven, relaxed confident expression. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
-  },
-  {
     path: "models/model-054-natalie.jpg",
     prompt:
       "Professional headshot portrait of an athletic mixed-race American woman in her mid 20s with curly dark brown hair, light brown skin, green-brown eyes, radiant smile. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
   },
+  // ── Regenerated previews ──
   {
-    path: "models/model-055-jake.jpg",
+    path: "models/model-female-mature-european.jpg",
     prompt:
-      "Professional headshot portrait of a plus-size young American man in his late 20s with short sandy brown hair, round friendly face, light beard stubble, warm genuine smile. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
+      "Professional headshot portrait of an elegant slim European woman in her late 40s with shoulder-length blonde hair styled elegantly, blue-gray eyes, refined composed expression, high cheekbones, graceful aging with natural beauty. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
   },
   {
-    path: "models/model-056-megan.jpg",
+    path: "models/model-male-athletic-japanese.jpg",
     prompt:
-      "Professional headshot portrait of a plus-size American woman in her mid 20s with long wavy red hair, fair freckled skin, green eyes, bright confident smile. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
+      "Professional headshot portrait of an athletic Japanese man in his late 20s with short styled black hair, clean-shaven, defined jawline, warm confident expression, light olive skin. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
   },
   {
-    path: "models/model-057-daniel.jpg",
+    path: "models/model-male-slim-indian.jpg",
     prompt:
-      "Professional headshot portrait of a slim young British man in his late 20s with neatly styled dark brown hair, sharp cheekbones, light stubble, composed confident expression. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
-  },
-  {
-    path: "models/model-058-sarah.jpg",
-    prompt:
-      "Professional headshot portrait of an average-build American woman in her mid 40s with medium-length light brown hair with subtle highlights, warm brown eyes, graceful mature smile, natural laugh lines. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
-  },
-  {
-    path: "models/model-059-ryan.jpg",
-    prompt:
-      "Professional headshot portrait of an athletic American man in his early 30s with short dark brown hair, strong square jaw, clean-shaven, piercing blue eyes, classic all-American confident look. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
+      "Professional headshot portrait of a slim South Asian Indian man in his early 30s with short neatly groomed dark hair, warm brown skin, kind intelligent expression, light stubble. Perfectly centered head-and-shoulders composition, symmetrical framing, 85mm lens aesthetic with sharp focus on the face, minimalist light gray background, natural skin texture, professional studio lighting, ultra high resolution",
   },
 ];
 
