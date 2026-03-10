@@ -160,6 +160,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         title,
         productType,
         description,
+        dimensions,
         isAnalyzing,
         manualEdits: { ...hasManualEdits.current },
       } : null;
