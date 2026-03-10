@@ -1,11 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ShoppingBag, Loader2, Check, AlertCircle, Search, Info, Unlink, Link } from 'lucide-react';
+import { ShoppingBag, Loader2, Check, AlertCircle, Search, Info, Unlink, Link, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -21,6 +23,13 @@ interface ShopifyListProduct {
   title: string;
   product_type: string;
   thumbnail: string;
+}
+
+interface ShopifyCollection {
+  id: number;
+  title: string;
+  handle: string;
+  type: string;
 }
 
 interface ShopifyConnection {
@@ -46,6 +55,11 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
   const [search, setSearch] = useState('');
   const [isDisconnecting, setIsDisconnecting] = useState(false);
 
+  // Collections
+  const [collections, setCollections] = useState<ShopifyCollection[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState<string>('all');
+  const [isLoadingCollection, setIsLoadingCollection] = useState(false);
+
   // Import progress
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
@@ -66,7 +80,6 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
       if (data && !error) {
         setConnection(data);
         setShop(data.shop_domain);
-        // Auto-load products if just connected
         if (searchParams.get('shopify') === 'connected') {
           searchParams.delete('shopify');
           setSearchParams(searchParams, { replace: true });
@@ -82,16 +95,35 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     checkConnection();
   }, [user]);
 
-  const loadProducts = async (shopDomain?: string) => {
+  const loadCollections = async (shopDomain: string) => {
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('shopify-sync', {
+        body: { action: 'collections', shop: shopDomain },
+      });
+      if (!fnError && data?.collections) {
+        setCollections(data.collections);
+      }
+    } catch {
+      // Collections are optional, don't block on failure
+    }
+  };
+
+  const loadProducts = async (shopDomain?: string, collectionId?: number) => {
     const domain = shopDomain || shop.trim();
     if (!domain) return;
     setIsLoading(true);
     setError(null);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('shopify-sync', {
-        body: { action: 'list', shop: domain },
-      });
+      // Load collections in parallel on first load
+      if (collections.length === 0 && !collectionId) {
+        loadCollections(domain);
+      }
+
+      const body: Record<string, unknown> = { action: 'list', shop: domain };
+      if (collectionId) body.collection_id = collectionId;
+
+      const { data, error: fnError } = await supabase.functions.invoke('shopify-sync', { body });
 
       if (fnError) throw new Error(fnError.message);
       if (data.error) throw new Error(data.error);
@@ -99,7 +131,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
       setProducts(data.products || []);
       setStep('select');
       if (data.total === 0) {
-        toast.info('No products found in this store.');
+        toast.info('No products found.');
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to load products';
@@ -108,6 +140,20 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
       setStep('connect');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCollectionChange = (value: string) => {
+    setSelectedCollection(value);
+    setSelectedIds(new Set());
+    setSearch('');
+    const domain = connection?.shop_domain || shop.trim();
+    if (value === 'all') {
+      setIsLoadingCollection(true);
+      loadProducts(domain).finally(() => setIsLoadingCollection(false));
+    } else {
+      setIsLoadingCollection(true);
+      loadProducts(domain, Number(value)).finally(() => setIsLoadingCollection(false));
     }
   };
 
@@ -122,21 +168,21 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
   const handleDisconnect = async () => {
     setIsDisconnecting(true);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('shopify-oauth', {
+      await supabase.functions.invoke('shopify-oauth', {
         body: {},
         headers: { 'x-action': 'disconnect' },
       });
-
-      // Also try direct delete as fallback
       await supabase.from('shopify_connections').delete().eq('user_id', user!.id);
 
       setConnection(null);
       setProducts([]);
       setSelectedIds(new Set());
+      setCollections([]);
+      setSelectedCollection('all');
       setShop('');
       setStep('connect');
       toast.success('Shopify store disconnected.');
-    } catch (err) {
+    } catch {
       toast.error('Failed to disconnect.');
     } finally {
       setIsDisconnecting(false);
@@ -234,7 +280,6 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     return (
       <div className="space-y-5">
         {connection ? (
-          // Connected state
           <div className="space-y-4">
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -268,7 +313,6 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
             </div>
           </div>
         ) : (
-          // Not connected state
           <div className="space-y-4">
             <div className="bg-muted/40 rounded-xl p-4 space-y-2.5">
               <p className="text-sm font-medium flex items-center gap-2">
@@ -329,15 +373,39 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
 
     return (
       <div className="space-y-4">
+        {/* Header with product count */}
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
             {products.length} product{products.length !== 1 ? 's' : ''} found
             {connection && <span className="text-xs"> · {connection.shop_domain}</span>}
           </p>
-          <div className="relative w-48">
+        </div>
+
+        {/* Collection filter + Search bar */}
+        <div className="flex items-center gap-2">
+          {collections.length > 0 && (
+            <Select value={selectedCollection} onValueChange={handleCollectionChange} disabled={isLoadingCollection}>
+              <SelectTrigger className="w-[180px] h-8 text-xs">
+                <FolderOpen className="w-3.5 h-3.5 mr-1.5 text-muted-foreground shrink-0" />
+                <SelectValue placeholder="All Products" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Products</SelectItem>
+                {collections.map((col) => (
+                  <SelectItem key={col.id} value={String(col.id)}>
+                    <span className="truncate">{col.title}</span>
+                    <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">
+                      {col.type}
+                    </Badge>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search…"
+              placeholder="Search by name or type…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 text-xs"
@@ -345,66 +413,77 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pb-1">
-          <Checkbox
-            checked={allSelected}
-            onCheckedChange={toggleAll}
-            id="select-all"
-            disabled={selectAllDisabled}
-          />
-          <Label htmlFor="select-all" className={`text-xs cursor-pointer ${selectAllDisabled ? 'text-muted-foreground/60' : ''}`}>
-            {filteredProducts.length <= MAX_SHOPIFY_BATCH
-              ? `Select all (${filteredProducts.length})`
-              : `Select first ${MAX_SHOPIFY_BATCH}`}
-          </Label>
-          <span className={`text-xs font-medium ml-auto ${atLimit ? 'text-amber-500' : 'text-primary'}`}>
-            {selectedIds.size}/{MAX_SHOPIFY_BATCH}
-          </span>
-        </div>
-
-        {products.length > MAX_SHOPIFY_BATCH && (
-          <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-            <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
-            <span>Maximum {MAX_SHOPIFY_BATCH} products per import. You can import more in additional batches.</span>
+        {isLoadingCollection && (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-xs text-muted-foreground">Loading collection…</span>
           </div>
         )}
 
-        <div className="max-h-[320px] overflow-y-auto space-y-1 -mx-1 px-1">
-          {filteredProducts.map((product) => (
-            <label
-              key={product.id}
-              className={`flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors ${atLimit && !selectedIds.has(product.id) ? 'opacity-40 pointer-events-none' : ''}`}
-            >
+        {!isLoadingCollection && (
+          <>
+            <div className="flex items-center gap-2 pb-1">
               <Checkbox
-                checked={selectedIds.has(product.id)}
-                onCheckedChange={() => toggleSelect(product.id)}
+                checked={allSelected}
+                onCheckedChange={toggleAll}
+                id="select-all"
+                disabled={selectAllDisabled}
               />
-              <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
-                {product.thumbnail ? (
-                  <ShimmerImage
-                    src={product.thumbnail}
-                    alt={product.title}
-                    className="w-full h-full object-cover"
-                    aspectRatio="1/1"
+              <Label htmlFor="select-all" className={`text-xs cursor-pointer ${selectAllDisabled ? 'text-muted-foreground/60' : ''}`}>
+                {filteredProducts.length <= MAX_SHOPIFY_BATCH
+                  ? `Select all (${filteredProducts.length})`
+                  : `Select first ${MAX_SHOPIFY_BATCH}`}
+              </Label>
+              <span className={`text-xs font-medium ml-auto ${atLimit ? 'text-amber-500' : 'text-primary'}`}>
+                {selectedIds.size}/{MAX_SHOPIFY_BATCH}
+              </span>
+            </div>
+
+            {products.length > MAX_SHOPIFY_BATCH && (
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+                <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" />
+                <span>Maximum {MAX_SHOPIFY_BATCH} products per import. You can import more in additional batches.</span>
+              </div>
+            )}
+
+            <div className="max-h-[320px] overflow-y-auto space-y-1 -mx-1 px-1">
+              {filteredProducts.map((product) => (
+                <label
+                  key={product.id}
+                  className={`flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors ${atLimit && !selectedIds.has(product.id) ? 'opacity-40 pointer-events-none' : ''}`}
+                >
+                  <Checkbox
+                    checked={selectedIds.has(product.id)}
+                    onCheckedChange={() => toggleSelect(product.id)}
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ShoppingBag className="w-4 h-4 text-muted-foreground" />
+                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
+                    {product.thumbnail ? (
+                      <ShimmerImage
+                        src={product.thumbnail}
+                        alt={product.title}
+                        className="w-full h-full object-cover"
+                        aspectRatio="1/1"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ShoppingBag className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm truncate">{product.title}</p>
-                {product.product_type && (
-                  <p className="text-[11px] text-muted-foreground truncate">{product.product_type}</p>
-                )}
-              </div>
-            </label>
-          ))}
-          {filteredProducts.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-8">No products match your search.</p>
-          )}
-        </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate">{product.title}</p>
+                    {product.product_type && (
+                      <p className="text-[11px] text-muted-foreground truncate">{product.product_type}</p>
+                    )}
+                  </div>
+                </label>
+              ))}
+              {filteredProducts.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-8">No products match your search.</p>
+              )}
+            </div>
+          </>
+        )}
 
         <div className="flex justify-between gap-2 pt-2">
           <Button variant="ghost" onClick={() => setStep('connect')} className="rounded-xl" size="sm">
@@ -412,7 +491,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
           </Button>
           <Button
             onClick={handleImport}
-            disabled={selectedIds.size === 0}
+            disabled={selectedIds.size === 0 || isLoadingCollection}
             className="rounded-xl"
           >
             <ShoppingBag className="w-4 h-4" />

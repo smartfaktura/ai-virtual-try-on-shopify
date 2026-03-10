@@ -14,14 +14,79 @@ interface ShopifyProduct {
   images: { id: number; src: string; position: number }[];
 }
 
+interface ShopifyCollection {
+  id: number;
+  title: string;
+  handle: string;
+  products_count?: number;
+}
+
 function stripHtml(html: string): string {
   return html?.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim() || "";
 }
 
-async function listProducts(shop: string, accessToken: string) {
-  const products: { id: number; title: string; product_type: string; thumbnail: string }[] = [];
+async function listCollections(shop: string, accessToken: string) {
+  const collections: { id: number; title: string; handle: string; type: string }[] = [];
+
+  // Fetch custom collections
   let url: string | null =
-    `https://${shop}/admin/api/2024-01/products.json?fields=id,title,product_type,images&limit=250`;
+    `https://${shop}/admin/api/2024-01/custom_collections.json?fields=id,title,handle&limit=250`;
+  while (url) {
+    const res = await fetch(url, {
+      headers: { "X-Shopify-Access-Token": accessToken },
+    });
+    if (!res.ok) break;
+    const data = await res.json();
+    for (const c of data.custom_collections || []) {
+      collections.push({ id: c.id, title: c.title, handle: c.handle, type: "custom" });
+    }
+    url = null;
+    const link = res.headers.get("link");
+    if (link) {
+      const next = link.split(",").find((s: string) => s.includes('rel="next"'));
+      if (next) {
+        const match = next.match(/<([^>]+)>/);
+        if (match) url = match[1];
+      }
+    }
+  }
+
+  // Fetch smart collections
+  url = `https://${shop}/admin/api/2024-01/smart_collections.json?fields=id,title,handle&limit=250`;
+  while (url) {
+    const res = await fetch(url, {
+      headers: { "X-Shopify-Access-Token": accessToken },
+    });
+    if (!res.ok) break;
+    const data = await res.json();
+    for (const c of data.smart_collections || []) {
+      collections.push({ id: c.id, title: c.title, handle: c.handle, type: "smart" });
+    }
+    url = null;
+    const link = res.headers.get("link");
+    if (link) {
+      const next = link.split(",").find((s: string) => s.includes('rel="next"'));
+      if (next) {
+        const match = next.match(/<([^>]+)>/);
+        if (match) url = match[1];
+      }
+    }
+  }
+
+  return collections;
+}
+
+async function listProducts(shop: string, accessToken: string, collectionId?: number) {
+  const products: { id: number; title: string; product_type: string; thumbnail: string }[] = [];
+
+  let url: string | null;
+
+  if (collectionId) {
+    // Fetch products for a specific collection via collects
+    url = `https://${shop}/admin/api/2024-01/collections/${collectionId}/products.json?fields=id,title,product_type,images&limit=250`;
+  } else {
+    url = `https://${shop}/admin/api/2024-01/products.json?fields=id,title,product_type,images&limit=250`;
+  }
 
   while (url) {
     const res = await fetch(url, {
@@ -40,7 +105,6 @@ async function listProducts(shop: string, accessToken: string) {
         thumbnail: p.images?.[0]?.src || "",
       });
     }
-    // Parse Link header for pagination
     const link = res.headers.get("link");
     url = null;
     if (link) {
@@ -70,13 +134,11 @@ async function importProducts(
 
     for (const productId of batch) {
       try {
-        // Fetch full product data
         const res = await fetch(
           `https://${shop}/admin/api/2024-01/products/${productId}.json?fields=id,title,product_type,body_html,images`,
           { headers: { "X-Shopify-Access-Token": accessToken } }
         );
         if (!res.ok) {
-          const text = await res.text();
           results.push({ id: productId, title: "", success: false, error: `API ${res.status}` });
           continue;
         }
@@ -84,7 +146,6 @@ async function importProducts(
         const description = stripHtml(product.body_html);
         const images = (product.images || []).slice(0, MAX_IMAGES);
 
-        // Download & upload first image as main
         let mainImageUrl = "";
         const uploadedImages: { url: string; path: string; position: number }[] = [];
 
@@ -126,7 +187,7 @@ async function importProducts(
         }
 
         if (!mainImageUrl && images.length > 0) {
-          mainImageUrl = images[0].src; // Fallback to original URL
+          mainImageUrl = images[0].src;
         }
 
         if (!mainImageUrl) {
@@ -134,7 +195,6 @@ async function importProducts(
           continue;
         }
 
-        // Insert user_product
         const { data: productData, error: insertErr } = await supabaseAdmin
           .from("user_products")
           .insert({
@@ -152,7 +212,6 @@ async function importProducts(
           continue;
         }
 
-        // Insert product_images
         if (uploadedImages.length > 0) {
           const imageRows = uploadedImages.map((img) => ({
             product_id: productData.id,
@@ -185,7 +244,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -216,7 +274,7 @@ Deno.serve(async (req) => {
     const userId = user.id;
 
     const body = await req.json();
-    const { action, shop, product_ids } = body;
+    const { action, shop, product_ids, collection_id } = body;
     let access_token = body.access_token;
 
     if (!shop) {
@@ -226,7 +284,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // If no token provided, look up from shopify_connections
     if (!access_token) {
       const { data: conn, error: connErr } = await supabaseAdmin
         .from("shopify_connections")
@@ -244,11 +301,17 @@ Deno.serve(async (req) => {
       access_token = conn.access_token;
     }
 
-    // Sanitize shop domain
     const cleanShop = shop.replace(/^https?:\/\//, "").replace(/\/+$/, "");
 
+    if (action === "collections") {
+      const collections = await listCollections(cleanShop, access_token);
+      return new Response(JSON.stringify({ collections, total: collections.length }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "list") {
-      const products = await listProducts(cleanShop, access_token);
+      const products = await listProducts(cleanShop, access_token, collection_id);
       return new Response(JSON.stringify({ products, total: products.length }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -273,7 +336,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: 'Invalid action. Use "list" or "import".' }),
+      JSON.stringify({ error: 'Invalid action. Use "collections", "list", or "import".' }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
