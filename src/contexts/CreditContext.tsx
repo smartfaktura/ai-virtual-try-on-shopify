@@ -133,6 +133,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         if (data.credits_balance !== null && data.credits_balance !== undefined) setBalance(data.credits_balance);
         if (data.current_period_end) setCurrentPeriodEnd(new Date(data.current_period_end));
         else setCurrentPeriodEnd(null);
+        if (data.billing_interval !== undefined) setBillingInterval(data.billing_interval as 'monthly' | 'annual' | null);
       }
     } catch (err) {
       console.error('Failed to check subscription:', err);
