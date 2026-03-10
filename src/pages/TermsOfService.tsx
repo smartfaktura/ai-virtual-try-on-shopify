@@ -1,6 +1,7 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { FileText } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
+import { SITE_URL } from '@/lib/constants';
 
 export default function TermsOfService() {
   return (
