@@ -22,8 +22,8 @@ const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'VOVV AI',
-  url: 'https://vovvai.lovable.app',
-  logo: 'https://vovvai.lovable.app/favicon.png',
+  url: SITE_URL,
+  logo: `${SITE_URL}/favicon.png`,
   sameAs: [],
   description: 'AI-powered product photography and visual studio for e-commerce brands.',
 };
