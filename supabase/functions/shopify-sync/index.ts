@@ -361,6 +361,15 @@ Deno.serve(async (req) => {
         );
       }
 
+      // Validate all product_ids are numbers
+      const validIds = product_ids.filter((id: unknown) => typeof id === "number" && Number.isFinite(id) && id > 0);
+      if (validIds.length === 0) {
+        return new Response(
+          JSON.stringify({ error: "Invalid product IDs" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const results = await importProducts(cleanShop, access_token, product_ids, userId, supabaseAdmin);
       const imported = results.filter((r) => r.success).length;
       const failed = results.filter((r) => !r.success).length;
