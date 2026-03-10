@@ -153,13 +153,9 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     setSelectedIds(new Set());
     setSearch('');
     const domain = connection?.shop_domain || shop.trim();
-    if (value === 'all') {
-      setIsLoadingCollection(true);
-      loadProducts(domain).finally(() => setIsLoadingCollection(false));
-    } else {
-      setIsLoadingCollection(true);
-      loadProducts(domain, Number(value)).finally(() => setIsLoadingCollection(false));
-    }
+    setIsLoadingCollection(true);
+    const collectionId = value === 'all' ? undefined : Number(value);
+    loadProducts(domain, collectionId, true).finally(() => setIsLoadingCollection(false));
   };
 
   const handleConnectOAuth = () => {

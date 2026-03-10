@@ -307,7 +307,10 @@ Deno.serve(async (req) => {
       access_token = conn.access_token;
     }
 
-    const cleanShop = shop.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    let cleanShop = shop.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    if (!cleanShop.includes(".")) {
+      cleanShop = `${cleanShop}.myshopify.com`;
+    }
 
     if (action === "collections") {
       const collections = await listCollections(cleanShop, access_token);
