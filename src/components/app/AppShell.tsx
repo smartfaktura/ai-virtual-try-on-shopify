@@ -10,7 +10,7 @@ import { useAdminView } from '@/contexts/AdminViewContext';
 import { CreditIndicator } from '@/components/app/CreditIndicator';
 import { StudioChat } from '@/components/app/StudioChat';
 import { GlobalGenerationBar } from '@/components/app/GlobalGenerationBar';
-import { SidebarTeamAvatar } from '@/components/app/SidebarTeamAvatar';
+
 import { toast } from '@/hooks/use-toast';
 import { useCredits } from '@/contexts/CreditContext';
 
@@ -212,8 +212,6 @@ export function AppShell({ children }: AppShellProps) {
           )}
         </div>
 
-        {/* Team Avatar */}
-        <SidebarTeamAvatar collapsed={isCollapsed} />
 
         {/* User Profile */}
         <div className={cn('border-t border-white/[0.06] relative', isCollapsed ? 'px-2 py-3' : 'px-4 py-3')}>
