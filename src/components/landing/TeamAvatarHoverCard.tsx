@@ -10,7 +10,7 @@ interface TeamAvatarHoverCardProps {
   sideOffset?: number;
 }
 
-export function TeamAvatarHoverCard({ member, children, side = 'top' }: TeamAvatarHoverCardProps) {
+export function TeamAvatarHoverCard({ member, children, side = 'top', sideOffset = 8 }: TeamAvatarHoverCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const shouldPlayRef = useRef(false);
