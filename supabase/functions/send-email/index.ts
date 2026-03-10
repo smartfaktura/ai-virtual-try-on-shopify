@@ -147,7 +147,7 @@ function lowCreditsEmail(data: { balance?: number; displayName?: string }): stri
       <br/>
       <span style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};">credits remaining</span>
     </div>
-    ${ctaButton("Get More Credits", "https://vovvai.lovable.app/pricing")}
+    ${ctaButton("Get More Credits", "https://vovv.ai/pricing")}
   `);
 }
 
