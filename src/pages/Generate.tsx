@@ -3865,6 +3865,7 @@ export default function Generate() {
         onOpenChange={setShowAddProduct}
         onProductAdded={() => queryClient.invalidateQueries({ queryKey: ['user-products'] })}
       />
+      <FeedbackBanner />
     </PageHeader>
   );
 }
