@@ -166,7 +166,7 @@ export default function Products() {
                 <List className="w-4 h-4" />
               </Button>
             </div>
-            <Button onClick={() => { setEditingProduct(null); setModalOpen(true); }}>
+            <Button onClick={() => navigate('/app/products/new')}>
               <Plus className="w-4 h-4 mr-2" />
               Add Product
             </Button>
