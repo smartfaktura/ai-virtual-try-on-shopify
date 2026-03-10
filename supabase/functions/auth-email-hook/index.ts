@@ -36,9 +36,9 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "vovvai"
-const SENDER_DOMAIN = "notify.vovv.ai"
+const SENDER_DOMAIN = "vovv.ai"
 const ROOT_DOMAIN = "vovv.ai"
-const FROM_DOMAIN = "notify.vovv.ai"
+const FROM_DOMAIN = "vovv.ai"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
