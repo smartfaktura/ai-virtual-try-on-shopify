@@ -269,6 +269,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
         planConfig,
         subscriptionStatus,
         currentPeriodEnd,
+        billingInterval,
         deductCredits,
         addCredits,
         refreshBalance: fetchCredits,
