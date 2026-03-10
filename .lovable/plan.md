@@ -1,30 +1,17 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Reorder `mockModels` Array to Match Landing Page Sequence
 
-### Issues Found
+Reorder the `mockModels` array in `src/data/mockData.ts` (lines 1260-1311) to match the same sequence used in the landing page marquee. This will update both the Freestyle model selector and the Generate page model selector.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### New Order
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**Priority models first (your requested sequence), then remaining models alternating W-M:**
 
-### Plan
+1. Freya → Zara → Anders → Sienna → Jordan → Hannah → Kai → Valeria → Fatima → Akiko → Olivia → Marcus (African American) → Isabella → Luca/Liam → Charlotte → Tyler → Amara/Nia → Omar → Priya (Indian) → Brandon/Ethan → Natalie → Hiro/Jin
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+Then remaining: Elena/Sofia → Arjun/Ravi → Madison/Ingrid → Diego → Sophie/Charlotte(European) → Callum/Rowan → Nadia/Amara(athletic) → Max/Henrik → Aubrey/Soo-Min → Kenji → Zoe/Elena(Latina) → Marco/Mateo → Niamh/Daphne → Kwame/Jamal → Mei → Ryan/Leo → Aisha/Maya → Carlos/Chen Wei → Leila/Layla → Erik/Anders(dup removed) → Emma → Hana/Soo-Min → remaining models (Sofia Spanish, Sienna Italian, Clara, Elise, Priya athletic, etc.)
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### File Changed
+**`src/data/mockData.ts`** — Reorder the entries in the `mockModels` array (lines 1260–1311). No additions or deletions, just resequencing to put Freya first and follow the same priority + W-M alternating pattern.
 
