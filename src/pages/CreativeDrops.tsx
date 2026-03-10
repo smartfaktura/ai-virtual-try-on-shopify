@@ -14,6 +14,7 @@ import { DropDetailModal } from '@/components/app/DropDetailModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 
 export interface CreativeSchedule {
   id: string;
