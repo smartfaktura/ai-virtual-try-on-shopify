@@ -51,11 +51,11 @@ export default function AddProduct() {
 
   return (
     <PageHeader
-      title={isEditing ? 'Edit Product' : 'Add Product'}
+      title={isEditing ? 'Edit Product' : 'Add Products'}
       subtitle={
         isEditing
           ? 'Update your product details and images.'
-          : 'Upload images, import from a URL, or bulk-add via CSV.'
+          : 'Upload images, import from a URL, or bulk-add via CSV. Each image = one product.'
       }
       backAction={{ content: 'Products', onAction: handleDone }}
     >
