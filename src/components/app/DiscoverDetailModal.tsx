@@ -136,9 +136,10 @@ export function DiscoverDetailModal({
       >
         {/* Left — Image showcase */}
         <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
-          <img
+          <ShimmerImage
             src={imageUrl}
             alt={title}
+            wrapperClassName="flex items-center justify-center"
             className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
           />
         </div>
