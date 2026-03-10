@@ -63,6 +63,11 @@ const ROW_2: ModelCard[] = [
   m('Astrid', 'model-female-average-nordic.jpg'),
   m('Leila', 'model-female-average-middleeast.jpg'),
   m('Fatima', 'model-female-plussize-middleeast.jpg'),
+  m('Jordan', 'models/model-051-jordan.jpg'),
+  m('Emma', 'models/model-052-emma.jpg'),
+  m('Jake', 'models/model-055-jake.jpg'),
+  m('Megan', 'models/model-056-megan.jpg'),
+  m('Ryan', 'models/model-059-ryan.jpg'),
 ];
 
 function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
