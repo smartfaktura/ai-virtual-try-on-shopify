@@ -188,11 +188,10 @@ export default function Auth() {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="h-11"
+                onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: undefined })); }}
+                className={`h-11 ${errors.password ? 'border-destructive' : ''}`}
               />
+              {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
             </div>
 
             <Button type="submit" className="w-full h-11 rounded-full font-semibold text-base" disabled={loading}>
