@@ -200,6 +200,20 @@ async function importProducts(
           ? (product as any).tags.split(", ").map((t: string) => t.trim()).filter(Boolean)
           : [];
 
+        // Check for duplicate product (same title + user)
+        const { data: existing } = await supabaseAdmin
+          .from("user_products")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("title", product.title)
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          results.push({ id: productId, title: product.title, success: false, error: "Already imported" });
+          continue;
+        }
+
         const { data: productData, error: insertErr } = await supabaseAdmin
           .from("user_products")
           .insert({
@@ -307,7 +321,10 @@ Deno.serve(async (req) => {
       access_token = conn.access_token;
     }
 
-    const cleanShop = shop.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    let cleanShop = shop.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    if (!cleanShop.includes(".")) {
+      cleanShop = `${cleanShop}.myshopify.com`;
+    }
 
     if (action === "collections") {
       const collections = await listCollections(cleanShop, access_token);

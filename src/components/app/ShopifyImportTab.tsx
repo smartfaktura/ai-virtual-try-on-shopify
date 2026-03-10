@@ -110,7 +110,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     }
   };
 
-  const loadProducts = async (shopDomain?: string, collectionId?: number) => {
+  const loadProducts = async (shopDomain?: string, collectionId?: number, isCollectionSwitch = false) => {
     const domain = shopDomain || shop.trim();
     if (!domain) return;
     setIsLoading(true);
@@ -139,7 +139,10 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
       const msg = err instanceof Error ? err.message : 'Failed to load products';
       setError(msg);
       toast.error(msg);
-      setStep('connect');
+      // Only reset to connect screen on initial load, not during collection switches
+      if (!isCollectionSwitch) {
+        setStep('connect');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -150,13 +153,9 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     setSelectedIds(new Set());
     setSearch('');
     const domain = connection?.shop_domain || shop.trim();
-    if (value === 'all') {
-      setIsLoadingCollection(true);
-      loadProducts(domain).finally(() => setIsLoadingCollection(false));
-    } else {
-      setIsLoadingCollection(true);
-      loadProducts(domain, Number(value)).finally(() => setIsLoadingCollection(false));
-    }
+    setIsLoadingCollection(true);
+    const collectionId = value === 'all' ? undefined : Number(value);
+    loadProducts(domain, collectionId, true).finally(() => setIsLoadingCollection(false));
   };
 
   const handleConnectOAuth = () => {
