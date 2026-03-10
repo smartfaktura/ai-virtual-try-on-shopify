@@ -3509,8 +3509,8 @@ export default function Generate() {
         {currentStep === 'generating' && (
           <Card><CardContent className="p-10 flex flex-col items-center gap-6">
             {(() => {
-              const productImg = sourceType === 'scratch' ? scratchUpload?.previewUrl : (selectedProduct?.images?.[0]?.url || selectedProduct?.image_url);
-              const modelImg = selectedModel?.previewUrl || selectedModel?.image_url;
+              const productImg = sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images?.[0]?.url;
+              const modelImg = selectedModel?.previewUrl;
               const showModel = (generationMode === 'virtual-try-on' || activeWorkflow?.uses_tryon) && modelImg;
 
               if (showModel && productImg) {
