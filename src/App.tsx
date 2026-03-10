@@ -114,6 +114,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AppShell>
+                    <Suspense fallback={<AppShellLoading />}>
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/products" element={<Products />} />
@@ -137,6 +138,7 @@ const App = () => (
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
+                    </Suspense>
                   </AppShell>
                 </ProtectedRoute>
               }
