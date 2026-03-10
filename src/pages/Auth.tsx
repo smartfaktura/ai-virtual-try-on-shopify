@@ -20,12 +20,13 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -36,11 +37,15 @@ export default function Auth() {
   if (isLoading || user) return null;
 
   const validate = () => {
-    const errs: { email?: string; password?: string } = {};
+    const errs: { email?: string; password?: string; confirmPassword?: string } = {};
     if (!email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email address';
     if (!password) errs.password = 'Password is required';
     else if (password.length < 6) errs.password = 'Password must be at least 6 characters';
+    if (mode === 'signup') {
+      if (!confirmPassword) errs.confirmPassword = 'Please confirm your password';
+      else if (confirmPassword !== password) errs.confirmPassword = 'Passwords do not match';
+    }
     return errs;
   };
 
@@ -193,6 +198,21 @@ export default function Auth() {
               />
               {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
             </div>
+
+            {mode === 'signup' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => { setConfirmPassword(e.target.value); setErrors(prev => ({ ...prev, confirmPassword: undefined })); }}
+                  className={`h-11 ${errors.confirmPassword ? 'border-destructive' : ''}`}
+                />
+                {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
+              </div>
+            )}
 
             <Button type="submit" className="w-full h-11 rounded-full font-semibold text-base" disabled={loading}>
               {loading
