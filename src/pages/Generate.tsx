@@ -1165,6 +1165,24 @@ export default function Generate() {
     setSelectedForPublish(prev => { const s = new Set(prev); s.has(index) ? s.delete(index) : s.add(index); return s; });
   };
   const handleImageClick = (index: number) => { setLightboxIndex(index); setLightboxOpen(true); };
+  const buildFileName = (index: number) => {
+    const sanitize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').substring(0, 30);
+    const parts: string[] = [];
+    const productName = selectedProduct?.title || scratchUpload?.productInfo.title;
+    if (productName) parts.push(sanitize(productName));
+    if (activeWorkflow?.name) parts.push(sanitize(activeWorkflow.name));
+    if (selectedModel?.name) parts.push(sanitize(selectedModel.name));
+    // Add variation label if available
+    if (variationStrategy?.variations?.length && selectedVariationIndices.size > 0) {
+      const sortedIndices = Array.from(selectedVariationIndices).sort((a, b) => a - b);
+      const variationIndex = sortedIndices[index % sortedIndices.length];
+      const label = variationStrategy.variations[variationIndex]?.label;
+      if (label) parts.push(sanitize(label));
+    }
+    parts.push(String(index + 1));
+    return parts.join('-') + '.png';
+  };
+
   const handleDownloadImage = async (index: number) => {
     const url = generatedImages[index];
     try {
@@ -1173,10 +1191,9 @@ export default function Generate() {
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = `generated-image-${index + 1}.png`;
+      link.download = buildFileName(index);
       link.click();
       URL.revokeObjectURL(blobUrl);
-      
     } catch {
       toast.error('Download failed');
     }
