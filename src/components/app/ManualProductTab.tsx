@@ -441,13 +441,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     });
   };
 
-  const updateBatchItem = (id: string, field: 'title' | 'productType' | 'description', value: string) => {
+  const updateBatchItem = (id: string, field: 'title' | 'productType' | 'description' | 'dimensions', value: string) => {
     setBatchItems(prev => prev.map(b => {
       if (b.id !== id) return b;
       return {
         ...b,
         [field]: value,
-        manualEdits: { ...b.manualEdits, [field]: true },
+        manualEdits: field === 'dimensions' ? b.manualEdits : { ...b.manualEdits, [field]: true },
       };
     }));
   };
