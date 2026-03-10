@@ -215,10 +215,21 @@ export default function Settings() {
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
-                {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-              </p>
+              {(() => {
+                const currentPlanData = pricingPlans.find(p => p.planId === plan);
+                const displayPrice = currentPlanData
+                  ? billingInterval === 'annual'
+                    ? Math.round(currentPlanData.annualPrice / 12)
+                    : currentPlanData.monthlyPrice
+                  : null;
+                return (
+                  <p className="text-sm text-muted-foreground">
+                    {displayPrice !== null && displayPrice > 0 && <>${displayPrice}/mo • </>}
+                    {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
+                    {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                  </p>
+                );
+              })()}
               {plan !== 'free' && billingInterval !== 'annual' && (
                 <button
                   className="text-xs text-primary hover:underline underline-offset-2 mt-1 font-medium"
