@@ -27,6 +27,7 @@ const BrandProfiles = lazy(() => import('@/pages/BrandProfiles'));
 const BrandProfileWizard = lazy(() => import('@/components/app/BrandProfileWizard'));
 const Workflows = lazy(() => import('@/pages/Workflows'));
 const Products = lazy(() => import('@/pages/Products'));
+const AddProduct = lazy(() => import('@/pages/AddProduct'));
 const CreativeDrops = lazy(() => import('@/pages/CreativeDrops'));
 const MobileUpload = lazy(() => import('@/pages/MobileUpload'));
 const VideoGenerate = lazy(() => import('@/pages/VideoGenerate'));
