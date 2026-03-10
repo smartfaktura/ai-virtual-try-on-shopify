@@ -42,6 +42,19 @@ export default function Auth() {
     }
   }, [user, isLoading, navigate]);
 
+  // Resend countdown timer
+  useEffect(() => {
+    if (!signupComplete && !magicLinkSent) return;
+    setResendTimer(30);
+    const interval = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) { clearInterval(interval); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [signupComplete, magicLinkSent]);
+
   if (isLoading || user) return null;
 
   const validate = () => {
