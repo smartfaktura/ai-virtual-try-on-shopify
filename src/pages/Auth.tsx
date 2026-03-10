@@ -564,6 +564,7 @@ export default function Auth() {
                 e.preventDefault();
                 if (!resetEmail.trim()) return;
                 setResetLoading(true);
+                setResetError(null);
                 const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
                   redirectTo: window.location.origin + '/reset-password',
                 });
@@ -571,9 +572,9 @@ export default function Auth() {
                 if (error) {
                   const msg = error.message?.toLowerCase() || '';
                   if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
-                    toast.error('Reset email already sent. Please check your inbox or wait a few minutes.');
+                    setResetError('Too many requests. Please wait a few minutes before trying again.');
                   } else {
-                    toast.error('Could not send reset link. Please try again.');
+                    setResetError('Could not send reset link. Please try again.');
                   }
                 } else {
                   setResetSent(true);

@@ -9,6 +9,7 @@ import {
   Heading,
   Html,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
@@ -18,17 +19,23 @@ interface ReauthenticationEmailProps {
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Your verification code</Preview>
+    <Head>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    </Head>
+    <Preview>Your verification code - VOVV.AI</Preview>
     <Body style={main}>
       <Container style={container}>
+        <Text style={wordmark}>VOVV.AI</Text>
         <Heading style={h1}>Confirm reauthentication</Heading>
         <Text style={text}>Use the code below to confirm your identity:</Text>
         <Text style={codeStyle}>{token}</Text>
-        <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+        <Text style={footerText}>
+          This code will expire shortly. If you didn't request this, you can safely ignore this email.
         </Text>
+        <Section style={footerSection}>
+          <Text style={footerCopy}>&copy; 2026 VOVV.AI. All rights reserved.</Text>
+          <Text style={footerSub}>A product by 123Presets</Text>
+        </Section>
       </Container>
     </Body>
   </Html>
@@ -36,25 +43,59 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
 export default ReauthenticationEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = {
+  backgroundColor: '#ffffff',
+  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+}
+const container = { padding: '40px 20px', maxWidth: '560px', margin: '0 auto' }
+const wordmark = {
+  fontFamily: "'Inter', sans-serif",
+  fontWeight: 700 as const,
+  fontSize: '20px',
+  letterSpacing: '-0.03em',
+  color: '#0f172a',
+  margin: '0 0 32px 0',
+}
 const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '24px',
+  fontWeight: 700 as const,
+  color: '#0f172a',
+  margin: '0 0 16px 0',
+  letterSpacing: '-0.02em',
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '15px',
+  color: '#64748b',
+  lineHeight: '1.6',
+  margin: '0 0 24px 0',
 }
 const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
+  fontFamily: "'Courier New', Courier, monospace",
+  fontSize: '28px',
+  fontWeight: 700 as const,
+  color: '#0f172a',
+  letterSpacing: '0.15em',
+  margin: '0 0 32px 0',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footerText = {
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '13px',
+  color: '#64748b',
+  margin: '0 0 40px 0',
+}
+const footerSection = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
+const footerCopy = {
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '12px',
+  color: '#64748b',
+  margin: '16px 0 0 0',
+  lineHeight: '1.5',
+}
+const footerSub = {
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '12px',
+  color: '#64748b',
+  margin: '4px 0 0 0',
+}
