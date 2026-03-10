@@ -43,7 +43,7 @@ export function TeamAvatarHoverCard({ member, children, side = 'top', sideOffset
       <HoverCardContent
         side={side}
         align="center"
-        sideOffset={8}
+        sideOffset={sideOffset}
         className="w-[220px] p-0 rounded-xl border border-border bg-card shadow-xl overflow-hidden"
       >
         {/* Video */}
