@@ -370,7 +370,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      const results = await importProducts(cleanShop, access_token, product_ids, userId, supabaseAdmin);
+      const results = await importProducts(cleanShop, access_token, validIds, userId, supabaseAdmin);
       const imported = results.filter((r) => r.success).length;
       const failed = results.filter((r) => !r.success).length;
 

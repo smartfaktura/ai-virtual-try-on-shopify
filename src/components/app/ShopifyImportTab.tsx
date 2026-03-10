@@ -196,7 +196,9 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     if (!search.trim()) return products;
     const q = search.toLowerCase();
     return products.filter(
-      (p) => p.title.toLowerCase().includes(q) || p.product_type.toLowerCase().includes(q)
+      (p) => p.title.toLowerCase().includes(q) ||
+        p.product_type.toLowerCase().includes(q) ||
+        p.tags.some((tag) => tag.toLowerCase().includes(q))
     );
   }, [products, search]);
 
