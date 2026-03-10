@@ -6,9 +6,10 @@ import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { CheckCircle2, ArrowLeft, MailCheck } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, MailCheck, Mail } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
@@ -28,6 +29,10 @@ export default function Auth() {
   const [resetLoading, setResetLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
   const [signupComplete, setSignupComplete] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -79,10 +84,117 @@ export default function Auth() {
     setLoading(false);
   };
 
+  const handleMagicLink = async () => {
+    if (!email.trim()) {
+      setErrors({ email: 'Enter your email to get a login link' });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setErrors({ email: 'Enter a valid email address' });
+      return;
+    }
+    setErrors({});
+    setMagicLinkLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/app' },
+    });
+    setMagicLinkLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setMagicLinkSent(true);
+    }
+  };
+
+  const handleVerifyOtp = async (code: string) => {
+    if (code.length !== 6) return;
+    setOtpLoading(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: code,
+      type: 'signup',
+    });
+    setOtpLoading(false);
+    if (error) {
+      toast.error('Invalid or expired code. Please try again.');
+      setOtpCode('');
+    } else {
+      toast.success('Email confirmed! Redirecting...');
+      navigate('/app', { replace: true });
+    }
+  };
+
+  // Shared "check your inbox" screen for both signup confirmation and magic link
+  const renderCheckInbox = (options: {
+    title: string;
+    description: string;
+    showOtp: boolean;
+    onBack: () => void;
+  }) => (
+    <div className="flex flex-col items-center text-center gap-6 py-8">
+      <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+        <MailCheck className="h-10 w-10 text-primary" />
+      </div>
+      <div className="space-y-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{options.title}</h1>
+        <p className="text-muted-foreground">
+          {options.description} <span className="font-medium text-foreground">{email}</span>
+        </p>
+      </div>
+
+      {options.showOtp && (
+        <div className="w-full max-w-xs space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Enter the 6-digit code from your email, or click the link to activate your account.
+          </p>
+          <div className="flex justify-center">
+            <InputOTP
+              maxLength={6}
+              value={otpCode}
+              onChange={(val) => {
+                setOtpCode(val);
+                if (val.length === 6) handleVerifyOtp(val);
+              }}
+              disabled={otpLoading}
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+          {otpLoading && (
+            <p className="text-sm text-muted-foreground">Verifying...</p>
+          )}
+        </div>
+      )}
+
+      {!options.showOtp && (
+        <p className="text-sm text-muted-foreground max-w-sm">
+          Click the link in your email to sign in. Check your spam folder if you don't see it.
+        </p>
+      )}
+
+      <Button
+        variant="outline"
+        className="rounded-full mt-2"
+        onClick={options.onBack}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back to sign in
+      </Button>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex bg-background">
-      <SEOHead title="Sign In — VOVV AI" description="Sign in or create your VOVV AI account to start generating AI product photography." noindex />
-      {/* Left side — Form */}
+      <SEOHead title="Sign In - VOVV AI" description="Sign in or create your VOVV AI account to start generating AI product photography." noindex />
+      {/* Left side - Form */}
       <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-16 xl:px-24 py-12">
         <div className="w-full max-w-md mx-auto">
           {/* Logo */}
@@ -97,7 +209,7 @@ export default function Auth() {
               <span className="font-bold text-lg text-foreground tracking-tight">VOVV.AI</span>
             </button>
 
-            {!signupComplete && (
+            {!signupComplete && !magicLinkSent && (
               <>
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
                   {mode === 'signup' ? 'Create your account' : 'Welcome back'}
@@ -112,33 +224,27 @@ export default function Auth() {
           </div>
 
           {signupComplete ? (
-            <div className="flex flex-col items-center text-center gap-6 py-8">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <MailCheck className="h-10 w-10 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Check your inbox</h1>
-                <p className="text-muted-foreground">
-                  We sent a confirmation link to <span className="font-medium text-foreground">{email}</span>
-                </p>
-              </div>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                Click the link in your email to activate your account. Check your spam folder if you don't see it.
-              </p>
-              <Button
-                variant="outline"
-                className="rounded-full mt-2"
-                onClick={() => {
-                  setSignupComplete(false);
-                  setMode('login');
-                  setPassword('');
-                  setConfirmPassword('');
-                }}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to sign in
-              </Button>
-            </div>
+            renderCheckInbox({
+              title: 'Check your inbox',
+              description: 'We sent a confirmation code to',
+              showOtp: true,
+              onBack: () => {
+                setSignupComplete(false);
+                setMode('login');
+                setPassword('');
+                setConfirmPassword('');
+                setOtpCode('');
+              },
+            })
+          ) : magicLinkSent ? (
+            renderCheckInbox({
+              title: 'Check your email',
+              description: 'We sent a login link to',
+              showOtp: false,
+              onBack: () => {
+                setMagicLinkSent(false);
+              },
+            })
           ) : (
             <>
 
@@ -252,12 +358,32 @@ export default function Auth() {
 
             <Button type="submit" className="w-full h-11 rounded-full font-semibold text-base" disabled={loading}>
               {loading
-                ? 'Loading…'
+                ? 'Loading...'
                 : mode === 'signup'
                   ? 'Create Account'
                   : 'Sign In'}
             </Button>
           </form>
+
+          {/* Magic Link option (login mode only) */}
+          {mode === 'login' && (
+            <>
+              <div className="my-5 flex items-center gap-3">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground uppercase">or</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+              <button
+                type="button"
+                onClick={handleMagicLink}
+                disabled={magicLinkLoading}
+                className="w-full h-11 rounded-full border border-input bg-background hover:bg-accent flex items-center justify-center gap-2.5 text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                <Mail className="h-4 w-4" />
+                {magicLinkLoading ? 'Sending...' : 'Sign in with email link'}
+              </button>
+            </>
+          )}
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             {mode === 'signup' ? (
@@ -282,7 +408,7 @@ export default function Auth() {
         </div>
       </div>
 
-      {/* Right side — Hero image (hidden on mobile) */}
+      {/* Right side - Hero image (hidden on mobile) */}
       <div className="hidden lg:block lg:w-1/2 xl:w-[55%] relative">
         <img
           src={authHero}
