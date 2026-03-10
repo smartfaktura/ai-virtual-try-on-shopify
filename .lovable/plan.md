@@ -1,49 +1,30 @@
 
 
-## Fix Credit Deduction Logic for Workflows and Freestyle
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Current State (Broken)
+### Issues Found
 
-**Edge function** (`enqueue-generation/index.ts`) uses complex tiered pricing: 4/8/10/12/15 per image depending on model/scene/quality/tryon flags.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**Workflow UI** (`Generate.tsx` line 1280) estimates `8` or `16` per image (standard/high).
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**Batch path** (`useGenerationBatch.ts`) never sends `hasModel`/`hasScene` → edge function defaults to 4/image.
+### Plan
 
-**Freestyle UI** (`Freestyle.tsx` line 192-196) uses 4/10/12/15 tiers.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-Result: mismatches everywhere between what's shown and what's charged.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### New Rules (Per User Request)
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-- **Workflows**: Always 8 credits per image. No model/scene/quality checks. Always use high quality.
-- **Freestyle**: 4 credits if no model and no scene. 8 credits if model OR scene selected. Max 8 per image.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Changes
-
-**1. `supabase/functions/enqueue-generation/index.ts`** — Simplify `calculateCreditCost`:
-```
-if (jobType === "workflow") → 8 per image, ignore all flags
-if (jobType === "freestyle") → hasModel || hasScene ? 8 : 4, ignore quality
-if (jobType === "tryon") → 8 per image (unchanged)
-```
-Remove the quality-based tiers entirely.
-
-**2. `src/pages/Generate.tsx`** — Two fixes:
-- Line 1280: Change workflow cost estimate to always `workflowImageCount * 8` (remove quality multiplier since quality is always high now)
-- Line ~770-815: Force `quality = 'high'` for workflow generations before enqueue/startBatch calls
-
-**3. `src/hooks/useGenerationBatch.ts`** — Pass `hasModel`/`hasScene` in the fetch body (lines 218-223). Even though workflows will always be 8, this prevents future bugs.
-
-**4. `src/pages/Freestyle.tsx`** — Line 192-196: Simplify credit cost display:
-```typescript
-const creditCost = (hasModel || hasScene) ? 8 : 4;
-```
-Remove quality-based tiers (10, 12, 15).
-
-### Files Changed — 4 files
-- `supabase/functions/enqueue-generation/index.ts` — Simplify pricing function
-- `src/pages/Generate.tsx` — Force high quality, fix cost estimate
-- `src/hooks/useGenerationBatch.ts` — Pass model/scene flags
-- `src/pages/Freestyle.tsx` — Simplify cost display to 4 or 8
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

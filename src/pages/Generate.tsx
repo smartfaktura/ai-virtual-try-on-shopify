@@ -804,11 +804,11 @@ export default function Generate() {
         jobType: 'workflow',
         payload,
         imageCount: workflowImageCount,
-        quality,
-        additionalProductCount: extraProductCount,
+        quality: 'high',
+        additionalProductCount: 0,
       }, {
         imageCount: workflowImageCount,
-        quality,
+        quality: 'high',
         hasModel: !!needsModel,
         hasScene: false,
         hasProduct: true,
@@ -824,8 +824,10 @@ export default function Generate() {
         payload,
         selectedVariationIndices: Array.from(selectedVariationIndices),
         angleMultiplier,
-        quality,
+        quality: 'high',
         imageCount: workflowImageCount,
+        hasModel: !!needsModel,
+        hasScene: false,
       });
       if (!success) {
         setCurrentStep('settings');
@@ -1277,7 +1279,7 @@ export default function Generate() {
   const extraProductCount = isFlatLay && selectedFlatLayProductIds.size > 1 ? selectedFlatLayProductIds.size - 1 : 0;
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
-  const singleProductCreditCost = generationMode === 'virtual-try-on' ? parseInt(imageCount) * (quality === 'high' ? 16 : 8) : (hasWorkflowConfig ? workflowImageCount * (quality === 'high' ? 16 : 8) + extraProductCredits : parseInt(imageCount) * (quality === 'high' ? 16 : 8));
+  const singleProductCreditCost = hasWorkflowConfig ? workflowImageCount * 8 : parseInt(imageCount) * 8;
   const creditCost = singleProductCreditCost * multiProductCount;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
