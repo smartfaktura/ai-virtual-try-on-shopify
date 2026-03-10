@@ -12,14 +12,25 @@ interface TeamAvatarHoverCardProps {
 export function TeamAvatarHoverCard({ member, children, side = 'top' }: TeamAvatarHoverCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const shouldPlayRef = useRef(false);
+
   const handleOpenChange = useCallback((open: boolean) => {
     const video = videoRef.current;
     if (!video) return;
     if (open) {
+      shouldPlayRef.current = true;
       video.currentTime = 0;
+      video.load();
       video.play().catch(() => {});
     } else {
+      shouldPlayRef.current = false;
       video.pause();
+    }
+  }, []);
+
+  const handleCanPlay = useCallback(() => {
+    if (shouldPlayRef.current && videoRef.current) {
+      videoRef.current.play().catch(() => {});
     }
   }, []);
 
