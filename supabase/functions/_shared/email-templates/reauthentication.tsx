@@ -26,11 +26,9 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
     <Body style={main}>
       <Container style={container}>
         <Text style={wordmark}>VOVV.AI</Text>
-        <Heading style={h1}>Confirm your identity</Heading>
-        <Text style={text}>Use the code below to verify your identity:</Text>
-        <Section style={codeBox}>
-          <Text style={codeStyle}>{token}</Text>
-        </Section>
+        <Heading style={h1}>Confirm reauthentication</Heading>
+        <Text style={text}>Use the code below to confirm your identity:</Text>
+        <Text style={codeStyle}>{token}</Text>
         <Text style={footerText}>
           This code will expire shortly. If you didn't request this, you can safely ignore this email.
         </Text>
@@ -73,20 +71,13 @@ const text = {
   lineHeight: '1.6',
   margin: '0 0 24px 0',
 }
-const codeBox = {
-  backgroundColor: '#f5f5f4',
-  borderRadius: '8px',
-  padding: '20px',
-  textAlign: 'center' as const,
-  margin: '0 0 24px 0',
-}
 const codeStyle = {
-  fontFamily: "'Inter', monospace",
-  fontSize: '32px',
+  fontFamily: "'Courier New', Courier, monospace",
+  fontSize: '28px',
   fontWeight: 700 as const,
   color: '#0f172a',
-  letterSpacing: '0.1em',
-  margin: '0',
+  letterSpacing: '0.15em',
+  margin: '0 0 32px 0',
 }
 const footerText = {
   fontFamily: "'Inter', sans-serif",
@@ -94,10 +85,7 @@ const footerText = {
   color: '#64748b',
   margin: '0 0 40px 0',
 }
-const footerSection = {
-  borderTop: '1px solid #e7e5e4',
-  paddingTop: '16px',
-}
+const footerSection = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
 const footerCopy = {
   fontFamily: "'Inter', sans-serif",
   fontSize: '12px',

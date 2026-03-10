@@ -38,7 +38,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 const SITE_NAME = "vovvai"
 const SENDER_DOMAIN = "notify.vovv.ai"
 const ROOT_DOMAIN = "vovv.ai"
-const FROM_DOMAIN = "notify.vovv.ai"
+const FROM_DOMAIN = "notify.vovv.ai" // Domain shown in From address (may be root or sender subdomain)
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
@@ -53,7 +53,6 @@ const SAMPLE_DATA: Record<string, object> = {
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
-    token: '123456',
   },
   magiclink: {
     siteName: SITE_NAME,
@@ -252,7 +251,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       {
         run_id,
         to: payload.data.email,
-        from: `${SITE_NAME} <notifications@${FROM_DOMAIN}>`,
+        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject: EMAIL_SUBJECTS[emailType] || 'Notification',
         html,
@@ -270,7 +269,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     })
   }
 
-  console.log('Email sent successfully', { result: JSON.stringify(result), run_id })
+  console.log('Email sent successfully', { message_id: result.message_id, run_id })
 
   return new Response(
     JSON.stringify({ success: true, message_id: result.message_id }),
@@ -279,7 +278,6 @@ async function handleWebhook(req: Request): Promise<Response> {
 }
 
 Deno.serve(async (req) => {
-  console.log("Webhook request received", { method: req.method, url: req.url })
   const url = new URL(req.url)
 
   // Handle CORS preflight for main endpoint

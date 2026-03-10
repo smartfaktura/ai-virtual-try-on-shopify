@@ -43,9 +43,6 @@ export const EmailChangeEmail = ({
           to{' '}
           <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
         </Text>
-        <Text style={text}>
-          Click the button below to confirm this change:
-        </Text>
         <Button style={button} href={confirmationUrl}>
           Confirm Email Change
         </Button>
@@ -111,10 +108,7 @@ const footerText = {
   color: '#64748b',
   margin: '0 0 40px 0',
 }
-const footerSection = {
-  borderTop: '1px solid #e7e5e4',
-  paddingTop: '16px',
-}
+const footerSection = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
 const footerCopy = {
   fontFamily: "'Inter', sans-serif",
   fontSize: '12px',

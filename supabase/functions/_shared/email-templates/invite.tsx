@@ -9,6 +9,7 @@ import {
   Head,
   Heading,
   Html,
+  Link,
   Preview,
   Section,
   Text,
@@ -35,7 +36,9 @@ export const InviteEmail = ({
         <Text style={wordmark}>VOVV.AI</Text>
         <Heading style={h1}>You've been invited</Heading>
         <Text style={text}>
-          You've been invited to join VOVV.AI. Click the button below to accept the invitation and create your account.
+          You've been invited to join{' '}
+          <Link href={siteUrl} style={link}><strong>VOVV.AI</strong></Link>.
+          Click the button below to accept the invitation and create your account.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Accept Invitation
@@ -82,6 +85,7 @@ const text = {
   lineHeight: '1.6',
   margin: '0 0 24px 0',
 }
+const link = { color: '#0f172a', textDecoration: 'underline' }
 const button = {
   backgroundColor: '#1e293b',
   color: '#ffffff',
@@ -101,10 +105,7 @@ const footerText = {
   color: '#64748b',
   margin: '0 0 40px 0',
 }
-const footerSection = {
-  borderTop: '1px solid #e7e5e4',
-  paddingTop: '16px',
-}
+const footerSection = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
 const footerCopy = {
   fontFamily: "'Inter', sans-serif",
   fontSize: '12px',

@@ -27,6 +27,7 @@ export default function Auth() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
   const [signupComplete, setSignupComplete] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
@@ -563,6 +564,7 @@ export default function Auth() {
                 e.preventDefault();
                 if (!resetEmail.trim()) return;
                 setResetLoading(true);
+                setResetError(null);
                 const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
                   redirectTo: window.location.origin + '/reset-password',
                 });
@@ -570,9 +572,9 @@ export default function Auth() {
                 if (error) {
                   const msg = error.message?.toLowerCase() || '';
                   if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
-                    toast.error('Reset email already sent. Please check your inbox or wait a few minutes.');
+                    setResetError('Too many requests. Please wait a few minutes before trying again.');
                   } else {
-                    toast.error('Could not send reset link. Please try again.');
+                    setResetError('Could not send reset link. Please try again.');
                   }
                 } else {
                   setResetSent(true);
@@ -580,12 +582,18 @@ export default function Auth() {
               }}
               className="space-y-5"
             >
+              {resetError && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  {resetError}
+                </div>
+              )}
               <Input
                 id="reset-email"
                 type="email"
                 placeholder="Email address"
                 value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
+                onChange={(e) => { setResetEmail(e.target.value); setResetError(null); }}
                 required
                 className="rounded-full bg-muted/50 border-0 h-11 px-5"
                 autoFocus

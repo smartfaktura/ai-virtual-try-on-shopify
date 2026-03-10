@@ -33,7 +33,7 @@ export const MagicLinkEmail = ({
         <Text style={wordmark}>VOVV.AI</Text>
         <Heading style={h1}>Your login link</Heading>
         <Text style={text}>
-          Click the button below to log in. This link will expire shortly.
+          Click the button below to log in to VOVV.AI. This link will expire shortly.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Log In
@@ -99,10 +99,7 @@ const footerText = {
   color: '#64748b',
   margin: '0 0 40px 0',
 }
-const footerSection = {
-  borderTop: '1px solid #e7e5e4',
-  paddingTop: '16px',
-}
+const footerSection = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
 const footerCopy = {
   fontFamily: "'Inter', sans-serif",
   fontSize: '12px',
