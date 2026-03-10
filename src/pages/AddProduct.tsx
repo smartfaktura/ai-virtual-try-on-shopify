@@ -1,14 +1,14 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag } from 'lucide-react';
 import { ManualProductTab } from '@/components/app/ManualProductTab';
 import { StoreImportTab } from '@/components/app/StoreImportTab';
 import { CsvImportTab } from '@/components/app/CsvImportTab';
 import { MobileUploadTab } from '@/components/app/MobileUploadTab';
 import { ShopifyImportTab } from '@/components/app/ShopifyImportTab';
 import { ProductUploadTips } from '@/components/app/ProductUploadTips';
+import { PageHeader } from '@/components/app/PageHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,30 +50,19 @@ export default function AddProduct() {
   const handleDone = () => navigate('/app/products');
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={handleDone} className="gap-1.5 -ml-2">
-            <ArrowLeft className="w-4 h-4" />
-            Products
-          </Button>
-        </div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight mt-2">
-          {isEditing ? 'Edit Product' : 'Add Product'}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1 max-w-lg">
-          {isEditing
-            ? 'Update your product details and images.'
-            : 'Upload images, import from a URL, or bulk-add via CSV.'}
-        </p>
-      </div>
-
+    <PageHeader
+      title={isEditing ? 'Edit Product' : 'Add Product'}
+      subtitle={
+        isEditing
+          ? 'Update your product details and images.'
+          : 'Upload images, import from a URL, or bulk-add via CSV.'
+      }
+      backAction={{ content: 'Products', onAction: handleDone }}
+    >
       <ProductUploadTips />
 
-      {/* Content */}
       {isEditing ? (
-        <div className="max-w-2xl">
+        <div className="max-w-3xl">
           {editingProduct && (
             <ManualProductTab
               onProductAdded={handleDone}
@@ -83,7 +72,7 @@ export default function AddProduct() {
           )}
         </div>
       ) : (
-        <Tabs defaultValue="manual" className="w-full max-w-2xl">
+        <Tabs defaultValue="manual" className="w-full max-w-3xl">
           <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto overflow-x-auto flex-nowrap max-w-full">
             <TabsTrigger
               value="manual"
@@ -145,6 +134,6 @@ export default function AddProduct() {
           </div>
         </Tabs>
       )}
-    </div>
+    </PageHeader>
   );
 }
