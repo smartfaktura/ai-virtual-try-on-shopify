@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { toast } from 'sonner';
 import JSZip from 'jszip';
 
@@ -322,6 +323,8 @@ export default function Jobs() {
         open={!!selectedItem}
         onClose={() => setSelectedItem(null)}
       />
+
+      <FeedbackBanner />
 
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <DialogContent>
