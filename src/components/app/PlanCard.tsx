@@ -12,6 +12,7 @@ interface PlanCardProps {
   isCurrentPlan?: boolean;
   currentPlanId?: string;
   subscriptionStatus?: SubscriptionStatus;
+  billingInterval?: 'monthly' | 'annual' | null;
   onSelect: (planId: string) => void;
   compact?: boolean;
 }
