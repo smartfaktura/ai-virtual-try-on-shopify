@@ -58,6 +58,7 @@ export function ShimmerImage({
           className,
         )}
         style={style}
+        fetchPriority={fetchPriority}
         onLoad={(e) => {
           setLoaded(true);
           onLoad?.(e);
