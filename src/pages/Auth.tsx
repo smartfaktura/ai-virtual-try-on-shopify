@@ -80,10 +80,21 @@ export default function Auth() {
     if (mode === 'signup') {
       const { data, error } = await signUp(email, password, displayName);
       if (error) {
-        toast.error(error.message);
+        const msg = error.message?.toLowerCase() || '';
+        if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
+          toast.info('We already sent a verification email. Check your inbox (and spam folder), or wait a few minutes before requesting another.');
+          setSignupComplete(true);
+        } else {
+          toast.error(error.message);
+        }
       } else if (!data?.user?.identities?.length) {
+        // Existing confirmed account — switch to login
         toast.error('An account with this email already exists. Try signing in instead.');
         setMode('login');
+      } else if (data?.user && !data.user.confirmed_at) {
+        // Unconfirmed account re-registration — resend confirmation and show OTP
+        await supabase.auth.resend({ type: 'signup', email });
+        setSignupComplete(true);
       } else {
         setSignupComplete(true);
       }
