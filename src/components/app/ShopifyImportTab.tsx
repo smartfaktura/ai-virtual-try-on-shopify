@@ -326,14 +326,14 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
 
             <div className="space-y-1.5">
               <Label htmlFor="shopify-domain">Your Shopify store</Label>
-              <div className="flex items-center">
+              <div className="flex items-center w-fit">
                 <Input
                   id="shopify-domain"
-                  placeholder="your-store-name"
+                  placeholder="my-store"
                   value={shop}
                   onChange={(e) => { setShop(e.target.value.replace(/\.myshopify\.com$/i, '').replace(/[^a-zA-Z0-9-]/g, '')); setError(null); }}
                   disabled={isLoading}
-                  className="rounded-r-none border-r-0"
+                  className="rounded-r-none border-r-0 w-44"
                 />
                 <span className="inline-flex items-center px-3 h-10 border border-l-0 border-input rounded-r-md bg-muted text-muted-foreground text-sm whitespace-nowrap">
                   .myshopify.com
