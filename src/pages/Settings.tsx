@@ -452,7 +452,7 @@ export default function Settings() {
       </div>
     </PageHeader>
 
-    <PlanChangeDialog
+     <PlanChangeDialog
       open={dialogOpen}
       onClose={() => setDialogOpen(false)}
       onConfirm={handleDialogConfirm}
@@ -461,6 +461,7 @@ export default function Settings() {
       currentPlanName={planConfig.name}
       isAnnual={billingPeriod === 'annual'}
       currentBalance={balance}
+      hasActiveSubscription={subscriptionStatus === 'active' || subscriptionStatus === 'canceling'}
     />
     </>
   );

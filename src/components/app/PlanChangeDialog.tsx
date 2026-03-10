@@ -169,12 +169,19 @@ export function PlanChangeDialog({
           )}
         </div>
 
+        {/* Redirect hint */}
+        <div className="px-8 pb-5 pt-0 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="w-3 h-3" />
+          <span>You'll be securely redirected to complete this change</span>
+        </div>
+
         <DialogFooter className="px-8 pb-8 pt-0 gap-3 sm:gap-3">
           <Button variant="outline" onClick={onClose} className="rounded-xl min-h-[44px]">
             Go Back
           </Button>
-          <Button variant={config.confirmVariant} onClick={onConfirm} className="rounded-xl min-h-[44px]">
-            {config.confirmLabel}
+          <Button variant={config.confirmVariant} onClick={onConfirm} className="rounded-xl min-h-[44px] gap-2">
+            {getConfirmLabel()}
+            <ExternalLink className="w-3.5 h-3.5" />
           </Button>
         </DialogFooter>
       </DialogContent>
