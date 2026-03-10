@@ -38,6 +38,8 @@ interface BatchParams {
   angleMultiplier: number;
   quality: string;
   imageCount: number; // total expected images
+  hasModel?: boolean;
+  hasScene?: boolean;
 }
 
 const INITIAL_BATCH_STATE: BatchState = {
