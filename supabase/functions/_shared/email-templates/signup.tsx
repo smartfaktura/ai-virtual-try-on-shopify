@@ -83,18 +83,18 @@ const main = {
   backgroundColor: '#ffffff',
   fontFamily: fontStack,
 }
-const container = { padding: '48px 24px', maxWidth: '480px', margin: '0 auto' }
+const container = { padding: '40px 20px', maxWidth: '560px', margin: '0 auto' }
 const wordmark = {
   fontFamily: fontStack,
   fontWeight: 700 as const,
-  fontSize: '18px',
+  fontSize: '20px',
   letterSpacing: '-0.03em',
   color: '#0f172a',
-  margin: '0 0 36px 0',
+  margin: '0 0 32px 0',
 }
 const h1 = {
   fontFamily: fontStack,
-  fontSize: '22px',
+  fontSize: '24px',
   fontWeight: 700 as const,
   color: '#0f172a',
   margin: '0 0 6px 0',
@@ -127,14 +127,14 @@ const codeText = {
 const codeHint = {
   fontFamily: fontStack,
   fontSize: '12px',
-  color: '#94a3b8',
+  color: '#64748b',
   margin: '0 0 28px 0',
   textAlign: 'center' as const,
 }
 const verifyText = {
   fontFamily: fontStack,
   fontSize: '13px',
-  color: '#94a3b8',
+  color: '#64748b',
   textAlign: 'center' as const,
   margin: '0 0 36px 0',
 }
@@ -146,21 +146,22 @@ const verifyLink = {
 const disclaimer = {
   fontFamily: fontStack,
   fontSize: '13px',
-  color: '#94a3b8',
+  color: '#64748b',
   lineHeight: '1.5',
-  margin: '0 0 36px 0',
+  margin: '0 0 40px 0',
 }
 const inlineLink = { color: '#0f172a', textDecoration: 'underline' }
-const footer = { borderTop: '1px solid #f1f5f9', paddingTop: '16px' }
+const footer = { borderTop: '1px solid #e7e5e4', paddingTop: '16px' }
 const footerCopy = {
   fontFamily: fontStack,
   fontSize: '12px',
-  color: '#94a3b8',
+  color: '#64748b',
   margin: '16px 0 0 0',
+  lineHeight: '1.5',
 }
 const footerSub = {
   fontFamily: fontStack,
   fontSize: '12px',
-  color: '#cbd5e1',
-  margin: '2px 0 0 0',
+  color: '#64748b',
+  margin: '4px 0 0 0',
 }
