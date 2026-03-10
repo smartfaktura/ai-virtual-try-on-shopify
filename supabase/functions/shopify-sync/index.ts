@@ -155,7 +155,7 @@ async function importProducts(
       }
 
       const res = await shopifyFetch(
-        `https://${shop}/admin/api/2024-01/products/${productId}.json?fields=id,title,product_type,body_html,images,tags`,
+        `https://${shop}/admin/api/2025-01/products/${productId}.json?fields=id,title,product_type,body_html,images,tags`,
         accessToken
       );
       if (!res.ok) {
