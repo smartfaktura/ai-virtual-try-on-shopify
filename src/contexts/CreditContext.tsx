@@ -102,7 +102,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
     }
     const { data, error } = await supabase
       .from('profiles')
-      .select('credits_balance, plan, subscription_status, current_period_end')
+      .select('credits_balance, plan, subscription_status, current_period_end, billing_interval')
       .eq('user_id', user.id)
       .single();
     
