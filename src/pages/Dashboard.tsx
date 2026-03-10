@@ -441,6 +441,8 @@ export default function Dashboard() {
                     const thumbUrl = firstResult || job.user_products?.image_url;
                     const displayUrl = getOptimizedUrl(thumbUrl, { quality: 50 }) || '/placeholder.svg';
                     const hoverUrl = getOptimizedUrl(thumbUrl, { quality: 70 }) || '/placeholder.svg';
+                    const toSentenceCase = (str: string) => str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+                    const sourceLabel = toSentenceCase(job.user_products?.title || job.workflows?.name || 'Generation');
                     return (
                     <TableRow key={job.id}>
                       <TableCell>
@@ -450,7 +452,7 @@ export default function Dashboard() {
                               <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0 bg-muted/30 cursor-pointer">
                                 <img
                                   src={displayUrl}
-                                  alt={job.user_products?.title || 'Generation'}
+                                  alt={sourceLabel}
                                   className="w-full h-full object-cover"
                                 />
                               </div>
@@ -460,7 +462,7 @@ export default function Dashboard() {
                             </HoverCardContent>
                           </HoverCard>
                           <span className="font-medium text-sm">
-                            {job.user_products?.title || 'Generation'}
+                            {sourceLabel}
                           </span>
                         </div>
                       </TableCell>
