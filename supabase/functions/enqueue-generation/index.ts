@@ -16,31 +16,26 @@ const HOURLY_LIMITS: Record<string, number> = {
   free: 10,
 };
 
-// Credit cost calculation — tiered pricing based on complexity
+// Credit cost calculation — simplified pricing
 function calculateCreditCost(
   jobType: string,
   imageCount: number,
-  quality: string,
+  _quality: string,
   hasModel: boolean = false,
   hasScene: boolean = false,
-  additionalProductCount: number = 0,
+  _additionalProductCount: number = 0,
 ): number {
   let perImage: number;
 
-  if (jobType === "tryon") {
+  if (jobType === "workflow" || jobType === "tryon") {
+    // Workflows and try-on: always 8 credits per image
     perImage = 8;
-  } else if (hasModel && hasScene) {
-    perImage = 15;
-  } else if (hasModel) {
-    perImage = 12;
   } else {
-    // Base: no model, no scene
-    perImage = quality === "high" ? 10 : 4;
+    // Freestyle: 8 if model or scene, 4 otherwise
+    perImage = (hasModel || hasScene) ? 8 : 4;
   }
 
-  const baseCost = imageCount * perImage;
-  const extraProductCost = additionalProductCount * 2 * imageCount;
-  return baseCost + extraProductCost;
+  return imageCount * perImage;
 }
 
 serve(async (req) => {
