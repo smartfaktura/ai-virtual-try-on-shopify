@@ -63,7 +63,7 @@ export function FeedbackBanner() {
   const isExpanded = !!selectedType;
 
   return (
-    <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+    <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 flex items-center justify-between gap-3 mb-16">
       <div className="flex items-center gap-3 min-w-0">
         <MessageSquarePlus className="h-4 w-4 shrink-0 text-primary" />
         <p className="text-sm text-muted-foreground">Help us improve VOVV.AI</p>
