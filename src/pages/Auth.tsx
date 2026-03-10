@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '@/components/ui/input-otp';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { CheckCircle2, ArrowLeft, MailCheck, Mail } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, MailCheck, Mail, AlertCircle } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 const authHero = getLandingAssetUrl('auth/auth-hero.jpg');
@@ -35,6 +35,7 @@ export default function Auth() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(60);
   const [resendLoading, setResendLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -77,22 +78,22 @@ export default function Auth() {
     setErrors({});
     setLoading(true);
 
+    setFormError(null);
+
     if (mode === 'signup') {
       const { data, error } = await signUp(email, password, displayName);
       if (error) {
         const msg = error.message?.toLowerCase() || '';
         if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
-          toast.info('We already sent a verification email. Check your inbox (and spam folder), or wait a few minutes before requesting another.');
+          setFormError('Verification email already sent. Check your inbox or wait a moment.');
           setSignupComplete(true);
         } else {
-          toast.error(error.message);
+          setFormError('Something went wrong. Please try again.');
         }
       } else if (!data?.user?.identities?.length) {
-        // Existing confirmed account — switch to login
-        toast.error('An account with this email already exists. Try signing in instead.');
+        setFormError('An account with this email already exists. Try signing in instead.');
         setMode('login');
       } else if (data?.user && !data.user.confirmed_at) {
-        // Unconfirmed account re-registration — resend confirmation and show OTP
         await supabase.auth.resend({ type: 'signup', email });
         setSignupComplete(true);
       } else {
@@ -101,7 +102,12 @@ export default function Auth() {
     } else {
       const { error } = await signIn(email, password);
       if (error) {
-        toast.error(error.message);
+        const msg = error.message?.toLowerCase() || '';
+        if (msg.includes('invalid login credentials')) {
+          setFormError('Incorrect email or password. Please try again.');
+        } else {
+          setFormError('Something went wrong. Please try again.');
+        }
       } else {
         navigate('/app', { replace: true });
       }
@@ -390,7 +396,7 @@ export default function Auth() {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); }}
+                onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); setFormError(null); }}
                 className={`h-11 ${errors.email ? 'border-destructive' : ''}`}
               />
               {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
@@ -418,7 +424,7 @@ export default function Auth() {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: undefined })); }}
+                onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: undefined })); setFormError(null); }}
                 className={`h-11 ${errors.password ? 'border-destructive' : ''}`}
               />
               {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
@@ -436,6 +442,13 @@ export default function Auth() {
                   className={`h-11 ${errors.confirmPassword ? 'border-destructive' : ''}`}
                 />
                 {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
+              </div>
+            )}
+
+            {formError && (
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-sm text-destructive">{formError}</p>
               </div>
             )}
 
@@ -472,14 +485,14 @@ export default function Auth() {
             {mode === 'signup' ? (
               <>
                 Already have an account?{' '}
-                <button onClick={() => setMode('login')} className="text-primary font-medium hover:underline">
+                <button onClick={() => { setMode('login'); setFormError(null); }} className="text-primary font-medium hover:underline">
                   Sign in
                 </button>
               </>
             ) : (
               <>
                 Don't have an account?{' '}
-                <button onClick={() => setMode('signup')} className="text-primary font-medium hover:underline">
+                <button onClick={() => { setMode('signup'); setFormError(null); }} className="text-primary font-medium hover:underline">
                   Sign up free
                 </button>
               </>
