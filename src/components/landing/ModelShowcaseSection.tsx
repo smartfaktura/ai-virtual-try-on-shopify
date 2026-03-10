@@ -34,10 +34,8 @@ const ROW_1: ModelCard[] = [
   m('Camila', 'model-female-athletic-latina.jpg'),
   m('Marco', 'model-male-plussize-latino.jpg'),
   m('Hannah', 'models/model-050-hannah.jpg'),
-  m('Chris', 'models/model-053-chris.jpg'),
   m('Natalie', 'models/model-054-natalie.jpg'),
-  m('Daniel', 'models/model-057-daniel.jpg'),
-  m('Sarah', 'models/model-058-sarah.jpg'),
+  m('Valeria', 'model-female-slim-american-latina.jpg'),
 ];
 
 // 22 unique models in row 2
