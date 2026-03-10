@@ -2699,8 +2699,8 @@ export default function Generate() {
                       <Select value={quality} onValueChange={v => setQuality(v as ImageQuality)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="standard">Standard — Fast generation, good quality (8 credits/img)</SelectItem>
-                          <SelectItem value="high">High (Pro Model) — Best quality, ~60-120s per image (16 credits/img)</SelectItem>
+                          <SelectItem value="standard">Standard — Fast generation, good quality</SelectItem>
+                          <SelectItem value="high">High (Pro Model) — Best quality, ~60-120s per image</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
