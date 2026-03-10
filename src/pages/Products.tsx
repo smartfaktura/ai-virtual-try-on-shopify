@@ -168,7 +168,7 @@ export default function Products() {
             </div>
             <Button onClick={() => navigate('/app/products/new')}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Product
+              Add Products
             </Button>
           </div>
         </div>
@@ -240,7 +240,7 @@ export default function Products() {
               <EmptyStateCard
                 heading={isFiltered ? 'No products match your filters' : 'No products yet'}
                 description={isFiltered ? 'Try a different search term or clear filters.' : ''}
-                action={!isFiltered ? { content: 'Add Product', onAction: () => navigate('/app/products/new') } : undefined}
+                action={!isFiltered ? { content: 'Add Products', onAction: () => navigate('/app/products/new') } : undefined}
                 icon={<Package className="w-12 h-12" />}
                 teamMember={!isFiltered && sophia ? { name: sophia.name, role: sophia.role, avatar: sophia.avatar, quote: "Upload your first product to start creating studio-quality visuals." } : undefined}
               />

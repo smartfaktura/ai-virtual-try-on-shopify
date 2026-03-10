@@ -586,13 +586,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                           ))}
                         </div>
                       ) : (
-                        <button
+                        <span
                           onClick={() => setExpandedChips(prev => ({ ...prev, [item.id]: true }))}
-                          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                          className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer underline decoration-dotted underline-offset-2 transition-colors"
                         >
-                          <ChevronDown className="w-3 h-3" />
                           Change category
-                        </button>
+                        </span>
                       )}
                     </>
                   )}
@@ -826,13 +825,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                 ))}
               </div>
             ) : (
-              <button
+              <span
                 onClick={() => setSingleChipsExpanded(true)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer underline decoration-dotted underline-offset-2 transition-colors"
               >
-                <ChevronDown className="w-3 h-3" />
                 Change category
-              </button>
+              </span>
             )}
           </>
         )}

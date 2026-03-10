@@ -1,33 +1,30 @@
 
 
-## Fix Pluralization + Category UX Polish
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Two issues: (1) all CTAs say "Add Product" (singular) even though the system supports batch uploads, and (2) the "Change category" toggle still looks like a button rather than subtle text.
+### Issues Found
 
-### Changes
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**1. `src/pages/Products.tsx`** — Update button and empty state CTA:
-- Line 171: `Add Product` → `Add Products`
-- Line 243: empty state action content → `Add Products`
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**2. `src/pages/AddProduct.tsx`** — Update page title and subtitle:
-- Line 54: `'Add Product'` → `'Add Products'`
-- Line 58: subtitle → `'Upload images, import from a URL, or bulk-add via CSV. Each image = one product.'`
+### Plan
 
-**3. `src/components/app/ManualProductTab.tsx`** — Two fixes:
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**a) Single product submit button** (line 894): Keep `'Add Product'` when single mode — already correct since it's 1 product.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**b) "Change category" styling** (batch: lines 589-595, single: lines 829-835):
-- Remove the `<button>` wrapper, use a plain `<span>` or `<p>` styled as subtle inline text link
-- Style: `text-[11px] text-muted-foreground/60 hover:text-muted-foreground cursor-pointer underline decoration-dotted underline-offset-2`
-- Remove the `ChevronDown` icon — just show "Change category" as a dotted-underline text link, not a button-like element
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### Summary of label changes
-- Products page button: "Add Products"
-- AddProduct page title: "Add Products" (singular "Edit Product" stays for edit mode)
-- AddProduct page subtitle: updated to mention batch
-- Batch submit button: already says "Add N Products" — no change
-- Single submit button: already says "Add Product" — no change
-- "Change category" becomes a subtle dotted-underline text, not a button
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
