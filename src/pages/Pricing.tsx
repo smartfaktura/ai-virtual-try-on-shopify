@@ -19,7 +19,7 @@ const pricingJsonLd = {
       name: 'Starter',
       price: '29',
       priceCurrency: 'USD',
-      url: 'https://vovvai.lovable.app/pricing',
+      url: `${SITE_URL}/pricing`,
       availability: 'https://schema.org/InStock',
     },
     {
@@ -27,7 +27,7 @@ const pricingJsonLd = {
       name: 'Pro',
       price: '79',
       priceCurrency: 'USD',
-      url: 'https://vovvai.lovable.app/pricing',
+      url: `${SITE_URL}/pricing`,
       availability: 'https://schema.org/InStock',
     },
     {
@@ -35,7 +35,7 @@ const pricingJsonLd = {
       name: 'Business',
       price: '199',
       priceCurrency: 'USD',
-      url: 'https://vovvai.lovable.app/pricing',
+      url: `${SITE_URL}/pricing`,
       availability: 'https://schema.org/InStock',
     },
   ],
