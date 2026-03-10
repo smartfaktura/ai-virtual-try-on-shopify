@@ -95,7 +95,7 @@ export function BrandProfileForm({ open, onClose, profile }: BrandProfileFormPro
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brand-profiles'] });
-      toast.success(isEditing ? 'Brand profile updated' : 'Brand profile created');
+      toastSienna(isEditing ? 'Brand profile updated — your look is locked in!' : 'Brand profile created — your visual DNA is set!');
       onClose();
     },
     onError: () => toast.error('Failed to save brand profile'),

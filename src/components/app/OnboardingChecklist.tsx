@@ -1,11 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { Check, Upload, Palette, Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { TEAM_MEMBERS } from '@/data/teamData';
+import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
 
-const imgProduct = getLandingAssetUrl('products/serum-vitamin-c.jpg');
-const imgBrand = getLandingAssetUrl('showcase/skincare-set-minimal.jpg');
-const imgGenerate = getLandingAssetUrl('showcase/fashion-dress-botanical.jpg');
+const findMember = (name: string) => TEAM_MEMBERS.find(m => m.name === name)!;
 
 interface OnboardingChecklistProps {
   productCount: number;
@@ -21,7 +20,7 @@ const steps = [
     icon: Upload,
     path: '/app/products',
     cta: 'Go to Products',
-    preview: imgProduct,
+    memberName: 'Sophia',
   },
   {
     key: 'brand',
@@ -30,7 +29,7 @@ const steps = [
     icon: Palette,
     path: '/app/brand-profiles',
     cta: 'Go to Brand Profiles',
-    preview: imgBrand,
+    memberName: 'Sienna',
   },
   {
     key: 'generate',
@@ -39,7 +38,7 @@ const steps = [
     icon: Sparkles,
     path: '/app/workflows',
     cta: 'Go to Workflows',
-    preview: imgGenerate,
+    memberName: 'Kenji',
   },
 ] as const;
 
@@ -73,13 +72,13 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
           {steps.map((step, index) => {
             const done = completionMap[step.key];
             const isLast = index === steps.length - 1;
-            const StepIcon = step.icon;
+            const member = findMember(step.memberName);
             return (
               <div
                 key={step.key}
                 className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-5 sm:py-4 ${!isLast ? 'border-b border-border' : ''}`}
               >
-                {/* Top row on mobile: number + title */}
+                {/* Top row on mobile: number + avatar + title */}
                 <div className="flex items-center gap-3 sm:gap-4">
                   {/* Step number circle */}
                   <div className={`w-9 h-9 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
@@ -90,17 +89,30 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
                     {done ? <Check className="w-4 h-4" /> : String(index + 1).padStart(2, '0')}
                   </div>
 
-                  {/* Preview thumbnail — always visible */}
-                  <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-border flex-shrink-0">
-                    <img src={step.preview} alt={step.title} className="w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }} />
-                  </div>
+                  {/* Team member avatar */}
+                  <TeamAvatarHoverCard member={member} side="right">
+                    <button className="focus:outline-none flex-shrink-0">
+                      <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-border">
+                        <img
+                          src={member.avatar}
+                          alt={member.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
+                        />
+                      </div>
+                    </button>
+                  </TeamAvatarHoverCard>
 
-                  {/* Title + description inline on desktop */}
+                  {/* Title + description inline on mobile */}
                   <div className="flex-1 min-w-0 sm:hidden">
                     <h3 className={`text-sm font-semibold ${done ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                       {step.title}
                     </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                      {member.name} · {member.role}
+                    </p>
                   </div>
                 </div>
 
@@ -110,6 +122,9 @@ export function OnboardingChecklist({ productCount, brandProfileCount, jobCount 
                     {step.title}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                    {member.name} · {member.role}
+                  </p>
                 </div>
 
                 {!done && (

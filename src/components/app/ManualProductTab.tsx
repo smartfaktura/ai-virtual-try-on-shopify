@@ -414,7 +414,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         if (insertImagesError) console.error('Failed to insert new images:', insertImagesError);
       }
 
-      toast.success('Product updated!');
+      toastSophia('Product updated!');
       onProductAdded();
       onClose();
     } catch (err) {

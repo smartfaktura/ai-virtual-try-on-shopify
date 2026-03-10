@@ -80,10 +80,10 @@ export default function BulkGenerate() {
     setCurrentStep('processing');
   };
 
-  const handlePublishAll = () => toast.success('Downloading all images...');
+  const handlePublishAll = () => toastKenji('Downloading all images — campaign ready!');
   const handlePublishSelected = (productIds: string[], selectedImages: Map<string, number[]>) => {
     const totalImages = Array.from(selectedImages.values()).reduce((acc, arr) => acc + arr.length, 0);
-    toast.success(`Downloading ${totalImages} selected images...`);
+    toastKenji(`Downloading ${totalImages} selected images...`);
   };
 
   const handleStartNew = () => {
