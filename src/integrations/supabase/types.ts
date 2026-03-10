@@ -1049,9 +1049,17 @@ export type Database = {
       }
       claim_next_job: { Args: never; Returns: Json }
       cleanup_stale_jobs: { Args: never; Returns: Json }
+      decrypt_shopify_token: {
+        Args: { p_encrypted: string; p_key: string }
+        Returns: string
+      }
       deduct_credits: {
         Args: { p_amount: number; p_user_id: string }
         Returns: number
+      }
+      encrypt_shopify_token: {
+        Args: { p_key: string; p_token: string }
+        Returns: string
       }
       enqueue_generation: {
         Args: {
