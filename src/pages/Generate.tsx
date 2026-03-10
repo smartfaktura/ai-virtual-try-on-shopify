@@ -824,8 +824,10 @@ export default function Generate() {
         payload,
         selectedVariationIndices: Array.from(selectedVariationIndices),
         angleMultiplier,
-        quality,
+        quality: 'high',
         imageCount: workflowImageCount,
+        hasModel: !!needsModel,
+        hasScene: false,
       });
       if (!success) {
         setCurrentStep('settings');
