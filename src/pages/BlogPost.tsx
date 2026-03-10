@@ -5,6 +5,7 @@ import { PageLayout } from '@/components/landing/PageLayout';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
+import { SITE_URL } from '@/lib/constants';
 import { getBlogPostBySlug, getRelatedPosts } from '@/data/blogPosts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
