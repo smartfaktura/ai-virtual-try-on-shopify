@@ -219,7 +219,7 @@ export default function Settings() {
                 {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
                 {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
               </p>
-              {plan !== 'free' && billingInterval === 'monthly' && (
+              {plan !== 'free' && billingInterval !== 'annual' && (
                 <button
                   className="text-xs text-primary hover:underline underline-offset-2 mt-1 font-medium"
                   onClick={openCustomerPortal}
