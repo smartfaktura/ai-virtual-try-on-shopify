@@ -133,8 +133,14 @@ export default function Auth() {
     });
     setMagicLinkLoading(false);
     if (error) {
-      toast.error(error.message);
+      const msg = error.message?.toLowerCase() || '';
+      if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
+        setFormError('Too many requests. Please wait a few minutes before trying again.');
+      } else {
+        setFormError('Could not send login link. Please try again.');
+      }
     } else {
+      setFormError(null);
       setMagicLinkSent(true);
     }
   };
@@ -164,9 +170,9 @@ export default function Auth() {
     if (error) {
       const msg = error.message?.toLowerCase() || '';
       if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
-        toast.info('Email already sent recently. Please check your inbox and spam folder, or wait a few minutes.');
+        toast.info('Email already sent. Check your inbox and spam folder, or wait a few minutes.');
       } else {
-        toast.error(error.message);
+        toast.error('Could not resend code. Please try again.');
       }
     } else {
       toast.success('New code sent! Check your inbox.');
@@ -182,7 +188,12 @@ export default function Auth() {
     });
     setResendLoading(false);
     if (error) {
-      toast.error(error.message);
+      const msg = error.message?.toLowerCase() || '';
+      if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
+        toast.info('Email already sent. Check your inbox and spam folder, or wait a few minutes.');
+      } else {
+        toast.error('Could not resend link. Please try again.');
+      }
     } else {
       setResendTimer(30);
       toast.success('New link sent! Check your inbox.');
@@ -557,7 +568,12 @@ export default function Auth() {
                 });
                 setResetLoading(false);
                 if (error) {
-                  toast.error(error.message);
+                  const msg = error.message?.toLowerCase() || '';
+                  if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
+                    toast.error('Reset email already sent. Please check your inbox or wait a few minutes.');
+                  } else {
+                    toast.error('Could not send reset link. Please try again.');
+                  }
                 } else {
                   setResetSent(true);
                 }
