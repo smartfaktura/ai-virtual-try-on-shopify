@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -8,46 +9,47 @@ import { AdminViewProvider } from '@/contexts/AdminViewContext';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ProtectedRoute } from '@/components/app/ProtectedRoute';
 import { AppShell } from '@/components/app/AppShell';
-import Dashboard from '@/pages/Dashboard';
-import Generate from '@/pages/Generate';
-import BulkGenerate from '@/pages/BulkGenerate';
-import Templates from '@/pages/Templates';
-import Discover from '@/pages/Discover';
-import Jobs from '@/pages/Jobs';
-import Settings from '@/pages/Settings';
 import Landing from '@/pages/Landing';
-import Auth from '@/pages/Auth';
 
-import Onboarding from '@/pages/Onboarding';
-import NotFound from '@/pages/NotFound';
-import BrandProfiles from '@/pages/BrandProfiles';
-import BrandProfileWizard from '@/components/app/BrandProfileWizard';
-import Workflows from '@/pages/Workflows';
-import Products from '@/pages/Products';
-import CreativeDrops from '@/pages/CreativeDrops';
-import MobileUpload from '@/pages/MobileUpload';
-import VideoGenerate from '@/pages/VideoGenerate';
-import Freestyle from '@/pages/Freestyle';
-import About from '@/pages/About';
-import Blog from '@/pages/Blog';
-import BlogPost from '@/pages/BlogPost';
-import Careers from '@/pages/Careers';
-import Press from '@/pages/Press';
-import HelpCenter from '@/pages/HelpCenter';
-import Contact from '@/pages/Contact';
-import Status from '@/pages/Status';
-import Changelog from '@/pages/Changelog';
-import PrivacyPolicy from '@/pages/PrivacyPolicy';
-import TermsOfService from '@/pages/TermsOfService';
-import CookiePolicy from '@/pages/CookiePolicy';
-import Team from '@/pages/Team';
-import ResetPassword from '@/pages/ResetPassword';
-import PublicDiscover from '@/pages/PublicDiscover';
-import WorkflowsFeature from '@/pages/features/WorkflowsFeature';
-import VirtualTryOnFeature from '@/pages/features/VirtualTryOnFeature';
-import CreativeDropsFeature from '@/pages/features/CreativeDropsFeature';
-import BrandProfilesFeature from '@/pages/features/BrandProfilesFeature';
-import Pricing from '@/pages/Pricing';
+// Lazy-loaded routes for code splitting
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Generate = lazy(() => import('@/pages/Generate'));
+const BulkGenerate = lazy(() => import('@/pages/BulkGenerate'));
+const Templates = lazy(() => import('@/pages/Templates'));
+const Discover = lazy(() => import('@/pages/Discover'));
+const Jobs = lazy(() => import('@/pages/Jobs'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const Auth = lazy(() => import('@/pages/Auth'));
+const Onboarding = lazy(() => import('@/pages/Onboarding'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const BrandProfiles = lazy(() => import('@/pages/BrandProfiles'));
+const BrandProfileWizard = lazy(() => import('@/components/app/BrandProfileWizard'));
+const Workflows = lazy(() => import('@/pages/Workflows'));
+const Products = lazy(() => import('@/pages/Products'));
+const CreativeDrops = lazy(() => import('@/pages/CreativeDrops'));
+const MobileUpload = lazy(() => import('@/pages/MobileUpload'));
+const VideoGenerate = lazy(() => import('@/pages/VideoGenerate'));
+const Freestyle = lazy(() => import('@/pages/Freestyle'));
+const About = lazy(() => import('@/pages/About'));
+const Blog = lazy(() => import('@/pages/Blog'));
+const BlogPost = lazy(() => import('@/pages/BlogPost'));
+const Careers = lazy(() => import('@/pages/Careers'));
+const Press = lazy(() => import('@/pages/Press'));
+const HelpCenter = lazy(() => import('@/pages/HelpCenter'));
+const Contact = lazy(() => import('@/pages/Contact'));
+const Status = lazy(() => import('@/pages/Status'));
+const Changelog = lazy(() => import('@/pages/Changelog'));
+const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
+const CookiePolicy = lazy(() => import('@/pages/CookiePolicy'));
+const Team = lazy(() => import('@/pages/Team'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const PublicDiscover = lazy(() => import('@/pages/PublicDiscover'));
+const WorkflowsFeature = lazy(() => import('@/pages/features/WorkflowsFeature'));
+const VirtualTryOnFeature = lazy(() => import('@/pages/features/VirtualTryOnFeature'));
+const CreativeDropsFeature = lazy(() => import('@/pages/features/CreativeDropsFeature'));
+const BrandProfilesFeature = lazy(() => import('@/pages/features/BrandProfilesFeature'));
+const Pricing = lazy(() => import('@/pages/Pricing'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +68,7 @@ const App = () => (
       <CreditProvider>
         <BrowserRouter>
           <ScrollToTop />
+          <Suspense fallback={null}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
@@ -140,6 +143,7 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           <BuyCreditsModal />
         </BrowserRouter>
       </CreditProvider>
