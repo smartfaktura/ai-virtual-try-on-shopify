@@ -133,8 +133,14 @@ export default function Auth() {
     });
     setMagicLinkLoading(false);
     if (error) {
-      toast.error(error.message);
+      const msg = error.message?.toLowerCase() || '';
+      if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
+        setFormError('Too many requests. Please wait a few minutes before trying again.');
+      } else {
+        setFormError('Could not send login link. Please try again.');
+      }
     } else {
+      setFormError(null);
       setMagicLinkSent(true);
     }
   };
