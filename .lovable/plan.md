@@ -1,30 +1,38 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Replace Toast Errors with Inline Form Errors
 
-### Issues Found
+### Problem
+Auth errors (invalid credentials, account exists, rate limit, etc.) show as toast notifications in the corner. This is poor UX — errors should appear inline near the form fields.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`src/pages/Auth.tsx`**:
 
-### Plan
+1. Add a new `formError` state for general form-level errors (not field-specific)
+2. Replace all `toast.error(...)` calls in `handleSubmit` with inline error state:
+   - Login `error.message` ("Invalid login credentials") → set `formError` with friendly text: "Incorrect email or password. Please try again."
+   - Signup existing account → set `formError`: "An account with this email already exists." + auto-switch to login
+   - Rate limit → set `formError` with the existing message (instead of `toast.info`)
+   - Generic errors → set `formError` with user-friendly message
+3. Render `formError` as a styled inline alert above the submit button — red background, icon, clear text
+4. Clear `formError` when user changes email/password or switches mode
+5. Keep `toast.success` for positive confirmations (those are fine as toasts)
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Error message improvements
+- `"Invalid login credentials"` → `"Incorrect email or password. Please try again."`
+- `"User already registered"` → `"An account with this email already exists."`  
+- Rate limit → `"Verification email already sent. Check your inbox or wait a moment."`
+- Generic fallback → `"Something went wrong. Please try again."`
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### UI for inline error
+A subtle destructive alert box rendered between the last input and the submit button:
+```
+┌─────────────────────────────────┐
+│ ⚠ Incorrect email or password. │
+│   Please try again.            │
+└─────────────────────────────────┘
+```
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+Uses existing `text-destructive` styling with `bg-destructive/10` rounded container, no external dependencies needed.
 
