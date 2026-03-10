@@ -113,7 +113,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
 
   const handleConnectOAuth = () => {
     if (!shop.trim() || !session?.access_token) return;
-    const cleanShop = shop.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+    const cleanShop = `${shop.trim()}.myshopify.com`;
     const baseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/shopify-oauth`;
     const url = `${baseUrl}?action=authorize&shop=${encodeURIComponent(cleanShop)}&token=${encodeURIComponent(session.access_token)}`;
     window.location.href = url;
