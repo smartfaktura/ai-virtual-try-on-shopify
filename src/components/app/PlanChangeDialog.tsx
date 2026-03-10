@@ -70,8 +70,20 @@ export function PlanChangeDialog({
   isAnnual,
   currentBalance,
   periodEnd,
+  hasActiveSubscription = false,
 }: PlanChangeDialogProps) {
   const config = modeConfig[mode];
+
+  // Determine the confirm button label based on context
+  const getConfirmLabel = () => {
+    if (mode === 'cancel' || mode === 'reactivate') {
+      return 'Continue to Billing Portal';
+    }
+    if (hasActiveSubscription) {
+      return 'Continue to Billing Portal';
+    }
+    return 'Continue to Checkout';
+  };
   const Icon = config.icon;
   const displayPrice = targetPlan
     ? isAnnual ? Math.round(targetPlan.annualPrice / 12) : targetPlan.monthlyPrice
