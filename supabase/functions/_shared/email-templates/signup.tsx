@@ -29,7 +29,7 @@ export const SignupEmail = ({
   confirmationUrl,
   token,
 }: SignupEmailProps) => {
-  const displayToken = token?.slice(0, 6) || ''
+  const displayToken = token || ''
 
   return (
     <Html lang="en" dir="ltr">
