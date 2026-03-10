@@ -212,8 +212,6 @@ export function AppShell({ children }: AppShellProps) {
           )}
         </div>
 
-        {/* Team Avatar */}
-        <SidebarTeamAvatar collapsed={isCollapsed} />
 
         {/* User Profile */}
         <div className={cn('border-t border-white/[0.06] relative', isCollapsed ? 'px-2 py-3' : 'px-4 py-3')}>
