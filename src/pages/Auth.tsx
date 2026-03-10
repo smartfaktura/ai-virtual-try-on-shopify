@@ -199,6 +199,21 @@ export default function Auth() {
               {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
             </div>
 
+            {mode === 'signup' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => { setConfirmPassword(e.target.value); setErrors(prev => ({ ...prev, confirmPassword: undefined })); }}
+                  className={`h-11 ${errors.confirmPassword ? 'border-destructive' : ''}`}
+                />
+                {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
+              </div>
+            )}
+
             <Button type="submit" className="w-full h-11 rounded-full font-semibold text-base" disabled={loading}>
               {loading
                 ? 'Loading…'
