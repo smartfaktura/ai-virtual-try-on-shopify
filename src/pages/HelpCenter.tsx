@@ -74,7 +74,7 @@ const faqCategories = [
     questions: [
       {
         q: 'What\'s the difference between Standard and High Quality?',
-        a: 'Standard (8 credits) uses Gemini Flash for fast generation suitable for social media and web listings. High Quality (16 credits) uses Gemini Pro for higher detail and realism — ideal for hero banners, marketing materials, and large-format displays. You can also upscale images from the Library for even higher resolution.',
+        a: 'Standard uses fast generation suitable for social media and web listings. High Quality uses a more advanced model for higher detail and realism — ideal for hero banners, marketing materials, and large-format displays. Both quality levels cost the same number of credits. You can also upscale images from the Library for even higher resolution.',
       },
       {
         q: 'My generated images don\'t look right. What can I do?',

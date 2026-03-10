@@ -164,7 +164,7 @@ export function FreestyleSettingsChips({
         </button>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-[220px] text-center">
-        Pro model is required for model-reference generations to preserve identity. 12 credits/image.
+        Pro model is required for model-reference generations to preserve identity. 8 credits/image.
       </TooltipContent>
     </Tooltip>
   ) : (
