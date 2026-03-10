@@ -29,18 +29,18 @@ export default function Blog() {
     '@type': 'Blog',
     name: 'VOVV AI Blog',
     description: 'Insights on AI product photography, visual content strategy, and e-commerce growth.',
-    url: 'https://vovvai.lovable.app/blog',
+    url: `${SITE_URL}/blog`,
     publisher: {
       '@type': 'Organization',
       name: 'VOVV AI',
-      url: 'https://vovvai.lovable.app',
+      url: SITE_URL,
     },
     blogPost: blogPosts.map((p) => ({
       '@type': 'BlogPosting',
       headline: p.title,
       datePublished: p.publishDate,
       author: { '@type': 'Organization', name: p.author },
-      url: `https://vovvai.lovable.app/blog/${p.slug}`,
+      url: `${SITE_URL}/blog/${p.slug}`,
     })),
   };
 
