@@ -1,30 +1,46 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix & Final Review
 
-### Issues Found
+### 1. Input Focus Ring Bug (UI)
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+The screenshot shows the browser's default focus outline wrapping around just the input portion of the compound input (input + `.myshopify.com` suffix), creating an ugly disconnected highlight. 
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**Fix**: Wrap the input+suffix in a `group` container with a shared focus-within ring, and remove the individual input's focus ring:
 
-### Plan
+```tsx
+<div className="flex items-center w-fit rounded-md ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+  <Input
+    className="rounded-r-none border-r-0 w-44 focus-visible:ring-0 focus-visible:ring-offset-0"
+    ...
+  />
+  <span className="... rounded-r-md">
+    .myshopify.com
+  </span>
+</div>
+```
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+This makes the entire compound input highlight as one unit on focus.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### 2. Remaining Pipeline Review — All Clear
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+After examining all files (`shopify-oauth`, `shopify-oauth-callback`, `shopify-sync`, `ShopifyImportTab.tsx`):
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+- **Nonce-based OAuth state** — implemented, single-use, 10-min TTL
+- **HMAC validation** — implemented with timing-safe comparison
+- **JWT validation** — checked in both authorize and callback
+- **Token encryption at rest** — encrypt on store, decrypt on read, fallback for pre-migration tokens
+- **RLS** — all user tables scoped to `auth.uid()`
+- **Input validation** — product IDs validated, shop domain sanitized
+- **Unique constraint** — `(user_id, shop_domain)` on `shopify_connections`
+- **API version** — upgraded to `2025-01`
+- **Scope** — `read_products` only
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+No further issues identified. The pipeline is production-ready.
+
+### Files to change
+
+| File | Change |
+|---|---|
+| `ShopifyImportTab.tsx` | Fix focus ring on compound input (lines 333-345) |
 
