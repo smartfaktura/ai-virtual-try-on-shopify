@@ -560,7 +560,12 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
         </p>
       </div>
       <div className="flex gap-2 pt-2">
-        <Button variant="outline" onClick={() => { setStep('select'); setSelectedIds(new Set()); }} className="rounded-xl">
+        <Button variant="outline" onClick={() => {
+          setSelectedIds(new Set());
+          // Re-fetch products so already-imported items can be visually up-to-date
+          const domain = connection?.shop_domain || shop.trim();
+          loadProducts(domain);
+        }} className="rounded-xl">
           Import More
         </Button>
         <Button onClick={onClose} className="rounded-xl">
