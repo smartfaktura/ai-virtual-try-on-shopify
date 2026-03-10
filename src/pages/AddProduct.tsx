@@ -62,7 +62,7 @@ export default function AddProduct() {
       <ProductUploadTips />
 
       {isEditing ? (
-        <div className="max-w-3xl">
+        <div>
           {editingProduct && (
             <ManualProductTab
               onProductAdded={handleDone}
