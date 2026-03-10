@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { SITE_URL } from '@/lib/constants';
 import type { TryOnPose, PoseCategory } from '@/types';
 
 interface PublicCustomScene {
