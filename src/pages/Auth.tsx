@@ -169,6 +169,7 @@ export default function Auth() {
     description: string;
     showOtp: boolean;
     onBack: () => void;
+    onResend?: () => void;
   }) => (
     <div className="flex flex-col items-center text-center gap-6 py-8">
       <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -182,7 +183,7 @@ export default function Auth() {
       </div>
 
       {options.showOtp && (
-        <div className="w-full max-w-xs space-y-4">
+        <div className="w-full max-w-sm space-y-5">
           <p className="text-sm text-muted-foreground">
             Enter the 6-digit code from your email, or click the link to activate your account.
           </p>
@@ -196,10 +197,15 @@ export default function Auth() {
               }}
               disabled={otpLoading}
             >
-              <InputOTPGroup>
+              <InputOTPGroup className="gap-2">
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />
                 <InputOTPSlot index={2} />
+              </InputOTPGroup>
+              <div className="flex items-center px-2">
+                <span className="text-xl text-muted-foreground">-</span>
+              </div>
+              <InputOTPGroup className="gap-2">
                 <InputOTPSlot index={3} />
                 <InputOTPSlot index={4} />
                 <InputOTPSlot index={5} />
@@ -217,6 +223,23 @@ export default function Auth() {
           Click the link in your email to sign in. Check your spam folder if you don't see it.
         </p>
       )}
+
+      {/* Resend button with countdown */}
+      <div className="text-sm text-muted-foreground">
+        {resendTimer > 0 ? (
+          <p>Didn't receive it? Resend in {resendTimer}s</p>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-primary hover:text-primary/80"
+            onClick={options.onResend}
+            disabled={resendLoading}
+          >
+            {resendLoading ? 'Sending...' : 'Resend code'}
+          </Button>
+        )}
+      </div>
 
       <Button
         variant="outline"
