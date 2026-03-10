@@ -281,20 +281,21 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="shopify-domain">Store name</Label>
+              <Label htmlFor="shopify-domain">Your Shopify store</Label>
               <div className="flex items-center">
                 <Input
                   id="shopify-domain"
-                  placeholder="mystore"
+                  placeholder="your-store-name"
                   value={shop}
                   onChange={(e) => { setShop(e.target.value.replace(/\.myshopify\.com$/i, '').replace(/[^a-zA-Z0-9-]/g, '')); setError(null); }}
                   disabled={isLoading}
                   className="rounded-r-none border-r-0"
                 />
-                <span className="inline-flex items-center px-3 h-9 border border-l-0 border-input rounded-r-md bg-muted text-muted-foreground text-sm whitespace-nowrap">
+                <span className="inline-flex items-center px-3 h-10 border border-l-0 border-input rounded-r-md bg-muted text-muted-foreground text-sm whitespace-nowrap">
                   .myshopify.com
                 </span>
               </div>
+              <p className="text-[11px] text-muted-foreground">Enter just your store name, without .myshopify.com</p>
             </div>
 
             {error && (
