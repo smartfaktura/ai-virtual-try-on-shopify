@@ -1,30 +1,29 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Bigger OTP Inputs + Resend Button with Countdown
 
-### Issues Found
+### Changes
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+**1. Restyle OTP slots (`src/components/ui/input-otp.tsx`)**
+- Increase slot size from `h-10 w-10` to `h-14 w-14`
+- Font: `text-2xl font-semibold`
+- Individual `rounded-xl` corners on every slot (remove first/last-only rounding)
+- Individual borders on all sides with subtle background on focus
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**2. Split OTP into 3+3 groups with separator (`src/pages/Auth.tsx`)**
+- Two `InputOTPGroup` components with 3 slots each, separated by a dash
+- Add `gap-2` spacing within each group
 
-### Plan
+**3. Add "Resend code" button with 30-second countdown (`src/pages/Auth.tsx`)**
+- New state: `resendTimer` (starts at 30 on signup complete), `resendLoading`
+- `useEffect` counts down from 30 to 0
+- When timer hits 0, show "Didn't get the code? Resend" button
+- On click, calls `signUp(email, password)` again to trigger a fresh email (both old and new codes remain valid for their default 30-min window — this is handled server-side by default)
+- Reset timer to 30 after resend
+- Also add resend for magic link screen: re-calls `supabase.auth.signInWithOtp`
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**4. Copy update**
+- Below OTP: "Didn't receive it? You can resend in {timer}s" → then "Resend code" button
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+No backend changes needed — OTP tokens are valid for their configured duration (default is fine).
 
