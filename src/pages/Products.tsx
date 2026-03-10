@@ -367,16 +367,6 @@ export default function Products() {
           </div>
         )}
       </div>
-
-      <AddProductModal
-        open={modalOpen}
-        onOpenChange={(open) => { setModalOpen(open); if (!open) setEditingProduct(null); }}
-        onProductAdded={() => {
-          queryClient.invalidateQueries({ queryKey: ['user-products'] });
-          queryClient.invalidateQueries({ queryKey: ['product-image-counts'] });
-        }}
-        editingProduct={editingProduct}
-      />
     </PageHeader>
   );
 }
