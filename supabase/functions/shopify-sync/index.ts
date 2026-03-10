@@ -54,7 +54,7 @@ async function listCollections(shop: string, accessToken: string) {
 
   // Fetch custom collections
   let url: string | null =
-    `https://${shop}/admin/api/2024-01/custom_collections.json?fields=id,title,handle&limit=250`;
+    `https://${shop}/admin/api/2025-01/custom_collections.json?fields=id,title,handle&limit=250`;
   while (url) {
     const res = await shopifyFetch(url, accessToken);
     if (!res.ok) break;
