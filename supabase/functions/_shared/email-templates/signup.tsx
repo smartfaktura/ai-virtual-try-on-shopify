@@ -36,7 +36,7 @@ export const SignupEmail = ({
       <Head>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </Head>
-      <Preview>Your verification code is {displayToken} — VOVV.AI</Preview>
+      <Preview>Your verification code is {displayToken} – VOVV.AI</Preview>
       <Body style={main}>
         <Container style={container}>
           <Text style={wordmark}>VOVV.AI</Text>
