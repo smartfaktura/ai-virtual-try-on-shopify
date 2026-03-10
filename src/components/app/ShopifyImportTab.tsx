@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ShoppingBag, Loader2, Check, AlertCircle, Search, Info, Unlink, Link, FolderOpen } from 'lucide-react';
+import { ShoppingBag, Loader2, Check, AlertCircle, Search, Info, Unlink, Link, FolderOpen, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,8 @@ interface ShopifyListProduct {
   title: string;
   product_type: string;
   thumbnail: string;
+  image_count: number;
+  tags: string[];
 }
 
 interface ShopifyCollection {
@@ -446,40 +448,64 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
               </div>
             )}
 
-            <div className="max-h-[320px] overflow-y-auto space-y-1 -mx-1 px-1">
-              {filteredProducts.map((product) => (
-                <label
-                  key={product.id}
-                  className={`flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors ${atLimit && !selectedIds.has(product.id) ? 'opacity-40 pointer-events-none' : ''}`}
-                >
-                  <Checkbox
-                    checked={selectedIds.has(product.id)}
-                    onCheckedChange={() => toggleSelect(product.id)}
-                  />
-                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
-                    {product.thumbnail ? (
-                      <ShimmerImage
-                        src={product.thumbnail}
-                        alt={product.title}
-                        className="w-full h-full object-cover"
-                        aspectRatio="1/1"
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[380px] overflow-y-auto p-1">
+              {filteredProducts.map((product) => {
+                const isSelected = selectedIds.has(product.id);
+                const isDisabled = atLimit && !isSelected;
+                return (
+                  <div
+                    key={product.id}
+                    onClick={() => !isDisabled && toggleSelect(product.id)}
+                    className={`relative rounded-xl border-2 p-2 cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'} ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="absolute top-2 left-2 z-10 bg-background/90 rounded-md shadow-sm p-0.5">
+                      <Checkbox
+                        checked={isSelected}
+                        disabled={isDisabled}
+                        onCheckedChange={() => toggleSelect(product.id)}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingBag className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="aspect-square rounded-lg overflow-hidden mb-2 bg-muted">
+                      {product.thumbnail ? (
+                        <ShimmerImage
+                          src={product.thumbnail}
+                          alt={product.title}
+                          className="w-full h-full object-cover"
+                          aspectRatio="1/1"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ShoppingBag className="w-5 h-5 text-muted-foreground" />
+                        </div>
+                      )}
+                      {product.image_count > 1 && (
+                        <div className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm rounded-md px-1.5 py-0.5 flex items-center gap-1 shadow-sm">
+                          <ImageIcon className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-[10px] font-medium text-muted-foreground">{product.image_count}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs font-medium truncate">{product.title}</p>
+                    {product.product_type && (
+                      <p className="text-[10px] text-muted-foreground truncate">{product.product_type}</p>
+                    )}
+                    {product.tags.length > 0 && (
+                      <div className="flex gap-1 flex-wrap mt-1">
+                        {product.tags.slice(0, 2).map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-[9px] px-1.5 py-0 font-normal">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {product.tags.length > 2 && (
+                          <span className="text-[9px] text-muted-foreground">+{product.tags.length - 2}</span>
+                        )}
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate">{product.title}</p>
-                    {product.product_type && (
-                      <p className="text-[11px] text-muted-foreground truncate">{product.product_type}</p>
-                    )}
-                  </div>
-                </label>
-              ))}
+                );
+              })}
               {filteredProducts.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-8">No products match your search.</p>
+                <p className="text-sm text-muted-foreground text-center py-8 col-span-full">No products match your search.</p>
               )}
             </div>
           </>
