@@ -296,6 +296,7 @@ export default function Auth() {
                 setConfirmPassword('');
                 setOtpCode('');
               },
+              onResend: handleResendSignup,
             })
           ) : magicLinkSent ? (
             renderCheckInbox({
@@ -305,6 +306,7 @@ export default function Auth() {
               onBack: () => {
                 setMagicLinkSent(false);
               },
+              onResend: handleResendMagicLink,
             })
           ) : (
             <>
