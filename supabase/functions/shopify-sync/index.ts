@@ -14,15 +14,39 @@ interface ShopifyProduct {
   images: { id: number; src: string; position: number }[];
 }
 
-interface ShopifyCollection {
-  id: number;
-  title: string;
-  handle: string;
-  products_count?: number;
-}
-
 function stripHtml(html: string): string {
   return html?.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim() || "";
+}
+
+function cleanShopDomain(shop: string): string {
+  let clean = shop.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  if (!clean.includes(".")) {
+    clean = `${clean}.myshopify.com`;
+  }
+  return clean;
+}
+
+/** Small delay helper for rate limiting */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Fetch with basic Shopify rate-limit retry (checks 429 + Retry-After header) */
+async function shopifyFetch(url: string, accessToken: string, retries = 2): Promise<Response> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(url, {
+      headers: { "X-Shopify-Access-Token": accessToken },
+    });
+    if (res.status === 429) {
+      const retryAfter = Number(res.headers.get("Retry-After") || "2");
+      console.warn(`Shopify 429 rate-limited, retrying after ${retryAfter}s`);
+      await delay(retryAfter * 1000);
+      continue;
+    }
+    return res;
+  }
+  // Final attempt without retry
+  return fetch(url, { headers: { "X-Shopify-Access-Token": accessToken } });
 }
 
 async function listCollections(shop: string, accessToken: string) {
@@ -32,9 +56,7 @@ async function listCollections(shop: string, accessToken: string) {
   let url: string | null =
     `https://${shop}/admin/api/2024-01/custom_collections.json?fields=id,title,handle&limit=250`;
   while (url) {
-    const res = await fetch(url, {
-      headers: { "X-Shopify-Access-Token": accessToken },
-    });
+    const res = await shopifyFetch(url, accessToken);
     if (!res.ok) break;
     const data = await res.json();
     for (const c of data.custom_collections || []) {
@@ -54,9 +76,7 @@ async function listCollections(shop: string, accessToken: string) {
   // Fetch smart collections
   url = `https://${shop}/admin/api/2024-01/smart_collections.json?fields=id,title,handle&limit=250`;
   while (url) {
-    const res = await fetch(url, {
-      headers: { "X-Shopify-Access-Token": accessToken },
-    });
+    const res = await shopifyFetch(url, accessToken);
     if (!res.ok) break;
     const data = await res.json();
     for (const c of data.smart_collections || []) {
@@ -88,9 +108,7 @@ async function listProducts(shop: string, accessToken: string, collectionId?: nu
   }
 
   while (url) {
-    const res = await fetch(url, {
-      headers: { "X-Shopify-Access-Token": accessToken },
-    });
+    const res = await shopifyFetch(url, accessToken);
     if (!res.ok) {
       const text = await res.text();
       throw new Error(`Shopify API error ${res.status}: ${text}`);
@@ -127,132 +145,132 @@ async function importProducts(
   supabaseAdmin: any
 ) {
   const results: { id: number; title: string; success: boolean; error?: string }[] = [];
-  const BATCH_SIZE = 10;
   const MAX_IMAGES = 6;
 
-  for (let i = 0; i < productIds.length; i += BATCH_SIZE) {
-    const batch = productIds.slice(i, i + BATCH_SIZE);
+  for (const productId of productIds) {
+    try {
+      // Small delay between products to respect Shopify rate limits
+      if (results.length > 0) {
+        await delay(500);
+      }
 
-    for (const productId of batch) {
-      try {
-        const res = await fetch(
-          `https://${shop}/admin/api/2024-01/products/${productId}.json?fields=id,title,product_type,body_html,images,tags`,
-          { headers: { "X-Shopify-Access-Token": accessToken } }
-        );
-        if (!res.ok) {
-          results.push({ id: productId, title: "", success: false, error: `API ${res.status}` });
-          continue;
-        }
-        const { product } = (await res.json()) as { product: ShopifyProduct };
-        const description = stripHtml(product.body_html);
-        const images = (product.images || []).slice(0, MAX_IMAGES);
+      const res = await shopifyFetch(
+        `https://${shop}/admin/api/2024-01/products/${productId}.json?fields=id,title,product_type,body_html,images,tags`,
+        accessToken
+      );
+      if (!res.ok) {
+        results.push({ id: productId, title: "", success: false, error: `API ${res.status}` });
+        continue;
+      }
+      const { product } = (await res.json()) as { product: ShopifyProduct };
+      const description = stripHtml(product.body_html);
+      const images = (product.images || []).slice(0, MAX_IMAGES);
 
-        let mainImageUrl = "";
-        const uploadedImages: { url: string; path: string; position: number }[] = [];
+      // Check for duplicate product (same title + user)
+      const { data: existing } = await supabaseAdmin
+        .from("user_products")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("title", product.title)
+        .limit(1)
+        .maybeSingle();
 
-        for (let idx = 0; idx < images.length; idx++) {
-          const img = images[idx];
-          try {
-            const imgRes = await fetch(img.src);
-            if (!imgRes.ok) continue;
-            const blob = await imgRes.blob();
-            const ext = img.src.split("?")[0].split(".").pop() || "jpg";
-            const storagePath = `${userId}/shopify-${product.id}-${idx}.${ext}`;
+      if (existing) {
+        results.push({ id: productId, title: product.title, success: false, error: "Already imported" });
+        continue;
+      }
 
-            const { error: uploadErr } = await supabaseAdmin.storage
-              .from("product-uploads")
-              .upload(storagePath, blob, {
-                contentType: blob.type || "image/jpeg",
-                upsert: true,
-              });
+      const uploadedImages: { url: string; path: string; position: number }[] = [];
 
-            if (uploadErr) {
-              console.error("Upload error:", uploadErr);
-              continue;
-            }
+      for (let idx = 0; idx < images.length; idx++) {
+        const img = images[idx];
+        try {
+          const imgRes = await fetch(img.src);
+          if (!imgRes.ok) continue;
+          const blob = await imgRes.blob();
+          const ext = img.src.split("?")[0].split(".").pop() || "jpg";
+          const storagePath = `${userId}/shopify-${product.id}-${idx}.${ext}`;
 
-            const { data: publicData } = supabaseAdmin.storage
-              .from("product-uploads")
-              .getPublicUrl(storagePath);
-
-            uploadedImages.push({
-              url: publicData.publicUrl,
-              path: storagePath,
-              position: idx,
+          const { error: uploadErr } = await supabaseAdmin.storage
+            .from("product-uploads")
+            .upload(storagePath, blob, {
+              contentType: blob.type || "image/jpeg",
+              upsert: true,
             });
 
-            if (idx === 0) mainImageUrl = publicData.publicUrl;
-          } catch (imgErr) {
-            console.error("Image download failed:", imgErr);
+          if (uploadErr) {
+            console.error("Upload error:", uploadErr);
+            continue;
           }
+
+          const { data: publicData } = supabaseAdmin.storage
+            .from("product-uploads")
+            .getPublicUrl(storagePath);
+
+          uploadedImages.push({
+            url: publicData.publicUrl,
+            path: storagePath,
+            position: idx,
+          });
+        } catch (imgErr) {
+          console.error("Image download failed:", imgErr);
         }
-
-        if (!mainImageUrl && images.length > 0) {
-          mainImageUrl = images[0].src;
-        }
-
-        if (!mainImageUrl) {
-          results.push({ id: productId, title: product.title, success: false, error: "No images" });
-          continue;
-        }
-
-        const tags = (product as any).tags
-          ? (product as any).tags.split(", ").map((t: string) => t.trim()).filter(Boolean)
-          : [];
-
-        // Check for duplicate product (same title + user)
-        const { data: existing } = await supabaseAdmin
-          .from("user_products")
-          .select("id")
-          .eq("user_id", userId)
-          .eq("title", product.title)
-          .limit(1)
-          .maybeSingle();
-
-        if (existing) {
-          results.push({ id: productId, title: product.title, success: false, error: "Already imported" });
-          continue;
-        }
-
-        const { data: productData, error: insertErr } = await supabaseAdmin
-          .from("user_products")
-          .insert({
-            user_id: userId,
-            title: product.title,
-            product_type: product.product_type || "",
-            description: description.slice(0, 2000),
-            image_url: mainImageUrl,
-            tags,
-          })
-          .select("id")
-          .single();
-
-        if (insertErr) {
-          results.push({ id: productId, title: product.title, success: false, error: insertErr.message });
-          continue;
-        }
-
-        if (uploadedImages.length > 0) {
-          const imageRows = uploadedImages.map((img) => ({
-            product_id: productData.id,
-            user_id: userId,
-            image_url: img.url,
-            storage_path: img.path,
-            position: img.position,
-          }));
-
-          await supabaseAdmin.from("product_images").insert(imageRows);
-        }
-
-        results.push({ id: productId, title: product.title, success: true });
-      } catch (err) {
-        results.push({
-          id: productId,
-          title: "",
-          success: false,
-          error: err instanceof Error ? err.message : "Unknown error",
-        });
       }
+
+      // Require at least one successfully uploaded image — don't fall back to Shopify CDN
+      if (uploadedImages.length === 0) {
+        results.push({ id: productId, title: product.title, success: false, error: "Failed to upload images" });
+        continue;
+      }
+
+      const mainImageUrl = uploadedImages[0].url;
+
+      const tags = (product as any).tags
+        ? (product as any).tags.split(", ").map((t: string) => t.trim()).filter(Boolean)
+        : [];
+
+      const { data: productData, error: insertErr } = await supabaseAdmin
+        .from("user_products")
+        .insert({
+          user_id: userId,
+          title: product.title,
+          product_type: product.product_type || "",
+          description: description.slice(0, 2000),
+          image_url: mainImageUrl,
+          tags,
+        })
+        .select("id")
+        .single();
+
+      if (insertErr) {
+        results.push({ id: productId, title: product.title, success: false, error: insertErr.message });
+        continue;
+      }
+
+      if (uploadedImages.length > 0) {
+        const imageRows = uploadedImages.map((img) => ({
+          product_id: productData.id,
+          user_id: userId,
+          image_url: img.url,
+          storage_path: img.path,
+          position: img.position,
+        }));
+
+        const { error: imgInsertErr } = await supabaseAdmin.from("product_images").insert(imageRows);
+        if (imgInsertErr) {
+          console.error("product_images insert error:", imgInsertErr);
+          // Product was created but gallery images failed — report partial success
+        }
+      }
+
+      results.push({ id: productId, title: product.title, success: true });
+    } catch (err) {
+      results.push({
+        id: productId,
+        title: "",
+        success: false,
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
     }
   }
   return results;
@@ -295,7 +313,6 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { action, shop, product_ids, collection_id } = body;
-    let access_token = body.access_token;
 
     if (!shop) {
       return new Response(
@@ -304,27 +321,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!access_token) {
-      const { data: conn, error: connErr } = await supabaseAdmin
-        .from("shopify_connections")
-        .select("access_token")
-        .eq("user_id", userId)
-        .limit(1)
-        .single();
+    // Always look up access token from DB — never accept from body
+    const { data: conn, error: connErr } = await supabaseAdmin
+      .from("shopify_connections")
+      .select("access_token")
+      .eq("user_id", userId)
+      .limit(1)
+      .single();
 
-      if (connErr || !conn) {
-        return new Response(
-          JSON.stringify({ error: "No Shopify connection found. Please connect your store first." }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      access_token = conn.access_token;
+    if (connErr || !conn) {
+      return new Response(
+        JSON.stringify({ error: "No Shopify connection found. Please connect your store first." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+    const access_token = conn.access_token;
 
-    let cleanShop = shop.replace(/^https?:\/\//, "").replace(/\/+$/, "");
-    if (!cleanShop.includes(".")) {
-      cleanShop = `${cleanShop}.myshopify.com`;
-    }
+    const cleanShop = cleanShopDomain(shop);
 
     if (action === "collections") {
       const collections = await listCollections(cleanShop, access_token);
