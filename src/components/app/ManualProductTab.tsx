@@ -807,18 +807,34 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         </div>
 
         {!(isAnalyzing && !hasManualEdits.current.productType) && (
-          <div className="flex flex-wrap gap-1.5">
-            {QUICK_TYPES.map((t) => (
-              <Badge
-                key={t}
-                variant={productType === t ? 'default' : 'outline'}
-                className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
-                onClick={() => { setProductType(productType === t ? '' : t); hasManualEdits.current.productType = true; }}
+          <>
+            {(!productType || singleChipsExpanded) ? (
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_TYPES.map((t) => (
+                  <Badge
+                    key={t}
+                    variant={productType === t ? 'default' : 'outline'}
+                    className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
+                    onClick={() => {
+                      setProductType(productType === t ? '' : t);
+                      hasManualEdits.current.productType = true;
+                      if (productType !== t) setSingleChipsExpanded(false);
+                    }}
+                  >
+                    {t}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <button
+                onClick={() => setSingleChipsExpanded(true)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                {t}
-              </Badge>
-            ))}
-          </div>
+                <ChevronDown className="w-3 h-3" />
+                Change category
+              </button>
+            )}
+          </>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
