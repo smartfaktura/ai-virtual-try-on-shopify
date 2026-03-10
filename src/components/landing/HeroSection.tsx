@@ -244,6 +244,7 @@ export function HeroSection() {
                     alt={current.product.label}
                     className="w-full h-full object-cover transition-all duration-500"
                     aspectRatio="3/4"
+                    fetchPriority="high"
                   />
                   <span className="absolute top-3 left-3 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
                     Your Upload
@@ -334,6 +335,7 @@ export function HeroSection() {
                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                            decoding="async"
                            loading={idx < 3 ? 'eager' : 'lazy'}
+                           fetchPriority={idx < 2 ? 'high' : undefined}
                            aspectRatio="3/4"
                          />
                         <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
