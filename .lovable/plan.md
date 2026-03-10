@@ -1,30 +1,50 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Improve Batch Upload UX: Clearer Messaging + Collapsible Categories
 
-### Issues Found
+Two issues from the screenshots:
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### 1. Upload zone doesn't clearly communicate batch behavior
+The hint "drop multiple for batch add (up to 10)" is buried in tiny text. Users don't understand each image = separate product.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**Fix**: Update the upload zone copy to be more explicit:
+- Main text: "Drop images, **browse**, or paste"  
+- Sub-text: "Each image creates a separate product · up to 10 at once"
+- Add a small `Layers` icon or similar to hint at multi-product
 
-### Plan
+### 2. Quick-type chips are noisy when category is already filled
+When AI fills in a specific type like "Oversized Hoodie", showing all 11 generic chips clutters the UI. The chips are only useful when the type field is empty or the user wants a generic category.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**Fix for single mode**: Hide chips when `productType` is already filled (AI or manual). Show a small "Browse categories" link/button that expands them on click, or use a `Select` dropdown.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**Fix for batch mode**: Same — hide chips per card when `productType` is filled. Show a small clickable text like "Change category" that reveals the chips row. This dramatically reduces card height and clutter.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### Changes — `src/components/app/ManualProductTab.tsx`
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+1. **Upload zone text** (line ~679-683): Change copy to emphasize each image = separate product
+2. **Single mode chips** (lines 787-800): Wrap in a collapsible section — show chips only when `productType` is empty OR user clicks "Change category" toggle
+3. **Batch mode chips** (lines 566-579): Same collapsible pattern per card — hidden when type is filled, revealed via toggle
+4. **Add per-batch-item state**: Track `showChips: boolean` in component state (not in BatchItem, just local toggle map)
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### UI Result
+
+**Upload zone:**
+```
+        Drop images, browse, or paste
+  Each image creates a separate product · up to 10 at once
+```
+
+**Batch card with type filled (collapsed — default):**
+```
+[thumb] | Name: Dark Grey Hoodie    Type: Hoodie  [×]
+        | ▸ Change category
+        | Description...           Dimensions...
+```
+
+**Batch card with type empty or expanded:**
+```
+[thumb] | Name: ___                 Type: ___     [×]
+        | Clothing  Footwear  Beauty  Skincare ...
+        | Description...           Dimensions...
+```
 
