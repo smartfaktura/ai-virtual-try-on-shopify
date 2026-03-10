@@ -83,18 +83,18 @@ const main = {
   backgroundColor: '#ffffff',
   fontFamily: fontStack,
 }
-const container = { padding: '48px 24px', maxWidth: '480px', margin: '0 auto' }
+const container = { padding: '40px 20px', maxWidth: '560px', margin: '0 auto' }
 const wordmark = {
   fontFamily: fontStack,
   fontWeight: 700 as const,
-  fontSize: '18px',
+  fontSize: '20px',
   letterSpacing: '-0.03em',
   color: '#0f172a',
-  margin: '0 0 36px 0',
+  margin: '0 0 32px 0',
 }
 const h1 = {
   fontFamily: fontStack,
-  fontSize: '22px',
+  fontSize: '24px',
   fontWeight: 700 as const,
   color: '#0f172a',
   margin: '0 0 6px 0',
