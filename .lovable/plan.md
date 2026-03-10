@@ -1,30 +1,74 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Build Shopify OAuth Integration
 
-### Issues Found
+### What we're building
+Replace the manual token-paste flow with a one-click "Connect Shopify Store" button. Users enter their store domain, get redirected to Shopify's consent screen, and come back connected.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**1. Database — `shopify_connections` table**
+```sql
+CREATE TABLE public.shopify_connections (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  shop_domain text NOT NULL,
+  access_token text NOT NULL,
+  scope text NOT NULL DEFAULT 'read_products',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, shop_domain)
+);
+ALTER TABLE public.shopify_connections ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "select_own" ON public.shopify_connections FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "insert_own" ON public.shopify_connections FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "delete_own" ON public.shopify_connections FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "update_own" ON public.shopify_connections FOR UPDATE USING (auth.uid() = user_id);
+```
 
-### Plan
+**2. Secrets** — Add `SHOPIFY_CLIENT_ID` and `SHOPIFY_CLIENT_SECRET` via the secrets tool.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**3. New edge function — `shopify-oauth/index.ts`**
+- `?action=authorize&shop=xxx` — builds Shopify OAuth URL, passes user JWT as `state`, redirects browser to Shopify consent screen
+- `?action=disconnect` — deletes the connection row (requires auth)
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**4. New edge function — `shopify-oauth-callback/index.ts`**
+- Receives Shopify redirect with `?code=&shop=&state=`
+- Exchanges code for permanent access token via `POST https://{shop}/admin/oauth/access_token`
+- Validates the JWT from `state`, saves token to `shopify_connections`
+- Redirects to `https://vovvai.lovable.app/app/products?shopify=connected`
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**5. Update `shopify-sync/index.ts`**
+- When `access_token` is missing from request body, look it up from `shopify_connections` using authenticated user's ID + shop domain
+- Existing list/import logic stays unchanged
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**6. Update `ShopifyImportTab.tsx`**
+- On mount, query `shopify_connections` for existing connection
+- **Connected state**: show store domain + "Disconnect" button, auto-load products
+- **Not connected state**: show store domain input + "Connect Shopify Store" button that opens OAuth URL
+- Listen for `?shopify=connected` URL param to refresh connection state
+- Remove the manual access token input field entirely
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**7. Config** — Add both new functions to `config.toml` with `verify_jwt = false`
+
+### Technical details
+
+OAuth flow:
+```text
+Browser → shopify-oauth?action=authorize&shop=store.myshopify.com
+  ↓ 302 redirect
+Shopify consent screen (read_products scope)
+  ↓ 302 redirect  
+shopify-oauth-callback?code=xxx&shop=store.myshopify.com&state=jwt
+  ↓ exchange code → token, save to DB
+302 → https://vovvai.lovable.app/app/products?shopify=connected
+```
+
+| Component | Action |
+|---|---|
+| Database | New `shopify_connections` table + RLS |
+| Secrets | `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET` |
+| Edge function (new) | `shopify-oauth` — authorize + disconnect |
+| Edge function (new) | `shopify-oauth-callback` — token exchange |
+| Edge function (edit) | `shopify-sync` — DB token fallback |
+| Frontend (edit) | `ShopifyImportTab` — OAuth connect button |
 
