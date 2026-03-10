@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { SITE_URL } from '@/lib/constants';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
