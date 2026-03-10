@@ -1,30 +1,35 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Shopify OAuth — Issues Found and Fixes
 
-### Issues Found
+### Issues Identified
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+1. **`auth.getClaims()` does not exist** — Both `shopify-oauth` (disconnect) and `shopify-oauth-callback` use `supabaseUser.auth.getClaims(jwt)` which is not a real Supabase JS method. Must use `auth.getUser(token)` instead.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+2. **Disconnect flow is broken** — The frontend calls `supabase.functions.invoke('shopify-oauth', ...)` which sends a POST request, but the edge function reads `action` from URL query params (`url.searchParams.get("action")`). The disconnect action will never match.
 
-### Plan
+3. **Store domain input** — User wants to enter only the store name (e.g. `mystore`) with `.myshopify.com` suffix shown as a fixed label, instead of typing the full domain.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Fix Plan
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+| File | Change |
+|---|---|
+| `shopify-oauth-callback/index.ts` | Replace `auth.getClaims(state)` with `auth.getUser(state)`, extract `user.id` |
+| `shopify-oauth/index.ts` | Replace `auth.getClaims(jwt)` with `auth.getUser(jwt)`. Also handle disconnect via POST body (`req.json()`) in addition to query params, so the frontend invoke works |
+| `ShopifyImportTab.tsx` | Change store domain input: show `.myshopify.com` as a fixed suffix, user only types the prefix. Auto-append `.myshopify.com` when building the OAuth URL and when querying. Fix disconnect to pass `action` in query params or switch to body-based approach |
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### Technical Details
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**Auth fix (both edge functions):**
+```typescript
+// Before (broken):
+const { data: claimsData, error: claimsErr } = await supabaseUser.auth.getClaims(jwt);
+const userId = claimsData.claims.sub;
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+// After (working):
+const { data: { user }, error: userErr } = await supabaseUser.auth.getUser(jwt);
+const userId = user.id;
+```
+
+**Input UX:** The store domain input becomes a prefix-only field with a fixed `.myshopify.com` suffix displayed inline, preventing full-domain entry mistakes.
 
