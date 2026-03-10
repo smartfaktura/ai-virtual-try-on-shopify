@@ -1,19 +1,21 @@
+import { lazy, Suspense } from 'react';
 import { LandingNav } from '@/components/landing/LandingNav';
 import { HeroSection } from '@/components/landing/HeroSection';
-import { StudioTeamSection } from '@/components/landing/StudioTeamSection';
-import { HowItWorks } from '@/components/landing/HowItWorks';
-import { FreestyleShowcaseSection } from '@/components/landing/FreestyleShowcaseSection';
-import { ProductCategoryShowcase } from '@/components/landing/ProductCategoryShowcase';
-import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
-import { EnvironmentShowcaseSection } from '@/components/landing/EnvironmentShowcaseSection';
-import { CreativeDropsSection } from '@/components/landing/CreativeDropsSection';
-import { LandingPricing } from '@/components/landing/LandingPricing';
-import { LandingFAQ } from '@/components/landing/LandingFAQ';
-import { FinalCTA } from '@/components/landing/FinalCTA';
-import { LandingFooter } from '@/components/landing/LandingFooter';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
-import { useMemo } from 'react';
+
+// Lazy-load below-fold sections to reduce initial main-thread work
+const StudioTeamSection = lazy(() => import('@/components/landing/StudioTeamSection').then(m => ({ default: m.StudioTeamSection })));
+const HowItWorks = lazy(() => import('@/components/landing/HowItWorks').then(m => ({ default: m.HowItWorks })));
+const FreestyleShowcaseSection = lazy(() => import('@/components/landing/FreestyleShowcaseSection').then(m => ({ default: m.FreestyleShowcaseSection })));
+const ProductCategoryShowcase = lazy(() => import('@/components/landing/ProductCategoryShowcase').then(m => ({ default: m.ProductCategoryShowcase })));
+const ModelShowcaseSection = lazy(() => import('@/components/landing/ModelShowcaseSection').then(m => ({ default: m.ModelShowcaseSection })));
+const EnvironmentShowcaseSection = lazy(() => import('@/components/landing/EnvironmentShowcaseSection').then(m => ({ default: m.EnvironmentShowcaseSection })));
+const CreativeDropsSection = lazy(() => import('@/components/landing/CreativeDropsSection').then(m => ({ default: m.CreativeDropsSection })));
+const LandingPricing = lazy(() => import('@/components/landing/LandingPricing').then(m => ({ default: m.LandingPricing })));
+const LandingFAQ = lazy(() => import('@/components/landing/LandingFAQ').then(m => ({ default: m.LandingFAQ })));
+const FinalCTA = lazy(() => import('@/components/landing/FinalCTA').then(m => ({ default: m.FinalCTA })));
+const LandingFooter = lazy(() => import('@/components/landing/LandingFooter').then(m => ({ default: m.LandingFooter })));
 
 const organizationJsonLd = {
   '@context': 'https://schema.org',
@@ -50,18 +52,22 @@ export default function Landing() {
       <LandingNav />
       <main>
         <HeroSection />
-        <StudioTeamSection />
-        <HowItWorks />
-        <FreestyleShowcaseSection />
-        <ProductCategoryShowcase />
-        <ModelShowcaseSection />
-        <EnvironmentShowcaseSection />
-        <CreativeDropsSection />
-        <LandingPricing />
-        <LandingFAQ />
-        <FinalCTA />
+        <Suspense fallback={null}>
+          <StudioTeamSection />
+          <HowItWorks />
+          <FreestyleShowcaseSection />
+          <ProductCategoryShowcase />
+          <ModelShowcaseSection />
+          <EnvironmentShowcaseSection />
+          <CreativeDropsSection />
+          <LandingPricing />
+          <LandingFAQ />
+          <FinalCTA />
+        </Suspense>
       </main>
-      <LandingFooter />
+      <Suspense fallback={null}>
+        <LandingFooter />
+      </Suspense>
     </div>
   );
 }
