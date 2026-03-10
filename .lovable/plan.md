@@ -1,39 +1,30 @@
 
 
-## Improve Batch Mode: Smaller Previews + Full Details Per Product
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The batch cards currently show oversized `aspect-square` images and only have title + type fields — missing description, dimensions, and quick-type chips that exist in single-product mode.
+### Issues Found
 
-### Changes — `src/components/app/ManualProductTab.tsx`
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**1. Shrink batch card images**
-- Change from `aspect-square` to a compact horizontal layout: small thumbnail (80px) on the left, fields on the right
-- This mirrors common batch/list UIs and fits more products on screen
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**2. Add all fields to each batch card**
-- Description textarea (2 rows, compact)
-- Dimensions input (optional)
-- Quick-type chips row per card
-- All with the same AI shimmer/auto-fill behavior already wired up
+### Plan
 
-**3. Update `BatchItem` interface**
-- Add `dimensions: string` field
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**4. Update `handleSubmitBatch`**
-- Include `dimensions` in the insert payload
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Batch Card Layout (per product)
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-```text
-┌─────────────────────────────────────────────┐
-│ [80px thumb] │ Name *          [×]          │
-│              │ Type ___  [chip] [chip] ...  │
-│              │ Description ___              │
-│              │ Dimensions ___ (optional)    │
-└─────────────────────────────────────────────┘
-```
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Grid
-- Stack vertically (1 column) instead of the current 2-3 column grid, since each card now has more detail
-- Keeps it scannable and consistent with the single-product form experience
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

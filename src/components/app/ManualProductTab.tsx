@@ -37,6 +37,7 @@ interface BatchItem {
   title: string;
   productType: string;
   description: string;
+  dimensions: string;
   isAnalyzing: boolean;
   manualEdits: { title: boolean; productType: boolean; description: boolean };
 }
@@ -159,6 +160,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         title,
         productType,
         description,
+        dimensions,
         isAnalyzing,
         manualEdits: { ...hasManualEdits.current },
       } : null;
@@ -170,6 +172,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         title: '',
         productType: '',
         description: '',
+        dimensions: '',
         isAnalyzing: false,
         manualEdits: { title: false, productType: false, description: false },
       }));
@@ -197,6 +200,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         title: '',
         productType: '',
         description: '',
+        dimensions: '',
         isAnalyzing: false,
         manualEdits: { title: false, productType: false, description: false },
       }));
@@ -228,6 +232,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       title: '',
       productType: '',
       description: '',
+      dimensions: '',
       isAnalyzing: false,
       manualEdits: { title: false, productType: false, description: false },
     }));
@@ -406,6 +411,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           product_type: item.productType || '',
           description: item.description.trim().substring(0, 500),
           image_url: imageUrl,
+          dimensions: item.dimensions.trim() || null,
         } as any);
         if (error) throw new Error(error.message);
         setUploadProgress({ current: i + 1, total: batchItems.length });
@@ -440,13 +446,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
     });
   };
 
-  const updateBatchItem = (id: string, field: 'title' | 'productType' | 'description', value: string) => {
+  const updateBatchItem = (id: string, field: 'title' | 'productType' | 'description' | 'dimensions', value: string) => {
     setBatchItems(prev => prev.map(b => {
       if (b.id !== id) return b;
       return {
         ...b,
         [field]: value,
-        manualEdits: { ...b.manualEdits, [field]: true },
+        manualEdits: field === 'dimensions' ? b.manualEdits : { ...b.manualEdits, [field]: true },
       };
     }));
   };
@@ -496,12 +502,9 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           />
         </div>
 
-        {/* Batch grid */}
+        {/* Batch list */}
         <div
-          className={cn(
-            'grid gap-3 transition-all',
-            batchItems.length <= 4 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'
-          )}
+          className="flex flex-col gap-3 transition-all"
           onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
           onDragLeave={() => setDragActive(false)}
           onDrop={handleDrop}
@@ -511,48 +514,91 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               key={item.id}
               className="group relative rounded-xl border border-border bg-card overflow-hidden transition-all hover:shadow-md"
             >
-              {/* Image */}
-              <div className="relative aspect-square bg-muted/30">
-                <img
-                  src={item.previewUrl}
-                  alt={item.title || 'Product'}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  onClick={() => removeBatchItem(item.id)}
-                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-                {item.isAnalyzing && (
-                  <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-                  </div>
-                )}
-              </div>
+              <div className="flex gap-3 p-3">
+                {/* Thumbnail */}
+                <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-muted/30">
+                  <img
+                    src={item.previewUrl}
+                    alt={item.title || 'Product'}
+                    className="w-full h-full object-cover"
+                  />
+                  {item.isAnalyzing && (
+                    <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                    </div>
+                  )}
+                </div>
 
-              {/* Fields */}
-              <div className="p-2.5 space-y-1.5">
-                <Input
-                  placeholder={item.isAnalyzing ? 'Analyzing…' : 'Product name *'}
-                  value={item.title}
-                  onChange={(e) => updateBatchItem(item.id, 'title', e.target.value)}
-                  maxLength={200}
-                  className={cn(
-                    'h-7 text-xs px-2',
-                    item.isAnalyzing && !item.manualEdits.title && 'animate-pulse ring-1 ring-primary/30'
+                {/* Fields */}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <div className="grid grid-cols-2 gap-2 flex-1">
+                      <Input
+                        placeholder={item.isAnalyzing ? 'Analyzing…' : 'Product name *'}
+                        value={item.title}
+                        onChange={(e) => updateBatchItem(item.id, 'title', e.target.value)}
+                        maxLength={200}
+                        className={cn(
+                          'h-8 text-xs',
+                          item.isAnalyzing && !item.manualEdits.title && 'animate-pulse ring-1 ring-primary/30'
+                        )}
+                      />
+                      <Input
+                        placeholder={item.isAnalyzing ? 'Analyzing…' : 'Type (e.g. Shoes)'}
+                        value={item.productType}
+                        onChange={(e) => updateBatchItem(item.id, 'productType', e.target.value)}
+                        maxLength={100}
+                        className={cn(
+                          'h-8 text-xs',
+                          item.isAnalyzing && !item.manualEdits.productType && 'animate-pulse ring-1 ring-primary/30'
+                        )}
+                      />
+                    </div>
+                    <button
+                      onClick={() => removeBatchItem(item.id)}
+                      className="w-6 h-6 shrink-0 rounded-full bg-muted/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {/* Quick type chips */}
+                  {!item.isAnalyzing && (
+                    <div className="flex flex-wrap gap-1">
+                      {QUICK_TYPES.map((t) => (
+                        <Badge
+                          key={t}
+                          variant={item.productType === t ? 'default' : 'outline'}
+                          className="cursor-pointer text-[10px] px-1.5 py-0 hover:bg-primary/10 transition-colors"
+                          onClick={() => updateBatchItem(item.id, 'productType', item.productType === t ? '' : t)}
+                        >
+                          {t}
+                        </Badge>
+                      ))}
+                    </div>
                   )}
-                />
-                <Input
-                  placeholder={item.isAnalyzing ? 'Analyzing…' : 'Type (e.g. Shoes)'}
-                  value={item.productType}
-                  onChange={(e) => updateBatchItem(item.id, 'productType', e.target.value)}
-                  maxLength={100}
-                  className={cn(
-                    'h-7 text-xs px-2',
-                    item.isAnalyzing && !item.manualEdits.productType && 'animate-pulse ring-1 ring-primary/30'
-                  )}
-                />
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Textarea
+                      placeholder={item.isAnalyzing ? 'Analyzing…' : 'Brief description…'}
+                      value={item.description}
+                      onChange={(e) => updateBatchItem(item.id, 'description', e.target.value)}
+                      maxLength={500}
+                      rows={2}
+                      className={cn(
+                        'resize-none min-h-0 text-xs',
+                        item.isAnalyzing && !item.manualEdits.description && 'animate-pulse ring-1 ring-primary/30'
+                      )}
+                    />
+                    <Input
+                      placeholder="Dimensions (optional)"
+                      value={item.dimensions}
+                      onChange={(e) => updateBatchItem(item.id, 'dimensions', e.target.value)}
+                      maxLength={100}
+                      className="h-8 text-xs self-start"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           ))}
