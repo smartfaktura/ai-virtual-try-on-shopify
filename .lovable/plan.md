@@ -1,30 +1,41 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Signup Email Template & OTP Code Issues
 
-### Issues Found
+### Problems Identified
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+1. **8-digit code instead of 6** — The auth system is generating an 8-digit OTP token, but the UI only accepts 6 digits. The default OTP length in the backend is likely set to 8. Need to check if this is configurable, but the real fix is to make both sides match.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+2. **Bad layout hierarchy** — The email shows the "Verify Email" button as the primary action, with the OTP code as a secondary afterthought ("or enter this code manually"). User wants the **code to be the hero** and the button to be secondary.
 
-### Plan
+3. **Ugly code font** — The code uses `Courier New` monospace which looks cheap. Should use Inter (the brand font) with wide letter-spacing for a clean, modern look.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Changes
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+#### 1. `supabase/functions/_shared/email-templates/signup.tsx`
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+Restructure the email layout to make the OTP code the primary focus:
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+- **Hero: OTP code first** — Large, beautifully styled 6-digit code displayed in individual digit boxes (using an HTML table with bordered cells for each digit, splitting `token` into characters). Use Inter font, not monospace.
+- **Secondary: "Verify Email" button below** — Smaller, outlined/ghost style button as an alternative ("Or click below to verify directly")
+- Trim token display to first 6 characters (in case backend sends more)
+- Clean, modern styling with the digit-box pattern (like the UI's OTP input)
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+#### 2. Backend OTP length
+
+The Supabase default OTP length is 6 digits. The screenshot shows 8 digits (`65693362`), which suggests the auth config may have a custom setting. I'll check if `config.toml` has an OTP size override — it doesn't appear to. This is likely a Supabase project-level setting. We should ensure the email template only displays the first 6 characters of the token as a safeguard, and the UI already expects 6.
+
+Actually, looking more carefully: the token the system sends could be longer than 6. The `verifyOtp` call uses `type: 'signup'` which by default uses a 6-digit code. The 8-digit display in the email is just the template rendering whatever token string it receives without truncation. The fix is to only show the first 6 digits in the template.
+
+#### 3. Deploy
+
+Redeploy `auth-email-hook` edge function after template changes.
+
+### Files to Change
+
+1. **`supabase/functions/_shared/email-templates/signup.tsx`** — Complete redesign of the code/button hierarchy:
+   - OTP code displayed as styled individual digit cells (first 6 chars of token)
+   - "Verify Email" button moved below as secondary action
+   - Remove monospace font, use Inter throughout
+   - Add helper text: "Enter this code to verify your account"
 
