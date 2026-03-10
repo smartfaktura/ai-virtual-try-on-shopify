@@ -25,6 +25,7 @@ export default function Auth() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -34,8 +35,20 @@ export default function Auth() {
 
   if (isLoading || user) return null;
 
+  const validate = () => {
+    const errs: { email?: string; password?: string } = {};
+    if (!email.trim()) errs.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email address';
+    if (!password) errs.password = 'Password is required';
+    else if (password.length < 6) errs.password = 'Password must be at least 6 characters';
+    return errs;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    setErrors({});
     setLoading(true);
 
     if (mode === 'signup') {
@@ -139,7 +152,7 @@ export default function Auth() {
             <div className="flex-1 h-px bg-border" />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} noValidate className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -147,10 +160,10 @@ export default function Auth() {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-11"
+                onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); }}
+                className={`h-11 ${errors.email ? 'border-destructive' : ''}`}
               />
+              {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -175,11 +188,10 @@ export default function Auth() {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="h-11"
+                onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: undefined })); }}
+                className={`h-11 ${errors.password ? 'border-destructive' : ''}`}
               />
+              {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
             </div>
 
             <Button type="submit" className="w-full h-11 rounded-full font-semibold text-base" disabled={loading}>
