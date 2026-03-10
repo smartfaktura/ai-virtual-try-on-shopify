@@ -59,6 +59,7 @@ const defaultValue: CreditContextValue = {
   planConfig: PLAN_CONFIG.free,
   subscriptionStatus: 'none',
   currentPeriodEnd: null,
+  billingInterval: null,
   deductCredits: () => {},
   addCredits: () => {},
   refreshBalance: async () => {},
