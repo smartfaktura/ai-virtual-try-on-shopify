@@ -27,6 +27,7 @@ export default function Auth() {
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
+  const [signupComplete, setSignupComplete] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
