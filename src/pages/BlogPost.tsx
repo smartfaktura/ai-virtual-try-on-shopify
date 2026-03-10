@@ -138,10 +138,10 @@ export default function BlogPost() {
     publisher: {
       '@type': 'Organization',
       name: 'VOVV AI',
-      url: 'https://vovvai.lovable.app',
+      url: SITE_URL,
       logo: { '@type': 'ImageObject', url: defaultImage },
     },
-    mainEntityOfPage: `https://vovvai.lovable.app/blog/${post.slug}`,
+    mainEntityOfPage: `${SITE_URL}/blog/${post.slug}`,
   };
 
   const breadcrumbJsonLd = {
