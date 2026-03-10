@@ -196,6 +196,10 @@ async function importProducts(
           continue;
         }
 
+        const tags = (product as any).tags
+          ? (product as any).tags.split(", ").map((t: string) => t.trim()).filter(Boolean)
+          : [];
+
         const { data: productData, error: insertErr } = await supabaseAdmin
           .from("user_products")
           .insert({
@@ -204,6 +208,7 @@ async function importProducts(
             product_type: product.product_type || "",
             description: description.slice(0, 2000),
             image_url: mainImageUrl,
+            tags,
           })
           .select("id")
           .single();
