@@ -98,7 +98,7 @@ function welcomeEmail(data: { displayName?: string }): string {
         3. Generate studio-quality images in seconds
       </p>
     </div>
-    ${ctaButton("Start Creating", "https://vovvai.lovable.app/dashboard")}
+    ${ctaButton("Start Creating", "https://vovv.ai/dashboard")}
   `);
 }
 
