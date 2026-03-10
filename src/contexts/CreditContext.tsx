@@ -32,6 +32,7 @@ interface CreditContextValue {
   planConfig: PlanConfig;
   subscriptionStatus: SubscriptionStatus;
   currentPeriodEnd: Date | null;
+  billingInterval: 'monthly' | 'annual' | null;
   
   deductCredits: (amount: number) => void;
   addCredits: (amount: number) => void;
