@@ -35,8 +35,20 @@ export default function Auth() {
 
   if (isLoading || user) return null;
 
+  const validate = () => {
+    const errs: { email?: string; password?: string } = {};
+    if (!email.trim()) errs.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email address';
+    if (!password) errs.password = 'Password is required';
+    else if (password.length < 6) errs.password = 'Password must be at least 6 characters';
+    return errs;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    setErrors({});
     setLoading(true);
 
     if (mode === 'signup') {
