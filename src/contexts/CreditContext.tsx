@@ -85,6 +85,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const [plan, setPlan] = useState('free');
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>('none');
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<Date | null>(null);
+  const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const checkingRef = useRef(false);
