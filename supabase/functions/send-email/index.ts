@@ -219,7 +219,7 @@ function generationFailedEmail(data: { jobType?: string; errorMessage?: string; 
         </tr>
       </table>
     </div>
-    ${ctaButton("Try Again", "https://vovvai.lovable.app/dashboard")}
+    ${ctaButton("Try Again", "https://vovv.ai/dashboard")}
   `);
 }
 

@@ -69,7 +69,7 @@ serve(async (req) => {
     }
     logStep("Customer lookup", { customerId: customerId || "new" });
 
-    const origin = req.headers.get("origin") || "https://vovvai.lovable.app";
+    const origin = req.headers.get("origin") || "https://vovv.ai";
     const checkoutMode = mode === "subscription" ? "subscription" : "payment";
 
     // Look up the price amount so we can pass it to the success URL for tracking
