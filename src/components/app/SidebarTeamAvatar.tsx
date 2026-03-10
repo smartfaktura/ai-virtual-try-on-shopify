@@ -26,7 +26,7 @@ export function SidebarTeamAvatar({ collapsed = false }: SidebarTeamAvatarProps)
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <TeamAvatarHoverCard member={member} side="top">
+              <TeamAvatarHoverCard member={member} side="right" sideOffset={16}>
                 <button className="focus:outline-none">
                   <img
                     src={member.avatar}
@@ -47,7 +47,7 @@ export function SidebarTeamAvatar({ collapsed = false }: SidebarTeamAvatarProps)
 
   return (
     <div className="px-4 py-2">
-      <TeamAvatarHoverCard member={member} side="top">
+      <TeamAvatarHoverCard member={member} side="right" sideOffset={16}>
         <button className="w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-white/[0.04] transition-colors focus:outline-none">
           <img
             src={member.avatar}

@@ -7,19 +7,31 @@ interface TeamAvatarHoverCardProps {
   member: TeamMember;
   children: React.ReactNode;
   side?: 'top' | 'bottom' | 'left' | 'right';
+  sideOffset?: number;
 }
 
-export function TeamAvatarHoverCard({ member, children, side = 'top' }: TeamAvatarHoverCardProps) {
+export function TeamAvatarHoverCard({ member, children, side = 'top', sideOffset = 8 }: TeamAvatarHoverCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const shouldPlayRef = useRef(false);
 
   const handleOpenChange = useCallback((open: boolean) => {
     const video = videoRef.current;
     if (!video) return;
     if (open) {
+      shouldPlayRef.current = true;
       video.currentTime = 0;
+      video.load();
       video.play().catch(() => {});
     } else {
+      shouldPlayRef.current = false;
       video.pause();
+    }
+  }, []);
+
+  const handleCanPlay = useCallback(() => {
+    if (shouldPlayRef.current && videoRef.current) {
+      videoRef.current.play().catch(() => {});
     }
   }, []);
 
@@ -31,7 +43,7 @@ export function TeamAvatarHoverCard({ member, children, side = 'top' }: TeamAvat
       <HoverCardContent
         side={side}
         align="center"
-        sideOffset={8}
+        sideOffset={sideOffset}
         className="w-[220px] p-0 rounded-xl border border-border bg-card shadow-xl overflow-hidden"
       >
         {/* Video */}
@@ -43,7 +55,8 @@ export function TeamAvatarHoverCard({ member, children, side = 'top' }: TeamAvat
             muted
             loop
             playsInline
-            preload="none"
+            preload="metadata"
+            onCanPlay={handleCanPlay}
             className="w-full h-full object-cover"
           />
         </div>
