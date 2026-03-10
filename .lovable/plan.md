@@ -1,31 +1,30 @@
 
 
-## Audit Result: Domain References
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-**All clear.** Every source file, edge function, static asset, and configuration file uses `vovv.ai` correctly. Here is the summary:
+### Issues Found
 
-| Area | Status | Notes |
-|------|--------|-------|
-| `src/lib/constants.ts` | `https://vovv.ai` | Single source of truth |
-| All page components (~20) | Uses `SITE_URL` constant | Canonicals, JSON-LD correct |
-| `SEOHead.tsx` | Imports from constants | OG, Twitter, canonical all correct |
-| `index.html` | `https://vovv.ai/` | Canonical link correct |
-| `public/sitemap.xml` | All `<loc>` use `vovv.ai` | Correct |
-| `public/robots.txt` | Sitemap URL uses `vovv.ai` | Correct |
-| Edge functions (6) | Fallback origins use `vovv.ai` | Correct |
-| Email templates | Brand name "VOVV.AI" (not a URL issue) | Correct |
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### One harmless legacy reference
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-The file `supabase/migrations/20260310144746_...sql` contains `vovvai.lovable.app` as a default column value for `shopify_oauth_nonces.app_origin`. Migration files are historical records and cannot be edited. However, the edge functions that actually insert into this table (`shopify-oauth/index.ts`) already use the request origin header or fall back to `https://vovv.ai`, so this default is never used in practice. **No action needed.**
+### Plan
 
-### SEO checklist confirmed
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-- Canonical URLs point to `vovv.ai` on every public page
-- Open Graph and Twitter Card meta tags use `vovv.ai`
-- JSON-LD structured data uses `vovv.ai`
-- Sitemap and robots.txt reference `vovv.ai`
-- No `lovable.app` references remain in any runtime code
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**No changes required.** Your SEO configuration is fully aligned with the `vovv.ai` domain.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
