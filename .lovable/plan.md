@@ -1,30 +1,29 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Diagnosis: Why "We already sent a verification email" appears
 
-### Issues Found
+### Two separate issues found
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+**Issue 1: Rate limiting (immediate cause of the toast)**
+The auth system has a per-email rate limit. Previous rapid signup attempts (before the domain fix) exhausted this limit. The Auth.tsx code (line 84-86) catches `rate_limit` / `over_email_send_rate_limit` errors and shows the friendly toast "We already sent a verification email" instead of the raw error. This clears automatically after a few minutes.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**Issue 2: Edge function silently failing (root cause — no emails ever sent)**
+The edge function logs show ONLY "booted" and "shutdown" entries — zero application logs ("Received auth event", "Email sent", or any error). This means the function crashes during webhook verification or payload parsing before reaching the business logic. Even when the rate limit clears and auth triggers the hook, the email still won't send.
 
 ### Plan
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+1. **Delete stale auth.users records** for `tomassimkus@123presets.com` — previous signup attempts may have created ghost records that trigger rate limits on re-signup. (Need to verify if new records were created after our earlier cleanup.)
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+2. **Add error logging to the edge function** — wrap the top-level `handleWebhook` in try/catch with `console.error` to surface what's actually failing. The current code has a try/catch but the error may be in the webhook signature verification step before any log is written.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+3. **Redeploy auth-email-hook** and test with a fresh email address (not rate-limited) to confirm emails actually send.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+4. **Improve the Auth.tsx toast** — optionally distinguish between "rate limited because we already sent" vs "rate limited because sending failed" so users get clearer guidance.
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Steps
+
+1. Query and delete any remaining `auth.users` records for `tomassimkus@123presets.com`
+2. Add a `console.log("Webhook request received")` at the very top of the `Deno.serve` handler (before routing) to confirm requests reach the function
+3. Redeploy `auth-email-hook`
+4. Wait ~2 minutes for rate limit to clear, then test signup with a fresh email
 
