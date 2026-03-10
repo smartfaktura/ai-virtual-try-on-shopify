@@ -42,6 +42,8 @@ export function BuyCreditsModal() {
     const targetIdx = PLAN_ORDER.indexOf(planId);
     if (planId === plan && subscriptionStatus === 'canceling') {
       setDialogMode('reactivate');
+    } else if (planId === 'free') {
+      setDialogMode('cancel');
     } else if (targetIdx > currentIdx) {
       setDialogMode('upgrade');
     } else {
