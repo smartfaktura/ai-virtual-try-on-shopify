@@ -1156,6 +1156,11 @@ const model054Natalie = getLandingAssetUrl('models/model-054-natalie.jpg');
 // Valeria (slim Latina American — was on landing marquee but missing from model selector)
 const modelFemaleSlimAmericanLatina = getLandingAssetUrl('models/model-female-slim-american-latina.jpg');
 
+// Aubrey, Madison, Zoe
+const modelFemaleAverageAmericanRedhead = getLandingAssetUrl('models/model-female-average-american-redhead.jpg');
+const modelFemaleSlimAmericanBlonde = getLandingAssetUrl('models/model-female-slim-american-blonde.jpg');
+const modelFemaleAthleticAmericanBlack = getLandingAssetUrl('models/model-female-athletic-american-black.jpg');
+
 // Pose preview images via storage
 const poseStudioFront = getLandingAssetUrl('poses/pose-studio-front.jpg');
 const poseLifestyleWalking = getLandingAssetUrl('poses/pose-lifestyle-walking.jpg');
