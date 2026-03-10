@@ -1315,9 +1315,10 @@ export const mockModels: ModelProfile[] = [
   { modelId: 'model_044', name: 'Priya', gender: 'female', bodyType: 'athletic', ethnicity: 'Indian', ageRange: 'adult', previewUrl: model044Priya },
   { modelId: 'model_045', name: 'Clara', gender: 'female', bodyType: 'average', ethnicity: 'German', ageRange: 'young-adult', previewUrl: model045Clara },
   { modelId: 'model_048', name: 'Elise', gender: 'female', bodyType: 'average', ethnicity: 'Dutch', ageRange: 'mature', previewUrl: model048Elise },
+  { modelId: 'model_061', name: 'Aubrey', gender: 'female', bodyType: 'average', ethnicity: 'American Redhead', ageRange: 'young-adult', previewUrl: modelFemaleAverageAmericanRedhead },
+  { modelId: 'model_062', name: 'Madison', gender: 'female', bodyType: 'slim', ethnicity: 'American Blonde', ageRange: 'young-adult', previewUrl: modelFemaleSlimAmericanBlonde },
+  { modelId: 'model_063', name: 'Zoe', gender: 'female', bodyType: 'athletic', ethnicity: 'African American', ageRange: 'young-adult', previewUrl: modelFemaleAthleticAmericanBlack },
 ];
-
-export const mockTryOnPoses: TryOnPose[] = [
   { poseId: 'pose_001', name: 'Studio Front', category: 'studio', description: 'Classic front view on clean white background', promptHint: 'Model standing facing camera in a classic lookbook pose, full body front view, relaxed shoulders, arms naturally at sides, clean white studio background', previewUrl: poseStudioFront, previewUrlMale: poseStudioFrontMale },
   { poseId: 'pose_002', name: 'Studio Profile', category: 'studio', description: 'Elegant three-quarter turn with soft shadows', promptHint: 'Model in elegant three-quarter turn, one shoulder slightly forward, chin tilted, professional studio lighting with soft shadows', previewUrl: poseStudioProfile, previewUrlMale: poseStudioProfileMale },
   { poseId: 'pose_007', name: 'Studio Movement', category: 'studio', description: 'Walking pose with natural fabric flow', promptHint: 'Model mid-stride walking naturally, arms in motion, fabric flowing with movement, clean white studio background', previewUrl: poseStudioMovement, previewUrlMale: poseStudioMovementMale },
