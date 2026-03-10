@@ -1,30 +1,50 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Team Carousel Auto-Scroll Jank
 
-### Issues Found
+The current implementation uses `setInterval(fn, 30)` with `scrollLeft += 1` — this fires ~33 times/sec via JS timers, which aren't synced to the browser's paint cycle. Each tick also calls `updateScrollState()` which triggers React re-renders via `setState`. This causes visible lag and makes hover pause/resume feel janky.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Root Causes
+1. **`setInterval` at 30ms** — not frame-synced, causes jank
+2. **`updateScrollState()` called every tick** — unnecessary re-renders 33x/sec
+3. **Abrupt pause/resume on hover** — no easing
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Fix — `src/components/landing/StudioTeamSection.tsx`
 
-### Plan
+1. **Replace `setInterval` with `requestAnimationFrame`** — smooth 60fps, frame-synced scrolling
+2. **Use a speed variable** (e.g. `0.5px/frame`) instead of `1px/30ms` for smoother motion
+3. **Remove `updateScrollState()` from the animation loop** — only call it on manual scroll events and after auto-scroll resets to start
+4. **Ease hover pause/resume** — use a `targetSpeed` ref that lerps between 0 (hovered) and 0.5 (running), so the carousel decelerates/accelerates smoothly instead of stopping abruptly
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Key Code Shape
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+```typescript
+const speedRef = useRef(0.5);
+const targetSpeedRef = useRef(0.5);
+const rafRef = useRef<number>(0);
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+useEffect(() => {
+  const tick = () => {
+    // Lerp speed toward target
+    speedRef.current += (targetSpeedRef.current - speedRef.current) * 0.08;
+    
+    const el = scrollRef.current;
+    if (el && speedRef.current > 0.01) {
+      if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
+        el.scrollTo({ left: 0 });
+      }
+      el.scrollLeft += speedRef.current;
+    }
+    rafRef.current = requestAnimationFrame(tick);
+  };
+  rafRef.current = requestAnimationFrame(tick);
+  return () => cancelAnimationFrame(rafRef.current);
+}, []);
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+// Hover handlers just change the target
+const handleMouseEnter = () => { targetSpeedRef.current = 0; };
+const handleMouseLeave = () => { targetSpeedRef.current = 0.5; };
+```
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+This eliminates all re-renders from the animation loop, syncs to the display refresh rate, and smoothly decelerates on hover instead of stopping instantly.
 
