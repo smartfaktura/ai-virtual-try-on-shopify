@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     q: 'How many credits does each generation cost?',
-    a: 'Standard Workflow generations cost 8 credits, High Quality and Virtual Try-On cost 16 credits each, and video generations cost 30 credits. Freestyle starts at 4 credits for Standard quality and 10 for High Quality. Your dashboard always shows the exact cost before you generate.',
+    a: 'Workflows and Virtual Try-On cost 8 credits per image. Freestyle costs 4 credits per image, or 8 credits when you add a model or scene. Your dashboard always shows the exact cost before you generate.',
   },
   {
     q: 'Is there a free trial?',
