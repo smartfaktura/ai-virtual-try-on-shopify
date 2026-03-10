@@ -1,21 +1,34 @@
 
 
-## Delete Test Account: `123case@123presets.com`
+## Diagnosis: Email Verification Emails Not Sending
 
-### What exists
-- **1 profile row** for user `c1b8d2b1-3b6d-4dad-9593-59f5222c3311` — no other data in any table
-- `tomassimkus@123presets.com` does not exist in the database at all
+### Root Cause
 
-### Plan
+The verified email domain is **`notify.vovv.ai`** (confirmed by the domain status check), but the edge function is currently configured with `SENDER_DOMAIN = "vovv.ai"` and `FROM_DOMAIN = "vovv.ai"`. The email API rejects sending because `vovv.ai` doesn't match the verified sender domain `notify.vovv.ai`.
 
-1. **Delete the profile row** from `profiles` table for user ID `c1b8d2b1-3b6d-4dad-9593-59f5222c3311`
-2. **Delete the auth user** from `auth.users` via a migration (since `handle_new_user` trigger references `auth.users`, and the profile has `ON DELETE CASCADE` indirectly — but we need a migration to touch auth schema safely)
+The edge function logs confirm this: the function boots when signup requests come in, but there are zero "Received auth event" or "Email sent" log entries — the send call fails because of the domain mismatch.
 
-Since we cannot modify the `auth` schema via migrations, the profile delete is straightforward. The auth user record will need to be deleted via a SQL command using `DELETE FROM auth.users WHERE id = 'c1b8d2b1-...'` — this is a data operation.
+Additionally, the auth logs show multiple `429: email rate limit exceeded` errors for `123case@123presets.com`, `tomassimkus@123presets.com`, and `hello@candleracandle.com` — these were caused by repeated signup attempts while emails were silently failing.
 
-### Steps
-1. Delete profile: `DELETE FROM profiles WHERE user_id = 'c1b8d2b1-3b6d-4dad-9593-59f5222c3311'`
-2. Delete auth user: `DELETE FROM auth.users WHERE id = 'c1b8d2b1-3b6d-4dad-9593-59f5222c3311'`
+### Fix
 
-This will fully remove the account so you can re-test signup with that email.
+**`supabase/functions/auth-email-hook/index.ts`** — revert two constants:
+
+```typescript
+const SENDER_DOMAIN = "notify.vovv.ai"  // was "vovv.ai"
+const FROM_DOMAIN = "notify.vovv.ai"    // was "vovv.ai"
+```
+
+This makes the `from` address `vovvai <notifications@notify.vovv.ai>` and `sender_domain: "notify.vovv.ai"`, matching the verified domain exactly.
+
+Then redeploy `auth-email-hook`.
+
+### Why `notify.vovv.ai`?
+
+When the email domain was set up, the system provisioned `notify.vovv.ai` as a subdomain specifically for sending. The root domain `vovv.ai` is listed as the workspace domain, but the actual verified sending subdomain is `notify.vovv.ai`. Emails must use this subdomain to pass verification.
+
+### Summary of Changes
+
+1. Update `SENDER_DOMAIN` and `FROM_DOMAIN` to `"notify.vovv.ai"` in the auth-email-hook
+2. Redeploy the edge function
 
