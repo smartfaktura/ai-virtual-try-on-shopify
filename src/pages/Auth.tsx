@@ -274,7 +274,7 @@ export default function Auth() {
             onClick={options.onResend}
             disabled={resendLoading}
           >
-            {resendLoading ? 'Sending...' : 'Resend code'}
+            {resendLoading ? 'Sending...' : 'Resend email'}
           </Button>
         )}
       </div>

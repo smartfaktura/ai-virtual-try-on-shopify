@@ -47,6 +47,12 @@ export const SignupEmail = ({
         <Button style={button} href={confirmationUrl}>
           Verify Email
         </Button>
+        {token && (
+          <>
+            <Text style={dividerText}>or enter this code manually</Text>
+            <Text style={codeStyle}>{token}</Text>
+          </>
+        )}
         <Text style={footerText}>
           If you didn't create an account, you can safely ignore this email.
         </Text>
