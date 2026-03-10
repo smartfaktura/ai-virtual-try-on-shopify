@@ -216,14 +216,32 @@ Deno.serve(async (req) => {
     const userId = user.id;
 
     const body = await req.json();
-    const { action, shop, access_token, product_ids } = body;
+    const { action, shop, product_ids } = body;
+    let access_token = body.access_token;
 
-    // Validate inputs
-    if (!shop || !access_token) {
+    if (!shop) {
       return new Response(
-        JSON.stringify({ error: "Missing shop domain or access token" }),
+        JSON.stringify({ error: "Missing shop domain" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // If no token provided, look up from shopify_connections
+    if (!access_token) {
+      const { data: conn, error: connErr } = await supabaseAdmin
+        .from("shopify_connections")
+        .select("access_token")
+        .eq("user_id", userId)
+        .limit(1)
+        .single();
+
+      if (connErr || !conn) {
+        return new Response(
+          JSON.stringify({ error: "No Shopify connection found. Please connect your store first." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      access_token = conn.access_token;
     }
 
     // Sanitize shop domain

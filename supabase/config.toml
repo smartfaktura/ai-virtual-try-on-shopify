@@ -55,3 +55,13 @@ project_id = "azwiljtrbtaupofwmpzb"
     verify_jwt = false
   [functions.upscale-image]
     verify_jwt = false
+  [functions.shopify-oauth]
+    verify_jwt = false
+  [functions.shopify-oauth-callback]
+    verify_jwt = false
+  [functions.shopify-sync]
+    verify_jwt = false
+  [functions.send-contact]
+    verify_jwt = false
+  [functions.trigger-creative-drop]
+    verify_jwt = false
