@@ -424,7 +424,7 @@ export default function Auth() {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: undefined })); }}
+                onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: undefined })); setFormError(null); }}
                 className={`h-11 ${errors.password ? 'border-destructive' : ''}`}
               />
               {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
