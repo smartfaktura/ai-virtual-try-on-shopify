@@ -9,6 +9,7 @@ import { AdminViewProvider } from '@/contexts/AdminViewContext';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ProtectedRoute } from '@/components/app/ProtectedRoute';
 import { AppShell } from '@/components/app/AppShell';
+import { AppShellLoading } from '@/components/app/AppShellLoading';
 import Landing from '@/pages/Landing';
 
 // Lazy-loaded routes for code splitting
@@ -68,7 +69,7 @@ const App = () => (
       <CreditProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <Suspense fallback={null}>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
@@ -113,6 +114,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AppShell>
+                    <Suspense fallback={<AppShellLoading />}>
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/products" element={<Products />} />
@@ -136,6 +138,7 @@ const App = () => (
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
+                    </Suspense>
                   </AppShell>
                 </ProtectedRoute>
               }
