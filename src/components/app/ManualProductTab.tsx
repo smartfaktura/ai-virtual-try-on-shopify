@@ -42,7 +42,7 @@ interface ImageItem {
 
 const QUICK_TYPES = [
   'Clothing', 'Footwear', 'Beauty', 'Skincare', 'Food & Drink',
-  'Home Decor', 'Electronics', 'Jewelry', 'Accessories', 'Pet Supplies',
+  'Home Decor', 'Electronics', 'Jewelry', 'Accessories', 'Pet Supplies', 'Other',
 ];
 
 const MAX_IMAGES = 6;

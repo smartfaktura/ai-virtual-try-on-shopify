@@ -1,0 +1,147 @@
+import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ManualProductTab } from '@/components/app/ManualProductTab';
+import { StoreImportTab } from '@/components/app/StoreImportTab';
+import { CsvImportTab } from '@/components/app/CsvImportTab';
+import { MobileUploadTab } from '@/components/app/MobileUploadTab';
+import { ShopifyImportTab } from '@/components/app/ShopifyImportTab';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface UserProduct {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  product_type: string;
+  image_url: string;
+  tags: string[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export default function AddProduct() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const isEditing = !!id;
+
+  const { data: editingProduct } = useQuery({
+    queryKey: ['user-product', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from('user_products')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data as UserProduct;
+    },
+    enabled: !!id && !!user,
+  });
+
+  const handleDone = () => navigate('/app/products');
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleDone} className="gap-1.5 -ml-2">
+            <ArrowLeft className="w-4 h-4" />
+            Products
+          </Button>
+        </div>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight mt-2">
+          {isEditing ? 'Edit Product' : 'Add Product'}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1 max-w-lg">
+          {isEditing
+            ? 'Update your product details and images.'
+            : 'Upload images, import from a URL, or bulk-add via CSV.'}
+        </p>
+      </div>
+
+      {/* Content */}
+      {isEditing ? (
+        <div className="max-w-2xl">
+          {editingProduct && (
+            <ManualProductTab
+              onProductAdded={handleDone}
+              onClose={handleDone}
+              editingProduct={editingProduct}
+            />
+          )}
+        </div>
+      ) : (
+        <Tabs defaultValue="manual" className="w-full max-w-2xl">
+          <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto overflow-x-auto flex-nowrap max-w-full">
+            <TabsTrigger
+              value="manual"
+              className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5 shrink-0"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              Upload
+            </TabsTrigger>
+            <TabsTrigger
+              value="store"
+              className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5 shrink-0"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Product </span>URL
+            </TabsTrigger>
+            <TabsTrigger
+              value="csv"
+              className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5 shrink-0"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              CSV
+            </TabsTrigger>
+            {!isMobile && (
+              <TabsTrigger
+                value="mobile"
+                className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5 shrink-0"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                Mobile
+              </TabsTrigger>
+            )}
+            <TabsTrigger
+              value="shopify"
+              className="rounded-lg px-3 sm:px-4 py-2 text-xs font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm bg-transparent text-muted-foreground hover:text-foreground transition-all gap-1.5 shrink-0"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              Shopify
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="pt-6">
+            <TabsContent value="manual" className="mt-0">
+              <ManualProductTab onProductAdded={handleDone} onClose={handleDone} />
+            </TabsContent>
+            <TabsContent value="store" className="mt-0">
+              <StoreImportTab onProductAdded={handleDone} onClose={handleDone} />
+            </TabsContent>
+            <TabsContent value="csv" className="mt-0">
+              <CsvImportTab onProductAdded={handleDone} onClose={handleDone} />
+            </TabsContent>
+            {!isMobile && (
+              <TabsContent value="mobile" className="mt-0">
+                <MobileUploadTab onProductAdded={handleDone} onClose={handleDone} />
+              </TabsContent>
+            )}
+            <TabsContent value="shopify" className="mt-0">
+              <ShopifyImportTab onProductAdded={handleDone} onClose={handleDone} />
+            </TabsContent>
+          </div>
+        </Tabs>
+      )}
+    </div>
+  );
+}
