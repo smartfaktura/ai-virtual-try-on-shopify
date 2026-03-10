@@ -97,15 +97,50 @@ export default function Auth() {
               <span className="font-bold text-lg text-foreground tracking-tight">VOVV.AI</span>
             </button>
 
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-              {mode === 'signup' ? 'Create your account' : 'Welcome back'}
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              {mode === 'signup'
-                ? 'Start with 20 free credits - no credit card required'
-                : 'Sign in to continue generating'}
-            </p>
+            {!signupComplete && (
+              <>
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
+                  {mode === 'signup' ? 'Create your account' : 'Welcome back'}
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  {mode === 'signup'
+                    ? 'Start with 20 free credits - no credit card required'
+                    : 'Sign in to continue generating'}
+                </p>
+              </>
+            )}
           </div>
+
+          {signupComplete ? (
+            <div className="flex flex-col items-center text-center gap-6 py-8">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <MailCheck className="h-10 w-10 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Check your inbox</h1>
+                <p className="text-muted-foreground">
+                  We sent a confirmation link to <span className="font-medium text-foreground">{email}</span>
+                </p>
+              </div>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                Click the link in your email to activate your account. Check your spam folder if you don't see it.
+              </p>
+              <Button
+                variant="outline"
+                className="rounded-full mt-2"
+                onClick={() => {
+                  setSignupComplete(false);
+                  setMode('login');
+                  setPassword('');
+                  setConfirmPassword('');
+                }}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to sign in
+              </Button>
+            </div>
+          ) : (
+            <>
 
           {/* OAuth Buttons */}
           <div className="space-y-3">
