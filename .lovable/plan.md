@@ -1,30 +1,38 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Source Label: Product Name & Sentence Case
 
-### Issues Found
+### Problem
+1. **"Generation" fallback** — Jobs without a linked `product_id` show "Generation" instead of a meaningful name. For historical jobs this data isn't recoverable, but we can improve the fallback by using the workflow name as context (e.g. "Flat Lay Set" is better than generic "Generation").
+2. **ALL CAPS product names** — Product titles like "DIAGO V2 HOODED ZIP JACKET" display in uppercase because that's how they were stored. Should display in sentence case for cleaner UI.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes — `src/pages/Dashboard.tsx`
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**A. Better fallback label (line 463)**
+When `user_products?.title` is null, fall back to workflow name, then "Generation":
+```tsx
+{toSentenceCase(job.user_products?.title || job.workflows?.name || 'Generation')}
+```
 
-### Plan
+**B. Add sentence case helper**
+Add a small utility function at top of file:
+```tsx
+function toSentenceCase(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+```
+This converts "DIAGO V2 HOODED ZIP JACKET" → "Diago v2 hooded zip jacket". However, for product names with acronyms/model numbers, a smarter approach would preserve words that look like acronyms. A simpler approach: just capitalize each word's first letter (title case):
+```tsx
+function toSentenceCase(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+```
+Result: "Diago V2 Hooded Zip Jacket" — cleaner and preserves readability.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**C. Apply to alt text too (line 453)**
+Use the same formatted name for the image alt attribute.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+Single file change, ~10 lines added/modified.
 
