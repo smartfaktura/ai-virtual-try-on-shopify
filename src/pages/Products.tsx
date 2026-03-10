@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { trackViewContent } from '@/lib/fbPixel';
+import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { gtagViewItem } from '@/lib/gtag';
 
 interface UserProduct {
