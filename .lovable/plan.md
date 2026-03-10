@@ -1,30 +1,55 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Shopify Import Flow — Analysis
 
-### Issues Found
+I examined the entire Shopify product import pipeline (edge function, frontend, database schema, and how products appear in the app). Here is what I found:
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### What works correctly
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+- **List step**: Fetches product `id`, `title`, `product_type`, and first image thumbnail from Shopify API
+- **Import step**: For each selected product, fetches full details (`title`, `product_type`, `body_html`, up to 6 images), downloads images to storage, inserts into `user_products` table with `title`, `product_type`, `description`, `image_url`, and inserts additional images into `product_images` table
+- **Database schema**: `user_products` has `title`, `product_type`, `description`, `image_url`, `tags`, `dimensions` — all populated correctly during import
+- **Products page**: Displays products from `user_products` with image counts from `product_images`
 
-### Plan
+### Issues found
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+1. **Description not shown in product list during selection** — When browsing Shopify products before import, users only see title + product_type + thumbnail. No description preview. This is by design (description requires fetching each product individually, which is expensive for listing).
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+2. **Tags not imported** — Shopify products have tags, but the import function doesn't fetch or save them. The `user_products` table has a `tags` column but it stays `null` after Shopify import.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+3. **Dimensions not imported** — Shopify has variant data with weight/dimensions, but these aren't pulled.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+4. **Product list UI is minimal** — During the selection step, each product shows only a small 10x10 thumbnail, title, and product_type in a flat list. No description, no image count, no additional details.
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Proposed fixes
+
+| Change | File |
+|---|---|
+| Import Shopify tags into `user_products.tags` | `shopify-sync/index.ts` — add `tags` to the API fields and save to DB |
+| Show richer product cards during selection | `ShopifyImportTab.tsx` — switch from flat list to grid cards with larger thumbnails and image count badge |
+| Add `tags` field to Shopify API fetch | `shopify-sync/index.ts` — add `tags` to both `listProducts` and `importProducts` API field lists |
+
+### Technical details
+
+**Edge function — add tags to import:**
+```typescript
+// In importProducts(), change API fields to include tags:
+`fields=id,title,product_type,body_html,images,tags`
+
+// When inserting:
+tags: product.tags ? product.tags.split(', ') : [],
+```
+
+**Edge function — add tags to list preview:**
+```typescript
+// In listProducts(), add tags to fields:
+`fields=id,title,product_type,images,tags`
+
+// Return tags in list response for richer UI
+```
+
+**Frontend — richer selection cards:**
+- Switch from flat list rows to a 2-column grid with larger thumbnails (like the `ProductMultiSelect` component pattern already used elsewhere)
+- Show image count indicator on thumbnail
+- Show tags as small badges below product type
 
