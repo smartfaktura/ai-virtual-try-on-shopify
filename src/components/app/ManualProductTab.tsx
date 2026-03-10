@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Info, Sparkles } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { ProductImageGallery } from './ProductImageGallery';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -31,13 +30,15 @@ interface ManualProductTabProps {
   editingProduct?: UserProduct | null;
 }
 
-interface ImageItem {
+interface BatchItem {
   id: string;
-  src: string;
-  file?: File;
-  isPrimary: boolean;
-  dbId?: string;
-  storagePath?: string;
+  file: File;
+  previewUrl: string;
+  title: string;
+  productType: string;
+  description: string;
+  isAnalyzing: boolean;
+  manualEdits: { title: boolean; productType: boolean; description: boolean };
 }
 
 const QUICK_TYPES = [
@@ -45,22 +46,28 @@ const QUICK_TYPES = [
   'Home Decor', 'Electronics', 'Jewelry', 'Accessories', 'Pet Supplies', 'Other',
 ];
 
-const MAX_IMAGES = 6;
+const MAX_BATCH = 10;
 
 export function ManualProductTab({ onProductAdded, onClose, editingProduct }: ManualProductTabProps) {
   const { user } = useAuth();
+  // Single product mode state
   const [title, setTitle] = useState('');
   const [productType, setProductType] = useState('');
   const [description, setDescription] = useState('');
   const [dimensions, setDimensions] = useState('');
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const [singleImage, setSingleImage] = useState<{ file?: File; previewUrl: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
-  const initialImageIdsRef = useRef<string[]>([]);
   const hasManualEdits = useRef({ title: false, productType: false, description: false });
+
+  // Batch mode state
+  const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
+  const isBatchMode = batchItems.length > 1;
+
+  // Edit mode
+  const isEditing = !!editingProduct;
 
   useEffect(() => {
     if (editingProduct) {
@@ -68,78 +75,55 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       setProductType(editingProduct.product_type);
       setDescription(editingProduct.description);
       setDimensions((editingProduct as any).dimensions || '');
-      loadExistingImages(editingProduct.id, editingProduct.image_url);
+      setSingleImage({ previewUrl: editingProduct.image_url });
       hasManualEdits.current = { title: true, productType: true, description: true };
     }
   }, [editingProduct]);
 
-  async function loadExistingImages(productId: string, fallbackImageUrl: string) {
-    setIsLoadingImages(true);
-    try {
-      const { data, error } = await supabase
-        .from('product_images')
-        .select('*')
-        .eq('product_id', productId)
-        .order('position', { ascending: true });
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        const items: ImageItem[] = data.map((row) => ({
-          id: `existing-${row.id}`,
-          src: row.image_url,
-          isPrimary: row.position === 0,
-          dbId: row.id,
-          storagePath: row.storage_path,
-        }));
-        if (!items.some(i => i.isPrimary) && items.length > 0) {
-          items[0].isPrimary = true;
-        }
-        setImages(items);
-        initialImageIdsRef.current = items.map(i => i.dbId!);
-      } else if (fallbackImageUrl) {
-        setImages([{
-          id: `fallback-${Date.now()}`,
-          src: fallbackImageUrl,
-          isPrimary: true,
-        }]);
-        initialImageIdsRef.current = [];
-      }
-    } catch (err) {
-      console.error('Failed to load product images:', err);
-      if (fallbackImageUrl) {
-        setImages([{
-          id: `fallback-${Date.now()}`,
-          src: fallbackImageUrl,
-          isPrimary: true,
-        }]);
-      }
-      initialImageIdsRef.current = [];
-    } finally {
-      setIsLoadingImages(false);
+  // AI analysis for a single image
+  const analyzeImage = useCallback(async (imageDataUrl: string, target?: { batchId: string }) => {
+    if (target) {
+      setBatchItems(prev => prev.map(b => b.id === target.batchId ? { ...b, isAnalyzing: true } : b));
+    } else {
+      setIsAnalyzing(true);
     }
-  }
-
-  const analyzeImage = useCallback(async (imageDataUrl: string) => {
-    setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('analyze-product-image', {
         body: { imageUrl: imageDataUrl },
       });
       if (error) throw error;
       if (data) {
-        if (data.title && !hasManualEdits.current.title) setTitle(data.title);
-        if (data.productType && !hasManualEdits.current.productType) setProductType(data.productType);
-        if (data.description && !hasManualEdits.current.description) setDescription(data.description);
+        if (target) {
+          setBatchItems(prev => prev.map(b => {
+            if (b.id !== target.batchId) return b;
+            return {
+              ...b,
+              isAnalyzing: false,
+              title: !b.manualEdits.title && data.title ? data.title : b.title,
+              productType: !b.manualEdits.productType && data.productType ? data.productType : b.productType,
+              description: !b.manualEdits.description && data.description ? data.description : b.description,
+            };
+          }));
+        } else {
+          if (data.title && !hasManualEdits.current.title) setTitle(data.title);
+          if (data.productType && !hasManualEdits.current.productType) setProductType(data.productType);
+          if (data.description && !hasManualEdits.current.description) setDescription(data.description);
+        }
       }
     } catch (err) {
       console.error('AI analysis failed:', err);
+      if (target) {
+        setBatchItems(prev => prev.map(b => b.id === target.batchId ? { ...b, isAnalyzing: false } : b));
+      }
     } finally {
-      setIsAnalyzing(false);
+      if (!target) setIsAnalyzing(false);
     }
   }, []);
 
+  // Process files: 1 file = single mode, 2+ = batch mode
   const addFiles = useCallback((files: File[]) => {
+    if (isEditing) return; // Edit mode only handles single image replacement
+
     const validFiles = files.filter(f => {
       if (!f.type.startsWith('image/')) {
         toast.error(`${f.name} is not an image`);
@@ -152,43 +136,146 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       return true;
     });
 
-    const remaining = MAX_IMAGES - images.length;
+    if (validFiles.length === 0) return;
+
+    // If we already have a single image or batch items, calculate remaining
+    const currentCount = singleImage ? 1 + batchItems.length : batchItems.length;
+    const remaining = MAX_BATCH - currentCount;
     const toAdd = validFiles.slice(0, remaining);
 
     if (validFiles.length > remaining) {
-      toast.error(`Max ${MAX_IMAGES} images allowed`);
+      toast.error(`Max ${MAX_BATCH} products at once`);
     }
 
-    const isFirstImage = images.length === 0 && toAdd.length > 0;
+    if (toAdd.length === 0) return;
 
-    toAdd.forEach((file, fileIdx) => {
+    // If currently in single mode (1 image, no batch) and adding more files,
+    // convert existing single image to batch item + add new ones
+    if (singleImage && !isBatchMode && toAdd.length >= 1) {
+      const existingBatchItem: BatchItem | null = singleImage.file ? {
+        id: `existing-${Date.now()}`,
+        file: singleImage.file,
+        previewUrl: singleImage.previewUrl,
+        title,
+        productType,
+        description,
+        isAnalyzing,
+        manualEdits: { ...hasManualEdits.current },
+      } : null;
+
+      const newItems: BatchItem[] = toAdd.map((file, i) => ({
+        id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+        title: '',
+        productType: '',
+        description: '',
+        isAnalyzing: false,
+        manualEdits: { title: false, productType: false, description: false },
+      }));
+
+      const allItems = existingBatchItem ? [existingBatchItem, ...newItems] : newItems;
+      setBatchItems(allItems);
+      setSingleImage(null);
+      setTitle('');
+      setProductType('');
+      setDescription('');
+      setDimensions('');
+      hasManualEdits.current = { title: false, productType: false, description: false };
+
+      // Run AI analysis for new items (concurrency limit of 3)
+      runBatchAnalysis(newItems);
+      return;
+    }
+
+    // If already in batch mode, add more items
+    if (isBatchMode) {
+      const newItems: BatchItem[] = toAdd.map((file, i) => ({
+        id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+        title: '',
+        productType: '',
+        description: '',
+        isAnalyzing: false,
+        manualEdits: { title: false, productType: false, description: false },
+      }));
+      setBatchItems(prev => [...prev, ...newItems]);
+      runBatchAnalysis(newItems);
+      return;
+    }
+
+    // Fresh upload: 1 file = single mode
+    if (toAdd.length === 1 && !singleImage) {
+      const file = toAdd[0];
+      const previewUrl = URL.createObjectURL(file);
+      setSingleImage({ file, previewUrl });
+      // Read as data URL for AI analysis
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
-        const newItem: ImageItem = {
-          id: `${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          src: dataUrl,
-          file,
-          isPrimary: false,
-        };
-        setImages(prev => {
-          const updated = [...prev, newItem];
-          if (updated.filter(i => i.isPrimary).length === 0 && updated.length > 0) {
-            updated[0].isPrimary = true;
-          }
-          return updated;
-        });
-
-        // Trigger AI analysis on the first image uploaded
-        if (isFirstImage && fileIdx === 0) {
-          analyzeImage(dataUrl);
-        }
+        analyzeImage(dataUrl);
       };
       reader.readAsDataURL(file);
-    });
-  }, [images.length, analyzeImage]);
+      return;
+    }
 
-  // Clipboard paste support (Cmd+V / Ctrl+V)
+    // Fresh upload: 2+ files = batch mode
+    const newItems: BatchItem[] = toAdd.map((file, i) => ({
+      id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+      title: '',
+      productType: '',
+      description: '',
+      isAnalyzing: false,
+      manualEdits: { title: false, productType: false, description: false },
+    }));
+    setBatchItems(newItems);
+    runBatchAnalysis(newItems);
+  }, [singleImage, batchItems.length, isBatchMode, title, productType, description, isAnalyzing, isEditing, analyzeImage]);
+
+  // Run AI analysis with concurrency limit
+  const runBatchAnalysis = useCallback((items: BatchItem[]) => {
+    const queue = [...items];
+    const concurrency = 3;
+    let active = 0;
+
+    const next = () => {
+      while (active < concurrency && queue.length > 0) {
+        const item = queue.shift()!;
+        active++;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string;
+          analyzeImage(dataUrl, { batchId: item.id }).finally(() => {
+            active--;
+            next();
+          });
+        };
+        reader.readAsDataURL(item.file);
+      }
+    };
+    next();
+  }, [analyzeImage]);
+
+  // Handle single image replacement in edit mode
+  const handleEditImageReplace = useCallback((files: File[]) => {
+    const file = files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image exceeds 10 MB');
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setSingleImage({ file, previewUrl });
+    hasManualEdits.current = { title: false, productType: false, description: false };
+    const reader = new FileReader();
+    reader.onload = (e) => analyzeImage(e.target?.result as string);
+    reader.readAsDataURL(file);
+  }, [analyzeImage]);
+
+  // Clipboard paste
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
@@ -202,237 +289,315 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       }
       if (imageFiles.length > 0) {
         e.preventDefault();
-        addFiles(imageFiles);
+        if (isEditing) {
+          handleEditImageReplace(imageFiles);
+        } else {
+          addFiles(imageFiles);
+        }
       }
     };
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
-  }, [addFiles]);
+  }, [addFiles, handleEditImageReplace, isEditing]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setDragActive(false);
       const files = Array.from(e.dataTransfer.files || []);
-      if (files.length) addFiles(files);
+      if (files.length) {
+        if (isEditing) handleEditImageReplace(files);
+        else addFiles(files);
+      }
     },
-    [addFiles]
+    [addFiles, handleEditImageReplace, isEditing]
   );
 
-  const handleSetPrimary = useCallback((id: string) => {
-    setImages(prev => prev.map(img => ({ ...img, isPrimary: img.id === id })));
-  }, []);
+  // Upload a single file to storage
+  async function uploadFile(file: File): Promise<string> {
+    if (!user) throw new Error('Not authenticated');
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const filePath = `${user.id}/${timestamp}-${randomId}.${ext}`;
 
-  const handleRemove = useCallback((id: string) => {
-    setImages(prev => {
-      const updated = prev.filter(img => img.id !== id);
-      if (updated.length > 0 && !updated.some(i => i.isPrimary)) {
-        updated[0].isPrimary = true;
+    const { data, error } = await supabase.storage
+      .from('product-uploads')
+      .upload(filePath, file, { contentType: file.type, cacheControl: '3600', upsert: false });
+    if (error) throw new Error(error.message);
+
+    const { data: urlData } = supabase.storage.from('product-uploads').getPublicUrl(data.path);
+    return urlData.publicUrl;
+  }
+
+  // Submit: single product (new or edit)
+  const handleSubmitSingle = async () => {
+    if (!user || !singleImage || !title.trim()) {
+      toast.error('Please provide a title and an image');
+      return;
+    }
+    setIsUploading(true);
+    try {
+      let imageUrl = singleImage.previewUrl;
+      if (singleImage.file) {
+        setUploadProgress({ current: 0, total: 1 });
+        imageUrl = await uploadFile(singleImage.file);
+        setUploadProgress({ current: 1, total: 1 });
+      }
+
+      if (isEditing && editingProduct) {
+        const { error } = await supabase
+          .from('user_products')
+          .update({
+            title: title.trim().substring(0, 200),
+            product_type: productType || '',
+            description: description.trim().substring(0, 500),
+            image_url: imageUrl,
+            dimensions: dimensions.trim() || null,
+          } as any)
+          .eq('id', editingProduct.id);
+        if (error) throw new Error(error.message);
+        toastSophia('Product updated!');
+      } else {
+        const { error } = await supabase
+          .from('user_products')
+          .insert({
+            user_id: user.id,
+            title: title.trim().substring(0, 200),
+            product_type: productType || '',
+            description: description.trim().substring(0, 500),
+            image_url: imageUrl,
+            dimensions: dimensions.trim() || null,
+          } as any);
+        if (error) throw new Error(error.message);
+        toastSophia('Product added — ready for your first shoot!');
+      }
+      onProductAdded();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save product');
+    } finally {
+      setIsUploading(false);
+      setUploadProgress({ current: 0, total: 0 });
+    }
+  };
+
+  // Submit: batch products
+  const handleSubmitBatch = async () => {
+    if (!user || batchItems.length === 0) return;
+    const incomplete = batchItems.filter(b => !b.title.trim());
+    if (incomplete.length > 0) {
+      toast.error(`${incomplete.length} product(s) missing a title`);
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress({ current: 0, total: batchItems.length });
+
+    try {
+      for (let i = 0; i < batchItems.length; i++) {
+        const item = batchItems[i];
+        setUploadProgress({ current: i, total: batchItems.length });
+        const imageUrl = await uploadFile(item.file);
+
+        const { error } = await supabase.from('user_products').insert({
+          user_id: user.id,
+          title: item.title.trim().substring(0, 200),
+          product_type: item.productType || '',
+          description: item.description.trim().substring(0, 500),
+          image_url: imageUrl,
+        } as any);
+        if (error) throw new Error(error.message);
+        setUploadProgress({ current: i + 1, total: batchItems.length });
+      }
+      toastSophia(`${batchItems.length} products added!`);
+      onProductAdded();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add products');
+    } finally {
+      setIsUploading(false);
+      setUploadProgress({ current: 0, total: 0 });
+    }
+  };
+
+  const handleSubmit = isBatchMode ? handleSubmitBatch : handleSubmitSingle;
+
+  const removeBatchItem = (id: string) => {
+    setBatchItems(prev => {
+      const updated = prev.filter(b => b.id !== id);
+      // If only 1 left, convert back to single mode
+      if (updated.length === 1) {
+        const item = updated[0];
+        setSingleImage({ file: item.file, previewUrl: item.previewUrl });
+        setTitle(item.title);
+        setProductType(item.productType);
+        setDescription(item.description);
+        hasManualEdits.current = { ...item.manualEdits };
+        return [];
       }
       return updated;
     });
-  }, []);
+  };
 
-  const handleReorder = useCallback((reordered: ImageItem[]) => {
-    setImages(reordered);
-  }, []);
+  const updateBatchItem = (id: string, field: 'title' | 'productType' | 'description', value: string) => {
+    setBatchItems(prev => prev.map(b => {
+      if (b.id !== id) return b;
+      return {
+        ...b,
+        [field]: value,
+        manualEdits: { ...b.manualEdits, [field]: true },
+      };
+    }));
+  };
 
-  async function uploadNewImage(img: ImageItem): Promise<{ publicUrl: string; storagePath: string }> {
-    if (!user || !img.file) throw new Error('No file to upload');
+  const anyBatchAnalyzing = batchItems.some(b => b.isAnalyzing);
+  const hasContent = isBatchMode ? batchItems.length > 0 : !!singleImage;
 
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2, 8);
-    const ext = img.file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const filePath = `${user.id}/${timestamp}-${randomId}.${ext}`;
+  // ── BATCH MODE UI ──
+  if (isBatchMode) {
+    return (
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs font-medium px-2.5 py-1">
+              {batchItems.length} product{batchItems.length !== 1 ? 's' : ''}
+            </Badge>
+            {anyBatchAnalyzing && (
+              <span className="flex items-center gap-1 text-[11px] text-primary">
+                <Sparkles className="w-3 h-3 animate-pulse" />
+                Analyzing…
+              </span>
+            )}
+          </div>
+          {batchItems.length < MAX_BATCH && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1.5"
+              onClick={() => document.getElementById('batch-add-more')?.click()}
+            >
+              <ImagePlus className="w-3.5 h-3.5" />
+              Add more
+            </Button>
+          )}
+          <input
+            id="batch-add-more"
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              if (files.length) addFiles(files);
+              e.target.value = '';
+            }}
+          />
+        </div>
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('product-uploads')
-      .upload(filePath, img.file, {
-        contentType: img.file.type,
-        cacheControl: '3600',
-        upsert: false,
-      });
+        {/* Batch grid */}
+        <div
+          className={cn(
+            'grid gap-3 transition-all',
+            batchItems.length <= 4 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'
+          )}
+          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+          onDragLeave={() => setDragActive(false)}
+          onDrop={handleDrop}
+        >
+          {batchItems.map((item) => (
+            <div
+              key={item.id}
+              className="group relative rounded-xl border border-border bg-card overflow-hidden transition-all hover:shadow-md"
+            >
+              {/* Image */}
+              <div className="relative aspect-square bg-muted/30">
+                <img
+                  src={item.previewUrl}
+                  alt={item.title || 'Product'}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={() => removeBatchItem(item.id)}
+                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+                {item.isAnalyzing && (
+                  <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                  </div>
+                )}
+              </div>
 
-    if (uploadError) throw new Error(uploadError.message);
+              {/* Fields */}
+              <div className="p-2.5 space-y-1.5">
+                <Input
+                  placeholder={item.isAnalyzing ? 'Analyzing…' : 'Product name *'}
+                  value={item.title}
+                  onChange={(e) => updateBatchItem(item.id, 'title', e.target.value)}
+                  maxLength={200}
+                  className={cn(
+                    'h-7 text-xs px-2',
+                    item.isAnalyzing && !item.manualEdits.title && 'animate-pulse ring-1 ring-primary/30'
+                  )}
+                />
+                <Input
+                  placeholder={item.isAnalyzing ? 'Analyzing…' : 'Type (e.g. Shoes)'}
+                  value={item.productType}
+                  onChange={(e) => updateBatchItem(item.id, 'productType', e.target.value)}
+                  maxLength={100}
+                  className={cn(
+                    'h-7 text-xs px-2',
+                    item.isAnalyzing && !item.manualEdits.productType && 'animate-pulse ring-1 ring-primary/30'
+                  )}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
 
-    const { data: publicUrlData } = supabase.storage
-      .from('product-uploads')
-      .getPublicUrl(uploadData.path);
+        {/* Progress */}
+        {isUploading && uploadProgress.total > 0 && (
+          <div className="space-y-1.5">
+            <Progress value={(uploadProgress.current / uploadProgress.total) * 100} className="h-1.5" />
+            <p className="text-[11px] text-muted-foreground text-center">
+              Adding {uploadProgress.current}/{uploadProgress.total} products…
+            </p>
+          </div>
+        )}
 
-    return { publicUrl: publicUrlData.publicUrl, storagePath: uploadData.path };
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-2 sticky bottom-0 bg-background pb-1">
+          <Button variant="ghost" onClick={onClose} disabled={isUploading} className="rounded-xl">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isUploading || anyBatchAnalyzing || batchItems.some(b => !b.title.trim())}
+            className="min-w-[120px] rounded-xl"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                Adding {uploadProgress.current}/{uploadProgress.total}…
+              </>
+            ) : (
+              `Add ${batchItems.length} Products`
+            )}
+          </Button>
+        </div>
+      </div>
+    );
   }
 
-  const handleSubmitNew = async () => {
-    if (!user || images.length === 0 || !title.trim()) {
-      toast.error('Please provide a title and at least one image');
-      return;
-    }
-
-    setIsUploading(true);
-    const filesToUpload = images.filter(i => i.file);
-    setUploadProgress({ current: 0, total: filesToUpload.length });
-
-    try {
-      const primaryImage = images.find(i => i.isPrimary) || images[0];
-      let primaryUrl = '';
-      const uploadedImages: { publicUrl: string; storagePath: string; position: number; imgId: string }[] = [];
-
-      for (let i = 0; i < images.length; i++) {
-        const img = images[i];
-        if (!img.file) continue;
-        setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
-        const { publicUrl, storagePath } = await uploadNewImage(img);
-        const position = img.isPrimary ? 0 : i + 1;
-        uploadedImages.push({ publicUrl, storagePath, position, imgId: img.id });
-        if (img.id === primaryImage.id) primaryUrl = publicUrl;
-      }
-
-      const { data: productData, error: insertError } = await supabase
-        .from('user_products')
-        .insert({
-          user_id: user.id,
-          title: title.trim().substring(0, 200),
-          product_type: productType || '',
-          description: description.trim().substring(0, 500),
-          image_url: primaryUrl,
-          dimensions: dimensions.trim() || null,
-        } as any)
-        .select('id')
-        .single();
-
-      if (insertError) throw new Error(insertError.message);
-
-      const imageRows = uploadedImages.map(img => ({
-        product_id: productData.id,
-        user_id: user.id,
-        image_url: img.publicUrl,
-        storage_path: img.storagePath,
-        position: img.position,
-      }));
-
-      const { error: imagesError } = await supabase.from('product_images').insert(imageRows);
-      if (imagesError) console.error('Failed to insert product images:', imagesError);
-
-      toastSophia('Product added — ready for your first shoot!');
-      onProductAdded();
-      onClose();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to add product');
-    } finally {
-      setIsUploading(false);
-      setUploadProgress({ current: 0, total: 0 });
-    }
-  };
-
-  const handleSubmitEdit = async () => {
-    if (!user || !editingProduct || images.length === 0 || !title.trim()) {
-      toast.error('Please provide a title and at least one image');
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const currentDbIds = images.filter(i => i.dbId).map(i => i.dbId!);
-      const removedDbIds = initialImageIdsRef.current.filter(id => !currentDbIds.includes(id));
-
-      if (removedDbIds.length > 0) {
-        const { data: removedRows } = await supabase
-          .from('product_images')
-          .select('storage_path')
-          .in('id', removedDbIds);
-
-        await supabase.from('product_images').delete().in('id', removedDbIds);
-
-        if (removedRows) {
-          const pathsToDelete = removedRows
-            .map(r => r.storage_path)
-            .filter(Boolean);
-          if (pathsToDelete.length > 0) {
-            await supabase.storage.from('product-uploads').remove(pathsToDelete);
-          }
-        }
-      }
-
-      const newImages = images.filter(i => i.file);
-      const uploadedNew: { imageItem: ImageItem; publicUrl: string; storagePath: string }[] = [];
-      setUploadProgress({ current: 0, total: newImages.length });
-
-      for (const img of newImages) {
-        setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
-        const { publicUrl, storagePath } = await uploadNewImage(img);
-        uploadedNew.push({ imageItem: img, publicUrl, storagePath });
-      }
-
-      let primaryUrl = '';
-      const allFinalImages: { dbId?: string; imageUrl: string; storagePath: string; position: number; isNew: boolean }[] = [];
-
-      images.forEach((img, idx) => {
-        const position = img.isPrimary ? 0 : idx + 1;
-        const uploaded = uploadedNew.find(u => u.imageItem.id === img.id);
-
-        if (uploaded) {
-          allFinalImages.push({ imageUrl: uploaded.publicUrl, storagePath: uploaded.storagePath, position, isNew: true });
-          if (img.isPrimary) primaryUrl = uploaded.publicUrl;
-        } else {
-          allFinalImages.push({ dbId: img.dbId, imageUrl: img.src, storagePath: img.storagePath || '', position, isNew: false });
-          if (img.isPrimary) primaryUrl = img.src;
-        }
-      });
-
-      const { error: updateError } = await supabase
-        .from('user_products')
-        .update({
-          title: title.trim().substring(0, 200),
-          product_type: productType || '',
-          description: description.trim().substring(0, 500),
-          image_url: primaryUrl,
-          dimensions: dimensions.trim() || null,
-        } as any)
-        .eq('id', editingProduct.id);
-
-      if (updateError) throw new Error(updateError.message);
-
-      for (const img of allFinalImages.filter(i => !i.isNew && i.dbId)) {
-        await supabase
-          .from('product_images')
-          .update({ position: img.position })
-          .eq('id', img.dbId!);
-      }
-
-      const newRows = allFinalImages
-        .filter(i => i.isNew)
-        .map(i => ({
-          product_id: editingProduct.id,
-          user_id: user.id,
-          image_url: i.imageUrl,
-          storage_path: i.storagePath,
-          position: i.position,
-        }));
-
-      if (newRows.length > 0) {
-        const { error: insertImagesError } = await supabase.from('product_images').insert(newRows);
-        if (insertImagesError) console.error('Failed to insert new images:', insertImagesError);
-      }
-
-      toastSophia('Product updated!');
-      onProductAdded();
-      onClose();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update product');
-    } finally {
-      setIsUploading(false);
-      setUploadProgress({ current: 0, total: 0 });
-    }
-  };
-
-  const handleSubmit = editingProduct ? handleSubmitEdit : handleSubmitNew;
-  const isEditing = !!editingProduct;
-
+  // ── SINGLE PRODUCT MODE UI ──
   return (
     <div className="space-y-3 sm:space-y-4">
-      {/* ── Image Section ── */}
+      {/* Image Section */}
       <div className="space-y-2">
-        {images.length > 0 && (
+        {singleImage && (
           <div className="flex items-center justify-between">
             {isAnalyzing && (
               <div className="flex items-center gap-1.5 text-[11px] text-primary">
@@ -440,20 +605,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                 AI analyzing…
               </div>
             )}
-            <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5 ml-auto">
-              {images.length}/{MAX_IMAGES}
-            </Badge>
           </div>
         )}
 
-        {isLoadingImages ? (
-          <div className="flex items-center justify-center min-h-[80px] rounded-xl bg-muted/30">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Loading images…
-            </div>
-          </div>
-        ) : images.length === 0 ? (
+        {!singleImage ? (
           <div
             className={cn(
               'relative flex flex-col items-center justify-center rounded-2xl transition-all duration-300 py-6 sm:py-8 cursor-pointer',
@@ -464,10 +619,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
-            onClick={() => {
-              const input = document.getElementById('dropzone-file-input');
-              if (input) input.click();
-            }}
+            onClick={() => document.getElementById('dropzone-file-input')?.click()}
           >
             <div className={cn(
               'w-10 h-10 rounded-full flex items-center justify-center mb-2.5 transition-all duration-300',
@@ -482,58 +634,77 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               Drop images, <span className="text-primary font-medium">browse</span>, or paste
             </p>
             <p className="text-[11px] text-muted-foreground/60 mt-1">
-              PNG, JPG, WebP · max 10 MB · up to {MAX_IMAGES}
+              PNG, JPG, WebP · max 10 MB · drop multiple for batch add (up to {MAX_BATCH})
             </p>
             <input
               id="dropzone-file-input"
               type="file"
               accept="image/*"
-              multiple
+              multiple={!isEditing}
               className="hidden"
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => {
                 const files = Array.from(e.target.files || []);
-                if (files.length) addFiles(files);
+                if (files.length) {
+                  if (isEditing) handleEditImageReplace(files);
+                  else addFiles(files);
+                }
                 e.target.value = '';
               }}
             />
           </div>
         ) : (
-          <div
-            className={cn(
-              'rounded-2xl p-2 sm:p-3 transition-all duration-300',
-              dragActive ? 'bg-primary/5 ring-2 ring-primary/20 scale-[1.01]' : 'bg-muted/20'
-            )}
-            onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-            onDragLeave={() => setDragActive(false)}
-            onDrop={handleDrop}
-          >
-            <ProductImageGallery
-              images={images}
-              onSetPrimary={handleSetPrimary}
-              onRemove={handleRemove}
-              onAddFiles={addFiles}
-              onReorder={handleReorder}
-              maxImages={MAX_IMAGES}
-              disabled={isUploading}
+          <div className="relative group rounded-2xl overflow-hidden bg-muted/20">
+            <img
+              src={singleImage.previewUrl}
+              alt={title || 'Product preview'}
+              className="w-full max-h-[200px] object-contain rounded-2xl"
             />
-          </div>
-        )}
-
-        {/* Pro Tip - hidden on mobile */}
-        {images.length > 0 && (
-          <div className="hidden sm:flex items-center gap-1.5 px-1">
-            <Info className="w-3 h-3 text-muted-foreground shrink-0" />
-            <p className="text-[11px] text-muted-foreground">
-              The <span className="text-primary font-medium">cover</span> image is used as the primary AI reference · drag to reorder
-            </p>
+            <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              {!isEditing && (
+                <button
+                  onClick={() => {
+                    setSingleImage(null);
+                    setTitle('');
+                    setProductType('');
+                    setDescription('');
+                    hasManualEdits.current = { title: false, productType: false, description: false };
+                  }}
+                  className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <label className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-muted cursor-pointer transition-colors">
+                <Pencil className="w-3.5 h-3.5" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length) {
+                      if (isEditing) handleEditImageReplace(files);
+                      else {
+                        const file = files[0];
+                        const previewUrl = URL.createObjectURL(file);
+                        setSingleImage({ file, previewUrl });
+                        const reader = new FileReader();
+                        reader.onload = (ev) => analyzeImage(ev.target?.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
           </div>
         )}
       </div>
 
-      {/* ── Product Details ── */}
+      {/* Product Details */}
       <div className="space-y-2">
-        {/* Name + Type side by side */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label htmlFor="product-title" className="text-xs font-medium">
@@ -543,10 +714,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               id="product-title"
               placeholder={isAnalyzing && !hasManualEdits.current.title ? "Analyzing…" : "e.g. Black Yoga Leggings"}
               value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                hasManualEdits.current.title = true;
-              }}
+              onChange={(e) => { setTitle(e.target.value); hasManualEdits.current.title = true; }}
               maxLength={200}
               className={cn(
                 'transition-all duration-300',
@@ -554,19 +722,13 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               )}
             />
           </div>
-
           <div className="space-y-1">
-            <Label htmlFor="product-type" className="text-xs font-medium">
-              Product Type
-            </Label>
+            <Label htmlFor="product-type" className="text-xs font-medium">Product Type</Label>
             <Input
               id="product-type"
               placeholder={isAnalyzing && !hasManualEdits.current.productType ? "Analyzing…" : "e.g. Sneakers, Face Serum…"}
               value={productType}
-              onChange={(e) => {
-                setProductType(e.target.value);
-                hasManualEdits.current.productType = true;
-              }}
+              onChange={(e) => { setProductType(e.target.value); hasManualEdits.current.productType = true; }}
               maxLength={100}
               className={cn(
                 'transition-all duration-300',
@@ -576,7 +738,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         </div>
 
-        {/* Quick type badges */}
         {!(isAnalyzing && !hasManualEdits.current.productType) && (
           <div className="flex flex-wrap gap-1.5">
             {QUICK_TYPES.map((t) => (
@@ -584,10 +745,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                 key={t}
                 variant={productType === t ? 'default' : 'outline'}
                 className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
-                onClick={() => {
-                  setProductType(productType === t ? '' : t);
-                  hasManualEdits.current.productType = true;
-                }}
+                onClick={() => { setProductType(productType === t ? '' : t); hasManualEdits.current.productType = true; }}
               >
                 {t}
               </Badge>
@@ -595,20 +753,14 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
           </div>
         )}
 
-        {/* Description + Dimensions side by side */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="product-desc" className="text-xs font-medium">
-              Description
-            </Label>
+            <Label htmlFor="product-desc" className="text-xs font-medium">Description</Label>
             <Textarea
               id="product-desc"
               placeholder={isAnalyzing && !hasManualEdits.current.description ? "Analyzing…" : "Brief description…"}
               value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                hasManualEdits.current.description = true;
-              }}
+              onChange={(e) => { setDescription(e.target.value); hasManualEdits.current.description = true; }}
               maxLength={500}
               rows={2}
               className={cn(
@@ -617,7 +769,6 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
               )}
             />
           </div>
-
           <div className="space-y-1">
             <Label htmlFor="product-dimensions" className="text-xs font-medium">
               Dimensions <span className="text-muted-foreground font-normal">(optional)</span>
@@ -633,33 +784,28 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         </div>
       </div>
 
-      {/* ── Upload Progress ── */}
+      {/* Upload Progress */}
       {isUploading && uploadProgress.total > 0 && (
         <div className="space-y-1.5">
           <Progress value={(uploadProgress.current / uploadProgress.total) * 100} className="h-1.5" />
           <p className="text-[11px] text-muted-foreground text-center">
-            Uploading {uploadProgress.current}/{uploadProgress.total} images…
+            Uploading…
           </p>
         </div>
       )}
 
-      {/* ── Footer Actions ── */}
+      {/* Footer */}
       <div className="flex justify-end gap-3 pt-2 sm:pt-3 sticky bottom-0 bg-background pb-1">
         <Button variant="ghost" onClick={onClose} disabled={isUploading} className="rounded-xl">
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={isUploading || isLoadingImages || isAnalyzing || !title.trim() || images.length === 0}
+          disabled={isUploading || isAnalyzing || !title.trim() || !singleImage}
           className="min-w-[100px] sm:min-w-[120px] rounded-xl"
         >
           {isUploading ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-              {uploadProgress.total > 0
-                ? `Uploading ${uploadProgress.current}/${uploadProgress.total}…`
-                : isEditing ? 'Saving…' : 'Uploading…'}
-            </>
+            <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />{isEditing ? 'Saving…' : 'Uploading…'}</>
           ) : (
             isEditing ? 'Save Changes' : 'Add Product'
           )}
