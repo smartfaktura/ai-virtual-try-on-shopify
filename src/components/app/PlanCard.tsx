@@ -66,6 +66,11 @@ export function PlanCard({
             <div className="flex items-center justify-between">
               <h3 className={`${compact ? 'text-base' : 'text-lg'} font-bold tracking-tight`}>{plan.name}</h3>
               {isCurrentPlan && <Badge variant="secondary" className="text-[10px]">Current</Badge>}
+              {isCurrentPlan && billingInterval && (
+                <Badge variant="outline" className="text-[10px]">
+                  {billingInterval === 'annual' ? 'Annual' : 'Monthly'}
+                </Badge>
+              )}
             </div>
 
             {plan.isEnterprise ? (

@@ -207,11 +207,24 @@ export default function Settings() {
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-semibold">Current Plan</h3>
                 <Badge className="bg-primary/10 text-primary">{planConfig.name}</Badge>
+                {plan !== 'free' && billingInterval && (
+                  <Badge variant="outline" className="text-[10px]">
+                    {billingInterval === 'annual' ? 'Billed annually' : 'Billed monthly'}
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 {creditsTotal === Infinity ? 'Unlimited' : creditsTotal.toLocaleString()} credits/{plan === 'free' ? 'bonus' : 'month'}
                 {currentPeriodEnd && plan !== 'free' && ` • Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
               </p>
+              {plan !== 'free' && billingInterval === 'monthly' && (
+                <button
+                  className="text-xs text-primary hover:underline underline-offset-2 mt-1 font-medium"
+                  onClick={openCustomerPortal}
+                >
+                  Switch to annual & save 20% →
+                </button>
+              )}
             </div>
             <Separator />
             <div className="space-y-2">
