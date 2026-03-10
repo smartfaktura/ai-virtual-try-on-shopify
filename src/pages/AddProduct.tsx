@@ -8,6 +8,7 @@ import { StoreImportTab } from '@/components/app/StoreImportTab';
 import { CsvImportTab } from '@/components/app/CsvImportTab';
 import { MobileUploadTab } from '@/components/app/MobileUploadTab';
 import { ShopifyImportTab } from '@/components/app/ShopifyImportTab';
+import { ProductUploadTips } from '@/components/app/ProductUploadTips';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,6 +68,8 @@ export default function AddProduct() {
             : 'Upload images, import from a URL, or bulk-add via CSV.'}
         </p>
       </div>
+
+      <ProductUploadTips />
 
       {/* Content */}
       {isEditing ? (
