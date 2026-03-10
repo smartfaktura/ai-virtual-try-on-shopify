@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
 import { cn } from '@/lib/utils';
 import { convertImageToBase64 } from '@/lib/imageUtils';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 interface DiscoverDetailModalProps {
   item: DiscoverItem | null;
