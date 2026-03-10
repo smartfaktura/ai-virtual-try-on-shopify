@@ -32,7 +32,7 @@ const faqCategories = [
     questions: [
       {
         q: 'How do credits work?',
-        a: 'Each image generation costs credits based on complexity. Standard quality costs 8 credits, High Quality costs 16 credits, with AI model reference 12 credits, model + scene combo 15 credits, and high-complexity (custom model + scene) 20 credits. Virtual Try-On costs 16 credits per image. Video generation costs 30 credits. You receive credits monthly with your plan, and can purchase additional credit packs anytime.',
+        a: 'Each image generation costs credits based on the mode you use. Freestyle costs 4 credits per image (or 8 credits when using a model or scene). Workflows and Virtual Try-On cost 8 credits per image. You receive credits monthly with your plan, and can purchase additional credit packs anytime.',
       },
       {
         q: 'What happens if I run out of credits?',
