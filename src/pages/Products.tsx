@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Ruler } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '@/components/app/PageHeader';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
-import { AddProductModal } from '@/components/app/AddProductModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -37,11 +37,10 @@ type SortBy = 'newest' | 'oldest' | 'name-asc' | 'name-desc';
 
 export default function Products() {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<UserProduct | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortBy>('newest');
@@ -166,7 +165,7 @@ export default function Products() {
                 <List className="w-4 h-4" />
               </Button>
             </div>
-            <Button onClick={() => { setEditingProduct(null); setModalOpen(true); }}>
+            <Button onClick={() => navigate('/app/products/new')}>
               <Plus className="w-4 h-4 mr-2" />
               Add Product
             </Button>
@@ -240,7 +239,7 @@ export default function Products() {
               <EmptyStateCard
                 heading={isFiltered ? 'No products match your filters' : 'No products yet'}
                 description={isFiltered ? 'Try a different search term or clear filters.' : ''}
-                action={!isFiltered ? { content: 'Add Product', onAction: () => setModalOpen(true) } : undefined}
+                action={!isFiltered ? { content: 'Add Product', onAction: () => navigate('/app/products/new') } : undefined}
                 icon={<Package className="w-12 h-12" />}
                 teamMember={!isFiltered && sophia ? { name: sophia.name, role: sophia.role, avatar: sophia.avatar, quote: "Upload your first product to start creating studio-quality visuals." } : undefined}
               />
@@ -275,7 +274,7 @@ export default function Products() {
                       isMobile ? "opacity-100 bg-gradient-to-t from-black/60 via-transparent to-transparent items-end justify-end pb-2 pr-2" : "opacity-0 group-hover:opacity-100"
                     )}>
                       <div className="flex gap-2">
-                        <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
+                        <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => navigate(`/app/products/${product.id}/edit`)}>
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
                         <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => deleteMutation.mutate(product.id)}>
@@ -354,7 +353,7 @@ export default function Products() {
 
                   {/* Actions */}
                   <div className={cn("flex items-center gap-1 transition-opacity shrink-0", isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditingProduct(product); setModalOpen(true); }}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => navigate(`/app/products/${product.id}/edit`)}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteMutation.mutate(product.id)}>
@@ -367,16 +366,6 @@ export default function Products() {
           </div>
         )}
       </div>
-
-      <AddProductModal
-        open={modalOpen}
-        onOpenChange={(open) => { setModalOpen(open); if (!open) setEditingProduct(null); }}
-        onProductAdded={() => {
-          queryClient.invalidateQueries({ queryKey: ['user-products'] });
-          queryClient.invalidateQueries({ queryKey: ['product-image-counts'] });
-        }}
-        editingProduct={editingProduct}
-      />
     </PageHeader>
   );
 }

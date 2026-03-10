@@ -27,6 +27,7 @@ const BrandProfiles = lazy(() => import('@/pages/BrandProfiles'));
 const BrandProfileWizard = lazy(() => import('@/components/app/BrandProfileWizard'));
 const Workflows = lazy(() => import('@/pages/Workflows'));
 const Products = lazy(() => import('@/pages/Products'));
+const AddProduct = lazy(() => import('@/pages/AddProduct'));
 const CreativeDrops = lazy(() => import('@/pages/CreativeDrops'));
 const MobileUpload = lazy(() => import('@/pages/MobileUpload'));
 const VideoGenerate = lazy(() => import('@/pages/VideoGenerate'));
@@ -118,6 +119,8 @@ const App = () => (
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/products" element={<Products />} />
+                      <Route path="/products/new" element={<AddProduct />} />
+                      <Route path="/products/:id/edit" element={<AddProduct />} />
                       <Route path="/brand-profiles" element={<BrandProfiles />} />
                       <Route path="/brand-profiles/new" element={<BrandProfileWizard />} />
                       <Route path="/brand-profiles/:id/edit" element={<BrandProfileWizard />} />
