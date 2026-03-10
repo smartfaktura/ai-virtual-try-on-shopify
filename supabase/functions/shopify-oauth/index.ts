@@ -13,12 +13,12 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    // Support action from query params (GET redirect) or x-action header (POST invoke)
     const action = url.searchParams.get("action") || req.headers.get("x-action");
 
     if (action === "authorize") {
       const shop = url.searchParams.get("shop")?.replace(/^https?:\/\//, "").replace(/\/+$/, "");
       const token = url.searchParams.get("token");
+      const origin = url.searchParams.get("origin") || "https://vovvai.lovable.app";
 
       if (!shop || !token) {
         return new Response("Missing shop or token", { status: 400 });
@@ -29,12 +29,41 @@ Deno.serve(async (req) => {
         return new Response("Server misconfigured", { status: 500 });
       }
 
+      // Validate the JWT before proceeding (hardening item #2)
+      const supabaseUser = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: `Bearer ${token}` } } }
+      );
+      const { data: { user }, error: userErr } = await supabaseUser.auth.getUser(token);
+      if (userErr || !user) {
+        return new Response("Invalid or expired session", { status: 401 });
+      }
+
+      // Generate a nonce and store it in the DB (hardening item #1)
+      const nonce = crypto.randomUUID();
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+
+      // Clean up expired nonces opportunistically
+      await supabaseAdmin.rpc("cleanup_expired_nonces");
+
+      const { error: nonceErr } = await supabaseAdmin
+        .from("shopify_oauth_nonces")
+        .insert({ nonce, user_id: user.id, user_token: token, app_origin: origin });
+
+      if (nonceErr) {
+        console.error("Failed to store nonce:", nonceErr);
+        return new Response("Internal error", { status: 500 });
+      }
+
       const redirectUri = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shopify-oauth-callback`;
       const scopes = "read_products";
-      const state = token; // user JWT passed as state
 
       const authUrl =
-        `https://${shop}/admin/oauth/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`;
+        `https://${shop}/admin/oauth/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(nonce)}`;
 
       return new Response(null, {
         status: 302,

@@ -926,6 +926,36 @@ export type Database = {
         }
         Relationships: []
       }
+      shopify_oauth_nonces: {
+        Row: {
+          app_origin: string
+          created_at: string
+          expires_at: string
+          id: string
+          nonce: string
+          user_id: string
+          user_token: string
+        }
+        Insert: {
+          app_origin?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nonce: string
+          user_id: string
+          user_token: string
+        }
+        Update: {
+          app_origin?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nonce?: string
+          user_id?: string
+          user_token?: string
+        }
+        Relationships: []
+      }
       user_products: {
         Row: {
           created_at: string
@@ -1048,6 +1078,7 @@ export type Database = {
         Returns: Json
       }
       claim_next_job: { Args: never; Returns: Json }
+      cleanup_expired_nonces: { Args: never; Returns: undefined }
       cleanup_stale_jobs: { Args: never; Returns: Json }
       decrypt_shopify_token: {
         Args: { p_encrypted: string; p_key: string }

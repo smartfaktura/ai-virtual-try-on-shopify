@@ -335,7 +335,23 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    const access_token = conn.access_token;
+    // Decrypt the access token (hardening item #3)
+    const clientSecret = Deno.env.get("SHOPIFY_CLIENT_SECRET");
+    let access_token = conn.access_token;
+    if (clientSecret) {
+      try {
+        const { data: decrypted, error: decryptErr } = await supabaseAdmin.rpc(
+          "decrypt_shopify_token",
+          { p_encrypted: conn.access_token, p_key: clientSecret }
+        );
+        if (!decryptErr && decrypted) {
+          access_token = decrypted;
+        }
+      } catch {
+        // If decryption fails, token may be unencrypted (pre-migration)
+        console.warn("Token decryption failed, using raw token");
+      }
+    }
 
     const cleanShop = cleanShopDomain(shop);
 
