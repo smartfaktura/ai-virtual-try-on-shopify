@@ -102,9 +102,9 @@ async function listProducts(shop: string, accessToken: string, collectionId?: nu
   let url: string | null;
 
   if (collectionId) {
-    url = `https://${shop}/admin/api/2024-01/collections/${collectionId}/products.json?fields=id,title,product_type,images,tags&limit=250`;
+    url = `https://${shop}/admin/api/2025-01/collections/${collectionId}/products.json?fields=id,title,product_type,images,tags&limit=250`;
   } else {
-    url = `https://${shop}/admin/api/2024-01/products.json?fields=id,title,product_type,images,tags&limit=250`;
+    url = `https://${shop}/admin/api/2025-01/products.json?fields=id,title,product_type,images,tags&limit=250`;
   }
 
   while (url) {
