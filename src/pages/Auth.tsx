@@ -568,7 +568,12 @@ export default function Auth() {
                 });
                 setResetLoading(false);
                 if (error) {
-                  toast.error(error.message);
+                  const msg = error.message?.toLowerCase() || '';
+                  if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit')) {
+                    toast.error('Reset email already sent. Please check your inbox or wait a few minutes.');
+                  } else {
+                    toast.error('Could not send reset link. Please try again.');
+                  }
                 } else {
                   setResetSent(true);
                 }
