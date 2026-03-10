@@ -37,11 +37,15 @@ export default function Auth() {
   if (isLoading || user) return null;
 
   const validate = () => {
-    const errs: { email?: string; password?: string } = {};
+    const errs: { email?: string; password?: string; confirmPassword?: string } = {};
     if (!email.trim()) errs.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email address';
     if (!password) errs.password = 'Password is required';
     else if (password.length < 6) errs.password = 'Password must be at least 6 characters';
+    if (mode === 'signup') {
+      if (!confirmPassword) errs.confirmPassword = 'Please confirm your password';
+      else if (confirmPassword !== password) errs.confirmPassword = 'Passwords do not match';
+    }
     return errs;
   };
 
