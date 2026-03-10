@@ -27,6 +27,7 @@ export function ShimmerImage({
   onLoad,
   onError,
   style,
+  fetchPriority,
   ...rest
 }: ShimmerImageProps) {
   const [loaded, setLoaded] = useState(false);
