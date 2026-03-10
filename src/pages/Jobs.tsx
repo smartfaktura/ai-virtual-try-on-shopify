@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { toast } from 'sonner';
 import JSZip from 'jszip';
 
