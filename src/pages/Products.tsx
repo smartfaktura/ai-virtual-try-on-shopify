@@ -42,7 +42,6 @@ export default function Products() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortBy>('newest');
 
