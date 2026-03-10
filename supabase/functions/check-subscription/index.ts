@@ -205,6 +205,7 @@ serve(async (req) => {
       subscription_status: subscriptionStatus,
       credits_balance: profile?.credits_balance ?? 0,
       current_period_end: periodEnd,
+      billing_interval: billingInterval,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
