@@ -1,30 +1,31 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Review: Shopify Import Flow — Issues Found
 
-### Issues Found
+After reviewing both the edge function (`shopify-sync/index.ts`) and the frontend (`ShopifyImportTab.tsx`), the core logic is solid — collections, listing, tags, import batching, and image upload all work correctly. However, there is one real bug and a couple of minor robustness issues:
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Bug: Collection switch error kicks user back to "Connect" screen
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+In `loadProducts()` (line 142), the `catch` block calls `setStep('connect')`. This is correct on first load, but when `handleCollectionChange` calls `loadProducts` to switch collections, a network hiccup would boot the user from the product selection screen back to the connect screen — losing their selections and context.
 
-### Plan
+**Fix:** Add an optional parameter to `loadProducts` to indicate it's a collection refresh. On error during a collection switch, show a toast but stay on the `select` step instead of resetting to `connect`.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Minor: Duplicate product imports not prevented
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+If a user imports products, clicks "Import More", and re-imports the same products, the edge function will create duplicate `user_products` rows. There's no deduplication check.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**Fix:** Before inserting into `user_products`, check if a product with the same title + user_id already exists (or store the Shopify product ID in a column for exact matching). For now, adding a simple `upsert` or skip-if-exists check would prevent duplicates.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### Minor: `shopify_connections.shop_domain` format assumption
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+The connect step stores the domain, but `loadProducts` sometimes uses `shop.trim()` (user input without `.myshopify.com`) and other times `connection.shop_domain` (which may or may not include it). The edge function's `cleanShop` regex only strips protocol/trailing slashes — it doesn't normalize `.myshopify.com`. If the stored domain doesn't include it, the Shopify API calls would fail.
+
+**Fix:** Ensure the edge function always appends `.myshopify.com` if not already present on `cleanShop`.
+
+### Summary of changes
+
+| File | Change |
+|---|---|
+| `ShopifyImportTab.tsx` | Fix `loadProducts` error handling to not reset step during collection switches |
+| `shopify-sync/index.ts` | Normalize shop domain to always include `.myshopify.com`; optionally add duplicate detection |
 
