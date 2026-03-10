@@ -1,30 +1,22 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Use vovv.ai Domain for Auth Confirmation Emails
 
-### Issues Found
+### Current Situation
+- Transactional emails (welcome, generation complete, etc.) already send via Resend from `notifications@vovv.ai` and `hello@vovv.ai` through the `send-email` edge function
+- Auth emails (signup confirmation, password reset) still use the default Lovable system (`no-reply@auth.lovable.cloud`)
+- The project has `www.vovv.ai` as a custom domain and `RESEND_API_KEY` is already configured
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Solution
+Set up `vovv.ai` as the email sender domain through the Lovable email setup flow, then scaffold branded auth email templates that match the existing VOVV.AI email design (navy text, stone accents, Inter font, same footer).
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Steps
 
-### Plan
+1. **Set up email domain** — configure `vovv.ai` as the sender domain (may require adding DNS records at your registrar)
+2. **Scaffold auth email templates** — creates the `auth-email-hook` edge function with templates for signup confirmation, password reset, magic link, etc.
+3. **Brand the templates** — apply the same VOVV.AI design system used in `send-email/index.ts`: navy `#0f172a` headings, muted `#64748b` body text, stone `#f5f5f4` accent panels, navy `#1e293b` CTA buttons, Inter font, "VOVV.AI" wordmark header, "A product by 123Presets" footer
+4. **Deploy** — deploy the `auth-email-hook` edge function; once DNS verifies, all auth emails send from `vovv.ai` automatically
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
-
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### What You Need To Do
+Click the button below to start the email domain setup. You'll need to add a few DNS records at your domain registrar for `vovv.ai` — this verifies ownership so emails can be sent from your domain.
 
