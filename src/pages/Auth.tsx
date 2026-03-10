@@ -6,7 +6,7 @@ import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '@/components/ui/input-otp';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { CheckCircle2, ArrowLeft, MailCheck, Mail } from 'lucide-react';
@@ -33,12 +33,27 @@ export default function Auth() {
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const [resendLoading, setResendLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
       navigate('/app', { replace: true });
     }
   }, [user, isLoading, navigate]);
+
+  // Resend countdown timer
+  useEffect(() => {
+    if (!signupComplete && !magicLinkSent) return;
+    setResendTimer(30);
+    const interval = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) { clearInterval(interval); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [signupComplete, magicLinkSent]);
 
   if (isLoading || user) return null;
 
@@ -125,12 +140,36 @@ export default function Auth() {
     }
   };
 
+  const handleResendSignup = async () => {
+    setResendLoading(true);
+    await signUp(email, password);
+    setResendLoading(false);
+    setResendTimer(30);
+    toast.success('New code sent! Check your inbox.');
+  };
+
+  const handleResendMagicLink = async () => {
+    setResendLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/app' },
+    });
+    setResendLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setResendTimer(30);
+      toast.success('New link sent! Check your inbox.');
+    }
+  };
+
   // Shared "check your inbox" screen for both signup confirmation and magic link
   const renderCheckInbox = (options: {
     title: string;
     description: string;
     showOtp: boolean;
     onBack: () => void;
+    onResend?: () => void;
   }) => (
     <div className="flex flex-col items-center text-center gap-6 py-8">
       <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -144,7 +183,7 @@ export default function Auth() {
       </div>
 
       {options.showOtp && (
-        <div className="w-full max-w-xs space-y-4">
+        <div className="w-full max-w-sm space-y-5">
           <p className="text-sm text-muted-foreground">
             Enter the 6-digit code from your email, or click the link to activate your account.
           </p>
@@ -158,10 +197,15 @@ export default function Auth() {
               }}
               disabled={otpLoading}
             >
-              <InputOTPGroup>
+              <InputOTPGroup className="gap-2">
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />
                 <InputOTPSlot index={2} />
+              </InputOTPGroup>
+              <div className="flex items-center px-2">
+                <span className="text-xl text-muted-foreground">-</span>
+              </div>
+              <InputOTPGroup className="gap-2">
                 <InputOTPSlot index={3} />
                 <InputOTPSlot index={4} />
                 <InputOTPSlot index={5} />
@@ -179,6 +223,23 @@ export default function Auth() {
           Click the link in your email to sign in. Check your spam folder if you don't see it.
         </p>
       )}
+
+      {/* Resend button with countdown */}
+      <div className="text-sm text-muted-foreground">
+        {resendTimer > 0 ? (
+          <p>Didn't receive it? Resend in {resendTimer}s</p>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-primary hover:text-primary/80"
+            onClick={options.onResend}
+            disabled={resendLoading}
+          >
+            {resendLoading ? 'Sending...' : 'Resend code'}
+          </Button>
+        )}
+      </div>
 
       <Button
         variant="outline"
@@ -235,6 +296,7 @@ export default function Auth() {
                 setConfirmPassword('');
                 setOtpCode('');
               },
+              onResend: handleResendSignup,
             })
           ) : magicLinkSent ? (
             renderCheckInbox({
@@ -244,6 +306,7 @@ export default function Auth() {
               onBack: () => {
                 setMagicLinkSent(false);
               },
+              onResend: handleResendMagicLink,
             })
           ) : (
             <>
