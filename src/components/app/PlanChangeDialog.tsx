@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight, ArrowDownRight, XCircle, RotateCcw, AlertTriangle } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, XCircle, RotateCcw, AlertTriangle, ExternalLink, Lock } from 'lucide-react';
 import type { PricingPlan } from '@/types';
 
 export type PlanChangeMode = 'upgrade' | 'downgrade' | 'cancel' | 'reactivate';
