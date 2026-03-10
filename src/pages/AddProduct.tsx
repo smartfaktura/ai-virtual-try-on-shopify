@@ -72,7 +72,7 @@ export default function AddProduct() {
           )}
         </div>
       ) : (
-        <Tabs defaultValue="manual" className="w-full max-w-3xl">
+        <Tabs defaultValue="manual" className="w-full">
           <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto overflow-x-auto flex-nowrap max-w-full">
             <TabsTrigger
               value="manual"
