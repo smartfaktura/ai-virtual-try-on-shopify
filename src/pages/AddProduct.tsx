@@ -69,6 +69,8 @@ export default function AddProduct() {
         </p>
       </div>
 
+      <ProductUploadTips />
+
       {/* Content */}
       {isEditing ? (
         <div className="max-w-2xl">
