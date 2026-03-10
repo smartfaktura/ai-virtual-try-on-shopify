@@ -159,7 +159,7 @@ export default function BlogPost() {
       <SEOHead
         title={`${post.title} | VOVV AI Blog`}
         description={post.metaDescription}
-        canonical={`https://vovvai.lovable.app/blog/${post.slug}`}
+        canonical={`${SITE_URL}/blog/${post.slug}`}
         ogType="article"
       />
       <JsonLd data={articleJsonLd} />

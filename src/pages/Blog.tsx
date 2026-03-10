@@ -49,7 +49,7 @@ export default function Blog() {
       <SEOHead
         title="VOVV AI Blog — AI Photography, E-commerce Tips & Visual Strategy"
         description="Insights on AI product photography, visual content strategy, and e-commerce growth from the VOVV AI team."
-        canonical="https://vovvai.lovable.app/blog"
+        canonical={`${SITE_URL}/blog`}
       />
       <JsonLd data={blogListJsonLd} />
 

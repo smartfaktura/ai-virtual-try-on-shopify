@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
-
-const DEFAULT_OG_IMAGE = 'https://vovvai.lovable.app/favicon.png';
-const SITE_URL = 'https://vovvai.lovable.app';
+import { SITE_URL, DEFAULT_OG_IMAGE } from '@/lib/constants';
 
 interface SEOHeadProps {
   title: string;

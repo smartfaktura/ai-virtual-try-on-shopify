@@ -10,7 +10,7 @@ import { ArrowRight, Mail, Sparkles, CreditCard, X } from 'lucide-react';
 export default function Team() {
   return (
     <PageLayout>
-      <SEOHead title="Meet the VOVV AI Studio Team — Your AI Creative Crew" description="10 AI professionals, zero overhead. Meet the virtual creative team powering your e-commerce product photography at VOVV AI." canonical="https://vovvai.lovable.app/team" />
+      <SEOHead title="Meet the VOVV AI Studio Team — Your AI Creative Crew" description="10 AI professionals, zero overhead. Meet the virtual creative team powering your e-commerce product photography at VOVV AI." canonical={`${SITE_URL}/team`} />
       {/* Hero */}
       <section className="py-24 sm:py-32 text-center px-4">
         <Badge variant="secondary" className="mb-6 text-xs tracking-widest uppercase px-4 py-1.5">

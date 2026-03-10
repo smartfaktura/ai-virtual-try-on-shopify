@@ -47,7 +47,7 @@ export default function CreativeDropsFeature() {
 
   return (
     <PageLayout>
-      <SEOHead title="Creative Drops — Automated Visual Content Delivery | VOVV AI" description="Fresh product visuals on autopilot. Schedule recurring Creative Drops and receive curated batches of AI-generated images monthly or biweekly." canonical="https://vovvai.lovable.app/features/creative-drops" />
+      <SEOHead title="Creative Drops — Automated Visual Content Delivery | VOVV AI" description="Fresh product visuals on autopilot. Schedule recurring Creative Drops and receive curated batches of AI-generated images monthly or biweekly." canonical={`${SITE_URL}/features/creative-drops`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
