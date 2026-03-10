@@ -41,6 +41,7 @@ export function PlanCard({
   isCurrentPlan,
   currentPlanId,
   subscriptionStatus = 'none',
+  billingInterval,
   onSelect,
   compact = false,
 }: PlanCardProps) {
