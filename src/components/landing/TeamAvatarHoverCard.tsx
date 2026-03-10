@@ -55,7 +55,8 @@ export function TeamAvatarHoverCard({ member, children, side = 'top', sideOffset
             muted
             loop
             playsInline
-            preload="none"
+            preload="metadata"
+            onCanPlay={handleCanPlay}
             className="w-full h-full object-cover"
           />
         </div>
