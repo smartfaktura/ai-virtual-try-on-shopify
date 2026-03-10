@@ -18,6 +18,7 @@ import type { GuideStepKey } from '@/components/app/freestyle/FreestyleGuide';
 import { STYLE_PRESETS } from '@/components/app/freestyle/StylePresetChips';
 import { useFreestyleImages } from '@/hooks/useFreestyleImages';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
+import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
