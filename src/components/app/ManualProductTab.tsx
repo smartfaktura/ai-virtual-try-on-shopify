@@ -313,7 +313,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       const { error: imagesError } = await supabase.from('product_images').insert(imageRows);
       if (imagesError) console.error('Failed to insert product images:', imagesError);
 
-      toast.success('Product added!');
+      toastSophia('Product added — ready for your first shoot!');
       onProductAdded();
       onClose();
     } catch (err) {
