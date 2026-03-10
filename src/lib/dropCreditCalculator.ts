@@ -29,10 +29,8 @@ const MODEL_WORKFLOW_IDS = new Set([
   '6ae70d95-78ec-4e3a-b62b-9c3f8d1e2a5b', // Mirror Selfie
 ]);
 
-function getCostPerImage(workflowId: string, hasModel: boolean, hasCustomScene: boolean): number {
-  if (hasModel && hasCustomScene) return 20;
-  if (hasModel || MODEL_WORKFLOW_IDS.has(workflowId)) return 16;
-  return 8; // Product Listing, Flat Lay
+function getCostPerImage(_workflowId: string, _hasModel: boolean, _hasCustomScene: boolean): number {
+  return 8; // All workflows cost 8 credits per image
 }
 
 export function calculateDropCredits(
