@@ -17,6 +17,7 @@ import type { BulkGenerationConfig } from '@/types/bulk';
 import type { Product } from '@/types';
 import { calculateBulkCredits, MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 import { toast } from 'sonner';
+import { toastKenji } from '@/lib/brandedToast';
 
 type BulkStep = 'select' | 'settings' | 'processing' | 'results';
 
