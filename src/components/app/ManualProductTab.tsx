@@ -67,6 +67,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const isBatchMode = batchItems.length > 1;
 
+  // Category chips visibility
+  const [expandedChips, setExpandedChips] = useState<Record<string, boolean>>({});
+  const [singleChipsExpanded, setSingleChipsExpanded] = useState(false);
+
   // Edit mode
   const isEditing = !!editingProduct;
 
