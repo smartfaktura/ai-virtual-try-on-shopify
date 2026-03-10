@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ImagePlus, Loader2, Sparkles, X, Pencil } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X, Pencil, Layers, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -66,6 +66,10 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
   // Batch mode state
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const isBatchMode = batchItems.length > 1;
+
+  // Category chips visibility
+  const [expandedChips, setExpandedChips] = useState<Record<string, boolean>>({});
+  const [singleChipsExpanded, setSingleChipsExpanded] = useState(false);
 
   // Edit mode
   const isEditing = !!editingProduct;
@@ -562,20 +566,35 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                     </button>
                   </div>
 
-                  {/* Quick type chips */}
+                  {/* Quick type chips — collapsible */}
                   {!item.isAnalyzing && (
-                    <div className="flex flex-wrap gap-1">
-                      {QUICK_TYPES.map((t) => (
-                        <Badge
-                          key={t}
-                          variant={item.productType === t ? 'default' : 'outline'}
-                          className="cursor-pointer text-[10px] px-1.5 py-0 hover:bg-primary/10 transition-colors"
-                          onClick={() => updateBatchItem(item.id, 'productType', item.productType === t ? '' : t)}
+                    <>
+                      {(!item.productType || expandedChips[item.id]) ? (
+                        <div className="flex flex-wrap gap-1">
+                          {QUICK_TYPES.map((t) => (
+                            <Badge
+                              key={t}
+                              variant={item.productType === t ? 'default' : 'outline'}
+                              className="cursor-pointer text-[10px] px-1.5 py-0 hover:bg-primary/10 transition-colors"
+                              onClick={() => {
+                                updateBatchItem(item.id, 'productType', item.productType === t ? '' : t);
+                                if (item.productType !== t) setExpandedChips(prev => ({ ...prev, [item.id]: false }));
+                              }}
+                            >
+                              {t}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setExpandedChips(prev => ({ ...prev, [item.id]: true }))}
+                          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          {t}
-                        </Badge>
-                      ))}
-                    </div>
+                          <ChevronDown className="w-3 h-3" />
+                          Change category
+                        </button>
+                      )}
+                    </>
                   )}
 
                   <div className="grid grid-cols-2 gap-2">
@@ -679,9 +698,12 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
             <p className="text-sm text-muted-foreground">
               Drop images, <span className="text-primary font-medium">browse</span>, or paste
             </p>
-            <p className="text-[11px] text-muted-foreground/60 mt-1">
-              PNG, JPG, WebP · max 10 MB · drop multiple for batch add (up to {MAX_BATCH})
-            </p>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <Layers className="w-3 h-3 text-muted-foreground/50" />
+              <p className="text-[11px] text-muted-foreground/60">
+                Each image creates a separate product · up to {MAX_BATCH} at once
+              </p>
+            </div>
             <input
               id="dropzone-file-input"
               type="file"
@@ -785,18 +807,34 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         </div>
 
         {!(isAnalyzing && !hasManualEdits.current.productType) && (
-          <div className="flex flex-wrap gap-1.5">
-            {QUICK_TYPES.map((t) => (
-              <Badge
-                key={t}
-                variant={productType === t ? 'default' : 'outline'}
-                className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
-                onClick={() => { setProductType(productType === t ? '' : t); hasManualEdits.current.productType = true; }}
+          <>
+            {(!productType || singleChipsExpanded) ? (
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_TYPES.map((t) => (
+                  <Badge
+                    key={t}
+                    variant={productType === t ? 'default' : 'outline'}
+                    className="cursor-pointer text-[11px] px-2 py-0.5 hover:bg-primary/10 transition-colors"
+                    onClick={() => {
+                      setProductType(productType === t ? '' : t);
+                      hasManualEdits.current.productType = true;
+                      if (productType !== t) setSingleChipsExpanded(false);
+                    }}
+                  >
+                    {t}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <button
+                onClick={() => setSingleChipsExpanded(true)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                {t}
-              </Badge>
-            ))}
-          </div>
+                <ChevronDown className="w-3 h-3" />
+                Change category
+              </button>
+            )}
+          </>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
