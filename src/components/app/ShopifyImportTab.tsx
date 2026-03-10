@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { ShoppingBag, Loader2, Check, AlertCircle, ExternalLink, Search, Info } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { ShoppingBag, Loader2, Check, AlertCircle, Search, Info, Unlink, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useSearchParams } from 'react-router-dom';
 
 interface ShopifyImportTabProps {
   onProductAdded: () => void;
@@ -22,19 +23,28 @@ interface ShopifyListProduct {
   thumbnail: string;
 }
 
-type Step = 'connect' | 'select' | 'importing' | 'done';
+interface ShopifyConnection {
+  id: string;
+  shop_domain: string;
+  scope: string;
+  created_at: string;
+}
+
+type Step = 'loading' | 'connect' | 'select' | 'importing' | 'done';
 const MAX_SHOPIFY_BATCH = 100;
 
 export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabProps) {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [step, setStep] = useState<Step>('loading');
+  const [connection, setConnection] = useState<ShopifyConnection | null>(null);
   const [shop, setShop] = useState('');
-  const [accessToken, setAccessToken] = useState('');
-  const [step, setStep] = useState<Step>('connect');
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<ShopifyListProduct[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   // Import progress
   const [importProgress, setImportProgress] = useState(0);
@@ -42,22 +52,45 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
   const [importedCount, setImportedCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
 
-  const filteredProducts = useMemo(() => {
-    if (!search.trim()) return products;
-    const q = search.toLowerCase();
-    return products.filter(
-      (p) => p.title.toLowerCase().includes(q) || p.product_type.toLowerCase().includes(q)
-    );
-  }, [products, search]);
+  // Check for existing connection on mount
+  useEffect(() => {
+    async function checkConnection() {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('shopify_connections')
+        .select('id, shop_domain, scope, created_at')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
 
-  const handleConnect = async () => {
-    if (!shop.trim() || !accessToken.trim()) return;
+      if (data && !error) {
+        setConnection(data);
+        setShop(data.shop_domain);
+        // Auto-load products if just connected
+        if (searchParams.get('shopify') === 'connected') {
+          searchParams.delete('shopify');
+          setSearchParams(searchParams, { replace: true });
+          toast.success('Shopify store connected!');
+          loadProducts(data.shop_domain);
+        } else {
+          setStep('connect');
+        }
+      } else {
+        setStep('connect');
+      }
+    }
+    checkConnection();
+  }, [user]);
+
+  const loadProducts = async (shopDomain?: string) => {
+    const domain = shopDomain || shop.trim();
+    if (!domain) return;
     setIsLoading(true);
     setError(null);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('shopify-sync', {
-        body: { action: 'list', shop: shop.trim(), access_token: accessToken.trim() },
+        body: { action: 'list', shop: domain },
       });
 
       if (fnError) throw new Error(fnError.message);
@@ -69,13 +102,54 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
         toast.info('No products found in this store.');
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to connect';
+      const msg = err instanceof Error ? err.message : 'Failed to load products';
       setError(msg);
       toast.error(msg);
+      setStep('connect');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleConnectOAuth = () => {
+    if (!shop.trim() || !session?.access_token) return;
+    const cleanShop = shop.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+    const baseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/shopify-oauth`;
+    const url = `${baseUrl}?action=authorize&shop=${encodeURIComponent(cleanShop)}&token=${encodeURIComponent(session.access_token)}`;
+    window.location.href = url;
+  };
+
+  const handleDisconnect = async () => {
+    setIsDisconnecting(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('shopify-oauth', {
+        body: {},
+        headers: { 'x-action': 'disconnect' },
+      });
+
+      // Also try direct delete as fallback
+      await supabase.from('shopify_connections').delete().eq('user_id', user!.id);
+
+      setConnection(null);
+      setProducts([]);
+      setSelectedIds(new Set());
+      setShop('');
+      setStep('connect');
+      toast.success('Shopify store disconnected.');
+    } catch (err) {
+      toast.error('Failed to disconnect.');
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
+
+  const filteredProducts = useMemo(() => {
+    if (!search.trim()) return products;
+    const q = search.toLowerCase();
+    return products.filter(
+      (p) => p.title.toLowerCase().includes(q) || p.product_type.toLowerCase().includes(q)
+    );
+  }, [products, search]);
 
   const atLimit = selectedIds.size >= MAX_SHOPIFY_BATCH;
 
@@ -106,7 +180,6 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     setImportedCount(0);
     setFailedCount(0);
 
-    // Process in batches of 10 from frontend side too
     const BATCH = 10;
     let totalImported = 0;
     let totalFailed = 0;
@@ -117,8 +190,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
         const { data, error: fnError } = await supabase.functions.invoke('shopify-sync', {
           body: {
             action: 'import',
-            shop: shop.trim(),
-            access_token: accessToken.trim(),
+            shop: connection?.shop_domain || shop.trim(),
             product_ids: batch,
           },
         });
@@ -148,82 +220,97 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     }
   };
 
+  // Loading state
+  if (step === 'loading') {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   // Connect step
   if (step === 'connect') {
     return (
       <div className="space-y-5">
-        {/* Setup instructions */}
-        <div className="bg-muted/40 rounded-xl p-4 space-y-2.5">
-          <p className="text-sm font-medium flex items-center gap-2">
-            <ShoppingBag className="w-4 h-4 text-primary" />
-            How to connect your Shopify store
-          </p>
-          <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-            <li>In your Shopify admin, go to <span className="font-medium text-foreground">Settings → Apps → Develop apps</span></li>
-            <li>Create an app and enable <span className="font-medium text-foreground">read_products</span> access scope</li>
-            <li>Copy your <span className="font-medium text-foreground">Admin API access token</span> and paste it below</li>
-          </ol>
-          <a
-            href="https://help.shopify.com/en/manual/apps/app-types/custom-apps"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-          >
-            Shopify setup guide <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
+        {connection ? (
+          // Connected state
+          <div className="space-y-4">
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <ShoppingBag className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{connection.shop_domain}</p>
+                <p className="text-xs text-muted-foreground">Connected · {connection.scope}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDisconnect}
+                disabled={isDisconnecting}
+                className="text-destructive hover:text-destructive shrink-0"
+              >
+                {isDisconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Unlink className="w-4 h-4" />}
+                Disconnect
+              </Button>
+            </div>
 
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="shopify-domain">Store domain</Label>
-            <Input
-              id="shopify-domain"
-              placeholder="mystore.myshopify.com"
-              value={shop}
-              onChange={(e) => { setShop(e.target.value); setError(null); }}
-              disabled={isLoading}
-            />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
+              <Button onClick={() => loadProducts(connection.shop_domain)} disabled={isLoading} className="rounded-xl">
+                {isLoading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Loading…</>
+                ) : (
+                  <><ShoppingBag className="w-4 h-4" /> Load Products</>
+                )}
+              </Button>
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="shopify-token">Admin API access token</Label>
-            <Input
-              id="shopify-token"
-              type="password"
-              placeholder="shpat_xxxxxxxxxxxx"
-              value={accessToken}
-              onChange={(e) => { setAccessToken(e.target.value); setError(null); }}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
+        ) : (
+          // Not connected state
+          <div className="space-y-4">
+            <div className="bg-muted/40 rounded-xl p-4 space-y-2.5">
+              <p className="text-sm font-medium flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-primary" />
+                Connect your Shopify store
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Enter your store domain and authorize access. We only request <span className="font-medium text-foreground">read_products</span> permission — your store data stays safe.
+              </p>
+            </div>
 
-        {error && (
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>{error}</span>
+            <div className="space-y-1.5">
+              <Label htmlFor="shopify-domain">Store domain</Label>
+              <Input
+                id="shopify-domain"
+                placeholder="mystore.myshopify.com"
+                value={shop}
+                onChange={(e) => { setShop(e.target.value); setError(null); }}
+                disabled={isLoading}
+              />
+            </div>
+
+            {error && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
+              <Button
+                onClick={handleConnectOAuth}
+                disabled={!shop.trim()}
+                className="rounded-xl"
+              >
+                <Link className="w-4 h-4" />
+                Connect Shopify Store
+              </Button>
+            </div>
           </div>
         )}
-
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
-          <Button
-            onClick={handleConnect}
-            disabled={isLoading || !shop.trim() || !accessToken.trim()}
-            className="rounded-xl"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Loading products…
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="w-4 h-4" />
-                Connect & Load Products
-              </>
-            )}
-          </Button>
-        </div>
       </div>
     );
   }
@@ -238,6 +325,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
             {products.length} product{products.length !== 1 ? 's' : ''} found
+            {connection && <span className="text-xs"> · {connection.shop_domain}</span>}
           </p>
           <div className="relative w-48">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
