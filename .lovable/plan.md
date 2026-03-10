@@ -1,30 +1,34 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Where to Add More Feedback Touchpoints
 
-### Issues Found
+Currently the `FeedbackBanner` only appears on **Dashboard** and **Settings**. Here are the high-value placements ranked by user engagement opportunity:
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Recommended Placements
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+1. **Library / Jobs page** (`src/pages/Jobs.tsx`) — Users reviewing generated results are primed to share quality feedback. Place at the bottom of the page.
 
-### Plan
+2. **Products page** (`src/pages/Products.tsx`) — After users have uploaded products, they have context on the upload experience. Place at the bottom.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+3. **Freestyle page** (`src/pages/Freestyle.tsx`) — Creative users experimenting with prompts are a great source of feature requests. Place at the bottom.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+4. **Generate page** (`src/pages/Generate.tsx`) — Core workflow page where users hit friction points. Place at the bottom.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+5. **Creative Drops page** (`src/pages/CreativeDrops.tsx`) — Users exploring drops may have ideas for new templates or improvements. Place at the bottom.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### Implementation
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+For each page, the change is identical — import and render `<FeedbackBanner />` as the last element before the closing wrapper div:
+
+```tsx
+import { FeedbackBanner } from '@/components/app/FeedbackBanner';
+// ... at the bottom of the page content:
+<FeedbackBanner />
+```
+
+No other changes needed — the component is self-contained (handles auth check, session dismissal, page URL tracking).
+
+### Note
+
+Avoid adding it to every single page (e.g. Brand Profiles, Workflows, Video, Bulk Generate) to prevent feedback fatigue. The five pages above cover the main user journeys: **browse results → manage products → create content**.
 
