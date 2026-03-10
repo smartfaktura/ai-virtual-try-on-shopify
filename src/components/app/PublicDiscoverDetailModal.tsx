@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 interface PublicDiscoverDetailModalProps {
   item: DiscoverItem | null;
