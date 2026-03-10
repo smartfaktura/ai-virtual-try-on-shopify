@@ -335,6 +335,7 @@ export function HeroSection() {
                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                            decoding="async"
                            loading={idx < 3 ? 'eager' : 'lazy'}
+                           fetchPriority={idx < 2 ? 'high' : undefined}
                            aspectRatio="3/4"
                          />
                         <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
