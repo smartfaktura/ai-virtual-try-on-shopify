@@ -29,14 +29,14 @@ export const SignupEmail = ({
   confirmationUrl,
   token,
 }: SignupEmailProps) => {
-  const displayToken = token?.slice(0, 6) || ''
+  const displayToken = token || ''
 
   return (
     <Html lang="en" dir="ltr">
       <Head>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </Head>
-      <Preview>Your verification code is {displayToken} — VOVV.AI</Preview>
+      <Preview>Your verification code is {displayToken} – VOVV.AI</Preview>
       <Body style={main}>
         <Container style={container}>
           <Text style={wordmark}>VOVV.AI</Text>
