@@ -172,6 +172,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         title: '',
         productType: '',
         description: '',
+        dimensions: '',
         isAnalyzing: false,
         manualEdits: { title: false, productType: false, description: false },
       }));
