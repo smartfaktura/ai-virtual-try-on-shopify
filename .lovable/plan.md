@@ -1,30 +1,35 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix OTP Verification Failure
 
-### Issues Found
+### Root Cause Analysis
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+The auth logs show `otp_expired` errors, not wrong-code errors. Two issues:
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+1. **Token invalidation**: Each resend/re-signup generates a new token, expiring the previous one. The user likely entered a code from an older email.
 
-### Plan
+2. **Possible OTP length mismatch**: The earlier screenshot showed 8 digits in the email. The Supabase default OTP size may be set to 8 for this project. The email template slices to 6 (`token?.slice(0, 6)`), and the UI accepts only 6 digits. If the backend expects all 8 digits, verification will always fail.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Changes
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+#### 1. `src/pages/Auth.tsx` — Support 8-digit OTP input
+- Change OTP input from 6 slots to 8 slots (4 + separator + 4 layout)
+- Update `handleVerifyOtp` length check from `!== 6` to `!== 8`
+- Update auto-submit trigger from `length === 6` to `length === 8`
+- Update instruction text to say "8-digit code"
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+#### 2. `supabase/functions/_shared/email-templates/signup.tsx` — Show full token
+- Remove the `.slice(0, 6)` — display the full token string so the code in the email always matches what the backend expects
+- Update preview text accordingly
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+#### 3. `supabase/functions/auth-email-hook/index.ts` — Update sample data
+- Change sample token from `'123456'` to `'12345678'` to match 8-digit format
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+#### 4. Redeploy `auth-email-hook`
+
+### Why 8 digits?
+The Supabase project-level OTP configuration likely has `otp_size = 8`. We cannot change this from config.toml (it's a server-side setting). The correct fix is to align the UI and email template with whatever the backend generates, which appears to be 8 digits based on the earlier evidence.
+
+### Alternative approach
+If we want to keep 6 digits, we'd need to change the Supabase project's OTP size setting — but that's a server-side config we can't modify from here. Aligning to 8 is the safer fix.
 
