@@ -140,6 +140,29 @@ export default function Auth() {
     }
   };
 
+  const handleResendSignup = async () => {
+    setResendLoading(true);
+    await signUp(email, password);
+    setResendLoading(false);
+    setResendTimer(30);
+    toast.success('New code sent! Check your inbox.');
+  };
+
+  const handleResendMagicLink = async () => {
+    setResendLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/app' },
+    });
+    setResendLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setResendTimer(30);
+      toast.success('New link sent! Check your inbox.');
+    }
+  };
+
   // Shared "check your inbox" screen for both signup confirmation and magic link
   const renderCheckInbox = (options: {
     title: string;
