@@ -109,6 +109,22 @@ const button = {
   margin: '32px 0',
   display: 'inline-block' as const,
 }
+const dividerText = {
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '13px',
+  color: '#94a3b8',
+  margin: '0 0 12px 0',
+  textAlign: 'center' as const,
+}
+const codeStyle = {
+  fontFamily: "'Courier New', Courier, monospace",
+  fontSize: '28px',
+  fontWeight: 700 as const,
+  color: '#0f172a',
+  letterSpacing: '0.15em',
+  margin: '0 0 32px 0',
+  textAlign: 'center' as const,
+}
 const footerText = {
   fontFamily: "'Inter', sans-serif",
   fontSize: '13px',
