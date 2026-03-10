@@ -3508,9 +3508,36 @@ export default function Generate() {
         {/* Generating */}
         {currentStep === 'generating' && (
           <Card><CardContent className="p-10 flex flex-col items-center gap-6">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse-subtle">
-              {generationMode === 'virtual-try-on' ? <User className="w-7 h-7 text-primary" /> : <Image className="w-7 h-7 text-primary" />}
-            </div>
+            {(() => {
+              const productImg = sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images?.[0]?.url;
+              const modelImg = selectedModel?.previewUrl;
+              const showModel = (generationMode === 'virtual-try-on' || activeWorkflow?.uses_tryon) && modelImg;
+
+              if (showModel && productImg) {
+                return (
+                  <div className="relative w-20 h-20">
+                    <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/20 animate-pulse-subtle">
+                      <img src={modelImg} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full overflow-hidden border-2 border-background ring-2 ring-primary/20 animate-pulse-subtle">
+                      <img src={productImg} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                );
+              }
+              if (productImg) {
+                return (
+                  <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary/20 animate-pulse-subtle">
+                    <img src={productImg} alt="" className="w-full h-full object-cover" />
+                  </div>
+                );
+              }
+              return (
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse-subtle">
+                  {generationMode === 'virtual-try-on' ? <User className="w-7 h-7 text-primary" /> : <Image className="w-7 h-7 text-primary" />}
+                </div>
+              );
+            })()}
             <div className="text-center">
               <h2 className="text-lg font-semibold">
                 {generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' :

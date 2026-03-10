@@ -1,32 +1,30 @@
 
 
-## Improve the Generating State Visual — Show Actual Model & Product
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-The grey circle with a generic `User` icon during generation is a placeholder that conveys no useful information. The system already has the selected model photo and product image available — we should show them.
+### Issues Found
 
-### Design
-Replace the static grey circle + User icon with a more engaging visual that shows:
-- **For Virtual Try-On / model workflows**: The selected model's photo overlapping with the product thumbnail (two overlapping circles, model larger behind, product smaller in front-right)
-- **For product-only workflows**: The product thumbnail in the pulsing circle
-- **For Interior/Staging**: The uploaded room image in the pulsing circle
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-This creates a visual "merging" effect that reinforces what's happening ("we're combining these").
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Changes — 1 file
+### Plan
 
-**`src/pages/Generate.tsx`** (lines 3510-3512)
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-Replace the current icon block:
-```tsx
-<div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse-subtle">
-  {generationMode === 'virtual-try-on' ? <User /> : <Image />}
-</div>
-```
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-With a composite thumbnail display:
-- If `selectedModel?.image_url` exists (try-on/model workflows): show model photo (64px circle) with product image (40px circle) overlapping bottom-right, both with a subtle pulsing ring animation
-- If only product exists: show product image in the 64px circle
-- Fallback to current icon if no images available
-- Add a subtle CSS ring animation around the outer circle to indicate processing
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
