@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { DiscoverItem } from '@/components/app/DiscoverCard';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 interface PublicDiscoverDetailModalProps {
   item: DiscoverItem | null;
@@ -65,9 +66,10 @@ export function PublicDiscoverDetailModal({
       >
         {/* Left — Image showcase */}
         <div className="w-full md:w-[60%] h-[45vh] md:h-full flex items-center justify-center p-6 md:p-12">
-          <img
+          <ShimmerImage
             src={imageUrl}
             alt={title}
+            wrapperClassName="flex items-center justify-center"
             className="max-w-full max-h-[calc(45vh-2rem)] md:max-h-[calc(100vh-6rem)] object-contain rounded-lg shadow-2xl"
           />
         </div>
@@ -152,7 +154,7 @@ export function PublicDiscoverDetailModal({
                         onClick={() => onSelectRelated(ri)}
                         className="aspect-[3/4] rounded-xl overflow-hidden bg-muted hover:ring-2 ring-primary/50 transition-all duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md"
                       >
-                        <img src={riImage} alt={riTitle} className="w-full h-full object-cover" />
+                        <ShimmerImage src={riImage} alt={riTitle} className="w-full h-full object-cover" aspectRatio="3/4" />
                       </button>
                     );
                   })}
