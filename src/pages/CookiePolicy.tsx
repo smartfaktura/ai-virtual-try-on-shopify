@@ -1,6 +1,7 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { Cookie } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
+import { SITE_URL } from '@/lib/constants';
 
 const cookieTypes = [
   {
@@ -32,7 +33,7 @@ const cookieTypes = [
 export default function CookiePolicy() {
   return (
     <PageLayout>
-      <SEOHead title="Cookie Policy — VOVV AI" description="Learn about the cookies VOVV AI uses and how to manage your cookie preferences." canonical="https://vovvai.lovable.app/cookies" />
+      <SEOHead title="Cookie Policy — VOVV AI" description="Learn about the cookies VOVV AI uses and how to manage your cookie preferences." canonical={`${SITE_URL}/cookies`} />
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">

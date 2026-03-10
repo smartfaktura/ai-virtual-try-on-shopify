@@ -1,5 +1,6 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { SITE_URL } from '@/lib/constants';
 import { Megaphone, Download, Mail, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +37,7 @@ const mediaMentions = [
 export default function Press() {
   return (
     <PageLayout>
-      <SEOHead title="VOVV AI in the Press — Media Coverage & Brand Assets" description="Read about VOVV AI in the press. Download brand assets, logos, and get in touch for media inquiries." canonical="https://vovvai.lovable.app/press" />
+      <SEOHead title="VOVV AI in the Press — Media Coverage & Brand Assets" description="Read about VOVV AI in the press. Download brand assets, logos, and get in touch for media inquiries." canonical={`${SITE_URL}/press`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

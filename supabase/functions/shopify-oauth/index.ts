@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     if (action === "authorize") {
       const shop = url.searchParams.get("shop")?.replace(/^https?:\/\//, "").replace(/\/+$/, "");
       const token = url.searchParams.get("token");
-      const origin = url.searchParams.get("origin") || "https://vovvai.lovable.app";
+      const origin = url.searchParams.get("origin") || "https://vovv.ai";
 
       if (!shop || !token) {
         return new Response("Missing shop or token", { status: 400 });

@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
     }
 
     const userToken = nonceRow.user_token;
-    const appOrigin = nonceRow.app_origin || "https://vovvai.lovable.app";
+    const appOrigin = nonceRow.app_origin || "https://vovv.ai";
 
     // Exchange code for permanent access token
     const tokenRes = await fetch(`https://${shop}/admin/oauth/access_token`, {

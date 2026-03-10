@@ -98,7 +98,7 @@ function welcomeEmail(data: { displayName?: string }): string {
         3. Generate studio-quality images in seconds
       </p>
     </div>
-    ${ctaButton("Start Creating", "https://vovvai.lovable.app/dashboard")}
+    ${ctaButton("Start Creating", "https://vovv.ai/dashboard")}
   `);
 }
 
@@ -129,7 +129,7 @@ function generationCompleteEmail(data: { imageCount?: number; jobType?: string; 
         </tr>
       </table>
     </div>
-    ${ctaButton("View Results", "https://vovvai.lovable.app/dashboard")}
+    ${ctaButton("View Results", "https://vovv.ai/dashboard")}
   `);
 }
 
@@ -147,7 +147,7 @@ function lowCreditsEmail(data: { balance?: number; displayName?: string }): stri
       <br/>
       <span style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};">credits remaining</span>
     </div>
-    ${ctaButton("Get More Credits", "https://vovvai.lovable.app/pricing")}
+    ${ctaButton("Get More Credits", "https://vovv.ai/pricing")}
   `);
 }
 
@@ -219,7 +219,7 @@ function generationFailedEmail(data: { jobType?: string; errorMessage?: string; 
         </tr>
       </table>
     </div>
-    ${ctaButton("Try Again", "https://vovvai.lovable.app/dashboard")}
+    ${ctaButton("Try Again", "https://vovv.ai/dashboard")}
   `);
 }
 

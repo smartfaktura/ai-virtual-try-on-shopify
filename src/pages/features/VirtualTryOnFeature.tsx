@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { SITE_URL } from '@/lib/constants';
 
 const benefits = [
   {
@@ -46,7 +47,7 @@ export default function VirtualTryOnFeature() {
 
   return (
     <PageLayout>
-      <SEOHead title="Virtual Try-On for Fashion Brands — VOVV AI" description="AI-powered virtual try-on with 40+ diverse models. Upload a clothing item and get realistic on-model photography in seconds. Reduce returns by 40%." canonical="https://vovvai.lovable.app/features/virtual-try-on" />
+      <SEOHead title="Virtual Try-On for Fashion Brands — VOVV AI" description="AI-powered virtual try-on with 40+ diverse models. Upload a clothing item and get realistic on-model photography in seconds. Reduce returns by 40%." canonical={`${SITE_URL}/features/virtual-try-on`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

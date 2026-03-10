@@ -1,46 +1,30 @@
 
 
-## Plan: Replace all hardcoded `vovvai.lovable.app` with `vovv.ai`
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Approach
+### Issues Found
 
-1. **Create a shared constant** in `src/lib/constants.ts`:
-   ```ts
-   export const SITE_URL = 'https://vovv.ai';
-   ```
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-2. **Update `src/components/SEOHead.tsx`** — import from constants instead of local `SITE_URL` and `DEFAULT_OG_IMAGE`.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-3. **Update all page files** that pass hardcoded `canonical="https://vovvai.lovable.app/..."` — replace with template using the constant (e.g., `` canonical={`${SITE_URL}/pricing`} ``). Affected files (~21 in `src/`):
-   - `Landing.tsx`, `Pricing.tsx`, `About.tsx`, `Blog.tsx`, `BlogPost.tsx`, `Contact.tsx`, `Careers.tsx`, `Press.tsx`, `Team.tsx`, `Status.tsx`, `Changelog.tsx`, `CookiePolicy.tsx`, `PrivacyPolicy.tsx`, `TermsOfService.tsx`, `HelpCenter.tsx`, `PublicDiscover.tsx`
-   - Feature pages: `WorkflowsFeature.tsx`, `VirtualTryOnFeature.tsx`, `CreativeDropsFeature.tsx`, `BrandProfilesFeature.tsx`
-   - Any JSON-LD data in `Pricing.tsx`, `Landing.tsx`, `BlogPost.tsx`, `About.tsx`
+### Plan
 
-4. **Update `index.html`** — replace the canonical link and OG/Twitter URLs.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-5. **Update `public/sitemap.xml`** — replace all `vovvai.lovable.app` with `vovv.ai`.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-6. **Update `public/robots.txt`** — update the Sitemap URL.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-7. **Update edge functions** (6 files) — replace fallback origins:
-   - `supabase/functions/customer-portal/index.ts`
-   - `supabase/functions/create-checkout/index.ts`
-   - `supabase/functions/shopify-oauth/index.ts`
-   - `supabase/functions/shopify-oauth-callback/index.ts`
-   - `supabase/functions/auth-email-hook/index.ts`
-   - `supabase/functions/send-email/index.ts`
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Summary
-
-| Area | Files | Change |
-|------|-------|--------|
-| Shared constant | 1 new file | `src/lib/constants.ts` |
-| SEO component | 1 | Import constant |
-| Page components | ~20 | Use `SITE_URL` for canonicals & JSON-LD |
-| `index.html` | 1 | Canonical + OG URLs |
-| `sitemap.xml` | 1 | All `<loc>` URLs |
-| `robots.txt` | 1 | Sitemap URL |
-| Edge functions | 6 | Fallback origin strings |
-
-All 249 references across 30 files will be updated to `vovv.ai`.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

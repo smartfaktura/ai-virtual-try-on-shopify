@@ -3,6 +3,7 @@ import { LandingNav } from '@/components/landing/LandingNav';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
+import { SITE_URL } from '@/lib/constants';
 
 // Lazy-load below-fold sections to reduce initial main-thread work
 const StudioTeamSection = lazy(() => import('@/components/landing/StudioTeamSection').then(m => ({ default: m.StudioTeamSection })));
@@ -21,8 +22,8 @@ const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'VOVV AI',
-  url: 'https://vovvai.lovable.app',
-  logo: 'https://vovvai.lovable.app/favicon.png',
+  url: SITE_URL,
+  logo: `${SITE_URL}/favicon.png`,
   sameAs: [],
   description: 'AI-powered product photography and visual studio for e-commerce brands.',
 };
@@ -31,10 +32,10 @@ const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'VOVV AI',
-  url: 'https://vovvai.lovable.app',
+  url: SITE_URL,
   potentialAction: {
     '@type': 'SearchAction',
-    target: 'https://vovvai.lovable.app/discover?q={search_term_string}',
+    target: `${SITE_URL}/discover?q={search_term_string}`,
     'query-input': 'required name=search_term_string',
   },
 };
@@ -45,7 +46,7 @@ export default function Landing() {
       <SEOHead
         title="VOVV AI — AI Product Photography & Visual Studio for E-commerce"
         description="Upload one product photo, get 20 brand-ready visuals for ads, website, and campaigns automatically. Your automated visual studio."
-        canonical="https://vovvai.lovable.app"
+        canonical={SITE_URL}
       />
       <JsonLd data={organizationJsonLd} />
       <JsonLd data={websiteJsonLd} />

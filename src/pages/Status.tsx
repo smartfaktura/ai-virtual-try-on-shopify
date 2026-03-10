@@ -1,5 +1,6 @@
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { SITE_URL } from '@/lib/constants';
 import { Activity, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -83,7 +84,7 @@ export default function Status() {
 
   return (
     <PageLayout>
-      <SEOHead title="System Status — VOVV AI" description="Real-time status of VOVV AI services including platform, generation API, CDN, authentication, and billing. 99.9% uptime." canonical="https://vovvai.lovable.app/status" />
+      <SEOHead title="System Status — VOVV AI" description="Real-time status of VOVV AI services including platform, generation API, CDN, authentication, and billing. 99.9% uptime." canonical={`${SITE_URL}/status`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

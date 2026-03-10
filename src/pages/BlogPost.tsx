@@ -5,6 +5,7 @@ import { PageLayout } from '@/components/landing/PageLayout';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
+import { SITE_URL } from '@/lib/constants';
 import { getBlogPostBySlug, getRelatedPosts } from '@/data/blogPosts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,7 @@ export default function BlogPost() {
   if (!post) return <Navigate to="/blog" replace />;
 
   const related = getRelatedPosts(post.slug, 3);
-  const defaultImage = 'https://vovvai.lovable.app/favicon.png';
+  const defaultImage = `${SITE_URL}/favicon.png`;
 
   let h2Counter = 0;
 
@@ -137,18 +138,18 @@ export default function BlogPost() {
     publisher: {
       '@type': 'Organization',
       name: 'VOVV AI',
-      url: 'https://vovvai.lovable.app',
+      url: SITE_URL,
       logo: { '@type': 'ImageObject', url: defaultImage },
     },
-    mainEntityOfPage: `https://vovvai.lovable.app/blog/${post.slug}`,
+    mainEntityOfPage: `${SITE_URL}/blog/${post.slug}`,
   };
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vovvai.lovable.app' },
-      { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://vovvai.lovable.app/blog' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog` },
       { '@type': 'ListItem', position: 3, name: post.title },
     ],
   };
@@ -158,7 +159,7 @@ export default function BlogPost() {
       <SEOHead
         title={`${post.title} | VOVV AI Blog`}
         description={post.metaDescription}
-        canonical={`https://vovvai.lovable.app/blog/${post.slug}`}
+        canonical={`${SITE_URL}/blog/${post.slug}`}
         ogType="article"
       />
       <JsonLd data={articleJsonLd} />

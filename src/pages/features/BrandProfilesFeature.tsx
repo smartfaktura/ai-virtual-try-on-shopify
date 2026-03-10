@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
+import { SITE_URL } from '@/lib/constants';
 
 const benefits = [
   {
@@ -46,7 +47,7 @@ export default function BrandProfilesFeature() {
 
   return (
     <PageLayout>
-      <SEOHead title="Brand Profiles — Consistent AI Photography | VOVV AI" description="Define your brand's visual identity once. Every AI-generated image automatically matches your lighting, colors, composition, and tone." canonical="https://vovvai.lovable.app/features/brand-profiles" />
+      <SEOHead title="Brand Profiles — Consistent AI Photography | VOVV AI" description="Define your brand's visual identity once. Every AI-generated image automatically matches your lighting, colors, composition, and tone." canonical={`${SITE_URL}/features/brand-profiles`} />
       {/* Hero */}
       <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

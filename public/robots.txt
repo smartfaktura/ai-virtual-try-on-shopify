@@ -28,4 +28,4 @@ Disallow: /onboarding
 Disallow: /reset-password
 Disallow: /mobile-upload
 
-Sitemap: https://vovvai.lovable.app/sitemap.xml
+Sitemap: https://vovv.ai/sitemap.xml

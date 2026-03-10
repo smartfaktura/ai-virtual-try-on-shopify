@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { JsonLd } from '@/components/JsonLd';
+import { SITE_URL } from '@/lib/constants';
 import { blogPosts } from '@/data/blogPosts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,18 +29,18 @@ export default function Blog() {
     '@type': 'Blog',
     name: 'VOVV AI Blog',
     description: 'Insights on AI product photography, visual content strategy, and e-commerce growth.',
-    url: 'https://vovvai.lovable.app/blog',
+    url: `${SITE_URL}/blog`,
     publisher: {
       '@type': 'Organization',
       name: 'VOVV AI',
-      url: 'https://vovvai.lovable.app',
+      url: SITE_URL,
     },
     blogPost: blogPosts.map((p) => ({
       '@type': 'BlogPosting',
       headline: p.title,
       datePublished: p.publishDate,
       author: { '@type': 'Organization', name: p.author },
-      url: `https://vovvai.lovable.app/blog/${p.slug}`,
+      url: `${SITE_URL}/blog/${p.slug}`,
     })),
   };
 
@@ -48,7 +49,7 @@ export default function Blog() {
       <SEOHead
         title="VOVV AI Blog — AI Photography, E-commerce Tips & Visual Strategy"
         description="Insights on AI product photography, visual content strategy, and e-commerce growth from the VOVV AI team."
-        canonical="https://vovvai.lovable.app/blog"
+        canonical={`${SITE_URL}/blog`}
       />
       <JsonLd data={blogListJsonLd} />
 
