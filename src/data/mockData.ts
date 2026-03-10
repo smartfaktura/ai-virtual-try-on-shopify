@@ -1147,6 +1147,18 @@ const model047Leo = getLandingAssetUrl('models/model-047-leo.jpg');
 const model048Elise = getLandingAssetUrl('models/model-048-elise.jpg');
 const model049Kai = getLandingAssetUrl('models/model-049-kai.jpg');
 
+// New American/European market models (050-059)
+const model050Hannah = getLandingAssetUrl('models/model-050-hannah.jpg');
+const model051Jordan = getLandingAssetUrl('models/model-051-jordan.jpg');
+const model052Emma = getLandingAssetUrl('models/model-052-emma.jpg');
+const model053Chris = getLandingAssetUrl('models/model-053-chris.jpg');
+const model054Natalie = getLandingAssetUrl('models/model-054-natalie.jpg');
+const model055Jake = getLandingAssetUrl('models/model-055-jake.jpg');
+const model056Megan = getLandingAssetUrl('models/model-056-megan.jpg');
+const model057Daniel = getLandingAssetUrl('models/model-057-daniel.jpg');
+const model058Sarah = getLandingAssetUrl('models/model-058-sarah.jpg');
+const model059Ryan = getLandingAssetUrl('models/model-059-ryan.jpg');
+
 // Pose preview images via storage
 const poseStudioFront = getLandingAssetUrl('poses/pose-studio-front.jpg');
 const poseLifestyleWalking = getLandingAssetUrl('poses/pose-lifestyle-walking.jpg');
