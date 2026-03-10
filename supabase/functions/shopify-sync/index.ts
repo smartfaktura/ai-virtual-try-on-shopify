@@ -74,7 +74,7 @@ async function listCollections(shop: string, accessToken: string) {
   }
 
   // Fetch smart collections
-  url = `https://${shop}/admin/api/2024-01/smart_collections.json?fields=id,title,handle&limit=250`;
+  url = `https://${shop}/admin/api/2025-01/smart_collections.json?fields=id,title,handle&limit=250`;
   while (url) {
     const res = await shopifyFetch(url, accessToken);
     if (!res.ok) break;
