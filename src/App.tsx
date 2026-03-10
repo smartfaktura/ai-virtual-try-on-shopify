@@ -9,6 +9,7 @@ import { AdminViewProvider } from '@/contexts/AdminViewContext';
 import { BuyCreditsModal } from '@/components/app/BuyCreditsModal';
 import { ProtectedRoute } from '@/components/app/ProtectedRoute';
 import { AppShell } from '@/components/app/AppShell';
+import { AppShellLoading } from '@/components/app/AppShellLoading';
 import Landing from '@/pages/Landing';
 
 // Lazy-loaded routes for code splitting
