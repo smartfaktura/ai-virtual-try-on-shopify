@@ -110,7 +110,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     }
   };
 
-  const loadProducts = async (shopDomain?: string, collectionId?: number) => {
+  const loadProducts = async (shopDomain?: string, collectionId?: number, isCollectionSwitch = false) => {
     const domain = shopDomain || shop.trim();
     if (!domain) return;
     setIsLoading(true);
@@ -139,7 +139,10 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
       const msg = err instanceof Error ? err.message : 'Failed to load products';
       setError(msg);
       toast.error(msg);
-      setStep('connect');
+      // Only reset to connect screen on initial load, not during collection switches
+      if (!isCollectionSwitch) {
+        setStep('connect');
+      }
     } finally {
       setIsLoading(false);
     }
