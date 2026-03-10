@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight, ArrowDownRight, XCircle, RotateCcw, AlertTriangle } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, XCircle, RotateCcw, AlertTriangle, ExternalLink, Lock } from 'lucide-react';
 import type { PricingPlan } from '@/types';
 
 export type PlanChangeMode = 'upgrade' | 'downgrade' | 'cancel' | 'reactivate';
@@ -15,6 +15,7 @@ interface PlanChangeDialogProps {
   isAnnual?: boolean;
   currentBalance?: number;
   periodEnd?: string;
+  hasActiveSubscription?: boolean;
 }
 
 const modeConfig: Record<PlanChangeMode, {
@@ -69,8 +70,20 @@ export function PlanChangeDialog({
   isAnnual,
   currentBalance,
   periodEnd,
+  hasActiveSubscription = false,
 }: PlanChangeDialogProps) {
   const config = modeConfig[mode];
+
+  // Determine the confirm button label based on context
+  const getConfirmLabel = () => {
+    if (mode === 'cancel' || mode === 'reactivate') {
+      return 'Continue to Billing Portal';
+    }
+    if (hasActiveSubscription) {
+      return 'Continue to Billing Portal';
+    }
+    return 'Continue to Checkout';
+  };
   const Icon = config.icon;
   const displayPrice = targetPlan
     ? isAnnual ? Math.round(targetPlan.annualPrice / 12) : targetPlan.monthlyPrice
@@ -156,12 +169,19 @@ export function PlanChangeDialog({
           )}
         </div>
 
+        {/* Redirect hint */}
+        <div className="px-8 pb-5 pt-0 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="w-3 h-3" />
+          <span>You'll be securely redirected to complete this change</span>
+        </div>
+
         <DialogFooter className="px-8 pb-8 pt-0 gap-3 sm:gap-3">
           <Button variant="outline" onClick={onClose} className="rounded-xl min-h-[44px]">
             Go Back
           </Button>
-          <Button variant={config.confirmVariant} onClick={onConfirm} className="rounded-xl min-h-[44px]">
-            {config.confirmLabel}
+          <Button variant={config.confirmVariant} onClick={onConfirm} className="rounded-xl min-h-[44px] gap-2">
+            {getConfirmLabel()}
+            <ExternalLink className="w-3.5 h-3.5" />
           </Button>
         </DialogFooter>
       </DialogContent>
