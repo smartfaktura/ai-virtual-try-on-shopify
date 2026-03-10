@@ -566,20 +566,35 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
                     </button>
                   </div>
 
-                  {/* Quick type chips */}
+                  {/* Quick type chips — collapsible */}
                   {!item.isAnalyzing && (
-                    <div className="flex flex-wrap gap-1">
-                      {QUICK_TYPES.map((t) => (
-                        <Badge
-                          key={t}
-                          variant={item.productType === t ? 'default' : 'outline'}
-                          className="cursor-pointer text-[10px] px-1.5 py-0 hover:bg-primary/10 transition-colors"
-                          onClick={() => updateBatchItem(item.id, 'productType', item.productType === t ? '' : t)}
+                    <>
+                      {(!item.productType || expandedChips[item.id]) ? (
+                        <div className="flex flex-wrap gap-1">
+                          {QUICK_TYPES.map((t) => (
+                            <Badge
+                              key={t}
+                              variant={item.productType === t ? 'default' : 'outline'}
+                              className="cursor-pointer text-[10px] px-1.5 py-0 hover:bg-primary/10 transition-colors"
+                              onClick={() => {
+                                updateBatchItem(item.id, 'productType', item.productType === t ? '' : t);
+                                if (item.productType !== t) setExpandedChips(prev => ({ ...prev, [item.id]: false }));
+                              }}
+                            >
+                              {t}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setExpandedChips(prev => ({ ...prev, [item.id]: true }))}
+                          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          {t}
-                        </Badge>
-                      ))}
-                    </div>
+                          <ChevronDown className="w-3 h-3" />
+                          Change category
+                        </button>
+                      )}
+                    </>
                   )}
 
                   <div className="grid grid-cols-2 gap-2">
