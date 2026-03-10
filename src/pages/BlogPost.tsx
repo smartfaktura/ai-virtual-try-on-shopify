@@ -59,7 +59,7 @@ export default function BlogPost() {
   if (!post) return <Navigate to="/blog" replace />;
 
   const related = getRelatedPosts(post.slug, 3);
-  const defaultImage = 'https://vovvai.lovable.app/favicon.png';
+  const defaultImage = `${SITE_URL}/favicon.png`;
 
   let h2Counter = 0;
 
