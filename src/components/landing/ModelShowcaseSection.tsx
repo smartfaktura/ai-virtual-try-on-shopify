@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -14,61 +15,79 @@ const ROW_1: ModelCard[] = [
   m('Zara', 'model-female-athletic-mixed.jpg'),
   m('Anders', 'model-male-slim-nordic.jpg'),
   m('Sienna', 'model-female-average-irish.jpg'),
-  m('Jordan', 'models/model-051-jordan.jpg'),
-  m('Hannah', 'models/model-050-hannah.jpg'),
-  m('Kai', 'models/model-049-kai.jpg'),
+  m('Jordan', 'model-051-jordan.jpg'),
+  m('Hannah', 'model-050-hannah.jpg'),
+  m('Kai', 'model-049-kai.jpg'),
   m('Valeria', 'model-female-slim-american-latina.jpg'),
   m('Fatima', 'model-female-plussize-middleeast.jpg'),
   m('Akiko', 'model-female-plussize-japanese.jpg'),
-  m('Olivia', 'model-female-athletic-american-brunette.jpg'),
+  m('Olivia', 'model-035-olivia.jpg'),
   m('Marcus', 'model-male-athletic-black.jpg'),
   m('Isabella', 'model-female-plussize-latina.jpg'),
-  m('Luca', 'model-male-athletic-european.jpg'),
-  m('Charlotte', 'model-female-mature-european.jpg'),
-  m('Tyler', 'model-male-slim-american-blonde.jpg'),
-  m('Amara', 'model-female-plussize-african.jpg'),
+  m('Liam', 'model-male-athletic-european.jpg'),
+  m('Victoria', 'model-female-mature-european.jpg'),
+  m('Tyler', 'model-male-athletic-mixed.jpg'),
+  m('Nia', 'model-female-plussize-african.jpg'),
   m('Omar', 'model-male-slim-middleeast.jpg'),
   m('Priya', 'model-female-athletic-indian.jpg'),
-  m('Brandon', 'model-male-average-american-beard.jpg'),
-  m('Natalie', 'models/model-054-natalie.jpg'),
-  m('Hiro', 'model-male-average-asian.jpg'),
+  m('Ethan', 'model-040-ethan.jpg'),
+  m('Natalie', 'model-054-natalie.jpg'),
+  m('Jin', 'model-male-average-asian.jpg'),
 ];
 
 const ROW_2: ModelCard[] = [
-  m('Elena', 'model-female-athletic-european.jpg'),
-  m('Arjun', 'model-male-slim-indian.jpg'),
+  m('Sofia', 'model-female-athletic-european.jpg'),
+  m('Ravi', 'model-male-slim-indian.jpg'),
   m('Madison', 'model-female-slim-american-blonde.jpg'),
-  m('Diego', 'model-male-athletic-latino.jpg'),
-  m('Sophie', 'model-female-average-european.jpg'),
-  m('Callum', 'model-male-athletic-scottish.jpg'),
-  m('Nadia', 'model-female-athletic-black.jpg'),
-  m('Max', 'model-male-plussize-european.jpg'),
+  m('Rafael', 'model-male-athletic-latino.jpg'),
+  m('Charlotte', 'model-female-average-european.jpg'),
+  m('Rowan', 'model-male-athletic-scottish.jpg'),
+  m('Amara', 'model-female-athletic-black.jpg'),
+  m('Henrik', 'model-male-plussize-european.jpg'),
   m('Aubrey', 'model-female-average-american-redhead.jpg'),
   m('Kenji', 'model-male-athletic-japanese.jpg'),
   m('Zoe', 'model-female-athletic-american-black.jpg'),
-  m('Marco', 'model-male-plussize-latino.jpg'),
-  m('Niamh', 'model-female-athletic-mixed.jpg'),
-  m('Kwame', 'model-male-plussize-african.jpg'),
+  m('Mateo', 'model-male-plussize-latino.jpg'),
+  m('Daphne', 'model-046-daphne.jpg'),
+  m('Jamal', 'model-male-plussize-african.jpg'),
   m('Mei', 'model-female-slim-chinese.jpg'),
-  m('Ryan', 'model-male-athletic-american-classic.jpg'),
-  m('Aisha', 'model-female-average-african.jpg'),
-  m('Carlos', 'model-male-average-latino.jpg'),
-  m('Leila', 'model-female-average-middleeast.jpg'),
-  m('Erik', 'model-male-slim-nordic.jpg'),
+  m('Leo', 'model-047-leo.jpg'),
+  m('Maya', 'model-female-average-african.jpg'),
+  m('Diego', 'model-male-average-latino.jpg'),
+  m('Layla', 'model-female-average-middleeast.jpg'),
+  m('Soo-Min', 'model-female-petite-korean.jpg'),
   m('Yuki', 'model-female-slim-asian.jpg'),
-  m('Astrid', 'model-female-average-nordic.jpg'),
-  m('Emma', 'models/model-052-emma.jpg'),
-  m('Hana', 'model-female-petite-korean.jpg'),
-  m('Jamal', 'model-male-athletic-mixed.jpg'),
+  m('Emma', 'model-052-emma.jpg'),
+  m('Elena', 'model-female-athletic-latina.jpg'),
+  m('Chen Wei', 'model-male-average-chinese.jpg'),
 ];
 
+function ModelCardItem({ model }: { model: ModelCard }) {
+  const [hidden, setHidden] = useState(false);
+
+  if (hidden) return null;
+
+  return (
+    <div className="flex flex-col items-center gap-2 flex-shrink-0">
+      <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
+        <ShimmerImage
+          src={model.image}
+          alt={model.name}
+          className="w-full h-full object-cover object-top"
+          aspectRatio="3/4"
+          onError={() => setHidden(true)}
+        />
+      </div>
+      <span className="text-xs sm:text-sm font-medium text-foreground">{model.name}</span>
+    </div>
+  );
+}
+
 function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { items: ModelCard[]; direction?: 'left' | 'right'; durationSeconds?: number }) {
-  // Triple the items to ensure seamless looping with plenty of content
   const tripled = [...items, ...items, ...items];
 
   return (
     <div className="relative overflow-hidden">
-      {/* Gradient fade edges */}
       <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, hsl(var(--muted) / 0.3), transparent)' }} />
       <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 lg:w-32 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, hsl(var(--muted) / 0.3), transparent)' }} />
       <div
@@ -81,17 +100,7 @@ function MarqueeRow({ items, direction = 'left', durationSeconds = 120 }: { item
         }}
       >
         {tripled.map((model, i) => (
-          <div key={`${model.name}-${i}`} className="flex flex-col items-center gap-2 flex-shrink-0">
-            <div className="w-28 h-36 sm:w-32 sm:h-40 lg:w-36 lg:h-44 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
-              <ShimmerImage
-                src={model.image}
-                alt={model.name}
-                className="w-full h-full object-cover object-top"
-                aspectRatio="3/4"
-              />
-            </div>
-            <span className="text-xs sm:text-sm font-medium text-foreground">{model.name}</span>
-          </div>
+          <ModelCardItem key={`${model.name}-${i}`} model={model} />
         ))}
       </div>
     </div>

@@ -1156,6 +1156,11 @@ const model054Natalie = getLandingAssetUrl('models/model-054-natalie.jpg');
 // Valeria (slim Latina American — was on landing marquee but missing from model selector)
 const modelFemaleSlimAmericanLatina = getLandingAssetUrl('models/model-female-slim-american-latina.jpg');
 
+// Aubrey, Madison, Zoe
+const modelFemaleAverageAmericanRedhead = getLandingAssetUrl('models/model-female-average-american-redhead.jpg');
+const modelFemaleSlimAmericanBlonde = getLandingAssetUrl('models/model-female-slim-american-blonde.jpg');
+const modelFemaleAthleticAmericanBlack = getLandingAssetUrl('models/model-female-athletic-american-black.jpg');
+
 // Pose preview images via storage
 const poseStudioFront = getLandingAssetUrl('poses/pose-studio-front.jpg');
 const poseLifestyleWalking = getLandingAssetUrl('poses/pose-lifestyle-walking.jpg');
@@ -1310,6 +1315,9 @@ export const mockModels: ModelProfile[] = [
   { modelId: 'model_044', name: 'Priya', gender: 'female', bodyType: 'athletic', ethnicity: 'Indian', ageRange: 'adult', previewUrl: model044Priya },
   { modelId: 'model_045', name: 'Clara', gender: 'female', bodyType: 'average', ethnicity: 'German', ageRange: 'young-adult', previewUrl: model045Clara },
   { modelId: 'model_048', name: 'Elise', gender: 'female', bodyType: 'average', ethnicity: 'Dutch', ageRange: 'mature', previewUrl: model048Elise },
+  { modelId: 'model_061', name: 'Aubrey', gender: 'female', bodyType: 'average', ethnicity: 'American Redhead', ageRange: 'young-adult', previewUrl: modelFemaleAverageAmericanRedhead },
+  { modelId: 'model_062', name: 'Madison', gender: 'female', bodyType: 'slim', ethnicity: 'American Blonde', ageRange: 'young-adult', previewUrl: modelFemaleSlimAmericanBlonde },
+  { modelId: 'model_063', name: 'Zoe', gender: 'female', bodyType: 'athletic', ethnicity: 'African American', ageRange: 'young-adult', previewUrl: modelFemaleAthleticAmericanBlack },
 ];
 
 export const mockTryOnPoses: TryOnPose[] = [
