@@ -11,6 +11,7 @@ import { ProductImageGallery } from './ProductImageGallery';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { toastSophia } from '@/lib/brandedToast';
 
 interface UserProduct {
   id: string;
@@ -312,7 +313,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
       const { error: imagesError } = await supabase.from('product_images').insert(imageRows);
       if (imagesError) console.error('Failed to insert product images:', imagesError);
 
-      toast.success('Product added!');
+      toastSophia('Product added — ready for your first shoot!');
       onProductAdded();
       onClose();
     } catch (err) {
@@ -413,7 +414,7 @@ export function ManualProductTab({ onProductAdded, onClose, editingProduct }: Ma
         if (insertImagesError) console.error('Failed to insert new images:', insertImagesError);
       }
 
-      toast.success('Product updated!');
+      toastSophia('Product updated!');
       onProductAdded();
       onClose();
     } catch (err) {

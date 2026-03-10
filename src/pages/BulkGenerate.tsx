@@ -17,6 +17,7 @@ import type { BulkGenerationConfig } from '@/types/bulk';
 import type { Product } from '@/types';
 import { calculateBulkCredits, MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
 import { toast } from 'sonner';
+import { toastKenji } from '@/lib/brandedToast';
 
 type BulkStep = 'select' | 'settings' | 'processing' | 'results';
 
@@ -79,10 +80,10 @@ export default function BulkGenerate() {
     setCurrentStep('processing');
   };
 
-  const handlePublishAll = () => toast.success('Downloading all images...');
+  const handlePublishAll = () => toastKenji('Downloading all images — campaign ready!');
   const handlePublishSelected = (productIds: string[], selectedImages: Map<string, number[]>) => {
     const totalImages = Array.from(selectedImages.values()).reduce((acc, arr) => acc + arr.length, 0);
-    toast.success(`Downloading ${totalImages} selected images...`);
+    toastKenji(`Downloading ${totalImages} selected images...`);
   };
 
   const handleStartNew = () => {
