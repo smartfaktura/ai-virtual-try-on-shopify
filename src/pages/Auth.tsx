@@ -396,7 +396,7 @@ export default function Auth() {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); }}
+                onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: undefined })); setFormError(null); }}
                 className={`h-11 ${errors.email ? 'border-destructive' : ''}`}
               />
               {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
