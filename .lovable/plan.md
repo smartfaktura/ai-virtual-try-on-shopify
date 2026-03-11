@@ -1,30 +1,31 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add Google Ads Purchase Conversion Event
 
-### Issues Found
+You already fire `gtagPurchase` (the GA4 `purchase` event) when a payment succeeds. The Google Ads conversion snippet from your screenshot needs the **same trigger point** — just a different event name: `ads_conversion_PURCHASE_1`.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`src/lib/gtag.ts`** — Add the Google Ads conversion call inside the existing `gtagPurchase` function, right after the GA4 purchase event:
 
-### Plan
+```ts
+export function gtagPurchase(value: number, currency = 'USD', transactionId?: string) {
+  if (typeof window.gtag === 'function') {
+    // GA4 purchase event
+    window.gtag('event', 'purchase', {
+      value,
+      currency,
+      ...(transactionId && { transaction_id: transactionId }),
+    });
+    // Google Ads conversion event
+    window.gtag('event', 'ads_conversion_PURCHASE_1', {
+      value,
+      currency,
+      ...(transactionId && { transaction_id: transactionId }),
+    });
+  }
+}
+```
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
-
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+No other files need changing — `gtagPurchase` is already called in `CreditContext.tsx` when `?payment=success` is detected with the amount.
 
