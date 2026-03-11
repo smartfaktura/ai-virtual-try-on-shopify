@@ -51,6 +51,7 @@ const WorkflowsFeature = lazy(() => import('@/pages/features/WorkflowsFeature'))
 const VirtualTryOnFeature = lazy(() => import('@/pages/features/VirtualTryOnFeature'));
 const CreativeDropsFeature = lazy(() => import('@/pages/features/CreativeDropsFeature'));
 const BrandProfilesFeature = lazy(() => import('@/pages/features/BrandProfilesFeature'));
+const AIModelsBackgroundsFeature = lazy(() => import('@/pages/features/AIModelsBackgroundsFeature'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 
 const queryClient = new QueryClient({
@@ -88,6 +89,7 @@ const App = () => (
             <Route path="/features/virtual-try-on" element={<VirtualTryOnFeature />} />
             <Route path="/features/creative-drops" element={<CreativeDropsFeature />} />
             <Route path="/features/brand-profiles" element={<BrandProfilesFeature />} />
+            <Route path="/features/ai-models-backgrounds" element={<AIModelsBackgroundsFeature />} />
             <Route path="/pricing" element={<Pricing />} />
 
             {/* Company pages */}
