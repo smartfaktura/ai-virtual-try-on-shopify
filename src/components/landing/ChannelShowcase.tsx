@@ -50,7 +50,7 @@ export function ChannelShowcase() {
         {/* Source product callout */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-14 h-14 rounded-lg border-2 border-primary/30 overflow-hidden bg-card shadow-sm">
-            <img src={sourceUrl} alt="Source: White crop top" className="w-full h-full object-contain" loading="lazy" />
+            <img src={sourceUrl} alt="Source: White crop top" className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div className="text-left">
             <p className="text-sm font-medium text-foreground">Source product</p>
