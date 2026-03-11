@@ -590,7 +590,29 @@ export default function Generate() {
   };
 
   const handleSelectModel = (model: ModelProfile) => { setSelectedModel(model); toast.success(`Model "${model.name}" selected!`); };
-  const handleSelectPose = (pose: TryOnPose) => { setSelectedPose(pose); toast.success(`Scene "${pose.name}" selected!`); };
+  const handleSelectPose = (pose: TryOnPose) => {
+    const maxScenes = isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT;
+    setSelectedPoses(prev => {
+      const next = new Set(prev);
+      const nextMap = new Map(selectedPoseMap);
+      if (next.has(pose.poseId)) {
+        next.delete(pose.poseId);
+        nextMap.delete(pose.poseId);
+      } else {
+        if (next.size >= maxScenes) {
+          toast.info(`You can select up to ${maxScenes} scene${maxScenes > 1 ? 's' : ''}${isFreeUser ? '. Upgrade for more.' : '.'}`);
+          return prev;
+        }
+        next.add(pose.poseId);
+        nextMap.set(pose.poseId, pose);
+      }
+      setSelectedPoseMap(nextMap);
+      // Keep selectedPose in sync for backward compat
+      const firstId = Array.from(next)[0];
+      setSelectedPose(firstId ? nextMap.get(firstId) || null : null);
+      return next;
+    });
+  };
   const handleCancelGeneration = () => { setCurrentStep('settings'); setGeneratingProgress(0); toast.info('Generation cancelled'); };
 
   const handleGenerateClick = () => {
