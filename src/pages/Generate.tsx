@@ -3472,7 +3472,7 @@ export default function Generate() {
                       {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                       {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                       {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                      {' '}× {quality === 'high' ? 16 : 8} credits
+                      {' '}× 8 credits
                     </p>
                   </div>
                   {balance >= creditCost ? (
