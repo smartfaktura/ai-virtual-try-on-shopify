@@ -19,6 +19,7 @@ export interface LibraryItem {
   imageUrl: string;
   source: 'generation' | 'freestyle';
   label: string;
+  productTitle?: string;
   prompt?: string;
   date: string;
   createdAt: string;

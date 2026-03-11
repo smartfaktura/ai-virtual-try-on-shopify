@@ -59,7 +59,8 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${item.label.replace(/\s+/g, '-').toLowerCase()}-${item.id.slice(0, 8)}.png`;
+      const downloadName = (item.productTitle || item.label).replace(/\s+/g, '-').toLowerCase();
+      a.download = `${downloadName}-${item.id.slice(0, 8)}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
