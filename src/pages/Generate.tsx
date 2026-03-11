@@ -988,7 +988,6 @@ export default function Generate() {
           model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
           pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
           aspectRatio, imageCount: parseInt(imageCount),
-          resolution: workflowResolution,
           framing: framing || undefined,
           workflow_id: activeWorkflow?.id || null,
           product_id: selectedProduct?.id || null,
