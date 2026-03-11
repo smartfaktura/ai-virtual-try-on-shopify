@@ -1357,7 +1357,7 @@ export default function Generate() {
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
   const tryOnSceneCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedPoses.size) : 1;
   const singleProductCreditCost = hasWorkflowConfig ? workflowImageCount * 8 : parseInt(imageCount) * 8 * tryOnSceneCount;
-  const creditCost = singleProductCreditCost * multiProductCount;
+  const creditCost = (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 
