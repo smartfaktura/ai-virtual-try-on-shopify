@@ -995,7 +995,6 @@ export default function Generate() {
         },
         imageCount: parseInt(imageCount),
         quality,
-        resolution: workflowResolution,
       }, {
         imageCount: parseInt(imageCount),
         quality,
