@@ -52,7 +52,7 @@ function formatEstimateRange(seconds: number): string {
   return `~${Math.round(low / 5) * 5}-${Math.round(high / 5) * 5} seconds`;
 }
 
-function ProcessingState({ job }: { job: QueueJob }) {
+function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => void }) {
   const [elapsed, setElapsed] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
 

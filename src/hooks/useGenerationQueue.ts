@@ -67,7 +67,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   const [lastCompletedAt, setLastCompletedAt] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdRef = useRef<string | null>(null);
-  const retriggeredRef = useRef(false);
+  const lastRetriggerRef = useRef<number>(0); // timestamp of last retrigger
 
   // Cleanup polling on unmount
   useEffect(() => {
