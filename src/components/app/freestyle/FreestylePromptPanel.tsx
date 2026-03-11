@@ -78,7 +78,7 @@ export function FreestylePromptPanel({
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
-  resolution, onResolutionChange,
+  
   polishPrompt, onPolishChange,
   
   stylePresets, onStylePresetsChange,
