@@ -46,7 +46,7 @@ interface CreditContextValue {
   openBuyModal: () => void;
   closeBuyModal: () => void;
   
-  calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string; resolution?: '1K' | '2K' | '4K' }) => number;
+  calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string }) => number;
 }
 
 const defaultValue: CreditContextValue = {
