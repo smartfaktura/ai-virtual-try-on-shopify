@@ -307,7 +307,7 @@ export function FreestyleSettingsChips({
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <div className="flex items-center gap-2 flex-wrap">
               {aspectRatioChip}
-              {resolutionChip}
+              {cameraStyleChip}
               {cameraStyleChip}
               <CollapsibleTrigger asChild>
                 <button className={cn(
