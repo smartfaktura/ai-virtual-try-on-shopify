@@ -1,29 +1,30 @@
 
 
-## Sharpness Improvements — 2 Targeted Edits
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### File: `supabase/functions/generate-freestyle/index.ts`
+### Issues Found
 
-**1. Line 87 — Photography DNA**
-- Change `85mm f/1.4` → `85mm f/2.8` for deeper focus and sharper detail
-- Add "visible material textures and fine stitching"
-- Remove "ultra high resolution" (vague), replace with "razor-sharp focus, micro-contrast"
-- **No "8K resolution"** — API doesn't support that output
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-New string:
-```
-"Shot on 85mm f/2.8 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Razor-sharp focus, micro-contrast. Natural skin texture, visible material textures and fine stitching. Subtle film grain, elegant highlight roll-off."
-```
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**2. Lines 301-302 — Portrait quality block**
-- Add "Razor-sharp eye detail with individual eyelash rendering" at the start
-- Add "Micro-contrast on skin texture" before the existing pores/peach-fuzz line
+### Plan
 
-New string:
-```
-"PORTRAIT QUALITY: Razor-sharp eye detail with individual eyelash rendering. Micro-contrast on skin texture — natural pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
-```
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Summary
-One file, two string edits. Edge function auto-deploys.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

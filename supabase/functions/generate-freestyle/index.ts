@@ -84,7 +84,7 @@ function detectFullBodyIntent(prompt: string): boolean {
 
 // ── Photography DNA (Pro camera style) ────────────────────────────────────
 function buildPhotographyDNA(): string {
-  return `Shot on 85mm f/1.4 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Natural skin texture, ultra high resolution. Subtle film grain, elegant highlight roll-off.`;
+  return `Shot on 85mm f/2.8 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Razor-sharp focus, micro-contrast. Natural skin texture, visible material textures and fine stitching. Subtle film grain, elegant highlight roll-off.`;
 }
 
 // ── Negative prompt (always appended when polish is on) ───────────────────
@@ -299,7 +299,7 @@ function polishUserPrompt(
       }
     } else {
       layers.push(
-        "PORTRAIT QUALITY: Natural skin pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
+        "PORTRAIT QUALITY: Razor-sharp eye detail with individual eyelash rendering. Micro-contrast on skin texture — natural pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
       );
       // Framing for standard portrait/model shots (only if no explicit framing override)
       if (!framing) {
