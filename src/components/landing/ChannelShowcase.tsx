@@ -25,7 +25,7 @@ const ITEMS: ShowcaseItem[] = [
 ];
 
 const CATEGORIES: Category[] = ['All', 'Ads', 'Listing', 'Website', 'Seasonal', 'Lifestyle'];
-const SOURCE_PATH = 'try-showcase/source-product.jpg';
+const SOURCE_PATH = 'try-showcase/source-product.png';
 
 export function ChannelShowcase() {
   const [active, setActive] = useState<Category>('All');
