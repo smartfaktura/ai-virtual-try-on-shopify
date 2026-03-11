@@ -92,7 +92,7 @@ export function BuyCreditsModal() {
   return (
     <>
       <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
-        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col">
+        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden">
 
           {/* Balance header */}
           <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border/40 flex items-center justify-between">
@@ -105,9 +105,17 @@ export function BuyCreditsModal() {
                 <span className="text-xs text-muted-foreground">credits</span>
               </div>
             </div>
-            <Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-semibold px-3 py-1 mr-8">
-              {planConfig.name}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-semibold px-3 py-1">
+                {planConfig.name}
+              </Badge>
+              <button
+                onClick={closeBuyModal}
+                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Tab switcher — pill style */}
