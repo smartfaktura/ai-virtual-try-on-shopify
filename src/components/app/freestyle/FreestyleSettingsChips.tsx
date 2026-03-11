@@ -96,7 +96,6 @@ export function FreestyleSettingsChips({
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
-  resolution, onResolutionChange,
   polishPrompt, onPolishChange,
   
   stylePresets, onStylePresetsChange,
@@ -105,7 +104,6 @@ export function FreestyleSettingsChips({
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
-  hasModelSelected = false,
   highlightedChip,
 }: FreestyleSettingsChipsProps) {
   const isMobile = useIsMobile();
