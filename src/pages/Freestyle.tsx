@@ -110,7 +110,7 @@ export default function Freestyle() {
       reason,
     }, ...prev]);
   }, []);
-  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue({
+  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     onContentBlocked: handleContentBlocked,
   });
   const isLoading = isEnqueuing || isProcessing;
