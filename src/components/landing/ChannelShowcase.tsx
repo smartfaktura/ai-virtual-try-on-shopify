@@ -94,8 +94,8 @@ export function ChannelShowcase() {
                   />
                   {/* Source thumbnail overlay */}
                   <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-border/50 shadow-sm">
-                    <div className="w-8 h-8 rounded bg-muted/50 p-0.5 overflow-hidden">
-                      <img src={sourceUrl} alt="Your Product" className="w-full h-full object-contain" />
+                    <div className="w-8 h-8 rounded overflow-hidden">
+                      <img src={LOCAL_SOURCE} alt="Your Product" className="w-full h-full object-cover" />
                     </div>
                     <span className="text-[10px] font-medium text-muted-foreground">Your Product</span>
                   </div>
