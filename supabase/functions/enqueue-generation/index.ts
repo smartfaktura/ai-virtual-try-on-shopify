@@ -118,8 +118,8 @@ serve(async (req) => {
       );
     }
 
-    // Enrich payload with imageCount, quality, aspectRatio so downstream functions receive them
-    const enrichedPayload = { ...payload, imageCount, quality, resolution };
+    // Enrich payload with imageCount, quality so downstream functions receive them
+    const enrichedPayload = { ...payload, imageCount, quality };
 
     // Atomic enqueue with credit deduction
     const { data: enqueueResult, error: enqueueError } = await supabase.rpc(
