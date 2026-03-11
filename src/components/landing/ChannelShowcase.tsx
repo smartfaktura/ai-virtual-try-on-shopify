@@ -12,7 +12,7 @@ interface ShowcaseItem {
 
 const ITEMS: ShowcaseItem[] = [
   { id: 'garden', image: '/images/try-showcase/garden-editorial.png', title: 'Garden Editorial', subtitle: 'Botanical lifestyle shoot' },
-  { id: 'tryon-1', image: '/images/try-showcase/virtual-tryon-1.png', title: 'Virtual Try-On', subtitle: 'AI-powered fitting preview' },
+  { id: 'tryon-1', image: '/images/try-showcase/virtual-tryon-1.png', title: 'Basketball Court', subtitle: 'Sporty outdoor editorial' },
   { id: 'cafe', image: '/images/try-showcase/cafe-lifestyle.png', title: 'Café Lifestyle', subtitle: 'Sun-drenched park editorial' },
   { id: 'golden', image: '/images/try-showcase/golden-hour.png', title: 'Golden Hour', subtitle: 'Warm outdoor portrait' },
   { id: 'studio', image: '/images/try-showcase/studio-lookbook.png', title: 'Studio Lookbook', subtitle: 'Clean e-comm on white' },
