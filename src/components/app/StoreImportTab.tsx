@@ -226,16 +226,33 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
 
           {/* Show all extracted images as thumbnails */}
           {extracted.image_urls && extracted.image_urls.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {extracted.image_urls.map((imgUrl, i) => (
-                <div key={i} className="w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0 border border-border">
-                  <img
-                    src={imgUrl}
-                    alt={`Product image ${i + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
+            <div className="space-y-1.5">
+              <p className="text-[11px] text-muted-foreground">Click to set primary image:</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {extracted.image_urls.map((imgUrl, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setSelectedImageIndex(i)}
+                    className={`relative w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0 border-2 transition-all ${
+                      i === selectedImageIndex
+                        ? 'border-primary ring-1 ring-primary/30'
+                        : 'border-border hover:border-muted-foreground/40'
+                    }`}
+                  >
+                    <img
+                      src={imgUrl}
+                      alt={`Product image ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    {i === selectedImageIndex && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
+                        <Check className="w-4 h-4 text-primary-foreground drop-shadow" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
