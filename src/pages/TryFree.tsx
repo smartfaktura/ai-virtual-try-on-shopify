@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SEOHead } from '@/components/SEOHead';
 import { PageLayout } from '@/components/landing/PageLayout';
-import { BeforeAfterGallery } from '@/components/landing/BeforeAfterGallery';
+
 import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
 import { EnvironmentShowcaseSection } from '@/components/landing/EnvironmentShowcaseSection';
 import { ChannelShowcase } from '@/components/landing/ChannelShowcase';
@@ -80,8 +80,6 @@ export default function TryFree() {
       {/* Channel Showcase */}
       <ChannelShowcase />
 
-      {/* Before / After */}
-      <BeforeAfterGallery />
 
       {/* How It Works */}
       <section className="py-16 lg:py-20 bg-muted/30">
