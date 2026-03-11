@@ -50,7 +50,7 @@ export function FreestyleShowcaseSection() {
 
   useEffect(() => {
     setTypedText('');
-    setActiveChips({ product: false, model: false, scene: false });
+    setActiveChips({ product: false, scene: false });
     setGenerating(false);
     setProgress(0);
     setShowResults(false);
