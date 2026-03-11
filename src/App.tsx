@@ -54,6 +54,7 @@ const BrandProfilesFeature = lazy(() => import('@/pages/features/BrandProfilesFe
 const AIModelsBackgroundsFeature = lazy(() => import('@/pages/features/AIModelsBackgroundsFeature'));
 const ShopifyImageGenerator = lazy(() => import('@/pages/features/ShopifyImageGenerator'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
+const TryFree = lazy(() => import('@/pages/TryFree'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
