@@ -54,7 +54,7 @@ export default function Freestyle() {
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
-  const [quality, setQuality] = useState<'standard' | 'high'>('standard');
+  const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('1K');
   const [polishPrompt, setPolishPrompt] = useState(true);
   
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
@@ -137,7 +137,7 @@ export default function Freestyle() {
     if (r && ['1:1', '3:4', '4:5', '9:16', '16:9'].includes(r)) {
       setAspectRatio(r as FreestyleAspectRatio);
     }
-    if (q === 'high') setQuality('high');
+    if (q === 'high') setResolution('2K');
     if (sceneParam) {
       const matchedScene = mockTryOnPoses.find((s) => s.poseId === sceneParam);
       if (matchedScene) {
@@ -190,7 +190,8 @@ export default function Freestyle() {
 
   const hasModel = !!selectedModel;
   const hasScene = !!selectedScene;
-  const creditCost = (hasModel || hasScene) ? 8 : 4;
+  const resolutionCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;
+  const creditCost = Math.max((hasModel || hasScene) ? 8 : 0, resolutionCredits);
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
   const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
   const hasEnoughCredits = balance >= creditCost;
@@ -395,6 +396,9 @@ export default function Freestyle() {
     } : undefined;
 
     // Build the payload for the queue — URLs instead of base64
+    // Map resolution to quality for backward compat
+    const quality = resolution === '1K' ? 'standard' : 'high';
+
     const queuePayload = {
       prompt: finalPrompt,
       sourceImage: sourceImageUrl,
@@ -404,6 +408,7 @@ export default function Freestyle() {
       aspectRatio,
       imageCount: 1,
       quality,
+      resolution,
       polishPrompt,
       modelContext,
       stylePresets: activePresetKeywords.length > 0 ? activePresetKeywords : undefined,
@@ -420,9 +425,11 @@ export default function Freestyle() {
       payload: queuePayload,
       imageCount: 1,
       quality,
+      resolution,
     }, {
       imageCount: 1,
       quality,
+      resolution,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
       hasProduct: !!selectedProduct || !!sourceImage,
@@ -432,7 +439,7 @@ export default function Freestyle() {
       // Update balance from server response
       setBalanceFromServer(enqueueResult.newBalance);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, resolution, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
@@ -553,8 +560,8 @@ export default function Freestyle() {
     isLoadingProducts,
     aspectRatio,
     onAspectRatioChange: setAspectRatio,
-    quality,
-    onQualityChange: setQuality,
+    resolution,
+    onResolutionChange: setResolution,
     polishPrompt,
     onPolishChange: setPolishPrompt,
     stylePresets,

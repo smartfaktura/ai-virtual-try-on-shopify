@@ -461,7 +461,8 @@ async function generateImage(
   apiKey: string,
   model: string,
   aspectRatio?: string,
-  maxRetries = 2
+  maxRetries = 2,
+  resolution?: string,
 ): Promise<GenerateResult> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -477,7 +478,7 @@ async function generateImage(
             model,
             messages: [{ role: "user", content }],
             modalities: ["image", "text"],
-            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
+            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio, ...(resolution && resolution !== '1K' ? { imageSize: resolution } : {}) } } : {}),
           }),
           signal: AbortSignal.timeout(90_000), // 90s timeout per AI call (pro model is slower)
         }
@@ -806,13 +807,14 @@ serve(async (req) => {
     const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage].filter(Boolean).length;
     const hasModelImage = !!body.modelImage;
     const hasDualProductRef = !!body.productImage && !!body.sourceImage;
-    const aiModel = (hasModelImage || hasDualProductRef)
+    // Resolution-aware model selection: 2K/4K forces Pro model
+    const resolution = (body as Record<string, unknown>).resolution as string || '1K';
+    const forceProForResolution = resolution === '2K' || resolution === '4K';
+    const aiModel = (hasModelImage || hasDualProductRef || forceProForResolution)
       ? "google/gemini-3-pro-image-preview"
       : isQueueInternal
         ? "google/gemini-3.1-flash-image-preview"
-        : (body.quality === "high" && refCount < 2)
-          ? "google/gemini-3-pro-image-preview"
-          : "google/gemini-3.1-flash-image-preview";
+        : "google/gemini-3.1-flash-image-preview";
 
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
@@ -861,7 +863,7 @@ serve(async (req) => {
           body.sceneImage,
         );
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
+        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries, resolution);
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;
