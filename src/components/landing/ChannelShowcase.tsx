@@ -1,31 +1,27 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { ShimmerImage } from '@/components/ui/shimmer-image';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
-import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { cn } from '@/lib/utils';
 
 type Category = 'All' | 'Ads' | 'Listing' | 'Website' | 'Seasonal' | 'Lifestyle';
 
 interface ShowcaseItem {
   id: string;
-  path: string;
+  image: string;
   title: string;
   subtitle: string;
   category: Category;
 }
 
 const ITEMS: ShowcaseItem[] = [
-  { id: 'instagram', path: 'try-showcase/instagram-ad.jpg', title: 'Instagram Ad', subtitle: 'Scroll-stopping social creative', category: 'Ads' },
-  { id: 'amazon', path: 'try-showcase/amazon-listing.jpg', title: 'Amazon Listing', subtitle: 'Clean on-model product shot', category: 'Listing' },
-  { id: 'hero', path: 'try-showcase/website-hero.jpg', title: 'Website Hero', subtitle: 'Dynamic lifestyle banner', category: 'Website' },
-  { id: 'seasonal', path: 'try-showcase/seasonal-autumn.jpg', title: 'Autumn Campaign', subtitle: 'Seasonal field shoot', category: 'Seasonal' },
-  { id: 'lifestyle', path: 'try-showcase/lifestyle-home.jpg', title: 'At-Home Lifestyle', subtitle: 'Cozy casual setting', category: 'Lifestyle' },
-  { id: 'blog', path: 'try-showcase/blog-editorial.jpg', title: 'Blog Editorial', subtitle: 'Botanical garden story', category: 'Lifestyle' },
+  { id: 'studio', image: '/images/try-showcase/studio-lookbook.png', title: 'Studio Lookbook', subtitle: 'Clean e-comm on white', category: 'Listing' },
+  { id: 'cafe', image: '/images/try-showcase/cafe-lifestyle.png', title: 'Café Lifestyle', subtitle: 'Sun-drenched editorial', category: 'Lifestyle' },
+  { id: 'pilates', image: '/images/try-showcase/pilates-studio.png', title: 'Pilates Studio', subtitle: 'Active lifestyle campaign', category: 'Ads' },
+  { id: 'home', image: '/images/try-showcase/at-home-editorial.png', title: 'At-Home Editorial', subtitle: 'Cozy living room story', category: 'Website' },
+  { id: 'golden', image: '/images/try-showcase/golden-hour.png', title: 'Golden Hour', subtitle: 'Warm outdoor portrait', category: 'Seasonal' },
+  { id: 'urban', image: '/images/try-showcase/urban-edge.png', title: 'Urban Edge', subtitle: 'Street-style stairwell shoot', category: 'Lifestyle' },
 ];
 
 const CATEGORIES: Category[] = ['All', 'Ads', 'Listing', 'Website', 'Seasonal', 'Lifestyle'];
-const SOURCE_PATH = 'try-showcase/source-product.png';
 const LOCAL_SOURCE = '/images/source-crop-top.jpg';
 
 export function ChannelShowcase() {
@@ -43,7 +39,7 @@ export function ChannelShowcase() {
             One Product. Every Channel.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Upload one photo — get visuals for Instagram, Amazon, your website, seasonal campaigns, and more.
+            One upload creates visuals for every channel and campaign.
           </p>
         </div>
 
@@ -78,38 +74,28 @@ export function ChannelShowcase() {
 
         {/* Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map(item => {
-            const url = getOptimizedUrl(getLandingAssetUrl(item.path), { width: 600, quality: 75 });
-            return (
-              <div
-                key={item.id}
-                className="group relative rounded-2xl overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md"
-              >
-                <div className="relative">
-                  <ShimmerImage
-                    src={url}
-                    alt={item.title}
-                    className="w-full aspect-[4/5] object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                    aspectRatio="4/5"
-                  />
-                  {/* Source thumbnail overlay */}
-                  <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-border/50 shadow-sm">
-                    <div className="w-8 h-8 rounded overflow-hidden">
-                      <img src={LOCAL_SOURCE} alt="Your Product" className="w-full h-full object-cover" />
-                    </div>
-                    <span className="text-[10px] font-medium text-muted-foreground">Your Product</span>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
-                    <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{item.subtitle}</p>
-                </div>
+          {filtered.map(item => (
+            <div
+              key={item.id}
+              className="group relative rounded-2xl overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md"
+            >
+              <div className="relative">
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full aspect-square object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                  loading="lazy"
+                />
               </div>
-            );
-          })}
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
+                  <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{item.subtitle}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
