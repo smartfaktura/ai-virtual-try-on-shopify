@@ -626,7 +626,7 @@ export default function Freestyle() {
                     </div>
                   </div>
                 ) : (
-                  <QueuePositionIndicator job={activeJob} onCancel={() => resetQueue()} />
+                  <QueuePositionIndicator job={activeJob} onCancel={() => cancel()} />
                 )}
               </div>
             )}
