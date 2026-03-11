@@ -326,8 +326,8 @@ export function FreestylePromptPanel({
                           : selectedModel && selectedScene
                             ? `${creditCost} credits: Model + Scene (15/image)`
                             : selectedModel
-                              ? `${creditCost} credits: Model reference (12/image)`
-                          : `${creditCost} credits: ${resolution === '4K' ? '4K resolution (12/image)' : resolution === '2K' ? '2K resolution (8/image)' : 'Standard 1K (4/image)'}`}
+                              ? `${creditCost} credits: Model reference (8/image)`
+                          : `${creditCost} credits: ${(selectedScene) ? '8 credits/image (scene)' : '4 credits/image'}`}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
