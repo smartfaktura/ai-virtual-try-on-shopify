@@ -66,8 +66,6 @@ interface FreestyleSettingsChipsProps {
   isLoadingProducts: boolean;
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
-  resolution: '1K' | '2K' | '4K';
-  onResolutionChange: (r: '1K' | '2K' | '4K') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
   stylePresets: string[];
@@ -88,7 +86,6 @@ interface FreestyleSettingsChipsProps {
   onFramingChange: (f: FramingOption | null) => void;
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
-  hasModelSelected?: boolean;
   highlightedChip?: GuideStepKey | null;
 }
 
