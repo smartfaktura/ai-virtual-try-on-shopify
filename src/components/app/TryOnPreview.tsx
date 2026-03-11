@@ -7,23 +7,29 @@ interface TryOnPreviewProps {
   scratchUpload?: ScratchUpload | null;
   model: ModelProfile | null;
   pose: TryOnPose | null;
+  poses?: TryOnPose[];
   creditCost?: number;
   selectedGender?: ModelGender;
   products?: Product[];
 }
 
-export function TryOnPreview({ product, scratchUpload, model, pose, creditCost = 0, selectedGender, products }: TryOnPreviewProps) {
-  const poseImage = selectedGender === 'male' && pose?.previewUrlMale ? pose.previewUrlMale : pose?.previewUrl;
+export function TryOnPreview({ product, scratchUpload, model, pose, poses, creditCost = 0, selectedGender, products }: TryOnPreviewProps) {
+  const allPoses = poses && poses.length > 0 ? poses : pose ? [pose] : [];
+  const firstPose = allPoses[0] || null;
+  const poseImage = selectedGender === 'male' && firstPose?.previewUrlMale ? firstPose.previewUrlMale : firstPose?.previewUrl;
   const productImageUrl = product?.images[0]?.url || scratchUpload?.previewUrl;
   const productTitle = product?.title || scratchUpload?.productInfo.title || '';
   const hasProduct = !!(product || scratchUpload);
   const isMultiProduct = products && products.length > 1;
-  const hasAllSelections = hasProduct && model && pose;
+  const isMultiScene = allPoses.length > 1;
+  const hasAllSelections = hasProduct && model && allPoses.length > 0;
 
   const description = hasAllSelections
     ? isMultiProduct
-      ? `${model.name} wearing ${products.length} products in ${pose.name}`
-      : `${model.name} in ${pose.name} wearing ${productTitle}`
+      ? `${model.name} wearing ${products.length} products in ${allPoses.length} scene${allPoses.length > 1 ? 's' : ''}`
+      : isMultiScene
+        ? `${model.name} wearing ${productTitle} in ${allPoses.length} scenes`
+        : `${model.name} in ${firstPose!.name} wearing ${productTitle}`
     : 'Complete your selections to see preview';
 
   return (
