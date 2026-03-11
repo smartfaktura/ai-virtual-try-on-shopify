@@ -4,9 +4,11 @@ import { PoseSelectorCard } from './PoseSelectorCard';
 interface PoseCategorySectionProps {
   category: PoseCategory;
   poses: TryOnPose[];
-  selectedPoseId: string | null;
+  selectedPoseId?: string | null;
+  selectedPoseIds?: Set<string>;
   onSelectPose: (pose: TryOnPose) => void;
   selectedGender?: ModelGender;
+  maxSelectable?: number;
 }
 
 const categoryInfo: Record<PoseCategory, { title: string; recommendation: string }> = {
@@ -24,9 +26,19 @@ const categoryInfo: Record<PoseCategory, { title: string; recommendation: string
   outdoor: { title: 'Outdoor', recommendation: 'Best for lifestyle & seasonal campaigns' },
 };
 
-export function PoseCategorySection({ category, poses, selectedPoseId, onSelectPose, selectedGender }: PoseCategorySectionProps) {
+export function PoseCategorySection({ category, poses, selectedPoseId, selectedPoseIds, onSelectPose, selectedGender, maxSelectable }: PoseCategorySectionProps) {
   const info = categoryInfo[category];
   if (poses.length === 0) return null;
+
+  const isMultiSelect = !!selectedPoseIds;
+  const selectedSet = selectedPoseIds || new Set(selectedPoseId ? [selectedPoseId] : []);
+
+  // For multi-select, compute the selection order number
+  const getSelectionIndex = (poseId: string): number | undefined => {
+    if (!isMultiSelect || !selectedPoseIds?.has(poseId)) return undefined;
+    const allSelected = Array.from(selectedPoseIds);
+    return allSelected.indexOf(poseId) + 1;
+  };
 
   return (
     <div className="space-y-2 sm:space-y-3">
@@ -36,7 +48,15 @@ export function PoseCategorySection({ category, poses, selectedPoseId, onSelectP
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {poses.map((pose) => (
-          <PoseSelectorCard key={pose.poseId} pose={pose} isSelected={selectedPoseId === pose.poseId} onSelect={() => onSelectPose(pose)} selectedGender={selectedGender} />
+          <PoseSelectorCard
+            key={pose.poseId}
+            pose={pose}
+            isSelected={selectedSet.has(pose.poseId)}
+            onSelect={() => onSelectPose(pose)}
+            selectedGender={selectedGender}
+            selectionIndex={getSelectionIndex(pose.poseId)}
+            maxSelectable={maxSelectable}
+          />
         ))}
       </div>
     </div>

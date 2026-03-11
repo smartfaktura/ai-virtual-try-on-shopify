@@ -7,23 +7,29 @@ interface TryOnPreviewProps {
   scratchUpload?: ScratchUpload | null;
   model: ModelProfile | null;
   pose: TryOnPose | null;
+  poses?: TryOnPose[];
   creditCost?: number;
   selectedGender?: ModelGender;
   products?: Product[];
 }
 
-export function TryOnPreview({ product, scratchUpload, model, pose, creditCost = 0, selectedGender, products }: TryOnPreviewProps) {
-  const poseImage = selectedGender === 'male' && pose?.previewUrlMale ? pose.previewUrlMale : pose?.previewUrl;
+export function TryOnPreview({ product, scratchUpload, model, pose, poses, creditCost = 0, selectedGender, products }: TryOnPreviewProps) {
+  const allPoses = poses && poses.length > 0 ? poses : pose ? [pose] : [];
+  const firstPose = allPoses[0] || null;
+  const poseImage = selectedGender === 'male' && firstPose?.previewUrlMale ? firstPose.previewUrlMale : firstPose?.previewUrl;
   const productImageUrl = product?.images[0]?.url || scratchUpload?.previewUrl;
   const productTitle = product?.title || scratchUpload?.productInfo.title || '';
   const hasProduct = !!(product || scratchUpload);
   const isMultiProduct = products && products.length > 1;
-  const hasAllSelections = hasProduct && model && pose;
+  const isMultiScene = allPoses.length > 1;
+  const hasAllSelections = hasProduct && model && allPoses.length > 0;
 
   const description = hasAllSelections
     ? isMultiProduct
-      ? `${model.name} wearing ${products.length} products in ${pose.name}`
-      : `${model.name} in ${pose.name} wearing ${productTitle}`
+      ? `${model.name} wearing ${products.length} products in ${allPoses.length} scene${allPoses.length > 1 ? 's' : ''}`
+      : isMultiScene
+        ? `${model.name} wearing ${productTitle} in ${allPoses.length} scenes`
+        : `${model.name} in ${firstPose!.name} wearing ${productTitle}`
     : 'Complete your selections to see preview';
 
   return (
@@ -42,7 +48,21 @@ export function TryOnPreview({ product, scratchUpload, model, pose, creditCost =
           <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center"><Plus className="w-3 h-3 text-muted-foreground" /></div>
           <Thumb image={model?.previewUrl} label="Model" active={!!model} round />
           <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center"><Plus className="w-3 h-3 text-muted-foreground" /></div>
-          <Thumb image={poseImage} label="Scene" active={!!pose} />
+          {isMultiScene ? (
+            <div className="flex items-center gap-1.5">
+              {allPoses.slice(0, 3).map((p, i) => {
+                const img = selectedGender === 'male' && p.previewUrlMale ? p.previewUrlMale : p.previewUrl;
+                return (
+                  <div key={p.poseId} className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 border-primary bg-card flex-shrink-0">
+                    <img src={img} alt={p.name} className="w-full h-full object-cover" />
+                  </div>
+                );
+              })}
+              <span className="ml-1 text-[10px] sm:text-xs font-medium text-primary">{allPoses.length} scenes</span>
+            </div>
+          ) : (
+            <Thumb image={poseImage} label="Scene" active={!!firstPose} />
+          )}
           {hasAllSelections && (
             <>
               <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center"><ArrowRight className="w-3 h-3 text-primary" /></div>
@@ -56,7 +76,7 @@ export function TryOnPreview({ product, scratchUpload, model, pose, creditCost =
         <div className="flex justify-center gap-3 sm:gap-4 pt-2 border-t border-border">
           <StatusPill label="Product" completed={hasProduct} count={isMultiProduct ? products.length : undefined} />
           <StatusPill label="Model" completed={!!model} />
-          <StatusPill label="Scene" completed={!!pose} />
+          <StatusPill label="Scene" completed={allPoses.length > 0} count={isMultiScene ? allPoses.length : undefined} />
         </div>
       </div>
     </Card>
