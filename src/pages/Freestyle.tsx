@@ -425,9 +425,11 @@ export default function Freestyle() {
       payload: queuePayload,
       imageCount: 1,
       quality,
+      resolution,
     }, {
       imageCount: 1,
       quality,
+      resolution,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
       hasProduct: !!selectedProduct || !!sourceImage,
