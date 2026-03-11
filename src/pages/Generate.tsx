@@ -953,6 +953,7 @@ export default function Generate() {
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
       toast.success(`Queued ${jobMap.size} product${jobMap.size > 1 ? 's' : ''} for generation`);
+      queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
       return;
     }
 
@@ -1003,6 +1004,7 @@ export default function Generate() {
       });
       if (enqueueResult) {
         setBalanceFromServer(enqueueResult.newBalance);
+        queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
       } else {
         setCurrentStep('settings');
       }
@@ -1032,6 +1034,7 @@ export default function Generate() {
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
       toast.success(`Queued ${jobMap.size} scene${jobMap.size > 1 ? 's' : ''} for generation`);
+      queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
     }
     } catch (err) {
       console.error('Try-on generation failed:', err);
