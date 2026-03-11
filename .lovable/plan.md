@@ -1,28 +1,32 @@
 
 
-## Simplify: Remove Resolution Selectors, Default Everything to 1K
+## Fix: Wrong Credit Cost for Virtual Try-On Workflows
 
-### Status: ✅ Implemented
+### Bug
+Line 1361 in `Generate.tsx`:
+```typescript
+const singleProductCreditCost = hasWorkflowConfig 
+  ? workflowImageCount * perImageCredits 
+  : parseInt(imageCount) * perImageCredits * tryOnSceneCount;
+```
 
-### What Changed
+When a try-on workflow has `generation_config` (making `hasWorkflowConfig = true`), it uses the workflow branch (`workflowImageCount = selectedVariationIndices.size * angleMultiplier`). But try-on doesn't use variation indices — it uses `selectedPoses`. So the cost picks up stale/default `selectedVariationIndices` data, producing a wrong number (32 instead of 8).
 
-1. **Removed resolution selectors** from Freestyle, Generate (all 3 workflow types), and FreestyleSettingsChips
-2. **Simplified credit pricing** to flat rates:
-   - Freestyle basic: 4 credits/image
-   - Freestyle with model/scene: 8 credits/image
-   - All workflows & try-on: 8 credits/image
-3. **Cleaned backend edge functions** — removed `OUTPUT RESOLUTION` prompt injections, `imageSize` config, and resolution-based model forcing
-4. **Upscaling remains available** in Library via existing `upscale-image` edge function
+### Fix
 
-### Files Changed
-- `src/pages/Freestyle.tsx`
-- `src/pages/Generate.tsx`
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx`
-- `src/components/app/freestyle/FreestylePromptPanel.tsx`
-- `src/contexts/CreditContext.tsx`
-- `src/hooks/useGenerationQueue.ts`
-- `src/hooks/useGenerationBatch.ts`
-- `supabase/functions/enqueue-generation/index.ts`
-- `supabase/functions/generate-freestyle/index.ts`
-- `supabase/functions/generate-workflow/index.ts`
-- `supabase/functions/generate-tryon/index.ts`
+**`src/pages/Generate.tsx` (line ~1361)**
+- Add a try-on check before the workflow check:
+```typescript
+const singleProductCreditCost = 
+  (generationMode === 'virtual-try-on' && !isSelfieUgc)
+    ? parseInt(imageCount) * perImageCredits * tryOnSceneCount
+    : hasWorkflowConfig 
+      ? workflowImageCount * perImageCredits 
+      : parseInt(imageCount) * perImageCredits * tryOnSceneCount;
+```
+
+This ensures try-on always uses `tryOnSceneCount` (from `selectedPoses.size`) regardless of whether the workflow has a `generation_config`.
+
+### Files
+1. **`src/pages/Generate.tsx`** — Fix the credit cost ternary (1 line change)
+
