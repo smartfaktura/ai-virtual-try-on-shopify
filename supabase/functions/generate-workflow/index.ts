@@ -944,7 +944,8 @@ serve(async (req) => {
             referenceImages,
             model,
             LOVABLE_API_KEY,
-            aspectRatio
+            aspectRatio,
+            resolution
           );
 
           if (imageUrl) {
