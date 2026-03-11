@@ -1,30 +1,44 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix: "Processing" Banner Stuck and Refresh Button Not Working
 
-### Issues Found
+### Root Cause
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+Two bugs in `src/pages/Jobs.tsx`:
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+1. **Banner never auto-dismisses**: `showIncomingBanner` uses `useMemo` with `Date.now()` inside it. Since `lastCompletedAt` only changes once (when a job completes), the memo never recomputes after the 30-second window passes. The banner stays visible forever.
 
-### Plan
+2. **Refresh button works but doesn't dismiss banner**: The Refresh button correctly calls `queryClient.invalidateQueries({ queryKey: ['library'] })` to refetch data, but the banner remains because it's controlled by the broken `useMemo` logic, not by whether data has refreshed.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Fix: `src/pages/Jobs.tsx`
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+- Replace the `useMemo`-based `showIncomingBanner` with a `useState` + `useEffect` pattern that sets a timer to auto-dismiss after 30 seconds
+- When the Refresh button is clicked, dismiss the banner immediately in addition to invalidating the query
+- Add a `dismissBanner` callback that sets the state to `false`
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+```text
+Before:
+  const showIncomingBanner = useMemo(() => {
+    if (!lastCompletedAt) return false;
+    const elapsed = Date.now() - new Date(lastCompletedAt).getTime();
+    return elapsed < 30_000;
+  }, [lastCompletedAt]);
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+After:
+  const [showIncomingBanner, setShowIncomingBanner] = useState(false);
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+  useEffect(() => {
+    if (!lastCompletedAt) return;
+    const elapsed = Date.now() - new Date(lastCompletedAt).getTime();
+    if (elapsed < 30_000) {
+      setShowIncomingBanner(true);
+      const timer = setTimeout(() => setShowIncomingBanner(false), 30_000 - elapsed);
+      return () => clearTimeout(timer);
+    }
+  }, [lastCompletedAt]);
+```
+
+- Update the Refresh button `onClick` to also call `setShowIncomingBanner(false)`
+
+Single file change, no backend or database modifications needed.
 
