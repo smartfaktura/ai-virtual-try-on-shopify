@@ -125,10 +125,17 @@ function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => vo
         </p>
       </div>
 
-      <Progress
-        value={progress}
-        className="h-1 sm:h-1.5 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
-      />
+      <div className="flex items-center gap-2">
+        <Progress
+          value={progress}
+          className="flex-1 h-1 sm:h-1.5 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
+        />
+        {onCancel && (
+          <Button variant="ghost" size="sm" onClick={onCancel} className="shrink-0 text-xs h-6 px-2">
+            Cancel
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
