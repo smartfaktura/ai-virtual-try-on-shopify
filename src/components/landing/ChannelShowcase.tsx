@@ -50,7 +50,7 @@ export function ChannelShowcase() {
         {/* Source product callout */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-14 h-14 rounded-lg border-2 border-primary/30 overflow-hidden bg-card shadow-sm">
-            <img src={sourceUrl} alt="Source: White crop top" className="w-full h-full object-cover" loading="lazy" />
+            <img src={sourceUrl} alt="Source: White crop top" className="w-full h-full object-contain" loading="lazy" />
           </div>
           <div className="text-left">
             <p className="text-sm font-medium text-foreground">Source product</p>
@@ -94,7 +94,7 @@ export function ChannelShowcase() {
                   />
                   {/* Source thumbnail overlay */}
                   <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-border/50 shadow-sm">
-                    <img src={sourceUrl} alt="Source" className="w-7 h-7 rounded object-cover" />
+                    <img src={sourceUrl} alt="Source" className="w-7 h-7 rounded object-contain" />
                     <span className="text-[10px] font-medium text-muted-foreground">Source</span>
                   </div>
                 </div>
