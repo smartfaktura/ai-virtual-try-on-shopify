@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -62,10 +62,16 @@ export default function Jobs() {
   const { lastCompletedAt } = useGenerationQueue();
   const columnCount = useColumnCount();
 
-  const showIncomingBanner = useMemo(() => {
-    if (!lastCompletedAt) return false;
+  const [showIncomingBanner, setShowIncomingBanner] = useState(false);
+
+  useEffect(() => {
+    if (!lastCompletedAt) return;
     const elapsed = Date.now() - new Date(lastCompletedAt).getTime();
-    return elapsed < 30_000;
+    if (elapsed < 30_000) {
+      setShowIncomingBanner(true);
+      const timer = setTimeout(() => setShowIncomingBanner(false), 30_000 - elapsed);
+      return () => clearTimeout(timer);
+    }
   }, [lastCompletedAt]);
 
   const columns: typeof items[] = Array.from({ length: columnCount }, () => []);
@@ -174,7 +180,7 @@ export default function Jobs() {
               variant="ghost"
               size="sm"
               className="shrink-0 gap-1.5 text-xs"
-              onClick={() => queryClient.invalidateQueries({ queryKey: ['library'] })}
+              onClick={() => { setShowIncomingBanner(false); queryClient.invalidateQueries({ queryKey: ['library'] }); }}
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Refresh
