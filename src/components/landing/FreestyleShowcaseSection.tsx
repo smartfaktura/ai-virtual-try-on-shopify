@@ -168,8 +168,7 @@ export function FreestyleShowcaseSection() {
                           src={chip.thumb}
                           alt={chip.label}
                           className={cn(
-                            'w-5 h-5 object-cover',
-                            chip.round ? 'rounded-full' : 'rounded',
+                            'w-5 h-5 object-cover rounded',
                           )}
                         />
                       ) : (
