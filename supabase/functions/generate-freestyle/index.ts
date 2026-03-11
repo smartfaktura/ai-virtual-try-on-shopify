@@ -299,7 +299,7 @@ function polishUserPrompt(
       }
     } else {
       layers.push(
-        "PORTRAIT QUALITY: Natural skin pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
+        "PORTRAIT QUALITY: Razor-sharp eye detail with individual eyelash rendering. Micro-contrast on skin texture — natural pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
       );
       // Framing for standard portrait/model shots (only if no explicit framing override)
       if (!framing) {
