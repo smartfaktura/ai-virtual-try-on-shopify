@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag } from 'lucide-react';
 import { ManualProductTab } from '@/components/app/ManualProductTab';
@@ -30,6 +30,7 @@ export default function AddProduct() {
   const { id } = useParams();
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const isEditing = !!id;
 
   const { data: editingProduct } = useQuery({
@@ -47,7 +48,11 @@ export default function AddProduct() {
     enabled: !!id && !!user,
   });
 
-  const handleDone = () => navigate('/app/products');
+  const handleDone = () => {
+    queryClient.invalidateQueries({ queryKey: ['user-products'] });
+    queryClient.invalidateQueries({ queryKey: ['product-image-counts'] });
+    navigate('/app/products');
+  };
 
   return (
     <PageHeader
