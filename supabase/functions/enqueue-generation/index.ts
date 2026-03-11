@@ -74,7 +74,7 @@ serve(async (req) => {
     const userId = user.id;
 
     const body = await req.json();
-    const { jobType, payload, imageCount = 1, quality = "standard", additionalProductCount = 0, hasModel = false, hasScene = false } = body;
+    const { jobType, payload, imageCount = 1, quality = "standard", additionalProductCount = 0, hasModel = false, hasScene = false, resolution = "1K" } = body;
 
     if (!jobType || !payload) {
       return new Response(
