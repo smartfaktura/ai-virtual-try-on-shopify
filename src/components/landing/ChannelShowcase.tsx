@@ -26,11 +26,11 @@ const ITEMS: ShowcaseItem[] = [
 
 const CATEGORIES: Category[] = ['All', 'Ads', 'Listing', 'Website', 'Seasonal', 'Lifestyle'];
 const SOURCE_PATH = 'try-showcase/source-product.png';
+const LOCAL_SOURCE = '/images/source-crop-top.jpg';
 
 export function ChannelShowcase() {
   const [active, setActive] = useState<Category>('All');
   const filtered = active === 'All' ? ITEMS : ITEMS.filter(i => i.category === active);
-  const sourceUrl = getOptimizedUrl(getLandingAssetUrl(SOURCE_PATH), { width: 120, quality: 80 });
 
   return (
     <section className="py-16 lg:py-20">
