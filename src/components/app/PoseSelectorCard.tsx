@@ -35,9 +35,13 @@ export function PoseSelectorCard({ pose, isSelected, onSelect, selectedGender, s
       {isSelected && (
         <div className="absolute inset-0 bg-primary/10 pointer-events-none">
           <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-5 h-5 sm:w-7 sm:h-7 bg-primary rounded-full flex items-center justify-center shadow-md">
-            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+            {selectionIndex !== undefined ? (
+              <span className="text-[10px] sm:text-xs font-bold text-primary-foreground">{selectionIndex}</span>
+            ) : (
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
           </div>
         </div>
       )}
