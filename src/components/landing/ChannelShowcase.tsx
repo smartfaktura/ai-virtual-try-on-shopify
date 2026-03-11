@@ -26,11 +26,11 @@ const ITEMS: ShowcaseItem[] = [
 
 const CATEGORIES: Category[] = ['All', 'Ads', 'Listing', 'Website', 'Seasonal', 'Lifestyle'];
 const SOURCE_PATH = 'try-showcase/source-product.png';
+const LOCAL_SOURCE = '/images/source-crop-top.jpg';
 
 export function ChannelShowcase() {
   const [active, setActive] = useState<Category>('All');
   const filtered = active === 'All' ? ITEMS : ITEMS.filter(i => i.category === active);
-  const sourceUrl = getOptimizedUrl(getLandingAssetUrl(SOURCE_PATH), { width: 120, quality: 80 });
 
   return (
     <section className="py-16 lg:py-20">
@@ -49,8 +49,8 @@ export function ChannelShowcase() {
 
         {/* Source product callout */}
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-16 h-16 p-1.5 rounded-lg border-2 border-primary/30 overflow-hidden bg-muted/50 shadow-sm">
-            <img src={sourceUrl} alt="White Crop-Top product" className="w-full h-full object-contain" loading="lazy" />
+          <div className="w-20 h-20 rounded-lg border-2 border-primary/30 overflow-hidden shadow-sm">
+            <img src={LOCAL_SOURCE} alt="White Crop-Top product" className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div className="text-left">
             <p className="text-sm font-medium text-foreground">Your Product</p>
@@ -94,8 +94,8 @@ export function ChannelShowcase() {
                   />
                   {/* Source thumbnail overlay */}
                   <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-border/50 shadow-sm">
-                    <div className="w-8 h-8 rounded bg-muted/50 p-0.5 overflow-hidden">
-                      <img src={sourceUrl} alt="Your Product" className="w-full h-full object-contain" />
+                    <div className="w-8 h-8 rounded overflow-hidden">
+                      <img src={LOCAL_SOURCE} alt="Your Product" className="w-full h-full object-cover" />
                     </div>
                     <span className="text-[10px] font-medium text-muted-foreground">Your Product</span>
                   </div>
