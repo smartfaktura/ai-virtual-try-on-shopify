@@ -8,6 +8,8 @@ interface PoseSelectorCardProps {
   isSelected: boolean;
   onSelect: () => void;
   selectedGender?: ModelGender;
+  selectionIndex?: number;
+  maxSelectable?: number;
 }
 
 export function PoseSelectorCard({ pose, isSelected, onSelect, selectedGender }: PoseSelectorCardProps) {
