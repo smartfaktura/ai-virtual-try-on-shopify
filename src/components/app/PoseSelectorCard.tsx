@@ -12,7 +12,7 @@ interface PoseSelectorCardProps {
   maxSelectable?: number;
 }
 
-export function PoseSelectorCard({ pose, isSelected, onSelect, selectedGender }: PoseSelectorCardProps) {
+export function PoseSelectorCard({ pose, isSelected, onSelect, selectedGender, selectionIndex }: PoseSelectorCardProps) {
   const displayImage = selectedGender === 'male' && pose.previewUrlMale
     ? pose.previewUrlMale
     : pose.previewUrl;
