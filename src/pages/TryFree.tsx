@@ -77,23 +77,8 @@ export default function TryFree() {
         </div>
       </section>
 
-      {/* Results Gallery */}
-      <section className="py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-              Real Results
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              See What Others Are Creating
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Every image below was generated with VOVV AI — from a single product photo.
-            </p>
-          </div>
-          <DiscoverGallery />
-        </div>
-      </section>
+      {/* Channel Showcase */}
+      <ChannelShowcase />
 
       {/* Before / After */}
       <BeforeAfterGallery />
