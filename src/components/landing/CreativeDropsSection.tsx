@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-const whiteCropTop = getLandingAssetUrl('drops/drop-model-white-crop.jpg');
+const whiteCropTop = '/images/source-crop-top.jpg';
 
 const drops = [
   {
