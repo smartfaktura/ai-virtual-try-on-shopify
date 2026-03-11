@@ -3710,7 +3710,7 @@ export default function Generate() {
                 )}
                 {/* Show active job indicator within batch */}
                 {activeJob && (
-                  <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
+                  <QueuePositionIndicator job={activeJob} onCancel={cancelQueue} />
                 )}
               </div>
             )}
