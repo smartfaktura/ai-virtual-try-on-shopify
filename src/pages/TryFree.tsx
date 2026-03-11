@@ -80,8 +80,6 @@ export default function TryFree() {
       {/* Channel Showcase */}
       <ChannelShowcase />
 
-      {/* Before / After */}
-      <BeforeAfterGallery />
 
       {/* How It Works */}
       <section className="py-16 lg:py-20 bg-muted/30">
