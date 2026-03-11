@@ -41,7 +41,6 @@ export function FreestyleShowcaseSection() {
   const [typedText, setTypedText] = useState('');
   const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({
     product: false,
-    model: false,
     scene: false,
   });
   const [generating, setGenerating] = useState(false);
