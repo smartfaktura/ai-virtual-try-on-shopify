@@ -1,24 +1,29 @@
 
 
-## Fix: Resolution Not Passed to Generation Function
+## Resolution Control: 1K/2K/4K for Freestyle, Auto-2K for Workflows/Try-On
 
-### Root Cause
+### Status: ✅ Implemented
 
-In `supabase/functions/enqueue-generation/index.ts` line 132, the enriched payload that gets forwarded to `generate-freestyle` only includes `imageCount` and `quality`:
+### What Changed
 
-```typescript
-const enrichedPayload = { ...payload, imageCount, quality };
-```
+1. **Freestyle UI** — Replaced Standard/High quality chip with 1K/2K/4K resolution picker
+   - 1K = Standard model, 4 credits/image
+   - 2K = Pro model (auto), 8 credits/image  
+   - 4K = Pro model (auto), 12 credits/image
+   - When model/scene selected, locked to "Pro · 2K" minimum
 
-The `resolution` field is extracted from the request body (line 77) but never added to the payload. So when `generate-freestyle` reads it on line 811, it gets `undefined` and defaults to `'1K'`, producing 1024x1024 images regardless of user selection.
+2. **Backend** — Added `imageSize` to Gemini `image_config`
+   - `generate-freestyle`: Dynamic resolution from payload, forces Pro model for 2K/4K
+   - `generate-tryon`: Hardcoded `imageSize: "2K"`
+   - `generate-workflow`: Hardcoded `imageSize: "2K"`
+   - `enqueue-generation`: Resolution-aware credit calculation
 
-### Fix
-
-**`supabase/functions/enqueue-generation/index.ts`** — Line 132: Add `resolution` to the enriched payload:
-
-```typescript
-const enrichedPayload = { ...payload, imageCount, quality, resolution };
-```
-
-One line change, one file. The `resolution` variable is already destructured on line 77. The `generate-freestyle` function already reads and uses it correctly (line 811). It just never arrives because enqueue strips it.
-
+### Files Changed
+- `src/pages/Freestyle.tsx`
+- `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+- `src/components/app/freestyle/FreestylePromptPanel.tsx`
+- `src/hooks/useGenerationQueue.ts`
+- `supabase/functions/generate-freestyle/index.ts`
+- `supabase/functions/generate-tryon/index.ts`
+- `supabase/functions/generate-workflow/index.ts`
+- `supabase/functions/enqueue-generation/index.ts`
