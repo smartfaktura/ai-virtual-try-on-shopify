@@ -36,9 +36,9 @@ const CHIPS = [
 ];
 
 const RESULT_CARDS = [
-  { label: 'Studio Lookbook', src: '/images/try-showcase/studio-lookbook.png' },
-  { label: 'Café Lifestyle', src: '/images/try-showcase/cafe-lifestyle.png' },
-  { label: 'Golden Hour', src: '/images/try-showcase/golden-hour.png' },
+  { label: 'Studio White', src: '/images/try-showcase/studio-lookbook.png' },
+  { label: 'Outdoor Café', src: '/images/try-showcase/cafe-lifestyle.png' },
+  { label: 'Urban Concrete', src: '/images/try-showcase/golden-hour.png' },
 ];
 
 type ChipKey = 'product' | 'model' | 'scene';
