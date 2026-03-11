@@ -189,8 +189,7 @@ export default function Freestyle() {
 
   const hasModel = !!selectedModel;
   const hasScene = !!selectedScene;
-  const resolutionCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;
-  const creditCost = Math.max((hasModel || hasScene) ? 8 : 0, resolutionCredits);
+  const creditCost = (hasModel || hasScene) ? 8 : 4;
   const hasAssets = !!selectedProduct || !!selectedModel || !!selectedScene || !!sourceImage;
   const canSubmit = (prompt.trim().length > 0 || hasAssets) && !isLoading;
   const hasEnoughCredits = balance >= creditCost;
