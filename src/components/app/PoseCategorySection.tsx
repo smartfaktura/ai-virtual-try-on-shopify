@@ -4,9 +4,11 @@ import { PoseSelectorCard } from './PoseSelectorCard';
 interface PoseCategorySectionProps {
   category: PoseCategory;
   poses: TryOnPose[];
-  selectedPoseId: string | null;
+  selectedPoseId?: string | null;
+  selectedPoseIds?: Set<string>;
   onSelectPose: (pose: TryOnPose) => void;
   selectedGender?: ModelGender;
+  maxSelectable?: number;
 }
 
 const categoryInfo: Record<PoseCategory, { title: string; recommendation: string }> = {
