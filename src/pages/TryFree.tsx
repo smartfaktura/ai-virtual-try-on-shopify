@@ -1,4 +1,3 @@
-import { useLink } from 'react-router-dom';
 import { ArrowRight, Upload, Sparkles, Download, ShoppingBag, Megaphone, Palette, Camera, CreditCard, Zap, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';

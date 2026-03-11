@@ -94,6 +94,7 @@ const App = () => (
             <Route path="/features/ai-models-backgrounds" element={<AIModelsBackgroundsFeature />} />
             <Route path="/features/shopify-image-generator" element={<ShopifyImageGenerator />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/try" element={<TryFree />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />
