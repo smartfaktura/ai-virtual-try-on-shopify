@@ -56,6 +56,13 @@ export function AppShell({ children }: AppShellProps) {
     try { localStorage.setItem(STORAGE_KEY, String(collapsed)); } catch {}
   }, [collapsed]);
 
+  // Reset scroll position on route change (skip Discover to preserve feed position)
+  useEffect(() => {
+    if (location.pathname.startsWith('/app/discover')) return;
+    const main = document.getElementById('app-main-scroll');
+    if (main) main.scrollTop = 0;
+  }, [location.pathname]);
+
   const handleSignOut = useCallback(async () => {
     await signOut();
     navigate('/');
