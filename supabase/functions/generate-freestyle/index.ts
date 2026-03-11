@@ -84,7 +84,7 @@ function detectFullBodyIntent(prompt: string): boolean {
 
 // ── Photography DNA (Pro camera style) ────────────────────────────────────
 function buildPhotographyDNA(): string {
-  return `Shot on 85mm f/1.4 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Natural skin texture, ultra high resolution. Subtle film grain, elegant highlight roll-off.`;
+  return `Shot on 85mm f/2.8 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Razor-sharp focus, micro-contrast. Natural skin texture, visible material textures and fine stitching. Subtle film grain, elegant highlight roll-off.`;
 }
 
 // ── Negative prompt (always appended when polish is on) ───────────────────
