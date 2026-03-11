@@ -3505,15 +3505,15 @@ export default function Generate() {
           </div>
         )}
 
-        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPose && (
+        {currentStep === 'settings' && generationMode === 'virtual-try-on' && selectedModel && selectedPoses.size > 0 && (
           <div className="space-y-4">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} poses={Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean)} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Selected Model & Scene</span>
+                <span className="text-sm text-muted-foreground">Selected Model & {selectedPoses.size > 1 ? 'Scenes' : 'Scene'}</span>
                 <Button variant="link" size="sm" onClick={() => setCurrentStep('model')}>Change</Button>
               </div>
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6 flex-wrap">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20"><img src={selectedModel.previewUrl} alt="" className="w-full h-full object-cover" /></div>
                   <div>
@@ -3522,13 +3522,20 @@ export default function Generate() {
                   </div>
                 </div>
                 <Separator orientation="vertical" className="h-10" />
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-primary/20"><img src={selectedModel?.gender === 'male' && selectedPose.previewUrlMale ? selectedPose.previewUrlMale : selectedPose.previewUrl} alt="" className="w-full h-full object-cover" /></div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Scene</p>
-                    <p className="text-sm font-medium">{selectedPose.name}</p>
-                  </div>
-                </div>
+                {Array.from(selectedPoses).map(poseId => {
+                  const p = selectedPoseMap.get(poseId);
+                  if (!p) return null;
+                  const img = selectedModel?.gender === 'male' && p.previewUrlMale ? p.previewUrlMale : p.previewUrl;
+                  return (
+                    <div key={poseId} className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-primary/20"><img src={img} alt="" className="w-full h-full object-cover" /></div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Scene</p>
+                        <p className="text-sm font-medium">{p.name}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent></Card>
 
@@ -3536,7 +3543,7 @@ export default function Generate() {
               <h3 className="text-base font-semibold">Generation Settings</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Number of Images</Label>
+                  <Label>Number of Images per Scene</Label>
                   <Select value={imageCount} onValueChange={v => setImageCount(v as '1' | '2' | '3' | '4')}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -3566,9 +3573,14 @@ export default function Generate() {
               <div>
                 <p className="text-sm font-semibold">Virtual Try-On: {creditCost} credits</p>
                 <p className="text-xs text-muted-foreground">
-                  {isMultiProductMode
-                    ? `${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''} × ${multiProductCount} product${multiProductCount > 1 ? 's' : ''} × ${quality === 'high' ? 16 : 8} credits each`
-                    : `${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''} × ${quality === 'high' ? 16 : 8} credits each`}
+                  {(() => {
+                    const parts: string[] = [];
+                    parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
+                    if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
+                    if (isMultiProductMode) parts.push(`${multiProductCount} products`);
+                    parts.push(`${quality === 'high' ? 16 : 8} credits each`);
+                    return parts.join(' × ');
+                  })()}
                 </p>
               </div>
               {balance >= creditCost ? (
@@ -3587,7 +3599,7 @@ export default function Generate() {
                 onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
                 className={balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
               >
-                {balance >= creditCost ? `Generate ${parseInt(imageCount) * multiProductCount} Try-On Images` : 'Buy Credits'}
+                {balance >= creditCost ? `Generate ${parseInt(imageCount) * tryOnSceneCount * multiProductCount} Try-On Images` : 'Buy Credits'}
               </Button>
             </div>
           </div>
