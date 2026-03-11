@@ -124,10 +124,11 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
       // Calculate position if still queued (count jobs ahead: lower priority_score, or same score but earlier created_at)
       if (job.status === 'queued') {
-        // Stuck detection: if queued > 30s, re-trigger process-queue via retry-queue
+        // Stuck detection: if queued > 30s, re-trigger process-queue via retry-queue (every 60s)
         const queuedDuration = Date.now() - new Date(job.created_at).getTime();
-        if (queuedDuration > 30_000 && !retriggeredRef.current) {
-          retriggeredRef.current = true;
+        const canRetrigger = Date.now() - lastRetriggerRef.current > 60_000;
+        if (queuedDuration > 30_000 && canRetrigger) {
+          lastRetriggerRef.current = Date.now();
           console.warn(`[queue] Job ${job.id} stuck for ${Math.round(queuedDuration / 1000)}s, re-triggering`);
           fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
             method: 'POST',
