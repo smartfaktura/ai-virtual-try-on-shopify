@@ -366,7 +366,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   }, [user, pollJobStatus]);
 
   const cancel = useCallback(async () => {
-    if (!jobIdRef.current || !activeJob || activeJob.status !== 'queued') return;
+    if (!jobIdRef.current || !activeJob || (activeJob.status !== 'queued' && activeJob.status !== 'processing')) return;
 
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
     const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
