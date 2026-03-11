@@ -30,6 +30,7 @@ export default function AddProduct() {
   const { id } = useParams();
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const isEditing = !!id;
 
   const { data: editingProduct } = useQuery({
