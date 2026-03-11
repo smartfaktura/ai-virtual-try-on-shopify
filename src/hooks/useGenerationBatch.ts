@@ -163,7 +163,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
       return false;
     }
 
-    const { payload, selectedVariationIndices, angleMultiplier, quality, imageCount, resolution } = params;
+    const { payload, selectedVariationIndices, angleMultiplier, quality, imageCount } = params;
 
     // Calculate scenes per chunk
     const scenesPerChunk = Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier));
