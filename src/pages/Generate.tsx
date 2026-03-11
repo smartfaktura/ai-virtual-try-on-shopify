@@ -936,10 +936,12 @@ export default function Generate() {
       const jobMap = new Map<string, string>();
       let lastBalance: number | null = null;
       for (const product of productQueue) {
-        const result = await enqueueTryOnForProduct(product, token);
-        if (result) {
-          jobMap.set(product.id, result.jobId);
-          lastBalance = result.newBalance;
+        for (const pose of posesToGenerate) {
+          const result = await enqueueTryOnForProduct(product, token, pose);
+          if (result) {
+            jobMap.set(`${product.id}_${pose.poseId}`, result.jobId);
+            lastBalance = result.newBalance;
+          }
         }
       }
 
