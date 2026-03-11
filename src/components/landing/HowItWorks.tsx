@@ -5,14 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
-const cropTopProduct = getLandingAssetUrl('hero/hero-product-croptop.jpg');
+const cropTopProduct = '/images/source-crop-top.jpg';
 const outcomeImage = getLandingAssetUrl('hero/hero-result-yoga-blonde.jpg');
-const sceneStudio = getLandingAssetUrl('hero/hero-output-studio.jpg');
-const sceneCoffee = getLandingAssetUrl('hero/hero-output-coffee.jpg');
-const sceneBeach = getLandingAssetUrl('hero/hero-output-beach.jpg');
-const scenePark = getLandingAssetUrl('hero/hero-output-park.jpg');
-const sceneRooftop = getLandingAssetUrl('hero/hero-output-rooftop.jpg');
-const sceneUrban = getLandingAssetUrl('hero/hero-output-urban.jpg');
+const sceneStudio = '/images/try-showcase/studio-dark.png';
+const sceneCoffee = '/images/try-showcase/cafe-lifestyle.png';
+const sceneBeach = '/images/try-showcase/golden-hour.png';
+const scenePark = '/images/try-showcase/garden-editorial.png';
+const sceneRooftop = '/images/try-showcase/urban-edge.png';
+const sceneUrban = '/images/try-showcase/pilates-studio.png';
 const modelThumb = getLandingAssetUrl('hero/hero-model-blonde.jpg');
 const envThumb = getLandingAssetUrl('hero/hero-scene-yoga.jpg');
 
