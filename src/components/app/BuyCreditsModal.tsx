@@ -384,7 +384,7 @@ export function BuyCreditsModal() {
 
                         {/* CTA */}
                         <Button
-                          variant={isDisabled ? 'secondary' : (p.highlighted || targetIdx > currentIdx) ? 'default' : 'outline'}
+                          variant={isDisabled ? 'secondary' : targetIdx > currentIdx ? 'default' : 'outline'}
                           className="w-full min-h-[44px] rounded-xl text-sm font-medium mt-auto"
                           onClick={() => handlePlanSelect(p.planId)}
                           disabled={isDisabled}

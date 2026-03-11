@@ -1,28 +1,30 @@
 
 
-## Fix: Downgrade CTA Buttons Should Not Use Primary Style
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-On line 387, the CTA button variant logic uses `'default'` (primary filled style) for both upgrades AND downgrades when `p.highlighted` is true. The Growth plan has `highlighted: true`, so "Downgrade to Growth" renders as a prominent primary CTA — making it look like the recommended action. Downgrade buttons should use `'outline'` style, matching Free and Starter downgrades.
+### Issues Found
 
-### Change
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**`src/components/app/BuyCreditsModal.tsx` (line 387)**
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-Update the variant logic to only apply `'default'` for upgrades, never for downgrades:
+### Plan
 
-```tsx
-// Before:
-variant={isDisabled ? 'secondary' : (p.highlighted || targetIdx > currentIdx) ? 'default' : 'outline'}
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-// After:
-variant={isDisabled ? 'secondary' : targetIdx > currentIdx ? 'default' : 'outline'}
-```
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-This ensures:
-- **Upgrade buttons** → primary filled (`default`)
-- **Downgrade buttons** → outlined (`outline`), regardless of the plan's `highlighted` flag
-- **Current plan** → disabled secondary (unchanged)
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-Single line change, no other files affected.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
