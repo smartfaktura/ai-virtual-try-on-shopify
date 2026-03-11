@@ -110,21 +110,20 @@ export function BuyCreditsModal() {
             </Badge>
           </div>
 
-          {/* Tab switcher */}
-          <div className="px-4 sm:px-6 pt-1">
-            <div className="flex gap-1 border-b border-border/40">
+          {/* Tab switcher — pill style */}
+          <div className="px-4 sm:px-6 pt-3 pb-1">
+            <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
               {(['topup', 'upgrade'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-2.5 text-sm font-medium transition-all relative ${
-                    activeTab === tab ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+                  className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all ${
+                    activeTab === tab
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground/70'
                   }`}
                 >
                   {tab === 'topup' ? 'Top Up' : 'Plans'}
-                  {activeTab === tab && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                  )}
                 </button>
               ))}
             </div>
