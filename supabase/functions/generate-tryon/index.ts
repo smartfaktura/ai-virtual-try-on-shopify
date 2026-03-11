@@ -110,7 +110,7 @@ function buildIdentityBlock(req: TryOnRequest): string {
    - This is ${req.model.name}, a ${req.model.gender} ${req.model.ethnicity} model in their ${ageDesc}`;
 }
 
-function buildPrompt(req: TryOnRequest, resolution?: string): string {
+function buildPrompt(req: TryOnRequest): string {
   const hasSceneImage = !!req.pose.imageUrl;
 
   const backgroundMap: Record<string, string> = {
