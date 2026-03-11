@@ -246,39 +246,23 @@ export function BuyCreditsModal() {
 
                 {/* Focused "Switch to Annual" card for monthly users viewing annual prices */}
                 {showAnnualSwitchCard && (
-                  <div className="rounded-2xl border-2 border-primary bg-primary/5 p-5 space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-semibold text-foreground">Switch your {currentPlanData.name} plan to annual billing</h3>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-foreground">
+                        Save <span className="text-emerald-600">${currentPlanData.monthlyPrice * 12 - currentPlanData.annualPrice}/yr</span> — switch to annual billing
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Pay ${Math.round(currentPlanData.annualPrice / 12)}/mo instead of ${currentPlanData.monthlyPrice}/mo
+                      </p>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Current monthly */}
-                      <div className="rounded-xl border border-border bg-card p-4 text-center space-y-1">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Current · Monthly</p>
-                        <p className="text-2xl font-bold tracking-tight text-muted-foreground line-through decoration-1">${currentPlanData.monthlyPrice}<span className="text-xs font-normal">/mo</span></p>
-                        <p className="text-xs text-muted-foreground">${currentPlanData.monthlyPrice * 12}/year</p>
-                      </div>
-                      {/* Annual */}
-                      <div className="rounded-xl border-2 border-primary bg-card p-4 text-center space-y-1">
-                        <p className="text-[10px] uppercase tracking-widest text-primary font-medium">Annual</p>
-                        <p className="text-2xl font-bold tracking-tight">${Math.round(currentPlanData.annualPrice / 12)}<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
-                        <p className="text-xs text-muted-foreground">${currentPlanData.annualPrice}/year</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="inline-flex rounded-full text-xs font-bold px-3 py-1 bg-emerald-500/15 text-emerald-700">
-                        Save ${currentPlanData.monthlyPrice * 12 - currentPlanData.annualPrice}/year
-                      </span>
-                      <Button
-                        onClick={handleSwitchToAnnual}
-                        className="rounded-xl min-h-[44px] px-6 text-sm font-medium"
-                      >
-                        Switch to Annual Billing
-                        <ArrowRight className="w-4 h-4 ml-1.5" />
-                      </Button>
-                    </div>
+                    <Button
+                      onClick={handleSwitchToAnnual}
+                      size="sm"
+                      className="rounded-lg shrink-0 gap-1.5"
+                    >
+                      Switch
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 )}
 
