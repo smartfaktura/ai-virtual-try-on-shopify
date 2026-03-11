@@ -223,6 +223,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
             payload: chunkPayload,
             imageCount: chunkImageCount,
             quality,
+            resolution: resolution || '1K',
             hasModel: params.hasModel ?? false,
             hasScene: params.hasScene ?? false,
           }),
