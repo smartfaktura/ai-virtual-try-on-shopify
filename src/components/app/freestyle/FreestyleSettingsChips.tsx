@@ -110,7 +110,6 @@ export function FreestyleSettingsChips({
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
   const [presetsPopoverOpen, setPresetsPopoverOpen] = React.useState(false);
-  const [presetsPopoverOpen, setPresetsPopoverOpen] = React.useState(false);
   const [advancedOpen, setAdvancedOpen] = React.useState(false);
 
   // Count active style settings for badge

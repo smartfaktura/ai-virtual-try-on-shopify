@@ -262,7 +262,7 @@ export function FreestylePromptPanel({
               cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
-              hasModelSelected={!!selectedModel}
+              
               highlightedChip={highlightedChip}
             />
           </div>
