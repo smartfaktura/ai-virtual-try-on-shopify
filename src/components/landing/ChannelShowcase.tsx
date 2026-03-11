@@ -49,12 +49,12 @@ export function ChannelShowcase() {
 
         {/* Source product callout */}
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-14 h-14 rounded-lg border-2 border-primary/30 overflow-hidden bg-card shadow-sm">
-            <img src={sourceUrl} alt="Source: White crop top" className="w-full h-full object-cover" loading="lazy" />
+          <div className="w-16 h-16 p-1.5 rounded-lg border-2 border-primary/30 overflow-hidden bg-muted/50 shadow-sm">
+            <img src={sourceUrl} alt="White Crop-Top product" className="w-full h-full object-contain" loading="lazy" />
           </div>
           <div className="text-left">
-            <p className="text-sm font-medium text-foreground">Source product</p>
-            <p className="text-xs text-muted-foreground">White Crop Top — flat lay</p>
+            <p className="text-sm font-medium text-foreground">Your Product</p>
+            <p className="text-xs text-muted-foreground">White Crop-Top · Flat Lay</p>
           </div>
         </div>
 
@@ -94,8 +94,10 @@ export function ChannelShowcase() {
                   />
                   {/* Source thumbnail overlay */}
                   <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-background/80 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-border/50 shadow-sm">
-                    <img src={sourceUrl} alt="Source" className="w-7 h-7 rounded object-cover" />
-                    <span className="text-[10px] font-medium text-muted-foreground">Source</span>
+                    <div className="w-8 h-8 rounded bg-muted/50 p-0.5 overflow-hidden">
+                      <img src={sourceUrl} alt="Your Product" className="w-full h-full object-contain" />
+                    </div>
+                    <span className="text-[10px] font-medium text-muted-foreground">Your Product</span>
                   </div>
                 </div>
                 <div className="p-4">
