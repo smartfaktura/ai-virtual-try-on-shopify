@@ -179,6 +179,7 @@ export function QueuePositionIndicator({ job, onCancel }: QueuePositionIndicator
 
   if (job.status === 'processing') {
     return <ProcessingState job={job} onCancel={onCancel} />;
+  }
 
   // Queued
   return (
