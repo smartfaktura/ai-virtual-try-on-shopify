@@ -62,10 +62,16 @@ export default function Jobs() {
   const { lastCompletedAt } = useGenerationQueue();
   const columnCount = useColumnCount();
 
-  const showIncomingBanner = useMemo(() => {
-    if (!lastCompletedAt) return false;
+  const [showIncomingBanner, setShowIncomingBanner] = useState(false);
+
+  useEffect(() => {
+    if (!lastCompletedAt) return;
     const elapsed = Date.now() - new Date(lastCompletedAt).getTime();
-    return elapsed < 30_000;
+    if (elapsed < 30_000) {
+      setShowIncomingBanner(true);
+      const timer = setTimeout(() => setShowIncomingBanner(false), 30_000 - elapsed);
+      return () => clearTimeout(timer);
+    }
   }, [lastCompletedAt]);
 
   const columns: typeof items[] = Array.from({ length: columnCount }, () => []);
