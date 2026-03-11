@@ -7,7 +7,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { cn } from '@/lib/utils';
 
-const PROMPT_TEXT = 'Studio portrait of our White Crop Top, natural lighting with soft shadows in a lifestyle setting...';
+const PROMPT_TEXT = 'White Crop Top on three models: clean studio with white background, outdoor café seated at a wooden table, and urban concrete setting shot from behind...';
 const CYCLE_MS = 12000;
 
 const CHIPS = [
@@ -36,9 +36,9 @@ const CHIPS = [
 ];
 
 const RESULT_CARDS = [
-  { label: 'Studio Lookbook', src: '/images/try-showcase/studio-lookbook.png' },
-  { label: 'Café Lifestyle', src: '/images/try-showcase/cafe-lifestyle.png' },
-  { label: 'Golden Hour', src: '/images/try-showcase/golden-hour.png' },
+  { label: 'Studio White', src: '/images/try-showcase/studio-lookbook.png' },
+  { label: 'Outdoor Café', src: '/images/try-showcase/cafe-lifestyle.png' },
+  { label: 'Urban Concrete', src: '/images/try-showcase/golden-hour.png' },
 ];
 
 type ChipKey = 'product' | 'model' | 'scene';
