@@ -1357,8 +1357,8 @@ export default function Generate() {
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
   const tryOnSceneCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedPoses.size) : 1;
-  const resolutionCredits = workflowResolution === '4K' ? 12 : workflowResolution === '2K' ? 8 : 4;
-  const singleProductCreditCost = hasWorkflowConfig ? workflowImageCount * resolutionCredits : parseInt(imageCount) * resolutionCredits * tryOnSceneCount;
+  const perImageCredits = 8; // All workflows & try-on use pro model
+  const singleProductCreditCost = hasWorkflowConfig ? workflowImageCount * perImageCredits : parseInt(imageCount) * perImageCredits * tryOnSceneCount;
   const creditCost = singleProductCreditCost * multiProductCount;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
