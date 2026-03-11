@@ -1,29 +1,22 @@
 
 
-## Resolution Control: 1K/2K/4K for Freestyle, Auto-2K for Workflows/Try-On
+## Fix Incorrect Credit Display in Virtual Try-On Settings
 
-### Status: ✅ Implemented
+### Problem
+The credit summary text on the try-on settings step shows `16 credits each` when quality is "high", but the actual cost calculation always uses **8 credits per image** (both frontend line 1360 and backend). This causes a misleading display like "1 image × 16 credits each = 32 credits" when the real cost is different.
 
-### What Changed
+### Root Cause
+Multiple places in `src/pages/Generate.tsx` use `quality === 'high' ? 16 : 8` for the **display text**, but the actual `creditCost` variable is computed differently (always 8 per image for workflows/try-on). The display label is out of sync with the real calculation.
 
-1. **Freestyle UI** — Replaced Standard/High quality chip with 1K/2K/4K resolution picker
-   - 1K = Standard model, 4 credits/image
-   - 2K = Pro model (auto), 8 credits/image  
-   - 4K = Pro model (auto), 12 credits/image
-   - When model/scene selected, locked to "Pro · 2K" minimum
+### Fix
+**`src/pages/Generate.tsx`** — Replace the hardcoded `quality === 'high' ? 16 : 8` display values with `8` (the actual per-image cost) in all three locations:
 
-2. **Backend** — Added `imageSize` to Gemini `image_config`
-   - `generate-freestyle`: Dynamic resolution from payload, forces Pro model for 2K/4K
-   - `generate-tryon`: Hardcoded `imageSize: "2K"`
-   - `generate-workflow`: Hardcoded `imageSize: "2K"`
-   - `enqueue-generation`: Resolution-aware credit calculation
+1. **Line 3321** (workflow surfaces summary): Change `quality === 'high' ? 16 : 8` → `8`
+2. **Line 3475** (workflow scenes summary): Change `quality === 'high' ? 16 : 8` → `8`  
+3. **Line 3584** (try-on summary): Change `quality === 'high' ? 16 : 8` → `8`
 
-### Files Changed
-- `src/pages/Freestyle.tsx`
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx`
-- `src/components/app/freestyle/FreestylePromptPanel.tsx`
-- `src/hooks/useGenerationQueue.ts`
-- `supabase/functions/generate-freestyle/index.ts`
-- `supabase/functions/generate-tryon/index.ts`
-- `supabase/functions/generate-workflow/index.ts`
-- `supabase/functions/enqueue-generation/index.ts`
+Also update the descriptive text to properly break down the total by showing the correct multipliers (scene count, product count) so the math adds up visually.
+
+### One file changed
+`src/pages/Generate.tsx` — 3 lines updated
+
