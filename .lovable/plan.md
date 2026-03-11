@@ -1,30 +1,35 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Redesign: Buy Credits Modal (Plans Tab)
 
-### Issues Found
+### Problems
+1. The "You're on Pro — billed monthly / Switch to annual & save 20%" banner looks awkward — it's a flat, sparse row that doesn't feel cohesive
+2. The billing toggle + banner + plan cards create too many separate visual layers with inconsistent spacing
+3. On mobile (390px), the tab underline indicator is thin and the layout feels disconnected
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Design Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**1. Merge the billing status banner into a richer header block**
+- Replace the flat border banner with a compact, visually cohesive card that integrates the current plan badge, billing interval, and the annual switch CTA into a single styled block
+- Use a subtle gradient or tinted background (`bg-primary/5`) with the plan icon, making it feel like a status card rather than a generic row
+- Format: `Pro Plan · Monthly billing` on the left, `Save 20% with annual →` as a pill-button on the right
 
-### Plan
+**2. Simplify the billing toggle**
+- Move the Monthly/Annual toggle into the merged header card (below the plan status line) to reduce vertical stacking
+- This eliminates one entire visual section
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**3. Improve the tab indicator**
+- Change from a thin 2px bottom line to a filled pill-style active tab background (matching the landing page toggle style), making the active tab more obvious
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**4. Tighten mobile spacing**
+- Reduce gaps between sections from `space-y-5` to `space-y-4`
+- Make plan cards slightly more compact on mobile with tighter padding
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### Files Changed
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**`src/components/app/BuyCreditsModal.tsx`**
+- Redesign the Plans tab layout:
+  - Replace lines 210-228 (billing status banner) and lines 230-258 (billing toggle) with a single combined status+toggle card
+  - Update tab switcher (lines 114-131) to use pill-style active state instead of underline
+  - Adjust spacing throughout
 
