@@ -52,7 +52,7 @@ function formatEstimateRange(seconds: number): string {
   return `~${Math.round(low / 5) * 5}-${Math.round(high / 5) * 5} seconds`;
 }
 
-function ProcessingState({ job }: { job: QueueJob }) {
+function ProcessingState({ job, onCancel }: { job: QueueJob; onCancel?: () => void }) {
   const [elapsed, setElapsed] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
 
@@ -129,6 +129,14 @@ function ProcessingState({ job }: { job: QueueJob }) {
         value={progress}
         className="h-1 sm:h-1.5 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
       />
+
+      {onCancel && (
+        <div className="flex justify-end pt-0.5">
+          <Button variant="ghost" size="sm" onClick={onCancel} className="shrink-0 text-xs h-7 text-muted-foreground hover:text-foreground">
+            Cancel
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -171,7 +179,7 @@ export function QueuePositionIndicator({ job, onCancel }: QueuePositionIndicator
   }
 
   if (job.status === 'processing') {
-    return <ProcessingState job={job} />;
+    return <ProcessingState job={job} onCancel={onCancel} />;
   }
 
   // Queued
