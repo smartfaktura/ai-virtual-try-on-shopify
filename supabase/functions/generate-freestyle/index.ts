@@ -461,7 +461,8 @@ async function generateImage(
   apiKey: string,
   model: string,
   aspectRatio?: string,
-  maxRetries = 2
+  maxRetries = 2,
+  resolution?: string,
 ): Promise<GenerateResult> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
