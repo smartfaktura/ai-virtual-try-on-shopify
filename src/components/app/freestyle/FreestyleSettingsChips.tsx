@@ -150,46 +150,6 @@ export function FreestyleSettingsChips({
     </Popover>
   );
 
-  const resolutionChip = (
-    <Popover open={resolutionPopoverOpen} onOpenChange={setResolutionPopoverOpen}>
-      <PopoverTrigger asChild>
-        <button className={cn(
-          'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-          resolution !== '1K' || hasModelSelected
-            ? 'border-primary/30 bg-primary/10 text-primary'
-            : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-        )}>
-          {hasModelSelected && <Sparkles className="w-3 h-3" />}
-          {resolution === '1K' ? '1K' : `✦ ${resolution}`}
-          {hasModelSelected && resolution === '1K' && <span className="text-[10px] opacity-70">Pro</span>}
-          <ChevronDown className="w-3 h-3 opacity-40" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-56 p-1.5" align="start">
-        {([
-          { value: '1K' as const, label: '1K', desc: hasModelSelected ? 'Pro model (model ref). 8 credits per image.' : 'Standard model, fast generation. 4 credits per image.' },
-          { value: '2K' as const, label: '✦ 2K', desc: 'Pro model, higher resolution output. 8 credits per image.' },
-          { value: '4K' as const, label: '✦ 4K', desc: 'Pro model, maximum resolution. 12 credits per image.' },
-        ]).map(opt => (
-          <button
-            key={opt.value}
-            onClick={() => { onResolutionChange(opt.value); setResolutionPopoverOpen(false); }}
-            className={cn(
-              'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
-              resolution === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-            )}
-          >
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-[13px]">{opt.label}</div>
-              <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
-            </div>
-            {resolution === opt.value && <span className="text-primary mt-0.5">✓</span>}
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
-  );
-
   const cameraStyleChip = (
     <Popover open={cameraPopoverOpen} onOpenChange={setCameraPopoverOpen}>
       <PopoverTrigger asChild>

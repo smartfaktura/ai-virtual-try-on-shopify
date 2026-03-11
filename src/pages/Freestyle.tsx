@@ -554,8 +554,6 @@ export default function Freestyle() {
     isLoadingProducts,
     aspectRatio,
     onAspectRatioChange: setAspectRatio,
-    resolution,
-    onResolutionChange: setResolution,
     polishPrompt,
     onPolishChange: setPolishPrompt,
     stylePresets,
