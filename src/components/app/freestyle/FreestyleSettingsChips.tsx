@@ -3,7 +3,7 @@ import type { GuideStepKey } from './FreestyleGuide';
 import {
   Square, RectangleHorizontal, ChevronDown,
   Wand2,
-  Smartphone, Camera, Lock, Palette, SlidersHorizontal, Sparkles,
+  Smartphone, Camera, Palette, SlidersHorizontal, Sparkles,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
