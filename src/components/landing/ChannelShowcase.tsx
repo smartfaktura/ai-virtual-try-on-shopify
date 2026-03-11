@@ -1,36 +1,33 @@
-import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-
-type Category = 'All' | 'Ads' | 'Website' | 'Listing' | 'Seasonal' | 'Lifestyle';
+import { Button } from '@/components/ui/button';
 
 interface ShowcaseItem {
   id: string;
   image: string;
   title: string;
   subtitle: string;
-  category: Category;
 }
 
 const ITEMS: ShowcaseItem[] = [
-  { id: 'studio-dark', image: '/images/try-showcase/studio-dark.png', title: 'Studio Portrait', subtitle: 'Dramatic dark backdrop', category: 'Ads' },
-  { id: 'garden', image: '/images/try-showcase/garden-editorial.png', title: 'Garden Editorial', subtitle: 'Botanical lifestyle shoot', category: 'Lifestyle' },
-  { id: 'studio', image: '/images/try-showcase/studio-lookbook.png', title: 'Studio Lookbook', subtitle: 'Clean e-comm on white', category: 'Listing' },
-  { id: 'gallery', image: '/images/try-showcase/gallery-walk.png', title: 'Gallery Walk', subtitle: 'Art-world editorial story', category: 'Website' },
-  { id: 'cafe', image: '/images/try-showcase/cafe-lifestyle.png', title: 'Café Lifestyle', subtitle: 'Sun-drenched park editorial', category: 'Lifestyle' },
-  { id: 'pilates', image: '/images/try-showcase/pilates-studio.png', title: 'Pilates Studio', subtitle: 'Active lifestyle campaign', category: 'Ads' },
-  { id: 'home', image: '/images/try-showcase/at-home-editorial.png', title: 'At-Home Editorial', subtitle: 'Cozy living room story', category: 'Website' },
-  { id: 'golden', image: '/images/try-showcase/golden-hour.png', title: 'Golden Hour', subtitle: 'Warm outdoor portrait', category: 'Seasonal' },
-  { id: 'urban', image: '/images/try-showcase/urban-edge.png', title: 'Urban Edge', subtitle: 'Street-style stairwell shoot', category: 'Lifestyle' },
+  { id: 'studio-dark', image: '/images/try-showcase/studio-dark.png', title: 'Studio Portrait', subtitle: 'Dramatic dark backdrop' },
+  { id: 'garden', image: '/images/try-showcase/garden-editorial.png', title: 'Garden Editorial', subtitle: 'Botanical lifestyle shoot' },
+  { id: 'cafe', image: '/images/try-showcase/cafe-lifestyle.png', title: 'Café Lifestyle', subtitle: 'Sun-drenched park editorial' },
+  { id: 'studio', image: '/images/try-showcase/studio-lookbook.png', title: 'Studio Lookbook', subtitle: 'Clean e-comm on white' },
+  { id: 'gallery', image: '/images/try-showcase/gallery-walk.png', title: 'Gallery Walk', subtitle: 'Art-world editorial story' },
+  { id: 'golden', image: '/images/try-showcase/golden-hour.png', title: 'Golden Hour', subtitle: 'Warm outdoor portrait' },
+  { id: 'pilates', image: '/images/try-showcase/pilates-studio.png', title: 'Pilates Studio', subtitle: 'Active lifestyle campaign' },
+  { id: 'home', image: '/images/try-showcase/at-home-editorial.png', title: 'At-Home Editorial', subtitle: 'Cozy living room story' },
+  { id: 'urban', image: '/images/try-showcase/urban-edge.png', title: 'Urban Edge', subtitle: 'Street-style stairwell shoot' },
+  { id: 'tryon-1', image: '/images/try-showcase/virtual-tryon-1.png', title: 'Virtual Try-On', subtitle: 'AI-powered fitting preview' },
+  { id: 'tryon-2', image: '/images/try-showcase/virtual-tryon-2.png', title: 'Campaign Shoot', subtitle: 'Professional brand imagery' },
+  { id: 'tryon-3', image: '/images/try-showcase/virtual-tryon-3.png', title: 'Lookbook Feature', subtitle: 'Seasonal collection story' },
 ];
 
-const CATEGORIES: Category[] = ['All', 'Ads', 'Website', 'Listing', 'Seasonal', 'Lifestyle'];
 const LOCAL_SOURCE = '/images/source-crop-top.jpg';
 
 export function ChannelShowcase() {
-  const [active, setActive] = useState<Category>('All');
-  const filtered = active === 'All' ? ITEMS : ITEMS.filter(i => i.category === active);
-
   return (
     <section className="py-16 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -47,7 +44,7 @@ export function ChannelShowcase() {
         </div>
 
         {/* Source product callout */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="flex items-center justify-center gap-3 mb-10">
           <div className="w-20 h-20 rounded-lg border-2 border-primary/30 overflow-hidden shadow-sm">
             <img src={LOCAL_SOURCE} alt="White Crop-Top product" className="w-full h-full object-cover" loading="lazy" />
           </div>
@@ -57,27 +54,9 @@ export function ChannelShowcase() {
           </div>
         </div>
 
-        {/* Filter chips */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActive(cat)}
-              className={cn(
-                'px-4 py-1.5 rounded-full text-sm font-medium transition-colors border',
-                active === cat
-                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                  : 'bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground'
-              )}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
         {/* Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map(item => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          {ITEMS.map(item => (
             <div
               key={item.id}
               className="group relative rounded-2xl overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md"
@@ -90,15 +69,27 @@ export function ChannelShowcase() {
                   loading="lazy"
                 />
               </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
-                  <Badge variant="outline" className="text-[10px]">{item.category}</Badge>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">{item.subtitle}</p>
+              <div className="p-3 sm:p-4">
+                <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">{item.subtitle}</p>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* CTA */}
+        <div className="mt-14 text-center">
+          <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Ready to create yours?
+          </h3>
+          <p className="mt-3 text-muted-foreground max-w-lg mx-auto">
+            Upload your product and generate professional visuals like these in seconds.
+          </p>
+          <Button asChild size="lg" className="mt-6 text-base px-8 py-6 rounded-full shadow-lg">
+            <Link to="/auth">
+              Start Creating for Free <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>

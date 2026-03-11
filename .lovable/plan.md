@@ -1,25 +1,30 @@
 
 
-## Expand Showcase to 12 Cards + Remove Filters + Add CTA
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Changes to `src/components/landing/ChannelShowcase.tsx`
+### Issues Found
 
-**1. Add 3 new images** from uploads to `public/images/try-showcase/`:
-- `virtual-tryon-1.png` (virtual-try-on-set-2b6dd369.png)
-- `virtual-tryon-2.png` (virtual-try-on-set-34d0d438.png)
-- `virtual-tryon-3.png` (virtual-try-on-set-f036bb8d.png)
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**2. Expand ITEMS to 12 cards** using all 9 existing + 3 new images. Varied titles/subtitles across the grid.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**3. Remove category filter chips entirely** — no more `All`, `Ads`, `Website` etc. buttons. Remove the `useState`, `Category` type, filtering logic. Just show all 12 cards in a static grid (4 cols on lg, 3 on md, 2 on sm).
+### Plan
 
-**4. Remove category Badge** from each card — simplify to just title + subtitle.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**5. Add CTA section** after the grid with a heading like "Ready to create yours?" and a button linking to `/auth` ("Start Creating for Free").
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**6. Grid layout**: `grid-cols-2 md:grid-cols-3 lg:grid-cols-4` to fit 12 cards nicely in 3 rows on desktop.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### Files changed
-- Copy 3 new images → `public/images/try-showcase/`
-- Edit `src/components/landing/ChannelShowcase.tsx` — remove filters, expand to 12 cards, add CTA
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
