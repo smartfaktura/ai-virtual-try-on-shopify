@@ -843,10 +843,7 @@ serve(async (req) => {
 
     const quality =
       body.quality || config.fixed_settings.quality || "standard";
-    const resolution = body.resolution || '1K';
     let model = getModelForQuality(quality);
-    // Force Pro model when resolution is 2K or 4K
-    if (resolution === '2K' || resolution === '4K') model = "google/gemini-3-pro-image-preview";
     // Force Pro model when a person/model reference image is present (e.g. Selfie/UGC Set)
     if (body.model?.imageUrl) model = "google/gemini-3-pro-image-preview";
     // Force Pro model for interior design (architectural preservation needs highest fidelity)
