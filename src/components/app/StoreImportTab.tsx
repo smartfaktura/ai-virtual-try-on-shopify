@@ -68,6 +68,10 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
     setIsSaving(true);
 
     try {
+      // Determine primary image from selection
+      const imageUrls = extracted.image_urls || [extracted.image_url];
+      const primaryImageUrl = imageUrls[selectedImageIndex] || extracted.image_url;
+
       // Insert product record
       const { data: productData, error: insertError } = await supabase
         .from('user_products')
@@ -76,7 +80,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
           title: extracted.title,
           product_type: extracted.product_type || '',
           description: extracted.description || '',
-          image_url: extracted.image_url,
+          image_url: primaryImageUrl,
           dimensions: extracted.dimensions || null,
         } as any)
         .select('id')
