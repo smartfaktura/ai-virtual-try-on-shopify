@@ -421,11 +421,9 @@ export default function Freestyle() {
       payload: queuePayload,
       imageCount: 1,
       quality,
-      resolution,
     }, {
       imageCount: 1,
       quality,
-      resolution,
       hasModel: !!selectedModel,
       hasScene: !!selectedScene,
       hasProduct: !!selectedProduct || !!sourceImage,
@@ -435,7 +433,7 @@ export default function Freestyle() {
       // Update balance from server response
       setBalanceFromServer(enqueueResult.newBalance);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, resolution, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);

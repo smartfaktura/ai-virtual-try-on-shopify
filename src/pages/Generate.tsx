@@ -3582,7 +3582,7 @@ export default function Generate() {
                     parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
                     if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
                     if (isMultiProductMode) parts.push(`${multiProductCount} products`);
-                    parts.push(`${resolutionCredits} credits each (${workflowResolution})`);
+                    parts.push(`${perImageCredits} credits each`);
                     return parts.join(' × ');
                   })()}
                 </p>
