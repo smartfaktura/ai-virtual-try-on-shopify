@@ -48,7 +48,11 @@ export default function AddProduct() {
     enabled: !!id && !!user,
   });
 
-  const handleDone = () => navigate('/app/products');
+  const handleDone = () => {
+    queryClient.invalidateQueries({ queryKey: ['user-products'] });
+    queryClient.invalidateQueries({ queryKey: ['product-image-counts'] });
+    navigate('/app/products');
+  };
 
   return (
     <PageHeader
