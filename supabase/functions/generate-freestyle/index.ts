@@ -862,7 +862,7 @@ serve(async (req) => {
           body.sceneImage,
         );
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
+        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries, resolution);
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;
