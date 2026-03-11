@@ -16,31 +16,20 @@ const HOURLY_LIMITS: Record<string, number> = {
   free: 10,
 };
 
-// Credit cost calculation — resolution-aware pricing
+// Credit cost calculation — flat pricing
 function calculateCreditCost(
   jobType: string,
-  imageCount: number,
+  _imageCount: number,
   _quality: string,
   hasModel: boolean = false,
   hasScene: boolean = false,
-  _additionalProductCount: number = 0,
-  resolution: string = '1K',
 ): number {
-  let perImage: number;
-
   if (jobType === "workflow" || jobType === "tryon") {
-    // Workflows and try-on: resolution-based pricing same as freestyle
-    const resolutionCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;
-    perImage = resolutionCredits;
-  } else {
-    // Freestyle: resolution-based pricing
-    const resolutionCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;
-    // Model/scene floor at 8
-    const modelSceneFloor = (hasModel || hasScene) ? 8 : 0;
-    perImage = Math.max(resolutionCredits, modelSceneFloor);
+    return _imageCount * 8; // Always pro model
   }
-
-  return imageCount * perImage;
+  // Freestyle: 8 with model/scene, 4 otherwise
+  const perImage = (hasModel || hasScene) ? 8 : 4;
+  return _imageCount * perImage;
 }
 
 serve(async (req) => {
