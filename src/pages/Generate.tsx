@@ -2562,18 +2562,31 @@ export default function Generate() {
         {/* Pose Selection */}
         {currentStep === 'pose' && selectedModel && (
           <div className="space-y-4">
-            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
+            <TryOnPreview product={selectedProduct} scratchUpload={scratchUpload} model={selectedModel} pose={selectedPose} poses={Array.from(selectedPoses).map(id => selectedPoseMap.get(id)!).filter(Boolean)} creditCost={creditCost} selectedGender={selectedModel?.gender} products={isMultiProductMode ? productQueue : undefined} />
             <Card><CardContent className="p-5 space-y-4">
               <div>
-                <h2 className="text-base font-semibold">Select a Scene</h2>
-                <p className="text-sm text-muted-foreground">Choose the scene and environment for your shoot</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold">Select Scenes</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {isFreeUser
+                        ? 'Free plan: 1 scene per generation'
+                        : `Choose up to ${PAID_SCENE_LIMIT} scenes for your shoot`}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedPoses.size} / {isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT}
+                  </Badge>
+                </div>
               </div>
               {Object.entries(posesByCategory).map(([category, poses]) => (
-                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseId={selectedPose?.poseId || null} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} />
+                <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseIds={selectedPoses} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} maxSelectable={isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT} />
               ))}
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
-                <Button disabled={!selectedPose} onClick={() => setCurrentStep('settings')}>Continue to Settings</Button>
+                <Button disabled={selectedPoses.size === 0} onClick={() => setCurrentStep('settings')}>
+                  Continue to Settings {selectedPoses.size > 0 && `(${selectedPoses.size} scene${selectedPoses.size > 1 ? 's' : ''})`}
+                </Button>
               </div>
             </CardContent></Card>
           </div>
