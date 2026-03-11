@@ -2,13 +2,12 @@ import { ArrowRight, Upload, Sparkles, Download, ShoppingBag, Megaphone, Palette
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { SEOHead } from '@/components/SEOHead';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { BeforeAfterGallery } from '@/components/landing/BeforeAfterGallery';
 import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
 import { EnvironmentShowcaseSection } from '@/components/landing/EnvironmentShowcaseSection';
-import { useDiscoverPresets } from '@/hooks/useDiscoverPresets';
+import { ChannelShowcase } from '@/components/landing/ChannelShowcase';
 import { SITE_URL } from '@/lib/constants';
 
 const TRUST_BADGES = [
