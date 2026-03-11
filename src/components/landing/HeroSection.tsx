@@ -23,16 +23,16 @@ interface ProductShowcase {
 
 const showcases: ProductShowcase[] = [
   {
-    product: { img: h('hero-product-tshirt.jpg'), label: 'Cropped Tee', subtitle: '1 product photo' },
+    product: { img: '/images/source-crop-top.jpg', label: 'Cropped Tee', subtitle: '1 product photo' },
     outputs: [
-      { img: h('hero-output-studio.jpg'), label: 'Studio Portrait' },
-      { img: h('hero-output-park.jpg'), label: 'Park Lifestyle' },
-      { img: h('hero-output-coffee.jpg'), label: 'Coffee Shop' },
-      { img: h('hero-output-rooftop.jpg'), label: 'Rooftop Editorial' },
-      { img: h('hero-output-yoga.jpg'), label: 'Yoga Studio' },
-      { img: h('hero-output-urban.jpg'), label: 'Urban Street' },
-      { img: h('hero-output-beach.jpg'), label: 'Beach Sunset' },
-      { img: h('hero-output-home.jpg'), label: 'At Home' },
+      { img: '/images/try-showcase/garden-editorial.png', label: 'Garden Editorial' },
+      { img: '/images/try-showcase/virtual-tryon-1.png', label: 'Basketball Court' },
+      { img: '/images/try-showcase/cafe-lifestyle.png', label: 'Café Lifestyle' },
+      { img: '/images/try-showcase/golden-hour.png', label: 'Golden Hour' },
+      { img: '/images/try-showcase/studio-lookbook.png', label: 'Studio Lookbook' },
+      { img: '/images/try-showcase/urban-edge.png', label: 'Urban Edge' },
+      { img: '/images/try-showcase/pilates-studio.png', label: 'Pilates Studio' },
+      { img: '/images/try-showcase/studio-dark.png', label: 'Studio Portrait' },
     ],
     caption: 'Same tee — ∞ environments — 12 seconds',
   },
