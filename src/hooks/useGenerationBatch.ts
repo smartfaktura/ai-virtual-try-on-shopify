@@ -37,7 +37,6 @@ interface BatchParams {
   selectedVariationIndices: number[];
   angleMultiplier: number;
   quality: string;
-  resolution?: '1K' | '2K' | '4K';
   imageCount: number; // total expected images
   hasModel?: boolean;
   hasScene?: boolean;
