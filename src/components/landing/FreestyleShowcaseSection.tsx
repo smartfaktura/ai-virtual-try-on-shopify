@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Sparkles, User, Camera, Package, Play } from 'lucide-react';
+import { Sparkles, Camera, Package, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
-import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { cn } from '@/lib/utils';
 
-const PROMPT_TEXT = 'White Crop Top on three models: clean studio with white background, outdoor café seated at a wooden table, and urban concrete setting shot from behind...';
+const PROMPT_TEXT = 'White Crop Top, three looks: studio, outdoor café, urban concrete';
 const CYCLE_MS = 12000;
 
 const CHIPS = [
@@ -19,29 +18,21 @@ const CHIPS = [
     delay: 3000,
   },
   {
-    key: 'model' as const,
-    icon: User,
-    label: 'Sofia',
-    thumb: getLandingAssetUrl('hero/hero-model-blonde.jpg'),
-    delay: 4000,
-    round: true,
-  },
-  {
     key: 'scene' as const,
     icon: Camera,
-    label: 'Café',
+    label: 'Multi-Scene',
     thumb: '/images/try-showcase/cafe-lifestyle.png',
-    delay: 5000,
+    delay: 4000,
   },
 ];
 
 const RESULT_CARDS = [
-  { label: 'Studio White', src: '/images/try-showcase/studio-lookbook.png' },
-  { label: 'Outdoor Café', src: '/images/try-showcase/cafe-lifestyle.png' },
-  { label: 'Urban Concrete', src: '/images/try-showcase/golden-hour.png' },
+  { label: 'Studio', src: '/images/try-showcase/virtual-tryon-1.png' },
+  { label: 'Outdoor Café', src: '/images/try-showcase/virtual-tryon-2.png' },
+  { label: 'Urban', src: '/images/try-showcase/virtual-tryon-3.png' },
 ];
 
-type ChipKey = 'product' | 'model' | 'scene';
+type ChipKey = 'product' | 'scene';
 
 export function FreestyleShowcaseSection() {
   const navigate = useNavigate();
@@ -50,7 +41,6 @@ export function FreestyleShowcaseSection() {
   const [typedText, setTypedText] = useState('');
   const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({
     product: false,
-    model: false,
     scene: false,
   });
   const [generating, setGenerating] = useState(false);
@@ -60,7 +50,7 @@ export function FreestyleShowcaseSection() {
 
   useEffect(() => {
     setTypedText('');
-    setActiveChips({ product: false, model: false, scene: false });
+    setActiveChips({ product: false, scene: false });
     setGenerating(false);
     setProgress(0);
     setShowResults(false);
@@ -178,8 +168,7 @@ export function FreestyleShowcaseSection() {
                           src={chip.thumb}
                           alt={chip.label}
                           className={cn(
-                            'w-5 h-5 object-cover',
-                            chip.round ? 'rounded-full' : 'rounded',
+                            'w-5 h-5 object-cover rounded',
                           )}
                         />
                       ) : (
