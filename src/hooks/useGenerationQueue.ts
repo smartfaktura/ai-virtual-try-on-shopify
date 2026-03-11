@@ -8,6 +8,7 @@ export type QueueJobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 
 export interface GenerationMeta {
   imageCount: number;
   quality: string;
+  resolution?: '1K' | '2K' | '4K';
   hasModel: boolean;
   hasScene: boolean;
   hasProduct: boolean;
