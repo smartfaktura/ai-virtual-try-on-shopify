@@ -195,7 +195,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
           <div className="flex gap-4">
             <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0">
               <img
-                src={extracted.image_url}
+                src={(extracted.image_urls?.[selectedImageIndex]) || extracted.image_url}
                 alt={extracted.title}
                 className="w-full h-full object-cover"
               />
