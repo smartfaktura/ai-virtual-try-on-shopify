@@ -137,7 +137,7 @@ export default function Freestyle() {
     if (r && ['1:1', '3:4', '4:5', '9:16', '16:9'].includes(r)) {
       setAspectRatio(r as FreestyleAspectRatio);
     }
-    if (q === 'high') setQuality('high');
+    if (q === 'high') setResolution('2K');
     if (sceneParam) {
       const matchedScene = mockTryOnPoses.find((s) => s.poseId === sceneParam);
       if (matchedScene) {
