@@ -941,7 +941,6 @@ serve(async (req) => {
             model,
             LOVABLE_API_KEY,
             aspectRatio,
-            resolution
           );
 
           if (imageUrl) {
