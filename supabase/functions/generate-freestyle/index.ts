@@ -806,13 +806,14 @@ serve(async (req) => {
     const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage].filter(Boolean).length;
     const hasModelImage = !!body.modelImage;
     const hasDualProductRef = !!body.productImage && !!body.sourceImage;
-    const aiModel = (hasModelImage || hasDualProductRef)
+    // Resolution-aware model selection: 2K/4K forces Pro model
+    const resolution = (body as Record<string, unknown>).resolution as string || '1K';
+    const forceProForResolution = resolution === '2K' || resolution === '4K';
+    const aiModel = (hasModelImage || hasDualProductRef || forceProForResolution)
       ? "google/gemini-3-pro-image-preview"
       : isQueueInternal
         ? "google/gemini-3.1-flash-image-preview"
-        : (body.quality === "high" && refCount < 2)
-          ? "google/gemini-3-pro-image-preview"
-          : "google/gemini-3.1-flash-image-preview";
+        : "google/gemini-3.1-flash-image-preview";
 
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,
