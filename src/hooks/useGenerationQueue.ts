@@ -347,7 +347,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       });
 
       jobIdRef.current = result.jobId;
-      retriggeredRef.current = false;
+      lastRetriggerRef.current = 0;
       // Start polling
       pollJobStatus(result.jobId);
 
