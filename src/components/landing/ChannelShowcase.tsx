@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-type Category = 'All' | 'Ads' | 'Listing' | 'Website' | 'Seasonal' | 'Lifestyle';
+type Category = 'All' | 'Ads' | 'Website' | 'Listing' | 'Seasonal' | 'Lifestyle';
 
 interface ShowcaseItem {
   id: string;
@@ -13,15 +13,18 @@ interface ShowcaseItem {
 }
 
 const ITEMS: ShowcaseItem[] = [
+  { id: 'studio-dark', image: '/images/try-showcase/studio-dark.png', title: 'Studio Portrait', subtitle: 'Dramatic dark backdrop', category: 'Ads' },
+  { id: 'garden', image: '/images/try-showcase/garden-editorial.png', title: 'Garden Editorial', subtitle: 'Botanical lifestyle shoot', category: 'Lifestyle' },
   { id: 'studio', image: '/images/try-showcase/studio-lookbook.png', title: 'Studio Lookbook', subtitle: 'Clean e-comm on white', category: 'Listing' },
-  { id: 'cafe', image: '/images/try-showcase/cafe-lifestyle.png', title: 'Café Lifestyle', subtitle: 'Sun-drenched editorial', category: 'Lifestyle' },
+  { id: 'gallery', image: '/images/try-showcase/gallery-walk.png', title: 'Gallery Walk', subtitle: 'Art-world editorial story', category: 'Website' },
+  { id: 'cafe', image: '/images/try-showcase/cafe-lifestyle.png', title: 'Café Lifestyle', subtitle: 'Sun-drenched park editorial', category: 'Lifestyle' },
   { id: 'pilates', image: '/images/try-showcase/pilates-studio.png', title: 'Pilates Studio', subtitle: 'Active lifestyle campaign', category: 'Ads' },
   { id: 'home', image: '/images/try-showcase/at-home-editorial.png', title: 'At-Home Editorial', subtitle: 'Cozy living room story', category: 'Website' },
   { id: 'golden', image: '/images/try-showcase/golden-hour.png', title: 'Golden Hour', subtitle: 'Warm outdoor portrait', category: 'Seasonal' },
   { id: 'urban', image: '/images/try-showcase/urban-edge.png', title: 'Urban Edge', subtitle: 'Street-style stairwell shoot', category: 'Lifestyle' },
 ];
 
-const CATEGORIES: Category[] = ['All', 'Ads', 'Listing', 'Website', 'Seasonal', 'Lifestyle'];
+const CATEGORIES: Category[] = ['All', 'Ads', 'Website', 'Listing', 'Seasonal', 'Lifestyle'];
 const LOCAL_SOURCE = '/images/source-crop-top.jpg';
 
 export function ChannelShowcase() {
