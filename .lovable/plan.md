@@ -1,36 +1,30 @@
 
 
-## Improve "Results Gallery" → "One Product. Every Channel." Section
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Replace the current `DiscoverGallery` (random discover_presets images) with a curated, interactive showcase section inspired by the reference screenshot. One product (white crop top) shown across 6 different channel contexts.
+### Issues Found
 
-### Approach
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-1. **Generate 6 images** using Gemini 3 Pro image model via an edge function call, each showing a white crop top in a different context:
-   - **Instagram Ad** — styled flat lay or on-model with bold ad framing
-   - **Amazon Listing** — clean white background product shot with model
-   - **Website Hero** — woman running outdoors wearing the crop top
-   - **Seasonal** — model in autumn fields wearing the crop top
-   - **Lifestyle** — casual at-home setting
-   - **Blog** — editorial lifestyle shot
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-2. **Upload generated images** to `landing-assets` storage bucket under `try-showcase/` folder
+### Plan
 
-3. **Replace the Results Gallery section** with a new "One Product. Every Channel." component:
-   - Headline: "One Product. Every Channel."
-   - Subtext: "One upload creates visuals for every channel and campaign."
-   - Filter chips: All, Ads, Website, Listing, Seasonal, Lifestyle (interactive toggle)
-   - 3-column grid of cards, each showing the generated image with a small product thumbnail overlay (the original crop top), a title (e.g. "Instagram Ad"), and a category label
-   - Filtering animates cards in/out
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-4. **Add a small product reference image** — a simple white crop top flat lay used as the "source" thumbnail overlay in each card corner (matching the reference screenshot pattern)
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Files to Modify
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-- **`src/pages/TryFree.tsx`** — Replace `DiscoverGallery` component and the "Results Gallery" section with new `ChannelShowcase` component featuring filter chips and curated cards using `getLandingAssetUrl('try-showcase/...')` paths
-- Remove `useDiscoverPresets` import (no longer needed on this page)
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Image Generation
-
-Will generate 6 images + 1 source product image during implementation using Gemini 3 Pro, upload to storage, then wire up the URLs.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

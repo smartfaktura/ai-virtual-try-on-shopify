@@ -2,13 +2,12 @@ import { ArrowRight, Upload, Sparkles, Download, ShoppingBag, Megaphone, Palette
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { SEOHead } from '@/components/SEOHead';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { BeforeAfterGallery } from '@/components/landing/BeforeAfterGallery';
 import { ModelShowcaseSection } from '@/components/landing/ModelShowcaseSection';
 import { EnvironmentShowcaseSection } from '@/components/landing/EnvironmentShowcaseSection';
-import { useDiscoverPresets } from '@/hooks/useDiscoverPresets';
+import { ChannelShowcase } from '@/components/landing/ChannelShowcase';
 import { SITE_URL } from '@/lib/constants';
 
 const TRUST_BADGES = [
@@ -37,38 +36,6 @@ const STATS = [
   { value: '<30s', label: 'Per Image' },
 ];
 
-function DiscoverGallery() {
-  const { data: presets, isLoading } = useDiscoverPresets();
-  const featured = (presets || []).filter(p => p.is_featured).slice(0, 8);
-  const items = featured.length >= 6 ? featured : (presets || []).slice(0, 8);
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="aspect-[3/4] rounded-xl bg-muted animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-
-  if (!items.length) return null;
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {items.map((item) => (
-        <div key={item.id} className="rounded-xl overflow-hidden border border-border bg-card shadow-sm group">
-          <ShimmerImage
-            src={item.image_url}
-            alt={item.title}
-            className="w-full aspect-[3/4] object-cover group-hover:scale-105 transition-transform duration-500"
-            aspectRatio="3/4"
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function TryFree() {
   return (
@@ -110,23 +77,8 @@ export default function TryFree() {
         </div>
       </section>
 
-      {/* Results Gallery */}
-      <section className="py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-              Real Results
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              See What Others Are Creating
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Every image below was generated with VOVV AI — from a single product photo.
-            </p>
-          </div>
-          <DiscoverGallery />
-        </div>
-      </section>
+      {/* Channel Showcase */}
+      <ChannelShowcase />
 
       {/* Before / After */}
       <BeforeAfterGallery />
