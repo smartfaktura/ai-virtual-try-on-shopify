@@ -394,8 +394,7 @@ export default function Freestyle() {
     } : undefined;
 
     // Build the payload for the queue — URLs instead of base64
-    // Map resolution to quality for backward compat
-    const quality = resolution === '1K' ? 'standard' : 'high';
+    const quality = (hasModel || hasScene) ? 'high' : 'standard';
 
     const queuePayload = {
       prompt: finalPrompt,
@@ -406,7 +405,6 @@ export default function Freestyle() {
       aspectRatio,
       imageCount: 1,
       quality,
-      resolution,
       polishPrompt,
       modelContext,
       stylePresets: activePresetKeywords.length > 0 ? activePresetKeywords : undefined,
