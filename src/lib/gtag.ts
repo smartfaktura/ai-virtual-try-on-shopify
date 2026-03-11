@@ -28,7 +28,14 @@ export function gtagSignUp(method: string) {
 
 export function gtagPurchase(value: number, currency = 'USD', transactionId?: string) {
   if (typeof window.gtag === 'function') {
+    // GA4 purchase event
     window.gtag('event', 'purchase', {
+      value,
+      currency,
+      ...(transactionId && { transaction_id: transactionId }),
+    });
+    // Google Ads conversion event
+    window.gtag('event', 'ads_conversion_PURCHASE_1', {
       value,
       currency,
       ...(transactionId && { transaction_id: transactionId }),
