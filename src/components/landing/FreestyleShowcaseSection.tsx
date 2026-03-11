@@ -7,15 +7,15 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { cn } from '@/lib/utils';
 
-const PROMPT_TEXT = 'Editorial portrait in golden hour light, wearing our summer collection on a rooftop terrace...';
+const PROMPT_TEXT = 'Studio portrait of our White Crop Top, natural lighting with soft shadows in a lifestyle setting...';
 const CYCLE_MS = 12000;
 
 const CHIPS = [
   {
     key: 'product' as const,
     icon: Package,
-    label: 'Cropped Tee',
-    thumb: getLandingAssetUrl('hero/hero-product-tshirt.jpg'),
+    label: 'White Crop Top',
+    thumb: '/images/source-crop-top.jpg',
     delay: 3000,
   },
   {
@@ -29,16 +29,16 @@ const CHIPS = [
   {
     key: 'scene' as const,
     icon: Camera,
-    label: 'Rooftop',
-    thumb: getLandingAssetUrl('hero/hero-scene-yoga.jpg'),
+    label: 'Café',
+    thumb: '/images/try-showcase/cafe-lifestyle.png',
     delay: 5000,
   },
 ];
 
 const RESULT_CARDS = [
-  { label: 'Studio Portrait', src: getLandingAssetUrl('hero/hero-output-studio.jpg') },
-  { label: 'Coffee Shop', src: getLandingAssetUrl('hero/hero-output-coffee.jpg') },
-  { label: 'Rooftop Editorial', src: getLandingAssetUrl('hero/hero-output-rooftop.jpg') },
+  { label: 'Studio Lookbook', src: '/images/try-showcase/studio-lookbook.png' },
+  { label: 'Café Lifestyle', src: '/images/try-showcase/cafe-lifestyle.png' },
+  { label: 'Golden Hour', src: '/images/try-showcase/golden-hour.png' },
 ];
 
 type ChipKey = 'product' | 'model' | 'scene';
