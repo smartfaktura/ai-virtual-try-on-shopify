@@ -188,7 +188,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
           if (isContentBlocked && onContentBlocked) {
             onContentBlocked(job.id, job.error_message || 'This prompt was flagged by our content safety system.');
           } else if (/timed?\s*out|timeout/.test(msg)) {
-            toast.error('⏱ Generation timed out. Your credits have been refunded.');
+            toast.error('Generation timed out. Your credits have been refunded.');
           } else if (/rate.?limit|concurrent|too many/.test(msg)) {
             toast.error('Too many generations at once. Your credits have been refunded.');
           } else {
