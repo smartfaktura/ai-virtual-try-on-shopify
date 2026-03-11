@@ -1,30 +1,46 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Buy Credits Modal Header — What's Good, What's Bad
 
-### Issues Found
+### What's Good
+- **Balance display** — Large, clear `3,398 credits` with wallet icon is immediately readable
+- **PRO badge + X close button** — Right-aligned, properly spaced, no overlap
+- **Tab pill switcher** — Clean rounded-full style, clear active state
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### What's Bad
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+1. **Too much vertical space consumed before content** — The header, tabs, and billing toggle take up ~200px before you see any plan cards. On mobile (390px), this means you only see the Free card and have to scroll far to find your current Pro plan.
 
-### Plan
+2. **Tab switcher alignment feels orphaned** — It's left-aligned and floating below the header with no visual anchor. It looks disconnected from both the balance above and the billing toggle below.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+3. **"Save 20% — switch to annual →" link is redundant** — The toggle already has "SAVE 20%" badge built in. Having both the badge AND the text link says the same thing twice.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+4. **Billing toggle sits alone** — It's centered in its own row with empty space on both sides, creating an awkward gap between tabs and plan cards.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### Proposed Fix
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**`src/components/app/BuyCreditsModal.tsx`**
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+1. **Move billing toggle inline with tabs** — Put tabs on the left and the Monthly/Annual toggle on the right, same row. This eliminates one entire vertical section (~50px saved).
+
+2. **Remove the "Save 20% — switch to annual →" text link** — The "SAVE 20%" badge on the Annual button is sufficient. Removes another ~30px.
+
+3. **Result**: Header → Tabs + Toggle (one row) → Plan cards. Three sections instead of five.
+
+Layout change:
+```text
+Before:                          After:
+┌─────────────────────┐          ┌─────────────────────┐
+│ 3,398 credits  PRO X│          │ 3,398 credits  PRO X│
+├─────────────────────┤          ├─────────────────────┤
+│ [Top Up] [Plans]    │          │ [Top Up][Plans] [Mo][An]│
+├─────────────────────┤          ├─────────────────────┤
+│  [Monthly] [Annual] │          │ Plan cards...       │
+│  Save 20% switch →  │          │                     │
+├─────────────────────┤          └─────────────────────┘
+│ Plan cards...       │
+└─────────────────────┘
+```
+
+On mobile (390px), the tabs and toggle would stack into two rows within the same section, still saving the redundant CTA link row.
 
