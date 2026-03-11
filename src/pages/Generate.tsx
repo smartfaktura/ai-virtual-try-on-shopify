@@ -620,8 +620,7 @@ export default function Generate() {
       toast.error('Please select a product first');
       return;
     }
-    const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode, hasModel: !!selectedModel });
-    if (balance < cost) { openBuyModal(); return; }
+    if (balance < creditCost) { openBuyModal(); return; }
     if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
       if (!selectedModel || selectedPoses.size === 0) { toast.error('Please select a model and at least one scene'); return; }
       handleTryOnConfirmGenerate(); return;
