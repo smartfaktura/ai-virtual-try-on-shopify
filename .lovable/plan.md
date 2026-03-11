@@ -1,30 +1,43 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Redesign: Annual Billing Switch Card
 
-### Issues Found
+### Problem
+The current card is heavy and cluttered — two bordered boxes side-by-side with redundant price info, a savings pill, and a CTA button all in a bordered container. It takes up too much vertical space and feels like a mini-page within the modal.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Proposed Design
+Replace the two-column card layout with a single, compact inline banner — one row with the key message and action:
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+```text
+Before (tall, 2-column):
+┌─────────────────────────────────────────┐
+│ ✨ Switch your Pro plan to annual billing│
+│ ┌──────────┐  ┌──────────┐             │
+│ │ $179/mo  │  │ $143/mo  │             │
+│ │ $2148/yr │  │ $1716/yr │             │
+│ └──────────┘  └──────────┘             │
+│ [Save $432]        [Switch to Annual →]│
+└─────────────────────────────────────────┘
 
-### Plan
+After (compact banner):
+┌─────────────────────────────────────────┐
+│ Save $432/yr — switch to annual at      │
+│ $143/mo instead of $179/mo  [Switch →] │
+└─────────────────────────────────────────┘
+```
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Changes — `src/components/app/BuyCreditsModal.tsx`
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+1. **Replace the entire `showAnnualSwitchCard` block** (lines 248-282) with a single-row banner:
+   - Subtle `bg-emerald-500/5 border border-emerald-500/20` container, `rounded-xl`, `p-4`
+   - Left side: Savings amount in bold green, then the price comparison as secondary text
+   - Right side: Compact "Switch →" button
+   - On mobile: text wraps naturally, button goes full-width below
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+2. **Remove**: The two-column price grid, the sparkles icon, the uppercase labels, the redundant year totals
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Result
+- Saves ~100px of vertical height
+- Cleaner, more actionable — one clear message instead of a data table
+- Matches the minimal aesthetic of the rest of the modal
 
