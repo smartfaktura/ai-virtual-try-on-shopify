@@ -329,7 +329,7 @@ export function FreestylePromptPanel({
                             ? `${creditCost} credits: Model + Scene (15/image)`
                             : selectedModel
                               ? `${creditCost} credits: Model reference (12/image)`
-                              : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'}`}
+                          : `${creditCost} credits: ${resolution === '4K' ? '4K resolution (12/image)' : resolution === '2K' ? '2K resolution (8/image)' : 'Standard 1K (4/image)'}`}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
