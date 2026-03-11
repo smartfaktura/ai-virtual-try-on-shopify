@@ -3710,7 +3710,7 @@ export default function Generate() {
                 )}
                 {/* Show active job indicator within batch */}
                 {activeJob && (
-                  <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
+                  <QueuePositionIndicator job={activeJob} onCancel={cancelQueue} />
                 )}
               </div>
             )}
@@ -3719,7 +3719,7 @@ export default function Generate() {
             {(!batchState || batchState.totalJobs <= 1) && !isMultiProductMode && (
               <div className="w-full max-w-md">
                 {activeJob ? (
-                  <QueuePositionIndicator job={activeJob} onCancel={activeJob.status === 'queued' ? cancelQueue : undefined} />
+                  <QueuePositionIndicator job={activeJob} onCancel={cancelQueue} />
                 ) : (
                   <Progress value={0} className="h-2 animate-pulse" />
                 )}

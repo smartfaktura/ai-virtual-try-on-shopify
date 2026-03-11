@@ -110,7 +110,7 @@ export default function Freestyle() {
       reason,
     }, ...prev]);
   }, []);
-  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue } = useGenerationQueue({
+  const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     onContentBlocked: handleContentBlocked,
   });
   const isLoading = isEnqueuing || isProcessing;
@@ -626,7 +626,7 @@ export default function Freestyle() {
                     </div>
                   </div>
                 ) : (
-                  <QueuePositionIndicator job={activeJob} onCancel={() => resetQueue()} />
+                  <QueuePositionIndicator job={activeJob} onCancel={() => cancelQueue()} />
                 )}
               </div>
             )}

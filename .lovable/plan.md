@@ -1,34 +1,30 @@
 
 
-## Fix: Allow Cancelling Stuck/Processing Generations
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-Users cannot cancel a generation once it starts processing. The cancel button only appears while queued, and the backend trigger only handles `queued → cancelled` refunds. If a generation gets stuck in "processing" (as seen at 241s elapsed), the user must wait up to 5 minutes for the watchdog.
+### Issues Found
 
-### Root Causes
-1. **`useGenerationQueue.ts` line 346**: `cancel()` exits early unless `status === 'queued'`
-2. **DB trigger**: Only fires on `queued → cancelled`, not `processing → cancelled` — so no credit refund
-3. **`Generate.tsx` lines 3713, 3722**: Only passes `onCancel` when `status === 'queued'`
-4. **`Freestyle.tsx` line 629**: Calls `resetQueue()` instead of `cancel()` — doesn't actually cancel the DB job
-5. **`QueuePositionIndicator.tsx`**: No cancel button in the ProcessingState component
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Plan (3 files + 1 migration)
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**1. Database migration** — Extend the cancellation trigger to also handle `processing → cancelled`:
-```sql
--- Update trigger to fire on both queued→cancelled AND processing→cancelled
--- Update function to handle both old statuses
-```
+### Plan
 
-**2. `src/hooks/useGenerationQueue.ts`** — Allow cancelling processing jobs:
-- Line 346: Change guard from `activeJob.status !== 'queued'` to check for both `queued` and `processing`
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**3. `src/pages/Generate.tsx`** — Always pass `onCancel` for active jobs (not just queued):
-- Lines 3713, 3722: Remove the `activeJob.status === 'queued'` condition
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**4. `src/pages/Freestyle.tsx`** — Call `cancel()` instead of `resetQueue()`:
-- Line 629: Change `onCancel={() => resetQueue()}` to `onCancel={() => cancel()}`
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**5. `src/components/app/QueuePositionIndicator.tsx`** — Add cancel button to ProcessingState:
-- Pass `onCancel` into `ProcessingState` and render a cancel button below the progress bar
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
