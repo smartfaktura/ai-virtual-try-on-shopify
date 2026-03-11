@@ -477,7 +477,7 @@ async function generateImage(
             model,
             messages: [{ role: "user", content }],
             modalities: ["image", "text"],
-            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
+            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio, ...(resolution && resolution !== '1K' ? { imageSize: resolution } : {}) } } : {}),
           }),
           signal: AbortSignal.timeout(90_000), // 90s timeout per AI call (pro model is slower)
         }
