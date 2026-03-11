@@ -281,6 +281,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
           payload: params.payload,
           imageCount: params.imageCount,
           quality: params.quality,
+          resolution: params.resolution || '1K',
           additionalProductCount: params.additionalProductCount || 0,
           hasModel: meta?.hasModel || false,
           hasScene: meta?.hasScene || false,
