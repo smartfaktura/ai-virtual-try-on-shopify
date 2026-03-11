@@ -953,6 +953,7 @@ export default function Generate() {
       if (lastBalance !== null) setBalanceFromServer(lastBalance);
       setMultiProductJobIds(jobMap);
       toast.success(`Queued ${jobMap.size} product${jobMap.size > 1 ? 's' : ''} for generation`);
+      queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
       return;
     }
 
