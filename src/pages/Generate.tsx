@@ -866,8 +866,9 @@ export default function Generate() {
   };
 
   // Helper: enqueue a single try-on job via direct fetch (used for multi-product upfront)
-  const enqueueTryOnForProduct = async (product: Product, token: string): Promise<{ jobId: string; newBalance: number } | null> => {
-    if (!selectedModel || !selectedPose) return null;
+  const enqueueTryOnForProduct = async (product: Product, token: string, poseOverride?: TryOnPose): Promise<{ jobId: string; newBalance: number } | null> => {
+    const pose = poseOverride || selectedPose;
+    if (!selectedModel || !pose) return null;
     const selectedImageId = Array.from(selectedSourceImages)[0];
     const sourceImage = product.images.find(img => img.id === selectedImageId);
     const sourceImageUrl = sourceImage?.url || product.images[0]?.url || '';
