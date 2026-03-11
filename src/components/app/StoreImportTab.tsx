@@ -88,17 +88,23 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
 
       if (insertError) throw new Error(insertError.message);
 
-      // Insert all images into product_images table
-      const imageUrls = extracted.image_urls || [extracted.image_url];
+      // Insert all images — selected image gets position 0
       const storagePaths = extracted.storage_paths || [extracted.storage_path];
 
-      const imageRows = imageUrls.map((imgUrl, i) => ({
-        product_id: productData.id,
-        user_id: user.id,
-        image_url: imgUrl,
-        storage_path: storagePaths[i] || '',
-        position: i,
-      }));
+      const imageRows = imageUrls.map((imgUrl, i) => {
+        // Reorder so selectedImageIndex gets position 0
+        let position = i;
+        if (i === selectedImageIndex) position = 0;
+        else if (i < selectedImageIndex) position = i + 1;
+
+        return {
+          product_id: productData.id,
+          user_id: user.id,
+          image_url: imgUrl,
+          storage_path: storagePaths[i] || '',
+          position,
+        };
+      });
 
       const { error: imagesError } = await supabase
         .from('product_images')
