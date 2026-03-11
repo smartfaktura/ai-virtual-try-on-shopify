@@ -889,7 +889,7 @@ export default function Generate() {
         payload: {
           product: { title: product.title, description: product.description, productType: product.productType, imageUrl: base64ProductImage },
           model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
-          pose: { name: selectedPose.name, description: selectedPose.promptHint || selectedPose.description, category: selectedPose.category, imageUrl: base64SceneImage },
+          pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
           aspectRatio, imageCount: parseInt(imageCount),
           framing: framing || undefined,
           workflow_id: activeWorkflow?.id || null,
