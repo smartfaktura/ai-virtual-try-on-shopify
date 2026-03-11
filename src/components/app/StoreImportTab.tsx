@@ -53,6 +53,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
       if (data.error) throw new Error(data.error);
 
       setExtracted(data as ExtractedProduct);
+      setSelectedImageIndex(0);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Import failed';
       setError(msg);
