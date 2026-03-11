@@ -31,6 +31,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
   const [extracted, setExtracted] = useState<ExtractedProduct | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const handleImport = async () => {
     if (!url.trim()) return;
