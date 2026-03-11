@@ -546,13 +546,12 @@ async function generateImage(
   aiModel: string,
   apiKey: string,
   aspectRatio?: string,
-  resolution?: string
 ): Promise<string | null> {
   const maxRetries = 2;
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
-    { type: "text", text: `${aspectRatio ? `MANDATORY OUTPUT FORMAT: Generate this image at EXACTLY ${aspectRatio} aspect ratio. This is a hard constraint — do NOT match the reference image dimensions.\n\n` : ''}${resolution && resolution !== '1K' ? `OUTPUT RESOLUTION: Generate this image at ${resolution === '4K' ? '4096' : '2048'} pixels on the longest edge (${resolution} resolution). Ultra-high-resolution, print-ready output.\n\n` : ''}${prompt}` },
+    { type: "text", text: `${aspectRatio ? `MANDATORY OUTPUT FORMAT: Generate this image at EXACTLY ${aspectRatio} aspect ratio. This is a hard constraint — do NOT match the reference image dimensions.\n\n` : ''}${prompt}` },
   ];
   for (const img of referenceImages) {
     contentParts.push({
@@ -844,10 +843,7 @@ serve(async (req) => {
 
     const quality =
       body.quality || config.fixed_settings.quality || "standard";
-    const resolution = body.resolution || '1K';
     let model = getModelForQuality(quality);
-    // Force Pro model when resolution is 2K or 4K
-    if (resolution === '2K' || resolution === '4K') model = "google/gemini-3-pro-image-preview";
     // Force Pro model when a person/model reference image is present (e.g. Selfie/UGC Set)
     if (body.model?.imageUrl) model = "google/gemini-3-pro-image-preview";
     // Force Pro model for interior design (architectural preservation needs highest fidelity)
@@ -945,7 +941,6 @@ serve(async (req) => {
             model,
             LOVABLE_API_KEY,
             aspectRatio,
-            resolution
           );
 
           if (imageUrl) {

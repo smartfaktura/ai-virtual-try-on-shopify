@@ -66,8 +66,6 @@ interface FreestyleSettingsChipsProps {
   isLoadingProducts: boolean;
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
-  resolution: '1K' | '2K' | '4K';
-  onResolutionChange: (r: '1K' | '2K' | '4K') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
   stylePresets: string[];
@@ -88,7 +86,6 @@ interface FreestyleSettingsChipsProps {
   onFramingChange: (f: FramingOption | null) => void;
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
-  hasModelSelected?: boolean;
   highlightedChip?: GuideStepKey | null;
 }
 
@@ -99,7 +96,6 @@ export function FreestyleSettingsChips({
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
-  resolution, onResolutionChange,
   polishPrompt, onPolishChange,
   
   stylePresets, onStylePresetsChange,
@@ -108,12 +104,10 @@ export function FreestyleSettingsChips({
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
-  hasModelSelected = false,
   highlightedChip,
 }: FreestyleSettingsChipsProps) {
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
-  const [resolutionPopoverOpen, setResolutionPopoverOpen] = React.useState(false);
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
   const [presetsPopoverOpen, setPresetsPopoverOpen] = React.useState(false);
   const [advancedOpen, setAdvancedOpen] = React.useState(false);
@@ -149,46 +143,6 @@ export function FreestyleSettingsChips({
           >
             <ar.icon className="w-3.5 h-3.5" />
             {ar.label}
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
-  );
-
-  const resolutionChip = (
-    <Popover open={resolutionPopoverOpen} onOpenChange={setResolutionPopoverOpen}>
-      <PopoverTrigger asChild>
-        <button className={cn(
-          'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-          resolution !== '1K' || hasModelSelected
-            ? 'border-primary/30 bg-primary/10 text-primary'
-            : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
-        )}>
-          {hasModelSelected && <Sparkles className="w-3 h-3" />}
-          {resolution === '1K' ? '1K' : `✦ ${resolution}`}
-          {hasModelSelected && resolution === '1K' && <span className="text-[10px] opacity-70">Pro</span>}
-          <ChevronDown className="w-3 h-3 opacity-40" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-56 p-1.5" align="start">
-        {([
-          { value: '1K' as const, label: '1K', desc: hasModelSelected ? 'Pro model (model ref). 8 credits per image.' : 'Standard model, fast generation. 4 credits per image.' },
-          { value: '2K' as const, label: '✦ 2K', desc: 'Pro model, higher resolution output. 8 credits per image.' },
-          { value: '4K' as const, label: '✦ 4K', desc: 'Pro model, maximum resolution. 12 credits per image.' },
-        ]).map(opt => (
-          <button
-            key={opt.value}
-            onClick={() => { onResolutionChange(opt.value); setResolutionPopoverOpen(false); }}
-            className={cn(
-              'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
-              resolution === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-            )}
-          >
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-[13px]">{opt.label}</div>
-              <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
-            </div>
-            {resolution === opt.value && <span className="text-primary mt-0.5">✓</span>}
           </button>
         ))}
       </PopoverContent>
@@ -352,7 +306,6 @@ export function FreestyleSettingsChips({
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <div className="flex items-center gap-2 flex-wrap">
               {aspectRatioChip}
-              {resolutionChip}
               {cameraStyleChip}
               <CollapsibleTrigger asChild>
                 <button className={cn(
@@ -467,7 +420,7 @@ export function FreestyleSettingsChips({
 
         {/* Group 3: Output — technical settings */}
         {aspectRatioChip}
-        {resolutionChip}
+        
         {cameraStyleChip}
         {polishChip}
 

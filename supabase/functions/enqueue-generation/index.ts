@@ -16,31 +16,20 @@ const HOURLY_LIMITS: Record<string, number> = {
   free: 10,
 };
 
-// Credit cost calculation — resolution-aware pricing
+// Credit cost calculation — flat pricing
 function calculateCreditCost(
   jobType: string,
-  imageCount: number,
+  _imageCount: number,
   _quality: string,
   hasModel: boolean = false,
   hasScene: boolean = false,
-  _additionalProductCount: number = 0,
-  resolution: string = '1K',
 ): number {
-  let perImage: number;
-
   if (jobType === "workflow" || jobType === "tryon") {
-    // Workflows and try-on: resolution-based pricing same as freestyle
-    const resolutionCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;
-    perImage = resolutionCredits;
-  } else {
-    // Freestyle: resolution-based pricing
-    const resolutionCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;
-    // Model/scene floor at 8
-    const modelSceneFloor = (hasModel || hasScene) ? 8 : 0;
-    perImage = Math.max(resolutionCredits, modelSceneFloor);
+    return _imageCount * 8; // Always pro model
   }
-
-  return imageCount * perImage;
+  // Freestyle: 8 with model/scene, 4 otherwise
+  const perImage = (hasModel || hasScene) ? 8 : 4;
+  return _imageCount * perImage;
 }
 
 serve(async (req) => {
@@ -75,7 +64,7 @@ serve(async (req) => {
     const userId = user.id;
 
     const body = await req.json();
-    const { jobType, payload, imageCount = 1, quality = "standard", additionalProductCount = 0, hasModel = false, hasScene = false, resolution = "1K" } = body;
+    const { jobType, payload, imageCount = 1, quality = "standard", hasModel = false, hasScene = false } = body;
 
     if (!jobType || !payload) {
       return new Response(
@@ -93,7 +82,7 @@ serve(async (req) => {
     }
 
     // Calculate credit cost
-    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene, additionalProductCount, resolution);
+    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene);
 
     // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -129,8 +118,8 @@ serve(async (req) => {
       );
     }
 
-    // Enrich payload with imageCount, quality, aspectRatio so downstream functions receive them
-    const enrichedPayload = { ...payload, imageCount, quality, resolution };
+    // Enrich payload with imageCount, quality so downstream functions receive them
+    const enrichedPayload = { ...payload, imageCount, quality };
 
     // Atomic enqueue with credit deduction
     const { data: enqueueResult, error: enqueueError } = await supabase.rpc(

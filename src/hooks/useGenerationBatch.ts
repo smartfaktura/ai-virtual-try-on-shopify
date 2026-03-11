@@ -37,7 +37,6 @@ interface BatchParams {
   selectedVariationIndices: number[];
   angleMultiplier: number;
   quality: string;
-  resolution?: '1K' | '2K' | '4K';
   imageCount: number; // total expected images
   hasModel?: boolean;
   hasScene?: boolean;
@@ -164,7 +163,7 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
       return false;
     }
 
-    const { payload, selectedVariationIndices, angleMultiplier, quality, imageCount, resolution } = params;
+    const { payload, selectedVariationIndices, angleMultiplier, quality, imageCount } = params;
 
     // Calculate scenes per chunk
     const scenesPerChunk = Math.max(1, Math.floor(MAX_IMAGES_PER_JOB / angleMultiplier));
@@ -223,7 +222,6 @@ export function useGenerationBatch(): UseGenerationBatchReturn {
             payload: chunkPayload,
             imageCount: chunkImageCount,
             quality,
-            resolution: resolution || '1K',
             hasModel: params.hasModel ?? false,
             hasScene: params.hasScene ?? false,
           }),

@@ -31,7 +31,6 @@ interface TryOnRequest {
   aspectRatio: "1:1" | "4:5" | "9:16" | "16:9";
   imageCount: number;
   framing?: string;
-  resolution?: string;
 }
 
 // --- Aspect ratio instruction ---
@@ -111,7 +110,7 @@ function buildIdentityBlock(req: TryOnRequest): string {
    - This is ${req.model.name}, a ${req.model.gender} ${req.model.ethnicity} model in their ${ageDesc}`;
 }
 
-function buildPrompt(req: TryOnRequest, resolution?: string): string {
+function buildPrompt(req: TryOnRequest): string {
   const hasSceneImage = !!req.pose.imageUrl;
 
   const backgroundMap: Record<string, string> = {
@@ -165,7 +164,7 @@ ${environmentBlock}
    - No AI artifacts or distortions
    - Ultra high resolution
 
-${framingInstruction}${resolution && resolution !== '1K' ? `OUTPUT RESOLUTION: Generate this image at ${resolution === '4K' ? '4096' : '2048'} pixels on the longest edge (${resolution} resolution). The final image must be ultra-high-resolution and print-ready.` : ''}
+
 
 Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " Match the pose, composition, and environment from [SCENE IMAGE], but the person's identity must come from [MODEL IMAGE] only." : ""}`;
 }
@@ -457,8 +456,7 @@ serve(async (req) => {
       );
     }
 
-    const resolution = body.resolution || '1K';
-    const prompt = buildPrompt(body, resolution);
+    const prompt = buildPrompt(body);
     console.log("Generating with prompt:", prompt.slice(0, 300) + "...");
 
     const imageCount = Math.min(body.imageCount || 4, 8);

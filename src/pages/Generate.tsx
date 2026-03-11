@@ -222,7 +222,6 @@ export default function Generate() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [quality, setQuality] = useState<ImageQuality>('standard');
   const [framing, setFraming] = useState<FramingOption | null>(null);
-  const [workflowResolution, setWorkflowResolution] = useState<'1K' | '2K' | '4K'>('1K');
 
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -786,7 +785,6 @@ export default function Generate() {
       product_angles: productAngle !== 'front' ? productAngle : undefined,
       quality,
       aspectRatio,
-      resolution: workflowResolution,
       framing: framing || undefined,
       styling_notes: flatLayStylingNotes || undefined,
       prop_style: isFlatLay ? flatLayPropStyle : undefined,
@@ -832,12 +830,10 @@ export default function Generate() {
         payload,
         imageCount: workflowImageCount,
         quality: 'high',
-        resolution: workflowResolution,
         additionalProductCount: 0,
       }, {
         imageCount: workflowImageCount,
         quality: 'high',
-        resolution: workflowResolution,
         hasModel: !!needsModel,
         hasScene: false,
         hasProduct: true,
@@ -854,7 +850,6 @@ export default function Generate() {
         selectedVariationIndices: Array.from(selectedVariationIndices),
         angleMultiplier,
         quality: 'high',
-        resolution: workflowResolution,
         imageCount: workflowImageCount,
         hasModel: !!needsModel,
         hasScene: false,
@@ -993,7 +988,6 @@ export default function Generate() {
           model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
           pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
           aspectRatio, imageCount: parseInt(imageCount),
-          resolution: workflowResolution,
           framing: framing || undefined,
           workflow_id: activeWorkflow?.id || null,
           product_id: selectedProduct?.id || null,
@@ -1001,7 +995,6 @@ export default function Generate() {
         },
         imageCount: parseInt(imageCount),
         quality,
-        resolution: workflowResolution,
       }, {
         imageCount: parseInt(imageCount),
         quality,
@@ -1364,8 +1357,8 @@ export default function Generate() {
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
   const tryOnSceneCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedPoses.size) : 1;
-  const resolutionCredits = workflowResolution === '4K' ? 12 : workflowResolution === '2K' ? 8 : 4;
-  const singleProductCreditCost = hasWorkflowConfig ? workflowImageCount * resolutionCredits : parseInt(imageCount) * resolutionCredits * tryOnSceneCount;
+  const perImageCredits = 8; // All workflows & try-on use pro model
+  const singleProductCreditCost = hasWorkflowConfig ? workflowImageCount * perImageCredits : parseInt(imageCount) * perImageCredits * tryOnSceneCount;
   const creditCost = singleProductCreditCost * multiProductCount;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
@@ -3314,16 +3307,6 @@ export default function Generate() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Resolution</Label>
-                      <div className="flex gap-2">
-                        {(['1K', '2K', '4K'] as const).map(res => (
-                          <button key={res} onClick={() => setWorkflowResolution(res)} className={cn('flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-all', workflowResolution === res ? 'border-primary bg-primary/5 text-primary' : 'border-border hover:border-primary/40 text-muted-foreground')}>
-                            {res} <span className="text-[10px] block">{res === '1K' ? '4 cr' : res === '2K' ? '8 cr' : '12 cr'}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
                       <Label>Aspect Ratio</Label>
                       <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
                     </div>
@@ -3336,7 +3319,7 @@ export default function Generate() {
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                     <p className="text-xs text-muted-foreground">
                       {selectedVariationIndices.size} surface{selectedVariationIndices.size !== 1 ? 's' : ''}
-                      {' '}× {resolutionCredits} credits ({workflowResolution})
+                      {' '}× {perImageCredits} credits
                       {selectedFlatLayProductIds.size > 1 && ` · ${selectedFlatLayProductIds.size} products in composition`}
                     </p>
                   </div>
@@ -3459,16 +3442,6 @@ export default function Generate() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Resolution</Label>
-                      <div className="flex gap-2">
-                        {(['1K', '2K', '4K'] as const).map(res => (
-                          <button key={res} onClick={() => setWorkflowResolution(res)} className={cn('flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-all', workflowResolution === res ? 'border-primary bg-primary/5 text-primary' : 'border-border hover:border-primary/40 text-muted-foreground')}>
-                            {res} <span className="text-[10px] block">{res === '1K' ? '4 cr' : res === '2K' ? '8 cr' : '12 cr'}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
                       <Label>Aspect Ratio</Label>
                       {isInteriorDesign ? (
                         <div className="flex items-center gap-2">
@@ -3500,7 +3473,7 @@ export default function Generate() {
                       {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                       {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                       {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                      {' '}× {resolutionCredits} credits ({workflowResolution})
+                      {' '}× {perImageCredits} credits
                     </p>
                   </div>
                   {balance >= creditCost ? (
@@ -3595,16 +3568,6 @@ export default function Generate() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Resolution</Label>
-                  <div className="flex gap-2">
-                    {(['1K', '2K', '4K'] as const).map(res => (
-                      <button key={res} onClick={() => setWorkflowResolution(res)} className={cn('flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-all', workflowResolution === res ? 'border-primary bg-primary/5 text-primary' : 'border-border hover:border-primary/40 text-muted-foreground')}>
-                        {res} <span className="text-[10px] block">{res === '1K' ? '4 cr' : res === '2K' ? '8 cr' : '12 cr'}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
               <FramingSelector framing={framing} onFramingChange={setFraming} />
               <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
@@ -3619,7 +3582,7 @@ export default function Generate() {
                     parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
                     if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
                     if (isMultiProductMode) parts.push(`${multiProductCount} products`);
-                    parts.push(`${resolutionCredits} credits each (${workflowResolution})`);
+                    parts.push(`${perImageCredits} credits each`);
                     return parts.join(' × ');
                   })()}
                 </p>

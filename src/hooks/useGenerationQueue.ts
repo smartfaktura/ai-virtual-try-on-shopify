@@ -8,7 +8,6 @@ export type QueueJobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 
 export interface GenerationMeta {
   imageCount: number;
   quality: string;
-  resolution?: '1K' | '2K' | '4K';
   hasModel: boolean;
   hasScene: boolean;
   hasProduct: boolean;
@@ -33,7 +32,7 @@ interface EnqueueParams {
   payload: Record<string, unknown>;
   imageCount: number;
   quality: string;
-  resolution?: '1K' | '2K' | '4K';
+  
   additionalProductCount?: number;
 }
 
@@ -301,7 +300,6 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
           payload: params.payload,
           imageCount: params.imageCount,
           quality: params.quality,
-          resolution: params.resolution || '1K',
           additionalProductCount: params.additionalProductCount || 0,
           hasModel: meta?.hasModel || false,
           hasScene: meta?.hasScene || false,
