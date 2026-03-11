@@ -3568,16 +3568,6 @@ export default function Generate() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Resolution</Label>
-                  <div className="flex gap-2">
-                    {(['1K', '2K', '4K'] as const).map(res => (
-                      <button key={res} onClick={() => setWorkflowResolution(res)} className={cn('flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-all', workflowResolution === res ? 'border-primary bg-primary/5 text-primary' : 'border-border hover:border-primary/40 text-muted-foreground')}>
-                        {res} <span className="text-[10px] block">{res === '1K' ? '4 cr' : res === '2K' ? '8 cr' : '12 cr'}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
               <FramingSelector framing={framing} onFramingChange={setFraming} />
               <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
