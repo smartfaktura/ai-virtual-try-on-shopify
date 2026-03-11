@@ -22,7 +22,7 @@ const ITEMS: ShowcaseItem[] = [
   { id: 'gallery', image: '/images/try-showcase/gallery-walk.png', title: 'Gallery Walk', subtitle: 'Art-world editorial story' },
   { id: 'home', image: '/images/try-showcase/at-home-editorial.png', title: 'At-Home Editorial', subtitle: 'Cozy living room story' },
   { id: 'studio-dark', image: '/images/try-showcase/studio-dark.png', title: 'Studio Portrait', subtitle: 'Dramatic dark backdrop' },
-  { id: 'tryon-3', image: '/images/try-showcase/virtual-tryon-3.png', title: 'Lookbook Feature', subtitle: 'Seasonal collection story' },
+  { id: 'tryon-3', image: '/images/try-showcase/virtual-tryon-3.png', title: 'Back Detail Shot', subtitle: 'Product detail close-up' },
 ];
 
 const LOCAL_SOURCE = '/images/source-crop-top.jpg';
