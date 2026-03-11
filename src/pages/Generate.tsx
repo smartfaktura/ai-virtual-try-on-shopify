@@ -620,8 +620,7 @@ export default function Generate() {
       toast.error('Please select a product first');
       return;
     }
-    const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode, hasModel: !!selectedModel });
-    if (balance < cost) { openBuyModal(); return; }
+    if (balance < creditCost) { openBuyModal(); return; }
     if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
       if (!selectedModel || selectedPoses.size === 0) { toast.error('Please select a model and at least one scene'); return; }
       handleTryOnConfirmGenerate(); return;
@@ -1358,7 +1357,7 @@ export default function Generate() {
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
   const tryOnSceneCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedPoses.size) : 1;
   const singleProductCreditCost = hasWorkflowConfig ? workflowImageCount * 8 : parseInt(imageCount) * 8 * tryOnSceneCount;
-  const creditCost = singleProductCreditCost * multiProductCount;
+  const creditCost = (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 
@@ -3472,7 +3471,7 @@ export default function Generate() {
                       {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                       {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                       {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                      {' '}× {quality === 'high' ? 16 : 8} credits
+                      {' '}× 8 credits
                     </p>
                   </div>
                   {balance >= creditCost ? (
@@ -3581,7 +3580,7 @@ export default function Generate() {
                     parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
                     if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
                     if (isMultiProductMode) parts.push(`${multiProductCount} products`);
-                    parts.push(`${quality === 'high' ? 16 : 8} credits each`);
+                    parts.push(`8 credits each`);
                     return parts.join(' × ');
                   })()}
                 </p>
