@@ -1,29 +1,55 @@
 
 
-## Resolution Control: 1K/2K/4K for Freestyle, Auto-2K for Workflows/Try-On
+## Fix WorkflowActivityCard Mobile Layout
 
-### Status: ✅ Implemented
+The current layout puts the icon, text, badges ("Pro Model", "Processing"), and cancel button all in a single horizontal `flex items-center` row. On a 390px screen this causes text to wrap vertically and badges to stack awkwardly.
 
-### What Changed
+### Active card (Processing/Queued) — changes
 
-1. **Freestyle UI** — Replaced Standard/High quality chip with 1K/2K/4K resolution picker
-   - 1K = Standard model, 4 credits/image
-   - 2K = Pro model (auto), 8 credits/image  
-   - 4K = Pro model (auto), 12 credits/image
-   - When model/scene selected, locked to "Pro · 2K" minimum
+**Row 1**: Icon + title text + elapsed time (horizontal, text truncates)
+**Row 2**: Inline badges ("Pro · Processing" or "Queued") + estimation text, all in a compact horizontal strip below the title
 
-2. **Backend** — Added `imageSize` to Gemini `image_config`
-   - `generate-freestyle`: Dynamic resolution from payload, forces Pro model for 2K/4K
-   - `generate-tryon`: Hardcoded `imageSize: "2K"`
-   - `generate-workflow`: Hardcoded `imageSize: "2K"`
-   - `enqueue-generation`: Resolution-aware credit calculation
+- Remove the separate "Pro Model" badge and "Processing" badge as two distinct elements
+- Combine into a single compact badge: `Pro · Processing` or just `Processing`
+- Move the estimation text (`est. ~60-120s per image`) into the same row as the badge, as regular muted text
+- Cancel button stays in row 1 (top-right) only when stuck
 
-### Files Changed
-- `src/pages/Freestyle.tsx`
-- `src/components/app/freestyle/FreestyleSettingsChips.tsx`
-- `src/components/app/freestyle/FreestylePromptPanel.tsx`
-- `src/hooks/useGenerationQueue.ts`
-- `supabase/functions/generate-freestyle/index.ts`
-- `supabase/functions/generate-tryon/index.ts`
-- `supabase/functions/generate-workflow/index.ts`
-- `supabase/functions/enqueue-generation/index.ts`
+**Structure**:
+```text
+┌─────────────────────────────────┐
+│ ⟳  Workflow — Product    [Cancel]│
+│    Generating… 1m 48s            │
+│    ┌──────────────┐ ~60-120s/img │
+│    │Pro·Processing│              │
+│    └──────────────┘              │
+│ ████████░░░░░░░░░  (if batch)   │
+└─────────────────────────────────┘
+```
+
+### Completed card — changes
+
+Same problem: icon + text + "Completed" badge + "View Results" button + dismiss X all in one row overflows on mobile.
+
+**Fix**: Stack into two rows:
+- **Row 1**: Icon + title text + dismiss X
+- **Row 2**: "Completed" badge + "View Results" button, right-aligned
+
+```text
+┌─────────────────────────────────┐
+│ ✓  Generation complete     [×]  │
+│    · images ready                │
+│    ┌─────────┐  View Results →  │
+│    │Completed│                   │
+│    └─────────┘                   │
+└─────────────────────────────────┘
+```
+
+### Failed card — same treatment
+
+- **Row 1**: Icon + title + dismiss X
+- **Row 2**: "Failed" badge + "Retry" button
+
+### File changed
+
+**`src/components/app/WorkflowActivityCard.tsx`** — restructure all three card types to use a two-row stacked layout for compact mobile fit. Badges and action buttons move to a second row below the title/status text.
+
