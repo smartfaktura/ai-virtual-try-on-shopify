@@ -36,38 +36,6 @@ const STATS = [
   { value: '<30s', label: 'Per Image' },
 ];
 
-function DiscoverGallery() {
-  const { data: presets, isLoading } = useDiscoverPresets();
-  const featured = (presets || []).filter(p => p.is_featured).slice(0, 8);
-  const items = featured.length >= 6 ? featured : (presets || []).slice(0, 8);
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="aspect-[3/4] rounded-xl bg-muted animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-
-  if (!items.length) return null;
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {items.map((item) => (
-        <div key={item.id} className="rounded-xl overflow-hidden border border-border bg-card shadow-sm group">
-          <ShimmerImage
-            src={item.image_url}
-            alt={item.title}
-            className="w-full aspect-[3/4] object-cover group-hover:scale-105 transition-transform duration-500"
-            aspectRatio="3/4"
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function TryFree() {
   return (
