@@ -3,7 +3,7 @@ import type { GuideStepKey } from './FreestyleGuide';
 import {
   Square, RectangleHorizontal, ChevronDown,
   Wand2,
-  Smartphone, Camera, Palette, SlidersHorizontal, Sparkles,
+  Smartphone, Camera, Lock, Palette, SlidersHorizontal, Sparkles,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -66,6 +66,8 @@ interface FreestyleSettingsChipsProps {
   isLoadingProducts: boolean;
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
+  quality: 'standard' | 'high';
+  onQualityChange: (q: 'standard' | 'high') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
   stylePresets: string[];
@@ -86,6 +88,7 @@ interface FreestyleSettingsChipsProps {
   onFramingChange: (f: FramingOption | null) => void;
   framingPopoverOpen: boolean;
   onFramingPopoverChange: (open: boolean) => void;
+  hasModelSelected?: boolean;
   highlightedChip?: GuideStepKey | null;
 }
 
@@ -96,6 +99,7 @@ export function FreestyleSettingsChips({
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
+  quality, onQualityChange,
   polishPrompt, onPolishChange,
   
   stylePresets, onStylePresetsChange,
@@ -104,10 +108,12 @@ export function FreestyleSettingsChips({
   negatives, onNegativesChange, negativesPopoverOpen, onNegativesPopoverChange,
   cameraStyle, onCameraStyleChange,
   framing, onFramingChange, framingPopoverOpen, onFramingPopoverChange,
+  hasModelSelected = false,
   highlightedChip,
 }: FreestyleSettingsChipsProps) {
   const isMobile = useIsMobile();
   const [aspectPopoverOpen, setAspectPopoverOpen] = React.useState(false);
+  const [qualityPopoverOpen, setQualityPopoverOpen] = React.useState(false);
   const [cameraPopoverOpen, setCameraPopoverOpen] = React.useState(false);
   const [presetsPopoverOpen, setPresetsPopoverOpen] = React.useState(false);
   const [advancedOpen, setAdvancedOpen] = React.useState(false);
@@ -143,6 +149,55 @@ export function FreestyleSettingsChips({
           >
             <ar.icon className="w-3.5 h-3.5" />
             {ar.label}
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+
+  const qualityChip = hasModelSelected ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary cursor-default">
+          <Lock className="w-3 h-3" />
+          Pro Model
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-[220px] text-center">
+        Pro model is required for model-reference generations to preserve identity. 8 credits/image.
+      </TooltipContent>
+    </Tooltip>
+  ) : (
+    <Popover open={qualityPopoverOpen} onOpenChange={setQualityPopoverOpen}>
+      <PopoverTrigger asChild>
+        <button className={cn(
+          'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+          quality === 'high'
+            ? 'border-primary/30 bg-primary/10 text-primary'
+            : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+        )}>
+          {quality === 'high' ? '✦ High' : 'Standard'}
+          <ChevronDown className="w-3 h-3 opacity-40" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1.5" align="start">
+        {([
+          { value: 'standard' as const, label: 'Standard', desc: 'Fast generation at standard resolution. 4 credits per image.' },
+          { value: 'high' as const, label: '✦ High', desc: 'Higher detail and resolution output. 10 credits per image.' },
+        ]).map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => { onQualityChange(opt.value); setQualityPopoverOpen(false); }}
+            className={cn(
+              'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
+              quality === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+            )}
+          >
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-[13px]">{opt.label}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
+            </div>
+            {quality === opt.value && <span className="text-primary mt-0.5">✓</span>}
           </button>
         ))}
       </PopoverContent>
@@ -306,6 +361,7 @@ export function FreestyleSettingsChips({
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <div className="flex items-center gap-2 flex-wrap">
               {aspectRatioChip}
+              {qualityChip}
               {cameraStyleChip}
               <CollapsibleTrigger asChild>
                 <button className={cn(
@@ -420,7 +476,7 @@ export function FreestyleSettingsChips({
 
         {/* Group 3: Output — technical settings */}
         {aspectRatioChip}
-        
+        {qualityChip}
         {cameraStyleChip}
         {polishChip}
 

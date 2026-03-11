@@ -16,20 +16,26 @@ const HOURLY_LIMITS: Record<string, number> = {
   free: 10,
 };
 
-// Credit cost calculation — flat pricing
+// Credit cost calculation — simplified pricing
 function calculateCreditCost(
   jobType: string,
-  _imageCount: number,
+  imageCount: number,
   _quality: string,
   hasModel: boolean = false,
   hasScene: boolean = false,
+  _additionalProductCount: number = 0,
 ): number {
+  let perImage: number;
+
   if (jobType === "workflow" || jobType === "tryon") {
-    return _imageCount * 8; // Always pro model
+    // Workflows and try-on: always 8 credits per image
+    perImage = 8;
+  } else {
+    // Freestyle: 8 if model or scene, 4 otherwise
+    perImage = (hasModel || hasScene) ? 8 : 4;
   }
-  // Freestyle: 8 with model/scene, 4 otherwise
-  const perImage = (hasModel || hasScene) ? 8 : 4;
-  return _imageCount * perImage;
+
+  return imageCount * perImage;
 }
 
 serve(async (req) => {
@@ -64,7 +70,7 @@ serve(async (req) => {
     const userId = user.id;
 
     const body = await req.json();
-    const { jobType, payload, imageCount = 1, quality = "standard", hasModel = false, hasScene = false } = body;
+    const { jobType, payload, imageCount = 1, quality = "standard", additionalProductCount = 0, hasModel = false, hasScene = false } = body;
 
     if (!jobType || !payload) {
       return new Response(
@@ -82,7 +88,7 @@ serve(async (req) => {
     }
 
     // Calculate credit cost
-    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene);
+    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene, additionalProductCount);
 
     // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -118,7 +124,7 @@ serve(async (req) => {
       );
     }
 
-    // Enrich payload with imageCount, quality so downstream functions receive them
+    // Enrich payload with imageCount, quality, aspectRatio so downstream functions receive them
     const enrichedPayload = { ...payload, imageCount, quality };
 
     // Atomic enqueue with credit deduction

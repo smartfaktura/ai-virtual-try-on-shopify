@@ -54,6 +54,7 @@ export default function Freestyle() {
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedScene, setSelectedScene] = useState<TryOnPose | null>(null);
   const [aspectRatio, setAspectRatio] = useState<FreestyleAspectRatio>('1:1');
+  const [quality, setQuality] = useState<'standard' | 'high'>('standard');
   const [polishPrompt, setPolishPrompt] = useState(true);
   
   const [modelPopoverOpen, setModelPopoverOpen] = useState(false);
@@ -136,7 +137,7 @@ export default function Freestyle() {
     if (r && ['1:1', '3:4', '4:5', '9:16', '16:9'].includes(r)) {
       setAspectRatio(r as FreestyleAspectRatio);
     }
-    // Resolution is now manually controlled — no auto-bump
+    if (q === 'high') setQuality('high');
     if (sceneParam) {
       const matchedScene = mockTryOnPoses.find((s) => s.poseId === sceneParam);
       if (matchedScene) {
@@ -394,8 +395,6 @@ export default function Freestyle() {
     } : undefined;
 
     // Build the payload for the queue — URLs instead of base64
-    const quality = (hasModel || hasScene) ? 'high' : 'standard';
-
     const queuePayload = {
       prompt: finalPrompt,
       sourceImage: sourceImageUrl,
@@ -433,7 +432,7 @@ export default function Freestyle() {
       // Update balance from server response
       setBalanceFromServer(enqueueResult.newBalance);
     }
-  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
+  }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
 
   // Stable refs for callbacks so completion effect doesn't depend on form state
   const refreshImagesRef = useRef(refreshImages);
@@ -554,6 +553,8 @@ export default function Freestyle() {
     isLoadingProducts,
     aspectRatio,
     onAspectRatioChange: setAspectRatio,
+    quality,
+    onQualityChange: setQuality,
     polishPrompt,
     onPolishChange: setPolishPrompt,
     stylePresets,

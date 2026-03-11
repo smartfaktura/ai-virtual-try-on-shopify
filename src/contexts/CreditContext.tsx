@@ -245,7 +245,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const closeBuyModal = useCallback(() => setBuyModalOpen(false), []);
   
   const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string }) => {
-    const { count, mode, hasModel, hasScene, modelName, duration } = settings;
+    const { count, quality, mode, hasModel, hasScene, modelName, duration } = settings;
     if (mode === 'video') {
       const isV16 = modelName === 'kling-v1-6';
       const baseCost = isV16 ? 70 : 90;

@@ -39,6 +39,8 @@ interface FreestylePromptPanelProps {
   isLoadingProducts: boolean;
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
+  quality: 'standard' | 'high';
+  onQualityChange: (q: 'standard' | 'high') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
   stylePresets: string[];
@@ -78,7 +80,7 @@ export function FreestylePromptPanel({
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
-  
+  quality, onQualityChange,
   polishPrompt, onPolishChange,
   
   stylePresets, onStylePresetsChange,
@@ -251,7 +253,7 @@ export function FreestylePromptPanel({
               selectedScene={selectedScene} onSceneSelect={onSceneSelect}
               scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
               aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
-              
+              quality={quality} onQualityChange={onQualityChange}
               polishPrompt={polishPrompt} onPolishChange={onPolishChange}
               stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
               selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
@@ -262,7 +264,7 @@ export function FreestylePromptPanel({
               cameraStyle={cameraStyle} onCameraStyleChange={onCameraStyleChange}
               framing={framing} onFramingChange={onFramingChange}
               framingPopoverOpen={framingPopoverOpen} onFramingPopoverChange={onFramingPopoverChange}
-              
+              hasModelSelected={!!selectedModel}
               highlightedChip={highlightedChip}
             />
           </div>
@@ -326,8 +328,8 @@ export function FreestylePromptPanel({
                           : selectedModel && selectedScene
                             ? `${creditCost} credits: Model + Scene (15/image)`
                             : selectedModel
-                              ? `${creditCost} credits: Model reference (8/image)`
-                          : `${creditCost} credits: ${(selectedScene) ? '8 credits/image (scene)' : '4 credits/image'}`}
+                              ? `${creditCost} credits: Model reference (12/image)`
+                              : `${creditCost} credits: ${quality === 'high' ? 'High quality (10/image)' : 'Standard (4/image)'}`}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

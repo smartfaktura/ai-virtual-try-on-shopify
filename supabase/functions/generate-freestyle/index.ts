@@ -461,7 +461,7 @@ async function generateImage(
   apiKey: string,
   model: string,
   aspectRatio?: string,
-  maxRetries = 2,
+  maxRetries = 2
 ): Promise<GenerateResult> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -810,7 +810,9 @@ serve(async (req) => {
       ? "google/gemini-3-pro-image-preview"
       : isQueueInternal
         ? "google/gemini-3.1-flash-image-preview"
-        : "google/gemini-3.1-flash-image-preview";
+        : (body.quality === "high" && refCount < 2)
+          ? "google/gemini-3-pro-image-preview"
+          : "google/gemini-3.1-flash-image-preview";
 
     console.log("Freestyle generation:", {
       promptLength: body.prompt.length,

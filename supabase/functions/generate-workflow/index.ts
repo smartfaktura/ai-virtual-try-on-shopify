@@ -545,13 +545,13 @@ async function generateImage(
   referenceImages: Array<{ url: string; label: string }>,
   aiModel: string,
   apiKey: string,
-  aspectRatio?: string,
+  aspectRatio?: string
 ): Promise<string | null> {
   const maxRetries = 2;
 
   // Build content array: text prompt + all reference images
   const contentParts: Array<Record<string, unknown>> = [
-    { type: "text", text: `${aspectRatio ? `MANDATORY OUTPUT FORMAT: Generate this image at EXACTLY ${aspectRatio} aspect ratio. This is a hard constraint — do NOT match the reference image dimensions.\n\n` : ''}${prompt}` },
+    { type: "text", text: aspectRatio ? `MANDATORY OUTPUT FORMAT: Generate this image at EXACTLY ${aspectRatio} aspect ratio. This is a hard constraint — do NOT match the reference image dimensions.\n\n${prompt}` : prompt },
   ];
   for (const img of referenceImages) {
     contentParts.push({
@@ -940,7 +940,7 @@ serve(async (req) => {
             referenceImages,
             model,
             LOVABLE_API_KEY,
-            aspectRatio,
+            aspectRatio
           );
 
           if (imageUrl) {

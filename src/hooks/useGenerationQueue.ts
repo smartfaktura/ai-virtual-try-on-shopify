@@ -32,7 +32,6 @@ interface EnqueueParams {
   payload: Record<string, unknown>;
   imageCount: number;
   quality: string;
-  
   additionalProductCount?: number;
 }
 
@@ -66,7 +65,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   const [lastCompletedAt, setLastCompletedAt] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdRef = useRef<string | null>(null);
-  const lastRetriggerRef = useRef<number>(0); // timestamp of last retrigger
+  const retriggeredRef = useRef(false);
 
   // Cleanup polling on unmount
   useEffect(() => {
@@ -123,11 +122,10 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
       // Calculate position if still queued (count jobs ahead: lower priority_score, or same score but earlier created_at)
       if (job.status === 'queued') {
-        // Stuck detection: if queued > 30s, re-trigger process-queue via retry-queue (every 60s)
+        // Stuck detection: if queued > 30s, re-trigger process-queue via retry-queue
         const queuedDuration = Date.now() - new Date(job.created_at).getTime();
-        const canRetrigger = Date.now() - lastRetriggerRef.current > 60_000;
-        if (queuedDuration > 30_000 && canRetrigger) {
-          lastRetriggerRef.current = Date.now();
+        if (queuedDuration > 30_000 && !retriggeredRef.current) {
+          retriggeredRef.current = true;
           console.warn(`[queue] Job ${job.id} stuck for ${Math.round(queuedDuration / 1000)}s, re-triggering`);
           fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
             method: 'POST',
@@ -159,27 +157,8 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       // Stuck detection for processing jobs: if processing > 5 minutes, trigger cleanup
       if (job.status === 'processing' && job.started_at) {
         const processingDuration = Date.now() - new Date(job.started_at).getTime();
-        const canRetrigger = Date.now() - lastRetriggerRef.current > 60_000;
-
-        // Client-side forced timeout: 10 minutes
-        if (processingDuration > 10 * 60 * 1000) {
-          console.warn(`[queue] Job ${job.id} processing for 10+ minutes, force-cancelling`);
-          await fetch(
-            `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}`,
-            {
-              method: 'PATCH',
-              headers: {
-                apikey: SUPABASE_KEY,
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                Prefer: 'return=minimal',
-              },
-              body: JSON.stringify({ status: 'cancelled' }),
-            }
-          ).catch(() => {});
-          job.status = 'cancelled';
-        } else if (processingDuration > 5 * 60 * 1000 && canRetrigger) {
-          lastRetriggerRef.current = Date.now();
+        if (processingDuration > 5 * 60 * 1000 && !retriggeredRef.current) {
+          retriggeredRef.current = true;
           console.warn(`[queue] Job ${job.id} processing for ${Math.round(processingDuration / 1000)}s, triggering cleanup`);
           fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
             method: 'POST',
@@ -345,7 +324,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       });
 
       jobIdRef.current = result.jobId;
-      lastRetriggerRef.current = 0;
+      retriggeredRef.current = false;
       // Start polling
       pollJobStatus(result.jobId);
 
@@ -364,7 +343,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
   }, [user, pollJobStatus]);
 
   const cancel = useCallback(async () => {
-    if (!jobIdRef.current || !activeJob || (activeJob.status !== 'queued' && activeJob.status !== 'processing')) return;
+    if (!jobIdRef.current || !activeJob || activeJob.status !== 'queued') return;
 
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
     const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;

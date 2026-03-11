@@ -1357,10 +1357,7 @@ export default function Generate() {
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
   const tryOnSceneCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedPoses.size) : 1;
-  const perImageCredits = 8; // All workflows & try-on use pro model
-  const singleProductCreditCost = (generationMode === 'virtual-try-on' && !isSelfieUgc)
-    ? parseInt(imageCount) * perImageCredits * tryOnSceneCount
-    : hasWorkflowConfig ? workflowImageCount * perImageCredits : parseInt(imageCount) * perImageCredits * tryOnSceneCount;
+  const singleProductCreditCost = hasWorkflowConfig ? workflowImageCount * 8 : parseInt(imageCount) * 8 * tryOnSceneCount;
   const creditCost = singleProductCreditCost * multiProductCount;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
@@ -3321,7 +3318,7 @@ export default function Generate() {
                     <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                     <p className="text-xs text-muted-foreground">
                       {selectedVariationIndices.size} surface{selectedVariationIndices.size !== 1 ? 's' : ''}
-                      {' '}× {perImageCredits} credits
+                      {' '}× {quality === 'high' ? 16 : 8} credits
                       {selectedFlatLayProductIds.size > 1 && ` · ${selectedFlatLayProductIds.size} products in composition`}
                     </p>
                   </div>
@@ -3475,7 +3472,7 @@ export default function Generate() {
                       {isMultiProductMode ? `${productQueue.length} products × ` : ''}
                       {selectedVariationIndices.size} {isInteriorDesign ? 'style' : 'scene'}{selectedVariationIndices.size !== 1 ? 's' : ''}
                       {angleMultiplier > 1 ? ` × ${angleMultiplier} angle${angleMultiplier > 1 ? 's' : ''}` : ''}
-                      {' '}× {perImageCredits} credits
+                      {' '}× {quality === 'high' ? 16 : 8} credits
                     </p>
                   </div>
                   {balance >= creditCost ? (
@@ -3577,14 +3574,14 @@ export default function Generate() {
 
             <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
               <div>
-                <p className="text-sm font-semibold">Total: {creditCost} credits</p>
+                <p className="text-sm font-semibold">Virtual Try-On: {creditCost} credits</p>
                 <p className="text-xs text-muted-foreground">
                   {(() => {
                     const parts: string[] = [];
                     parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
                     if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
                     if (isMultiProductMode) parts.push(`${multiProductCount} products`);
-                    parts.push(`${perImageCredits} credits each`);
+                    parts.push(`${quality === 'high' ? 16 : 8} credits each`);
                     return parts.join(' × ');
                   })()}
                 </p>
