@@ -877,7 +877,7 @@ export default function Generate() {
     const [base64ProductImage, base64ModelImage, base64SceneImage] = await Promise.all([
       convertImageToBase64(sourceImageUrl),
       convertImageToBase64(selectedModel.previewUrl),
-      selectedPose.previewUrl ? convertImageToBase64(selectedPose.previewUrl) : Promise.resolve(undefined),
+      pose.previewUrl ? convertImageToBase64(pose.previewUrl) : Promise.resolve(undefined),
     ]);
 
     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
