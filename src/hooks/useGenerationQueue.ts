@@ -32,6 +32,7 @@ interface EnqueueParams {
   payload: Record<string, unknown>;
   imageCount: number;
   quality: string;
+  resolution?: '1K' | '2K' | '4K';
   additionalProductCount?: number;
 }
 
