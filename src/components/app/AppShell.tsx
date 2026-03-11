@@ -56,6 +56,13 @@ export function AppShell({ children }: AppShellProps) {
     try { localStorage.setItem(STORAGE_KEY, String(collapsed)); } catch {}
   }, [collapsed]);
 
+  // Reset scroll position on route change (skip Discover to preserve feed position)
+  useEffect(() => {
+    if (location.pathname.startsWith('/app/discover')) return;
+    const main = document.getElementById('app-main-scroll');
+    if (main) main.scrollTop = 0;
+  }, [location.pathname]);
+
   const handleSignOut = useCallback(async () => {
     await signOut();
     navigate('/');
@@ -343,7 +350,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 overflow-y-auto overscroll-contain">
+        <main id="app-main-scroll" className="flex-1 overflow-y-auto overscroll-contain">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-8 pb-4 sm:pb-6 lg:pb-8">
             {children}
           </div>
