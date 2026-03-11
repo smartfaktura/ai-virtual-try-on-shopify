@@ -46,7 +46,7 @@ interface CreditContextValue {
   openBuyModal: () => void;
   closeBuyModal: () => void;
   
-  calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string }) => number;
+  calculateCost: (settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string; resolution?: '1K' | '2K' | '4K' }) => number;
 }
 
 const defaultValue: CreditContextValue = {
@@ -244,17 +244,18 @@ export function CreditProvider({ children }: CreditProviderProps) {
   const openBuyModal = useCallback(() => setBuyModalOpen(true), []);
   const closeBuyModal = useCallback(() => setBuyModalOpen(false), []);
   
-  const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string }) => {
-    const { count, quality, mode, hasModel, hasScene, modelName, duration } = settings;
+  const calculateCost = useCallback((settings: { count: number; quality: ImageQuality; mode: GenerationMode; hasModel?: boolean; hasScene?: boolean; modelName?: string; duration?: string; resolution?: '1K' | '2K' | '4K' }) => {
+    const { count, quality, mode, hasModel, hasScene, modelName, duration, resolution = '1K' } = settings;
     if (mode === 'video') {
       const isV16 = modelName === 'kling-v1-6';
       const baseCost = isV16 ? 70 : 90;
       const multiplier = duration === '10' ? 2 : 1;
       return count * baseCost * multiplier;
     }
-    if (mode === 'virtual-try-on') return count * 8;
-    if (hasModel || hasScene) return count * 8;
-    return count * 4;
+    const resCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;
+    if (mode === 'virtual-try-on') return count * resCredits;
+    if (hasModel || hasScene) return count * Math.max(resCredits, 8);
+    return count * resCredits;
   }, []);
   
   return (
