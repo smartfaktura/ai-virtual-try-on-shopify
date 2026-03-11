@@ -76,7 +76,7 @@ export function TryOnPreview({ product, scratchUpload, model, pose, poses, credi
         <div className="flex justify-center gap-3 sm:gap-4 pt-2 border-t border-border">
           <StatusPill label="Product" completed={hasProduct} count={isMultiProduct ? products.length : undefined} />
           <StatusPill label="Model" completed={!!model} />
-          <StatusPill label="Scene" completed={!!pose} />
+          <StatusPill label="Scene" completed={allPoses.length > 0} count={isMultiScene ? allPoses.length : undefined} />
         </div>
       </div>
     </Card>
