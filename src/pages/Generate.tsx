@@ -623,7 +623,7 @@ export default function Generate() {
     const cost = calculateCost({ count: parseInt(imageCount), quality, mode: generationMode, hasModel: !!selectedModel });
     if (balance < cost) { openBuyModal(); return; }
     if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
-      if (!selectedModel || !selectedPose) { toast.error('Please select a model and scene first'); return; }
+      if (!selectedModel || selectedPoses.size === 0) { toast.error('Please select a model and at least one scene'); return; }
       handleTryOnConfirmGenerate(); return;
     }
     // Workflow-config path: skip template requirement
