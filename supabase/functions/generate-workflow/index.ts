@@ -579,7 +579,7 @@ async function generateImage(
               },
             ],
             modalities: ["image", "text"],
-            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio, imageSize: "2K" } } : {}),
+            ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
         }
       );

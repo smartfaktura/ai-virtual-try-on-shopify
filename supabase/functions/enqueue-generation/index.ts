@@ -29,8 +29,9 @@ function calculateCreditCost(
   let perImage: number;
 
   if (jobType === "workflow" || jobType === "tryon") {
-    // Workflows and try-on: always 8 credits per image (2K forced)
-    perImage = 8;
+    // Workflows and try-on: resolution-based pricing same as freestyle
+    const resolutionCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;
+    perImage = resolutionCredits;
   } else {
     // Freestyle: resolution-based pricing
     const resolutionCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;

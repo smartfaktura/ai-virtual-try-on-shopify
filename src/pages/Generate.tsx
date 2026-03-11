@@ -3595,6 +3595,16 @@ export default function Generate() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label>Resolution</Label>
+                  <div className="flex gap-2">
+                    {(['1K', '2K', '4K'] as const).map(res => (
+                      <button key={res} onClick={() => setWorkflowResolution(res)} className={cn('flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-all', workflowResolution === res ? 'border-primary bg-primary/5 text-primary' : 'border-border hover:border-primary/40 text-muted-foreground')}>
+                        {res} <span className="text-[10px] block">{res === '1K' ? '4 cr' : res === '2K' ? '8 cr' : '12 cr'}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
               <FramingSelector framing={framing} onFramingChange={setFraming} />
               <AspectRatioSelector value={aspectRatio} onChange={setAspectRatio} />
@@ -3602,14 +3612,14 @@ export default function Generate() {
 
             <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
               <div>
-                <p className="text-sm font-semibold">Virtual Try-On: {creditCost} credits</p>
+                <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                 <p className="text-xs text-muted-foreground">
                   {(() => {
                     const parts: string[] = [];
                     parts.push(`${parseInt(imageCount)} image${parseInt(imageCount) > 1 ? 's' : ''}`);
                     if (selectedPoses.size > 1) parts.push(`${selectedPoses.size} scenes`);
                     if (isMultiProductMode) parts.push(`${multiProductCount} products`);
-                    parts.push(`8 credits each`);
+                    parts.push(`${resolutionCredits} credits each (${workflowResolution})`);
                     return parts.join(' × ');
                   })()}
                 </p>
