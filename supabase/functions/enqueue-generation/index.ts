@@ -92,7 +92,7 @@ serve(async (req) => {
     }
 
     // Calculate credit cost
-    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene, additionalProductCount);
+    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene, additionalProductCount, resolution);
 
     // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
