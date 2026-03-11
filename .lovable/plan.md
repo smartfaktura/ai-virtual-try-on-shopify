@@ -1,30 +1,15 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix: Loading indicator in Freestyle prompt bar
 
-### Issues Found
+### Problem
+When a generation is active, a thin 2px loading bar appears at the very top of the prompt panel (lines 195-199 of `FreestylePromptPanel.tsx`). It looks out of place — it's a raw div with `h-[2px]` that doesn't match the rounded panel design and clips awkwardly at the top edge.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Fix
+Replace the hacky top-edge loading line with a subtle `Progress` component integrated into the panel's bottom action bar area, or better yet, remove it entirely since the `QueuePositionIndicator` already shows processing state above the prompt panel. The `isLoading` state in the prompt panel is a brief local state before the queue takes over, so a small spinner on the Generate button (already implemented at line 319) is sufficient.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**Plan**: Remove the floating loading bar entirely (lines 195-199). The Generate button already shows a `Loader2` spinner when `isLoading` is true, and once the job is enqueued, the `QueuePositionIndicator` card handles progress display. The thin line is redundant and visually jarring.
 
-### Plan
-
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
-
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### File change
+**`src/components/app/freestyle/FreestylePromptPanel.tsx`** — Delete lines 195-199 (the `isLoading && ...` block with the `h-[2px]` bar).
 
