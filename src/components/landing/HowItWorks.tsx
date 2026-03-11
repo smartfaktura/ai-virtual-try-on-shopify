@@ -7,12 +7,12 @@ import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const cropTopProduct = '/images/source-crop-top.jpg';
 const outcomeImage = getLandingAssetUrl('hero/hero-result-yoga-blonde.jpg');
-const sceneStudio = '/images/try-showcase/studio-dark.png';
+const sceneStudio = '/images/try-showcase/studio-lookbook.png';
 const sceneCoffee = '/images/try-showcase/cafe-lifestyle.png';
 const sceneBeach = '/images/try-showcase/golden-hour.png';
 const scenePark = '/images/try-showcase/garden-editorial.png';
-const sceneRooftop = '/images/try-showcase/urban-edge.png';
-const sceneUrban = '/images/try-showcase/pilates-studio.png';
+const sceneRooftop = '/images/try-showcase/studio-back-detail.png';
+const sceneUrban = '/images/try-showcase/at-home-editorial.png';
 const modelThumb = getLandingAssetUrl('hero/hero-model-blonde.jpg');
 const envThumb = getLandingAssetUrl('hero/hero-scene-yoga.jpg');
 
