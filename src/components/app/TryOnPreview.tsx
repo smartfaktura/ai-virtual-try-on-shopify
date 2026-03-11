@@ -48,7 +48,21 @@ export function TryOnPreview({ product, scratchUpload, model, pose, poses, credi
           <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center"><Plus className="w-3 h-3 text-muted-foreground" /></div>
           <Thumb image={model?.previewUrl} label="Model" active={!!model} round />
           <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center"><Plus className="w-3 h-3 text-muted-foreground" /></div>
-          <Thumb image={poseImage} label="Scene" active={!!pose} />
+          {isMultiScene ? (
+            <div className="flex items-center gap-1.5">
+              {allPoses.slice(0, 3).map((p, i) => {
+                const img = selectedGender === 'male' && p.previewUrlMale ? p.previewUrlMale : p.previewUrl;
+                return (
+                  <div key={p.poseId} className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 border-primary bg-card flex-shrink-0">
+                    <img src={img} alt={p.name} className="w-full h-full object-cover" />
+                  </div>
+                );
+              })}
+              <span className="ml-1 text-[10px] sm:text-xs font-medium text-primary">{allPoses.length} scenes</span>
+            </div>
+          ) : (
+            <Thumb image={poseImage} label="Scene" active={!!firstPose} />
+          )}
           {hasAllSelections && (
             <>
               <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center"><ArrowRight className="w-3 h-3 text-primary" /></div>
