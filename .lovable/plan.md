@@ -1,30 +1,27 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Update FreestyleShowcaseSection with Local Assets
 
-### Issues Found
+### File: `src/components/landing/FreestyleShowcaseSection.tsx`
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+**1. Update prompt text** to reference the White Crop Top:
+```
+'Studio portrait of our White Crop Top, natural lighting with soft shadows in a lifestyle setting...'
+```
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**2. Update CHIPS** — swap Supabase URLs to local paths:
+- Product thumb: `/images/source-crop-top.jpg`, label: `White Crop Top`
+- Model thumb: keep Supabase URL (no local model headshot available), label stays `Sofia`
+- Scene thumb: `/images/try-showcase/cafe-lifestyle.png`, label: `Café`
 
-### Plan
+**3. Update RESULT_CARDS** — use 3 local try-showcase images:
+```typescript
+{ label: 'Studio Lookbook', src: '/images/try-showcase/studio-lookbook.png' },
+{ label: 'Café Lifestyle', src: '/images/try-showcase/cafe-lifestyle.png' },
+{ label: 'Golden Hour', src: '/images/try-showcase/golden-hour.png' },
+```
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**4. Remove unused `getLandingAssetUrl` import** if model thumb also switches to local (or keep if model thumb stays on Supabase).
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+No other files change.
 
