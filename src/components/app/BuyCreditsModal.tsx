@@ -110,21 +110,20 @@ export function BuyCreditsModal() {
             </Badge>
           </div>
 
-          {/* Tab switcher */}
-          <div className="px-4 sm:px-6 pt-1">
-            <div className="flex gap-1 border-b border-border/40">
+          {/* Tab switcher — pill style */}
+          <div className="px-4 sm:px-6 pt-3 pb-1">
+            <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
               {(['topup', 'upgrade'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-2.5 text-sm font-medium transition-all relative ${
-                    activeTab === tab ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+                  className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all ${
+                    activeTab === tab
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground/70'
                   }`}
                 >
                   {tab === 'topup' ? 'Top Up' : 'Plans'}
-                  {activeTab === tab && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                  )}
                 </button>
               ))}
             </div>
@@ -205,56 +204,59 @@ export function BuyCreditsModal() {
 
             {/* === PLANS TAB === */}
             {activeTab === 'upgrade' && (
-              <div className="space-y-5">
+              <div className="space-y-4">
 
-                {/* Billing status banner for paid users */}
-                {isPaidUser && (
-                  <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-foreground">
-                        You're on <span className="font-semibold">{planConfig.name}</span> — billed {effectiveInterval === 'annual' ? 'annually' : 'monthly'}
-                      </span>
+                {/* Combined plan status + billing toggle card */}
+                <div className="rounded-xl bg-muted/30 border border-border/50 p-4 space-y-3">
+                  {isPaidUser && (
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-[10px] tracking-widest uppercase font-semibold px-2.5 py-0.5">
+                          {planConfig.name}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {effectiveInterval === 'annual' ? 'Annual billing' : 'Monthly billing'}
+                        </span>
+                      </div>
+                      {effectiveInterval === 'monthly' && (
+                        <button
+                          onClick={handleSwitchToAnnual}
+                          className="text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-full"
+                        >
+                          Save 20% with annual
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
-                    {effectiveInterval === 'monthly' && (
+                  )}
+                  <div className="flex justify-center">
+                    <div className="flex rounded-full border border-border p-0.5 bg-background">
                       <button
-                        onClick={handleSwitchToAnnual}
-                        className="text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                        className={`px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all ${
+                          billingPeriod === 'monthly'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                        onClick={() => setBillingPeriod('monthly')}
                       >
-                        Switch to annual & save 20%
-                        <ArrowRight className="w-3 h-3" />
+                        Monthly
                       </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Billing toggle */}
-                <div className="flex justify-center">
-                  <div className="flex rounded-full border border-border p-0.5 bg-muted/40">
-                    <button
-                      className={`px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all ${
-                        billingPeriod === 'monthly'
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                      onClick={() => setBillingPeriod('monthly')}
-                    >
-                      Monthly
-                    </button>
-                    <button
-                      className={`px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
-                        billingPeriod === 'annual'
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                      onClick={() => setBillingPeriod('annual')}
-                    >
-                      Annual
-                      <span className={`inline-flex rounded-full text-[9px] font-bold px-1.5 py-0.5 leading-none ${
-                        billingPeriod === 'annual' ? 'bg-white/25 text-white' : 'bg-emerald-500/20 text-emerald-700'
-                      }`}>
-                        SAVE 20%
-                      </span>
-                    </button>
+                      <button
+                        className={`px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
+                          billingPeriod === 'annual'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                        onClick={() => setBillingPeriod('annual')}
+                      >
+                        Annual
+                        <span className={`inline-flex rounded-full text-[9px] font-bold px-1.5 py-0.5 leading-none ${
+                          billingPeriod === 'annual' ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-emerald-500/20 text-emerald-700'
+                        }`}>
+                          SAVE 20%
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
