@@ -164,7 +164,7 @@ ${environmentBlock}
    - No AI artifacts or distortions
    - Ultra high resolution
 
-${framingInstruction}${resolution && resolution !== '1K' ? `OUTPUT RESOLUTION: Generate this image at ${resolution === '4K' ? '4096' : '2048'} pixels on the longest edge (${resolution} resolution). The final image must be ultra-high-resolution and print-ready.` : ''}
+
 
 Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " Match the pose, composition, and environment from [SCENE IMAGE], but the person's identity must come from [MODEL IMAGE] only." : ""}`;
 }
