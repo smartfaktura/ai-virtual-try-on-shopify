@@ -155,49 +155,50 @@ export function FreestyleSettingsChips({
     </Popover>
   );
 
-  const qualityChip = hasModelSelected ? (
+  const resolutionChip = hasModelSelected ? (
     <Tooltip>
       <TooltipTrigger asChild>
         <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary cursor-default">
           <Lock className="w-3 h-3" />
-          Pro Model
+          Pro · 2K
         </button>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-[220px] text-center">
-        Pro model is required for model-reference generations to preserve identity. 8 credits/image.
+        Pro model with 2K resolution is required for model-reference generations. 8 credits/image.
       </TooltipContent>
     </Tooltip>
   ) : (
-    <Popover open={qualityPopoverOpen} onOpenChange={setQualityPopoverOpen}>
+    <Popover open={resolutionPopoverOpen} onOpenChange={setResolutionPopoverOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
           'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-          quality === 'high'
+          resolution !== '1K'
             ? 'border-primary/30 bg-primary/10 text-primary'
             : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
-          {quality === 'high' ? '✦ High' : 'Standard'}
+          {resolution === '1K' ? '1K' : `✦ ${resolution}`}
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-1.5" align="start">
         {([
-          { value: 'standard' as const, label: 'Standard', desc: 'Fast generation at standard resolution. 4 credits per image.' },
-          { value: 'high' as const, label: '✦ High', desc: 'Higher detail and resolution output. 10 credits per image.' },
+          { value: '1K' as const, label: '1K', desc: 'Standard model, fast generation. 4 credits per image.' },
+          { value: '2K' as const, label: '✦ 2K', desc: 'Pro model, higher resolution output. 8 credits per image.' },
+          { value: '4K' as const, label: '✦ 4K', desc: 'Pro model, maximum resolution. 12 credits per image.' },
         ]).map(opt => (
           <button
             key={opt.value}
-            onClick={() => { onQualityChange(opt.value); setQualityPopoverOpen(false); }}
+            onClick={() => { onResolutionChange(opt.value); setResolutionPopoverOpen(false); }}
             className={cn(
               'w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors flex items-start gap-3',
-              quality === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+              resolution === opt.value ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
             )}
           >
             <div className="flex-1 min-w-0">
               <div className="font-medium text-[13px]">{opt.label}</div>
               <div className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{opt.desc}</div>
             </div>
-            {quality === opt.value && <span className="text-primary mt-0.5">✓</span>}
+            {resolution === opt.value && <span className="text-primary mt-0.5">✓</span>}
           </button>
         ))}
       </PopoverContent>
