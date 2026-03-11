@@ -31,6 +31,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
   const [extracted, setExtracted] = useState<ExtractedProduct | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const handleImport = async () => {
     if (!url.trim()) return;
@@ -52,6 +53,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
       if (data.error) throw new Error(data.error);
 
       setExtracted(data as ExtractedProduct);
+      setSelectedImageIndex(0);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Import failed';
       setError(msg);
@@ -66,6 +68,10 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
     setIsSaving(true);
 
     try {
+      // Determine primary image from selection
+      const imageUrls = extracted.image_urls || [extracted.image_url];
+      const primaryImageUrl = imageUrls[selectedImageIndex] || extracted.image_url;
+
       // Insert product record
       const { data: productData, error: insertError } = await supabase
         .from('user_products')
@@ -74,7 +80,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
           title: extracted.title,
           product_type: extracted.product_type || '',
           description: extracted.description || '',
-          image_url: extracted.image_url,
+          image_url: primaryImageUrl,
           dimensions: extracted.dimensions || null,
         } as any)
         .select('id')
@@ -82,17 +88,23 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
 
       if (insertError) throw new Error(insertError.message);
 
-      // Insert all images into product_images table
-      const imageUrls = extracted.image_urls || [extracted.image_url];
+      // Insert all images — selected image gets position 0
       const storagePaths = extracted.storage_paths || [extracted.storage_path];
 
-      const imageRows = imageUrls.map((imgUrl, i) => ({
-        product_id: productData.id,
-        user_id: user.id,
-        image_url: imgUrl,
-        storage_path: storagePaths[i] || '',
-        position: i,
-      }));
+      const imageRows = imageUrls.map((imgUrl, i) => {
+        // Reorder so selectedImageIndex gets position 0
+        let position = i;
+        if (i === selectedImageIndex) position = 0;
+        else if (i < selectedImageIndex) position = i + 1;
+
+        return {
+          product_id: productData.id,
+          user_id: user.id,
+          image_url: imgUrl,
+          storage_path: storagePaths[i] || '',
+          position,
+        };
+      });
 
       const { error: imagesError } = await supabase
         .from('product_images')
@@ -183,7 +195,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
           <div className="flex gap-4">
             <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0">
               <img
-                src={extracted.image_url}
+                src={(extracted.image_urls?.[selectedImageIndex]) || extracted.image_url}
                 alt={extracted.title}
                 className="w-full h-full object-cover"
               />
@@ -214,16 +226,33 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
 
           {/* Show all extracted images as thumbnails */}
           {extracted.image_urls && extracted.image_urls.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {extracted.image_urls.map((imgUrl, i) => (
-                <div key={i} className="w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0 border border-border">
-                  <img
-                    src={imgUrl}
-                    alt={`Product image ${i + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
+            <div className="space-y-1.5">
+              <p className="text-[11px] text-muted-foreground">Click to set primary image:</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {extracted.image_urls.map((imgUrl, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setSelectedImageIndex(i)}
+                    className={`relative w-14 h-14 rounded-md overflow-hidden bg-muted shrink-0 border-2 transition-all ${
+                      i === selectedImageIndex
+                        ? 'border-primary ring-1 ring-primary/30'
+                        : 'border-border hover:border-muted-foreground/40'
+                    }`}
+                  >
+                    <img
+                      src={imgUrl}
+                      alt={`Product image ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    {i === selectedImageIndex && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
+                        <Check className="w-4 h-4 text-primary-foreground drop-shadow" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
