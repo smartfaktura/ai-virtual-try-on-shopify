@@ -206,6 +206,8 @@ export default function Generate() {
   const [generationMode, setGenerationMode] = useState<GenerationMode>('product-only');
   const [selectedModel, setSelectedModel] = useState<ModelProfile | null>(null);
   const [selectedPose, setSelectedPose] = useState<TryOnPose | null>(null);
+  const [selectedPoses, setSelectedPoses] = useState<Set<string>>(new Set());
+  const [selectedPoseMap, setSelectedPoseMap] = useState<Map<string, TryOnPose>>(new Map());
   const [modelGenderFilter, setModelGenderFilter] = useState<ModelGender | 'all'>('all');
   const [modelBodyTypeFilter, setModelBodyTypeFilter] = useState<ModelBodyType | 'all'>('all');
   const [modelAgeFilter, setModelAgeFilter] = useState<ModelAgeRange | 'all'>('all');
