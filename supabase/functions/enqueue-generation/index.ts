@@ -16,7 +16,7 @@ const HOURLY_LIMITS: Record<string, number> = {
   free: 10,
 };
 
-// Credit cost calculation — simplified pricing
+// Credit cost calculation — resolution-aware pricing
 function calculateCreditCost(
   jobType: string,
   imageCount: number,
@@ -24,15 +24,19 @@ function calculateCreditCost(
   hasModel: boolean = false,
   hasScene: boolean = false,
   _additionalProductCount: number = 0,
+  resolution: string = '1K',
 ): number {
   let perImage: number;
 
   if (jobType === "workflow" || jobType === "tryon") {
-    // Workflows and try-on: always 8 credits per image
+    // Workflows and try-on: always 8 credits per image (2K forced)
     perImage = 8;
   } else {
-    // Freestyle: 8 if model or scene, 4 otherwise
-    perImage = (hasModel || hasScene) ? 8 : 4;
+    // Freestyle: resolution-based pricing
+    const resolutionCredits = resolution === '4K' ? 12 : resolution === '2K' ? 8 : 4;
+    // Model/scene floor at 8
+    const modelSceneFloor = (hasModel || hasScene) ? 8 : 0;
+    perImage = Math.max(resolutionCredits, modelSceneFloor);
   }
 
   return imageCount * perImage;
