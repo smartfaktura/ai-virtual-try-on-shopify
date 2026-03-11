@@ -7,7 +7,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 import { cn } from '@/lib/utils';
 
-const PROMPT_TEXT = 'Studio portrait of our White Crop Top, natural lighting with soft shadows in a lifestyle setting...';
+const PROMPT_TEXT = 'White Crop Top on three models: clean studio with white background, outdoor café seated at a wooden table, and urban concrete setting shot from behind...';
 const CYCLE_MS = 12000;
 
 const CHIPS = [
