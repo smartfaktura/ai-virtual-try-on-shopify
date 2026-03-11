@@ -956,7 +956,7 @@ export default function Generate() {
       return;
     }
 
-    // Single product path (unchanged)
+    // Single product path — enqueue one job per pose
     let sourceImageUrl = '';
     let productData: { title: string; productType: string; description: string } | null = null;
     if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
@@ -973,37 +973,65 @@ export default function Generate() {
     setCurrentStep('generating');
     setGeneratingProgress(0);
 
-    const [base64ProductImage, base64ModelImage, base64SceneImage] = await Promise.all([
-      convertImageToBase64(sourceImageUrl),
-      convertImageToBase64(selectedModel.previewUrl),
-      selectedPose.previewUrl ? convertImageToBase64(selectedPose.previewUrl) : Promise.resolve(undefined),
-    ]);
+    const base64ProductImage = await convertImageToBase64(sourceImageUrl);
+    const base64ModelImage = await convertImageToBase64(selectedModel.previewUrl);
 
-    const enqueueResult = await enqueue({
-      jobType: 'tryon',
-      payload: {
-        product: { title: productData.title, description: productData.description, productType: productData.productType, imageUrl: base64ProductImage },
-        model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
-        pose: { name: selectedPose.name, description: selectedPose.promptHint || selectedPose.description, category: selectedPose.category, imageUrl: base64SceneImage },
-        aspectRatio, imageCount: parseInt(imageCount),
-        framing: framing || undefined,
-        workflow_id: activeWorkflow?.id || null,
-        product_id: selectedProduct?.id || null,
-        brand_profile_id: selectedBrandProfileId || null,
-      },
-      imageCount: parseInt(imageCount),
-      quality,
-    }, {
-      imageCount: parseInt(imageCount),
-      quality,
-      hasModel: true,
-      hasScene: true,
-      hasProduct: true,
-    });
-    if (enqueueResult) {
-      setBalanceFromServer(enqueueResult.newBalance);
+    if (posesToGenerate.length === 1) {
+      // Single scene — use existing enqueue hook for real-time tracking
+      const pose = posesToGenerate[0];
+      const base64SceneImage = pose.previewUrl ? await convertImageToBase64(pose.previewUrl) : undefined;
+      const enqueueResult = await enqueue({
+        jobType: 'tryon',
+        payload: {
+          product: { title: productData.title, description: productData.description, productType: productData.productType, imageUrl: base64ProductImage },
+          model: { name: selectedModel.name, gender: selectedModel.gender, ethnicity: selectedModel.ethnicity, bodyType: selectedModel.bodyType, ageRange: selectedModel.ageRange, imageUrl: base64ModelImage },
+          pose: { name: pose.name, description: pose.promptHint || pose.description, category: pose.category, imageUrl: base64SceneImage },
+          aspectRatio, imageCount: parseInt(imageCount),
+          framing: framing || undefined,
+          workflow_id: activeWorkflow?.id || null,
+          product_id: selectedProduct?.id || null,
+          brand_profile_id: selectedBrandProfileId || null,
+        },
+        imageCount: parseInt(imageCount),
+        quality,
+      }, {
+        imageCount: parseInt(imageCount),
+        quality,
+        hasModel: true,
+        hasScene: true,
+        hasProduct: true,
+      });
+      if (enqueueResult) {
+        setBalanceFromServer(enqueueResult.newBalance);
+      } else {
+        setCurrentStep('settings');
+      }
     } else {
-      setCurrentStep('settings');
+      // Multi-scene — use direct fetch for each pose (upfront batch enqueue)
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
+
+      const jobMap = new Map<string, string>();
+      let lastBalance: number | null = null;
+      const product = selectedProduct || { id: 'scratch', title: productData.title, description: productData.description, productType: productData.productType, vendor: '', tags: [], images: [{ id: 'scratch-img', url: sourceImageUrl }], status: 'active' as const, createdAt: '', updatedAt: '' };
+
+      for (const pose of posesToGenerate) {
+        const result = await enqueueTryOnForProduct(product as Product, token, pose);
+        if (result) {
+          jobMap.set(pose.poseId, result.jobId);
+          lastBalance = result.newBalance;
+        }
+      }
+
+      if (jobMap.size === 0) {
+        toast.error('Could not queue any scenes');
+        setCurrentStep('settings');
+        return;
+      }
+      if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setMultiProductJobIds(jobMap);
+      toast.success(`Queued ${jobMap.size} scene${jobMap.size > 1 ? 's' : ''} for generation`);
     }
     } catch (err) {
       console.error('Try-on generation failed:', err);
