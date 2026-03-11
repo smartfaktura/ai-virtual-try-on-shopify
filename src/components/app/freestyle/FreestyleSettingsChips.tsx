@@ -99,7 +99,7 @@ export function FreestyleSettingsChips({
   selectedProduct, onProductSelect, productPopoverOpen, onProductPopoverChange,
   products, isLoadingProducts,
   aspectRatio, onAspectRatioChange,
-  quality, onQualityChange,
+  resolution, onResolutionChange,
   polishPrompt, onPolishChange,
   
   stylePresets, onStylePresetsChange,
