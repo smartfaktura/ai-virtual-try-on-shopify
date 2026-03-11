@@ -832,10 +832,12 @@ export default function Generate() {
         payload,
         imageCount: workflowImageCount,
         quality: 'high',
+        resolution: workflowResolution,
         additionalProductCount: 0,
       }, {
         imageCount: workflowImageCount,
         quality: 'high',
+        resolution: workflowResolution,
         hasModel: !!needsModel,
         hasScene: false,
         hasProduct: true,
