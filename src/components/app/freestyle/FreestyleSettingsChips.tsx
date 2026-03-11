@@ -3,7 +3,7 @@ import type { GuideStepKey } from './FreestyleGuide';
 import {
   Square, RectangleHorizontal, ChevronDown,
   Wand2,
-  Smartphone, Camera, Lock, Palette, SlidersHorizontal, Sparkles,
+  Smartphone, Camera, Palette, SlidersHorizontal, Sparkles,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -155,34 +155,24 @@ export function FreestyleSettingsChips({
     </Popover>
   );
 
-  const resolutionChip = hasModelSelected ? (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-primary/30 bg-primary/10 text-primary cursor-default">
-          <Lock className="w-3 h-3" />
-          Pro · 2K
-        </button>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-[220px] text-center">
-        Pro model with 2K resolution is required for model-reference generations. 8 credits/image.
-      </TooltipContent>
-    </Tooltip>
-  ) : (
+  const resolutionChip = (
     <Popover open={resolutionPopoverOpen} onOpenChange={setResolutionPopoverOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
           'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
-          resolution !== '1K'
+          resolution !== '1K' || hasModelSelected
             ? 'border-primary/30 bg-primary/10 text-primary'
             : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
+          {hasModelSelected && <Sparkles className="w-3 h-3" />}
           {resolution === '1K' ? '1K' : `✦ ${resolution}`}
+          {hasModelSelected && resolution === '1K' && <span className="text-[10px] opacity-70">Pro</span>}
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-1.5" align="start">
         {([
-          { value: '1K' as const, label: '1K', desc: 'Standard model, fast generation. 4 credits per image.' },
+          { value: '1K' as const, label: '1K', desc: hasModelSelected ? 'Pro model (model ref). 8 credits per image.' : 'Standard model, fast generation. 4 credits per image.' },
           { value: '2K' as const, label: '✦ 2K', desc: 'Pro model, higher resolution output. 8 credits per image.' },
           { value: '4K' as const, label: '✦ 4K', desc: 'Pro model, maximum resolution. 12 credits per image.' },
         ]).map(opt => (
