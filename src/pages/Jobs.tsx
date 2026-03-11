@@ -180,7 +180,7 @@ export default function Jobs() {
               variant="ghost"
               size="sm"
               className="shrink-0 gap-1.5 text-xs"
-              onClick={() => queryClient.invalidateQueries({ queryKey: ['library'] })}
+              onClick={() => { setShowIncomingBanner(false); queryClient.invalidateQueries({ queryKey: ['library'] }); }}
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Refresh
