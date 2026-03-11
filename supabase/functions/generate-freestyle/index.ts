@@ -801,21 +801,12 @@ serve(async (req) => {
       finalPrompt = unpolished;
     }
 
-    // Add resolution instruction to prompt
-    const resolutionInstruction = resolution === '4K'
-      ? '\n\nOUTPUT RESOLUTION: Generate this image at 4096 pixels on the longest edge (4K resolution). Ultra-high-resolution, print-ready output.'
-      : resolution === '2K'
-        ? '\n\nOUTPUT RESOLUTION: Generate this image at 2048 pixels on the longest edge (2K resolution). Ultra-high-resolution, print-ready output.'
-        : '';
-    const aspectPrompt = `${finalPrompt}${resolutionInstruction}\n\nOutput aspect ratio: ${body.aspectRatio}`;
+    const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
 
     const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage].filter(Boolean).length;
     const hasModelImage = !!body.modelImage;
     const hasDualProductRef = !!body.productImage && !!body.sourceImage;
-    // Resolution-aware model selection: 2K/4K forces Pro model
-    const resolution = (body as Record<string, unknown>).resolution as string || '1K';
-    const forceProForResolution = resolution === '2K' || resolution === '4K';
-    const aiModel = (hasModelImage || hasDualProductRef || forceProForResolution)
+    const aiModel = (hasModelImage || hasDualProductRef)
       ? "google/gemini-3-pro-image-preview"
       : isQueueInternal
         ? "google/gemini-3.1-flash-image-preview"
