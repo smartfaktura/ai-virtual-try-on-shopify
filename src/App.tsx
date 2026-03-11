@@ -54,6 +54,7 @@ const BrandProfilesFeature = lazy(() => import('@/pages/features/BrandProfilesFe
 const AIModelsBackgroundsFeature = lazy(() => import('@/pages/features/AIModelsBackgroundsFeature'));
 const ShopifyImageGenerator = lazy(() => import('@/pages/features/ShopifyImageGenerator'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
+const TryFree = lazy(() => import('@/pages/TryFree'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +94,7 @@ const App = () => (
             <Route path="/features/ai-models-backgrounds" element={<AIModelsBackgroundsFeature />} />
             <Route path="/features/shopify-image-generator" element={<ShopifyImageGenerator />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/try" element={<TryFree />} />
 
             {/* Company pages */}
             <Route path="/about" element={<About />} />

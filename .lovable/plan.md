@@ -1,39 +1,30 @@
 
 
-## New Google Ads Landing Page: Try VOVV AI Free
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Create a general-purpose "Try VOVV AI Free" landing page at `/try` — the broadest conversion page for Google Ads, combining the best visual assets from across the site with Discover gallery examples.
+### Issues Found
 
-### Route
-`/try` — short, clean, perfect for ad URLs
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Page Sections
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-1. **Hero** — Badge "Try Free", H1 "Create Stunning Product Visuals with AI", subtext about uploading one photo and getting brand-ready visuals. Primary CTA "Try VOVV AI Free". Trust badges (No credit card, 20 free credits, Cancel anytime) reused from HeroSection pattern.
+### Plan
 
-2. **Results Gallery** — Grid of real Discover-feed images fetched from the database (public discover_presets table). Show 6-8 images in a masonry/grid layout with shimmer loading. This is the "See what others are creating" social proof.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-3. **Before → After Showcase** — Reuse `BeforeAfterGallery` component showing product-to-output transformations.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-4. **How It Works** — 3 steps: Upload → Customize → Download. Clean card layout.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-5. **Visual Capabilities Strip** — Horizontal showcase: AI Models (reuse `ModelShowcaseSection`), Scenes (reuse `EnvironmentShowcaseSection`).
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-6. **Use Cases Grid** — 4 cards: E-commerce Listings, Social Media Ads, Brand Campaigns, Lifestyle Content — each with a relevant icon and short copy.
-
-7. **Stats Bar** — 10,000+ images, 50+ models, 30+ scenes, < 30s per image.
-
-8. **Final CTA** — "Start Creating for Free" with strong closing copy and CTA button.
-
-### Files
-
-- **Create** `src/pages/TryFree.tsx` — new page with all sections, fetches discover images from the database
-- **Edit** `src/App.tsx` — add lazy import + public route at `/try`
-
-### Technical Details
-
-- Discover images: query `discover_presets` table (same as PublicDiscover) limited to 8 featured/recent items with `is_public = true`
-- All CTAs → `/auth`
-- SEO: Full meta tags, canonical at `https://vovv.ai/try`
-- Reuses: `PageLayout`, `SEOHead`, `BeforeAfterGallery`, `ModelShowcaseSection`, `EnvironmentShowcaseSection`, `ShimmerImage`, `getLandingAssetUrl`
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
