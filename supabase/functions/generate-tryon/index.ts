@@ -456,7 +456,8 @@ serve(async (req) => {
       );
     }
 
-    const prompt = buildPrompt(body);
+    const resolution = body.resolution || '1K';
+    const prompt = buildPrompt(body, resolution);
     console.log("Generating with prompt:", prompt.slice(0, 300) + "...");
 
     const imageCount = Math.min(body.imageCount || 4, 8);

@@ -545,7 +545,8 @@ async function generateImage(
   referenceImages: Array<{ url: string; label: string }>,
   aiModel: string,
   apiKey: string,
-  aspectRatio?: string
+  aspectRatio?: string,
+  resolution?: string
 ): Promise<string | null> {
   const maxRetries = 2;
 
