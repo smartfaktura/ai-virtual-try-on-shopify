@@ -49,7 +49,9 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
 
               const workflowName = (job.workflows as any)?.name || '';
               const productTitle = (job.user_products as any)?.title || '';
-              const label = workflowName || productTitle || 'Generated';
+              const label = workflowName && productTitle
+                ? `${workflowName} — ${productTitle}`
+                : workflowName || productTitle || 'Generated';
               const promptText = job.prompt_final || '';
 
               if (q && !label.toLowerCase().includes(q) &&
