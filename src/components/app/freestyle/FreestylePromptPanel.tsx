@@ -39,8 +39,8 @@ interface FreestylePromptPanelProps {
   isLoadingProducts: boolean;
   aspectRatio: FreestyleAspectRatio;
   onAspectRatioChange: (ar: FreestyleAspectRatio) => void;
-  quality: 'standard' | 'high';
-  onQualityChange: (q: 'standard' | 'high') => void;
+  resolution: '1K' | '2K' | '4K';
+  onResolutionChange: (r: '1K' | '2K' | '4K') => void;
   polishPrompt: boolean;
   onPolishChange: (v: boolean) => void;
   stylePresets: string[];
