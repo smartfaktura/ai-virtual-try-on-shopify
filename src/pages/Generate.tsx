@@ -1004,6 +1004,7 @@ export default function Generate() {
       });
       if (enqueueResult) {
         setBalanceFromServer(enqueueResult.newBalance);
+        queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
       } else {
         setCurrentStep('settings');
       }
