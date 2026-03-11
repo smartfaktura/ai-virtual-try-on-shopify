@@ -854,6 +854,7 @@ export default function Generate() {
         selectedVariationIndices: Array.from(selectedVariationIndices),
         angleMultiplier,
         quality: 'high',
+        resolution: workflowResolution,
         imageCount: workflowImageCount,
         hasModel: !!needsModel,
         hasScene: false,
