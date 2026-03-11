@@ -64,6 +64,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
                   id: `${job.id}-${i}`,
                   source: 'generation',
                   label,
+                  productTitle: productTitle || undefined,
                   prompt: job.prompt_final || undefined,
                   date: new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                   createdAt: job.created_at,

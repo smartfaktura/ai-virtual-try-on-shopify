@@ -164,7 +164,9 @@ ${environmentBlock}
    - No AI artifacts or distortions
    - Ultra high resolution
 
-${framingInstruction}Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " Match the pose, composition, and environment from [SCENE IMAGE], but the person's identity must come from [MODEL IMAGE] only." : ""}`;
+${framingInstruction}OUTPUT RESOLUTION: Generate this image at 2048 pixels on the longest edge (2K resolution). The final image must be ultra-high-resolution and print-ready.
+
+Remember: The final image must show THE EXACT PERSON from [MODEL IMAGE] wearing THE EXACT GARMENT from [PRODUCT IMAGE].${hasSceneImage ? " Match the pose, composition, and environment from [SCENE IMAGE], but the person's identity must come from [MODEL IMAGE] only." : ""}`;
 }
 
 const negativePrompt =
