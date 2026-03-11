@@ -222,6 +222,7 @@ export default function Generate() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [quality, setQuality] = useState<ImageQuality>('standard');
   const [framing, setFraming] = useState<FramingOption | null>(null);
+  const [workflowResolution, setWorkflowResolution] = useState<'1K' | '2K' | '4K'>('1K');
 
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
