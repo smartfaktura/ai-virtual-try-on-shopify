@@ -786,6 +786,7 @@ export default function Generate() {
       product_angles: productAngle !== 'front' ? productAngle : undefined,
       quality,
       aspectRatio,
+      resolution: workflowResolution,
       framing: framing || undefined,
       styling_notes: flatLayStylingNotes || undefined,
       prop_style: isFlatLay ? flatLayPropStyle : undefined,
