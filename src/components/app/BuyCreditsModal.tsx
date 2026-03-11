@@ -118,8 +118,8 @@ export function BuyCreditsModal() {
             </div>
           </div>
 
-          {/* Tab switcher — pill style */}
-          <div className="px-4 sm:px-6 pt-3 pb-1">
+          {/* Tab switcher + billing toggle — single row */}
+          <div className="px-4 sm:px-6 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
             <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
               {(['topup', 'upgrade'] as const).map(tab => (
                 <button
@@ -135,6 +135,35 @@ export function BuyCreditsModal() {
                 </button>
               ))}
             </div>
+            {activeTab === 'upgrade' && (
+              <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
+                <button
+                  className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all ${
+                    billingPeriod === 'monthly'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setBillingPeriod('monthly')}
+                >
+                  Monthly
+                </button>
+                <button
+                  className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-full transition-all flex items-center gap-1 ${
+                    billingPeriod === 'annual'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setBillingPeriod('annual')}
+                >
+                  Annual
+                  <span className={`inline-flex rounded-full text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 leading-none ${
+                    billingPeriod === 'annual' ? 'bg-primary-foreground/25 text-primary-foreground' : 'bg-emerald-500/20 text-emerald-700'
+                  }`}>
+                    SAVE 20%
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Content */}
