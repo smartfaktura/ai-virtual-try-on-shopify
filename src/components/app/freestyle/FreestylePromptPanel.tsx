@@ -251,7 +251,7 @@ export function FreestylePromptPanel({
               selectedScene={selectedScene} onSceneSelect={onSceneSelect}
               scenePopoverOpen={scenePopoverOpen} onScenePopoverChange={onScenePopoverChange}
               aspectRatio={aspectRatio} onAspectRatioChange={onAspectRatioChange}
-              resolution={resolution} onResolutionChange={onResolutionChange}
+              
               polishPrompt={polishPrompt} onPolishChange={onPolishChange}
               stylePresets={stylePresets} onStylePresetsChange={onStylePresetsChange}
               selectedBrandProfile={selectedBrandProfile} onBrandProfileSelect={onBrandProfileSelect}
