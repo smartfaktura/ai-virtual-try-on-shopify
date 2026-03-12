@@ -1,4 +1,4 @@
-import { useState, type ImgHTMLAttributes } from 'react';
+import { useState, useRef, useCallback, type ImgHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 interface ShimmerImageProps extends ImgHTMLAttributes<HTMLImageElement> {
