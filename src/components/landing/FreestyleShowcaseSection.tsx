@@ -7,7 +7,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 
 const PROMPT_TEXT = 'White Crop Top, three looks: studio, outdoor café, urban concrete';
-const CYCLE_MS = 12000;
+const CYCLE_MS = 8000;
 
 const CHIPS = [
   {
@@ -15,14 +15,14 @@ const CHIPS = [
     icon: Package,
     label: 'White Crop Top',
     thumb: '/images/source-crop-top.jpg',
-    delay: 3000,
+    delay: 1500,
   },
   {
     key: 'scene' as const,
     icon: Camera,
     label: 'Multi-Scene',
     thumb: '/images/try-showcase/cafe-lifestyle.png',
-    delay: 4000,
+    delay: 2200,
   },
 ];
 
