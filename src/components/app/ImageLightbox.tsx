@@ -99,8 +99,8 @@ export function ImageLightbox({
           <button
             onClick={handlePrevious}
             className={cn(
-              'absolute left-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors',
-              isMobile ? 'w-9 h-9' : 'w-12 h-12 left-4'
+              'absolute left-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/20 border border-white/20 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/30 transition-colors',
+              isMobile ? 'w-10 h-10' : 'w-12 h-12 left-4'
             )}
           >
             <ChevronLeft className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
@@ -108,8 +108,8 @@ export function ImageLightbox({
           <button
             onClick={handleNext}
             className={cn(
-              'absolute right-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors',
-              isMobile ? 'w-9 h-9' : 'w-12 h-12 right-4'
+              'absolute right-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/20 border border-white/20 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/30 transition-colors',
+              isMobile ? 'w-10 h-10' : 'w-12 h-12 right-4'
             )}
           >
             <ChevronRight className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
@@ -138,47 +138,42 @@ export function ImageLightbox({
 
         {/* Action bar */}
         {isMobile ? (
-          /* ── Mobile: icon-only row + promoted Share pill ── */
-          <div className="flex flex-col items-center gap-3 mt-4 w-full">
-            <div className="flex items-center justify-center gap-3">
-              {onSelect && (
-                <button
-                  onClick={() => onSelect(currentIndex)}
-                  className={cn(
-                    iconBtnClass,
-                    isSelected && 'bg-primary text-primary-foreground hover:bg-primary/80'
-                  )}
-                >
-                  <Check className="w-4 h-4" />
-                </button>
-              )}
-              {onDownload && (
-                <button onClick={() => onDownload(currentIndex)} className={iconBtnClass}>
-                  <Download className="w-4 h-4" />
-                </button>
-              )}
-              {onCopyPrompt && (
-                <button onClick={() => onCopyPrompt(currentIndex)} className={iconBtnClass}>
-                  <ClipboardCopy className="w-4 h-4" />
-                </button>
-              )}
-              {onRegenerate && (
-                <button onClick={() => onRegenerate(currentIndex)} className={iconBtnClass}>
-                  <RefreshCw className="w-4 h-4" />
-                </button>
-              )}
-              {onDelete && (
-                <button onClick={() => onDelete(currentIndex)} className={deleteBtnClass}>
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-            {onShare && (
+          /* ── Mobile: single icon-only row ── */
+          <div className="flex items-center justify-center gap-3 mt-4">
+            {onSelect && (
               <button
-                onClick={() => onShare(currentIndex)}
-                className={iconBtnClass}
+                onClick={() => onSelect(currentIndex)}
+                className={cn(
+                  iconBtnClass,
+                  isSelected && 'bg-primary text-primary-foreground hover:bg-primary/80'
+                )}
               >
+                <Check className="w-4 h-4" />
+              </button>
+            )}
+            {onDownload && (
+              <button onClick={() => onDownload(currentIndex)} className={iconBtnClass}>
+                <Download className="w-4 h-4" />
+              </button>
+            )}
+            {onCopyPrompt && (
+              <button onClick={() => onCopyPrompt(currentIndex)} className={iconBtnClass}>
+                <ClipboardCopy className="w-4 h-4" />
+              </button>
+            )}
+            {onRegenerate && (
+              <button onClick={() => onRegenerate(currentIndex)} className={iconBtnClass}>
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            )}
+            {onShare && (
+              <button onClick={() => onShare(currentIndex)} className={iconBtnClass}>
                 <Trophy className="w-4 h-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button onClick={() => onDelete(currentIndex)} className={deleteBtnClass}>
+                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>
