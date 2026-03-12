@@ -176,10 +176,9 @@ export function ImageLightbox({
             {onShare && (
               <button
                 onClick={() => onShare(currentIndex)}
-                className="w-full max-w-xs flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-colors backdrop-blur-md"
+                className={iconBtnClass}
               >
                 <Trophy className="w-4 h-4" />
-                Share & Win up to 10K credits
               </button>
             )}
           </div>
