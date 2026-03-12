@@ -1358,6 +1358,10 @@ export default function Generate() {
   const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 
   const getStepNumber = () => {
+    if (isUpscale) {
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, settings: 2, generating: 3, results: 3 };
+      return map[currentStep] || 1;
+    }
     if (isFlatLay) {
       if (currentStep === 'settings' && flatLayPhase === 'surfaces') return 3;
       if (currentStep === 'settings' && flatLayPhase === 'details') return 4;
