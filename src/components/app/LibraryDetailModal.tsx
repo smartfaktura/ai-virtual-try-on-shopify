@@ -86,7 +86,8 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
     setDeleting(false);
   };
 
-  const isUpscaled = item.quality === 'upscaled';
+  const isUpscaled = item.quality?.startsWith('upscaled_') || item.quality === 'upscaled';
+  const upscaleLabel = item.quality === 'upscaled_4k' ? '4K' : item.quality === 'upscaled_2k' ? '2K' : item.quality === 'upscaled' ? 'HD' : null;
 
   return (
     <>
@@ -131,9 +132,9 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 </p>
                 <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
                   {item.label}
-                  {isUpscaled && (
+                  {upscaleLabel && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
-                      <Sparkles className="w-3 h-3" /> PRO HD
+                      <Sparkles className="w-3 h-3" /> {upscaleLabel}
                     </span>
                   )}
                 </h2>
@@ -173,16 +174,14 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                   <Download className="w-4 h-4 mr-2" /> Download Image
                 </Button>
 
-                {!isUpscaled && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setUpscaleModalOpen(true)}
-                    className="w-full h-11 rounded-xl text-sm font-medium"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Enhance to 2K / 4K
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  onClick={() => setUpscaleModalOpen(true)}
+                  className="w-full h-11 rounded-xl text-sm font-medium"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  {upscaleLabel ? `Re-enhance (currently ${upscaleLabel})` : 'Enhance to 2K / 4K'}
+                </Button>
 
                 {item.source === 'freestyle' && (
                   <Button

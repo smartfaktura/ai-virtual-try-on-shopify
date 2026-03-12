@@ -342,7 +342,7 @@ export default function Jobs() {
           <Button
             size="sm"
             onClick={() => {
-              const nonUpscaled = items.filter(i => selectedIds.has(i.id) && i.quality !== 'upscaled');
+              const nonUpscaled = items.filter(i => selectedIds.has(i.id) && !i.quality?.startsWith('upscaled_') && i.quality !== 'upscaled');
               if (nonUpscaled.length === 0) {
                 toast.info('All selected images are already upscaled');
                 return;
@@ -377,7 +377,7 @@ export default function Jobs() {
         open={upscaleModalOpen}
         onClose={() => setUpscaleModalOpen(false)}
         items={items
-          .filter(i => selectedIds.has(i.id) && i.quality !== 'upscaled')
+          .filter(i => selectedIds.has(i.id) && !i.quality?.startsWith('upscaled_') && i.quality !== 'upscaled')
           .map(i => ({
             imageUrl: i.imageUrl,
             sourceType: i.source as 'freestyle' | 'generation',

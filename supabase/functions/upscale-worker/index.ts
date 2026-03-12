@@ -54,6 +54,7 @@ serve(async (req) => {
     }
 
     const resConfig = RESOLUTION_CONFIG[resolution] || RESOLUTION_CONFIG["2k"];
+    const qualityTag = resolution === "4k" ? "upscaled_4k" : "upscaled_2k";
 
     console.log(`[upscale-worker] Job ${jobId}: upscaling to ${resConfig.label} (${resConfig.maxPx}px), source=${sourceType}/${sourceId}`);
 
@@ -168,17 +169,8 @@ serve(async (req) => {
       bytes[i] = binaryStr.charCodeAt(i);
     }
 
-    // Parse sourceId for generation items (composite: "jobUUID-index")
-    let storageId = sourceId;
-    if (sourceType === "generation") {
-      const lastDash = sourceId.lastIndexOf("-");
-      if (lastDash > 0) {
-        storageId = sourceId.substring(0, lastDash);
-      }
-    }
-
     const ext = newMimeType.includes("png") ? "png" : "jpg";
-    const storagePath = `upscaled/${userId}/${storageId}-${resolution}.${ext}`;
+    const storagePath = `upscaled/${userId}/${crypto.randomUUID()}-${resolution}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("freestyle-images")
@@ -198,50 +190,65 @@ serve(async (req) => {
 
     const newImageUrl = publicUrlData.publicUrl;
 
-    // 6. Update source DB record
-    if (sourceType === "freestyle") {
-      const { error: updateError } = await supabase
-        .from("freestyle_generations")
-        .update({ image_url: newImageUrl, quality: "upscaled" })
-        .eq("id", sourceId)
-        .eq("user_id", userId);
+    // 6. Create NEW record — do NOT update the original
+    // Fetch source metadata to copy into the new record
+    let sourcePrompt = `Upscaled from ${sourceType}/${sourceId}`;
+    let sourceAspectRatio = "1:1";
+    let sourceModelId: string | null = null;
+    let sourceSceneId: string | null = null;
+    let sourceProductId: string | null = null;
 
-      if (updateError) {
-        console.error("[upscale-worker] DB update error:", updateError);
-        throw new Error("Failed to update freestyle record");
+    if (sourceType === "freestyle") {
+      const { data: srcRow } = await supabase
+        .from("freestyle_generations")
+        .select("prompt, aspect_ratio, model_id, scene_id, product_id")
+        .eq("id", sourceId)
+        .eq("user_id", userId)
+        .single();
+
+      if (srcRow) {
+        sourcePrompt = srcRow.prompt || sourcePrompt;
+        sourceAspectRatio = srcRow.aspect_ratio || sourceAspectRatio;
+        sourceModelId = srcRow.model_id;
+        sourceSceneId = srcRow.scene_id;
+        sourceProductId = srcRow.product_id;
       }
     } else if (sourceType === "generation") {
+      // For generation items, extract the job prompt
       const lastDash = sourceId.lastIndexOf("-");
       const realJobId = sourceId.substring(0, lastDash);
-      const resultIndex = parseInt(sourceId.substring(lastDash + 1), 10);
 
-      const { data: jobData, error: fetchError } = await supabase
+      const { data: jobData } = await supabase
         .from("generation_jobs")
-        .select("results")
+        .select("prompt_final, ratio, product_id")
         .eq("id", realJobId)
         .eq("user_id", userId)
         .single();
 
-      if (fetchError || !jobData) {
-        console.error("[upscale-worker] Failed to fetch job:", fetchError);
-        throw new Error("Failed to find generation job");
+      if (jobData) {
+        sourcePrompt = jobData.prompt_final || sourcePrompt;
+        sourceAspectRatio = jobData.ratio || sourceAspectRatio;
+        sourceProductId = jobData.product_id;
       }
+    }
 
-      const results = Array.isArray(jobData.results) ? [...(jobData.results as string[])] : [];
-      if (resultIndex >= 0 && resultIndex < results.length) {
-        results[resultIndex] = newImageUrl;
-      }
+    // Insert a new freestyle_generations row for the upscaled version
+    const { error: insertError } = await supabase
+      .from("freestyle_generations")
+      .insert({
+        user_id: userId,
+        image_url: newImageUrl,
+        prompt: sourcePrompt,
+        aspect_ratio: sourceAspectRatio,
+        quality: qualityTag,
+        model_id: sourceModelId,
+        scene_id: sourceSceneId,
+        product_id: sourceProductId,
+      });
 
-      const { error: updateError } = await supabase
-        .from("generation_jobs")
-        .update({ results, quality: "upscaled" })
-        .eq("id", realJobId)
-        .eq("user_id", userId);
-
-      if (updateError) {
-        console.error("[upscale-worker] DB update error:", updateError);
-        throw new Error("Failed to update generation job");
-      }
+    if (insertError) {
+      console.error("[upscale-worker] Insert error:", insertError);
+      throw new Error("Failed to create upscaled record");
     }
 
     // 7. Mark queue job as completed
