@@ -139,15 +139,7 @@ export function HeroSection() {
 
   const current = showcases[activeScene];
 
-  // Preload hero product image via <link rel="preload"> for LCP
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = '/images/source-crop-top.jpg';
-    document.head.appendChild(link);
-    return () => { document.head.removeChild(link); };
-  }, []);
+  // Product image preload is handled by <link rel="preload"> in index.html
 
   // Only preload scene 0 outputs + product thumbnails for other scenes
   useEffect(() => {

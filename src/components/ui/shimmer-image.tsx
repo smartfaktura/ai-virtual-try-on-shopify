@@ -1,4 +1,4 @@
-import { useState, type ImgHTMLAttributes } from 'react';
+import { useState, useRef, useCallback, type ImgHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 interface ShimmerImageProps extends ImgHTMLAttributes<HTMLImageElement> {
@@ -33,6 +33,13 @@ export function ShimmerImage({
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
 
+  // Ref callback: if the image is already cached, skip shimmer immediately
+  const imgRef = useCallback((node: HTMLImageElement | null) => {
+    if (node && node.complete && node.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }, []);
+
   return (
     <div
       className={cn('relative overflow-hidden w-full h-full', wrapperClassName)}
@@ -50,6 +57,7 @@ export function ShimmerImage({
       )}
 
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         className={cn(
