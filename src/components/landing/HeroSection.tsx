@@ -34,7 +34,7 @@ const showcases: ProductShowcase[] = [
       { img: '/images/try-showcase/pilates-studio.png', label: 'Pilates Studio' },
       { img: '/images/try-showcase/studio-dark.png', label: 'Studio Portrait' },
     ],
-    caption: 'Same top — ∞ environments — 12 seconds',
+    caption: 'Same top ∞ environments in 12 seconds',
   },
   {
     product: { img: h('hero-product-serum.jpg'), label: 'Face Serum', subtitle: '1 product photo' },
