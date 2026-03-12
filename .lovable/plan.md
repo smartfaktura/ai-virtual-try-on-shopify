@@ -1,30 +1,23 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Upscale Animation: Reduce Blur + Eliminate Flash on Loop Reset
 
-### Issues Found
+### Problems
+1. **Blur too strong** — `blur(6px)` looks unnatural; needs to be subtler
+2. **Flash on loop reset** — The component uses `key={iteration}` which unmounts/remounts everything, causing a visible flash when the cycle restarts
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes — `src/components/app/WorkflowAnimatedThumbnail.tsx`
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+#### 1. Reduce blur intensity
+- Change `filter: 'blur(6px) saturate(0.9)'` to `filter: 'blur(3px) saturate(0.95)'`
+- Reduce scale compensation from `1.06` to `1.03` (less blur = less edge bleed to hide)
 
-### Plan
+#### 2. Eliminate flash on loop reset
+Instead of re-keying the component on each iteration (which destroys and recreates all DOM elements causing a flash), use CSS animation iteration or a state-driven approach:
+- Remove `key={isActive ? iteration : 'static'}` from the container
+- Use a `phase` state that cycles through: `'blur'` → `'wiping'` → `'sharp'` → back to `'blur'`
+- On reset, **cross-fade** the sharp image out (opacity transition) while keeping the blurred layer always visible underneath — no abrupt unmount
+- Timeline: blur visible 1s → wipe 1.5s → hold sharp 2s → fade sharp out over 0.5s → loop
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
-
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+This eliminates the jarring re-render flash entirely.
 
