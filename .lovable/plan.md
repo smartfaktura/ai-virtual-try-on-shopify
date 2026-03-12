@@ -1,19 +1,30 @@
 
 
-## Fix Freestyle Demo Panel Dimension Changes on Mobile
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-On mobile (390px), when chips activate from short labels ("Product", "Scene") to longer labels ("White Crop Top", "Multi-Scene") with thumbnail images, the chips row wraps to two lines because `flex-wrap` is set. This causes the demo panel to grow in height mid-animation, creating a jarring layout shift.
+### Issues Found
 
-### Solution
-1. **Remove `flex-wrap`** from the chips row — use `flex-nowrap` with `overflow-hidden` so it never wraps
-2. **Truncate chip labels on mobile** — add `max-w-[90px]` and `truncate` to chip text so "White Crop Top" becomes "White Crop..." and fits
-3. **Fixed height for the chips row** — set `h-10` on the chips container so it never changes height regardless of chip state
-4. **Shrink Generate button on mobile** — use shorter padding `px-3` on mobile to leave more room for chips
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Changes — `src/components/landing/FreestyleShowcaseSection.tsx`
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-- Line 152: Change `flex-wrap` to `flex-nowrap` and add `h-10` for fixed height
-- Lines 157-181: Add `shrink-0` to chips, add `max-w-[80px] sm:max-w-none truncate` to the label text span
-- Line 187: Reduce mobile padding on generate button
+### Plan
+
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
