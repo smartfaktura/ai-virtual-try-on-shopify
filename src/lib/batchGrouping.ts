@@ -13,6 +13,7 @@ export interface ActiveJob {
   job_type?: string | null;
   quality?: string | null;
   batch_id?: string | null;
+  resolution?: string | null;
 }
 
 export interface BatchGroup {
@@ -34,6 +35,8 @@ export interface BatchGroup {
   job_type: string | null;
   /** Quality setting ('standard' or 'high') */
   quality: string | null;
+  /** Upscale resolution ('2k' or '4k') when job_type is 'upscale' */
+  resolution: string | null;
 }
 
 /**
@@ -84,6 +87,7 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       created_at: anchor.created_at,
       job_type: anchor.job_type ?? null,
       quality: anchor.quality ?? null,
+      resolution: anchor.resolution ?? null,
     });
   }
 
@@ -131,6 +135,7 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       created_at: anchor.created_at,
       job_type: anchor.job_type ?? null,
       quality: anchor.quality ?? null,
+      resolution: anchor.resolution ?? null,
     });
   }
 

@@ -59,6 +59,7 @@ export function GlobalGenerationBar() {
           credits_reserved: row.credits_reserved,
           job_type: row.job_type,
           quality: (payload?.quality as string) ?? null,
+          resolution: (payload?.resolution as string) ?? null,
         };
       });
 
@@ -80,7 +81,7 @@ export function GlobalGenerationBar() {
 
     if (justFinished.length > 0) {
       setCompletedGroups((prev) => {
-        const newCompleted = justFinished.map((key) => ({
+        const newCompleted: BatchGroup[] = justFinished.map((key) => ({
           key,
           workflow_id: null,
           workflow_name: 'Generation',
@@ -95,6 +96,7 @@ export function GlobalGenerationBar() {
           created_at: new Date().toISOString(),
           job_type: null,
           quality: null,
+          resolution: null,
         }));
         return [...prev, ...newCompleted];
       });
@@ -146,14 +148,16 @@ export function GlobalGenerationBar() {
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">
-                          {group.workflow_name ?? 'Generation'}
+                          {group.job_type === 'upscale'
+                            ? `Upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
+                            : (group.workflow_name ?? 'Generation')}
                           {group.product_name ? ` — ${group.product_name}` : ''}
                         </p>
                         <p className="text-[11px] text-muted-foreground">
                           {isBatch
                             ? `${group.completedCount}/${group.totalCount} done · ${elapsed}`
                             : isProcessing
-                              ? `Generating… ${elapsed}`
+                              ? `${group.job_type === 'upscale' ? 'Upscaling' : 'Generating'}… ${elapsed}`
                               : `Queued · ${elapsed}`}
                         </p>
                       </div>
