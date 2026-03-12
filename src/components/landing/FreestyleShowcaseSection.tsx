@@ -157,7 +157,7 @@ export function FreestyleShowcaseSection() {
                     <div
                       key={chip.key}
                       className={cn(
-                        'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[11px] font-medium border transition-[color,background-color,border-color,transform] duration-500 shrink-0',
+                        'inline-flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-full text-[11px] font-medium border transition-[color,background-color,border-color,transform] duration-500 shrink-0',
                         active
                           ? 'border-primary/40 bg-primary/10 text-primary scale-105'
                           : 'border-border/50 bg-muted/30 text-muted-foreground/50',
@@ -167,12 +167,12 @@ export function FreestyleShowcaseSection() {
                         <img
                           src={chip.thumb}
                           alt={chip.label}
-                          className="w-5 h-5 object-cover rounded shrink-0"
+                          className="w-4 h-4 sm:w-5 sm:h-5 object-cover rounded shrink-0"
                         />
                       ) : (
                         <Icon className="w-3.5 h-3.5 shrink-0" />
                       )}
-                      <span className="max-w-[80px] sm:max-w-none truncate">
+                      <span className="max-w-[70px] sm:max-w-none truncate">
                         {active
                           ? chip.label
                           : chip.key.charAt(0).toUpperCase() + chip.key.slice(1)}
