@@ -48,7 +48,7 @@ const showcases: ProductShowcase[] = [
       { img: h('hero-serum-garden.jpg'), label: 'Garden' },
       { img: h('hero-serum-moody.jpg'), label: 'Moody Dark' },
     ],
-    caption: 'Same serum — ∞ scenes — 12 seconds',
+    caption: 'Same serum ∞ scenes in 12 seconds',
   },
   {
     product: { img: h('hero-product-ring.jpg'), label: 'Gold Ring', subtitle: '1 product photo' },
