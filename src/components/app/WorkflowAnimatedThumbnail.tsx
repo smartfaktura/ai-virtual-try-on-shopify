@@ -440,10 +440,9 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
     return () => clearInterval(timer);
   }, [isActive, totalDuration, isCarousel]);
 
-  // For carousel mode, delegate to dedicated component
-  if (isCarousel) {
-    return <CarouselThumbnail scene={scene} isActive={isActive} />;
-  }
+  // Delegate to specialized components
+  if (isCarousel) return <CarouselThumbnail scene={scene} isActive={isActive} />;
+  if (isUpscale) return <UpscaleThumbnail scene={scene} isActive={isActive} />;
 
   const bgSrc = scene.backgrounds ? scene.backgrounds[iteration % scene.backgrounds.length] : scene.background;
 
