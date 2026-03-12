@@ -1,30 +1,33 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Improve Mobile Hero Carousel Arrow UX
 
-### Issues Found
+### Problem
+The current arrows are tiny (28px), sit on top of image content, and feel fiddly on mobile touchscreens. They lack active/disabled states and don't indicate scroll position.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Solution — Mobile-optimized carousel navigation
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**1. Bigger touch targets with better positioning**
+- Increase arrow buttons from `w-7 h-7` to `w-9 h-9` (36px) — meets 44px touch target with padding
+- Add `active:scale-90` for tactile press feedback
+- Hide left arrow when scrolled to start, hide right arrow when scrolled to end (use the existing `scrollState`)
+- Add `transition-opacity` so arrows fade in/out smoothly
 
-### Plan
+**2. Add dot indicators below the carousel**
+- Small dots row showing approximate scroll position (one dot per ~2 cards)
+- Active dot highlighted with `bg-primary`, others `bg-muted-foreground/30`
+- Provides visual context of how many images are available
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**3. Edge gradient overlays**
+- Add subtle gradient fade on left/right edges of the scroll strip to hint at more content
+- Left gradient: `bg-gradient-to-r from-background to-transparent`
+- Right gradient: `bg-gradient-to-l from-background to-transparent`
+- Only show when there's content to scroll in that direction
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### Changes — `src/components/landing/HeroSection.tsx` (lines 252-303)
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+- Arrow buttons: `w-9 h-9`, `active:scale-90 transition-all`, conditionally render based on scroll position
+- Add `activeIndex` state derived from scroll position for dot indicators
+- Add gradient overlays as `absolute` pseudo-elements on the scroll container edges
+- Add a dot row `div` with `flex gap-1.5 justify-center` below the scroll strip
 
