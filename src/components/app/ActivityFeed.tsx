@@ -101,16 +101,20 @@ export function ActivityFeed() {
       // Recent freestyle generations
       const { data: freestyles } = await supabase
         .from('freestyle_generations')
-        .select('id, prompt, created_at')
+        .select('id, prompt, quality, created_at')
         .order('created_at', { ascending: false })
         .limit(3);
 
       for (const f of freestyles ?? []) {
         const truncated = f.prompt.length > 30 ? f.prompt.slice(0, 30) + '…' : f.prompt;
+        const isUpscaled = f.quality?.startsWith('upscaled_');
+        const resolution = f.quality?.includes('4k') ? '4K' : '2K';
         items.push({
           id: `freestyle-${f.id}`,
-          icon: Sparkles,
-          text: `Freestyle "${truncated}" generated`,
+          icon: isUpscaled ? Sparkles : Sparkles,
+          text: isUpscaled
+            ? `Enhanced to ${resolution} — "${truncated}"`
+            : `Freestyle "${truncated}" generated`,
           time: formatDistanceToNow(new Date(f.created_at), { addSuffix: true }),
           sortDate: new Date(f.created_at),
         });

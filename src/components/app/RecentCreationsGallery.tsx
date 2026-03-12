@@ -97,10 +97,13 @@ export function RecentCreationsGallery() {
       if (!freestyleResult.error) {
         for (const f of freestyleResult.data ?? []) {
           const signedUrl = await toSignedUrl(f.image_url);
+          const isUpscaled = f.quality?.startsWith('upscaled_');
+          const resolution = f.quality?.includes('4k') ? '4K' : '2K';
           items.push({
             id: f.id,
             imageUrl: signedUrl,
-            label: 'Freestyle',
+            label: isUpscaled ? 'Enhanced' : 'Freestyle',
+            subtitle: isUpscaled ? `${resolution} Upscale` : undefined,
             date: new Date(f.created_at).toLocaleDateString(),
             rawDate: f.created_at,
           });
