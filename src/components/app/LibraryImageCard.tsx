@@ -110,7 +110,9 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
         {/* Top: badge */}
         <div className="flex justify-between items-start">
           <span className="text-[10px] px-2 py-0.5 rounded-md font-medium backdrop-blur-sm flex items-center gap-1 bg-black/40 text-white">
-            {item.source === 'freestyle' ? (
+            {item.quality?.startsWith('upscaled_') ? (
+              <><Sparkles className="w-3 h-3" /> Enhanced</>
+            ) : item.source === 'freestyle' ? (
               <><Sparkles className="w-3 h-3" /> Freestyle</>
             ) : (
               <><Camera className="w-3 h-3" /> {item.label}</>
