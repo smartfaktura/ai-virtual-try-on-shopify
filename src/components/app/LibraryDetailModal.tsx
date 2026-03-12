@@ -186,25 +186,21 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 </>
               )}
 
-              {/* Share to Discover — visible to all authenticated users */}
-              <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold text-foreground">Share to Discover</h3>
+              {/* Share to Discover */}
+              <div className="rounded-xl border border-border/40 bg-primary/5 p-5 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <Trophy className="w-5 h-5 text-primary" />
+                  <h3 className="text-base font-semibold text-foreground">Share to Discover</h3>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Submit your best generations and win up to 10,000 credits
+                <p className="text-sm text-muted-foreground">
+                  Submit your best work · Win up to 10,000 credits
                 </p>
-                <p className="text-[10px] text-muted-foreground/60 leading-relaxed italic">
-                  Each month we randomly select winners from submissions and award up to 10,000 credits.
-                </p>
-                <button
+                <Button
                   onClick={() => setSubmitDiscoverOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-medium border border-primary/30 bg-transparent text-primary hover:bg-primary/10 transition-colors"
+                  className="w-full h-11 rounded-xl text-sm font-medium"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  Submit for Review
-                </button>
+                  <Send className="w-4 h-4 mr-2" /> Submit for Review
+                </Button>
               </div>
 
               {/* Admin actions */}
