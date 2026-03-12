@@ -24,6 +24,7 @@ export function BuyCreditsModal() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
