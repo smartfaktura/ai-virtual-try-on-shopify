@@ -175,7 +175,7 @@ export function FreestyleShowcaseSection() {
               </div>
 
               {/* Chips + Generate row */}
-              <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 h-10 overflow-hidden">
+              <div <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 h-10 overflow-hidden pl-0.5">>
                 {CHIPS.map((chip) => {
                   const Icon = chip.icon;
                   const active = activeChips[chip.key];
