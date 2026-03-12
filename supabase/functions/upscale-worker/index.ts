@@ -73,13 +73,23 @@ serve(async (req) => {
     const imgBase64 = btoa(binary);
     const mimeType = imgResponse.headers.get("content-type") || "image/png";
 
-    // 2. Build resolution-specific prompt
+    // 2. Build resolution-specific prompt with professional upscaling directives
     const targetPx = resConfig.maxPx;
-    const promptText = `Upscale this image to ${targetPx}px on its longest edge. Output the EXACT same image at higher resolution as a PNG. Do not change, crop, or alter anything — preserve identical composition, colors, lighting, framing, and every detail. Maximum sharpness, no artifacts, lossless quality.`;
+    const promptText = `You are a professional image upscaler. Take this image and output the EXACT same image at ${targetPx}px on its longest edge as a high-resolution PNG.
 
-    // 3. Call Gemini 3.1 Flash Image for upscale
+CRITICAL RULES:
+- Preserve EVERY detail: composition, colors, lighting, shadows, reflections, framing
+- Do NOT add, remove, change, or hallucinate any element
+- Do NOT crop, reframe, or alter the aspect ratio
+- Enhance sharpness: visible material textures, fine stitching, micro-contrast on skin texture
+- Maximize detail clarity on edges, text, patterns, and fine structures
+- Razor-sharp eye detail with individual eyelash rendering where applicable
+- Output as lossless PNG at the highest possible quality
+- The result must be indistinguishable from the original except at higher resolution`;
+
+    // 3. Call Gemini 3 Pro Image for maximum upscale fidelity
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 90_000);
+    const timeout = setTimeout(() => controller.abort(), 120_000);
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -88,7 +98,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3.1-flash-image-preview",
+        model: "google/gemini-3-pro-image-preview",
         modalities: ["image", "text"],
         messages: [
           {
