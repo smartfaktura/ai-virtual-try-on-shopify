@@ -258,6 +258,8 @@ export function HeroSection() {
                     alt={current.product.label}
                     className="w-full h-full object-cover transition-all duration-500"
                     aspectRatio="3/4"
+                    width={200}
+                    height={267}
                     fetchPriority="high"
                   />
                   <span className="absolute top-3 left-3 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
