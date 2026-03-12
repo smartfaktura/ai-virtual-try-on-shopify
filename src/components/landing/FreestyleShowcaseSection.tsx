@@ -109,7 +109,7 @@ export function FreestyleShowcaseSection() {
   }, [cycle, promptText]);
 
   return (
-    <section className="py-20 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
+    <section className="py-12 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
       <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10 max-w-4xl">
