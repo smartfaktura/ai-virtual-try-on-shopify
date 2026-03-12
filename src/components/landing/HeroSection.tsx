@@ -62,7 +62,7 @@ const showcases: ProductShowcase[] = [
       { img: h('hero-ring-water.jpg'), label: 'Water Reflection' },
       { img: h('hero-ring-golden.jpg'), label: 'Golden Hour' },
     ],
-    caption: 'Same ring — ∞ shots — 12 seconds',
+    caption: 'Same ring ∞ shots in 12 seconds',
   },
 ];
 
