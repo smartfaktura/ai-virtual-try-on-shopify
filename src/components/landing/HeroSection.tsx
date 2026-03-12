@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowRight, CreditCard, Shield, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
@@ -75,6 +76,15 @@ const SLOGANS = [
   'Scale Without Limits.',
 ];
 
+const SLOGANS_MOBILE = [
+  'Ready When You Are.',
+  'No Studio Needed.',
+  'Instant Visuals.',
+  'Every Product.',
+  'Ads That Convert.',
+  'Scale Without Limits.',
+];
+
 function useTypewriter(phrases: string[], typingSpeed = 55, deletingSpeed = 30, pauseDuration = 2400) {
   const [displayText, setDisplayText] = useState('');
   const state = useRef({
@@ -128,13 +138,14 @@ const optimizeOutput = (url: string) => getOptimizedUrl(url, { quality: 70 });
 export function HeroSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeScene, setActiveScene] = useState(0);
   const [pulsed, setPulsed] = useState(false);
   const [visibleDot, setVisibleDot] = useState(0);
-  const typedText = useTypewriter(SLOGANS);
+  const typedText = useTypewriter(isMobile ? SLOGANS_MOBILE : SLOGANS);
   const visitedScenes = useRef(new Set([0]));
 
   const current = showcases[activeScene];
@@ -202,10 +213,10 @@ export function HeroSection() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto mb-14">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-6">
+          <h1 className="text-[2rem] sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-6">
             Your AI Photography Team.
             <br />
-            <span className="text-primary">
+            <span className="text-primary inline-block whitespace-nowrap h-[1.15em] sm:h-auto">
               {typedText}
               <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-0.5 align-middle animate-[blink_1s_step-end_infinite]" />
             </span>
@@ -213,8 +224,11 @@ export function HeroSection() {
 
           <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="hidden sm:block text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Upload a product photo. Your team of photographers, art directors, and retouchers delivers ∞ brand-ready visuals in seconds — for ads, listings, and campaigns.
+          </p>
+          <p className="sm:hidden text-sm text-muted-foreground max-w-xs mx-auto mb-8 leading-relaxed">
+            Upload a product photo — get ∞ brand-ready visuals in seconds.
           </p>
 
           {/* CTAs */}
