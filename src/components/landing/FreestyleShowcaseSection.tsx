@@ -2,14 +2,21 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sparkles, Camera, Package, Play } from 'lucide-react';
+import { Sparkles, Camera, Package, Play, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const PROMPT_TEXT_FULL = 'Shoot my white crop top on a basketball court, in a clean studio, and a sunny café';
 const PROMPT_TEXT_MOBILE = 'Shoot my crop top on a court, studio, and café';
 const CYCLE_MS = 8000;
+
+const MODEL_AVATARS = [
+  { name: 'Zara', src: getLandingAssetUrl('models/model-female-athletic-mixed.jpg') },
+  { name: 'Freya', src: getLandingAssetUrl('models/model-female-average-nordic.jpg') },
+  { name: 'Olivia', src: getLandingAssetUrl('models/model-035-olivia.jpg') },
+];
 
 const CHIPS = [
   {
@@ -21,10 +28,18 @@ const CHIPS = [
     delay: 1500,
   },
   {
+    key: 'model' as const,
+    icon: User,
+    label: 'Zara +2',
+    mobileLabel: 'Zara +2',
+    thumb: '',
+    delay: 1800,
+  },
+  {
     key: 'scene' as const,
     icon: Camera,
     label: 'Select scenes',
-    mobileLabel: 'Select scenes',
+    mobileLabel: 'Scenes',
     thumb: '/images/try-showcase/cafe-lifestyle.png',
     delay: 2200,
   },
@@ -36,7 +51,7 @@ const RESULT_CARDS = [
   { label: 'Café', src: '/images/try-showcase/cafe-lifestyle.png' },
 ];
 
-type ChipKey = 'product' | 'scene';
+type ChipKey = 'product' | 'model' | 'scene';
 
 export function FreestyleShowcaseSection() {
   const navigate = useNavigate();
@@ -46,6 +61,7 @@ export function FreestyleShowcaseSection() {
   const [typedText, setTypedText] = useState('');
   const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({
     product: false,
+    model: false,
     scene: false,
   });
   const [generating, setGenerating] = useState(false);
@@ -57,7 +73,7 @@ export function FreestyleShowcaseSection() {
 
   useEffect(() => {
     setTypedText('');
-    setActiveChips({ product: false, scene: false });
+    setActiveChips({ product: false, model: false, scene: false });
     setGenerating(false);
     setProgress(0);
     setShowResults(false);
@@ -159,21 +175,34 @@ export function FreestyleShowcaseSection() {
               </div>
 
               {/* Chips + Generate row */}
-              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:flex sm:flex-nowrap items-center gap-1.5 sm:gap-2 h-10 overflow-hidden">
+              <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 h-10 overflow-hidden">
                 {CHIPS.map((chip) => {
                   const Icon = chip.icon;
                   const active = activeChips[chip.key];
+                  const isModel = chip.key === 'model';
                   return (
                     <div
                       key={chip.key}
                       className={cn(
-                        'inline-flex items-center gap-1 sm:gap-1.5 h-8 px-2 sm:px-2.5 rounded-full text-[11px] font-medium border transition-[color,background-color,border-color,transform] duration-500 min-w-0',
+                        'inline-flex items-center gap-1 sm:gap-1.5 h-8 px-2.5 sm:px-3 rounded-full text-[11px] font-medium border whitespace-nowrap transition-[color,background-color,border-color,transform] duration-500 shrink-0',
                         active
                           ? 'border-primary/40 bg-primary/10 text-primary sm:scale-105'
                           : 'border-border/50 bg-muted/30 text-muted-foreground/50',
                       )}
                     >
-                      {active ? (
+                      {active && isModel ? (
+                        <div className="flex -space-x-1.5 shrink-0">
+                          {MODEL_AVATARS.map((m, idx) => (
+                            <img
+                              key={m.name}
+                              src={m.src}
+                              alt={m.name}
+                              className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover ring-1 ring-card"
+                              style={{ zIndex: MODEL_AVATARS.length - idx }}
+                            />
+                          ))}
+                        </div>
+                      ) : active ? (
                         <img
                           src={chip.thumb}
                           alt={chip.label}
@@ -182,7 +211,7 @@ export function FreestyleShowcaseSection() {
                       ) : (
                         <Icon className="w-3.5 h-3.5 shrink-0" />
                       )}
-                      <span className="truncate">
+                      <span>
                         {active
                           ? (isMobile ? chip.mobileLabel : chip.label)
                           : chip.key.charAt(0).toUpperCase() + chip.key.slice(1)}
