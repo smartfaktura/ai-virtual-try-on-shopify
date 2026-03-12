@@ -1,30 +1,39 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Hero Image Loading — Shimmer Flash on Cached Images
 
-### Issues Found
+### Problem
+The `ShimmerImage` component always starts with `loaded = false`, meaning every image shows a shimmer placeholder even when the browser has it cached. In incognito mode (cold cache), images load in unpredictable order — some appear while others remain as grey shimmer boxes, creating the "strange pattern" you see in the screenshot.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+The root cause is that `ShimmerImage` never checks if an image is **already loaded** (from cache) when it mounts. The `onLoad` callback fires asynchronously, so there's always at least one render frame showing the shimmer.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Changes
 
-### Plan
+**1. `src/components/ui/shimmer-image.tsx` — Skip shimmer for cached images**
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+Add an `onMount` ref callback that checks `img.complete && img.naturalWidth > 0`. If the image is already in the browser cache, set `loaded = true` immediately — no shimmer flash.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+```tsx
+const imgRef = useRef<HTMLImageElement>(null);
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+useEffect(() => {
+  const img = imgRef.current;
+  if (img && img.complete && img.naturalWidth > 0) {
+    setLoaded(true);
+  }
+}, [src]);
+```
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+This single check eliminates the shimmer flash for cached images across the entire app (hero, galleries, everywhere `ShimmerImage` is used).
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**2. `src/components/landing/HeroSection.tsx` — Prioritize first 3 images with `eager` + `fetchPriority`**
+
+The first two carousel images load with shimmer because they're large files competing for bandwidth. Ensure the product image and first 2 outputs use `fetchPriority="high"` and `loading="eager"` consistently. Currently `idx < 3` gets eager and `idx < 2` gets high priority — this is correct but the product image preload (`link rel="preload"`) points to `/images/source-crop-top.jpg` (the raw path) while the actual `src` uses `optimizeProduct()` which may return a different URL. Align them so the preload actually matches what's rendered.
+
+### Result
+- Cached images (same session, revisiting scenes): instant display, zero shimmer
+- Cold cache (incognito): images still shimmer but load in a more predictable order due to proper priority hints
+- No more "strange patterns" of some loaded / some shimmer
+
+Two file changes, minimal code.
 
