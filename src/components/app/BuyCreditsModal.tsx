@@ -282,9 +282,13 @@ export function BuyCreditsModal() {
                       onClick={handleSwitchToAnnual}
                       size="sm"
                       className="rounded-lg shrink-0 gap-1.5"
+                      disabled={switchLoading || !!topUpLoadingId}
                     >
-                      Switch
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      {switchLoading ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" />Redirecting…</>
+                      ) : (
+                        <>Switch<ArrowRight className="w-3.5 h-3.5" /></>
+                      )}
                     </Button>
                   </div>
                 )}
