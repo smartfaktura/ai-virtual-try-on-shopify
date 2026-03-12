@@ -345,7 +345,7 @@ export function HeroSection() {
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] font-bold text-foreground whitespace-nowrap">1 photo</span>
                   <ArrowRight className="w-3 h-3 text-primary flex-shrink-0" />
-                  <span className="text-[11px] font-bold text-primary whitespace-nowrap">{current.outputs.length} results</span>
+                  <span className="text-[11px] font-bold text-primary whitespace-nowrap">∞ results</span>
                 </div>
                 <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
                   {showcases.map((scene, i) => (
