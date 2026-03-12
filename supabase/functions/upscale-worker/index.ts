@@ -179,6 +179,10 @@ CRITICAL RULES:
       bytes[i] = binaryStr.charCodeAt(i);
     }
 
+    // Log actual output size for monitoring
+    const outputSizeKB = Math.round(bytes.length / 1024);
+    console.log(`[upscale-worker] Job ${jobId}: AI output ${outputSizeKB}KB (${newMimeType}), source was ${Math.round(imgBuffer.byteLength / 1024)}KB`);
+
     const ext = newMimeType.includes("png") ? "png" : "jpg";
     const storagePath = `upscaled/${userId}/${crypto.randomUUID()}-${resolution}.${ext}`;
 

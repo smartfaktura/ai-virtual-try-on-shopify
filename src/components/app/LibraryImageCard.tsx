@@ -89,14 +89,21 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
       />
 
       {/* Upscaling overlay */}
-      {isUpscaling && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-            <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
-            <span className="text-[11px] font-medium text-primary">Enhancing…</span>
+      {isUpscaling && (() => {
+        const luna = TEAM_MEMBERS.find(m => m.name === 'Luna');
+        return (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/70 backdrop-blur-[3px]">
+            <Avatar className="w-10 h-10 ring-2 ring-primary/30 mb-2">
+              <AvatarImage src={luna?.avatar} alt="Luna" />
+              <AvatarFallback className="bg-primary/10 text-primary text-xs">LP</AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+              <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+              <span className="text-[11px] font-medium text-primary">Luna is enhancing…</span>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Hover overlay — minimal: badge + date */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-between p-3 hidden [@media(hover:hover)]:flex">
