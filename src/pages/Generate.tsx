@@ -622,12 +622,97 @@ export default function Generate() {
   };
   const handleCancelGeneration = () => { setCurrentStep('settings'); setGeneratingProgress(0); toast.info('Generation cancelled'); };
 
+  const handleUpscaleWorkflowGenerate = async () => {
+    try {
+      if (!selectedProduct && !scratchUpload) return;
+      setCurrentStep('generating');
+      setGeneratingProgress(0);
+
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
+
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+      // Gather source images — either from selected products or scratch upload
+      const sources: Array<{ imageUrl: string; sourceType: 'generation' | 'freestyle'; sourceId: string; title: string }> = [];
+
+      if (isMultiProductMode) {
+        for (const product of productQueue) {
+          const imgUrl = product.images[0]?.url;
+          if (imgUrl) sources.push({ imageUrl: imgUrl, sourceType: 'generation', sourceId: product.id, title: product.title });
+        }
+      } else if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
+        sources.push({ imageUrl: scratchUpload.uploadedUrl, sourceType: 'freestyle', sourceId: 'scratch', title: scratchUpload.productInfo.title || 'Upload' });
+      } else if (selectedProduct) {
+        const imgUrl = selectedProduct.images[0]?.url;
+        if (imgUrl) sources.push({ imageUrl: imgUrl, sourceType: 'generation', sourceId: selectedProduct.id, title: selectedProduct.title });
+      }
+
+      if (sources.length === 0) { toast.error('No source image available'); setCurrentStep('settings'); return; }
+
+      const jobMap = new Map<string, string>();
+      let lastBalance: number | null = null;
+
+      for (const src of sources) {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            jobType: 'upscale',
+            payload: {
+              imageUrl: src.imageUrl,
+              sourceType: src.sourceType,
+              sourceId: src.sourceId,
+              resolution: upscaleResolution,
+            },
+            imageCount: 1,
+            quality: 'standard',
+            resolution: upscaleResolution,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (response.status === 402) { toast.error(errorData.error || 'Insufficient credits'); break; }
+          if (response.status === 429) { toast.error(errorData.message || errorData.error || 'Rate limited. Please wait.'); break; }
+          toast.error(errorData.error || `Failed to enqueue upscale for "${src.title}"`);
+          break;
+        }
+
+        const result = await response.json();
+        jobMap.set(src.sourceId, result.jobId);
+        lastBalance = result.newBalance;
+      }
+
+      if (jobMap.size === 0) {
+        toast.error('Could not queue any images');
+        setCurrentStep('settings');
+        return;
+      }
+      if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setMultiProductJobIds(jobMap);
+      const resLabel = upscaleResolution === '4k' ? '4K' : '2K';
+      toast.success(`Upscaling ${jobMap.size} image${jobMap.size > 1 ? 's' : ''} to ${resLabel}…`);
+      queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
+    } catch (err) {
+      console.error('Upscale workflow failed:', err);
+      toast.error('Something went wrong starting the upscale. Please try again.');
+      setCurrentStep('settings');
+    }
+  };
+
   const handleGenerateClick = () => {
     if (!selectedProduct && !(sourceType === 'scratch' && scratchUpload)) {
       toast.error('Please select a product first');
       return;
     }
     if (balance < creditCost) { openBuyModal(); return; }
+    // Upscale workflow path
+    if (isUpscale) {
+      handleUpscaleWorkflowGenerate();
+      return;
+    }
     if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
       if (!selectedModel || selectedPoses.size === 0) { toast.error('Please select a model and at least one scene'); return; }
       handleTryOnConfirmGenerate(); return;
