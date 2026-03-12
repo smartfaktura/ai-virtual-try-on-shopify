@@ -8,6 +8,7 @@ export interface TeamMember {
   avatar: string;
   videoUrl: string;
   statusMessage: string;
+  expertiseTag: string;
 }
 
 const VIDEO_BASE = getLandingAssetUrl('team-videos');
@@ -27,29 +28,32 @@ export const TEAM_MEMBERS: TeamMember[] = [
   {
     name: 'Sophia',
     fullName: 'Sophia Chen',
-    role: 'Product Photographer',
+    role: 'E-commerce Photographer',
     description: 'Crafts pixel-perfect e-commerce listings, hero shots, and catalog visuals with studio-grade lighting and composition.',
     avatar: avatarSophia,
     videoUrl: `${VIDEO_BASE}/849395850555686932.mp4`,
     statusMessage: 'Setting up the lighting...',
+    expertiseTag: 'Lighting',
   },
   {
     name: 'Amara',
     fullName: 'Amara Osei',
-    role: 'Lifestyle Photographer',
+    role: 'Lifestyle Scene Photographer',
     description: 'Places your products in real-world scenes so customers see them in context. Perfect for social media and storytelling.',
     avatar: avatarAmara,
     videoUrl: `${VIDEO_BASE}/849398236443574344.mp4`,
     statusMessage: 'Adjusting the exposure...',
+    expertiseTag: 'Composition',
   },
   {
     name: 'Luna',
     fullName: 'Luna Park',
-    role: 'Retouch Specialist',
+    role: 'Retouch & Image Refinement Specialist',
     description: 'Handles color correction, background cleanup, and pixel-level refinement. Every image leaves polished and flawless.',
     avatar: avatarLuna,
     videoUrl: `${VIDEO_BASE}/849398707518439436.mp4`,
     statusMessage: 'Retouching the highlights...',
+    expertiseTag: 'Retouching',
   },
   {
     name: 'Kenji',
@@ -59,51 +63,57 @@ export const TEAM_MEMBERS: TeamMember[] = [
     avatar: avatarKenji,
     videoUrl: `${VIDEO_BASE}/849400657458757636.mp4`,
     statusMessage: 'Reviewing the composition...',
+    expertiseTag: 'Art Direction',
   },
   {
     name: 'Yuki',
     fullName: 'Yuki Nakamura',
-    role: 'Ad Creative Specialist',
+    role: 'Performance Ad Creative Director',
     description: 'Builds ad-ready visuals optimized for Meta, Google, TikTok, and Amazon. Knows which formats drive clicks.',
     avatar: avatarYuki,
     videoUrl: `${VIDEO_BASE}/849398252540657664.mp4`,
     statusMessage: 'Building the scene...',
+    expertiseTag: 'Ad Creatives',
   },
   {
     name: 'Omar',
     fullName: 'Omar Farouk',
-    role: 'CRO Visual Optimizer',
+    role: 'Visual CRO Strategist',
     description: 'Analyzes composition, color psychology, and visual hierarchy to produce images that drive revenue.',
     avatar: avatarOmar,
     videoUrl: `${VIDEO_BASE}/849398684226822188.mp4`,
     statusMessage: 'Styling the set...',
+    expertiseTag: 'Conversion Design',
   },
   {
     name: 'Sienna',
     fullName: 'Sienna Russo',
-    role: 'Brand Consistency Manager',
+    role: 'Brand Identity Guardian',
     description: 'Ensures every visual matches your brand DNA. Locks your look so every image feels unmistakably yours.',
     avatar: avatarSienna,
     videoUrl: `${VIDEO_BASE}/849398695958937689.mp4`,
     statusMessage: 'Grading the colors...',
+    expertiseTag: 'Brand Styling',
   },
   {
     name: 'Max',
     fullName: 'Max Lindqvist',
-    role: 'Export & Format Engineer',
+    role: 'Platform Optimization Engineer',
     description: 'Auto-sizes and formats every visual for Shopify, Amazon, Meta, and Google. One click, every platform covered.',
     avatar: avatarMax,
     videoUrl: `${VIDEO_BASE}/849399340514426899.mp4`,
     statusMessage: 'Calibrating the lights...',
+    expertiseTag: 'Platform Export',
   },
   {
     name: 'Zara',
     fullName: 'Zara Ahmed',
-    role: 'Fashion Stylist',
+    role: 'Fashion & Apparel Stylist',
     description: 'Curates outfits, coordinates colors, and styles virtual try-on shoots so every garment looks its absolute best.',
     avatar: avatarZara,
     videoUrl: `${VIDEO_BASE}/849399354389184514.mp4`,
     statusMessage: 'Aligning with brand guidelines...',
+    expertiseTag: 'Fashion Styling',
   },
   {
     name: 'Leo',
@@ -113,5 +123,6 @@ export const TEAM_MEMBERS: TeamMember[] = [
     avatar: avatarLeo,
     videoUrl: `${VIDEO_BASE}/849399365948022876.mp4`,
     statusMessage: 'Animating the sequence...',
+    expertiseTag: 'Scene Generation',
   },
 ];

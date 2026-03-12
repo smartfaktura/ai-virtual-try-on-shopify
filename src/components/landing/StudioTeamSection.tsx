@@ -82,14 +82,17 @@ export function StudioTeamSection() {
         {/* Header */}
         <div className="text-center mb-14 lg:mb-20">
           <Badge variant="secondary" className="mb-4 text-xs tracking-wide uppercase">
-            Your AI Studio Team
+            Your AI Creative Studio
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-            10 AI Professionals. Zero Overhead.
+            Your AI Creative Studio
           </h2>
+          <p className="mt-2 text-xl sm:text-2xl font-semibold text-primary">
+            10 Specialists. Zero Overhead.
+          </p>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            A full creative team of photographers, art directors, stylists, and brand specialists
-            — working together on every visual you create. Instantly.
+            A dedicated AI-powered creative team that never sleeps, never misses deadlines,
+            and delivers studio-quality product visuals on demand.
           </p>
         </div>
 
@@ -135,7 +138,7 @@ export function StudioTeamSection() {
                 className="flex-shrink-0 w-[240px] sm:w-[270px] lg:w-[300px] snap-start group"
               >
                 {/* Character image card */}
-                <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-card border border-border shadow-sm group-hover:shadow-lg group-hover:border-primary/30 transition-all duration-300">
+                <div className="rounded-2xl overflow-hidden aspect-[4/5] bg-card border border-border shadow-sm group-hover:shadow-lg group-hover:border-primary/30 group-hover:-translate-y-1 transition-all duration-300">
                   {member.videoUrl ? (
                     <video
                       src={member.videoUrl}
@@ -164,6 +167,13 @@ export function StudioTeamSection() {
                   <p className="text-xs text-muted-foreground leading-relaxed mt-2">
                     {member.description}
                   </p>
+                  {/* Expertise tag — visible on hover */}
+                  <Badge
+                    variant="outline"
+                    className="mt-2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  >
+                    {member.expertiseTag}
+                  </Badge>
                 </div>
               </div>
             ))}
