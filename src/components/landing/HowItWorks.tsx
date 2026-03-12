@@ -308,7 +308,7 @@ export function HowItWorks() {
                   <div className="p-3 border-b border-border flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg overflow-hidden border border-border shrink-0">
-                        <img src={cropTopProduct} alt="Product" className="w-full h-full object-cover object-top" />
+                        <ShimmerImage src={cropTopProduct} alt="Product" className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-foreground">White Crop Top</p>
