@@ -246,45 +246,76 @@ export function HeroSection() {
 
         {/* Visual showcase: Upload → Carousel of outputs */}
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
-
-            {/* Mobile: compact product bar + scene pills */}
-            <div className="flex md:hidden items-center gap-3 px-1">
-              <div className="flex-shrink-0 w-[56px] h-[75px] rounded-xl overflow-hidden border border-border shadow-sm relative">
-                <ShimmerImage
-                  src={optimizeProduct(current.product.img)}
-                  alt={current.product.label}
-                  className="w-full h-full object-cover"
-                  aspectRatio="3/4"
-                  width={56}
-                  height={75}
-                  fetchPriority="high"
-                />
-                <span className="absolute bottom-0 inset-x-0 bg-background/80 backdrop-blur-sm text-[8px] font-semibold text-foreground text-center py-0.5">
-                  Upload
-                </span>
+          {/* ===== MOBILE: Grid showcase ===== */}
+          <div className="flex md:hidden flex-col items-center">
+            <div className="grid grid-cols-2 gap-2 w-full max-w-sm mx-auto">
+              {/* Product upload — first cell */}
+              <div className="rounded-xl border border-border bg-card overflow-hidden shadow-md relative">
+                <div className="relative aspect-[3/4]">
+                  <ShimmerImage
+                    src={optimizeProduct(current.product.img)}
+                    alt={current.product.label}
+                    className="w-full h-full object-cover"
+                    aspectRatio="3/4"
+                    width={180}
+                    height={240}
+                    fetchPriority="high"
+                  />
+                  <span className="absolute top-2 left-2 text-[9px] font-semibold px-2 py-0.5 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
+                    Your Upload
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {showcases.map((scene, i) => (
-                  <button
-                    key={i}
-                    onClick={() => selectScene(i)}
-                    className={`text-[10px] font-medium px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
-                      activeScene === i
-                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                        : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
-                            !pulsed ? 'animate-[pillPulse_1.5s_ease-in-out_2s_2]' : ''
-                          }`
-                    }`}
-                  >
-                    {scene.product.label}
-                  </button>
-                ))}
-              </div>
+              {/* First 5 output images */}
+              {current.outputs.slice(0, 5).map((output, idx) => (
+                <div key={output.label} className="rounded-xl border border-border bg-card overflow-hidden shadow-md">
+                  <div className="relative aspect-[3/4]">
+                    <ShimmerImage
+                      src={optimizeOutput(output.img)}
+                      alt={output.label}
+                      className="w-full h-full object-cover"
+                      aspectRatio="3/4"
+                      width={180}
+                      height={240}
+                      loading={idx < 2 ? 'eager' : 'lazy'}
+                      fetchPriority={idx < 2 ? 'high' : undefined}
+                    />
+                    <span className="absolute bottom-2 left-2 text-[9px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                      {output.label}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Desktop: Original upload card with scene switcher (hidden on mobile) */}
-            <div className="hidden md:block flex-shrink-0 w-[200px]">
+            {/* Scene switcher pills */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              {showcases.map((scene, i) => (
+                <button
+                  key={i}
+                  onClick={() => selectScene(i)}
+                  className={`text-[11px] font-medium px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                    activeScene === i
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                      : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
+                          !pulsed ? 'animate-[pillPulse_1.5s_ease-in-out_2s_2]' : ''
+                        }`
+                  }`}
+                >
+                  {scene.product.label}
+                </button>
+              ))}
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground mt-2">
+              {current.caption}
+            </p>
+          </div>
+
+          {/* ===== DESKTOP: Side-by-side upload + carousel ===== */}
+          <div className="hidden md:flex md:items-center gap-8">
+            {/* Original upload card with scene switcher */}
+            <div className="flex-shrink-0 w-[200px]">
               <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
                 <div className="relative aspect-[3/4]">
                   <ShimmerImage
@@ -329,8 +360,8 @@ export function HeroSection() {
               </p>
             </div>
 
-            {/* Flow arrow (desktop only) */}
-            <div className="flex-shrink-0 hidden md:flex flex-col items-center gap-1">
+            {/* Flow arrow */}
+            <div className="flex-shrink-0 flex flex-col items-center gap-1">
               <div className="w-10 h-px bg-border" />
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <ChevronRight className="w-4 h-4 text-primary" />
@@ -338,9 +369,8 @@ export function HeroSection() {
               <div className="w-10 h-px bg-border" />
             </div>
 
-            {/* Output carousel — full width on mobile */}
-            <div className="flex-1 min-w-0 relative w-full">
-              {/* Carousel arrows */}
+            {/* Output carousel */}
+            <div className="flex-1 min-w-0 relative">
               <button
                 onClick={() => scroll('left')}
                 className={`absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-card border border-border shadow-md flex items-center justify-center transition-all ${
@@ -360,7 +390,6 @@ export function HeroSection() {
                 <ChevronRight className="w-4 h-4 text-foreground" />
               </button>
 
-              {/* Right-edge gradient fade */}
               {canScrollRight && (
                 <div className="absolute right-0 top-0 bottom-3 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
               )}
@@ -369,28 +398,25 @@ export function HeroSection() {
                 ref={scrollRef}
                 onScroll={updateScrollState}
                 data-hero-carousel
-                className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
+                className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
               >
                 {current.outputs.map((output, idx) => (
-                  <div
-                    key={output.label}
-                    className="flex-shrink-0 w-[150px] sm:w-[180px] snap-start group"
-                  >
+                  <div key={output.label} className="flex-shrink-0 w-[180px] snap-start group">
                     <div className="rounded-xl border border-border bg-card overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-primary/30 transition-all duration-300">
                       <div className="relative aspect-[3/4]">
                         <ShimmerImage
-                           src={optimizeOutput(output.img)}
-                           alt={output.label}
-                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                           decoding="async"
-                           loading={idx < 3 ? 'eager' : 'lazy'}
-                           fetchPriority={idx < 2 ? 'high' : undefined}
-                           aspectRatio="3/4"
-                           width={180}
-                           height={240}
-                         />
-                        <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                          src={optimizeOutput(output.img)}
+                          alt={output.label}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          decoding="async"
+                          loading={idx < 3 ? 'eager' : 'lazy'}
+                          fetchPriority={idx < 2 ? 'high' : undefined}
+                          aspectRatio="3/4"
+                          width={180}
+                          height={240}
+                        />
+                        <span className="absolute bottom-2 left-2 text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
                           {output.label}
                         </span>
                       </div>
@@ -399,21 +425,17 @@ export function HeroSection() {
                 ))}
               </div>
 
-              {/* Dot indicators */}
               <div className="flex items-center justify-center gap-1.5 mt-2">
                 {current.outputs.map((_, idx) => (
                   <div
                     key={idx}
                     className={`rounded-full transition-all duration-300 ${
-                      idx === visibleDot
-                        ? 'w-4 h-1.5 bg-primary'
-                        : 'w-1.5 h-1.5 bg-border'
+                      idx === visibleDot ? 'w-4 h-1.5 bg-primary' : 'w-1.5 h-1.5 bg-border'
                     }`}
                   />
                 ))}
               </div>
 
-              {/* Caption */}
               <p className="text-center text-xs text-muted-foreground mt-2">
                 {current.caption}
               </p>
