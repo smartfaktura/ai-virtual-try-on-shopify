@@ -110,6 +110,10 @@ export default function Settings() {
     if (error) {
       toast.error('Failed to save settings');
     } else {
+      // Sync marketing preference to Resend audience
+      supabase.functions.invoke('sync-resend-contact', {
+        body: { email: user.email, first_name: undefined, opted_in: marketingOptIn },
+      }).catch(() => {});
       toast.success('Settings saved successfully!');
     }
     setIsSaving(false);
