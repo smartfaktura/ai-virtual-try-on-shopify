@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowRight, Sparkles, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
 
