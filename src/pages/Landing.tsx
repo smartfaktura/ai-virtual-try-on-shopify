@@ -13,7 +13,7 @@ const ProductCategoryShowcase = lazy(() => import('@/components/landing/ProductC
 const ModelShowcaseSection = lazy(() => import('@/components/landing/ModelShowcaseSection').then(m => ({ default: m.ModelShowcaseSection })));
 const EnvironmentShowcaseSection = lazy(() => import('@/components/landing/EnvironmentShowcaseSection').then(m => ({ default: m.EnvironmentShowcaseSection })));
 const CreativeDropsSection = lazy(() => import('@/components/landing/CreativeDropsSection').then(m => ({ default: m.CreativeDropsSection })));
-const TeamVideoInterlude = lazy(() => import('@/components/landing/TeamVideoInterlude').then(m => ({ default: m.TeamVideoInterlude })));
+
 const LandingPricing = lazy(() => import('@/components/landing/LandingPricing').then(m => ({ default: m.LandingPricing })));
 const LandingFAQ = lazy(() => import('@/components/landing/LandingFAQ').then(m => ({ default: m.LandingFAQ })));
 const FinalCTA = lazy(() => import('@/components/landing/FinalCTA').then(m => ({ default: m.FinalCTA })));
@@ -62,7 +62,7 @@ export default function Landing() {
           <ModelShowcaseSection />
           <EnvironmentShowcaseSection />
           <CreativeDropsSection />
-          <TeamVideoInterlude />
+          
           <LandingPricing />
           <LandingFAQ />
           <FinalCTA />
