@@ -24,7 +24,7 @@ interface LibraryDetailModalProps {
   isUpscaling?: boolean;
 }
 
-export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalProps) {
+export function LibraryDetailModal({ item, open, onClose, isUpscaling }: LibraryDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
