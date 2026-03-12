@@ -157,7 +157,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
               </div>
 
               {/* Prompt */}
-              {item.prompt && (
+              {item.prompt && !isUpscaled && (
                 <div className="space-y-2">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
                     Prompt
