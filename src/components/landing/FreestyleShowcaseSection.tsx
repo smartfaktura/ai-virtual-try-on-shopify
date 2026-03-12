@@ -106,7 +106,7 @@ export function FreestyleShowcaseSection() {
       clearInterval(typeTimer);
       timers.forEach(clearTimeout);
     };
-  }, [cycle]);
+  }, [cycle, promptText]);
 
   return (
     <section className="py-20 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
