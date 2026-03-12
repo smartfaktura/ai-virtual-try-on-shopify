@@ -76,6 +76,15 @@ const SLOGANS = [
   'Scale Without Limits.',
 ];
 
+const SLOGANS_MOBILE = [
+  'Ready When You Are.',
+  'No Studio Needed.',
+  'Instant Visuals.',
+  'Every Product.',
+  'Ads That Convert.',
+  'Scale Without Limits.',
+];
+
 function useTypewriter(phrases: string[], typingSpeed = 55, deletingSpeed = 30, pauseDuration = 2400) {
   const [displayText, setDisplayText] = useState('');
   const state = useRef({
