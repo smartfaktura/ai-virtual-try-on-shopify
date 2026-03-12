@@ -223,7 +223,7 @@ export function FreestyleShowcaseSection() {
                 {/* Generate button inline */}
                 <button
                   className={cn(
-                    'h-8 px-2.5 sm:px-4 rounded-lg text-xs font-semibold transition-[color,background-color,box-shadow,transform] duration-500 flex items-center gap-1.5 sm:gap-2 shrink-0 sm:ml-auto',
+                    'w-8 h-8 sm:w-auto sm:h-8 sm:px-4 rounded-lg text-xs font-semibold transition-[color,background-color,box-shadow,transform] duration-500 flex items-center justify-center gap-1.5 sm:gap-2 shrink-0 sm:ml-auto',
                     generating
                       ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 sm:scale-[1.02]'
                       : showResults
@@ -234,12 +234,12 @@ export function FreestyleShowcaseSection() {
                   {generating ? (
                     <>
                       <div className="w-3 h-3 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                      {isMobile ? 'Gen…' : 'Generating…'}
+                      <span className="hidden sm:inline">Generating…</span>
                     </>
                   ) : (
                     <>
                       <Play className="w-3 h-3" />
-                      Generate
+                      <span className="hidden sm:inline">Generate</span>
                     </>
                   )}
                 </button>
