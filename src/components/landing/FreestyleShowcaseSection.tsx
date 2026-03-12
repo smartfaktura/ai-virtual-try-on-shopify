@@ -16,6 +16,7 @@ const CHIPS = [
     key: 'product' as const,
     icon: Package,
     label: 'White Crop Top',
+    mobileLabel: 'Top',
     thumb: '/images/source-crop-top.jpg',
     delay: 1500,
   },
@@ -23,6 +24,7 @@ const CHIPS = [
     key: 'scene' as const,
     icon: Camera,
     label: 'Multi-Scene',
+    mobileLabel: 'Scene',
     thumb: '/images/try-showcase/cafe-lifestyle.png',
     delay: 2200,
   },
@@ -150,14 +152,14 @@ export function FreestyleShowcaseSection() {
             <div className="p-3 md:p-5">
               {/* Prompt area */}
               <div className="rounded-xl border border-border/50 bg-background px-3 md:px-4 py-3 mb-4 h-[56px] md:h-[72px] flex items-start overflow-hidden">
-                <p className="text-xs md:text-sm text-foreground/90 leading-relaxed flex-1">
+                <p className="text-xs md:text-sm text-foreground/90 leading-relaxed flex-1 whitespace-nowrap overflow-hidden text-ellipsis md:whitespace-normal md:overflow-visible">
                   {typedText}
                   <span className="inline-block w-[2px] h-4 bg-primary ml-0.5 animate-pulse align-text-bottom" />
                 </p>
               </div>
 
               {/* Chips + Generate row */}
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap h-10 overflow-hidden">
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:flex sm:flex-nowrap items-center gap-1.5 sm:gap-2 h-10 overflow-hidden">
                 {CHIPS.map((chip) => {
                   const Icon = chip.icon;
                   const active = activeChips[chip.key];
@@ -165,9 +167,9 @@ export function FreestyleShowcaseSection() {
                     <div
                       key={chip.key}
                       className={cn(
-                        'inline-flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-full text-[11px] font-medium border transition-[color,background-color,border-color,transform] duration-500 shrink-0',
+                        'inline-flex items-center gap-1 sm:gap-1.5 h-8 px-2 sm:px-2.5 rounded-full text-[11px] font-medium border transition-[color,background-color,border-color,transform] duration-500 min-w-0',
                         active
-                          ? 'border-primary/40 bg-primary/10 text-primary scale-105'
+                          ? 'border-primary/40 bg-primary/10 text-primary sm:scale-105'
                           : 'border-border/50 bg-muted/30 text-muted-foreground/50',
                       )}
                     >
@@ -180,9 +182,9 @@ export function FreestyleShowcaseSection() {
                       ) : (
                         <Icon className="w-3.5 h-3.5 shrink-0" />
                       )}
-                      <span className="max-w-[70px] sm:max-w-none truncate">
+                      <span className="truncate">
                         {active
-                          ? chip.label
+                          ? (isMobile ? chip.mobileLabel : chip.label)
                           : chip.key.charAt(0).toUpperCase() + chip.key.slice(1)}
                       </span>
                     </div>
@@ -192,9 +194,9 @@ export function FreestyleShowcaseSection() {
                 {/* Generate button inline */}
                 <button
                   className={cn(
-                    'ml-auto h-8 px-3 sm:px-4 rounded-lg text-xs font-semibold transition-[color,background-color,box-shadow,transform] duration-500 flex items-center gap-2 shrink-0',
+                    'h-8 px-2.5 sm:px-4 rounded-lg text-xs font-semibold transition-[color,background-color,box-shadow,transform] duration-500 flex items-center gap-1.5 sm:gap-2 shrink-0 sm:ml-auto',
                     generating
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-[1.02]'
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 sm:scale-[1.02]'
                       : showResults
                         ? 'bg-primary/80 text-primary-foreground'
                         : 'bg-muted text-muted-foreground',
@@ -203,7 +205,7 @@ export function FreestyleShowcaseSection() {
                   {generating ? (
                     <>
                       <div className="w-3 h-3 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                      Generating…
+                      {isMobile ? 'Gen…' : 'Generating…'}
                     </>
                   ) : (
                     <>
