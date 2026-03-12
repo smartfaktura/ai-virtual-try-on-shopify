@@ -481,9 +481,6 @@ export default function Auth() {
               </div>
               </>
             )}
-                </label>
-              </div>
-            )}
 
             {formError && (
               <div className="flex items-start gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
