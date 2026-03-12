@@ -136,16 +136,29 @@ serve(async (req) => {
       throw new Error(`Topaz processing timed out after ${MAX_POLL_ATTEMPTS * POLL_INTERVAL_MS / 1000}s`);
     }
 
-    // 3. Download the processed image
-    const downloadResponse = await fetch(`${TOPAZ_BASE}/download/output/${processId}`, {
+    // 3. Get download URL from Topaz (returns JSON with presigned URL)
+    const downloadMetaResponse = await fetch(`${TOPAZ_BASE}/download/${processId}`, {
       headers: { "X-API-Key": topazApiKey },
     });
 
-    if (!downloadResponse.ok) {
-      throw new Error(`Failed to download from Topaz: ${downloadResponse.status}`);
+    if (!downloadMetaResponse.ok) {
+      throw new Error(`Failed to get download URL from Topaz: ${downloadMetaResponse.status}`);
     }
 
-    const processedBlob = await downloadResponse.blob();
+    const downloadMeta = await downloadMetaResponse.json();
+    const presignedUrl = downloadMeta.download_url;
+    if (!presignedUrl) {
+      throw new Error("No download_url in Topaz download response");
+    }
+
+    console.log(`[upscale-worker] Job ${jobId}: fetching processed image from presigned URL`);
+
+    const imageDownloadResponse = await fetch(presignedUrl);
+    if (!imageDownloadResponse.ok) {
+      throw new Error(`Failed to download processed image: ${imageDownloadResponse.status}`);
+    }
+
+    const processedBlob = await imageDownloadResponse.blob();
     const outputSizeKB = Math.round(processedBlob.size / 1024);
     const processedBytes = new Uint8Array(await processedBlob.arrayBuffer());
 
