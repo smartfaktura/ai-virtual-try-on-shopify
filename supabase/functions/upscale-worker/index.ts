@@ -78,6 +78,11 @@ serve(async (req) => {
     formData.append("fix_compression", String(resConfig.fix_compression));
     formData.append("denoise", String(resConfig.denoise));
     formData.append("strength", String(resConfig.strength));
+    if (resConfig.face_enhancement) {
+      formData.append("face_enhancement", "true");
+      formData.append("face_enhancement_strength", String(resConfig.face_enhancement_strength));
+      formData.append("face_enhancement_creativity", String(resConfig.face_enhancement_creativity));
+    }
 
     const submitResponse = await fetch(`${TOPAZ_BASE}/enhance/async`, {
       method: "POST",
