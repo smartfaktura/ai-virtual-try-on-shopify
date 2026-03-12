@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '@/components/ui/input-otp';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, ArrowLeft, MailCheck, Mail, AlertCircle } from 'lucide-react';
 import { SEOHead } from '@/components/SEOHead';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -37,6 +38,7 @@ export default function Auth() {
   const [resendTimer, setResendTimer] = useState(60);
   const [resendLoading, setResendLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -95,9 +97,16 @@ export default function Auth() {
         setFormError('An account with this email already exists. Try signing in instead.');
         setMode('login');
       } else if (data?.user && !data.user.confirmed_at) {
+        // Save marketing preference after profile is auto-created
+        if (data.user.id) {
+          supabase.from('profiles').update({ marketing_emails_opted_in: marketingOptIn }).eq('user_id', data.user.id).then(() => {});
+        }
         await supabase.auth.resend({ type: 'signup', email });
         setSignupComplete(true);
       } else {
+        if (data?.user?.id) {
+          supabase.from('profiles').update({ marketing_emails_opted_in: marketingOptIn }).eq('user_id', data.user.id).then(() => {});
+        }
         setSignupComplete(true);
       }
     } else {
@@ -445,6 +454,7 @@ export default function Auth() {
             </div>
 
             {mode === 'signup' && (
+              <>
               <div className="space-y-1.5">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
@@ -457,6 +467,19 @@ export default function Auth() {
                 />
                 {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
               </div>
+
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="marketingOptIn"
+                  checked={marketingOptIn}
+                  onCheckedChange={(v) => setMarketingOptIn(!!v)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="marketingOptIn" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+                  Send me news, tips & special offers via email
+                </label>
+              </div>
+              </>
             )}
 
             {formError && (

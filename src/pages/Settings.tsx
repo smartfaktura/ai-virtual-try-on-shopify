@@ -60,6 +60,7 @@ export default function Settings() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>(billingInterval || 'monthly');
@@ -76,12 +77,15 @@ export default function Settings() {
     const load = async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('settings')
+        .select('settings, marketing_emails_opted_in')
         .eq('user_id', user.id)
         .single();
 
       if (data?.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
         setSettings(prev => ({ ...prev, ...(data.settings as Partial<UserSettings>) }));
+      }
+      if (data && typeof data.marketing_emails_opted_in === 'boolean') {
+        setMarketingOptIn(data.marketing_emails_opted_in);
       }
       setIsLoaded(true);
     };
@@ -97,7 +101,10 @@ export default function Settings() {
     setIsSaving(true);
     const { error } = await supabase
       .from('profiles')
-      .update({ settings: JSON.parse(JSON.stringify(settings)) })
+      .update({
+        settings: JSON.parse(JSON.stringify(settings)),
+        marketing_emails_opted_in: marketingOptIn,
+      })
       .eq('user_id', user.id);
 
     if (error) {
@@ -413,6 +420,16 @@ export default function Settings() {
               ))}
             </div>
             <Separator />
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold">Marketing & Promotions</h3>
+              <div className="flex items-start space-x-2">
+                <Checkbox id="marketingOptIn" checked={marketingOptIn} onCheckedChange={v => setMarketingOptIn(!!v)} />
+                <div>
+                  <Label htmlFor="marketingOptIn">News, tips & special offers</Label>
+                  <p className="text-xs text-muted-foreground">Receive product updates, tips, and occasional promotions via email</p>
+                </div>
+              </div>
+            </div>
             <div className="space-y-3">
               <h3 className="text-sm font-semibold">In-App Notifications</h3>
               {([

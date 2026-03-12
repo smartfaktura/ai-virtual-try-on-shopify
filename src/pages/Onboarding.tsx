@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { ArrowRight, Check } from 'lucide-react';
@@ -53,6 +54,7 @@ export default function Onboarding() {
 
   // Step 3: Categories
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
 
   if (!isLoading && !user) {
     return <Navigate to="/auth" replace />;
@@ -95,6 +97,7 @@ export default function Onboarding() {
         company_url: companyUrl.trim() || null,
         referral_source: referralSource,
         product_categories: selectedCategories,
+        marketing_emails_opted_in: marketingOptIn,
         onboarding_completed: true,
       })
       .eq('user_id', user.id);
@@ -177,6 +180,18 @@ export default function Onboarding() {
                     onChange={(e) => setCompanyUrl(e.target.value)}
                     className="h-11"
                   />
+                </div>
+
+                <div className="flex items-start space-x-2 pt-1">
+                  <Checkbox
+                    id="marketingOptIn"
+                    checked={marketingOptIn}
+                    onCheckedChange={(v) => setMarketingOptIn(!!v)}
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="marketingOptIn" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+                    Send me news, tips & special offers via email
+                  </label>
                 </div>
               </div>
             </div>
