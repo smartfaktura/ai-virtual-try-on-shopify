@@ -19,6 +19,7 @@ interface LibraryDetailModalProps {
   item: LibraryItem | null;
   open: boolean;
   onClose: () => void;
+  isUpscaling?: boolean;
 }
 
 export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalProps) {
