@@ -101,7 +101,10 @@ export default function Settings() {
     setIsSaving(true);
     const { error } = await supabase
       .from('profiles')
-      .update({ settings: JSON.parse(JSON.stringify(settings)) })
+      .update({
+        settings: JSON.parse(JSON.stringify(settings)),
+        marketing_emails_opted_in: marketingOptIn,
+      })
       .eq('user_id', user.id);
 
     if (error) {
