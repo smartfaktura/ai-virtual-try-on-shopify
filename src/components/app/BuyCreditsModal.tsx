@@ -25,7 +25,10 @@ export function BuyCreditsModal() {
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [topUpLoadingId, setTopUpLoadingId] = useState<string | null>(null);
+  const [switchLoading, setSwitchLoading] = useState(false);
 
+  const anyLoading = checkoutLoading || !!topUpLoadingId || switchLoading;
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
   const currentPlanData = pricingPlans.find(p => p.planId === plan);
