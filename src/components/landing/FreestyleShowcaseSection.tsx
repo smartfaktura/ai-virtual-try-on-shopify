@@ -240,6 +240,7 @@ export function FreestyleShowcaseSection() {
               </div>
             ))}
           </div>
+          </div>
         </div>
 
         {/* CTA below results */}
