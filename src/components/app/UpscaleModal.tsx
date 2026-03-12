@@ -48,8 +48,8 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center">
-              <Sparkles className="w-4.5 h-4.5 text-violet-500" />
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-4.5 h-4.5 text-primary" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">Upscale Images</h3>
