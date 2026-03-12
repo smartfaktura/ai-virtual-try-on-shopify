@@ -2,14 +2,21 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sparkles, Camera, Package, Play } from 'lucide-react';
+import { Sparkles, Camera, Package, Play, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
+import { getLandingAssetUrl } from '@/lib/landingAssets';
 
 const PROMPT_TEXT_FULL = 'Shoot my white crop top on a basketball court, in a clean studio, and a sunny café';
 const PROMPT_TEXT_MOBILE = 'Shoot my crop top on a court, studio, and café';
 const CYCLE_MS = 8000;
+
+const MODEL_AVATARS = [
+  { name: 'Zara', src: getLandingAssetUrl('models/model-female-athletic-mixed.jpg') },
+  { name: 'Freya', src: getLandingAssetUrl('models/model-female-average-nordic.jpg') },
+  { name: 'Olivia', src: getLandingAssetUrl('models/model-035-olivia.jpg') },
+];
 
 const CHIPS = [
   {
@@ -21,22 +28,24 @@ const CHIPS = [
     delay: 1500,
   },
   {
+    key: 'model' as const,
+    icon: User,
+    label: 'Zara +2',
+    mobileLabel: 'Zara +2',
+    thumb: '',
+    delay: 1800,
+  },
+  {
     key: 'scene' as const,
     icon: Camera,
     label: 'Select scenes',
-    mobileLabel: 'Select scenes',
+    mobileLabel: 'Scenes',
     thumb: '/images/try-showcase/cafe-lifestyle.png',
     delay: 2200,
   },
 ];
 
-const RESULT_CARDS = [
-  { label: 'Studio', src: '/images/try-showcase/virtual-tryon-1.png' },
-  { label: 'Basketball Court', src: '/images/try-showcase/virtual-tryon-2.png' },
-  { label: 'Café', src: '/images/try-showcase/cafe-lifestyle.png' },
-];
-
-type ChipKey = 'product' | 'scene';
+type ChipKey = 'product' | 'model' | 'scene';
 
 export function FreestyleShowcaseSection() {
   const navigate = useNavigate();
