@@ -263,7 +263,9 @@ export default function Generate() {
 
   // Flat Lay Set detection and state
   const isFlatLay = activeWorkflow?.name === 'Flat Lay Set';
+  const isUpscale = activeWorkflow?.name === 'Image Upscaling';
   const [flatLayPhase, setFlatLayPhase] = useState<'surfaces' | 'details'>('surfaces');
+  const [upscaleResolution, setUpscaleResolution] = useState<'2k' | '4k'>('2k');
   const [stylingNotes, setStylingNotes] = useState('');
   const [selectedAesthetics, setSelectedAesthetics] = useState<string[]>([]);
   const [selectedFlatLayProductIds, setSelectedFlatLayProductIds] = useState<Set<string>>(new Set());
@@ -535,6 +537,11 @@ export default function Generate() {
     // Auto-detect framing
     const detectedFraming = detectDefaultFraming(product.productType, product.tags);
     if (detectedFraming) setFraming(detectedFraming);
+    // Upscale workflow: skip straight to settings
+    if (isUpscale) {
+      setCurrentStep('settings');
+      return;
+    }
     // Go to brand profile step if profiles exist
     if (brandProfiles.length > 0) {
       setCurrentStep('brand-profile');
@@ -615,12 +622,97 @@ export default function Generate() {
   };
   const handleCancelGeneration = () => { setCurrentStep('settings'); setGeneratingProgress(0); toast.info('Generation cancelled'); };
 
+  const handleUpscaleWorkflowGenerate = async () => {
+    try {
+      if (!selectedProduct && !scratchUpload) return;
+      setCurrentStep('generating');
+      setGeneratingProgress(0);
+
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
+      if (!token) { toast.error('Authentication required'); setCurrentStep('settings'); return; }
+
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+      // Gather source images — either from selected products or scratch upload
+      const sources: Array<{ imageUrl: string; sourceType: 'generation' | 'freestyle'; sourceId: string; title: string }> = [];
+
+      if (isMultiProductMode) {
+        for (const product of productQueue) {
+          const imgUrl = product.images[0]?.url;
+          if (imgUrl) sources.push({ imageUrl: imgUrl, sourceType: 'generation', sourceId: product.id, title: product.title });
+        }
+      } else if (sourceType === 'scratch' && scratchUpload?.uploadedUrl) {
+        sources.push({ imageUrl: scratchUpload.uploadedUrl, sourceType: 'freestyle', sourceId: 'scratch', title: scratchUpload.productInfo.title || 'Upload' });
+      } else if (selectedProduct) {
+        const imgUrl = selectedProduct.images[0]?.url;
+        if (imgUrl) sources.push({ imageUrl: imgUrl, sourceType: 'generation', sourceId: selectedProduct.id, title: selectedProduct.title });
+      }
+
+      if (sources.length === 0) { toast.error('No source image available'); setCurrentStep('settings'); return; }
+
+      const jobMap = new Map<string, string>();
+      let lastBalance: number | null = null;
+
+      for (const src of sources) {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            jobType: 'upscale',
+            payload: {
+              imageUrl: src.imageUrl,
+              sourceType: src.sourceType,
+              sourceId: src.sourceId,
+              resolution: upscaleResolution,
+            },
+            imageCount: 1,
+            quality: 'standard',
+            resolution: upscaleResolution,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (response.status === 402) { toast.error(errorData.error || 'Insufficient credits'); break; }
+          if (response.status === 429) { toast.error(errorData.message || errorData.error || 'Rate limited. Please wait.'); break; }
+          toast.error(errorData.error || `Failed to enqueue upscale for "${src.title}"`);
+          break;
+        }
+
+        const result = await response.json();
+        jobMap.set(src.sourceId, result.jobId);
+        lastBalance = result.newBalance;
+      }
+
+      if (jobMap.size === 0) {
+        toast.error('Could not queue any images');
+        setCurrentStep('settings');
+        return;
+      }
+      if (lastBalance !== null) setBalanceFromServer(lastBalance);
+      setMultiProductJobIds(jobMap);
+      const resLabel = upscaleResolution === '4k' ? '4K' : '2K';
+      toast.success(`Upscaling ${jobMap.size} image${jobMap.size > 1 ? 's' : ''} to ${resLabel}…`);
+      queryClient.invalidateQueries({ queryKey: ['workflow-active-jobs'] });
+    } catch (err) {
+      console.error('Upscale workflow failed:', err);
+      toast.error('Something went wrong starting the upscale. Please try again.');
+      setCurrentStep('settings');
+    }
+  };
+
   const handleGenerateClick = () => {
     if (!selectedProduct && !(sourceType === 'scratch' && scratchUpload)) {
       toast.error('Please select a product first');
       return;
     }
     if (balance < creditCost) { openBuyModal(); return; }
+    // Upscale workflow path
+    if (isUpscale) {
+      handleUpscaleWorkflowGenerate();
+      return;
+    }
     if (generationMode === 'virtual-try-on' && !isSelfieUgc) {
       if (!selectedModel || selectedPoses.size === 0) { toast.error('Please select a model and at least one scene'); return; }
       handleTryOnConfirmGenerate(); return;
@@ -1266,6 +1358,10 @@ export default function Generate() {
   const handleRegenerate = (index: number) => toast.info('Regenerating variation... (this would cost 1 credit)');
 
   const getStepNumber = () => {
+    if (isUpscale) {
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, settings: 2, generating: 3, results: 3 };
+      return map[currentStep] || 1;
+    }
     if (isFlatLay) {
       if (currentStep === 'settings' && flatLayPhase === 'surfaces') return 3;
       if (currentStep === 'settings' && flatLayPhase === 'details') return 4;
@@ -1307,6 +1403,13 @@ export default function Generate() {
   };
 
   const getSteps = () => {
+    if (isUpscale) {
+      return [
+        { name: sourceType === 'scratch' ? 'Upload' : 'Product(s)' },
+        { name: 'Settings' },
+        { name: 'Results' },
+      ];
+    }
     if (isFlatLay) {
       return [
         { name: sourceType === 'scratch' ? 'Source' : 'Product(s)' },
@@ -1356,8 +1459,10 @@ export default function Generate() {
   const extraProductCredits = extraProductCount * 2 * workflowImageCount;
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
   const tryOnSceneCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedPoses.size) : 1;
-  const singleProductCreditCost = hasWorkflowConfig ? workflowImageCount * 8 : parseInt(imageCount) * 8 * tryOnSceneCount;
-  const creditCost = (singleProductCreditCost * multiProductCount) + extraProductCredits;
+  const upscaleImageCount = isUpscale ? (isMultiProductMode ? productQueue.length : 1) : 0;
+  const upscaleCreditCost = isUpscale ? upscaleImageCount * (upscaleResolution === '4k' ? 12 : 8) : 0;
+  const singleProductCreditCost = isUpscale ? 0 : (hasWorkflowConfig ? workflowImageCount * 8 : parseInt(imageCount) * 8 * tryOnSceneCount);
+  const creditCost = isUpscale ? upscaleCreditCost : (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
   const pageTitle = activeWorkflow ? `Create: ${activeWorkflow.name}` : 'Generate Images';
 
@@ -1914,7 +2019,7 @@ export default function Generate() {
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
-              <Button disabled={!scratchUpload || (!isInteriorDesign && (!scratchUpload.productInfo.title || !scratchUpload.productInfo.productType)) || (isInteriorDesign && !interiorRoomType)}
+              <Button disabled={!scratchUpload || (!isInteriorDesign && !isUpscale && (!scratchUpload.productInfo.title || !scratchUpload.productInfo.productType)) || (isInteriorDesign && !interiorRoomType)}
                 onClick={async () => {
                   if (!scratchUpload) return;
                   // Skip upload if reusing a previously uploaded image
@@ -1924,7 +2029,9 @@ export default function Generate() {
                   }
                   if (finalUrl) {
                     setScratchUpload({ ...scratchUpload, uploadedUrl: finalUrl });
-                    if (activeWorkflow?.uses_tryon) {
+                    if (isUpscale) {
+                      setCurrentStep('settings');
+                    } else if (activeWorkflow?.uses_tryon) {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     } else if (isInteriorDesign) {
                       setCurrentStep('settings');
@@ -2396,7 +2503,9 @@ export default function Generate() {
                     if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
                     const cat = detectProductCategory(product);
                     if (cat) setSelectedCategory(cat);
-                    if (brandProfiles.length > 0) {
+                    if (isUpscale) {
+                       setCurrentStep('settings');
+                     } else if (brandProfiles.length > 0) {
                        setCurrentStep('brand-profile');
                      } else if (uiConfig?.show_model_picker) {
                        setCurrentStep('model');
@@ -2417,7 +2526,9 @@ export default function Generate() {
                     if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
                     const cat = detectProductCategory(product);
                     if (cat) setSelectedCategory(cat);
-                    if (brandProfiles.length > 0) {
+                    if (isUpscale) {
+                      setCurrentStep('settings');
+                    } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.show_model_picker) {
                       setCurrentStep('model');
@@ -2859,8 +2970,107 @@ export default function Generate() {
           </>
         )}
 
+        {/* Upscale Workflow Settings */}
+        {isUpscale && currentStep === 'settings' && (selectedProduct || scratchUpload) && (
+          <div className="space-y-4">
+            {/* Product summary */}
+            <Card><CardContent className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  {sourceType === 'scratch' ? 'Uploaded Image' : isMultiProductMode ? `Selected Images (${productQueue.length})` : 'Selected Product'}
+                </span>
+                <Button variant="link" size="sm" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'source')}>Change</Button>
+              </div>
+              {isMultiProductMode ? (
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {productQueue.map(p => (
+                    <div key={p.id} className="flex-shrink-0 w-[72px]">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-border mx-auto">
+                        <img src={p.images[0]?.url || '/placeholder.svg'} alt={p.title} className="w-full h-full object-cover" />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-center mt-1 truncate">{p.title}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden border border-border">
+                    <img src={sourceType === 'scratch' ? scratchUpload?.previewUrl : selectedProduct?.images[0]?.url || '/placeholder.svg'} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{sourceType === 'scratch' ? scratchUpload?.productInfo.title : selectedProduct?.title}</p>
+                    <p className="text-sm text-muted-foreground">{sourceType === 'scratch' ? 'Custom Upload' : selectedProduct?.productType}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent></Card>
+
+            {/* Resolution Picker */}
+            <Card><CardContent className="p-5 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  Choose Resolution
+                </h3>
+                <p className="text-sm text-muted-foreground">Select the target resolution for your enhanced images</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {([
+                  { key: '2k' as const, label: '2K Resolution', desc: '2048px — Great for web, social media & listings', credits: 8, badge: 'Standard' },
+                  { key: '4k' as const, label: '4K Resolution', desc: '4096px — Print-ready, maximum detail & sharpness', credits: 12, badge: 'Premium' },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setUpscaleResolution(opt.key)}
+                    className={cn(
+                      'relative p-5 rounded-xl border-2 text-left transition-all',
+                      upscaleResolution === opt.key
+                        ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                        : 'border-border hover:border-primary/40'
+                    )}
+                  >
+                    <Badge variant="secondary" className="absolute top-3 right-3 text-[10px]">{opt.badge}</Badge>
+                    <p className="text-lg font-bold">{opt.label}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{opt.desc}</p>
+                    <p className="text-sm font-semibold text-primary mt-2">{opt.credits} credits per image</p>
+                  </button>
+                ))}
+              </div>
+            </CardContent></Card>
+
+            {/* Cost Summary */}
+            <div className={cn("p-4 rounded-lg border flex items-center justify-between", balance >= creditCost ? "border-border bg-muted/30" : "border-destructive/30 bg-destructive/5")}>
+              <div>
+                <p className="text-sm font-semibold">Total: {creditCost} credits</p>
+                <p className="text-xs text-muted-foreground">
+                  {upscaleImageCount} image{upscaleImageCount !== 1 ? 's' : ''} × {upscaleResolution === '4k' ? 12 : 8} credits ({upscaleResolution === '4k' ? '4K' : '2K'})
+                </p>
+              </div>
+              {balance >= creditCost ? (
+                <p className="text-sm text-muted-foreground">{balance} credits available</p>
+              ) : (
+                <button onClick={openBuyModal} className="flex items-center gap-1 text-sm text-destructive font-semibold hover:underline">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {balance} credits — need {creditCost}. Top up
+                </button>
+              )}
+            </div>
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep(sourceType === 'scratch' ? 'upload' : 'product')}>Back</Button>
+              <Button
+                onClick={balance >= creditCost ? handleGenerateClick : openBuyModal}
+                className={cn("gap-2", balance < creditCost ? 'bg-primary text-primary-foreground hover:bg-primary/90' : '')}
+              >
+                <Sparkles className="w-4 h-4" />
+                {balance >= creditCost ? `Enhance ${upscaleImageCount} Image${upscaleImageCount !== 1 ? 's' : ''} to ${upscaleResolution === '4k' ? '4K' : '2K'}` : 'Buy Credits'}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Workflow-Specific Settings */}
-        {hasWorkflowConfig && currentStep === 'settings' && (generationMode !== 'virtual-try-on' || isSelfieUgc) && (selectedProduct || scratchUpload) && (
+        {hasWorkflowConfig && !isUpscale && currentStep === 'settings' && (generationMode !== 'virtual-try-on' || isSelfieUgc) && (selectedProduct || scratchUpload) && (
           <div className="space-y-4">
             {/* Product summary — hidden in mirror selfie final phase */}
             {!(isMirrorSelfie && mirrorSettingsPhase === 'final') && !(isFlatLay && flatLayPhase === 'details') && (
@@ -3642,11 +3852,13 @@ export default function Generate() {
             })()}
             <div className="text-center">
               <h2 className="text-lg font-semibold">
-                {generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' :
+                {isUpscale ? `Enhancing to ${upscaleResolution === '4k' ? '4K' : '2K'}...` :
+                 generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' :
                  hasWorkflowConfig ? `Creating ${activeWorkflow?.name}...` : 'Creating Your Images...'}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
+                {isUpscale ? `Upscaling ${upscaleImageCount} image${upscaleImageCount !== 1 ? 's' : ''} — sharpening details & recovering textures` :
+                 generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
                  isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
                  isInteriorDesign ? (() => { const styles = Array.from(selectedVariationIndices).map(i => variationStrategy?.variations[i]?.label).filter(Boolean); return styles.length > 1 ? `Staging your ${interiorRoomType || 'room'} in ${styles.length} styles: ${styles.join(', ')}` : `Staging your ${interiorRoomType || 'room'} in ${styles[0] || 'selected'} style`; })() :
                  hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :

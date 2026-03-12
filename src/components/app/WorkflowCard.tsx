@@ -54,6 +54,12 @@ const featureMap: Record<string, string[]> = {
     'Strict architectural preservation — windows, doors, angles unchanged',
     'Optional wall color and flooring customization',
   ],
+  'Image Upscaling': [
+    'AI-powered 2K & 4K resolution enhancement',
+    'Face recovery & texture sharpening',
+    'Works with any product or uploaded image',
+    '8 credits for 2K, 12 credits for 4K',
+  ],
 };
 
 export function WorkflowCard({ workflow, onSelect, reversed }: WorkflowRowProps) {

@@ -1,4 +1,4 @@
-import { Plus, User, MapPin, Camera, Star, Layers, Smartphone, Home } from 'lucide-react';
+import { Plus, User, MapPin, Camera, Star, Layers, Smartphone, Home, Sparkles, Maximize2 } from 'lucide-react';
 import type { WorkflowScene } from './WorkflowAnimatedThumbnail';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
 
@@ -159,6 +159,28 @@ export const workflowScenes: Record<string, WorkflowScene> = {
       },
       {
         type: 'badge', label: '12 Styles', icon: <Layers className="w-3 h-3" />,
+        position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
+      },
+    ],
+  },
+
+  'Image Upscaling': {
+    background: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
+    elements: [
+      {
+        type: 'badge', label: 'Original', icon: <Camera className="w-3 h-3" />,
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+      },
+      {
+        type: 'action', label: '', icon: <Sparkles className="w-4 h-4" />,
+        position: { top: '44%', left: '42%' }, enterDelay: 0.9, animation: 'pop',
+      },
+      {
+        type: 'badge', label: '4K', icon: <Maximize2 className="w-3 h-3" />,
+        position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
+      },
+      {
+        type: 'badge', label: 'Enhanced', icon: <Sparkles className="w-3 h-3" />,
         position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
       },
     ],
