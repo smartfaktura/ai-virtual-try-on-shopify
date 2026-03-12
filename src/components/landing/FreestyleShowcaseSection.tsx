@@ -61,12 +61,12 @@ export function FreestyleShowcaseSection() {
     let charIdx = 0;
     const typeTimer = setInterval(() => {
       if (charIdx < PROMPT_TEXT.length) {
-        charIdx = Math.min(charIdx + 2, PROMPT_TEXT.length);
+        charIdx = Math.min(charIdx + 3, PROMPT_TEXT.length);
         setTypedText(PROMPT_TEXT.slice(0, charIdx));
       } else {
         clearInterval(typeTimer);
       }
-    }, 50);
+    }, 30);
 
     CHIPS.forEach((chip) => {
       timers.push(
