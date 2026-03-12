@@ -3,6 +3,8 @@ import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { TEAM_MEMBERS } from '@/data/teamData';
 
 function getAspectClass(ratio?: string) {
   switch (ratio) {
