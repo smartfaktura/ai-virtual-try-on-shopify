@@ -81,26 +81,42 @@ export function GlobalGenerationBar() {
     });
 
     if (justFinished.length > 0) {
+      // Look up the original group data from previous active groups
+      const prevGroups = prevActiveKeysRef.current;
+
       setCompletedGroups((prev) => {
-        const newCompleted: BatchGroup[] = justFinished.map((key) => ({
-          key,
-          workflow_id: null,
-          workflow_name: 'Generation',
-          product_name: null,
-          jobs: [],
-          totalCount: 0,
-          completedCount: 0,
-          processingCount: 0,
-          queuedCount: 0,
-          failedCount: 0,
-          allCompleted: true,
-          created_at: new Date().toISOString(),
-          job_type: null,
-          quality: null,
-          resolution: null,
-        }));
+        const newCompleted: BatchGroup[] = justFinished.map((key) => {
+          // Find the original group from the previous render's activeGroups
+          // We stored the full groups in a separate ref below
+          const original = prevGroupsRef.current.find((g) => g.key === key);
+          return {
+            key,
+            workflow_id: original?.workflow_id ?? null,
+            workflow_name: original?.workflow_name ?? 'Generation',
+            product_name: original?.product_name ?? null,
+            jobs: [],
+            totalCount: original?.totalCount ?? 0,
+            completedCount: original?.totalCount ?? 0,
+            processingCount: 0,
+            queuedCount: 0,
+            failedCount: 0,
+            allCompleted: true,
+            created_at: new Date().toISOString(),
+            job_type: original?.job_type ?? null,
+            quality: original?.quality ?? null,
+            resolution: original?.resolution ?? null,
+          };
+        });
         return [...prev, ...newCompleted];
       });
+
+      // Invalidate library cache when upscale jobs complete
+      const hadUpscale = justFinished.some((key) =>
+        prevGroupsRef.current.find((g) => g.key === key && g.job_type === 'upscale')
+      );
+      if (hadUpscale) {
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+      }
 
       setTimeout(() => {
         setCompletedGroups((prev) => prev.filter((g) => !justFinished.includes(g.key)));
