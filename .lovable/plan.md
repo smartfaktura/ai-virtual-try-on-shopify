@@ -1,61 +1,30 @@
 
 
-## Topaz Labs API Integration Assessment
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Verdict: Not difficult at all. It's a clean REST API that fits perfectly into our existing queue architecture.
+### Issues Found
 
-### How the Topaz API Works
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-1. **Submit** — `POST https://api.topazlabs.com/image/v1/enhance/async` with the image (via `source_url` or file upload) + `output_width`/`output_height` + `model` choice. Returns a `process_id`.
-2. **Poll** — Check status via their Status endpoint using `process_id` until "Completed".
-3. **Download** — Fetch the processed image from their presigned `download_url`.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-They also support **webhooks** — you can pass a `webhook_url` and they'll POST the result when done, which would eliminate polling entirely.
+### Plan
 
-### Why This Solves the Resolution Problem
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-Unlike Gemini which outputs a fixed ~1024px regardless of prompt, Topaz supports **exact pixel output up to 32,000px** per dimension. You specify `output_width: 2048` for 2K or `output_width: 4096` for 4K and get exactly that. This is a true super-resolution engine, not a generative model.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Available Models
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-| Model | Type | Best For |
-|-------|------|----------|
-| **Standard V2** | Standard | General-purpose, fast, preserves fidelity |
-| **High Fidelity V2** | Standard | Maximum detail preservation |
-| **Low Resolution V2** | Standard | Small source images (web graphics) |
-| **Standard MAX** | Generative | Higher quality, slower |
-| **Redefine** | Generative | Most creative output |
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-For our use case, **Standard V2** (fast, faithful) for 2K and **High Fidelity V2** for 4K would be ideal.
-
-### Integration Plan — 2 files
-
-**1. `supabase/functions/upscale-worker/index.ts` — Replace Gemini with Topaz API**
-
-- Remove the Gemini AI call entirely
-- Submit image via `source_url` to Topaz async endpoint with exact `output_width`/`output_height`
-- Poll the status endpoint every 3-5 seconds until completed (with timeout)
-- Download the result and upload to storage
-- Use `Standard V2` model for 2K, `High Fidelity V2` for 4K
-- Auth: `X-API-Key` header with the Topaz API key
-
-**2. Secret required: `TOPAZ_API_KEY`**
-
-- You'll need a Topaz Labs account and API key from https://topazlabs.com/my-account/
-- Their pricing is credit-based (plans start at ~$0.07/credit, upscale costs vary by resolution)
-
-### What Stays the Same
-
-- Our queue system (`enqueue-generation` → `process-queue` → `upscale-worker`) stays identical
-- The `useUpscaleImages` hook stays identical
-- Credit costs, UI, Luna avatars — all unchanged
-- Only the worker's internal processing logic changes
-
-### Pricing Consideration
-
-Topaz uses their own credit system. You'd need to factor their per-image cost into your credit pricing. Their Standard models are described as "blazingly fast" and low-cost. Check https://www.topazlabs.com/enhance-api for current plan pricing.
-
-### Want to proceed?
-
-If you'd like to integrate Topaz, the first step is getting an API key. I'll then securely store it and rewrite the upscale worker to use their API instead of Gemini.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
