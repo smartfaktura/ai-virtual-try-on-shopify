@@ -2501,7 +2501,9 @@ export default function Generate() {
                     if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
                     const cat = detectProductCategory(product);
                     if (cat) setSelectedCategory(cat);
-                    if (brandProfiles.length > 0) {
+                    if (isUpscale) {
+                       setCurrentStep('settings');
+                     } else if (brandProfiles.length > 0) {
                        setCurrentStep('brand-profile');
                      } else if (uiConfig?.show_model_picker) {
                        setCurrentStep('model');
@@ -2522,7 +2524,9 @@ export default function Generate() {
                     if (product.images.length > 0) setSelectedSourceImages(new Set([product.images[0].id]));
                     const cat = detectProductCategory(product);
                     if (cat) setSelectedCategory(cat);
-                    if (brandProfiles.length > 0) {
+                    if (isUpscale) {
+                      setCurrentStep('settings');
+                    } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.show_model_picker) {
                       setCurrentStep('model');
