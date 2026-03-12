@@ -135,6 +135,7 @@ export function HeroSection() {
   const [pulsed, setPulsed] = useState(false);
   const [visibleDot, setVisibleDot] = useState(0);
   const typedText = useTypewriter(SLOGANS);
+  const visitedScenes = useRef(new Set([0]));
 
   const current = showcases[activeScene];
 
@@ -148,19 +149,24 @@ export function HeroSection() {
     return () => { document.head.removeChild(link); };
   }, []);
 
-  // Preload active scene eagerly, defer others by 3s
+  // Only preload scene 0 outputs + product thumbnails for other scenes
   useEffect(() => {
-    const active = showcases[0];
-    active.outputs.forEach(o => { new Image().src = optimizeOutput(o.img); });
-
-    const t = setTimeout(() => {
-      showcases.slice(1).forEach(scene => {
-        new Image().src = optimizeProduct(scene.product.img);
-        scene.outputs.forEach(o => { new Image().src = optimizeOutput(o.img); });
-      });
-    }, 3000);
-    return () => clearTimeout(t);
+    showcases[0].outputs.forEach(o => { new Image().src = optimizeOutput(o.img); });
+    // Prefetch just the product thumbnails for inactive scenes (small images)
+    showcases.slice(1).forEach(scene => { new Image().src = optimizeProduct(scene.product.img); });
   }, []);
+
+  // Preload a scene's outputs on demand
+  const preloadScene = useCallback((index: number) => {
+    if (visitedScenes.current.has(index)) return;
+    visitedScenes.current.add(index);
+    showcases[index].outputs.forEach(o => { new Image().src = optimizeOutput(o.img); });
+  }, []);
+
+  const selectScene = useCallback((index: number) => {
+    preloadScene(index);
+    setActiveScene(index);
+  }, [preloadScene]);
 
   // One-time attention pulse on product pills after 2s
   useEffect(() => {
