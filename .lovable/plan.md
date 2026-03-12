@@ -1,30 +1,35 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Upscale: Create New Entry, Fix Quality Badge, Fix Image Quality
 
-### Issues Found
+### Problems
+1. **Upscale replaces original** — worker overwrites the source record's `image_url` instead of creating a new DB entry
+2. **Image quality is worse** — AI image generation model outputs a lower-quality re-creation (490KB) vs original (1.2MB). The model is being asked to "reproduce" the image, but it generates a new one at lower fidelity
+3. **Badge shows "PRO HD"** — should show "2K" or "4K" based on actual resolution
+4. **Enhance button disappears** after upscaling — since the original is overwritten with `quality: 'upscaled'`, the button hides
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**1. `supabase/functions/upscale-worker/index.ts` — Create new record instead of replacing**
+- For freestyle sources: INSERT a new row in `freestyle_generations` (copying prompt, aspect_ratio, model_id, scene_id, product_id from the original) with the upscaled `image_url` and `quality` set to `'upscaled_2k'` or `'upscaled_4k'`
+- For generation sources: INSERT a new `freestyle_generations` row (treating the upscaled version as a standalone library item) rather than mutating the `results[]` array
+- Do NOT update the original record — it stays untouched
+- Store resolution in quality field: `'upscaled_2k'` or `'upscaled_4k'` instead of generic `'upscaled'`
 
-### Plan
+**2. `src/components/app/LibraryDetailModal.tsx` — Fix badge and button logic**
+- Replace `PRO HD` badge text with actual resolution: check `item.quality` for `'upscaled_2k'` → show "2K", `'upscaled_4k'` → show "4K"
+- Keep the Enhance button visible for all items (remove the `!isUpscaled` guard) — users should be able to upscale any image, even re-upscale to a different resolution
+- Add a helper: `const upscaleLabel = item.quality === 'upscaled_4k' ? '4K' : item.quality === 'upscaled_2k' ? '2K' : null`
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**3. `src/components/app/LibraryImageCard.tsx` — Show resolution badge on cards**
+- If `item.quality` starts with `'upscaled_'`, show a small "2K" or "4K" badge in the top-right corner of the card
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**4. `src/pages/Jobs.tsx` — Update upscale filter logic**
+- Change `i.quality !== 'upscaled'` checks to `!i.quality?.startsWith('upscaled_')` for the batch selection filter
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**5. `src/hooks/useLibraryItems.ts` — No changes needed**
+- The new inserted rows will automatically appear in the library query since it fetches all freestyle_generations
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Image Quality Note
+The fundamental issue is that Gemini 3 Pro Image is a generative model — it creates a *new* image inspired by the input, not a true pixel-level upscale. The output is often lower resolution/quality than the input. This is an inherent limitation. For now, the approach creates a separate entry so the original is preserved. A proper fix would require a dedicated super-resolution model, but that's outside the current scope.
 
