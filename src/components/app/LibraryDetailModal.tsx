@@ -86,7 +86,8 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
     setDeleting(false);
   };
 
-  const isUpscaled = item.quality === 'upscaled';
+  const isUpscaled = item.quality?.startsWith('upscaled_') || item.quality === 'upscaled';
+  const upscaleLabel = item.quality === 'upscaled_4k' ? '4K' : item.quality === 'upscaled_2k' ? '2K' : item.quality === 'upscaled' ? 'HD' : null;
 
   return (
     <>
