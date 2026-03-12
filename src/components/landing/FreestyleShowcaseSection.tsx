@@ -77,21 +77,21 @@ export function FreestyleShowcaseSection() {
       );
     });
 
-    timers.push(setTimeout(() => setGenerating(true), 6000));
-    timers.push(setTimeout(() => setProgress(30), 6200));
-    timers.push(setTimeout(() => setProgress(65), 6600));
-    timers.push(setTimeout(() => setProgress(100), 7000));
+    timers.push(setTimeout(() => setGenerating(true), 3000));
+    timers.push(setTimeout(() => setProgress(30), 3200));
+    timers.push(setTimeout(() => setProgress(65), 3500));
+    timers.push(setTimeout(() => setProgress(100), 3800));
 
     timers.push(
       setTimeout(() => {
         setGenerating(false);
         setShowResults(true);
-      }, 7500),
+      }, 4200),
     );
 
     RESULT_CARDS.forEach((_, i) => {
       timers.push(
-        setTimeout(() => setVisibleResults((prev) => [...prev, i]), 7700 + i * 300),
+        setTimeout(() => setVisibleResults((prev) => [...prev, i]), 4400 + i * 200),
       );
     });
 
