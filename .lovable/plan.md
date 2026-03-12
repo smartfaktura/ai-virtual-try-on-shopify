@@ -1,39 +1,30 @@
 
 
-## Improve Upscale Worker: Switch to Pro Model + Enhanced Prompt Engineering
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Why Pro over Flash
+### Issues Found
 
-You're right. `google/gemini-3-pro-image-preview` (Nano Banana Pro) is the top-tier image generation model — described as "next-generation image generation model" with superior output quality. For upscaling where fidelity is paramount, Pro is the correct choice. Flash is better suited for speed-sensitive tasks, not quality-critical reproduction.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Changes — 1 file
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**`supabase/functions/upscale-worker/index.ts`**
+### Plan
 
-1. **Switch model** from `google/gemini-3.1-flash-image-preview` → `google/gemini-3-pro-image-preview`
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-2. **Rewrite the prompt** with professional upscaling directives:
-   - Explicit instruction to enhance resolution while preserving every pixel-level detail
-   - Sharpness directives borrowed from the generation engine: micro-contrast, visible material textures, fine stitching detail
-   - Explicit anti-hallucination guard: do not add, remove, or alter any element
-   - Request maximum output resolution PNG with lossless quality
-   - Resolution-specific language (2K = 2048px, 4K = 4096px on longest edge)
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-3. **Increase timeout** from 90s → 120s since Pro model is slower than Flash
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### New prompt (draft):
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-```
-You are a professional image upscaler. Take this image and output the EXACT same image 
-at {targetPx}px on its longest edge as a high-resolution PNG.
-
-CRITICAL RULES:
-- Preserve EVERY detail: composition, colors, lighting, shadows, reflections, framing
-- Do NOT add, remove, change, or hallucinate any element
-- Do NOT crop, reframe, or alter the aspect ratio
-- Enhance sharpness: visible material textures, fine stitching, micro-contrast on skin
-- Maximize detail clarity on edges, text, patterns, and fine structures
-- Output as lossless PNG at the highest possible quality
-- The result must be indistinguishable from the original except at higher resolution
-```
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
