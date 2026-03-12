@@ -47,7 +47,7 @@ export function ChannelShowcase() {
         {/* Source product callout */}
         <div className="flex items-center justify-center gap-3 mb-10">
           <div className="w-20 h-20 rounded-lg border-2 border-primary/30 overflow-hidden shadow-sm">
-            <img src={LOCAL_SOURCE} alt="White Crop-Top product" className="w-full h-full object-cover" loading="lazy" />
+            <ShimmerImage src={LOCAL_SOURCE} alt="White Crop-Top product" className="w-full h-full object-cover" aspectRatio="1/1" loading="lazy" />
           </div>
           <div className="text-left">
             <p className="text-sm font-medium text-foreground">Your Product</p>
