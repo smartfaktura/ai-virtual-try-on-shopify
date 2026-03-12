@@ -421,6 +421,16 @@ export default function Settings() {
             </div>
             <Separator />
             <div className="space-y-3">
+              <h3 className="text-sm font-semibold">Marketing & Promotions</h3>
+              <div className="flex items-start space-x-2">
+                <Checkbox id="marketingOptIn" checked={marketingOptIn} onCheckedChange={v => setMarketingOptIn(!!v)} />
+                <div>
+                  <Label htmlFor="marketingOptIn">News, tips & special offers</Label>
+                  <p className="text-xs text-muted-foreground">Receive product updates, tips, and occasional promotions via email</p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3">
               <h3 className="text-sm font-semibold">In-App Notifications</h3>
               {([
                 { key: 'inAppComplete' as const, label: 'Show generation complete' },
