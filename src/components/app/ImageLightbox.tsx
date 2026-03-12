@@ -99,8 +99,8 @@ export function ImageLightbox({
           <button
             onClick={handlePrevious}
             className={cn(
-              'absolute left-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors',
-              isMobile ? 'w-9 h-9' : 'w-12 h-12 left-4'
+              'absolute left-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/20 border border-white/20 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/30 transition-colors',
+              isMobile ? 'w-10 h-10' : 'w-12 h-12 left-4'
             )}
           >
             <ChevronLeft className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
@@ -108,8 +108,8 @@ export function ImageLightbox({
           <button
             onClick={handleNext}
             className={cn(
-              'absolute right-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors',
-              isMobile ? 'w-9 h-9' : 'w-12 h-12 right-4'
+              'absolute right-3 top-1/2 -translate-y-1/2 z-50 rounded-full bg-white/20 border border-white/20 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white hover:bg-white/30 transition-colors',
+              isMobile ? 'w-10 h-10' : 'w-12 h-12 right-4'
             )}
           >
             <ChevronRight className={isMobile ? 'w-5 h-5' : 'w-6 h-6'} />
