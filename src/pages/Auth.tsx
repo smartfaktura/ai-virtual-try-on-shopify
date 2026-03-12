@@ -459,6 +459,18 @@ export default function Auth() {
                 />
                 {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
               </div>
+
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="marketingOptIn"
+                  checked={marketingOptIn}
+                  onCheckedChange={(v) => setMarketingOptIn(!!v)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="marketingOptIn" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+                  Send me news, tips & special offers via email
+                </label>
+              </div>
             )}
 
             {formError && (
