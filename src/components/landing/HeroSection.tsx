@@ -246,9 +246,45 @@ export function HeroSection() {
 
         {/* Visual showcase: Upload → Carousel of outputs */}
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-6 md:gap-8">
-            {/* Left: Original upload with scene switcher */}
-            <div className="flex-shrink-0 w-[180px] sm:w-[200px]">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+
+            {/* Mobile: compact product bar + scene pills */}
+            <div className="flex md:hidden items-center gap-3 px-1">
+              <div className="flex-shrink-0 w-[56px] h-[75px] rounded-xl overflow-hidden border border-border shadow-sm relative">
+                <ShimmerImage
+                  src={optimizeProduct(current.product.img)}
+                  alt={current.product.label}
+                  className="w-full h-full object-cover"
+                  aspectRatio="3/4"
+                  width={56}
+                  height={75}
+                  fetchPriority="high"
+                />
+                <span className="absolute bottom-0 inset-x-0 bg-background/80 backdrop-blur-sm text-[8px] font-semibold text-foreground text-center py-0.5">
+                  Upload
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {showcases.map((scene, i) => (
+                  <button
+                    key={i}
+                    onClick={() => selectScene(i)}
+                    className={`text-[10px] font-medium px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                      activeScene === i
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
+                            !pulsed ? 'animate-[pillPulse_1.5s_ease-in-out_2s_2]' : ''
+                          }`
+                    }`}
+                  >
+                    {scene.product.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop: Original upload card with scene switcher (hidden on mobile) */}
+            <div className="hidden md:block flex-shrink-0 w-[200px]">
               <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg">
                 <div className="relative aspect-[3/4]">
                   <ShimmerImage
@@ -260,13 +296,13 @@ export function HeroSection() {
                     height={267}
                     fetchPriority="high"
                   />
-                  <span className="absolute top-3 left-3 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
+                  <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
                     Your Upload
                   </span>
                 </div>
                 <div className="p-3 text-center">
-                  <p className="text-xs sm:text-sm font-semibold text-foreground">{current.product.subtitle}</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">That's all you need</p>
+                  <p className="text-sm font-semibold text-foreground">{current.product.subtitle}</p>
+                  <p className="text-xs text-muted-foreground">That's all you need</p>
                 </div>
               </div>
 
@@ -276,7 +312,7 @@ export function HeroSection() {
                   <button
                     key={i}
                     onClick={() => selectScene(i)}
-                    className={`text-[10px] sm:text-xs font-medium px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                    className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                       activeScene === i
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                         : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
@@ -293,8 +329,8 @@ export function HeroSection() {
               </p>
             </div>
 
-            {/* Flow arrow */}
-            <div className="flex-shrink-0 hidden sm:flex flex-col items-center gap-1">
+            {/* Flow arrow (desktop only) */}
+            <div className="flex-shrink-0 hidden md:flex flex-col items-center gap-1">
               <div className="w-10 h-px bg-border" />
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <ChevronRight className="w-4 h-4 text-primary" />
@@ -302,8 +338,8 @@ export function HeroSection() {
               <div className="w-10 h-px bg-border" />
             </div>
 
-            {/* Right: Portrait carousel */}
-            <div className="flex-1 min-w-0 relative">
+            {/* Output carousel — full width on mobile */}
+            <div className="flex-1 min-w-0 relative w-full">
               {/* Carousel arrows */}
               <button
                 onClick={() => scroll('left')}
@@ -324,7 +360,7 @@ export function HeroSection() {
                 <ChevronRight className="w-4 h-4 text-foreground" />
               </button>
 
-              {/* Right-edge gradient fade to signal scrollability */}
+              {/* Right-edge gradient fade */}
               {canScrollRight && (
                 <div className="absolute right-0 top-0 bottom-3 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
               )}
