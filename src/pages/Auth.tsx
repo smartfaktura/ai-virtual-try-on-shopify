@@ -37,6 +37,7 @@ export default function Auth() {
   const [resendTimer, setResendTimer] = useState(60);
   const [resendLoading, setResendLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
 
   useEffect(() => {
     if (!isLoading && user) {
