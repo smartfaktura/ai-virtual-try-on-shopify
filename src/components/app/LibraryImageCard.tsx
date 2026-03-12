@@ -47,7 +47,7 @@ async function downloadImage(url: string, filename: string) {
   URL.revokeObjectURL(blobUrl);
 }
 
-export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected }: LibraryImageCardProps) {
+export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected, isUpscaling }: LibraryImageCardProps) {
   return (
     <div
       className={cn(
