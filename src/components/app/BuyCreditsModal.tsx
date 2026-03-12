@@ -36,10 +36,14 @@ export function BuyCreditsModal() {
   // Show the focused "switch to annual" card when a monthly paid user toggles to annual
   const showAnnualSwitchCard = isPaidUser && effectiveInterval === 'monthly' && isAnnual && currentPlanData;
 
-  const handlePurchase = (stripePriceId: string | undefined) => {
-    if (!stripePriceId) return;
-    startCheckout(stripePriceId, 'payment');
-    closeBuyModal();
+  const handlePurchase = async (packId: string, stripePriceId: string | undefined) => {
+    if (!stripePriceId || anyLoading) return;
+    setTopUpLoadingId(packId);
+    try {
+      await startCheckout(stripePriceId, 'payment');
+    } catch {
+      setTopUpLoadingId(null);
+    }
   };
 
   const handlePlanSelect = (planId: string) => {
