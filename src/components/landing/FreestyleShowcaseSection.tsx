@@ -125,8 +125,11 @@ export function FreestyleShowcaseSection() {
             <span className="text-primary">No Limits.</span>
           </h2>
 
-          <p className="text-muted-foreground text-base md:text-lg max-w-lg mx-auto">
+          <p className="text-muted-foreground text-sm md:text-lg max-w-lg mx-auto hidden md:block">
             Describe what you want, pick your inputs, and get studio-quality images in seconds.
+          </p>
+          <p className="text-muted-foreground text-sm md:hidden">
+            Describe it, generate it. Studio quality in seconds.
           </p>
         </div>
 
