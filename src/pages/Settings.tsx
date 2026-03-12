@@ -135,20 +135,24 @@ export default function Settings() {
     setDialogOpen(true);
   };
 
-  const handleDialogConfirm = () => {
-    if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
-      if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
-        openCustomerPortal();
-      } else {
-        const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
-        if (priceId) {
-          startCheckout(priceId, 'subscription');
+  const handleDialogConfirm = async () => {
+    setCheckoutLoading(true);
+    try {
+      if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
+        if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+          await openCustomerPortal();
+        } else {
+          const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+          if (priceId) {
+            await startCheckout(priceId, 'subscription');
+          }
         }
+      } else if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
+        await openCustomerPortal();
       }
-    } else if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
-      openCustomerPortal();
+    } catch {
+      setCheckoutLoading(false);
     }
-    setDialogOpen(false);
   };
 
   const handleCreditPurchase = (packId: string) => {
