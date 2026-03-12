@@ -425,20 +425,20 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   const elementsReady = usePreloadImages(elementUrls);
 
   // Compute timing from element delays (only used for recipe mode)
-  const maxDelay = isCarousel ? 0 : Math.max(...scene.elements.map((e) => e.enterDelay));
+  const maxDelay = (isCarousel || isUpscale || scene.elements.length === 0) ? 0 : Math.max(...scene.elements.map((e) => e.enterDelay));
   const elementsExitAt = maxDelay + 1.8;
   const badgeAt = elementsExitAt + 0.35;
   const totalDuration = badgeAt + 1.6;
 
   // Loop the animation (recipe mode only)
   useEffect(() => {
-    if (isCarousel || !isActive) {
+    if (isCarousel || isUpscale || !isActive) {
       setIteration(0);
       return;
     }
     const timer = setInterval(() => setIteration((i) => i + 1), totalDuration * 1000);
     return () => clearInterval(timer);
-  }, [isActive, totalDuration, isCarousel]);
+  }, [isActive, totalDuration, isCarousel, isUpscale]);
 
   // Delegate to specialized components
   if (isCarousel) return <CarouselThumbnail scene={scene} isActive={isActive} />;
