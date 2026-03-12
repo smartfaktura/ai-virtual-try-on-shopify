@@ -174,16 +174,14 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                   <Download className="w-4 h-4 mr-2" /> Download Image
                 </Button>
 
-                {!isUpscaled && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setUpscaleModalOpen(true)}
-                    className="w-full h-11 rounded-xl text-sm font-medium"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Enhance to 2K / 4K
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  onClick={() => setUpscaleModalOpen(true)}
+                  className="w-full h-11 rounded-xl text-sm font-medium"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  {upscaleLabel ? `Re-enhance (currently ${upscaleLabel})` : 'Enhance to 2K / 4K'}
+                </Button>
 
                 {item.source === 'freestyle' && (
                   <Button

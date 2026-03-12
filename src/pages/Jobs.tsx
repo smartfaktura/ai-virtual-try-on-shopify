@@ -377,7 +377,7 @@ export default function Jobs() {
         open={upscaleModalOpen}
         onClose={() => setUpscaleModalOpen(false)}
         items={items
-          .filter(i => selectedIds.has(i.id) && i.quality !== 'upscaled')
+          .filter(i => selectedIds.has(i.id) && !i.quality?.startsWith('upscaled_') && i.quality !== 'upscaled')
           .map(i => ({
             imageUrl: i.imageUrl,
             sourceType: i.source as 'freestyle' | 'generation',

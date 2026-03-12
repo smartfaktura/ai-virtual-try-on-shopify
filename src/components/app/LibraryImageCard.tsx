@@ -57,6 +57,15 @@ export function LibraryImageCard({ item, onClick, onDelete, selectMode, selected
       )}
       onClick={onClick}
     >
+      {/* Resolution badge */}
+      {item.quality?.startsWith('upscaled_') && !selectMode && (
+        <div className="absolute top-3 right-3 z-10">
+          <Badge variant="secondary" className="bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0 font-bold shadow-md">
+            {item.quality === 'upscaled_4k' ? '4K' : '2K'}
+          </Badge>
+        </div>
+      )}
+
       {/* Select mode checkbox */}
       {selectMode && (
         <div className="absolute top-3 left-3 z-10">
