@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Check, ArrowUpRight, ArrowRight, X } from 'lucide-react';
+import { Wallet, Check, ArrowUpRight, ArrowRight, X, Loader2 } from 'lucide-react';
 import { creditPacks, pricingPlans } from '@/data/mockData';
 import { useCredits } from '@/contexts/CreditContext';
 import { PlanChangeDialog, type PlanChangeMode } from '@/components/app/PlanChangeDialog';
@@ -25,7 +25,10 @@ export function BuyCreditsModal() {
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [topUpLoadingId, setTopUpLoadingId] = useState<string | null>(null);
+  const [switchLoading, setSwitchLoading] = useState(false);
 
+  const anyLoading = checkoutLoading || !!topUpLoadingId || switchLoading;
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
   const currentPlanData = pricingPlans.find(p => p.planId === plan);
@@ -33,10 +36,14 @@ export function BuyCreditsModal() {
   // Show the focused "switch to annual" card when a monthly paid user toggles to annual
   const showAnnualSwitchCard = isPaidUser && effectiveInterval === 'monthly' && isAnnual && currentPlanData;
 
-  const handlePurchase = (stripePriceId: string | undefined) => {
-    if (!stripePriceId) return;
-    startCheckout(stripePriceId, 'payment');
-    closeBuyModal();
+  const handlePurchase = async (packId: string, stripePriceId: string | undefined) => {
+    if (!stripePriceId || anyLoading) return;
+    setTopUpLoadingId(packId);
+    try {
+      await startCheckout(stripePriceId, 'payment');
+    } catch {
+      setTopUpLoadingId(null);
+    }
   };
 
   const handlePlanSelect = (planId: string) => {
@@ -64,7 +71,9 @@ export function BuyCreditsModal() {
   const handleDialogConfirm = async () => {
     setCheckoutLoading(true);
     try {
-      if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
+      if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
+        await openCustomerPortal();
+      } else if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
         if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
           await openCustomerPortal();
         } else {
@@ -79,13 +88,18 @@ export function BuyCreditsModal() {
     }
   };
 
-  const handleSwitchToAnnual = () => {
-    if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
-      openCustomerPortal();
-    } else if (currentPlanData?.stripePriceIdAnnual) {
-      startCheckout(currentPlanData.stripePriceIdAnnual, 'subscription');
+  const handleSwitchToAnnual = async () => {
+    if (anyLoading) return;
+    setSwitchLoading(true);
+    try {
+      if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+        await openCustomerPortal();
+      } else if (currentPlanData?.stripePriceIdAnnual) {
+        await startCheckout(currentPlanData.stripePriceIdAnnual, 'subscription');
+      }
+    } catch {
+      setSwitchLoading(false);
     }
-    closeBuyModal();
   };
 
   const handleViewAllPlans = () => {
@@ -95,7 +109,7 @@ export function BuyCreditsModal() {
 
   return (
     <>
-      <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
+      <Dialog open={buyModalOpen} onOpenChange={(open) => { if (!open && !anyLoading) closeBuyModal(); }}>
         <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden">
 
           {/* Balance header */}
@@ -114,8 +128,9 @@ export function BuyCreditsModal() {
                 {planConfig.name}
               </Badge>
               <button
-                onClick={closeBuyModal}
-                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                onClick={() => { if (!anyLoading) closeBuyModal(); }}
+                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
+                disabled={anyLoading}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -222,10 +237,15 @@ export function BuyCreditsModal() {
                             )}
                             <Button
                               variant={pack.popular ? 'default' : 'outline'}
-                              className="w-full min-h-[44px] rounded-xl text-sm font-medium"
-                              onClick={() => handlePurchase(pack.stripePriceId)}
+                              className="w-full min-h-[44px] rounded-xl text-sm font-medium gap-2"
+                              onClick={() => handlePurchase(pack.packId, pack.stripePriceId)}
+                              disabled={!!topUpLoadingId || switchLoading}
                             >
-                              Buy {pack.credits.toLocaleString()} credits
+                              {topUpLoadingId === pack.packId ? (
+                                <><Loader2 className="w-4 h-4 animate-spin" />Redirecting…</>
+                              ) : (
+                                <>Buy {pack.credits.toLocaleString()} credits</>
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -263,9 +283,13 @@ export function BuyCreditsModal() {
                       onClick={handleSwitchToAnnual}
                       size="sm"
                       className="rounded-lg shrink-0 gap-1.5"
+                      disabled={switchLoading || !!topUpLoadingId}
                     >
-                      Switch
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      {switchLoading ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" />Redirecting…</>
+                      ) : (
+                        <>Switch<ArrowRight className="w-3.5 h-3.5" /></>
+                      )}
                     </Button>
                   </div>
                 )}

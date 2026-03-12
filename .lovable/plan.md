@@ -1,34 +1,30 @@
 
 
-## Plan: Fix all missing loading states in checkout flows
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problems Found
+### Issues Found
 
-1. **Top Up tab (BuyCreditsModal)**: `handlePurchase` calls `startCheckout()` then immediately `closeBuyModal()` — modal vanishes with no loading feedback while the edge function creates the Stripe session.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-2. **Switch to Annual button (BuyCreditsModal)**: `handleSwitchToAnnual` calls `openCustomerPortal()` or `startCheckout()` then immediately `closeBuyModal()` — same problem.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-3. **PlanChangeDialog in BuyCreditsModal**: `handleDialogConfirm` only handles `upgrade`/`downgrade` modes but not `cancel`/`reactivate` — if a user tries to cancel or reactivate from the modal, nothing happens and loading never resets.
+### Plan
 
-4. **Settings PlanChangeDialog**: Already handles all modes correctly. No issues here.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Changes
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**1. `src/components/app/BuyCreditsModal.tsx`**
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-- **Top Up buttons**: Add a `topUpLoading` state. Set it to `true` before calling `startCheckout()`. Do NOT call `closeBuyModal()` — let the redirect happen naturally. Show a spinner on the clicked button and disable all Top Up buttons while loading.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-- **Switch to Annual button**: Add a `switchLoading` state. Set it to `true` before calling `openCustomerPortal()`/`startCheckout()`. Do NOT call `closeBuyModal()`. Show spinner on the Switch button.
-
-- **PlanChangeDialog confirm handler**: Add `cancel` and `reactivate` handling (call `openCustomerPortal()`), matching what Settings.tsx already does. This ensures all 4 dialog modes work.
-
-- **Prevent modal close while any checkout is loading**: In the `onOpenChange` handler, check if any loading state is active and block closing.
-
-**2. `src/components/app/PlanChangeDialog.tsx`**
-
-- Already has the `loading` prop implemented correctly. No changes needed.
-
-### Result
-
-Every checkout button across the entire app (Top Up packs, Plan upgrade/downgrade/cancel/reactivate, Switch to Annual) will show a loading spinner and disable interaction until the Stripe redirect happens.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
