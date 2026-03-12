@@ -106,6 +106,10 @@ export default function Onboarding() {
       toast.error('Failed to save profile. Please try again.');
       console.error(error);
     } else {
+      // Sync marketing preference to Resend audience
+      supabase.functions.invoke('sync-resend-contact', {
+        body: { email: user.email, first_name: firstName.trim(), opted_in: marketingOptIn },
+      }).catch(() => {});
       toast.success('Welcome to VOVV.AI!');
       navigate('/app', { replace: true });
     }
