@@ -55,6 +55,8 @@ project_id = "azwiljtrbtaupofwmpzb"
     verify_jwt = false
   [functions.upscale-image]
     verify_jwt = false
+  [functions.upscale-worker]
+    verify_jwt = false
   [functions.shopify-oauth]
     verify_jwt = false
   [functions.shopify-oauth-callback]
