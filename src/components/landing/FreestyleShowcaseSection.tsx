@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Sparkles, Camera, Package, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 
-const PROMPT_TEXT = 'White Crop Top, three looks: studio, outdoor café, urban concrete';
+const PROMPT_TEXT_FULL = 'White Crop Top, three looks: studio, outdoor café, urban concrete';
+const PROMPT_TEXT_MOBILE = 'Crop Top — studio, café, urban';
 const CYCLE_MS = 8000;
 
 const CHIPS = [
@@ -37,6 +39,7 @@ type ChipKey = 'product' | 'scene';
 export function FreestyleShowcaseSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [cycle, setCycle] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({
@@ -47,6 +50,8 @@ export function FreestyleShowcaseSection() {
   const [progress, setProgress] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [visibleResults, setVisibleResults] = useState<number[]>([]);
+
+  const promptText = isMobile ? PROMPT_TEXT_MOBILE : PROMPT_TEXT_FULL;
 
   useEffect(() => {
     setTypedText('');
@@ -60,9 +65,9 @@ export function FreestyleShowcaseSection() {
 
     let charIdx = 0;
     const typeTimer = setInterval(() => {
-      if (charIdx < PROMPT_TEXT.length) {
-        charIdx = Math.min(charIdx + 3, PROMPT_TEXT.length);
-        setTypedText(PROMPT_TEXT.slice(0, charIdx));
+      if (charIdx < promptText.length) {
+        charIdx = Math.min(charIdx + 3, promptText.length);
+        setTypedText(promptText.slice(0, charIdx));
       } else {
         clearInterval(typeTimer);
       }
@@ -101,10 +106,10 @@ export function FreestyleShowcaseSection() {
       clearInterval(typeTimer);
       timers.forEach(clearTimeout);
     };
-  }, [cycle]);
+  }, [cycle, promptText]);
 
   return (
-    <section className="py-20 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
+    <section className="py-12 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
       <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10 max-w-4xl">
@@ -120,8 +125,11 @@ export function FreestyleShowcaseSection() {
             <span className="text-primary">No Limits.</span>
           </h2>
 
-          <p className="text-muted-foreground text-base md:text-lg max-w-lg mx-auto">
+          <p className="text-muted-foreground text-sm md:text-lg max-w-lg mx-auto hidden md:block">
             Describe what you want, pick your inputs, and get studio-quality images in seconds.
+          </p>
+          <p className="text-muted-foreground text-sm md:hidden">
+            Describe it, generate it. Studio quality in seconds.
           </p>
         </div>
 
