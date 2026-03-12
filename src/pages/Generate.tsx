@@ -3852,11 +3852,13 @@ export default function Generate() {
             })()}
             <div className="text-center">
               <h2 className="text-lg font-semibold">
-                {generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' :
+                {isUpscale ? `Enhancing to ${upscaleResolution === '4k' ? '4K' : '2K'}...` :
+                 generationMode === 'virtual-try-on' ? 'Creating Virtual Try-On...' :
                  hasWorkflowConfig ? `Creating ${activeWorkflow?.name}...` : 'Creating Your Images...'}
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
+                {isUpscale ? `Upscaling ${upscaleImageCount} image${upscaleImageCount !== 1 ? 's' : ''} — sharpening details & recovering textures` :
+                 generationMode === 'virtual-try-on' ? `Dressing ${selectedModel?.name} in "${selectedProduct?.title}"` :
                  isFlatLay && selectedFlatLayProductIds.size > 1 ? `Arranging ${selectedFlatLayProductIds.size} products on ${selectedVariationIndices.size} surface${selectedVariationIndices.size !== 1 ? 's' : ''}` :
                  isInteriorDesign ? (() => { const styles = Array.from(selectedVariationIndices).map(i => variationStrategy?.variations[i]?.label).filter(Boolean); return styles.length > 1 ? `Staging your ${interiorRoomType || 'room'} in ${styles.length} styles: ${styles.join(', ')}` : `Staging your ${interiorRoomType || 'room'} in ${styles[0] || 'selected'} style`; })() :
                  hasWorkflowConfig ? `Generating ${selectedVariationIndices.size} variation${selectedVariationIndices.size !== 1 ? 's' : ''} of "${selectedProduct?.title || scratchUpload?.productInfo.title}"` :
