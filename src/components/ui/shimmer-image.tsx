@@ -33,6 +33,13 @@ export function ShimmerImage({
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
 
+  // Ref callback: if the image is already cached, skip shimmer immediately
+  const imgRef = useCallback((node: HTMLImageElement | null) => {
+    if (node && node.complete && node.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }, []);
+
   return (
     <div
       className={cn('relative overflow-hidden w-full h-full', wrapperClassName)}
