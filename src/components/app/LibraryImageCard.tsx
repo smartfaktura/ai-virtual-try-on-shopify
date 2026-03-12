@@ -33,6 +33,7 @@ interface LibraryImageCardProps {
   onDelete?: () => void;
   selectMode?: boolean;
   selected?: boolean;
+  isUpscaling?: boolean;
 }
 
 async function downloadImage(url: string, filename: string) {
