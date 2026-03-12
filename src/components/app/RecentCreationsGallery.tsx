@@ -45,7 +45,7 @@ export function RecentCreationsGallery() {
           .limit(5),
         supabase
           .from('freestyle_generations')
-          .select('id, image_url, prompt, created_at')
+          .select('id, image_url, prompt, quality, created_at')
           .order('created_at', { ascending: false })
           .limit(5),
       ]);
