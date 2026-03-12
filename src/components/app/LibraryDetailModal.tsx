@@ -3,7 +3,6 @@ import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maxim
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
