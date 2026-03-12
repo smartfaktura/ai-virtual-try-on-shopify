@@ -246,65 +246,99 @@ export function HeroSection() {
 
         {/* Visual showcase: Upload → Carousel of outputs */}
         <div className="max-w-6xl mx-auto">
-          {/* ===== MOBILE: Compact horizontal strip ===== */}
-          <div className="flex md:hidden flex-col items-center gap-2 px-4">
-            {/* "Your Upload" label + product pill inline with scene pills */}
-            <div className="flex items-center justify-center gap-2 w-full">
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-border bg-card shadow-sm">
-                <div className="w-6 h-6 rounded-full overflow-hidden border border-border">
-                  <ShimmerImage
-                    src={optimizeProduct(current.product.img)}
-                    alt={current.product.label}
-                    className="w-full h-full object-cover"
-                    width={24}
-                    height={24}
-                    fetchPriority="high"
-                  />
-                </div>
-                <span className="text-[10px] font-semibold text-foreground">1 photo</span>
-                <ArrowRight className="w-3 h-3 text-muted-foreground" />
-              </div>
-              {showcases.map((scene, i) => (
-                <button
-                  key={i}
-                  onClick={() => selectScene(i)}
-                  className={`text-[11px] font-medium px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-                    activeScene === i
-                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                      : `bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground ${
-                          !pulsed ? 'animate-[pillPulse_1.5s_ease-in-out_2s_2]' : ''
-                        }`
-                  }`}
-                >
-                  {scene.product.label}
-                </button>
-              ))}
-            </div>
+          {/* ===== MOBILE: Carousel with arrows + bottom product strip ===== */}
+          <div className="flex md:hidden flex-col gap-2 px-2">
+            {/* Output images carousel with arrow buttons */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const el = scrollRef.current;
+                  if (el) el.scrollBy({ left: -160, behavior: 'smooth' });
+                }}
+                className="absolute -left-1 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-card/90 border border-border shadow flex items-center justify-center backdrop-blur-sm"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-4 h-4 text-foreground" />
+              </button>
+              <button
+                onClick={() => {
+                  const el = scrollRef.current;
+                  if (el) el.scrollBy({ left: 160, behavior: 'smooth' });
+                }}
+                className="absolute -right-1 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-card/90 border border-border shadow flex items-center justify-center backdrop-blur-sm"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-4 h-4 text-foreground" />
+              </button>
 
-            {/* Output images — larger, full-width scroll */}
-            <div className="flex gap-2 w-full overflow-x-auto scrollbar-none pb-1">
-              {current.outputs.slice(0, 6).map((output, idx) => (
-                <div key={output.label} className="flex-shrink-0 w-[140px] rounded-xl border border-border bg-card overflow-hidden shadow-sm">
-                  <div className="relative aspect-[3/4]">
-                    <ShimmerImage
-                      src={optimizeOutput(output.img)}
-                      alt={output.label}
-                      className="w-full h-full object-cover"
-                      aspectRatio="3/4"
-                      width={140}
-                      height={187}
-                      loading={idx < 3 ? 'eager' : 'lazy'}
-                      fetchPriority={idx < 2 ? 'high' : undefined}
-                    />
-                    <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
-                      {output.label}
-                    </span>
+              <div
+                ref={scrollRef}
+                onScroll={updateScrollState}
+                data-hero-carousel
+                className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory px-4"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+              >
+                {current.outputs.map((output, idx) => (
+                  <div key={output.label} className="flex-shrink-0 w-[155px] snap-start">
+                    <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+                      <div className="relative aspect-[3/4]">
+                        <ShimmerImage
+                          src={optimizeOutput(output.img)}
+                          alt={output.label}
+                          className="w-full h-full object-cover"
+                          aspectRatio="3/4"
+                          width={155}
+                          height={207}
+                          loading={idx < 3 ? 'eager' : 'lazy'}
+                          fetchPriority={idx < 2 ? 'high' : undefined}
+                        />
+                        <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
+                          {output.label}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
-            <p className="text-center text-xs text-muted-foreground -mt-0.5">
+            {/* Bottom product strip: thumbnail + text + scene pills */}
+            <div className="flex items-center gap-2.5 px-2">
+              <div className="flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden border border-border shadow-sm">
+                <ShimmerImage
+                  src={optimizeProduct(current.product.img)}
+                  alt={current.product.label}
+                  className="w-full h-full object-cover"
+                  width={48}
+                  height={64}
+                  fetchPriority="high"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-foreground whitespace-nowrap">1 photo</span>
+                  <ArrowRight className="w-3 h-3 text-primary flex-shrink-0" />
+                  <span className="text-[11px] font-bold text-primary whitespace-nowrap">{current.outputs.length} results</span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                  {showcases.map((scene, i) => (
+                    <button
+                      key={i}
+                      onClick={() => selectScene(i)}
+                      className={`text-[10px] font-medium px-2.5 py-1 rounded-full border transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
+                        activeScene === i
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'bg-card text-muted-foreground border-border'
+                      }`}
+                    >
+                      {scene.product.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-center text-[11px] text-muted-foreground">
               {current.caption}
             </p>
           </div>
