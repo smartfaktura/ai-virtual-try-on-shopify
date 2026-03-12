@@ -34,7 +34,7 @@ const showcases: ProductShowcase[] = [
       { img: '/images/try-showcase/pilates-studio.png', label: 'Pilates Studio' },
       { img: '/images/try-showcase/studio-dark.png', label: 'Studio Portrait' },
     ],
-    caption: 'Same top — ∞ environments — 12 seconds',
+    caption: 'Same top ∞ environments in 12 seconds',
   },
   {
     product: { img: h('hero-product-serum.jpg'), label: 'Face Serum', subtitle: '1 product photo' },
@@ -48,7 +48,7 @@ const showcases: ProductShowcase[] = [
       { img: h('hero-serum-garden.jpg'), label: 'Garden' },
       { img: h('hero-serum-moody.jpg'), label: 'Moody Dark' },
     ],
-    caption: 'Same serum — ∞ scenes — 12 seconds',
+    caption: 'Same serum ∞ scenes in 12 seconds',
   },
   {
     product: { img: h('hero-product-ring.jpg'), label: 'Gold Ring', subtitle: '1 product photo' },
@@ -62,7 +62,7 @@ const showcases: ProductShowcase[] = [
       { img: h('hero-ring-water.jpg'), label: 'Water Reflection' },
       { img: h('hero-ring-golden.jpg'), label: 'Golden Hour' },
     ],
-    caption: 'Same ring — ∞ shots — 12 seconds',
+    caption: 'Same ring ∞ shots in 12 seconds',
   },
 ];
 
