@@ -2,6 +2,7 @@ import { Sparkles, Camera, Download, Check, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Badge } from '@/components/ui/badge';
 
 function getAspectClass(ratio?: string) {
   switch (ratio) {
