@@ -81,7 +81,7 @@ export function GlobalGenerationBar() {
 
     if (justFinished.length > 0) {
       setCompletedGroups((prev) => {
-        const newCompleted = justFinished.map((key) => ({
+        const newCompleted: BatchGroup[] = justFinished.map((key) => ({
           key,
           workflow_id: null,
           workflow_name: 'Generation',
@@ -96,6 +96,7 @@ export function GlobalGenerationBar() {
           created_at: new Date().toISOString(),
           job_type: null,
           quality: null,
+          resolution: null,
         }));
         return [...prev, ...newCompleted];
       });
