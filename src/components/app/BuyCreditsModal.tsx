@@ -236,10 +236,15 @@ export function BuyCreditsModal() {
                             )}
                             <Button
                               variant={pack.popular ? 'default' : 'outline'}
-                              className="w-full min-h-[44px] rounded-xl text-sm font-medium"
-                              onClick={() => handlePurchase(pack.stripePriceId)}
+                              className="w-full min-h-[44px] rounded-xl text-sm font-medium gap-2"
+                              onClick={() => handlePurchase(pack.packId, pack.stripePriceId)}
+                              disabled={!!topUpLoadingId || switchLoading}
                             >
-                              Buy {pack.credits.toLocaleString()} credits
+                              {topUpLoadingId === pack.packId ? (
+                                <><Loader2 className="w-4 h-4 animate-spin" />Redirecting…</>
+                              ) : (
+                                <>Buy {pack.credits.toLocaleString()} credits</>
+                              )}
                             </Button>
                           </div>
                         </div>
