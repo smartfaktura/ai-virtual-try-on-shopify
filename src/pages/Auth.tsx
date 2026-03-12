@@ -454,6 +454,7 @@ export default function Auth() {
             </div>
 
             {mode === 'signup' && (
+              <>
               <div className="space-y-1.5">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
@@ -476,6 +477,10 @@ export default function Auth() {
                 />
                 <label htmlFor="marketingOptIn" className="text-sm text-muted-foreground leading-snug cursor-pointer">
                   Send me news, tips & special offers via email
+                </label>
+              </div>
+              </>
+            )}
                 </label>
               </div>
             )}
