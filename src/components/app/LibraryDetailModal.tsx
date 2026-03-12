@@ -179,8 +179,8 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                     onClick={() => setUpscaleModalOpen(true)}
                     className="w-full h-11 rounded-xl text-sm font-medium"
                   >
-                    <Maximize className="w-4 h-4 mr-2" />
-                    Upscale to HD
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Enhance to 2K / 4K
                   </Button>
                 )}
 

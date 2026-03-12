@@ -328,8 +328,8 @@ export default function Jobs() {
             }}
             variant="secondary"
           >
-            <Maximize className="w-4 h-4 mr-2" />
-            Upscale
+            <Sparkles className="w-4 h-4 mr-2" />
+            Enhance 2K / 4K
           </Button>
           <Button
             size="sm"
