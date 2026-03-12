@@ -127,7 +127,7 @@ serve(async (req) => {
       status = statusResult.status?.toLowerCase() || "unknown";
       console.log(`[upscale-worker] Job ${jobId}: poll ${attempts}/${MAX_POLL_ATTEMPTS} → ${status}`);
 
-      if (status === "failed" || status === "error") {
+      if (status === "failed" || status === "error" || status === "cancelled") {
         throw new Error(`Topaz processing failed: ${statusResult.error || "Unknown error"}`);
       }
     }
