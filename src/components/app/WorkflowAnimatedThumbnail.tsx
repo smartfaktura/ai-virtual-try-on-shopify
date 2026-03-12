@@ -274,10 +274,144 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
   );
 }
 
+/* ── Upscale mode component ── */
+
+function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
+  const CYCLE = 5000; // total loop duration ms
+  const [iteration, setIteration] = useState(0);
+  const [bgLoaded, setBgLoaded] = useState(false);
+  const bgSrc = scene.background;
+
+  useEffect(() => {
+    if (!isActive) return;
+    const t = setInterval(() => setIteration((i) => i + 1), CYCLE);
+    return () => clearInterval(t);
+  }, [isActive]);
+
+  return (
+    <div className="relative w-full h-full overflow-hidden bg-muted" key={isActive ? iteration : 'static'}>
+      {/* Blurred layer (always visible underneath) */}
+      <img
+        src={bgSrc}
+        alt=""
+        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        style={{ filter: 'blur(6px) saturate(0.9)', transform: 'scale(1.06)' }}
+        onLoad={() => setBgLoaded(true)}
+      />
+
+      {isActive && bgLoaded && (
+        <>
+          {/* Sharp layer — wipes in left-to-right via clip-path */}
+          <img
+            src={bgSrc}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-top"
+            style={{
+              clipPath: 'inset(0 100% 0 0)',
+              animation: `wf-upscale-wipe 1.5s ease-in-out 0.8s forwards`,
+            }}
+          />
+
+          {/* Vertical divider line tracking the wipe edge */}
+          <div
+            className="absolute top-0 bottom-0 w-[2px] bg-white/80 z-[15]"
+            style={{
+              left: '0%',
+              animation: `wf-divider-move 1.5s ease-in-out 0.8s forwards`,
+              boxShadow: '0 0 8px rgba(255,255,255,0.5)',
+            }}
+          />
+
+          {/* "Original" badge — top-left */}
+          <div
+            className="absolute top-3 left-3 z-20"
+            style={{
+              opacity: 0,
+              animation: 'wf-slide-in-left 0.45s cubic-bezier(.22,1,.36,1) 0.2s forwards, wf-fade-out 0.3s ease-in 2.3s forwards',
+            }}
+          >
+            <div className="bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-white/60" />
+              <span className="text-[10px] font-semibold text-white/90 tracking-wide">Original</span>
+            </div>
+          </div>
+
+          {/* "Enhanced 4K" badge — bottom-right, appears after wipe */}
+          <div
+            className="absolute bottom-3 right-3 z-20"
+            style={{
+              opacity: 0,
+              animation: 'wf-badge-pop-right 0.5s cubic-bezier(.34,1.56,.64,1) 2.4s forwards',
+            }}
+          >
+            <div className="bg-white rounded-full px-3 py-1.5 wf-card-shadow flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-primary" />
+              <span className="text-[11px] font-bold text-primary tracking-wide">Enhanced 4K</span>
+            </div>
+          </div>
+
+          {/* Shimmer sweep across the sharp reveal */}
+          <div
+            className="absolute inset-0 z-[12] pointer-events-none overflow-hidden"
+            style={{
+              opacity: 0,
+              animation: 'wf-fade-in 0.2s ease-out 1.8s forwards, wf-fade-out 0.3s ease-in 2.6s forwards',
+            }}
+          >
+            <div
+              className="absolute inset-y-0 w-1/3"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                animation: 'wf-shimmer 0.8s ease-in-out 1.8s forwards',
+              }}
+            />
+          </div>
+        </>
+      )}
+
+      <style>{`
+        @keyframes wf-upscale-wipe {
+          from { clip-path: inset(0 100% 0 0); }
+          to   { clip-path: inset(0 0% 0 0); }
+        }
+        @keyframes wf-divider-move {
+          from { left: 0%; }
+          to   { left: calc(100% - 2px); }
+        }
+        @keyframes wf-badge-pop-right {
+          0%   { opacity: 0; transform: translateY(8px) scale(0.5); }
+          70%  { opacity: 1; transform: translateY(-2px) scale(1.06); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .wf-card-shadow {
+          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
+        }
+        @keyframes wf-slide-in-left {
+          from { opacity: 0; transform: translateX(-28px) scale(0.9); }
+          to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes wf-fade-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes wf-fade-out {
+          from { opacity: 1; }
+          to   { opacity: 0; }
+        }
+        @keyframes wf-shimmer {
+          from { left: -33%; }
+          to   { left: 100%; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 /* ── Main component ── */
 
 export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   const isCarousel = scene.mode === 'carousel';
+  const isUpscale = scene.mode === 'upscale';
   const [iteration, setIteration] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
 
