@@ -25,6 +25,7 @@ export function GlobalGenerationBar() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [minimized, setMinimized] = useState(true);
   const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set());
   const prevActiveKeysRef = useRef<Set<string>>(new Set());
