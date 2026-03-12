@@ -166,7 +166,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Image Upscaling': {
     mode: 'upscale',
-    background: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
+    background: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&q=80',
     elements: [],
   },
 
