@@ -314,6 +314,25 @@ export default function Jobs() {
           <span className="text-sm font-medium">{selectedIds.size} selected</span>
           <Button
             size="sm"
+            onClick={() => {
+              const nonUpscaled = items.filter(i => selectedIds.has(i.id) && i.quality !== 'upscaled');
+              if (nonUpscaled.length === 0) {
+                toast.info('All selected images are already upscaled');
+                return;
+              }
+              if (nonUpscaled.length > 10) {
+                toast.error('Maximum 10 images per upscale batch');
+                return;
+              }
+              setUpscaleModalOpen(true);
+            }}
+            className="bg-violet-600 text-white hover:bg-violet-700"
+          >
+            <Maximize className="w-4 h-4 mr-2" />
+            Upscale
+          </Button>
+          <Button
+            size="sm"
             onClick={handleBulkDownload}
             disabled={isZipping}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -326,6 +345,22 @@ export default function Jobs() {
           </button>
         </div>
       )}
+
+      <UpscaleModal
+        open={upscaleModalOpen}
+        onClose={() => setUpscaleModalOpen(false)}
+        items={items
+          .filter(i => selectedIds.has(i.id) && i.quality !== 'upscaled')
+          .map(i => ({
+            imageUrl: i.imageUrl,
+            sourceType: i.source as 'freestyle' | 'generation',
+            sourceId: i.id,
+          }))}
+        onComplete={() => {
+          cancelSelect();
+          queryClient.invalidateQueries({ queryKey: ['library'] });
+        }}
+      />
 
       <LibraryDetailModal
         item={selectedItem}
