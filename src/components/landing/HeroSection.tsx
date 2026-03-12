@@ -213,10 +213,10 @@ export function HeroSection() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto mb-14">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-6">
+          <h1 className="text-[2rem] sm:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-[1.1] mb-6">
             Your AI Photography Team.
             <br />
-            <span className="text-primary">
+            <span className="text-primary inline-block whitespace-nowrap h-[1.15em] sm:h-auto">
               {typedText}
               <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-0.5 align-middle animate-[blink_1s_step-end_infinite]" />
             </span>
