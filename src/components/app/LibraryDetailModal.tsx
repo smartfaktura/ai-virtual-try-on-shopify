@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +13,7 @@ import { AddModelModal } from '@/components/app/AddModelModal';
 import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import { UpscaleModal } from '@/components/app/UpscaleModal';
+import { TEAM_MEMBERS } from '@/data/teamData';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 
@@ -19,9 +21,10 @@ interface LibraryDetailModalProps {
   item: LibraryItem | null;
   open: boolean;
   onClose: () => void;
+  isUpscaling?: boolean;
 }
 
-export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalProps) {
+export function LibraryDetailModal({ item, open, onClose, isUpscaling }: LibraryDetailModalProps) {
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
@@ -165,6 +168,24 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 </div>
               )}
 
+              {/* Upscaling in-progress state */}
+              {isUpscaling && (() => {
+                const luna = TEAM_MEMBERS.find(m => m.name === 'Luna');
+                return (
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-in fade-in">
+                    <Avatar className="w-10 h-10 ring-2 ring-primary/30 animate-pulse">
+                      <AvatarImage src={luna?.avatar} alt="Luna" />
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">LP</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">Luna is enhancing this image…</p>
+                      <p className="text-xs text-muted-foreground">Adding detail and sharpness</p>
+                    </div>
+                    <Sparkles className="w-4 h-4 text-primary animate-pulse shrink-0" />
+                  </div>
+                );
+              })()}
+
               {/* Actions */}
               <div className="space-y-2.5">
                 <Button
@@ -174,14 +195,25 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                   <Download className="w-4 h-4 mr-2" /> Download Image
                 </Button>
 
-                <Button
-                  variant="outline"
-                  onClick={() => setUpscaleModalOpen(true)}
-                  className="w-full h-11 rounded-xl text-sm font-medium"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {upscaleLabel ? `Re-enhance (currently ${upscaleLabel})` : 'Enhance to 2K / 4K'}
-                </Button>
+                {isUpscaling ? (
+                  <Button
+                    variant="outline"
+                    disabled
+                    className="w-full h-11 rounded-xl text-sm font-medium"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
+                    Enhancing in progress…
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => setUpscaleModalOpen(true)}
+                    className="w-full h-11 rounded-xl text-sm font-medium"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    {upscaleLabel ? `Re-enhance (currently ${upscaleLabel})` : 'Enhance to 2K / 4K'}
+                  </Button>
+                )}
 
                 {item.source === 'freestyle' && (
                   <Button
