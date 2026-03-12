@@ -246,50 +246,54 @@ export function HeroSection() {
 
         {/* Visual showcase: Upload → Carousel of outputs */}
         <div className="max-w-6xl mx-auto">
-          {/* ===== MOBILE: Grid showcase ===== */}
-          <div className="flex md:hidden flex-col items-center">
-            <div className="grid grid-cols-2 gap-2 w-full max-w-sm mx-auto">
-              {/* Product upload — first cell */}
-              <div className="rounded-xl border border-border bg-card overflow-hidden shadow-md relative">
-                <div className="relative aspect-[3/4]">
+          {/* ===== MOBILE: Compact horizontal strip ===== */}
+          <div className="flex md:hidden flex-col items-center gap-3 px-4">
+            <div className="flex items-center gap-2 w-full overflow-x-auto scrollbar-none pb-1">
+              {/* Product upload thumbnail */}
+              <div className="flex-shrink-0 flex flex-col items-center gap-1">
+                <div className="w-14 h-[75px] rounded-lg border border-border bg-card overflow-hidden shadow-sm relative">
                   <ShimmerImage
                     src={optimizeProduct(current.product.img)}
                     alt={current.product.label}
                     className="w-full h-full object-cover"
                     aspectRatio="3/4"
-                    width={180}
-                    height={240}
+                    width={56}
+                    height={75}
                     fetchPriority="high"
                   />
-                  <span className="absolute top-2 left-2 text-[9px] font-semibold px-2 py-0.5 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
-                    Your Upload
-                  </span>
                 </div>
+                <span className="text-[9px] font-medium text-muted-foreground whitespace-nowrap">Your Upload</span>
               </div>
-              {/* First 5 output images */}
-              {current.outputs.slice(0, 5).map((output, idx) => (
-                <div key={output.label} className="rounded-xl border border-border bg-card overflow-hidden shadow-md">
-                  <div className="relative aspect-[3/4]">
-                    <ShimmerImage
-                      src={optimizeOutput(output.img)}
-                      alt={output.label}
-                      className="w-full h-full object-cover"
-                      aspectRatio="3/4"
-                      width={180}
-                      height={240}
-                      loading={idx < 2 ? 'eager' : 'lazy'}
-                      fetchPriority={idx < 2 ? 'high' : undefined}
-                    />
-                    <span className="absolute bottom-2 left-2 text-[9px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                      {output.label}
-                    </span>
+
+              {/* Arrow separator */}
+              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+
+              {/* Output thumbnails strip */}
+              <div className="flex gap-2">
+                {current.outputs.slice(0, 5).map((output, idx) => (
+                  <div key={output.label} className="flex-shrink-0 w-[100px] rounded-lg border border-border bg-card overflow-hidden shadow-sm relative">
+                    <div className="relative aspect-[3/4]">
+                      <ShimmerImage
+                        src={optimizeOutput(output.img)}
+                        alt={output.label}
+                        className="w-full h-full object-cover"
+                        aspectRatio="3/4"
+                        width={100}
+                        height={133}
+                        loading={idx < 2 ? 'eager' : 'lazy'}
+                        fetchPriority={idx < 2 ? 'high' : undefined}
+                      />
+                      <span className="absolute bottom-1 left-1 text-[8px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
+                        {output.label}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Scene switcher pills */}
-            <div className="flex items-center justify-center gap-2 mt-4">
+            <div className="flex items-center justify-center gap-2">
               {showcases.map((scene, i) => (
                 <button
                   key={i}
@@ -307,7 +311,7 @@ export function HeroSection() {
               ))}
             </div>
 
-            <p className="text-center text-xs text-muted-foreground mt-2">
+            <p className="text-center text-xs text-muted-foreground">
               {current.caption}
             </p>
           </div>
