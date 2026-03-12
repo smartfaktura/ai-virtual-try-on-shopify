@@ -54,6 +54,7 @@ export default function Onboarding() {
 
   // Step 3: Categories
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
 
   if (!isLoading && !user) {
     return <Navigate to="/auth" replace />;
