@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 
-const PROMPT_TEXT_FULL = 'White Crop Top, three looks: studio, outdoor café, urban concrete';
-const PROMPT_TEXT_MOBILE = 'Crop Top — studio, café, urban';
+const PROMPT_TEXT_FULL = 'White Crop Top — basketball court, studio backdrop, café setting';
+const PROMPT_TEXT_MOBILE = 'Crop Top — court, studio, café';
 const CYCLE_MS = 8000;
 
 const CHIPS = [
@@ -16,15 +16,15 @@ const CHIPS = [
     key: 'product' as const,
     icon: Package,
     label: 'White Crop Top',
-    mobileLabel: 'Top',
+    mobileLabel: 'Crop Top',
     thumb: '/images/source-crop-top.jpg',
     delay: 1500,
   },
   {
     key: 'scene' as const,
     icon: Camera,
-    label: 'Multi-Scene',
-    mobileLabel: 'Scene',
+    label: 'Select scenes',
+    mobileLabel: 'Select scenes',
     thumb: '/images/try-showcase/cafe-lifestyle.png',
     delay: 2200,
   },
@@ -32,8 +32,8 @@ const CHIPS = [
 
 const RESULT_CARDS = [
   { label: 'Studio', src: '/images/try-showcase/virtual-tryon-1.png' },
-  { label: 'Outdoor Café', src: '/images/try-showcase/virtual-tryon-2.png' },
-  { label: 'Urban', src: '/images/try-showcase/virtual-tryon-3.png' },
+  { label: 'Basketball Court', src: '/images/try-showcase/virtual-tryon-2.png' },
+  { label: 'Café', src: '/images/try-showcase/cafe-lifestyle.png' },
 ];
 
 type ChipKey = 'product' | 'scene';
