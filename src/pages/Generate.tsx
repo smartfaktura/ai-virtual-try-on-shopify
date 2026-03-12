@@ -1403,6 +1403,13 @@ export default function Generate() {
   };
 
   const getSteps = () => {
+    if (isUpscale) {
+      return [
+        { name: sourceType === 'scratch' ? 'Upload' : 'Product(s)' },
+        { name: 'Settings' },
+        { name: 'Results' },
+      ];
+    }
     if (isFlatLay) {
       return [
         { name: sourceType === 'scratch' ? 'Source' : 'Product(s)' },
