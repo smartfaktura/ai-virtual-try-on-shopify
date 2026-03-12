@@ -13,6 +13,7 @@ export interface ActiveJob {
   job_type?: string | null;
   quality?: string | null;
   batch_id?: string | null;
+  resolution?: string | null;
 }
 
 export interface BatchGroup {
