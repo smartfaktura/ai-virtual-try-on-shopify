@@ -250,26 +250,34 @@ export function HeroSection() {
           <div className="flex md:hidden flex-col gap-2 px-2">
             {/* Output images carousel with arrow buttons */}
             <div className="relative">
+              {/* Left arrow — hidden at scroll start */}
               <button
-                onClick={() => {
-                  const el = scrollRef.current;
-                  if (el) el.scrollBy({ left: -160, behavior: 'smooth' });
-                }}
-                className="absolute -left-1 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-card/90 border border-border shadow flex items-center justify-center backdrop-blur-sm"
+                onClick={() => scroll('left')}
+                className={`absolute -left-1 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-card/95 border border-border shadow-md flex items-center justify-center backdrop-blur-sm transition-all duration-200 active:scale-90 ${
+                  canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
                 aria-label="Scroll left"
               >
-                <ChevronLeft className="w-4 h-4 text-foreground" />
+                <ChevronLeft className="w-5 h-5 text-foreground" />
               </button>
+              {/* Right arrow — hidden at scroll end */}
               <button
-                onClick={() => {
-                  const el = scrollRef.current;
-                  if (el) el.scrollBy({ left: 160, behavior: 'smooth' });
-                }}
-                className="absolute -right-1 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-card/90 border border-border shadow flex items-center justify-center backdrop-blur-sm"
+                onClick={() => scroll('right')}
+                className={`absolute -right-1 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-card/95 border border-border shadow-md flex items-center justify-center backdrop-blur-sm transition-all duration-200 active:scale-90 ${
+                  canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
                 aria-label="Scroll right"
               >
-                <ChevronRight className="w-4 h-4 text-foreground" />
+                <ChevronRight className="w-5 h-5 text-foreground" />
               </button>
+
+              {/* Edge gradient overlays */}
+              {canScrollLeft && (
+                <div className="absolute left-0 top-0 bottom-1 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none rounded-l-xl" />
+              )}
+              {canScrollRight && (
+                <div className="absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none rounded-r-xl" />
+              )}
 
               <div
                 ref={scrollRef}
@@ -300,6 +308,25 @@ export function HeroSection() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Dot indicators */}
+            <div className="flex gap-1.5 justify-center pt-1">
+              {current.outputs.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    const el = scrollRef.current;
+                    if (el) el.scrollTo({ left: i * 168, behavior: 'smooth' });
+                  }}
+                  className={`rounded-full transition-all duration-200 ${
+                    visibleDot === i
+                      ? 'w-4 h-1.5 bg-primary'
+                      : 'w-1.5 h-1.5 bg-muted-foreground/30'
+                  }`}
+                  aria-label={`Go to image ${i + 1}`}
+                />
+              ))}
             </div>
 
             {/* Bottom product strip: thumbnail + text + scene pills */}
