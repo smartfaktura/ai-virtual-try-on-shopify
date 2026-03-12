@@ -212,6 +212,10 @@ export function FreestyleShowcaseSection() {
                         <Icon className="w-3.5 h-3.5 shrink-0" />
                       )}
                       <span>
+                        {active
+                          ? (isMobile ? chip.mobileLabel : chip.label)
+                          : chip.key.charAt(0).toUpperCase() + chip.key.slice(1)}
+                      </span>
                     </div>
                   );
                 })}
