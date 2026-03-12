@@ -283,7 +283,7 @@ export function HeroSection() {
                 {showcases.map((scene, i) => (
                   <button
                     key={i}
-                    onClick={() => setActiveScene(i)}
+                    onClick={() => selectScene(i)}
                     className={`text-[10px] sm:text-xs font-medium px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                       activeScene === i
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
