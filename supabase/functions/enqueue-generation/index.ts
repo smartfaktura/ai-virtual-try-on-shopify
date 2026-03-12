@@ -24,14 +24,16 @@ function calculateCreditCost(
   hasModel: boolean = false,
   hasScene: boolean = false,
   _additionalProductCount: number = 0,
+  resolution?: string,
 ): number {
   let perImage: number;
 
-  if (jobType === "workflow" || jobType === "tryon") {
-    // Workflows and try-on: always 8 credits per image
+  if (jobType === "upscale") {
+    // Upscale: 4 credits for 2K, 8 credits for 4K
+    perImage = resolution === "4k" ? 8 : 4;
+  } else if (jobType === "workflow" || jobType === "tryon") {
     perImage = 8;
   } else {
-    // Freestyle: 8 if model or scene, 4 otherwise
     perImage = (hasModel || hasScene) ? 8 : 4;
   }
 
