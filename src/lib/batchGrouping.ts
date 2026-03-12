@@ -35,6 +35,8 @@ export interface BatchGroup {
   job_type: string | null;
   /** Quality setting ('standard' or 'high') */
   quality: string | null;
+  /** Upscale resolution ('2k' or '4k') when job_type is 'upscale' */
+  resolution: string | null;
 }
 
 /**
