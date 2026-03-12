@@ -141,7 +141,7 @@ export function FreestyleShowcaseSection() {
 
             <div className="p-4 md:p-5">
               {/* Prompt area */}
-              <div className="rounded-xl border border-border/50 bg-background px-4 py-3 mb-4 min-h-[56px] flex items-start">
+              <div className="rounded-xl border border-border/50 bg-background px-4 py-3 mb-4 h-[72px] flex items-start overflow-hidden">
                 <p className="text-sm text-foreground/90 leading-relaxed flex-1">
                   {typedText}
                   <span className="inline-block w-[2px] h-4 bg-primary ml-0.5 animate-pulse align-text-bottom" />
@@ -209,11 +209,11 @@ export function FreestyleShowcaseSection() {
           </div>
 
           {/* Results grid */}
-          <div className="mt-4 min-h-[200px]">
+          <div className="mt-4">
           <div
             className={cn(
-              'grid grid-cols-3 gap-3 transition-opacity duration-500',
-              showResults ? 'opacity-100' : 'opacity-0 pointer-events-none',
+              'grid grid-cols-3 gap-3 transition-all duration-500',
+              showResults ? 'opacity-100 visible' : 'opacity-0 invisible',
             )}
           >
             {RESULT_CARDS.map((card, i) => (
