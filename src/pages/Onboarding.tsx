@@ -97,6 +97,7 @@ export default function Onboarding() {
         company_url: companyUrl.trim() || null,
         referral_source: referralSource,
         product_categories: selectedCategories,
+        marketing_emails_opted_in: marketingOptIn,
         onboarding_completed: true,
       })
       .eq('user_id', user.id);
