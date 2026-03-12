@@ -74,6 +74,10 @@ serve(async (req) => {
     formData.append("model", resConfig.model);
     formData.append("output_width", String(resConfig.maxPx));
     formData.append("output_format", "png");
+    formData.append("sharpen", String(resConfig.sharpen));
+    formData.append("fix_compression", String(resConfig.fix_compression));
+    formData.append("denoise", String(resConfig.denoise));
+    formData.append("strength", String(resConfig.strength));
 
     const submitResponse = await fetch(`${TOPAZ_BASE}/enhance/async`, {
       method: "POST",
