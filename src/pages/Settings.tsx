@@ -60,6 +60,7 @@ export default function Settings() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>(billingInterval || 'monthly');
