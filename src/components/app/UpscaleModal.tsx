@@ -103,7 +103,7 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Total cost</span>
             <span className="text-sm font-semibold text-foreground flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <Zap className="w-3.5 h-3.5 text-primary" />
               {totalCost} credits
             </span>
           </div>

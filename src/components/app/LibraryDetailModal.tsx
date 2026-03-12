@@ -133,7 +133,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
                   {item.label}
                   {isUpscaled && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-500/10 text-violet-400 text-xs font-semibold uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
                       <Sparkles className="w-3 h-3" /> PRO HD
                     </span>
                   )}
