@@ -1,34 +1,30 @@
 
 
-## Fix Upscale Worker: Missing `modalities` Parameter + Quality Improvements
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Root Cause
+### Issues Found
 
-The last upscale job **failed** with "No image returned from AI model". The edge function logs confirm:
-```
-ERROR: No image returned from AI model
-```
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-The API call to Gemini 3 Pro Image is **missing the `modalities: ["image", "text"]` parameter**. Without this, the model returns text-only content — no image is ever generated. This is why the result is either a failure or a tiny low-quality file.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Changes
+### Plan
 
-**1. `supabase/functions/upscale-worker/index.ts`** — Fix the API call
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-Add `modalities: ["image", "text"]` to the request body (line ~91-103). This is **required** by the Gemini image generation models to actually produce an image output. Without it, the model only returns text.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-```typescript
-body: JSON.stringify({
-  model: "google/gemini-3-pro-image-preview",
-  modalities: ["image", "text"],  // <-- MISSING, causes "No image returned"
-  messages: [ ... ],
-}),
-```
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-Also switch to `google/gemini-3.1-flash-image-preview` (Nano Banana 2) which is faster and produces pro-level quality — better suited for reproduction tasks than the slower Pro model.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-**2. Improve the prompt** — The current prompt asks the model to "reproduce at X pixels" which is vague for a generative model. Refine to emphasize exact pixel-for-pixel reproduction with maximum output quality, and explicitly request PNG output format for lossless quality.
-
-### Files Changed — 1 file
-- `supabase/functions/upscale-worker/index.ts` — Add `modalities` parameter, switch to flash-image model, refine prompt
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

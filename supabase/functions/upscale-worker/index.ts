@@ -74,11 +74,10 @@ serve(async (req) => {
     const mimeType = imgResponse.headers.get("content-type") || "image/png";
 
     // 2. Build resolution-specific prompt
-    const promptText = resolution === "4k"
-      ? `[SOURCE IMAGE]: Reproduce this EXACT image at 4096 pixels on the longest edge. Maximum resolution, razor-sharp details, no compression artifacts. Preserve every detail: colors, composition, lighting, textures, skin pores, fabric weave, background elements. Do NOT change anything — same framing, same content, same style. Output at absolute maximum quality and resolution.`
-      : `[SOURCE IMAGE]: Reproduce this EXACT image at 2048 pixels on the longest edge. Ultra-sharp, preserve all details: colors, composition, lighting, textures. No compression artifacts, maximum quality output. Do not change anything about the image — same framing, same content, same style. Just output at higher resolution.`;
+    const targetPx = resConfig.maxPx;
+    const promptText = `Upscale this image to ${targetPx}px on its longest edge. Output the EXACT same image at higher resolution as a PNG. Do not change, crop, or alter anything — preserve identical composition, colors, lighting, framing, and every detail. Maximum sharpness, no artifacts, lossless quality.`;
 
-    // 3. Call Gemini 3 Pro Image for upscale
+    // 3. Call Gemini 3.1 Flash Image for upscale
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90_000);
 
@@ -89,7 +88,8 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
+        model: "google/gemini-3.1-flash-image-preview",
+        modalities: ["image", "text"],
         messages: [
           {
             role: "user",
