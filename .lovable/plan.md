@@ -1,30 +1,16 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Freestyle Section Layout Stability
 
-### Issues Found
+The page jumps because two things change dimensions during the 8-second animation cycle:
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+1. **Prompt area** — text typing causes height changes as it wraps to new lines
+2. **Results grid** — `min-h-[200px]` doesn't match the actual rendered height of the 4/5 aspect-ratio cards, so the section grows/shrinks each cycle
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Changes — `src/components/landing/FreestyleShowcaseSection.tsx`
 
-### Plan
-
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
-
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+1. **Fixed-height prompt area**: Change `min-h-[56px]` to a taller fixed `h-[72px]` (or `min-h-[72px]`) so the two-line prompt never causes reflow
+2. **Use `visibility` instead of `opacity`** for the results grid: Replace `opacity-0 pointer-events-none` with `invisible` — this keeps the grid fully laid out and space-reserving at all times, eliminating any height difference
+3. **Remove `min-h-[200px]`** from the wrapper since `invisible`/`visible` already reserves the exact correct space
+4. **Keep card translate/scale animations** but use `visibility` + `opacity` combo so cards animate in smoothly without layout shift
 
