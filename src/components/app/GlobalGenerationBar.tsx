@@ -242,7 +242,6 @@ export function GlobalGenerationBar() {
                     </Button>
                   );
                 })()}
-                </Button>
               </div>
             )}
           </div>
