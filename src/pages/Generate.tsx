@@ -537,6 +537,11 @@ export default function Generate() {
     // Auto-detect framing
     const detectedFraming = detectDefaultFraming(product.productType, product.tags);
     if (detectedFraming) setFraming(detectedFraming);
+    // Upscale workflow: skip straight to settings
+    if (isUpscale) {
+      setCurrentStep('settings');
+      return;
+    }
     // Go to brand profile step if profiles exist
     if (brandProfiles.length > 0) {
       setCurrentStep('brand-profile');
