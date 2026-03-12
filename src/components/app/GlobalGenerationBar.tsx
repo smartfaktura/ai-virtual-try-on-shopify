@@ -201,7 +201,11 @@ export function GlobalGenerationBar() {
                 <div key={group.key} className="px-3 py-2.5 border-b border-border/20 last:border-0 bg-emerald-500/[0.04]">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <p className="text-xs font-medium flex-1 truncate">Complete</p>
+                    <p className="text-xs font-medium flex-1 truncate">
+                      {group.job_type === 'upscale'
+                        ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
+                        : 'Complete'}
+                    </p>
                     <Button
                       size="sm"
                       variant="ghost"
