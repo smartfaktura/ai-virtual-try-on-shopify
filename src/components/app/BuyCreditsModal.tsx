@@ -71,7 +71,9 @@ export function BuyCreditsModal() {
   const handleDialogConfirm = async () => {
     setCheckoutLoading(true);
     try {
-      if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
+      if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
+        await openCustomerPortal();
+      } else if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
         if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
           await openCustomerPortal();
         } else {
