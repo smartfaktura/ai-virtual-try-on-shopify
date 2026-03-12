@@ -2019,7 +2019,7 @@ export default function Generate() {
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
-              <Button disabled={!scratchUpload || (!isInteriorDesign && (!scratchUpload.productInfo.title || !scratchUpload.productInfo.productType)) || (isInteriorDesign && !interiorRoomType)}
+              <Button disabled={!scratchUpload || (!isInteriorDesign && !isUpscale && (!scratchUpload.productInfo.title || !scratchUpload.productInfo.productType)) || (isInteriorDesign && !interiorRoomType)}
                 onClick={async () => {
                   if (!scratchUpload) return;
                   // Skip upload if reusing a previously uploaded image
