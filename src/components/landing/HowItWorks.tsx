@@ -325,10 +325,12 @@ export function HowItWorks() {
                           className={`rounded-md overflow-hidden border border-border aspect-[4/5] ${baseTransition} ${step3Card.inView ? visible : hidden}`}
                           style={{ transitionDelay: step3Card.inView ? `${250 + i * 80}ms` : '0ms' }}
                         >
-                          <img
+                          <ShimmerImage
                             src={scene}
                             alt={`Scene ${i + 1}`}
                             className="w-full h-full object-cover object-top"
+                            aspectRatio="4/5"
+                            loading="lazy"
                           />
                         </div>
                       ))}

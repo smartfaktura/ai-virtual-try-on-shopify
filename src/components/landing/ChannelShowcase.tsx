@@ -63,10 +63,11 @@ export function ChannelShowcase() {
               className="group relative rounded-2xl overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md"
             >
               <div className="relative">
-                <img
+                <ShimmerImage
                   src={item.image}
                   alt={item.title}
                   className="w-full aspect-square object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                  aspectRatio="1/1"
                   loading="lazy"
                 />
               </div>
