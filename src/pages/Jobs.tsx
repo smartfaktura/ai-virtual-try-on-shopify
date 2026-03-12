@@ -57,6 +57,7 @@ export default function Jobs() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isZipping, setIsZipping] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<LibraryItem | null>(null);
+  const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery);
