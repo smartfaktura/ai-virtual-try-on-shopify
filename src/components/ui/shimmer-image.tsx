@@ -57,6 +57,7 @@ export function ShimmerImage({
       )}
 
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         className={cn(
