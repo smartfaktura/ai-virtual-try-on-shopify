@@ -48,8 +48,8 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center">
-              <Sparkles className="w-4.5 h-4.5 text-violet-500" />
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-4.5 h-4.5 text-primary" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">Upscale Images</h3>
@@ -76,20 +76,20 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
                 className={cn(
                   'flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 transition-all',
                   resolution === tier.id
-                    ? 'border-violet-500 bg-violet-500/5 shadow-sm'
+                    ? 'border-primary bg-primary/5 shadow-sm'
                     : 'border-border/40 bg-muted/20 hover:border-border/70'
                 )}
               >
                 <span className={cn(
                   'text-xl font-bold',
-                  resolution === tier.id ? 'text-violet-500' : 'text-foreground'
+                  resolution === tier.id ? 'text-primary' : 'text-foreground'
                 )}>
                   {tier.label}
                 </span>
                 <span className="text-[11px] text-muted-foreground text-center">{tier.desc}</span>
                 <span className={cn(
                   'text-xs font-semibold mt-1',
-                  resolution === tier.id ? 'text-violet-500' : 'text-muted-foreground'
+                  resolution === tier.id ? 'text-primary' : 'text-muted-foreground'
                 )}>
                   {tier.cost} credits/image
                 </span>
@@ -103,7 +103,7 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Total cost</span>
             <span className="text-sm font-semibold text-foreground flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <Zap className="w-3.5 h-3.5 text-primary" />
               {totalCost} credits
             </span>
           </div>
@@ -123,7 +123,7 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
           <Button
             onClick={handleUpscale}
             disabled={isUpscaling || !hasEnough}
-            className="w-full h-12 rounded-xl text-sm font-medium bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/20"
+            className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/20"
           >
             {isUpscaling ? (
               <>
