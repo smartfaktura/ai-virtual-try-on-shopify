@@ -1,30 +1,42 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix: Scene 0 Images Loading 10-20x Slower Than Others
 
-### Issues Found
+### Root Cause
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+Scene 0 (White Crop Top) images use **local paths** (`/images/try-showcase/studio-lookbook.png`), while Scenes 1-2 (Face Serum, Gold Ring) use **Supabase Storage** via `h('hero-serum-studio.jpg')`.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+The `optimizeOutput()` function calls `getOptimizedUrl()`, which **only transforms Supabase Storage URLs**. Local `/images/...` paths are returned **unchanged** — meaning:
+- Scene 0: Full-resolution `.png` files served raw (likely 2-5MB each)
+- Scenes 1-2: Optimized via Supabase render endpoint at `quality=70` (typically 50-150KB each)
 
-### Plan
+This explains why Café Lifestyle and Garden Editorial appear faster — they're further right in the carousel so the browser loads them after the first two have started, but the real issue is that **all 8 scene-0 images are unoptimized PNGs**.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+Additionally, the `<link rel="preload">` in `index.html` points to `hero-product-tshirt.jpg` (a Supabase asset that's no longer the active product image), so the preload is wasted.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### Fix — Migrate Scene 0 to Supabase Storage
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**1. Upload scene 0 images to the `landing-assets` bucket** under `hero/` (same pattern as scenes 1-2). The 8 output images + 1 product image need to be uploaded.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**2. Update `src/components/landing/HeroSection.tsx`** — Change scene 0 to use `h()` helper:
+```tsx
+{
+  product: { img: h('hero-product-croptop.jpg'), label: 'White Crop Top', subtitle: '1 product photo' },
+  outputs: [
+    { img: h('hero-croptop-studio-lookbook.jpg'), label: 'Studio Lookbook' },
+    { img: h('hero-croptop-golden-hour.jpg'), label: 'Golden Hour' },
+    // ... etc
+  ],
+}
+```
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**3. Update `index.html`** — Fix the preload to match the actual first product image URL.
+
+### Expected Result
+- All images go through `getOptimizedUrl` → served at `quality=70` via Supabase's image transformation CDN
+- Load times drop from 10-20s to under 2s (matching scenes 1-2)
+- Consistent rendering behavior across all 3 scenes
+
+### Prerequisite
+The 9 images from `public/images/try-showcase/` and `public/images/source-crop-top.jpg` need to be uploaded to the `landing-assets` storage bucket first. I can handle the upload and code changes together.
 
