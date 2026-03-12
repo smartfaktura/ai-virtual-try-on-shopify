@@ -1,30 +1,31 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Mobile Hero — "1 Photo → Multiple Results" with Bottom Product Strip
 
-### Issues Found
+### Current Issue
+The product indicator is a tiny pill at the top mixed with scene switcher buttons — it's unclear what the product is, and the "1 photo → many results" story doesn't land visually.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### New Layout
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+```text
+┌─────────────────────────────────┐
+│  ← [Out1] [Out2] [Out3] [Out4] →│  Full-width carousel with arrows
+│     scene labels overlaid        │  ~160px tall cards, aspect 3/4
+├─────────────────────────────────┤
+│  ┌────┐                         │
+│  │prod│  1 photo → 8 results    │  Product thumb (48x64) + text
+│  │img │  [Crop Top][Serum][Ring] │  + scene switcher pills
+│  └────┘                         │
+└─────────────────────────────────┘
+```
 
-### Plan
+### Changes — `src/components/landing/HeroSection.tsx` (mobile block, lines 249-310)
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+1. **Move product to bottom row**: Product thumbnail (48×64px, rounded-lg) on the left, with bold text "1 photo → 8 results" next to it, followed by scene switcher pills on the right
+2. **Add left/right arrow buttons**: Small circular chevron buttons (`ChevronLeft`/`ChevronRight`) flanking the output scroll strip for clear navigability
+3. **Make output cards bigger**: Increase from `w-[140px]` to `w-[160px]` so they're more impactful
+4. **Remove the "1 photo" pill** from the top — it moves to the bottom context row
+5. **Caption** stays below everything
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+This makes the "1 product photo → many styled outputs" story immediately clear, with arrows signaling there's more to explore.
 
