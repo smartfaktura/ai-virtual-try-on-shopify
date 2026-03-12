@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw } from 'lucide-react';
+import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { TEAM_MEMBERS } from '@/data/teamData';
@@ -22,6 +22,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { toast } from 'sonner';
 import JSZip from 'jszip';
+import { UpscaleModal } from '@/components/app/UpscaleModal';
+import type { UpscaleItem } from '@/hooks/useUpscaleImages';
 
 const SORTS: { id: LibrarySortBy; label: string }[] = [
   { id: 'newest', label: 'Newest' },
@@ -55,6 +57,7 @@ export default function Jobs() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isZipping, setIsZipping] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<LibraryItem | null>(null);
+  const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery);
@@ -311,6 +314,25 @@ export default function Jobs() {
           <span className="text-sm font-medium">{selectedIds.size} selected</span>
           <Button
             size="sm"
+            onClick={() => {
+              const nonUpscaled = items.filter(i => selectedIds.has(i.id) && i.quality !== 'upscaled');
+              if (nonUpscaled.length === 0) {
+                toast.info('All selected images are already upscaled');
+                return;
+              }
+              if (nonUpscaled.length > 10) {
+                toast.error('Maximum 10 images per upscale batch');
+                return;
+              }
+              setUpscaleModalOpen(true);
+            }}
+            className="bg-violet-600 text-white hover:bg-violet-700"
+          >
+            <Maximize className="w-4 h-4 mr-2" />
+            Upscale
+          </Button>
+          <Button
+            size="sm"
             onClick={handleBulkDownload}
             disabled={isZipping}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -323,6 +345,22 @@ export default function Jobs() {
           </button>
         </div>
       )}
+
+      <UpscaleModal
+        open={upscaleModalOpen}
+        onClose={() => setUpscaleModalOpen(false)}
+        items={items
+          .filter(i => selectedIds.has(i.id) && i.quality !== 'upscaled')
+          .map(i => ({
+            imageUrl: i.imageUrl,
+            sourceType: i.source as 'freestyle' | 'generation',
+            sourceId: i.id,
+          }))}
+        onComplete={() => {
+          cancelSelect();
+          queryClient.invalidateQueries({ queryKey: ['library'] });
+        }}
+      />
 
       <LibraryDetailModal
         item={selectedItem}

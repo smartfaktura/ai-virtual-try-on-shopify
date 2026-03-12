@@ -24,14 +24,16 @@ function calculateCreditCost(
   hasModel: boolean = false,
   hasScene: boolean = false,
   _additionalProductCount: number = 0,
+  resolution?: string,
 ): number {
   let perImage: number;
 
-  if (jobType === "workflow" || jobType === "tryon") {
-    // Workflows and try-on: always 8 credits per image
+  if (jobType === "upscale") {
+    // Upscale: 4 credits for 2K, 8 credits for 4K
+    perImage = resolution === "4k" ? 8 : 4;
+  } else if (jobType === "workflow" || jobType === "tryon") {
     perImage = 8;
   } else {
-    // Freestyle: 8 if model or scene, 4 otherwise
     perImage = (hasModel || hasScene) ? 8 : 4;
   }
 
@@ -70,7 +72,7 @@ serve(async (req) => {
     const userId = user.id;
 
     const body = await req.json();
-    const { jobType, payload, imageCount = 1, quality = "standard", additionalProductCount = 0, hasModel = false, hasScene = false } = body;
+    const { jobType, payload, imageCount = 1, quality = "standard", additionalProductCount = 0, hasModel = false, hasScene = false, resolution } = body;
 
     if (!jobType || !payload) {
       return new Response(
@@ -79,7 +81,7 @@ serve(async (req) => {
       );
     }
 
-    const validJobTypes = ["tryon", "freestyle", "workflow"];
+    const validJobTypes = ["tryon", "freestyle", "workflow", "upscale"];
     if (!validJobTypes.includes(jobType)) {
       return new Response(
         JSON.stringify({ error: `Invalid job type: ${jobType}` }),
@@ -88,7 +90,7 @@ serve(async (req) => {
     }
 
     // Calculate credit cost
-    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene, additionalProductCount);
+    const creditsCost = calculateCreditCost(jobType, imageCount, quality, hasModel, hasScene, additionalProductCount, resolution);
 
     // Use service role client for DB operations
     const supabase = createClient(supabaseUrl, serviceRoleKey, {

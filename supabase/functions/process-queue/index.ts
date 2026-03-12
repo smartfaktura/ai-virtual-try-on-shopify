@@ -12,6 +12,7 @@ const JOB_TYPE_TO_FUNCTION: Record<string, string> = {
   tryon: "generate-tryon",
   freestyle: "generate-freestyle",
   workflow: "generate-workflow",
+  upscale: "upscale-worker",
 };
 
 /**

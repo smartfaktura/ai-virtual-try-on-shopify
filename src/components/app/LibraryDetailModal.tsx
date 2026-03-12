@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy } from 'lucide-react';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -12,6 +12,7 @@ import { AddSceneModal } from '@/components/app/AddSceneModal';
 import { AddModelModal } from '@/components/app/AddModelModal';
 import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
+import { UpscaleModal } from '@/components/app/UpscaleModal';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 
@@ -27,6 +28,7 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
   const [discoverModalOpen, setDiscoverModalOpen] = useState(false);
   const [submitDiscoverOpen, setSubmitDiscoverOpen] = useState(false);
+  const [upscaleModalOpen, setUpscaleModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { isAdmin } = useIsAdmin();
 
@@ -171,6 +173,17 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <Download className="w-4 h-4 mr-2" /> Download Image
               </Button>
 
+              {/* Upscale */}
+              {!isUpscaled && (
+                <button
+                  onClick={() => setUpscaleModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-medium bg-violet-600/10 text-violet-500 border border-violet-500/20 hover:bg-violet-600/20 transition-all"
+                >
+                  <Maximize className="w-4 h-4" />
+                  Upscale to HD
+                </button>
+              )}
+
               {/* Delete button for freestyle items */}
               {item.source === 'freestyle' && (
                 <>
@@ -260,6 +273,21 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
           prompt={item.prompt || ''}
           aspectRatio={item.aspectRatio}
           quality={item.quality}
+        />
+      )}
+      {upscaleModalOpen && item && (
+        <UpscaleModal
+          open={upscaleModalOpen}
+          onClose={() => setUpscaleModalOpen(false)}
+          items={[{
+            imageUrl: item.imageUrl,
+            sourceType: item.source as 'freestyle' | 'generation',
+            sourceId: item.id,
+          }]}
+          onComplete={() => {
+            queryClient.invalidateQueries({ queryKey: ['library'] });
+            onClose();
+          }}
         />
       )}
     </>
