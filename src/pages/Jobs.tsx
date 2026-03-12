@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import { LibraryDetailModal } from '@/components/app/LibraryDetailModal';
 import { EmptyStateCard } from '@/components/app/EmptyStateCard';
 import { useLibraryItems, type LibrarySortBy } from '@/hooks/useLibraryItems';
 import { useGenerationQueue } from '@/hooks/useGenerationQueue';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,7 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { toast } from 'sonner';
 import JSZip from 'jszip';
@@ -50,6 +51,7 @@ function useColumnCount() {
 
 export default function Jobs() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
@@ -64,6 +66,30 @@ export default function Jobs() {
   const items = data?.pages.flatMap(p => p.items) ?? [];
   const { lastCompletedAt } = useGenerationQueue();
   const columnCount = useColumnCount();
+
+  // Track which images are currently being upscaled
+  const { data: upscalingSourceIds = new Set<string>() } = useQuery({
+    queryKey: ['upscaling-jobs', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return new Set<string>();
+      const { data } = await supabase
+        .from('generation_queue')
+        .select('payload')
+        .eq('user_id', user.id)
+        .eq('job_type', 'upscale')
+        .in('status', ['queued', 'processing']);
+      if (!data || data.length === 0) return new Set<string>();
+      const ids = new Set<string>();
+      for (const row of data) {
+        const payload = row.payload as Record<string, unknown> | null;
+        const sourceId = payload?.sourceId as string | undefined;
+        if (sourceId) ids.add(sourceId);
+      }
+      return ids;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 4000,
+  });
 
   const [showIncomingBanner, setShowIncomingBanner] = useState(false);
 
@@ -278,6 +304,7 @@ export default function Jobs() {
                       item={item}
                       selectMode={selectMode}
                       selected={selectedIds.has(item.id)}
+                      isUpscaling={upscalingSourceIds.has(item.id)}
                       onDelete={() => handleDeleteItem(item)}
                       onClick={() => {
                         if (selectMode) {

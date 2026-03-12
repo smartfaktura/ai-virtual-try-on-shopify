@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,9 +25,11 @@ export function GlobalGenerationBar() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [minimized, setMinimized] = useState(true);
   const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set());
   const prevActiveKeysRef = useRef<Set<string>>(new Set());
+  const prevGroupsRef = useRef<BatchGroup[]>([]);
   const [completedGroups, setCompletedGroups] = useState<BatchGroup[]>([]);
   const [, tick] = useState(0);
 
@@ -80,26 +82,42 @@ export function GlobalGenerationBar() {
     });
 
     if (justFinished.length > 0) {
+      // Look up the original group data from previous active groups
+      const prevGroups = prevActiveKeysRef.current;
+
       setCompletedGroups((prev) => {
-        const newCompleted: BatchGroup[] = justFinished.map((key) => ({
-          key,
-          workflow_id: null,
-          workflow_name: 'Generation',
-          product_name: null,
-          jobs: [],
-          totalCount: 0,
-          completedCount: 0,
-          processingCount: 0,
-          queuedCount: 0,
-          failedCount: 0,
-          allCompleted: true,
-          created_at: new Date().toISOString(),
-          job_type: null,
-          quality: null,
-          resolution: null,
-        }));
+        const newCompleted: BatchGroup[] = justFinished.map((key) => {
+          // Find the original group from the previous render's activeGroups
+          // We stored the full groups in a separate ref below
+          const original = prevGroupsRef.current.find((g) => g.key === key);
+          return {
+            key,
+            workflow_id: original?.workflow_id ?? null,
+            workflow_name: original?.workflow_name ?? 'Generation',
+            product_name: original?.product_name ?? null,
+            jobs: [],
+            totalCount: original?.totalCount ?? 0,
+            completedCount: original?.totalCount ?? 0,
+            processingCount: 0,
+            queuedCount: 0,
+            failedCount: 0,
+            allCompleted: true,
+            created_at: new Date().toISOString(),
+            job_type: original?.job_type ?? null,
+            quality: original?.quality ?? null,
+            resolution: original?.resolution ?? null,
+          };
+        });
         return [...prev, ...newCompleted];
       });
+
+      // Invalidate library cache when upscale jobs complete
+      const hadUpscale = justFinished.some((key) =>
+        prevGroupsRef.current.find((g) => g.key === key && g.job_type === 'upscale')
+      );
+      if (hadUpscale) {
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+      }
 
       setTimeout(() => {
         setCompletedGroups((prev) => prev.filter((g) => !justFinished.includes(g.key)));
@@ -107,7 +125,8 @@ export function GlobalGenerationBar() {
     }
 
     prevActiveKeysRef.current = currentKeys;
-  }, [activeGroups]);
+    prevGroupsRef.current = activeGroups;
+  }, [activeGroups, queryClient]);
 
   // Tick for elapsed time
   useEffect(() => {
@@ -182,7 +201,11 @@ export function GlobalGenerationBar() {
                 <div key={group.key} className="px-3 py-2.5 border-b border-border/20 last:border-0 bg-emerald-500/[0.04]">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    <p className="text-xs font-medium flex-1 truncate">Complete</p>
+                    <p className="text-xs font-medium flex-1 truncate">
+                      {group.job_type === 'upscale'
+                        ? `Upscaled to ${group.resolution === '4k' ? '4K' : '2K'}`
+                        : 'Complete'}
+                    </p>
                     <Button
                       size="sm"
                       variant="ghost"
@@ -205,15 +228,20 @@ export function GlobalGenerationBar() {
 
             {visibleActive.length > 0 && (
               <div className="border-t border-border/40 px-3 py-2 flex justify-end">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1 h-7 text-[11px]"
-                  onClick={() => navigate('/app/workflows')}
-                >
-                  View in Workflows
-                  <ArrowRight className="w-3 h-3" />
-                </Button>
+                {(() => {
+                  const hasUpscale = visibleActive.some((g) => g.job_type === 'upscale');
+                  return (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 h-7 text-[11px]"
+                      onClick={() => navigate(hasUpscale ? '/app/library' : '/app/workflows')}
+                    >
+                      {hasUpscale ? 'View in Library' : 'View in Workflows'}
+                      <ArrowRight className="w-3 h-3" />
+                    </Button>
+                  );
+                })()}
               </div>
             )}
           </div>
