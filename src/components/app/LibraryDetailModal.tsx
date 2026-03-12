@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +13,7 @@ import { AddModelModal } from '@/components/app/AddModelModal';
 import { AddToDiscoverModal } from '@/components/app/AddToDiscoverModal';
 import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import { UpscaleModal } from '@/components/app/UpscaleModal';
+import { TEAM_MEMBERS } from '@/data/teamData';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
 
 
