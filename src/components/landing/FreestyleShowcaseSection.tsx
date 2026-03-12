@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Sparkles, Camera, Package, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 
-const PROMPT_TEXT = 'White Crop Top, three looks: studio, outdoor café, urban concrete';
+const PROMPT_TEXT_FULL = 'White Crop Top, three looks: studio, outdoor café, urban concrete';
+const PROMPT_TEXT_MOBILE = 'Crop Top — studio, café, urban';
 const CYCLE_MS = 8000;
 
 const CHIPS = [
