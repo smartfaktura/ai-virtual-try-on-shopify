@@ -138,13 +138,14 @@ const optimizeOutput = (url: string) => getOptimizedUrl(url, { quality: 70 });
 export function HeroSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeScene, setActiveScene] = useState(0);
   const [pulsed, setPulsed] = useState(false);
   const [visibleDot, setVisibleDot] = useState(0);
-  const typedText = useTypewriter(SLOGANS);
+  const typedText = useTypewriter(isMobile ? SLOGANS_MOBILE : SLOGANS);
   const visitedScenes = useRef(new Set([0]));
 
   const current = showcases[activeScene];
