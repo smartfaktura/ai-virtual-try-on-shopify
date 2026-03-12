@@ -353,6 +353,8 @@ export function HeroSection() {
                            loading={idx < 3 ? 'eager' : 'lazy'}
                            fetchPriority={idx < 2 ? 'high' : undefined}
                            aspectRatio="3/4"
+                           width={180}
+                           height={240}
                          />
                         <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
                           {output.label}
