@@ -57,6 +57,7 @@ export default function Settings() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
   const [selectedPlan, setSelectedPlan] = useState<import('@/types').PricingPlan | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
