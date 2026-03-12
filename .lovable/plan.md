@@ -1,22 +1,30 @@
 
 
-## Increase Topaz Upscaling Sharpness & Texture
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Change — 1 file
+### Issues Found
 
-**`supabase/functions/upscale-worker/index.ts`** (lines 10-13)
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-Push all texture/sharpness parameters higher while keeping denoise very low to preserve natural grain:
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-| Parameter | 2K now → new | 4K now → new |
-|-----------|-------------|-------------|
-| sharpen | 0.6 → 0.85 | 0.7 → 0.9 |
-| fix_compression | 0.5 → 0.6 | 0.5 → 0.65 |
-| denoise | 0.15 → 0.05 | 0.1 → 0.03 |
-| strength | 0.7 → 0.85 | 0.8 → 0.9 |
+### Plan
 
-- **sharpen** cranked up for crisp micro-detail (fabric weave, skin texture, hair strands)
-- **denoise** dropped near zero to keep natural grain and avoid the smooth "AI" look
-- **fix_compression** bumped slightly to clean source artifacts without softening
-- **strength** raised for more aggressive detail recovery
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
