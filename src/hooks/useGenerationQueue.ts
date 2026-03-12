@@ -28,7 +28,7 @@ export interface QueueJob {
 }
 
 interface EnqueueParams {
-  jobType: 'tryon' | 'freestyle' | 'workflow';
+  jobType: 'tryon' | 'freestyle' | 'workflow' | 'upscale';
   payload: Record<string, unknown>;
   imageCount: number;
   quality: string;
