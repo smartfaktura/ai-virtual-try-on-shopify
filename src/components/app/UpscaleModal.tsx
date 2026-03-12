@@ -76,20 +76,20 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
                 className={cn(
                   'flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 transition-all',
                   resolution === tier.id
-                    ? 'border-violet-500 bg-violet-500/5 shadow-sm'
+                    ? 'border-primary bg-primary/5 shadow-sm'
                     : 'border-border/40 bg-muted/20 hover:border-border/70'
                 )}
               >
                 <span className={cn(
                   'text-xl font-bold',
-                  resolution === tier.id ? 'text-violet-500' : 'text-foreground'
+                  resolution === tier.id ? 'text-primary' : 'text-foreground'
                 )}>
                   {tier.label}
                 </span>
                 <span className="text-[11px] text-muted-foreground text-center">{tier.desc}</span>
                 <span className={cn(
                   'text-xs font-semibold mt-1',
-                  resolution === tier.id ? 'text-violet-500' : 'text-muted-foreground'
+                  resolution === tier.id ? 'text-primary' : 'text-muted-foreground'
                 )}>
                   {tier.cost} credits/image
                 </span>
