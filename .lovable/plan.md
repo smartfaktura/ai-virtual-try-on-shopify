@@ -1,30 +1,46 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Team Avatar Video Interlude — Before Pricing
 
-### Issues Found
+A cinematic full-width section placed between `CreativeDropsSection` and `LandingPricing` featuring a large cropped avatar video with scroll-triggered parallax and simulated team chat messages.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Concept
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+A dark, full-bleed strip (~60vh) with a single large avatar video (e.g. Kenji or Sophia) cropped tight to head/shoulders, positioned to one side. On the opposite side, staggered chat-style message bubbles fade in as the user scrolls into view — each from a different team member with their small avatar, name, and a short status-style message. The overall feel: "your team is already working on it."
 
-### Plan
+```text
+┌──────────────────────────────────────────────────────┐
+│  ┌─────────────┐                                     │
+│  │             │    ○ Sophia: "Lighting set up ✓"    │
+│  │  BIG VIDEO  │                                     │
+│  │  (Kenji)    │    ○ Zara: "Styling complete"       │
+│  │  cropped    │                                     │
+│  │  parallax   │    ○ Luna: "Retouching in progress" │
+│  │             │                                     │
+│  └─────────────┘    "Your team. Always on."          │
+└──────────────────────────────────────────────────────┘
+```
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### New Component: `TeamVideoInterlude.tsx`
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**Layout:**
+- Full-width section with `bg-foreground/[0.97]` (near-black) for contrast
+- Left: Large video element (~50% width on desktop, full-width on mobile) with `object-cover` cropped to upper body, slight parallax via `transform: translateY()` on scroll
+- Right: 3-4 chat bubbles that stagger in with `animate-fade-in` + increasing delays as the section enters the viewport
+- Each bubble: small round avatar (24px), member name, short message, subtle timestamp
+- Bottom tagline: "Your team. Always on." in large editorial type
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**Scroll animation:**
+- Intersection Observer triggers entrance once (same pattern as HowItWorks)
+- Video parallax: simple `onScroll` listener that shifts the video Y position by ~10% of scroll delta within the section bounds
+- Chat bubbles: CSS stagger using `animation-delay: 0s, 0.2s, 0.4s, 0.6s`
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**Data:** Pick 4 team members from `TEAM_MEMBERS` (Sophia, Kenji, Luna, Zara) with their existing `videoUrl`, `avatar`, and `statusMessage` fields — no new data needed.
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**Mobile:** Stack vertically — video on top (aspect 16:9 cropped), messages below.
+
+### Integration in `Landing.tsx`
+
+- Lazy-load `TeamVideoInterlude` between `CreativeDropsSection` and `LandingPricing`
+- Single new file, no changes to existing components
 
