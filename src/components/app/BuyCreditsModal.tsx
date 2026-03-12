@@ -88,13 +88,18 @@ export function BuyCreditsModal() {
     }
   };
 
-  const handleSwitchToAnnual = () => {
-    if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
-      openCustomerPortal();
-    } else if (currentPlanData?.stripePriceIdAnnual) {
-      startCheckout(currentPlanData.stripePriceIdAnnual, 'subscription');
+  const handleSwitchToAnnual = async () => {
+    if (anyLoading) return;
+    setSwitchLoading(true);
+    try {
+      if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+        await openCustomerPortal();
+      } else if (currentPlanData?.stripePriceIdAnnual) {
+        await startCheckout(currentPlanData.stripePriceIdAnnual, 'subscription');
+      }
+    } catch {
+      setSwitchLoading(false);
     }
-    closeBuyModal();
   };
 
   const handleViewAllPlans = () => {
