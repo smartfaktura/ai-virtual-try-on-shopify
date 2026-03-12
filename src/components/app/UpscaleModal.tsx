@@ -123,7 +123,7 @@ export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalP
           <Button
             onClick={handleUpscale}
             disabled={isUpscaling || !hasEnough}
-            className="w-full h-12 rounded-xl text-sm font-medium bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/20"
+            className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/20"
           >
             {isUpscaling ? (
               <>

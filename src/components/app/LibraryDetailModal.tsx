@@ -165,39 +165,38 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 </div>
               )}
 
-              {/* Primary: Download */}
-              <Button
-                onClick={handleDownload}
-                className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
-              >
-                <Download className="w-4 h-4 mr-2" /> Download Image
-              </Button>
-
-              {/* Upscale */}
-              {!isUpscaled && (
-                <button
-                  onClick={() => setUpscaleModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-medium bg-violet-600/10 text-violet-500 border border-violet-500/20 hover:bg-violet-600/20 transition-all"
+              {/* Actions */}
+              <div className="space-y-2.5">
+                <Button
+                  onClick={handleDownload}
+                  className="w-full h-12 rounded-xl text-sm font-medium shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 transition-shadow duration-300"
                 >
-                  <Maximize className="w-4 h-4" />
-                  Upscale to HD
-                </button>
-              )}
+                  <Download className="w-4 h-4 mr-2" /> Download Image
+                </Button>
 
-              {/* Delete button for freestyle items */}
-              {item.source === 'freestyle' && (
-                <>
-                  <Separator className="bg-border/30" />
-                  <button
+                {!isUpscaled && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setUpscaleModalOpen(true)}
+                    className="w-full h-11 rounded-xl text-sm font-medium"
+                  >
+                    <Maximize className="w-4 h-4 mr-2" />
+                    Upscale to HD
+                  </Button>
+                )}
+
+                {item.source === 'freestyle' && (
+                  <Button
+                    variant="ghost"
                     onClick={handleDelete}
                     disabled={deleting}
-                    className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-destructive bg-muted/30 backdrop-blur-sm border border-destructive/20 hover:bg-destructive/10 transition-all disabled:opacity-50"
+                    className="w-full h-10 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                     {deleting ? 'Deleting…' : 'Delete'}
-                  </button>
-                </>
-              )}
+                  </Button>
+                )}
+              </div>
 
               {/* Share to Discover */}
               <div className="rounded-xl border border-border/40 bg-primary/5 p-5 space-y-3">

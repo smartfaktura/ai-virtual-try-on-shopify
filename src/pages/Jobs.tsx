@@ -326,7 +326,7 @@ export default function Jobs() {
               }
               setUpscaleModalOpen(true);
             }}
-            className="bg-violet-600 text-white hover:bg-violet-700"
+            variant="secondary"
           >
             <Maximize className="w-4 h-4 mr-2" />
             Upscale
