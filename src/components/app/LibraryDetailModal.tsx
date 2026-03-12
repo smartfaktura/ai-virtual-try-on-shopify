@@ -173,6 +173,17 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
                 <Download className="w-4 h-4 mr-2" /> Download Image
               </Button>
 
+              {/* Upscale */}
+              {!isUpscaled && (
+                <button
+                  onClick={() => setUpscaleModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-medium bg-violet-600/10 text-violet-500 border border-violet-500/20 hover:bg-violet-600/20 transition-all"
+                >
+                  <Maximize className="w-4 h-4" />
+                  Upscale to HD
+                </button>
+              )}
+
               {/* Delete button for freestyle items */}
               {item.source === 'freestyle' && (
                 <>
