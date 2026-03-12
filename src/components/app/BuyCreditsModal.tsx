@@ -128,8 +128,9 @@ export function BuyCreditsModal() {
                 {planConfig.name}
               </Badge>
               <button
-                onClick={closeBuyModal}
-                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                onClick={() => { if (!anyLoading) closeBuyModal(); }}
+                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
+                disabled={anyLoading}
               >
                 <X className="w-5 h-5" />
               </button>
