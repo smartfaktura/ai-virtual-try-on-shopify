@@ -1,30 +1,19 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Labels for Upscaled Images in Dashboard
 
-### Issues Found
+### Problem
+Upscaled images are stored in the `freestyle_generations` table with `quality` set to `'upscaled_2k'` or `'upscaled_4k'`. Both the **Recent Creations** gallery and **Activity Feed** don't check this field, so they incorrectly label upscaled items as "Freestyle".
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes — 2 files
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+#### 1. `src/components/app/RecentCreationsGallery.tsx`
+- Add `quality` to the freestyle query select: `'id, image_url, prompt, quality, created_at'`
+- Check if `quality` starts with `'upscaled_'` — if so, label as `'Enhanced'` instead of `'Freestyle'`
+- Show resolution in subtitle: "2K" or "4K"
 
-### Plan
-
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
-
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+#### 2. `src/components/app/ActivityFeed.tsx`
+- Add `quality` to the freestyle query select: `'id, prompt, quality, created_at'`
+- For upscaled items, change the activity text from `Freestyle "prompt" generated` to `Enhanced to 2K — "prompt"` (or 4K)
+- Use a different icon — `Sparkles` is already imported and appropriate for enhanced items
 
