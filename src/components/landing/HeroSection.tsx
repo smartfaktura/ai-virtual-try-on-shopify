@@ -23,16 +23,16 @@ interface ProductShowcase {
 
 const showcases: ProductShowcase[] = [
   {
-    product: { img: '/images/source-crop-top.jpg', label: 'White Crop Top', subtitle: '1 product photo' },
+    product: { img: h('hero-product-croptop.jpg'), label: 'White Crop Top', subtitle: '1 product photo' },
     outputs: [
-      { img: '/images/try-showcase/studio-lookbook.png', label: 'Studio Lookbook' },
-      { img: '/images/try-showcase/golden-hour.png', label: 'Golden Hour' },
-      { img: '/images/try-showcase/cafe-lifestyle.png', label: 'Café Lifestyle' },
-      { img: '/images/try-showcase/garden-editorial.png', label: 'Garden Editorial' },
-      { img: '/images/try-showcase/virtual-tryon-1.png', label: 'Basketball Court' },
-      { img: '/images/try-showcase/urban-edge.png', label: 'Urban Edge' },
-      { img: '/images/try-showcase/pilates-studio.png', label: 'Pilates Studio' },
-      { img: '/images/try-showcase/studio-dark.png', label: 'Studio Portrait' },
+      { img: h('hero-croptop-studio-lookbook.png'), label: 'Studio Lookbook' },
+      { img: h('hero-croptop-golden-hour.png'), label: 'Golden Hour' },
+      { img: h('hero-croptop-cafe-lifestyle.png'), label: 'Café Lifestyle' },
+      { img: h('hero-croptop-garden-editorial.png'), label: 'Garden Editorial' },
+      { img: h('hero-croptop-basketball-court.png'), label: 'Basketball Court' },
+      { img: h('hero-croptop-urban-edge.png'), label: 'Urban Edge' },
+      { img: h('hero-croptop-pilates-studio.png'), label: 'Pilates Studio' },
+      { img: h('hero-croptop-studio-dark.png'), label: 'Studio Portrait' },
     ],
     caption: 'Same top ∞ environments in under 2 minutes',
   },
