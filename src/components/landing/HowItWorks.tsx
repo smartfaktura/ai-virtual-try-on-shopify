@@ -75,7 +75,7 @@ function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt:
         }}
       >
         <div className="w-44 h-44 rounded-xl overflow-hidden border border-border bg-card shadow-xl">
-          <img src={src} alt={alt} className="w-full h-full object-cover object-top" />
+          <ShimmerImage src={src} alt={alt} className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
         </div>
         <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-card border-r border-b border-border rotate-45" />
       </div>
