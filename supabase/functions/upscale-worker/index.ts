@@ -8,8 +8,8 @@ const corsHeaders = {
 };
 
 const RESOLUTION_CONFIG: Record<string, { maxPx: number; label: string; model: string; sharpen: number; fix_compression: number; denoise: number; strength: number }> = {
-  "2k": { maxPx: 2048, label: "2K", model: "Standard V2", sharpen: 0.6, fix_compression: 0.5, denoise: 0.15, strength: 0.7 },
-  "4k": { maxPx: 4096, label: "4K", model: "High Fidelity V2", sharpen: 0.7, fix_compression: 0.5, denoise: 0.1, strength: 0.8 },
+  "2k": { maxPx: 2048, label: "2K", model: "Standard V2", sharpen: 0.85, fix_compression: 0.6, denoise: 0.05, strength: 0.85 },
+  "4k": { maxPx: 4096, label: "4K", model: "High Fidelity V2", sharpen: 0.9, fix_compression: 0.65, denoise: 0.03, strength: 0.9 },
 };
 
 const TOPAZ_BASE = "https://api.topazlabs.com/image/v1";
