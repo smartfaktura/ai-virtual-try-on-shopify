@@ -61,19 +61,22 @@ export function BuyCreditsModal() {
     setDialogOpen(true);
   };
 
-  const handleDialogConfirm = () => {
-    if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
-      if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
-        openCustomerPortal();
-      } else {
-        const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
-        if (priceId) {
-          startCheckout(priceId, 'subscription');
+  const handleDialogConfirm = async () => {
+    setCheckoutLoading(true);
+    try {
+      if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
+        if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+          await openCustomerPortal();
+        } else {
+          const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+          if (priceId) {
+            await startCheckout(priceId, 'subscription');
+          }
         }
       }
+    } catch {
+      setCheckoutLoading(false);
     }
-    setDialogOpen(false);
-    closeBuyModal();
   };
 
   const handleSwitchToAnnual = () => {
