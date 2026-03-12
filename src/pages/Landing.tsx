@@ -62,7 +62,7 @@ export default function Landing() {
           <ModelShowcaseSection />
           <EnvironmentShowcaseSection />
           <CreativeDropsSection />
-          <TeamVideoInterlude />
+          
           <LandingPricing />
           <LandingFAQ />
           <FinalCTA />
