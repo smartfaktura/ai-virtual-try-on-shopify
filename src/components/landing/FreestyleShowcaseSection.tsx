@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 
-const PROMPT_TEXT_FULL = 'White Crop Top — basketball court, studio backdrop, café setting';
-const PROMPT_TEXT_MOBILE = 'Crop Top — court, studio, café';
+const PROMPT_TEXT_FULL = 'Shoot my white crop top on a basketball court, in a clean studio, and a sunny café';
+const PROMPT_TEXT_MOBILE = 'Shoot my crop top on a court, studio, and café';
 const CYCLE_MS = 8000;
 
 const CHIPS = [
