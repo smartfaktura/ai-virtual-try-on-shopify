@@ -7,9 +7,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const RESOLUTION_CONFIG: Record<string, { maxPx: number; label: string; model: string }> = {
-  "2k": { maxPx: 2048, label: "2K", model: "Standard V2" },
-  "4k": { maxPx: 4096, label: "4K", model: "High Fidelity V2" },
+const RESOLUTION_CONFIG: Record<string, { maxPx: number; label: string; model: string; sharpen: number; fix_compression: number; denoise: number; strength: number }> = {
+  "2k": { maxPx: 2048, label: "2K", model: "Standard V2", sharpen: 0.6, fix_compression: 0.5, denoise: 0.15, strength: 0.7 },
+  "4k": { maxPx: 4096, label: "4K", model: "High Fidelity V2", sharpen: 0.7, fix_compression: 0.5, denoise: 0.1, strength: 0.8 },
 };
 
 const TOPAZ_BASE = "https://api.topazlabs.com/image/v1";
@@ -74,6 +74,10 @@ serve(async (req) => {
     formData.append("model", resConfig.model);
     formData.append("output_width", String(resConfig.maxPx));
     formData.append("output_format", "png");
+    formData.append("sharpen", String(resConfig.sharpen));
+    formData.append("fix_compression", String(resConfig.fix_compression));
+    formData.append("denoise", String(resConfig.denoise));
+    formData.append("strength", String(resConfig.strength));
 
     const submitResponse = await fetch(`${TOPAZ_BASE}/enhance/async`, {
       method: "POST",
