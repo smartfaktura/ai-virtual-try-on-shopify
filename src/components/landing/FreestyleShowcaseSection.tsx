@@ -7,7 +7,7 @@ import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 
 const PROMPT_TEXT = 'White Crop Top, three looks: studio, outdoor café, urban concrete';
-const CYCLE_MS = 12000;
+const CYCLE_MS = 8000;
 
 const CHIPS = [
   {
@@ -15,14 +15,14 @@ const CHIPS = [
     icon: Package,
     label: 'White Crop Top',
     thumb: '/images/source-crop-top.jpg',
-    delay: 3000,
+    delay: 1500,
   },
   {
     key: 'scene' as const,
     icon: Camera,
     label: 'Multi-Scene',
     thumb: '/images/try-showcase/cafe-lifestyle.png',
-    delay: 4000,
+    delay: 2200,
   },
 ];
 
@@ -61,12 +61,12 @@ export function FreestyleShowcaseSection() {
     let charIdx = 0;
     const typeTimer = setInterval(() => {
       if (charIdx < PROMPT_TEXT.length) {
-        charIdx = Math.min(charIdx + 2, PROMPT_TEXT.length);
+        charIdx = Math.min(charIdx + 3, PROMPT_TEXT.length);
         setTypedText(PROMPT_TEXT.slice(0, charIdx));
       } else {
         clearInterval(typeTimer);
       }
-    }, 50);
+    }, 30);
 
     CHIPS.forEach((chip) => {
       timers.push(
@@ -77,21 +77,21 @@ export function FreestyleShowcaseSection() {
       );
     });
 
-    timers.push(setTimeout(() => setGenerating(true), 6000));
-    timers.push(setTimeout(() => setProgress(30), 6200));
-    timers.push(setTimeout(() => setProgress(65), 6600));
-    timers.push(setTimeout(() => setProgress(100), 7000));
+    timers.push(setTimeout(() => setGenerating(true), 3000));
+    timers.push(setTimeout(() => setProgress(30), 3200));
+    timers.push(setTimeout(() => setProgress(65), 3500));
+    timers.push(setTimeout(() => setProgress(100), 3800));
 
     timers.push(
       setTimeout(() => {
         setGenerating(false);
         setShowResults(true);
-      }, 7500),
+      }, 4200),
     );
 
     RESULT_CARDS.forEach((_, i) => {
       timers.push(
-        setTimeout(() => setVisibleResults((prev) => [...prev, i]), 7700 + i * 300),
+        setTimeout(() => setVisibleResults((prev) => [...prev, i]), 4400 + i * 200),
       );
     });
 
@@ -105,7 +105,7 @@ export function FreestyleShowcaseSection() {
 
   return (
     <section className="py-20 md:py-28 relative overflow-hidden bg-[hsl(30,20%,98%)]">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[800px] md:h-[800px] bg-primary/[0.04] rounded-full blur-2xl md:blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[800px] md:h-[800px] bg-primary/[0.04] rounded-full md:blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10 max-w-4xl">
         {/* Centered header */}
