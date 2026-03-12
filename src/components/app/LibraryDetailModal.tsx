@@ -131,7 +131,7 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
               {/* Source + label */}
               <div className="space-y-2">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {item.source === 'freestyle' ? 'Freestyle' : 'Generation'}
+                  {isUpscaled ? 'Enhanced' : item.source === 'freestyle' ? 'Freestyle' : 'Generation'}
                 </p>
                 <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-tight flex items-center gap-2">
                   {item.label}
