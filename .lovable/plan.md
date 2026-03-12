@@ -1,30 +1,30 @@
 
 
-## Replace Raw `<img>` Tags with `ShimmerImage` Across Landing Page
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-Three landing page sections still use raw `<img>` tags with no shimmer/loading state, causing images to pop in abruptly — especially noticeable on the "How It Works" Step 3 grid (the screenshot you shared) and the 12-card Channel Showcase grid.
+### Issues Found
 
-### Sections to Fix
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**1. `src/components/landing/HowItWorks.tsx`** — 7 raw `<img>` tags
-- `HoverPreview` component: 2 img tags (thumbnail + hover preview) — replace both with `ShimmerImage`
-- Step 1 drag-drop product thumbnail (line 169)
-- Step 3 header product thumbnail (line 310)
-- Step 3 grid: 6 scene images in the 3×2 grid (lines 327-331) — these are the ones in your screenshot
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**2. `src/components/landing/ChannelShowcase.tsx`** — 13 raw `<img>` tags
-- Source product callout (line 49)
-- 12-card grid (line 65-70) — all use raw `<img>` with no loading placeholder
+### Plan
 
-**3. `src/components/landing/FinalCTA.tsx`** — team avatar `<img>` tags (line 58-63)
-- Small 40×40 circular avatars; replace with `ShimmerImage` for consistency
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Approach
-- Import `ShimmerImage` in each file
-- Replace `<img>` with `<ShimmerImage>`, preserving existing `className`, `loading`, and `alt` props
-- Add `loading="lazy"` and `decoding="async"` where not already present (all below-fold)
-- For the ChannelShowcase grid and HowItWorks Step 3 grid, add `aspectRatio` props to reserve space and prevent layout shift
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### No structural or layout changes — purely swapping the image component for consistent shimmer loading states across the entire homepage.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

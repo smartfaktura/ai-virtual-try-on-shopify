@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowRight, Sparkles, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { TEAM_MEMBERS } from '@/data/teamData';
 import { TeamAvatarHoverCard } from '@/components/landing/TeamAvatarHoverCard';
 
@@ -55,11 +56,14 @@ export function FinalCTA() {
           <div className="flex items-center justify-center">
             {TEAM_MEMBERS.map((member, i) => (
               <TeamAvatarHoverCard key={member.name} member={member} side="bottom">
-                <img
+                <ShimmerImage
                   src={member.avatar}
                   alt={member.name}
                   className="w-10 h-10 rounded-full border-2 border-background object-cover transition-transform duration-200 hover:scale-110 hover:z-10 relative cursor-pointer"
-                  style={{ marginLeft: i === 0 ? 0 : '-0.6rem' }}
+                  wrapperClassName="w-10 h-10 rounded-full"
+                  wrapperStyle={{ marginLeft: i === 0 ? 0 : '-0.6rem' }}
+                  aspectRatio="1/1"
+                  loading="lazy"
                 />
               </TeamAvatarHoverCard>
             ))}

@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 
 interface ShowcaseItem {
   id: string;
@@ -46,7 +47,7 @@ export function ChannelShowcase() {
         {/* Source product callout */}
         <div className="flex items-center justify-center gap-3 mb-10">
           <div className="w-20 h-20 rounded-lg border-2 border-primary/30 overflow-hidden shadow-sm">
-            <img src={LOCAL_SOURCE} alt="White Crop-Top product" className="w-full h-full object-cover" loading="lazy" />
+            <ShimmerImage src={LOCAL_SOURCE} alt="White Crop-Top product" className="w-full h-full object-cover" aspectRatio="1/1" loading="lazy" />
           </div>
           <div className="text-left">
             <p className="text-sm font-medium text-foreground">Your Product</p>
@@ -62,10 +63,11 @@ export function ChannelShowcase() {
               className="group relative rounded-2xl overflow-hidden border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md"
             >
               <div className="relative">
-                <img
+                <ShimmerImage
                   src={item.image}
                   alt={item.title}
                   className="w-full aspect-square object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                  aspectRatio="1/1"
                   loading="lazy"
                 />
               </div>

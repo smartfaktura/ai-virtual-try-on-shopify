@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Upload, Target, Images, ArrowRight, Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
@@ -62,7 +63,7 @@ function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt:
       onMouseLeave={() => setHovered(false)}
     >
       <div className={`w-14 h-14 rounded-lg overflow-hidden cursor-pointer ${isResult ? 'border-2 border-primary/50 ring-2 ring-primary/20' : 'border-2 border-primary'}`}>
-        <img src={src} alt={alt} className="w-full h-full object-cover object-top" />
+        <ShimmerImage src={src} alt={alt} className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
       </div>
       <span className={`text-[9px] ${isResult ? 'text-primary font-medium' : 'text-muted-foreground'}`}>{label}</span>
 
@@ -74,7 +75,7 @@ function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt:
         }}
       >
         <div className="w-44 h-44 rounded-xl overflow-hidden border border-border bg-card shadow-xl">
-          <img src={src} alt={alt} className="w-full h-full object-cover object-top" />
+          <ShimmerImage src={src} alt={alt} className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
         </div>
         <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-card border-r border-b border-border rotate-45" />
       </div>
@@ -166,7 +167,7 @@ export function HowItWorks() {
                         animation: 'drag-drop-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both',
                       } : { opacity: 0 }}
                     >
-                      <img src={cropTopProduct} alt="White Crop Top" className="w-full h-full object-cover object-top" />
+                      <ShimmerImage src={cropTopProduct} alt="White Crop Top" className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
                     </div>
                     <div
                       className="flex-1 min-w-0 transition-all duration-500"
@@ -307,7 +308,7 @@ export function HowItWorks() {
                   <div className="p-3 border-b border-border flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg overflow-hidden border border-border shrink-0">
-                        <img src={cropTopProduct} alt="Product" className="w-full h-full object-cover object-top" />
+                        <ShimmerImage src={cropTopProduct} alt="Product" className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-foreground">White Crop Top</p>
@@ -324,10 +325,12 @@ export function HowItWorks() {
                           className={`rounded-md overflow-hidden border border-border aspect-[4/5] ${baseTransition} ${step3Card.inView ? visible : hidden}`}
                           style={{ transitionDelay: step3Card.inView ? `${250 + i * 80}ms` : '0ms' }}
                         >
-                          <img
+                          <ShimmerImage
                             src={scene}
                             alt={`Scene ${i + 1}`}
                             className="w-full h-full object-cover object-top"
+                            aspectRatio="4/5"
+                            loading="lazy"
                           />
                         </div>
                       ))}
