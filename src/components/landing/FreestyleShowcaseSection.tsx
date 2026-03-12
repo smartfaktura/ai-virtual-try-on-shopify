@@ -209,11 +209,11 @@ export function FreestyleShowcaseSection() {
           </div>
 
           {/* Results grid */}
-          <div className="mt-4 min-h-[200px]">
+          <div className="mt-4">
           <div
             className={cn(
-              'grid grid-cols-3 gap-3 transition-opacity duration-500',
-              showResults ? 'opacity-100' : 'opacity-0 pointer-events-none',
+              'grid grid-cols-3 gap-3 transition-all duration-500',
+              showResults ? 'opacity-100 visible' : 'opacity-0 invisible',
             )}
           >
             {RESULT_CARDS.map((card, i) => (
