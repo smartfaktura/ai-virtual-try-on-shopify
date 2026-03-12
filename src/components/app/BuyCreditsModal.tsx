@@ -109,7 +109,7 @@ export function BuyCreditsModal() {
 
   return (
     <>
-      <Dialog open={buyModalOpen} onOpenChange={closeBuyModal}>
+      <Dialog open={buyModalOpen} onOpenChange={(open) => { if (!open && !anyLoading) closeBuyModal(); }}>
         <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden rounded-none sm:rounded-2xl border-border/50 shadow-2xl max-h-[100dvh] sm:max-h-[90dvh] h-full sm:h-auto flex flex-col [&>button:last-child]:hidden">
 
           {/* Balance header */}
