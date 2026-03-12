@@ -7,10 +7,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const RESOLUTION_CONFIG: Record<string, { maxPx: number; label: string }> = {
-  "2k": { maxPx: 2048, label: "2K" },
-  "4k": { maxPx: 4096, label: "4K" },
+const RESOLUTION_CONFIG: Record<string, { maxPx: number; label: string; model: string }> = {
+  "2k": { maxPx: 2048, label: "2K", model: "Standard V2" },
+  "4k": { maxPx: 4096, label: "4K", model: "High Fidelity V2" },
 };
+
+const TOPAZ_BASE = "https://api.topazlabs.com/image/v1";
+const POLL_INTERVAL_MS = 3000;
+const MAX_POLL_ATTEMPTS = 60; // 3s × 60 = 3 min max
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -19,7 +23,7 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+  const topazApiKey = Deno.env.get("TOPAZ_API_KEY")!;
 
   // Internal-only: only process-queue can call this
   const authHeader = req.headers.get("authorization");
@@ -56,140 +60,104 @@ serve(async (req) => {
     const resConfig = RESOLUTION_CONFIG[resolution] || RESOLUTION_CONFIG["2k"];
     const qualityTag = resolution === "4k" ? "upscaled_4k" : "upscaled_2k";
 
-    console.log(`[upscale-worker] Job ${jobId}: upscaling to ${resConfig.label} (${resConfig.maxPx}px), source=${sourceType}/${sourceId}`);
+    console.log(`[upscale-worker] Job ${jobId}: upscaling to ${resConfig.label} (${resConfig.maxPx}px) using Topaz ${resConfig.model}, source=${sourceType}/${sourceId}`);
 
-    // 1. Fetch source image
+    // 1. Submit to Topaz Labs Enhance API (async)
+    const formData = new FormData();
+    // Fetch the source image and submit as file upload
     const imgResponse = await fetch(imageUrl);
     if (!imgResponse.ok) throw new Error(`Failed to fetch source image: ${imgResponse.status}`);
-    const imgBuffer = await imgResponse.arrayBuffer();
+    const imgBlob = await imgResponse.blob();
+    const sourceSizeKB = Math.round(imgBlob.size / 1024);
 
-    // Chunked base64 encoding
-    const uint8 = new Uint8Array(imgBuffer);
-    let binary = "";
-    const chunkSize = 8192;
-    for (let i = 0; i < uint8.length; i += chunkSize) {
-      binary += String.fromCharCode.apply(null, Array.from(uint8.slice(i, i + chunkSize)));
-    }
-    const imgBase64 = btoa(binary);
-    const mimeType = imgResponse.headers.get("content-type") || "image/png";
+    formData.append("image", imgBlob, "source.png");
+    formData.append("model", resConfig.model);
+    formData.append("output_width", String(resConfig.maxPx));
+    formData.append("output_format", "png");
 
-    // 2. Build resolution-specific prompt with professional upscaling directives
-    const targetPx = resConfig.maxPx;
-    const promptText = `You are a professional image upscaler. Take this image and output the EXACT same image at ${targetPx}px on its longest edge as a high-resolution PNG.
-
-CRITICAL RULES:
-- Preserve EVERY detail: composition, colors, lighting, shadows, reflections, framing
-- Do NOT add, remove, change, or hallucinate any element
-- Do NOT crop, reframe, or alter the aspect ratio
-- Enhance sharpness: visible material textures, fine stitching, micro-contrast on skin texture
-- Maximize detail clarity on edges, text, patterns, and fine structures
-- Razor-sharp eye detail with individual eyelash rendering where applicable
-- Output as lossless PNG at the highest possible quality
-- The result must be indistinguishable from the original except at higher resolution`;
-
-    // 3. Call Gemini 3 Pro Image for maximum upscale fidelity
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120_000);
-
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const submitResponse = await fetch(`${TOPAZ_BASE}/enhance/async`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
+        "X-API-Key": topazApiKey,
       },
-      body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
-        modalities: ["image", "text"],
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: promptText },
-              { type: "image_url", image_url: { url: `data:${mimeType};base64,${imgBase64}` } },
-            ],
-          },
-        ],
-      }),
-      signal: controller.signal,
+      body: formData,
     });
 
-    clearTimeout(timeout);
-
-    if (!aiResponse.ok) {
-      const errText = await aiResponse.text();
-      console.error(`[upscale-worker] AI gateway error: ${aiResponse.status}`, errText);
-
-      if (aiResponse.status === 429) {
-        throw new Error("Rate limited by AI gateway. Please try again shortly.");
+    if (!submitResponse.ok) {
+      const errText = await submitResponse.text();
+      console.error(`[upscale-worker] Topaz submit error: ${submitResponse.status}`, errText);
+      if (submitResponse.status === 401 || submitResponse.status === 403) {
+        throw new Error("Topaz API authentication failed. Check API key.");
       }
-      if (aiResponse.status === 402) {
-        throw new Error("AI gateway payment required.");
+      if (submitResponse.status === 402) {
+        throw new Error("Topaz API: insufficient credits on Topaz account.");
       }
-      throw new Error(`AI gateway error: ${aiResponse.status}`);
+      if (submitResponse.status === 429) {
+        throw new Error("Topaz API rate limited. Please try again shortly.");
+      }
+      throw new Error(`Topaz API error: ${submitResponse.status}`);
     }
 
-    const aiResult = await aiResponse.json();
-
-    // 4. Extract generated image
-    let newImageBase64: string | null = null;
-    let newMimeType = "image/png";
-
-    // Try images array first (Lovable AI gateway format)
-    const images = aiResult.choices?.[0]?.message?.images;
-    if (Array.isArray(images)) {
-      for (const img of images) {
-        if (img.type === "image_url" && img.image_url?.url) {
-          const dataUrl = img.image_url.url as string;
-          const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-          if (match) {
-            newMimeType = match[1];
-            newImageBase64 = match[2];
-            break;
-          }
-        }
-      }
+    const submitResult = await submitResponse.json();
+    const processId = submitResult.process_id;
+    if (!processId) {
+      throw new Error("No process_id returned from Topaz API");
     }
 
-    // Fallback to content array
-    if (!newImageBase64) {
-      const content = aiResult.choices?.[0]?.message?.content;
-      if (Array.isArray(content)) {
-        for (const part of content) {
-          if (part.type === "image_url" && part.image_url?.url) {
-            const dataUrl = part.image_url.url as string;
-            const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-            if (match) {
-              newMimeType = match[1];
-              newImageBase64 = match[2];
-              break;
-            }
-          }
-        }
+    console.log(`[upscale-worker] Job ${jobId}: Topaz process_id=${processId}, ETA=${submitResult.eta}`);
+
+    // 2. Poll for completion
+    let status = "pending";
+    let attempts = 0;
+
+    while (status !== "completed" && status !== "failed" && attempts < MAX_POLL_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+      attempts++;
+
+      const statusResponse = await fetch(`${TOPAZ_BASE}/status/${processId}`, {
+        headers: { "X-API-Key": topazApiKey },
+      });
+
+      if (!statusResponse.ok) {
+        console.warn(`[upscale-worker] Status poll ${attempts} failed: ${statusResponse.status}`);
+        continue;
+      }
+
+      const statusResult = await statusResponse.json();
+      status = statusResult.status?.toLowerCase() || "unknown";
+      console.log(`[upscale-worker] Job ${jobId}: poll ${attempts}/${MAX_POLL_ATTEMPTS} → ${status}`);
+
+      if (status === "failed" || status === "error") {
+        throw new Error(`Topaz processing failed: ${statusResult.error || "Unknown error"}`);
       }
     }
 
-    if (!newImageBase64) {
-      throw new Error("No image returned from AI model");
+    if (status !== "completed") {
+      throw new Error(`Topaz processing timed out after ${MAX_POLL_ATTEMPTS * POLL_INTERVAL_MS / 1000}s`);
     }
 
-    // 5. Decode and upload
-    const binaryStr = atob(newImageBase64);
-    const bytes = new Uint8Array(binaryStr.length);
-    for (let i = 0; i < binaryStr.length; i++) {
-      bytes[i] = binaryStr.charCodeAt(i);
+    // 3. Download the processed image
+    const downloadResponse = await fetch(`${TOPAZ_BASE}/download/output/${processId}`, {
+      headers: { "X-API-Key": topazApiKey },
+    });
+
+    if (!downloadResponse.ok) {
+      throw new Error(`Failed to download from Topaz: ${downloadResponse.status}`);
     }
 
-    // Log actual output size for monitoring
-    const outputSizeKB = Math.round(bytes.length / 1024);
-    console.log(`[upscale-worker] Job ${jobId}: AI output ${outputSizeKB}KB (${newMimeType}), source was ${Math.round(imgBuffer.byteLength / 1024)}KB`);
+    const processedBlob = await downloadResponse.blob();
+    const outputSizeKB = Math.round(processedBlob.size / 1024);
+    const processedBytes = new Uint8Array(await processedBlob.arrayBuffer());
 
-    const ext = newMimeType.includes("png") ? "png" : "jpg";
-    const storagePath = `upscaled/${userId}/${crypto.randomUUID()}-${resolution}.${ext}`;
+    console.log(`[upscale-worker] Job ${jobId}: Topaz output ${outputSizeKB}KB (source was ${sourceSizeKB}KB)`);
+
+    // 4. Upload to storage
+    const storagePath = `upscaled/${userId}/${crypto.randomUUID()}-${resolution}.png`;
 
     const { error: uploadError } = await supabase.storage
       .from("freestyle-images")
-      .upload(storagePath, bytes, {
-        contentType: newMimeType,
+      .upload(storagePath, processedBytes, {
+        contentType: "image/png",
         upsert: true,
       });
 
@@ -204,8 +172,7 @@ CRITICAL RULES:
 
     const newImageUrl = publicUrlData.publicUrl;
 
-    // 6. Create NEW record — do NOT update the original
-    // Fetch source metadata to copy into the new record
+    // 5. Fetch source metadata and create new record
     let sourcePrompt = `Upscaled from ${sourceType}/${sourceId}`;
     let sourceAspectRatio = "1:1";
     let sourceModelId: string | null = null;
@@ -228,7 +195,6 @@ CRITICAL RULES:
         sourceProductId = srcRow.product_id;
       }
     } else if (sourceType === "generation") {
-      // For generation items, extract the job prompt
       const lastDash = sourceId.lastIndexOf("-");
       const realJobId = sourceId.substring(0, lastDash);
 
@@ -246,7 +212,6 @@ CRITICAL RULES:
       }
     }
 
-    // Insert a new freestyle_generations row for the upscaled version
     const { error: insertError } = await supabase
       .from("freestyle_generations")
       .insert({
@@ -265,7 +230,7 @@ CRITICAL RULES:
       throw new Error("Failed to create upscaled record");
     }
 
-    // 7. Mark queue job as completed
+    // 6. Mark queue job as completed
     await supabase
       .from("generation_queue")
       .update({
@@ -275,7 +240,13 @@ CRITICAL RULES:
       })
       .eq("id", jobId);
 
-    console.log(`[upscale-worker] ✅ Job ${jobId} completed: ${resConfig.label} upscale → ${storagePath}`);
+    // 7. Clean up Topaz status (optional, free up their storage)
+    fetch(`${TOPAZ_BASE}/status/${processId}`, {
+      method: "DELETE",
+      headers: { "X-API-Key": topazApiKey },
+    }).catch(() => {});
+
+    console.log(`[upscale-worker] ✅ Job ${jobId} completed: ${resConfig.label} upscale via Topaz → ${storagePath}`);
 
     return new Response(
       JSON.stringify({ success: true, imageUrl: newImageUrl }),
@@ -284,7 +255,6 @@ CRITICAL RULES:
   } catch (error) {
     console.error(`[upscale-worker] Job ${jobId} failed:`, error);
 
-    // Mark queue job as failed — cleanup_stale_jobs handles credit refund
     if (jobId) {
       await supabase
         .from("generation_queue")
@@ -295,7 +265,6 @@ CRITICAL RULES:
         })
         .eq("id", jobId);
 
-      // Refund credits immediately
       if (userId && creditsReserved) {
         await supabase.rpc("refund_credits", {
           p_user_id: userId,
