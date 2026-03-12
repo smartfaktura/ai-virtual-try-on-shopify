@@ -59,6 +59,7 @@ export function GlobalGenerationBar() {
           credits_reserved: row.credits_reserved,
           job_type: row.job_type,
           quality: (payload?.quality as string) ?? null,
+          resolution: (payload?.resolution as string) ?? null,
         };
       });
 
