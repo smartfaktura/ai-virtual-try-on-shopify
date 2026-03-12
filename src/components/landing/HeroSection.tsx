@@ -23,18 +23,18 @@ interface ProductShowcase {
 
 const showcases: ProductShowcase[] = [
   {
-    product: { img: '/images/source-crop-top.jpg', label: 'Cropped Tee', subtitle: '1 product photo' },
+    product: { img: '/images/source-crop-top.jpg', label: 'White Crop Top', subtitle: '1 product photo' },
     outputs: [
+      { img: '/images/try-showcase/studio-lookbook.png', label: 'Studio Lookbook' },
+      { img: '/images/try-showcase/golden-hour.png', label: 'Golden Hour' },
+      { img: '/images/try-showcase/cafe-lifestyle.png', label: 'Café Lifestyle' },
       { img: '/images/try-showcase/garden-editorial.png', label: 'Garden Editorial' },
       { img: '/images/try-showcase/virtual-tryon-1.png', label: 'Basketball Court' },
-      { img: '/images/try-showcase/cafe-lifestyle.png', label: 'Café Lifestyle' },
-      { img: '/images/try-showcase/golden-hour.png', label: 'Golden Hour' },
-      { img: '/images/try-showcase/studio-lookbook.png', label: 'Studio Lookbook' },
       { img: '/images/try-showcase/urban-edge.png', label: 'Urban Edge' },
       { img: '/images/try-showcase/pilates-studio.png', label: 'Pilates Studio' },
       { img: '/images/try-showcase/studio-dark.png', label: 'Studio Portrait' },
     ],
-    caption: 'Same tee — ∞ environments — 12 seconds',
+    caption: 'Same top — ∞ environments — 12 seconds',
   },
   {
     product: { img: h('hero-product-serum.jpg'), label: 'Face Serum', subtitle: '1 product photo' },
@@ -138,14 +138,28 @@ export function HeroSection() {
 
   const current = showcases[activeScene];
 
-  // Preload all showcase images on mount
+  // Preload hero product image via <link rel="preload"> for LCP
   useEffect(() => {
-    showcases.forEach(scene => {
-      new Image().src = optimizeProduct(scene.product.img);
-      scene.outputs.forEach(o => {
-        new Image().src = optimizeOutput(o.img);
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = '/images/source-crop-top.jpg';
+    document.head.appendChild(link);
+    return () => { document.head.removeChild(link); };
+  }, []);
+
+  // Preload active scene eagerly, defer others by 3s
+  useEffect(() => {
+    const active = showcases[0];
+    active.outputs.forEach(o => { new Image().src = optimizeOutput(o.img); });
+
+    const t = setTimeout(() => {
+      showcases.slice(1).forEach(scene => {
+        new Image().src = optimizeProduct(scene.product.img);
+        scene.outputs.forEach(o => { new Image().src = optimizeOutput(o.img); });
       });
-    });
+    }, 3000);
+    return () => clearTimeout(t);
   }, []);
 
   // One-time attention pulse on product pills after 2s
@@ -244,6 +258,8 @@ export function HeroSection() {
                     alt={current.product.label}
                     className="w-full h-full object-cover transition-all duration-500"
                     aspectRatio="3/4"
+                    width={200}
+                    height={267}
                     fetchPriority="high"
                   />
                   <span className="absolute top-3 left-3 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-background/90 text-foreground backdrop-blur-sm">
@@ -337,6 +353,8 @@ export function HeroSection() {
                            loading={idx < 3 ? 'eager' : 'lazy'}
                            fetchPriority={idx < 2 ? 'high' : undefined}
                            aspectRatio="3/4"
+                           width={180}
+                           height={240}
                          />
                         <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded">
                           {output.label}
