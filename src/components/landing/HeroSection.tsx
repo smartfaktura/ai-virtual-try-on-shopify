@@ -224,8 +224,11 @@ export function HeroSection() {
 
           <style>{`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
 
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="hidden sm:block text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Upload a product photo. Your team of photographers, art directors, and retouchers delivers ∞ brand-ready visuals in seconds — for ads, listings, and campaigns.
+          </p>
+          <p className="sm:hidden text-sm text-muted-foreground max-w-xs mx-auto mb-8 leading-relaxed">
+            Upload a product photo — get ∞ brand-ready visuals in seconds.
           </p>
 
           {/* CTAs */}
