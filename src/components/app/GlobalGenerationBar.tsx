@@ -1,13 +1,15 @@
 import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Loader2, ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { groupJobsIntoBatches, type ActiveJob, type BatchGroup } from '@/lib/batchGrouping';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { TEAM_MEMBERS } from '@/data/teamData';
 import { cn } from '@/lib/utils';
 
 /** Pages where dedicated activity UI already exists */
