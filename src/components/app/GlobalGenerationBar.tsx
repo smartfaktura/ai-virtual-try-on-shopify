@@ -163,14 +163,22 @@ export function GlobalGenerationBar() {
                 const progressPct = isBatch
                   ? Math.round((group.completedCount / group.totalCount) * 100)
                   : undefined;
+                const isUpscale = group.job_type === 'upscale';
+                const luna = isUpscale ? TEAM_MEMBERS.find(m => m.name === 'Luna') : null;
 
                 return (
                   <div key={group.key} className="px-3 py-2.5 border-b border-border/20 last:border-0">
                     <div className="flex items-center gap-2">
+                      {luna && (
+                        <Avatar className="w-6 h-6 shrink-0 ring-1 ring-primary/20">
+                          <AvatarImage src={luna.avatar} alt="Luna" />
+                          <AvatarFallback className="text-[8px] bg-primary/10 text-primary">LP</AvatarFallback>
+                        </Avatar>
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">
-                          {group.job_type === 'upscale'
-                            ? `Upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
+                          {isUpscale
+                            ? `${luna?.name ?? 'Luna'} is upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
                             : (group.workflow_name ?? 'Generation')}
                           {group.product_name ? ` — ${group.product_name}` : ''}
                         </p>
