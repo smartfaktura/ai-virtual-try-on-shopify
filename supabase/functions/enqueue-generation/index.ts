@@ -29,8 +29,8 @@ function calculateCreditCost(
   let perImage: number;
 
   if (jobType === "upscale") {
-    // Upscale: 4 credits for 2K, 8 credits for 4K
-    perImage = resolution === "4k" ? 8 : 4;
+    // Upscale: 8 credits for 2K, 12 credits for 4K
+    perImage = resolution === "4k" ? 12 : 8;
   } else if (jobType === "workflow" || jobType === "tryon") {
     perImage = 8;
   } else {
