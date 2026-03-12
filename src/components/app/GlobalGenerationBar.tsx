@@ -124,7 +124,8 @@ export function GlobalGenerationBar() {
     }
 
     prevActiveKeysRef.current = currentKeys;
-  }, [activeGroups]);
+    prevGroupsRef.current = activeGroups;
+  }, [activeGroups, queryClient]);
 
   // Tick for elapsed time
   useEffect(() => {
