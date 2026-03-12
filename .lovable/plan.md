@@ -1,30 +1,53 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Improve Topaz Upscaling Quality — More Texture, Less "AI Look"
 
-### Issues Found
+### Problem
+Currently we send minimal parameters to Topaz — just `model`, `output_width`, and `output_format`. This uses default settings which can produce smooth, plastic-looking results typical of AI upscaling.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### What Topaz Offers
+The Topaz API supports several tuning parameters we're not using:
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+- **`sharpen`** — sharpens the output (0–1)
+- **`fix_compression`** — reduces compression artifacts (0–1)
+- **`denoise`** — noise reduction (0–1, lower = preserves grain/texture)
+- **`strength`** — overall model strength (0.01–1, too high = unrealistic)
 
-### Plan
+### Plan — 1 file
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**`supabase/functions/upscale-worker/index.ts`**
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+1. **Add quality parameters to the form data** sent to Topaz, tuned for photorealistic texture retention:
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+```
+sharpen: 0.6        — moderate sharpening for crisp detail
+fix_compression: 0.5 — clean up JPEG artifacts from source
+denoise: 0.15        — very low denoising to preserve natural grain/texture
+strength: 0.75       — strong enough to enhance but not over-process
+```
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+2. **Use different tuning per resolution**:
+   - **2K**: slightly lower strength (0.7) since less upscaling needed
+   - **4K**: higher strength (0.8) + slightly more sharpening (0.7) for the bigger scale factor
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+These parameters get appended as form-data fields alongside the existing `model`, `output_width`, and `output_format`.
+
+### Technical Detail
+
+The `RESOLUTION_CONFIG` object will be extended to include these parameters, and they'll be appended to the `formData` before submission:
+
+```typescript
+const RESOLUTION_CONFIG = {
+  "2k": { 
+    maxPx: 2048, label: "2K", model: "Standard V2",
+    sharpen: 0.6, fix_compression: 0.5, denoise: 0.15, strength: 0.7
+  },
+  "4k": { 
+    maxPx: 4096, label: "4K", model: "High Fidelity V2",
+    sharpen: 0.7, fix_compression: 0.5, denoise: 0.1, strength: 0.8
+  },
+};
+```
+
+No frontend changes needed — this is purely a backend quality improvement.
 
