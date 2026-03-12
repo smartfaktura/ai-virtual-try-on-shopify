@@ -139,17 +139,17 @@ export function FreestyleShowcaseSection() {
               />
             </div>
 
-            <div className="p-4 md:p-5">
+            <div className="p-3 md:p-5">
               {/* Prompt area */}
-              <div className="rounded-xl border border-border/50 bg-background px-4 py-3 mb-4 h-[72px] flex items-start overflow-hidden">
-                <p className="text-sm text-foreground/90 leading-relaxed flex-1">
+              <div className="rounded-xl border border-border/50 bg-background px-3 md:px-4 py-3 mb-4 h-[56px] md:h-[72px] flex items-start overflow-hidden">
+                <p className="text-xs md:text-sm text-foreground/90 leading-relaxed flex-1">
                   {typedText}
                   <span className="inline-block w-[2px] h-4 bg-primary ml-0.5 animate-pulse align-text-bottom" />
                 </p>
               </div>
 
               {/* Chips + Generate row */}
-              <div className="flex items-center gap-2 flex-nowrap h-10 overflow-hidden">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap h-10 overflow-hidden">
                 {CHIPS.map((chip) => {
                   const Icon = chip.icon;
                   const active = activeChips[chip.key];
