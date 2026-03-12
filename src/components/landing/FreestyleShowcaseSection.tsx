@@ -39,6 +39,7 @@ type ChipKey = 'product' | 'scene';
 export function FreestyleShowcaseSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [cycle, setCycle] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({
