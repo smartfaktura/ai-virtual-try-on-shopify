@@ -277,57 +277,88 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
 /* ── Upscale mode component ── */
 
 function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
-  const CYCLE = 5000; // total loop duration ms
-  const [iteration, setIteration] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
+  const [phase, setPhase] = useState<'blur' | 'wiping' | 'sharp'>('blur');
   const bgSrc = scene.background;
 
   useEffect(() => {
-    if (!isActive) return;
-    const t = setInterval(() => setIteration((i) => i + 1), CYCLE);
-    return () => clearInterval(t);
+    if (!isActive) {
+      setPhase('blur');
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout>;
+
+    function startCycle() {
+      setPhase('blur');
+      // After 1s of blur, start wipe
+      timer = setTimeout(() => {
+        setPhase('wiping');
+        // After 1.5s wipe, hold sharp
+        timer = setTimeout(() => {
+          setPhase('sharp');
+          // Hold sharp 2s, then fade back to blur
+          timer = setTimeout(() => {
+            startCycle();
+          }, 2000);
+        }, 1500);
+      }, 1000);
+    }
+
+    startCycle();
+    return () => clearTimeout(timer);
   }, [isActive]);
 
+  const showSharpLayer = phase === 'wiping' || phase === 'sharp';
+
   return (
-    <div className="relative w-full h-full overflow-hidden bg-muted" key={isActive ? iteration : 'static'}>
+    <div className="relative w-full h-full overflow-hidden bg-muted">
       {/* Blurred layer (always visible underneath) */}
       <img
         src={bgSrc}
         alt=""
         className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
-        style={{ filter: 'blur(6px) saturate(0.9)', transform: 'scale(1.06)' }}
+        style={{ filter: 'blur(3px) saturate(0.95)', transform: 'scale(1.03)' }}
         onLoad={() => setBgLoaded(true)}
       />
 
       {isActive && bgLoaded && (
         <>
-          {/* Sharp layer — wipes in left-to-right via clip-path */}
+          {/* Sharp layer — wipes in left-to-right via clip-path, fades out on reset */}
           <img
             src={bgSrc}
             alt=""
             className="absolute inset-0 w-full h-full object-cover object-top"
             style={{
-              clipPath: 'inset(0 100% 0 0)',
-              animation: `wf-upscale-wipe 1.5s ease-in-out 0.8s forwards`,
+              clipPath: showSharpLayer
+                ? (phase === 'wiping' ? undefined : 'inset(0 0% 0 0)')
+                : 'inset(0 100% 0 0)',
+              animation: phase === 'wiping'
+                ? 'wf-upscale-wipe 1.5s ease-in-out forwards'
+                : undefined,
+              opacity: phase === 'blur' ? 0 : 1,
+              transition: phase === 'blur' ? 'opacity 0.5s ease-out' : undefined,
             }}
           />
 
           {/* Vertical divider line tracking the wipe edge */}
-          <div
-            className="absolute top-0 bottom-0 w-[2px] bg-white/80 z-[15]"
-            style={{
-              left: '0%',
-              animation: `wf-divider-move 1.5s ease-in-out 0.8s forwards`,
-              boxShadow: '0 0 8px rgba(255,255,255,0.5)',
-            }}
-          />
+          {phase === 'wiping' && (
+            <div
+              className="absolute top-0 bottom-0 w-[2px] bg-white/80 z-[15]"
+              style={{
+                left: '0%',
+                animation: 'wf-divider-move 1.5s ease-in-out forwards',
+                boxShadow: '0 0 8px rgba(255,255,255,0.5)',
+              }}
+            />
+          )}
 
-          {/* "Original" badge — top-left */}
+          {/* "Original" badge — top-left, visible during blur & wiping */}
           <div
             className="absolute top-3 left-3 z-20"
             style={{
-              opacity: 0,
-              animation: 'wf-slide-in-left 0.45s cubic-bezier(.22,1,.36,1) 0.2s forwards, wf-fade-out 0.3s ease-in 2.3s forwards',
+              opacity: phase === 'blur' ? 1 : 0,
+              transition: 'opacity 0.3s ease-out',
+              animation: phase === 'blur' ? 'wf-slide-in-left 0.45s cubic-bezier(.22,1,.36,1) forwards' : undefined,
             }}
           >
             <div className="bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1.5">
@@ -340,8 +371,9 @@ function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
           <div
             className="absolute bottom-3 right-3 z-20"
             style={{
-              opacity: 0,
-              animation: 'wf-badge-pop-right 0.5s cubic-bezier(.34,1.56,.64,1) 2.4s forwards',
+              opacity: phase === 'sharp' ? 1 : 0,
+              transform: phase === 'sharp' ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.5)',
+              transition: 'opacity 0.4s ease-out, transform 0.4s cubic-bezier(.34,1.56,.64,1)',
             }}
           >
             <div className="bg-white rounded-full px-3 py-1.5 wf-card-shadow flex items-center gap-1.5">
@@ -351,21 +383,20 @@ function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
           </div>
 
           {/* Shimmer sweep across the sharp reveal */}
-          <div
-            className="absolute inset-0 z-[12] pointer-events-none overflow-hidden"
-            style={{
-              opacity: 0,
-              animation: 'wf-fade-in 0.2s ease-out 1.8s forwards, wf-fade-out 0.3s ease-in 2.6s forwards',
-            }}
-          >
+          {phase === 'sharp' && (
             <div
-              className="absolute inset-y-0 w-1/3"
-              style={{
-                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-                animation: 'wf-shimmer 0.8s ease-in-out 1.8s forwards',
-              }}
-            />
-          </div>
+              className="absolute inset-0 z-[12] pointer-events-none overflow-hidden"
+              style={{ animation: 'wf-fade-in 0.2s ease-out forwards, wf-fade-out 0.3s ease-in 0.8s forwards' }}
+            >
+              <div
+                className="absolute inset-y-0 w-1/3"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                  animation: 'wf-shimmer 0.8s ease-in-out forwards',
+                }}
+              />
+            </div>
+          )}
         </>
       )}
 
@@ -377,11 +408,6 @@ function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
         @keyframes wf-divider-move {
           from { left: 0%; }
           to   { left: calc(100% - 2px); }
-        }
-        @keyframes wf-badge-pop-right {
-          0%   { opacity: 0; transform: translateY(8px) scale(0.5); }
-          70%  { opacity: 1; transform: translateY(-2px) scale(1.06); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         .wf-card-shadow {
           box-shadow: 0 4px 20px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
