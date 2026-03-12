@@ -72,6 +72,7 @@ export function PlanChangeDialog({
   currentBalance,
   periodEnd,
   hasActiveSubscription = false,
+  loading = false,
 }: PlanChangeDialogProps) {
   const config = modeConfig[mode];
 
