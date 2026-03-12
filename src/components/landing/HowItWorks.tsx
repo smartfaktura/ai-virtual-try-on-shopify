@@ -167,7 +167,7 @@ export function HowItWorks() {
                         animation: 'drag-drop-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both',
                       } : { opacity: 0 }}
                     >
-                      <img src={cropTopProduct} alt="White Crop Top" className="w-full h-full object-cover object-top" />
+                      <ShimmerImage src={cropTopProduct} alt="White Crop Top" className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
                     </div>
                     <div
                       className="flex-1 min-w-0 transition-all duration-500"
