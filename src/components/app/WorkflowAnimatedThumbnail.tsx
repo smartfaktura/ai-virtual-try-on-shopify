@@ -317,7 +317,7 @@ function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
         src={bgSrc}
         alt=""
         className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
-        style={{ filter: 'blur(3px) saturate(0.95)', transform: 'scale(1.03)' }}
+        style={{ filter: 'blur(1.5px) saturate(0.97)', transform: 'scale(1.015)' }}
         onLoad={() => setBgLoaded(true)}
       />
 
