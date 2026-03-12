@@ -16,6 +16,7 @@ interface PlanChangeDialogProps {
   currentBalance?: number;
   periodEnd?: string;
   hasActiveSubscription?: boolean;
+  loading?: boolean;
 }
 
 const modeConfig: Record<PlanChangeMode, {
