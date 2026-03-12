@@ -51,6 +51,8 @@ export function FreestyleShowcaseSection() {
   const [showResults, setShowResults] = useState(false);
   const [visibleResults, setVisibleResults] = useState<number[]>([]);
 
+  const promptText = isMobile ? PROMPT_TEXT_MOBILE : PROMPT_TEXT_FULL;
+
   useEffect(() => {
     setTypedText('');
     setActiveChips({ product: false, scene: false });
@@ -63,9 +65,9 @@ export function FreestyleShowcaseSection() {
 
     let charIdx = 0;
     const typeTimer = setInterval(() => {
-      if (charIdx < PROMPT_TEXT.length) {
-        charIdx = Math.min(charIdx + 3, PROMPT_TEXT.length);
-        setTypedText(PROMPT_TEXT.slice(0, charIdx));
+      if (charIdx < promptText.length) {
+        charIdx = Math.min(charIdx + 3, promptText.length);
+        setTypedText(promptText.slice(0, charIdx));
       } else {
         clearInterval(typeTimer);
       }
