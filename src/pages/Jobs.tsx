@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw } from 'lucide-react';
+import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { TEAM_MEMBERS } from '@/data/teamData';
@@ -22,6 +22,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 import { toast } from 'sonner';
 import JSZip from 'jszip';
+import { UpscaleModal } from '@/components/app/UpscaleModal';
+import type { UpscaleItem } from '@/hooks/useUpscaleImages';
 
 const SORTS: { id: LibrarySortBy; label: string }[] = [
   { id: 'newest', label: 'Newest' },
