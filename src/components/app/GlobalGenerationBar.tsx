@@ -29,6 +29,7 @@ export function GlobalGenerationBar() {
   const [minimized, setMinimized] = useState(true);
   const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set());
   const prevActiveKeysRef = useRef<Set<string>>(new Set());
+  const prevGroupsRef = useRef<BatchGroup[]>([]);
   const [completedGroups, setCompletedGroups] = useState<BatchGroup[]>([]);
   const [, tick] = useState(0);
 
