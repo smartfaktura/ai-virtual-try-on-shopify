@@ -181,6 +181,18 @@ export default function Onboarding() {
                     className="h-11"
                   />
                 </div>
+
+                <div className="flex items-start space-x-2 pt-1">
+                  <Checkbox
+                    id="marketingOptIn"
+                    checked={marketingOptIn}
+                    onCheckedChange={(v) => setMarketingOptIn(!!v)}
+                    className="mt-0.5"
+                  />
+                  <label htmlFor="marketingOptIn" className="text-sm text-muted-foreground leading-snug cursor-pointer">
+                    Send me news, tips & special offers via email
+                  </label>
+                </div>
               </div>
             </div>
           )}
