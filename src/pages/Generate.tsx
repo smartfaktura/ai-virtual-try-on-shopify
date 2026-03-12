@@ -2029,7 +2029,9 @@ export default function Generate() {
                   }
                   if (finalUrl) {
                     setScratchUpload({ ...scratchUpload, uploadedUrl: finalUrl });
-                    if (activeWorkflow?.uses_tryon) {
+                    if (isUpscale) {
+                      setCurrentStep('settings');
+                    } else if (activeWorkflow?.uses_tryon) {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     } else if (isInteriorDesign) {
                       setCurrentStep('settings');
