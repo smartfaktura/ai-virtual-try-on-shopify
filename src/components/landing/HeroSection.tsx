@@ -138,14 +138,28 @@ export function HeroSection() {
 
   const current = showcases[activeScene];
 
-  // Preload all showcase images on mount
+  // Preload hero product image via <link rel="preload"> for LCP
   useEffect(() => {
-    showcases.forEach(scene => {
-      new Image().src = optimizeProduct(scene.product.img);
-      scene.outputs.forEach(o => {
-        new Image().src = optimizeOutput(o.img);
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = '/images/source-crop-top.jpg';
+    document.head.appendChild(link);
+    return () => { document.head.removeChild(link); };
+  }, []);
+
+  // Preload active scene eagerly, defer others by 3s
+  useEffect(() => {
+    const active = showcases[0];
+    active.outputs.forEach(o => { new Image().src = optimizeOutput(o.img); });
+
+    const t = setTimeout(() => {
+      showcases.slice(1).forEach(scene => {
+        new Image().src = optimizeProduct(scene.product.img);
+        scene.outputs.forEach(o => { new Image().src = optimizeOutput(o.img); });
       });
-    });
+    }, 3000);
+    return () => clearTimeout(t);
   }, []);
 
   // One-time attention pulse on product pills after 2s
