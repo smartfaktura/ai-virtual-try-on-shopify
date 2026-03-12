@@ -186,7 +186,7 @@ serve(async (req) => {
     const newImageUrl = publicUrlData.publicUrl;
 
     // 5. Fetch source metadata and create new record
-    let sourcePrompt = `Upscaled from ${sourceType}/${sourceId}`;
+    let sourcePrompt = `Enhanced to ${resolution === '4k' ? '4K' : '2K'}`;
     let sourceAspectRatio = "1:1";
     let sourceModelId: string | null = null;
     let sourceSceneId: string | null = null;
