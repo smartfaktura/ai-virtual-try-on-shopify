@@ -24,6 +24,7 @@ export function BuyCreditsModal() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const isAnnual = billingPeriod === 'annual';
   const mainPlans = pricingPlans.filter(p => !p.isEnterprise);
@@ -60,19 +61,22 @@ export function BuyCreditsModal() {
     setDialogOpen(true);
   };
 
-  const handleDialogConfirm = () => {
-    if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
-      if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
-        openCustomerPortal();
-      } else {
-        const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
-        if (priceId) {
-          startCheckout(priceId, 'subscription');
+  const handleDialogConfirm = async () => {
+    setCheckoutLoading(true);
+    try {
+      if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
+        if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+          await openCustomerPortal();
+        } else {
+          const priceId = isAnnual ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+          if (priceId) {
+            await startCheckout(priceId, 'subscription');
+          }
         }
       }
+    } catch {
+      setCheckoutLoading(false);
     }
-    setDialogOpen(false);
-    closeBuyModal();
   };
 
   const handleSwitchToAnnual = () => {
@@ -388,7 +392,7 @@ export function BuyCreditsModal() {
 
       <PlanChangeDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        onClose={() => { setDialogOpen(false); setCheckoutLoading(false); }}
         onConfirm={handleDialogConfirm}
         mode={dialogMode}
         targetPlan={selectedPlan || undefined}
@@ -396,6 +400,7 @@ export function BuyCreditsModal() {
         isAnnual={isAnnual}
         currentBalance={balance}
         hasActiveSubscription={subscriptionStatus === 'active' || subscriptionStatus === 'canceling'}
+        loading={checkoutLoading}
       />
     </>
   );

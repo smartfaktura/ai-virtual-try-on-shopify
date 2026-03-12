@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ArrowUpRight, ArrowDownRight, XCircle, RotateCcw, AlertTriangle, ExternalLink, Lock } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, XCircle, RotateCcw, AlertTriangle, ExternalLink, Lock, Loader2 } from 'lucide-react';
 import type { PricingPlan } from '@/types';
 
 export type PlanChangeMode = 'upgrade' | 'downgrade' | 'cancel' | 'reactivate';
@@ -16,6 +16,7 @@ interface PlanChangeDialogProps {
   currentBalance?: number;
   periodEnd?: string;
   hasActiveSubscription?: boolean;
+  loading?: boolean;
 }
 
 const modeConfig: Record<PlanChangeMode, {
@@ -71,6 +72,7 @@ export function PlanChangeDialog({
   currentBalance,
   periodEnd,
   hasActiveSubscription = false,
+  loading = false,
 }: PlanChangeDialogProps) {
   const config = modeConfig[mode];
 
@@ -176,12 +178,21 @@ export function PlanChangeDialog({
         </div>
 
         <DialogFooter className="px-8 pb-8 pt-0 gap-3 sm:gap-3">
-          <Button variant="outline" onClick={onClose} className="rounded-xl min-h-[44px]">
+          <Button variant="outline" onClick={onClose} disabled={loading} className="rounded-xl min-h-[44px]">
             Go Back
           </Button>
-          <Button variant={config.confirmVariant} onClick={onConfirm} className="rounded-xl min-h-[44px] gap-2">
-            {getConfirmLabel()}
-            <ExternalLink className="w-3.5 h-3.5" />
+          <Button variant={config.confirmVariant} onClick={onConfirm} disabled={loading} className="rounded-xl min-h-[44px] gap-2">
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Redirecting…
+              </>
+            ) : (
+              <>
+                {getConfirmLabel()}
+                <ExternalLink className="w-3.5 h-3.5" />
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

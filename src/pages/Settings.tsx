@@ -57,6 +57,7 @@ export default function Settings() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<PlanChangeMode>('upgrade');
   const [selectedPlan, setSelectedPlan] = useState<import('@/types').PricingPlan | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isSaving, setIsSaving] = useState(false);
@@ -134,20 +135,24 @@ export default function Settings() {
     setDialogOpen(true);
   };
 
-  const handleDialogConfirm = () => {
-    if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
-      if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
-        openCustomerPortal();
-      } else {
-        const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
-        if (priceId) {
-          startCheckout(priceId, 'subscription');
+  const handleDialogConfirm = async () => {
+    setCheckoutLoading(true);
+    try {
+      if (selectedPlan && (dialogMode === 'upgrade' || dialogMode === 'downgrade')) {
+        if (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') {
+          await openCustomerPortal();
+        } else {
+          const priceId = billingPeriod === 'annual' ? selectedPlan.stripePriceIdAnnual : selectedPlan.stripePriceIdMonthly;
+          if (priceId) {
+            await startCheckout(priceId, 'subscription');
+          }
         }
+      } else if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
+        await openCustomerPortal();
       }
-    } else if (dialogMode === 'cancel' || dialogMode === 'reactivate') {
-      openCustomerPortal();
+    } catch {
+      setCheckoutLoading(false);
     }
-    setDialogOpen(false);
   };
 
   const handleCreditPurchase = (packId: string) => {
@@ -481,7 +486,7 @@ export default function Settings() {
 
      <PlanChangeDialog
       open={dialogOpen}
-      onClose={() => setDialogOpen(false)}
+      onClose={() => { setDialogOpen(false); setCheckoutLoading(false); }}
       onConfirm={handleDialogConfirm}
       mode={dialogMode}
       targetPlan={selectedPlan || undefined}
@@ -489,6 +494,7 @@ export default function Settings() {
       isAnnual={billingPeriod === 'annual'}
       currentBalance={balance}
       hasActiveSubscription={subscriptionStatus === 'active' || subscriptionStatus === 'canceling'}
+      loading={checkoutLoading}
     />
     </>
   );
