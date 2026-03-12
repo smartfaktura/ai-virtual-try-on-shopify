@@ -486,7 +486,7 @@ export default function Settings() {
 
      <PlanChangeDialog
       open={dialogOpen}
-      onClose={() => setDialogOpen(false)}
+      onClose={() => { setDialogOpen(false); setCheckoutLoading(false); }}
       onConfirm={handleDialogConfirm}
       mode={dialogMode}
       targetPlan={selectedPlan || undefined}
@@ -494,6 +494,7 @@ export default function Settings() {
       isAnnual={billingPeriod === 'annual'}
       currentBalance={balance}
       hasActiveSubscription={subscriptionStatus === 'active' || subscriptionStatus === 'canceling'}
+      loading={checkoutLoading}
     />
     </>
   );

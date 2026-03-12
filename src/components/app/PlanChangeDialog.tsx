@@ -178,12 +178,21 @@ export function PlanChangeDialog({
         </div>
 
         <DialogFooter className="px-8 pb-8 pt-0 gap-3 sm:gap-3">
-          <Button variant="outline" onClick={onClose} className="rounded-xl min-h-[44px]">
+          <Button variant="outline" onClick={onClose} disabled={loading} className="rounded-xl min-h-[44px]">
             Go Back
           </Button>
-          <Button variant={config.confirmVariant} onClick={onConfirm} className="rounded-xl min-h-[44px] gap-2">
-            {getConfirmLabel()}
-            <ExternalLink className="w-3.5 h-3.5" />
+          <Button variant={config.confirmVariant} onClick={onConfirm} disabled={loading} className="rounded-xl min-h-[44px] gap-2">
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Redirecting…
+              </>
+            ) : (
+              <>
+                {getConfirmLabel()}
+                <ExternalLink className="w-3.5 h-3.5" />
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -392,7 +392,7 @@ export function BuyCreditsModal() {
 
       <PlanChangeDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        onClose={() => { setDialogOpen(false); setCheckoutLoading(false); }}
         onConfirm={handleDialogConfirm}
         mode={dialogMode}
         targetPlan={selectedPlan || undefined}
@@ -400,6 +400,7 @@ export function BuyCreditsModal() {
         isAnnual={isAnnual}
         currentBalance={balance}
         hasActiveSubscription={subscriptionStatus === 'active' || subscriptionStatus === 'canceling'}
+        loading={checkoutLoading}
       />
     </>
   );
