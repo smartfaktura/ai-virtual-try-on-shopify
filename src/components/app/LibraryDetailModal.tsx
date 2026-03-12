@@ -275,6 +275,21 @@ export function LibraryDetailModal({ item, open, onClose }: LibraryDetailModalPr
           quality={item.quality}
         />
       )}
+      {upscaleModalOpen && item && (
+        <UpscaleModal
+          open={upscaleModalOpen}
+          onClose={() => setUpscaleModalOpen(false)}
+          items={[{
+            imageUrl: item.imageUrl,
+            sourceType: item.source as 'freestyle' | 'generation',
+            sourceId: item.id,
+          }]}
+          onComplete={() => {
+            queryClient.invalidateQueries({ queryKey: ['library'] });
+            onClose();
+          }}
+        />
+      )}
     </>
   );
 }
