@@ -45,6 +45,12 @@ const CHIPS = [
   },
 ];
 
+const RESULT_CARDS = [
+  { label: 'Studio', src: '/images/try-showcase/virtual-tryon-1.png' },
+  { label: 'Basketball Court', src: '/images/try-showcase/virtual-tryon-2.png' },
+  { label: 'Café', src: '/images/try-showcase/cafe-lifestyle.png' },
+];
+
 type ChipKey = 'product' | 'model' | 'scene';
 
 export function FreestyleShowcaseSection() {
@@ -55,6 +61,7 @@ export function FreestyleShowcaseSection() {
   const [typedText, setTypedText] = useState('');
   const [activeChips, setActiveChips] = useState<Record<ChipKey, boolean>>({
     product: false,
+    model: false,
     scene: false,
   });
   const [generating, setGenerating] = useState(false);
