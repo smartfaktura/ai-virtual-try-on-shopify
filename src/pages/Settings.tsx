@@ -77,12 +77,15 @@ export default function Settings() {
     const load = async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('settings')
+        .select('settings, marketing_emails_opted_in')
         .eq('user_id', user.id)
         .single();
 
       if (data?.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
         setSettings(prev => ({ ...prev, ...(data.settings as Partial<UserSettings>) }));
+      }
+      if (data && typeof data.marketing_emails_opted_in === 'boolean') {
+        setMarketingOptIn(data.marketing_emails_opted_in);
       }
       setIsLoaded(true);
     };
