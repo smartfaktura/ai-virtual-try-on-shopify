@@ -63,7 +63,7 @@ function HoverPreview({ src, alt, label, isResult = false }: { src: string; alt:
       onMouseLeave={() => setHovered(false)}
     >
       <div className={`w-14 h-14 rounded-lg overflow-hidden cursor-pointer ${isResult ? 'border-2 border-primary/50 ring-2 ring-primary/20' : 'border-2 border-primary'}`}>
-        <img src={src} alt={alt} className="w-full h-full object-cover object-top" />
+        <ShimmerImage src={src} alt={alt} className="w-full h-full object-cover object-top" aspectRatio="1/1" loading="lazy" />
       </div>
       <span className={`text-[9px] ${isResult ? 'text-primary font-medium' : 'text-muted-foreground'}`}>{label}</span>
 
