@@ -247,53 +247,23 @@ export function HeroSection() {
         {/* Visual showcase: Upload → Carousel of outputs */}
         <div className="max-w-6xl mx-auto">
           {/* ===== MOBILE: Compact horizontal strip ===== */}
-          <div className="flex md:hidden flex-col items-center gap-3 px-4">
-            <div className="flex items-center gap-2 w-full overflow-x-auto scrollbar-none pb-1">
-              {/* Product upload thumbnail */}
-              <div className="flex-shrink-0 flex flex-col items-center gap-1">
-                <div className="w-14 h-[75px] rounded-lg border border-border bg-card overflow-hidden shadow-sm relative">
+          <div className="flex md:hidden flex-col items-center gap-2 px-4">
+            {/* "Your Upload" label + product pill inline with scene pills */}
+            <div className="flex items-center justify-center gap-2 w-full">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-border bg-card shadow-sm">
+                <div className="w-6 h-6 rounded-full overflow-hidden border border-border">
                   <ShimmerImage
                     src={optimizeProduct(current.product.img)}
                     alt={current.product.label}
                     className="w-full h-full object-cover"
-                    aspectRatio="3/4"
-                    width={56}
-                    height={75}
+                    width={24}
+                    height={24}
                     fetchPriority="high"
                   />
                 </div>
-                <span className="text-[9px] font-medium text-muted-foreground whitespace-nowrap">Your Upload</span>
+                <span className="text-[10px] font-semibold text-foreground">1 photo</span>
+                <ArrowRight className="w-3 h-3 text-muted-foreground" />
               </div>
-
-              {/* Arrow separator */}
-              <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-
-              {/* Output thumbnails strip */}
-              <div className="flex gap-2">
-                {current.outputs.slice(0, 5).map((output, idx) => (
-                  <div key={output.label} className="flex-shrink-0 w-[100px] rounded-lg border border-border bg-card overflow-hidden shadow-sm relative">
-                    <div className="relative aspect-[3/4]">
-                      <ShimmerImage
-                        src={optimizeOutput(output.img)}
-                        alt={output.label}
-                        className="w-full h-full object-cover"
-                        aspectRatio="3/4"
-                        width={100}
-                        height={133}
-                        loading={idx < 2 ? 'eager' : 'lazy'}
-                        fetchPriority={idx < 2 ? 'high' : undefined}
-                      />
-                      <span className="absolute bottom-1 left-1 text-[8px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
-                        {output.label}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Scene switcher pills */}
-            <div className="flex items-center justify-center gap-2">
               {showcases.map((scene, i) => (
                 <button
                   key={i}
@@ -311,7 +281,30 @@ export function HeroSection() {
               ))}
             </div>
 
-            <p className="text-center text-xs text-muted-foreground">
+            {/* Output images — larger, full-width scroll */}
+            <div className="flex gap-2 w-full overflow-x-auto scrollbar-none pb-1">
+              {current.outputs.slice(0, 6).map((output, idx) => (
+                <div key={output.label} className="flex-shrink-0 w-[140px] rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+                  <div className="relative aspect-[3/4]">
+                    <ShimmerImage
+                      src={optimizeOutput(output.img)}
+                      alt={output.label}
+                      className="w-full h-full object-cover"
+                      aspectRatio="3/4"
+                      width={140}
+                      height={187}
+                      loading={idx < 3 ? 'eager' : 'lazy'}
+                      fetchPriority={idx < 2 ? 'high' : undefined}
+                    />
+                    <span className="absolute bottom-1.5 left-1.5 text-[9px] font-semibold bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded backdrop-blur-sm">
+                      {output.label}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground -mt-0.5">
               {current.caption}
             </p>
           </div>
