@@ -135,6 +135,7 @@ export function groupJobsIntoBatches(jobs: ActiveJob[]): BatchGroup[] {
       created_at: anchor.created_at,
       job_type: anchor.job_type ?? null,
       quality: anchor.quality ?? null,
+      resolution: anchor.resolution ?? null,
     });
   }
 

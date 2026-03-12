@@ -147,14 +147,16 @@ export function GlobalGenerationBar() {
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">
-                          {group.workflow_name ?? 'Generation'}
+                          {group.job_type === 'upscale'
+                            ? `Upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
+                            : (group.workflow_name ?? 'Generation')}
                           {group.product_name ? ` — ${group.product_name}` : ''}
                         </p>
                         <p className="text-[11px] text-muted-foreground">
                           {isBatch
                             ? `${group.completedCount}/${group.totalCount} done · ${elapsed}`
                             : isProcessing
-                              ? `Generating… ${elapsed}`
+                              ? `${group.job_type === 'upscale' ? 'Upscaling' : 'Generating'}… ${elapsed}`
                               : `Queued · ${elapsed}`}
                         </p>
                       </div>
