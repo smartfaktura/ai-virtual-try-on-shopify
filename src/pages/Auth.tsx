@@ -97,9 +97,16 @@ export default function Auth() {
         setFormError('An account with this email already exists. Try signing in instead.');
         setMode('login');
       } else if (data?.user && !data.user.confirmed_at) {
+        // Save marketing preference after profile is auto-created
+        if (data.user.id) {
+          supabase.from('profiles').update({ marketing_emails_opted_in: marketingOptIn }).eq('user_id', data.user.id).then(() => {});
+        }
         await supabase.auth.resend({ type: 'signup', email });
         setSignupComplete(true);
       } else {
+        if (data?.user?.id) {
+          supabase.from('profiles').update({ marketing_emails_opted_in: marketingOptIn }).eq('user_id', data.user.id).then(() => {});
+        }
         setSignupComplete(true);
       }
     } else {
