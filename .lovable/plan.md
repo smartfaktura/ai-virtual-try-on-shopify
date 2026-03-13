@@ -1,30 +1,34 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Shopify CSV Export Import — Replace "Coming Soon" with Working Importer
 
-### Issues Found
+### What We're Building
+Replace the `ShopifyImportTab` placeholder with a functional Shopify CSV importer that:
+1. Shows a 3-step mini guide on how to export products from Shopify admin
+2. Accepts the Shopify CSV export file
+3. Parses the Shopify-specific format (deduplicates by `Handle`, maps `Title`, grabs the first `Image Src` where `Image Position` = 1)
+4. Shows a preview table, then bulk-inserts into `user_products`
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Shopify CSV Format Notes
+- Multiple rows share the same `Handle` (variants + extra images)
+- Key columns: `Handle` (0), `Title` (1), `Type` (5), `Body (HTML)` (2), `Image Src` (32), `Image Position` (33)
+- Only the first row per Handle has the Title populated
+- We take the image with `Image Position` = "1" as the primary image
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Changes
 
-### Plan
+**File: `src/components/app/ShopifyImportTab.tsx`** — full rewrite
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+- Remove the "Coming Soon" placeholder
+- Add a collapsible 3-step Shopify export guide:
+  1. Go to Shopify Admin → Products
+  2. Click Export → Select "All products" → CSV for Excel/Numbers
+  3. Upload the exported file below
+- Add a CSV drop zone (reuse the same drag/drop pattern from `CsvImportTab`)
+- Parse logic: use the existing `parseCSV` helper, then group rows by `Handle`, extract Title from first row with a title, pick `Image Src` where `Image Position` is "1" (or first available image), use `Type` as product_type
+- Show preview table with product count, valid/invalid badges
+- Import button inserts deduplicated products into `user_products` (same pattern as `CsvImportTab`)
+- Keep the "App coming soon" as a small subtle note at the bottom: "Direct Shopify sync is coming soon. For now, use the CSV export method above."
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+No database changes needed — uses existing `user_products` table and the same insert pattern as `CsvImportTab`.
 
