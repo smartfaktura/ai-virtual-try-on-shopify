@@ -1,22 +1,30 @@
 
 
-## Update Pricing Plan Features — Virtual Try-On for All Plans
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The user wants two changes:
-1. **Remove "Try-On mode"** from the Starter plan (line 1446) since Virtual Try-On is included in all plans
-2. **Add "Virtual Try-On"** to the Free plan's feature list (and ensure it's listed on all plans consistently)
+### Issues Found
 
-Since all workflows (including Virtual Try-On) are available to all plans, the feature lists should reflect this consistently.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Changes in `src/data/mockData.ts`
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**Free plan** (line 1425-1432): Replace `'All workflows'` with `'All workflows incl. Virtual Try-On'` to make it explicit.
+### Plan
 
-**Starter plan** (line 1441-1449): Remove the `'Try-On mode'` line entirely — it's redundant since all plans include it. Add `'All workflows incl. Virtual Try-On'` in its place to match Free.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**Growth plan** (line 1460-1468): Add `'All workflows incl. Virtual Try-On'` as first feature (before Batch generation) for consistency.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**Pro plan** (line 1482-1491): Add `'All workflows incl. Virtual Try-On'` as first feature for consistency.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-This makes it clear across all plans that Virtual Try-On is universally included, while removing the misleading "Try-On mode" from Starter that implied it was a paid upgrade.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

@@ -1423,7 +1423,7 @@ export const pricingPlans: PricingPlan[] = [
     annualPrice: 0,
     credits: 20,
     features: [
-      'All workflows',
+      'All workflows incl. Virtual Try-On',
       'Freestyle generation',
       'All Models & Scenes',
       'Upscale to 2K & 4K',
@@ -1439,11 +1439,11 @@ export const pricingPlans: PricingPlan[] = [
     annualPrice: 372,
     credits: 500,
     features: [
+      'All workflows incl. Virtual Try-On',
       'Batch generation (3 scenes)',
       'Freestyle generation',
       'All Models & Scenes',
       'Upscale to 2K & 4K',
-      'Try-On mode',
       '3 Brand Profiles',
       'Up to 100 products',
     ],
@@ -1458,6 +1458,7 @@ export const pricingPlans: PricingPlan[] = [
     annualPrice: 756,
     credits: 1500,
     features: [
+      'All workflows incl. Virtual Try-On',
       'Batch generation (3 scenes)',
       'Freestyle generation',
       'All Models & Scenes',
@@ -1480,6 +1481,7 @@ export const pricingPlans: PricingPlan[] = [
     annualPrice: 1716,
     credits: 4500,
     features: [
+      'All workflows incl. Virtual Try-On',
       'Batch generation (3 scenes)',
       'Freestyle generation',
       'All Models & Scenes',
