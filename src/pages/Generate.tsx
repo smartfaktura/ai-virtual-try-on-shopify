@@ -1679,39 +1679,42 @@ export default function Generate() {
                   </Alert>
                 )}
 
-                {/* Recent uploads gallery for interior/exterior staging */}
-                {isInteriorDesign && previousUploads.length > 0 && !scratchUpload && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Your Recent Uploads</Label>
-                    <p className="text-xs text-muted-foreground">Click to reuse a previously uploaded photo</p>
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
-                      {previousUploads.map((upload) => (
-                        <button
-                          key={upload.name}
-                          type="button"
-                          onClick={() => {
-                            setScratchUpload({
-                              file: new File([], upload.name),
-                              previewUrl: upload.url,
-                              uploadedUrl: upload.url,
-                              productInfo: { title: isInteriorDesign ? 'Uploaded Room' : upload.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').replace(/^\d+-\w+\s*/, ''), productType: isInteriorDesign ? 'Room' : '', description: '' },
-                            });
-                          }}
-                          className="aspect-square rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors bg-muted"
-                        >
-                          <img src={upload.url} alt="Previous upload" className="w-full h-full object-cover" loading="lazy" />
-                        </button>
-                      ))}
-                    </div>
-                    <Separator />
-                  </div>
-                )}
-
                 <UploadSourceCard scratchUpload={scratchUpload} onUpload={setScratchUpload} onRemove={() => setScratchUpload(null)}
                   onUpdateProductInfo={info => { setScratchUpload(prev => prev ? { ...prev, productInfo: info } : prev); }}
                   isUploading={isUploading}
                   variant={isInteriorDesign ? 'room' : 'product'}
                 />
+
+                {/* Recent uploads as collapsible section below upload area */}
+                {isInteriorDesign && previousUploads.length > 0 && !scratchUpload && (
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group w-full">
+                      <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" />
+                      Or reuse a previous photo ({previousUploads.length} available)
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-3">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                        {previousUploads.slice(0, 10).map((upload) => (
+                          <button
+                            key={upload.name}
+                            type="button"
+                            onClick={() => {
+                              setScratchUpload({
+                                file: new File([], upload.name),
+                                previewUrl: upload.url,
+                                uploadedUrl: upload.url,
+                                productInfo: { title: 'Uploaded Room', productType: 'Room', description: '' },
+                              });
+                            }}
+                            className="aspect-square rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors bg-muted"
+                          >
+                            <img src={upload.url} alt="Previous upload" className="w-full h-full object-cover" loading="lazy" />
+                          </button>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
 
                 {/* Interior / Exterior Staging: Room Details right below the upload */}
                 {isInteriorDesign && scratchUpload && (
