@@ -207,7 +207,9 @@ export function FreestyleShowcaseSection() {
                         <img
                           src={chip.thumb}
                           alt={chip.label}
-                          className="w-4 h-4 sm:w-5 sm:h-5 object-cover rounded shrink-0"
+                          width={20}
+                          height={20}
+                          className="w-4 h-4 sm:w-5 sm:h-5 object-cover rounded ring-1 ring-border/40 bg-muted shrink-0"
                         />
                       ) : (
                         <Icon className="w-3.5 h-3.5 shrink-0" />
