@@ -229,7 +229,8 @@ function polishUserPrompt(
     );
   } else {
     layers.push(`Professional photography: ${rawPrompt}`);
-    layers.push(buildPhotographyDNA());
+    const wantsPeople = context.hasModel || context.hasProduct;
+    layers.push(wantsPeople ? buildPhotographyDNA() : buildGenericDNA());
   }
 
   // Brand profile layer
