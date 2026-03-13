@@ -14,7 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { groupJobsIntoBatches } from '@/lib/batchGrouping';
 import type { ActiveJob } from '@/lib/batchGrouping';
 import type { Workflow } from '@/types/workflow';
-import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
+import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 
 export type { Workflow } from '@/types/workflow';
 
@@ -336,7 +336,7 @@ export default function Workflows() {
               reversed={index % 2 !== 0}
             />
           ))}
-          <MissingRequestBanner category="workflow" compact />
+          <FeedbackBanner />
         </div>
       )}
     </PageHeader>
