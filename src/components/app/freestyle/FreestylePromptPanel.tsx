@@ -100,6 +100,25 @@ export function FreestylePromptPanel({
   const dragCounterRef = useRef(0);
   const touchStartY = useRef<number | null>(null);
 
+  // Clipboard paste support for images
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items || !onFileDrop) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) onFileDrop(file);
+          return;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [onFileDrop]);
+  const touchStartY = useRef<number | null>(null);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
   }, []);
