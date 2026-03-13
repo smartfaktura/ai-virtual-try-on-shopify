@@ -308,7 +308,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
           const uiConfig = (wf?.generation_config as any)?.ui_config;
           const variations = (wf?.generation_config as any)?.variation_strategy?.variations || [];
           if (variations.length > 0 && !wf?.uses_tryon) {
-            if (!workflowRandomScenes[wfId] && (!workflowSceneSelections[wfId] || workflowSceneSelections[wfId].size === 0)) {
+            if (!randomScenes[wfId] && (!workflowSceneSelections[wfId] || workflowSceneSelections[wfId].size === 0)) {
               return `"${wf?.name}" needs at least one scene (or enable Random)`;
             }
           }
