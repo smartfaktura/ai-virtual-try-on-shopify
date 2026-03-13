@@ -1,30 +1,45 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Multi-Product Virtual Try-On Loading State
 
-### Issues Found
+The screenshot shows the multi-product generating overlay lacks time estimates and feels "glitched" — it only shows "0 of 3 products complete" with a flat progress bar and product chips, but no elapsed timer, estimated time, or per-product active indicator.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes in `src/pages/Generate.tsx`
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**Add elapsed timer and time estimate to the multi-product progress section (lines 3873-3910):**
 
-### Plan
+1. **Add elapsed timer state** — track a `multiProductStartTime` ref that gets set when entering multi-product generating mode. Display elapsed seconds alongside the progress.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+2. **Add estimated time** — calculate based on product count × ~90s per product (Pro model for try-on). Show "Est. ~X-Y min" below the progress bar.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+3. **Show the active QueuePositionIndicator inside multi-product mode** — currently it's explicitly hidden (`!isMultiProductMode`). Add the `activeJob` indicator below the product chips so users can see per-product processing status (with the spinning timer, team messages, etc.).
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+4. **Add overtime messaging** — if elapsed exceeds estimate, show reassuring text like "Taking a bit longer — still working..."
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**Specific edits:**
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+- **Lines 3873-3910**: Enhance the multi-product progress block:
+  - Add an elapsed timer (seconds counter) using a `useEffect` interval
+  - Add estimated time text: `Est. ~${Math.ceil(productQueue.length * 1.5)}-${productQueue.length * 3} min`
+  - After the product chips (line 3908), add the `QueuePositionIndicator` for the currently active job so users see real-time per-product progress with the team avatar rotation
+  - Add a subtle "currently processing" label next to the active product chip
+
+- **Around line 227**: Add a ref for tracking multi-product start time:
+  ```tsx
+  const multiProductStartRef = useRef<number>(0);
+  ```
+
+- **Around lines 737-738**: Set the start time when entering multi-product generation:
+  ```tsx
+  multiProductStartRef.current = Date.now();
+  ```
+
+### Result
+The loading state will show:
+- "1 of 3 products complete — 45s elapsed"  
+- "Est. ~3-6 min for 3 products"
+- Progress bar with percentage
+- Product chips with active/done states
+- QueuePositionIndicator for the currently processing product (with team avatars, per-product timer)
+- Cancel button
 
