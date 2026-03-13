@@ -3367,7 +3367,7 @@ export default function Generate() {
                       <p className="text-xs text-muted-foreground">Tap a style to select it</p>
                     ) : (
                       <p className="text-xs text-muted-foreground">
-                        1 style selected
+                        {selectedVariationIndices.size} style{selectedVariationIndices.size !== 1 ? 's' : ''} selected
                       </p>
                     )
                   ) : (
