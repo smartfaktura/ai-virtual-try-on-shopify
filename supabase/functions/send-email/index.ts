@@ -98,7 +98,7 @@ function welcomeEmail(data: { displayName?: string }): string {
         3. Generate studio-quality images in seconds
       </p>
     </div>
-    ${ctaButton("Start Creating", "https://vovv.ai/dashboard")}
+    ${ctaButton("Start Creating", "https://vovv.ai/app")}
   `);
 }
 
@@ -129,7 +129,7 @@ function generationCompleteEmail(data: { imageCount?: number; jobType?: string; 
         </tr>
       </table>
     </div>
-    ${ctaButton("View Results", "https://vovv.ai/dashboard")}
+    ${ctaButton("View Results", "https://vovv.ai/app/library")}
   `);
 }
 
@@ -219,7 +219,7 @@ function generationFailedEmail(data: { jobType?: string; errorMessage?: string; 
         </tr>
       </table>
     </div>
-    ${ctaButton("Try Again", "https://vovv.ai/dashboard")}
+    ${ctaButton("Try Again", "https://vovv.ai/app")}
   `);
 }
 
