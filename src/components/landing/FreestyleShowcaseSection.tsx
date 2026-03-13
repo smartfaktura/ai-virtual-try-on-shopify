@@ -14,9 +14,9 @@ const PROMPT_TEXT_MOBILE = 'Shoot my crop top on a court, studio, and café';
 const CYCLE_MS = 8000;
 
 const MODEL_AVATARS = [
-  { name: 'Zara', src: getLandingAssetUrl('models/model-female-athletic-mixed.jpg') },
-  { name: 'Freya', src: getLandingAssetUrl('models/model-female-average-nordic.jpg') },
-  { name: 'Olivia', src: getLandingAssetUrl('models/model-035-olivia.jpg') },
+  { name: 'Zara', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-athletic-mixed.jpg'), { width: 40, quality: 50 }) },
+  { name: 'Freya', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-average-nordic.jpg'), { width: 40, quality: 50 }) },
+  { name: 'Olivia', src: getOptimizedUrl(getLandingAssetUrl('models/model-035-olivia.jpg'), { width: 40, quality: 50 }) },
 ];
 
 const CHIPS = [
