@@ -41,7 +41,7 @@ const CHIPS = [
     icon: Camera,
     label: 'Select scenes',
     mobileLabel: 'Scenes',
-    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { width: 40, quality: 50 }),
+    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { quality: 50 }),
     delay: 2200,
   },
 ];
