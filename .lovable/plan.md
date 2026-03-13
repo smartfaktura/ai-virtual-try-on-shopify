@@ -1,29 +1,30 @@
 
 
-## Current State
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-**Product upload limits are display-only** — there is no backend enforcement. The `user_products` table RLS simply checks `auth.uid() = user_id` with no count restrictions. Any user can upload as many products as they want regardless of plan. The limits shown in pricing cards are purely marketing text in `src/data/mockData.ts`.
+### Issues Found
 
-## Proposed Changes
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-Update the feature text in `src/data/mockData.ts` to reflect more generous and sensible product limits:
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-| Plan | Current | Proposed |
-|------|---------|----------|
-| Free | `1 product upload` | `Up to 5 products` |
-| Starter | `Up to 10 products` | `Up to 100 products` |
-| Growth | `Up to 100 products` | `Up to 250 products` |
-| Pro | `Unlimited products` | `Unlimited products` (no change) |
+### Plan
 
-Also noting a few feature inconsistencies visible in the screenshot:
-- **Free plan** says "All workflows" but other plans say "Batch generation (3 scenes)" — Free should probably not claim "All workflows" if it doesn't include batch generation. Should Free say something like "Single generation" instead?
-- **Pro plan** is missing "Priority queue" which Growth has — should Pro also list it?
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-I'd recommend keeping the limits as display text only (no backend enforcement) for now, since adding enforcement would require checking product counts in the insert policy or an edge function, adding friction without clear benefit at this stage.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Single file change
-**`src/data/mockData.ts`** — update the features arrays:
-- Free: `'1 product upload'` → `'Up to 5 products'`
-- Starter: `'Up to 10 products'` → `'Up to 100 products'`  
-- Growth: `'Up to 100 products'` → `'Up to 250 products'`
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
