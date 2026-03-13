@@ -811,21 +811,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             next.delete(wf.id);
                           } else {
                             next.add(wf.id);
+                            // Initialize empty scene set — user must pick explicitly
                             if (variations.length > 0 && !workflowSceneSelections[wf.id]) {
                               setWorkflowSceneSelections(prev => ({
                                 ...prev,
-                                [wf.id]: new Set(variations.map((v: { label: string }) => v.label)),
+                                [wf.id]: new Set<string>(),
                               }));
-                            }
-                            const firstSection = (variations.length > 0 && !wf.uses_tryon)
-                              ? 'scenes'
-                              : showPosePicker
-                                ? 'poses'
-                                : needsModels
-                                  ? 'models'
-                                  : null;
-                            if (firstSection) {
-                              setExpandedSection(prev => ({ ...prev, [wf.id]: firstSection }));
                             }
                           }
                           setSelectedWorkflowIds(next);
