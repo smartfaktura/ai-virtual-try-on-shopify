@@ -1,46 +1,30 @@
 
 
-## Redesign Staging Animation as Before/After Slider
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Current Problem
-The staging animation cycles through images with a simple crossfade — it doesn't clearly show the transformation from empty to styled. The user wants a slow before/after wipe slider effect.
+### Issues Found
 
-### New Animation Flow
-1. Show empty room (hold 2s)
-2. Wipe divider slides left-to-right revealing "Japandi" (1.5s wipe)
-3. Hold styled result (2s), show style label + "Generated" badge
-4. Wipe back right-to-left revealing empty room (1.5s)
-5. Pause on empty (1.5s)
-6. Wipe to "Contemporary" (same pattern)
-7. Back to empty, then "Eclectic", loop
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-Total per style: ~7s. Full cycle: ~21s. Slow and deliberate.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Changes
+### Plan
 
-**`src/components/app/WorkflowAnimatedThumbnail.tsx` — Replace `StagingThumbnail`**
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-- Replace the crossfade carousel with a wipe-based before/after slider (similar to the upscale mode but cycling through styles)
-- State machine with phases: `empty-hold` → `wiping-in` → `styled-hold` → `wiping-out` → next style
-- Empty room image is always the base layer; styled image is clipped with `clip-path: inset()` animated via CSS keyframes
-- A vertical divider line (2px white) tracks the wipe edge (reuse `wf-divider-move` pattern from upscale)
-- Style label badge updates per style with fade transition
-- "Generated" badge appears during `styled-hold` phase
-- Progress dots remain to show which style is active
-- Use `object-cover` without any scale transforms to keep images natural (no zoom)
-- Optimize background URLs with `getOptimizedUrl({ quality: 60 })` for performance
-- All transitions use `ease-in-out` for smoothness; no abrupt opacity changes
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**`src/components/app/workflowAnimationData.tsx`** — No changes needed (already has correct data)
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### Key Implementation Detail
-```tsx
-// Phase cycle per style:
-// empty-hold (2s) → wiping-in (1.5s) → styled-hold (2.5s) → wiping-out (1.5s)
-// Then advance styleIndex and repeat
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-// Wipe-in: clip-path goes from inset(0 100% 0 0) to inset(0 0% 0 0)
-// Wipe-out: clip-path goes from inset(0 0% 0 0) to inset(0 100% 0 0)
-// Divider line tracks the wipe edge position
-```
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
