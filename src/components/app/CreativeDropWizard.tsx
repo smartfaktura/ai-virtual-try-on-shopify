@@ -306,6 +306,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         for (const wfId of selectedWorkflowIds) {
           const wf = workflows.find(w => w.id === wfId);
           const uiConfig = (wf?.generation_config as any)?.ui_config;
+          const variations = (wf?.generation_config as any)?.variation_strategy?.variations || [];
+          if (variations.length > 0 && !wf?.uses_tryon) {
+            if (!workflowRandomScenes[wfId] && (!workflowSceneSelections[wfId] || workflowSceneSelections[wfId].size === 0)) {
+              return `"${wf?.name}" needs at least one scene (or enable Random)`;
+            }
+          }
           if (wf?.uses_tryon || uiConfig?.show_model_picker) {
             if (!randomModels[wfId] && !workflowModelSelections[wfId]?.length) {
               return `"${wf?.name}" requires at least one model (or enable Random)`;
