@@ -19,6 +19,7 @@ interface MultiProductProgressBannerProps {
   generatingProgress: number;
   activeJob?: QueueJob | null;
   onCancel?: () => void;
+  totalExpectedImages?: number;
 }
 
 function formatElapsed(seconds: number): string {
@@ -35,6 +36,7 @@ export function MultiProductProgressBanner({
   generatingProgress,
   activeJob,
   onCancel,
+  totalExpectedImages,
 }: MultiProductProgressBannerProps) {
   const [elapsed, setElapsed] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
@@ -58,8 +60,9 @@ export function MultiProductProgressBanner({
 
   const totalProducts = productQueue.length;
   const completedCount = multiProductResults.size;
-  const estimatePerProduct = 90; // seconds for try-on / pro model
-  const totalEstimate = totalProducts * estimatePerProduct;
+  const totalImages = totalExpectedImages || totalProducts;
+  const estimatePerImage = 90; // seconds per image for try-on / pro model
+  const totalEstimate = totalImages * estimatePerImage;
   const estLowMin = Math.max(1, Math.ceil((totalEstimate * 0.7) / 60));
   const estHighMin = Math.ceil((totalEstimate * 1.3) / 60);
 
@@ -77,7 +80,7 @@ export function MultiProductProgressBanner({
       {/* Header with counts and elapsed */}
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">
-          {completedCount} of {totalProducts} products complete
+          {completedCount} of {totalProducts} products{totalExpectedImages ? ` · ${totalImages} images` : ''}
         </span>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
@@ -90,7 +93,7 @@ export function MultiProductProgressBanner({
 
       {/* Time estimate */}
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Est. ~{estLowMin}-{estHighMin} min for {totalProducts} product{totalProducts !== 1 ? 's' : ''}</span>
+        <span>Est. ~{estLowMin}-{estHighMin} min for {totalImages} image{totalImages !== 1 ? 's' : ''}</span>
         <span>{generatingProgress}%</span>
       </div>
 
