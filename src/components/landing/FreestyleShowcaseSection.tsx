@@ -25,7 +25,7 @@ const CHIPS = [
     icon: Package,
     label: 'White Crop Top',
     mobileLabel: 'Crop Top',
-    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { width: 40, quality: 50 }),
+    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { quality: 50 }),
     delay: 1500,
   },
   {
