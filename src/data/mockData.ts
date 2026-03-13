@@ -1445,7 +1445,7 @@ export const pricingPlans: PricingPlan[] = [
       'Upscale to 2K & 4K',
       'Try-On mode',
       '3 Brand Profiles',
-      'Up to 10 products',
+      'Up to 100 products',
     ],
     ctaText: 'Get Starter',
     stripePriceIdMonthly: 'price_1T26oWC8WPO5rhKrKggeWeLh',
