@@ -314,7 +314,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
       const wf = configWorkflow;
       const uiConfig = (wf.generation_config as any)?.ui_config;
       const variations = (wf.generation_config as any)?.variation_strategy?.variations || [];
-      if (variations.length > 0 && !wf.uses_tryon) {
+      if (variations.length > 0) {
         if (!randomScenes[wf.id] && (!workflowSceneSelections[wf.id] || workflowSceneSelections[wf.id].size === 0)) {
           return `Select at least one scene or enable Random`;
         }
