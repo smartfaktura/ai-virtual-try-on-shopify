@@ -924,7 +924,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 )}
 
                 {/* ── Scenes (full grid, no collapsible) ── */}
-                {variations.length > 0 && !wf.uses_tryon && (
+{variations.length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <p className="section-label">Scenes</p>
