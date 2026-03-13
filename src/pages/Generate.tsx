@@ -3872,41 +3872,14 @@ export default function Generate() {
 
             {/* Multi-product progress banner */}
             {isMultiProductMode && (
-              <div className="w-full max-w-md space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">
-                    {multiProductResults.size} of {productQueue.length} products complete
-                  </span>
-                  <span className="text-muted-foreground">{generatingProgress}%</span>
-                </div>
-                <Progress value={generatingProgress} className="h-2" />
-                <div className="flex flex-wrap gap-1.5">
-                  {productQueue.map((p) => {
-                    const thumb = p.images?.[0]?.url;
-                    const isDone = multiProductResults.has(p.id);
-                    const isProcessing = multiProductJobIds.has(p.id) && !isDone;
-                    return (
-                      <div
-                        key={p.id}
-                        className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] transition-all ${
-                          isDone ? 'border-primary/30 bg-primary/5' :
-                          isProcessing ? 'border-primary bg-primary/10 ring-1 ring-primary/30' :
-                          'border-border bg-muted/30 opacity-60'
-                        }`}
-                      >
-                        {thumb ? (
-                          <img src={thumb} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
-                        ) : (
-                          <div className="w-5 h-5 rounded-full bg-muted flex-shrink-0" />
-                        )}
-                        <span className="truncate max-w-[120px]">{p.title}</span>
-                        {isDone && <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />}
-                        {isProcessing && !isDone && <Loader2 className="w-3 h-3 text-primary animate-spin flex-shrink-0" />}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <MultiProductProgressBanner
+                productQueue={productQueue}
+                multiProductResults={multiProductResults}
+                multiProductJobIds={multiProductJobIds}
+                generatingProgress={generatingProgress}
+                activeJob={activeJob}
+                onCancel={cancelQueue}
+              />
             )}
 
             {/* Batch progress - enhanced (hidden in multi-product mode) */}
