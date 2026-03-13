@@ -36,6 +36,7 @@ export function MultiProductProgressBanner({
   generatingProgress,
   activeJob,
   onCancel,
+  totalExpectedImages,
 }: MultiProductProgressBannerProps) {
   const [elapsed, setElapsed] = useState(0);
   const [teamIndex, setTeamIndex] = useState(0);
