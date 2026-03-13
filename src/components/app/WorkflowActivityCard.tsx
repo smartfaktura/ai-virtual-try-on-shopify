@@ -172,9 +172,12 @@ export function WorkflowActivityCard({
                   {group.product_name ? ` — ${group.product_name}` : ''}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {isBatch
-                    ? `All ${group.totalCount} batches complete`
-                    : 'Generation complete'}
+                  {(() => {
+                    const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
+                    return isBatch
+                      ? `All ${group.totalCount} ${isStagingWorkflow ? 'styles' : 'batches'} complete`
+                      : 'Generation complete';
+                  })()}
                   {' · images ready'}
                 </p>
               </div>
