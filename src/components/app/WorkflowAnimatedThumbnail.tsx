@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Home } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 /* ── Image preloader hook ── */
