@@ -1,35 +1,30 @@
 
 
-## Improve Shopify Import: Interactive Dropzone + Selectable Product Review
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Changes (single file: `src/components/app/ShopifyImportTab.tsx`)
+### Issues Found
 
-**1. Enhanced Dropzone**
-- Make the entire dropzone a clickable `<label>` with hover/active states and a prominent "Browse files" button
-- Add animated upload icon on drag, subtle pulse animation
-- Rounded-2xl with better padding, Shopify green accent on drag
-- Clearer visual hierarchy: icon → headline → subtitle → file types accepted
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**2. Product Selection Review (replaces current flat table)**
-After CSV is parsed, show a review panel with:
-- **Select All / Deselect All** toggle at the top with count indicator
-- **Each product row gets a checkbox** for individual selection/deselection
-- Image thumbnail + title + type + status columns (keep existing layout but add checkbox)
-- Invalid products are shown but grayed out and unchecked (not selectable)
-- **Filter chips**: "All", "Valid only", "Missing image" to quickly filter the list
-- **Import button** updates dynamically: "Import 12 of 45 Products" based on selection
-- Products without images still importable (user can toggle them on) — only truly invalid ones (no title) stay locked out
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**3. Interaction Flow**
-```text
-Upload CSV → Parse → Review panel with all valid pre-selected
-  ├─ User can uncheck products they don't want
-  ├─ Filter by status
-  ├─ "Select All" / "Deselect All"
-  └─ Click "Import X Products" → confirms and imports selected only
-```
+### Plan
 
-No separate confirmation dialog needed — the review table with checkboxes IS the confirmation step. This avoids an extra modal-in-modal which feels heavy.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### No database or backend changes needed.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
