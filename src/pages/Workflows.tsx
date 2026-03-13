@@ -336,7 +336,7 @@ export default function Workflows() {
               reversed={index % 2 !== 0}
             />
           ))}
-          <MissingRequestBanner category="workflow" />
+          <MissingRequestBanner category="workflow" compact />
         </div>
       )}
     </PageHeader>
