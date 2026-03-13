@@ -82,23 +82,31 @@ function detectFullBodyIntent(prompt: string): boolean {
   return FULL_BODY_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-// ── Photography DNA (Pro camera style) ────────────────────────────────────
+// ── Photography DNA (Pro camera style — for people/fashion shots) ─────────
 function buildPhotographyDNA(): string {
   return `Shot on 85mm f/2.8 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Razor-sharp focus, micro-contrast. Natural skin texture, visible material textures and fine stitching. Subtle film grain, elegant highlight roll-off.`;
 }
 
+// ── Generic DNA (for scene/architecture/product-only shots without people) ─
+function buildGenericDNA(): string {
+  return `Ultra high resolution, photorealistic, razor-sharp details, natural lighting, professional photography. Visible material textures, realistic surfaces. Subtle film grain, elegant highlight roll-off.`;
+}
+
 // ── Negative prompt (always appended when polish is on) ───────────────────
-function buildNegativePrompt(cameraStyle?: 'pro' | 'natural'): string {
+function buildNegativePrompt(cameraStyle?: 'pro' | 'natural', hasPeople = true): string {
   const blurRule = cameraStyle === 'natural'
     ? 'No blurry or out-of-focus areas. No bokeh. No shallow depth of field. Everything must be sharp from foreground to background.'
     : 'No blurry or out-of-focus areas unless intentionally bokeh';
 
-  return `
-CRITICAL — DO NOT include any of the following:
-
+  const anatomyRules = hasPeople ? `
 - Exactly 2 arms, 2 hands (5 fingers each), 2 legs per person — no extra, missing, or merged limbs
 - Natural joint articulation only — no impossible bends, twisted spines, or backward limbs
-- No duplicated or phantom body parts
+- No duplicated or phantom body parts` : `
+- No people, no human figures, no body parts`;
+
+  return `
+CRITICAL — DO NOT include any of the following:
+${anatomyRules}
 - ${blurRule}
 - No AI-looking skin smoothing or plastic textures
 - No collage layouts or split-screen compositions
