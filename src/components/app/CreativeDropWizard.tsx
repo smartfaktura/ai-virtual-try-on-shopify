@@ -857,6 +857,14 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         </div>
                       </button>
 
+                      {/* Configure hint when selected but no scenes picked */}
+                      {isSelected && variations.length > 0 && !wf.uses_tryon && !isRandomScenes && (!workflowSceneSelections[wf.id] || workflowSceneSelections[wf.id].size === 0) && (
+                        <div className="flex items-center gap-1.5 mt-1.5 ml-1 text-xs text-amber-600 dark:text-amber-400 animate-fade-in">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>Configure scenes below to continue</span>
+                        </div>
+                      )}
+
                       {/* ── Expanded per-workflow config — collapsible sections ── */}
                       {isSelected && (
                         <div className="bg-muted/30 rounded-xl p-4 mt-2 space-y-2 animate-fade-in">
