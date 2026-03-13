@@ -47,9 +47,9 @@ const CHIPS = [
 ];
 
 const RESULT_CARDS = [
-  { label: 'Studio', src: getOptimizedUrl(getLandingAssetUrl('showcase/virtual-tryon-1.png'), { width: 400, quality: 60 }) },
-  { label: 'Basketball Court', src: getOptimizedUrl(getLandingAssetUrl('showcase/virtual-tryon-2.png'), { width: 400, quality: 60 }) },
-  { label: 'Café', src: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { width: 400, quality: 60 }) },
+  { label: 'Studio', src: getOptimizedUrl(getLandingAssetUrl('showcase/virtual-tryon-1.png'), { quality: 60 }) },
+  { label: 'Basketball Court', src: getOptimizedUrl(getLandingAssetUrl('showcase/virtual-tryon-2.png'), { quality: 60 }) },
+  { label: 'Café', src: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { quality: 60 }) },
 ];
 
 type ChipKey = 'product' | 'model' | 'scene';
