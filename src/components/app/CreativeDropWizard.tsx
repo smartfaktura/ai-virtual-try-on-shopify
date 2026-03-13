@@ -21,6 +21,7 @@ import {
   Sparkles, Search, Loader2,
   Zap, CreditCard, Clock, RocketIcon, Repeat, Plus, Trash2, ChevronDown, Package, Info,
   LayoutGrid, List, Shuffle, Leaf, Sun, Snowflake, Heart, ShoppingBag, GraduationCap, TreePine,
+  AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
