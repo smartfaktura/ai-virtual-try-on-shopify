@@ -612,17 +612,6 @@ function StagingThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
             </div>
           </div>
 
-          {/* Progress dots — show which style is active */}
-          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-            {styledBackgrounds.map((_, i) => (
-              <div
-                key={i}
-                className={`rounded-full transition-all duration-500 ${
-                  i === styleIndex ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'
-                }`}
-              />
-            ))}
-          </div>
         </>
       )}
 
