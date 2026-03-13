@@ -3915,10 +3915,10 @@ export default function Generate() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">
                     {batchState.allDone
-                      ? `All ${batchState.totalJobs} batches complete`
-                      : `Image ${Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...`}
+                      ? isInteriorDesign ? `All ${batchState.totalJobs} styles complete` : `All ${batchState.totalJobs} batches complete`
+                      : isInteriorDesign ? `Style ${Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...` : `Image ${Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...`}
                   </span>
-                  <span className="text-muted-foreground">{batchState.readyImages} images ready</span>
+                  <span className="text-muted-foreground">{batchState.readyImages} image{batchState.readyImages !== 1 ? 's' : ''} ready</span>
                 </div>
                 <Progress value={(batchState.completedJobs + batchState.failedJobs) / batchState.totalJobs * 100} className="h-2" />
                 {batchState.failedJobs > 0 && (
