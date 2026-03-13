@@ -129,7 +129,7 @@ function generationCompleteEmail(data: { imageCount?: number; jobType?: string; 
         </tr>
       </table>
     </div>
-    ${ctaButton("View Results", "https://vovv.ai/dashboard")}
+    ${ctaButton("View Results", "https://vovv.ai/app/library")}
   `);
 }
 
