@@ -1,30 +1,37 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Interior/Exterior Staging: Button Text, Style Count, Progress Tracking
 
-### Issues Found
+### Problems Found
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+1. **Button text hardcoded**: Line 3716 says `'Generate 1 Image'` for all interior design cases regardless of how many styles are selected.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+2. **Style count hardcoded**: Line 3370 always shows `"1 style selected"` instead of the actual count.
 
-### Plan
+3. **Generating progress**: The batch progress (lines 3912-3932) shows "Image X of Y" but for interior staging it should say "Style X of Y" or "Scene X of Y generating...". The single-job path (lines 3934-3943) has no scene-level progress at all since 3 styles are sent as 1 job.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+4. **Activity card**: `WorkflowActivityCard.tsx` line 92 shows `"X of Y batches complete"` — should say "styles" for interior staging. Time estimate (line 104-105) shows per-image but doesn't account for multiple styles in a single job.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### Changes
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**`src/pages/Generate.tsx`** (4 fixes):
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+1. **Line 3370** — Fix hardcoded "1 style selected":
+   - Change to `{selectedVariationIndices.size} style{selectedVariationIndices.size !== 1 ? 's' : ''} selected`
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+2. **Line 3716** — Fix button text:
+   - Change from `'Generate 1 Image'` to:
+   - `Generate ${selectedVariationIndices.size} Staging Image${selectedVariationIndices.size !== 1 ? 's' : ''}`
+
+3. **Lines 3912-3931** — Batch progress: replace "Image" / "batches" with "Style" when `isInteriorDesign`:
+   - `Style ${completed + 1} of ${total} generating...`
+   - `All ${total} styles complete`
+
+4. **Lines 3858-3861** — Generating title: already correct ("Creating Interior / Exterior Staging...")
+
+**`src/components/app/WorkflowActivityCard.tsx`** (2 fixes):
+
+1. **Line 86-92** — Activity status text: detect interior staging from `workflow_name` containing "Interior" or "Staging" and show "X of Y styles complete" instead of "X of Y batches complete"
+
+2. **Lines 100-106** — Time estimate: for interior staging batches, show total estimate based on style count (e.g., "est. ~2-4 min for 3 styles")
 
