@@ -1428,7 +1428,7 @@ export const pricingPlans: PricingPlan[] = [
       'All Models & Scenes',
       'Upscale to 2K & 4K',
       '1 Brand Profile',
-      '1 product upload',
+      'Up to 5 products',
     ],
     ctaText: 'Get Started Free',
   },
