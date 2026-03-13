@@ -13,8 +13,8 @@ export interface UpscaleItem {
 }
 
 const CREDIT_COST: Record<UpscaleResolution, number> = {
-  '2k': 8,
-  '4k': 12,
+  '2k': 10,
+  '4k': 15,
 };
 
 const MAX_BATCH = 10;

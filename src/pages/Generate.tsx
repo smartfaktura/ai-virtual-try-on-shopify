@@ -1460,7 +1460,7 @@ export default function Generate() {
   const multiProductCount = isMultiProductMode ? productQueue.length : 1;
   const tryOnSceneCount = generationMode === 'virtual-try-on' ? Math.max(1, selectedPoses.size) : 1;
   const upscaleImageCount = isUpscale ? (isMultiProductMode ? productQueue.length : 1) : 0;
-  const upscaleCreditCost = isUpscale ? upscaleImageCount * (upscaleResolution === '4k' ? 12 : 8) : 0;
+  const upscaleCreditCost = isUpscale ? upscaleImageCount * (upscaleResolution === '4k' ? 15 : 10) : 0;
   const singleProductCreditCost = isUpscale ? 0 : (hasWorkflowConfig ? workflowImageCount * 8 : parseInt(imageCount) * 8 * tryOnSceneCount);
   const creditCost = isUpscale ? upscaleCreditCost : (singleProductCreditCost * multiProductCount) + extraProductCredits;
 
@@ -3016,8 +3016,8 @@ export default function Generate() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {([
-                  { key: '2k' as const, label: '2K Resolution', desc: '2048px — Great for web, social media & listings', credits: 8, badge: 'Standard' },
-                  { key: '4k' as const, label: '4K Resolution', desc: '4096px — Print-ready, maximum detail & sharpness', credits: 12, badge: 'Premium' },
+                  { key: '2k' as const, label: '2K Resolution', desc: '2048px — Great for web, social media & listings', credits: 10, badge: 'Standard' },
+                  { key: '4k' as const, label: '4K Resolution', desc: '4096px — Print-ready, maximum detail & sharpness', credits: 15, badge: 'Premium' },
                 ] as const).map(opt => (
                   <button
                     key={opt.key}
@@ -3043,7 +3043,7 @@ export default function Generate() {
               <div>
                 <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                 <p className="text-xs text-muted-foreground">
-                  {upscaleImageCount} image{upscaleImageCount !== 1 ? 's' : ''} × {upscaleResolution === '4k' ? 12 : 8} credits ({upscaleResolution === '4k' ? '4K' : '2K'})
+                  {upscaleImageCount} image{upscaleImageCount !== 1 ? 's' : ''} × {upscaleResolution === '4k' ? 15 : 10} credits ({upscaleResolution === '4k' ? '4K' : '2K'})
                 </p>
               </div>
               {balance >= creditCost ? (
