@@ -5,7 +5,8 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AddProductModal } from '@/components/app/AddProductModal';
-import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Search, LayoutGrid } from 'lucide-react';
+import { Image, CheckCircle, Download, RefreshCw, Maximize2, X, User, List, Palette, Shirt, Upload as UploadIcon, Package, Loader2, Check, Sparkles, Ban, Info, Smartphone, Layers, AlertCircle, Lock, Search, LayoutGrid, ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 
