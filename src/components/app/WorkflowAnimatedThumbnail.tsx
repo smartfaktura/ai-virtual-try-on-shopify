@@ -434,11 +434,127 @@ function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
   );
 }
 
+/* ── Staging mode component ── */
+
+function StagingThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
+  const backgrounds = scene.backgrounds ?? [scene.background];
+  const labels = scene.slideLabels ?? backgrounds.map((_, i) => `Style ${i + 1}`);
+  const INTERVAL = 4000;
+  const [index, setIndex] = useState(0);
+  const [bgLoaded, setBgLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!isActive || backgrounds.length <= 1) return;
+    const t = setInterval(() => {
+      setIndex((i) => (i + 1) % backgrounds.length);
+    }, INTERVAL);
+    return () => clearInterval(t);
+  }, [isActive, backgrounds.length]);
+
+  const prev = (index - 1 + backgrounds.length) % backgrounds.length;
+  const isFirstSlide = index === 0;
+
+  return (
+    <div className="relative w-full h-full overflow-hidden bg-muted">
+      {!bgLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
+      )}
+
+      {/* Previous image */}
+      <img src={backgrounds[prev]} alt="" className="absolute inset-0 w-full h-full object-cover object-top" />
+
+      {/* Current image with crossfade */}
+      <img
+        key={index}
+        src={backgrounds[index]}
+        alt=""
+        className={`absolute inset-0 w-full h-full object-cover object-top ${bgLoaded ? '' : 'opacity-0'}`}
+        style={bgLoaded ? { animation: 'wf-staging-fade 0.8s ease-in-out forwards' } : {}}
+        onLoad={() => setBgLoaded(true)}
+      />
+
+      {/* Gradient overlay */}
+      <div
+        className="absolute inset-0 z-[1]"
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.1))' }}
+      />
+
+      {isActive && (
+        <>
+          {/* Dynamic label badge */}
+          <div
+            key={`label-${index}`}
+            className="absolute top-3 left-3 z-20"
+            style={{ animation: 'wf-staging-label 0.4s ease-out forwards' }}
+          >
+            <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full wf-card-shadow">
+              {isFirstSlide ? (
+                <Home className="w-3 h-3 text-muted-foreground" />
+              ) : (
+                <Sparkles className="w-3 h-3 text-primary" />
+              )}
+              <span className={`text-[11px] font-bold tracking-wide ${isFirstSlide ? 'text-muted-foreground' : 'text-primary'}`}>
+                {labels[index]}
+              </span>
+            </div>
+          </div>
+
+          {/* "Generated" badge on styled slides */}
+          {!isFirstSlide && (
+            <div
+              key={`gen-${index}`}
+              className="absolute bottom-7 right-3 z-20"
+              style={{ animation: 'wf-staging-badge 0.45s cubic-bezier(.34,1.56,.64,1) 0.2s forwards', opacity: 0 }}
+            >
+              <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full wf-card-shadow">
+                <Sparkles className="w-3 h-3 text-primary" />
+                <span className="text-[11px] font-bold text-primary tracking-wide">Generated</span>
+              </div>
+            </div>
+          )}
+
+          {/* Progress dots */}
+          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+            {backgrounds.map((_, i) => (
+              <div
+                key={i}
+                className={`rounded-full transition-all duration-500 ${
+                  i === index ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      <style>{`
+        @keyframes wf-staging-fade {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes wf-staging-label {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes wf-staging-badge {
+          0%   { opacity: 0; transform: translateY(8px) scale(0.6); }
+          70%  { opacity: 1; transform: translateY(-2px) scale(1.05); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .wf-card-shadow {
+          box-shadow: 0 4px 20px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
+        }
+      `}</style>
+    </div>
+  );
+}
+
 /* ── Main component ── */
 
 export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   const isCarousel = scene.mode === 'carousel';
   const isUpscale = scene.mode === 'upscale';
+  const isStaging = scene.mode === 'staging';
   const [iteration, setIteration] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
 
@@ -452,24 +568,25 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
   const elementsReady = usePreloadImages(elementUrls);
 
   // Compute timing from element delays (only used for recipe mode)
-  const maxDelay = (isCarousel || isUpscale || scene.elements.length === 0) ? 0 : Math.max(...scene.elements.map((e) => e.enterDelay));
+  const maxDelay = (isCarousel || isUpscale || isStaging || scene.elements.length === 0) ? 0 : Math.max(...scene.elements.map((e) => e.enterDelay));
   const elementsExitAt = maxDelay + 1.8;
   const badgeAt = elementsExitAt + 0.35;
   const totalDuration = badgeAt + 1.6;
 
   // Loop the animation (recipe mode only)
   useEffect(() => {
-    if (isCarousel || isUpscale || !isActive) {
+    if (isCarousel || isUpscale || isStaging || !isActive) {
       setIteration(0);
       return;
     }
     const timer = setInterval(() => setIteration((i) => i + 1), totalDuration * 1000);
     return () => clearInterval(timer);
-  }, [isActive, totalDuration, isCarousel, isUpscale]);
+  }, [isActive, totalDuration, isCarousel, isUpscale, isStaging]);
 
   // Delegate to specialized components
   if (isCarousel) return <CarouselThumbnail scene={scene} isActive={isActive} />;
   if (isUpscale) return <UpscaleThumbnail scene={scene} isActive={isActive} />;
+  if (isStaging) return <StagingThumbnail scene={scene} isActive={isActive} />;
 
   const bgSrc = scene.backgrounds ? scene.backgrounds[iteration % scene.backgrounds.length] : scene.background;
 
