@@ -143,7 +143,7 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   },
 
   'Interior / Exterior Staging': {
-    mode: 'carousel',
+    mode: 'staging',
     background: '/images/staging/staging-empty.png',
     backgrounds: [
       '/images/staging/staging-empty.png',
@@ -151,16 +151,8 @@ export const workflowScenes: Record<string, WorkflowScene> = {
       '/images/staging/staging-eclectic.png',
       '/images/staging/staging-contemporary.png',
     ],
-    elements: [
-      {
-        type: 'badge', label: 'Room Photo', icon: <Home className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
-      },
-      {
-        type: 'badge', label: '3 Styles', icon: <Layers className="w-3 h-3" />,
-        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
-      },
-    ],
+    slideLabels: ['Empty Room', 'Japandi', 'Eclectic', 'Contemporary'],
+    elements: [],
   },
 
   'Image Upscaling': {
