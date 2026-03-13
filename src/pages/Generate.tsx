@@ -3016,8 +3016,8 @@ export default function Generate() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {([
-                  { key: '2k' as const, label: '2K Resolution', desc: '2048px — Great for web, social media & listings', credits: 8, badge: 'Standard' },
-                  { key: '4k' as const, label: '4K Resolution', desc: '4096px — Print-ready, maximum detail & sharpness', credits: 12, badge: 'Premium' },
+                  { key: '2k' as const, label: '2K Resolution', desc: '2048px — Great for web, social media & listings', credits: 10, badge: 'Standard' },
+                  { key: '4k' as const, label: '4K Resolution', desc: '4096px — Print-ready, maximum detail & sharpness', credits: 15, badge: 'Premium' },
                 ] as const).map(opt => (
                   <button
                     key={opt.key}
