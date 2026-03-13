@@ -143,23 +143,22 @@ export const workflowScenes: Record<string, WorkflowScene> = {
   },
 
   'Interior / Exterior Staging': {
-    background: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+    mode: 'carousel',
+    background: '/images/staging/staging-empty.png',
+    backgrounds: [
+      '/images/staging/staging-empty.png',
+      '/images/staging/staging-japandi.png',
+      '/images/staging/staging-eclectic.png',
+      '/images/staging/staging-contemporary.png',
+    ],
     elements: [
       {
         type: 'badge', label: 'Room Photo', icon: <Home className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
       },
       {
-        type: 'action', label: '', icon: <Plus className="w-4 h-4" />,
-        position: { top: '44%', left: '42%' }, enterDelay: 0.9, animation: 'pop',
-      },
-      {
-        type: 'badge', label: 'Japandi', icon: <Star className="w-3 h-3" />,
-        position: { top: '22%', right: '6%' }, enterDelay: 1.4, animation: 'slide-right',
-      },
-      {
-        type: 'badge', label: '12 Styles', icon: <Layers className="w-3 h-3" />,
-        position: { bottom: '18%', left: '6%' }, enterDelay: 2.0, animation: 'slide-up',
+        type: 'badge', label: '3 Styles', icon: <Layers className="w-3 h-3" />,
+        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
