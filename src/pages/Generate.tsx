@@ -3043,7 +3043,7 @@ export default function Generate() {
               <div>
                 <p className="text-sm font-semibold">Total: {creditCost} credits</p>
                 <p className="text-xs text-muted-foreground">
-                  {upscaleImageCount} image{upscaleImageCount !== 1 ? 's' : ''} × {upscaleResolution === '4k' ? 12 : 8} credits ({upscaleResolution === '4k' ? '4K' : '2K'})
+                  {upscaleImageCount} image{upscaleImageCount !== 1 ? 's' : ''} × {upscaleResolution === '4k' ? 15 : 10} credits ({upscaleResolution === '4k' ? '4K' : '2K'})
                 </p>
               </div>
               {balance >= creditCost ? (

@@ -13,8 +13,8 @@ interface UpscaleModalProps {
 }
 
 const TIERS: { id: UpscaleResolution; label: string; desc: string; cost: number }[] = [
-  { id: '2k', label: '2K', desc: '2048px — Sharp & detailed', cost: 4 },
-  { id: '4k', label: '4K', desc: '4096px — Maximum resolution', cost: 8 },
+  { id: '2k', label: '2K', desc: '2048px — Sharp & detailed', cost: 10 },
+  { id: '4k', label: '4K', desc: '4096px — Maximum resolution', cost: 15 },
 ];
 
 export function UpscaleModal({ open, onClose, items, onComplete }: UpscaleModalProps) {
