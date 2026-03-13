@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
-import { ShoppingBag, Upload, X, AlertCircle, Loader2, Check, ChevronDown, FileSpreadsheet, Info } from 'lucide-react';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { ShoppingBag, Upload, X, AlertCircle, Loader2, Check, ChevronDown, FileSpreadsheet, Info, ImageOff, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +22,8 @@ interface ShopifyProduct {
   valid: boolean;
   error?: string;
 }
+
+type FilterMode = 'all' | 'valid' | 'missing-image';
 
 function parseCSV(text: string): string[][] {
   const rows: string[][] = [];
@@ -73,12 +76,15 @@ function stripHtml(html: string): string {
 
 export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabProps) {
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [products, setProducts] = useState<ShopifyProduct[]>([]);
+  const [selectedHandles, setSelectedHandles] = useState<Set<string>>(new Set());
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [guideOpen, setGuideOpen] = useState(true);
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
 
   const processFile = useCallback((f: File) => {
     if (!f.name.toLowerCase().endsWith('.csv')) {
@@ -112,7 +118,6 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
           return;
         }
 
-        // Group rows by Handle
         const grouped: Record<string, {
           title: string;
           product_type: string;
@@ -126,29 +131,16 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
           if (!handle) continue;
 
           if (!grouped[handle]) {
-            grouped[handle] = {
-              title: '',
-              product_type: '',
-              description: '',
-              images: [],
-            };
+            grouped[handle] = { title: '', product_type: '', description: '', images: [] };
           }
 
           const entry = grouped[handle];
-
-          // Title comes from first row that has it
           const rowTitle = titleIdx >= 0 ? (row[titleIdx] || '') : '';
           if (!entry.title && rowTitle) entry.title = rowTitle;
-
-          // Type from first row
           const rowType = typeIdx >= 0 ? (row[typeIdx] || '') : '';
           if (!entry.product_type && rowType) entry.product_type = rowType;
-
-          // Body from first row
           const rowBody = bodyIdx >= 0 ? (row[bodyIdx] || '') : '';
           if (!entry.description && rowBody) entry.description = rowBody;
-
-          // Collect images
           const imgUrl = imgSrcIdx >= 0 ? (row[imgSrcIdx] || '') : '';
           const imgPos = imgPosIdx >= 0 ? parseInt(row[imgPosIdx] || '0', 10) : 0;
           if (imgUrl && imgUrl.startsWith('http')) {
@@ -156,12 +148,9 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
           }
         }
 
-        // Convert to products array
         const shopifyProducts: ShopifyProduct[] = Object.entries(grouped).map(([handle, data]) => {
-          // Pick image with position 1, or first available
           const sortedImages = [...data.images].sort((a, b) => a.position - b.position);
           const primaryImage = sortedImages.find((img) => img.position === 1) || sortedImages[0];
-
           const title = data.title || handle.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
           const image_url = primaryImage?.url || '';
 
@@ -172,22 +161,18 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
             valid = false;
             rowError = 'Missing title';
           } else if (!image_url) {
-            valid = false;
-            rowError = 'No image found';
+            rowError = 'No image';
           }
 
-          return {
-            handle,
-            title,
-            product_type: data.product_type,
-            description: stripHtml(data.description),
-            image_url,
-            valid,
-            error: rowError,
-          };
+          return { handle, title, product_type: data.product_type, description: stripHtml(data.description), image_url, valid, error: rowError };
         });
 
         setProducts(shopifyProducts);
+        // Pre-select all valid products that have images
+        const initialSelected = new Set(
+          shopifyProducts.filter((p) => p.valid && p.image_url).map((p) => p.handle)
+        );
+        setSelectedHandles(initialSelected);
         setGuideOpen(false);
       } catch {
         setError('Failed to parse CSV file');
@@ -206,17 +191,64 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
     [processFile]
   );
 
-  const handleImportAll = async () => {
+  // Filter logic
+  const filteredProducts = useMemo(() => {
+    switch (filterMode) {
+      case 'valid':
+        return products.filter((p) => p.valid && p.image_url);
+      case 'missing-image':
+        return products.filter((p) => !p.image_url);
+      default:
+        return products;
+    }
+  }, [products, filterMode]);
+
+  const selectableProducts = useMemo(
+    () => products.filter((p) => p.valid),
+    [products]
+  );
+
+  const selectedCount = selectedHandles.size;
+
+  const isAllFilteredSelected = useMemo(() => {
+    const selectableInView = filteredProducts.filter((p) => p.valid);
+    return selectableInView.length > 0 && selectableInView.every((p) => selectedHandles.has(p.handle));
+  }, [filteredProducts, selectedHandles]);
+
+  const toggleSelectAll = () => {
+    const selectableInView = filteredProducts.filter((p) => p.valid);
+    if (isAllFilteredSelected) {
+      const next = new Set(selectedHandles);
+      selectableInView.forEach((p) => next.delete(p.handle));
+      setSelectedHandles(next);
+    } else {
+      const next = new Set(selectedHandles);
+      selectableInView.forEach((p) => next.add(p.handle));
+      setSelectedHandles(next);
+    }
+  };
+
+  const toggleProduct = (handle: string) => {
+    const next = new Set(selectedHandles);
+    if (next.has(handle)) {
+      next.delete(handle);
+    } else {
+      next.add(handle);
+    }
+    setSelectedHandles(next);
+  };
+
+  const handleImportSelected = async () => {
     if (!user) return;
-    const validProducts = products.filter((p) => p.valid);
-    if (validProducts.length === 0) {
-      toast.error('No valid products to import');
+    const toImport = products.filter((p) => selectedHandles.has(p.handle) && p.valid);
+    if (toImport.length === 0) {
+      toast.error('No products selected');
       return;
     }
 
     setIsImporting(true);
     try {
-      const rows = validProducts.map((p) => ({
+      const rows = toImport.map((p) => ({
         user_id: user.id,
         title: p.title.substring(0, 200),
         product_type: p.product_type.substring(0, 100),
@@ -227,7 +259,7 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
       const { error: insertError } = await supabase.from('user_products').insert(rows);
       if (insertError) throw new Error(insertError.message);
 
-      toast.success(`${validProducts.length} products imported from Shopify export!`);
+      toast.success(`${toImport.length} product${toImport.length !== 1 ? 's' : ''} imported!`);
       onProductAdded();
       onClose();
     } catch (err) {
@@ -238,7 +270,14 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
   };
 
   const validCount = products.filter((p) => p.valid).length;
+  const missingImageCount = products.filter((p) => !p.image_url).length;
   const invalidCount = products.filter((p) => !p.valid).length;
+
+  const filterChips: { key: FilterMode; label: string; count: number }[] = [
+    { key: 'all', label: 'All', count: products.length },
+    { key: 'valid', label: 'Ready', count: validCount },
+    ...(missingImageCount > 0 ? [{ key: 'missing-image' as FilterMode, label: 'No image', count: missingImageCount }] : []),
+  ];
 
   return (
     <div className="space-y-5">
@@ -277,32 +316,59 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
 
       {products.length === 0 ? (
         <>
-          {/* Dropzone */}
-          <div
-            className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors min-h-[160px] ${
-              dragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/40'
+          {/* Enhanced Dropzone */}
+          <label
+            htmlFor="shopify-csv-input"
+            className={`group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 transition-all duration-200 cursor-pointer min-h-[200px] ${
+              dragActive
+                ? 'border-primary bg-primary/5 scale-[1.01]'
+                : 'border-border hover:border-primary/50 hover:bg-muted/30'
             }`}
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
           >
-            <ShoppingBag className="w-10 h-10 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground mb-2">
-              Drop your Shopify CSV export or{' '}
-              <label className="text-primary cursor-pointer hover:underline">
-                browse
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  onChange={(e) => e.target.files?.[0] && processFile(e.target.files[0])}
-                />
-              </label>
+            <input
+              ref={fileInputRef}
+              id="shopify-csv-input"
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && processFile(e.target.files[0])}
+            />
+
+            <div className={`flex items-center justify-center w-14 h-14 rounded-2xl mb-4 transition-all duration-200 ${
+              dragActive
+                ? 'bg-primary/10 scale-110'
+                : 'bg-muted group-hover:bg-primary/5'
+            }`}>
+              <Upload className={`w-6 h-6 transition-all duration-200 ${
+                dragActive
+                  ? 'text-primary animate-bounce'
+                  : 'text-muted-foreground group-hover:text-primary/70'
+              }`} />
+            </div>
+
+            <p className="text-sm font-medium text-foreground mb-1">
+              {dragActive ? 'Drop your CSV here' : 'Drop your Shopify CSV here'}
             </p>
-            <p className="text-[11px] text-muted-foreground">
-              We'll map titles, types, and primary images automatically
+            <p className="text-xs text-muted-foreground mb-4">
+              or click anywhere to browse files
             </p>
-          </div>
+
+            <div className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium transition-colors ${
+              dragActive
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-secondary text-secondary-foreground group-hover:bg-primary group-hover:text-primary-foreground'
+            }`}>
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              Choose .csv file
+            </div>
+
+            <p className="text-[10px] text-muted-foreground mt-4">
+              Titles, types, and primary images mapped automatically
+            </p>
+          </label>
 
           {error && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -317,86 +383,161 @@ export function ShopifyImportTab({ onProductAdded, onClose }: ShopifyImportTabPr
         </>
       ) : (
         <>
-          {/* Preview header */}
+          {/* Review header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileSpreadsheet className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">{file?.name}</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setProducts([]); setFile(null); }}>
+              <span className="text-sm font-medium truncate max-w-[160px]">{file?.name}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setProducts([]); setFile(null); setSelectedHandles(new Set()); setFilterMode('all'); }}>
                 <X className="w-3.5 h-3.5" />
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="secondary">{validCount} products</Badge>
+              <Badge variant="secondary" className="text-[11px]">{products.length} found</Badge>
               {invalidCount > 0 && (
-                <Badge variant="destructive">{invalidCount} skipped</Badge>
+                <Badge variant="destructive" className="text-[11px]">{invalidCount} invalid</Badge>
               )}
             </div>
           </div>
 
-          {/* Preview table */}
-          <div className="max-h-[300px] overflow-auto rounded-xl border border-border">
+          {/* Filter chips + select all */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+              {filterChips.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  onClick={() => setFilterMode(chip.key)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
+                    filterMode === chip.key
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {chip.label}
+                  <span className={`${filterMode === chip.key ? 'text-primary-foreground/70' : 'text-muted-foreground/60'}`}>
+                    {chip.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              {isAllFilteredSelected ? 'Deselect all' : 'Select all'}
+            </button>
+          </div>
+
+          {/* Product review table */}
+          <div className="max-h-[320px] overflow-auto rounded-xl border border-border">
             <table className="w-full text-sm">
-              <thead className="bg-muted/40 sticky top-0">
+              <thead className="bg-muted/40 sticky top-0 z-10">
                 <tr>
-                  <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground w-12">Img</th>
-                  <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Title</th>
-                  <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Type</th>
-                  <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground w-16">Status</th>
+                  <th className="px-3 py-2 w-8">
+                    <Checkbox
+                      checked={isAllFilteredSelected}
+                      onCheckedChange={toggleSelectAll}
+                      className="h-3.5 w-3.5"
+                    />
+                  </th>
+                  <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground w-12">Img</th>
+                  <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground">Title</th>
+                  <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground hidden sm:table-cell">Type</th>
+                  <th className="text-left px-2 py-2 text-xs font-medium text-muted-foreground w-20">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {products.slice(0, 100).map((p, i) => (
-                  <tr key={p.handle} className={`border-t border-border/50 ${!p.valid ? 'bg-destructive/5' : i % 2 === 1 ? 'bg-muted/15' : ''}`}>
-                    <td className="px-3 py-1.5">
-                      {p.image_url ? (
-                        <img src={p.image_url} alt="" className="w-8 h-8 rounded object-cover bg-muted" />
-                      ) : (
-                        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
-                          <ShoppingBag className="w-3.5 h-3.5 text-muted-foreground" />
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-3 py-1.5 truncate max-w-[200px] text-sm">{p.title || '—'}</td>
-                    <td className="px-3 py-1.5 truncate max-w-[120px] text-sm text-muted-foreground">{p.product_type || '—'}</td>
-                    <td className="px-3 py-1.5">
-                      {p.valid ? (
-                        <Check className="w-3.5 h-3.5 text-primary" />
-                      ) : (
-                        <span className="text-[11px] text-destructive">{p.error}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {filteredProducts.slice(0, 100).map((p, i) => {
+                  const isSelectable = p.valid;
+                  const isSelected = selectedHandles.has(p.handle);
+
+                  return (
+                    <tr
+                      key={p.handle}
+                      onClick={() => isSelectable && toggleProduct(p.handle)}
+                      className={`border-t border-border/50 transition-colors ${
+                        !isSelectable
+                          ? 'opacity-40 cursor-not-allowed'
+                          : isSelected
+                            ? 'bg-primary/5 hover:bg-primary/10 cursor-pointer'
+                            : 'hover:bg-muted/30 cursor-pointer'
+                      } ${!isSelectable ? '' : i % 2 === 1 && !isSelected ? 'bg-muted/10' : ''}`}
+                    >
+                      <td className="px-3 py-1.5">
+                        <Checkbox
+                          checked={isSelected}
+                          disabled={!isSelectable}
+                          onCheckedChange={() => isSelectable && toggleProduct(p.handle)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-3.5 w-3.5"
+                        />
+                      </td>
+                      <td className="px-2 py-1.5">
+                        {p.image_url ? (
+                          <img src={p.image_url} alt="" className="w-8 h-8 rounded object-cover bg-muted" loading="lazy" />
+                        ) : (
+                          <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
+                            <ImageOff className="w-3.5 h-3.5 text-muted-foreground" />
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 truncate max-w-[180px] text-sm">{p.title || '—'}</td>
+                      <td className="px-2 py-1.5 truncate max-w-[100px] text-sm text-muted-foreground hidden sm:table-cell">{p.product_type || '—'}</td>
+                      <td className="px-2 py-1.5">
+                        {p.valid && p.image_url ? (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-emerald-500/10 text-emerald-600 border-0">Ready</Badge>
+                        ) : p.valid && !p.image_url ? (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 border-0">No img</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-destructive/10 text-destructive border-0">{p.error}</Badge>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-            {products.length > 100 && (
+            {filteredProducts.length > 100 && (
               <p className="px-3 py-2 text-[11px] text-muted-foreground text-center bg-muted/20">
-                Showing first 100 of {products.length} products
+                Showing first 100 of {filteredProducts.length} products
+              </p>
+            )}
+            {filteredProducts.length === 0 && (
+              <p className="px-3 py-8 text-sm text-muted-foreground text-center">
+                No products match this filter
               </p>
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
-            <Button onClick={handleImportAll} disabled={isImporting || validCount === 0}>
-              {isImporting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Importing…
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import {validCount} Product{validCount !== 1 ? 's' : ''}
-                </>
-              )}
-            </Button>
+          {/* Action bar */}
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <p className="text-[11px] text-muted-foreground">
+              {selectedCount} of {selectableProducts.length} selected
+            </p>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
+              <Button onClick={handleImportSelected} disabled={isImporting || selectedCount === 0} className="rounded-xl">
+                {isImporting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                    Importing…
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-1.5" />
+                    Import {selectedCount} Product{selectedCount !== 1 ? 's' : ''}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </>
       )}
 
-      {/* Subtle note about direct sync */}
       <p className="text-[11px] text-muted-foreground text-center pt-2">
         Direct Shopify sync is coming soon. For now, use the CSV export method above.
       </p>
