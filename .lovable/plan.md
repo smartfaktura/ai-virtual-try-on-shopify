@@ -1,20 +1,30 @@
 
 
-## Fix Zoomed-In Images in Freestyle Showcase
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-**Problem**: The `getOptimizedUrl` width parameter forces server-side resize, so images served at `width: 40` (chips) and `width: 400` (results) appear zoomed/cropped when displayed with `object-cover`.
+### Issues Found
 
-**Fix**: Remove `width` constraints and use quality-only optimization. This preserves original framing while still reducing file size.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**File**: `src/components/landing/FreestyleShowcaseSection.tsx`
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Changes
+### Plan
 
-1. **Model avatars** (lines 17-19): Remove `width: 40`, keep `quality: 50` only — these are tiny circles so quality compression alone is enough.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-2. **Chip thumbnails** (lines 28, 44): Remove `width: 40`, keep `quality: 50` only.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-3. **Result cards** (lines 50-52): Remove `width: 400`, keep `quality: 60` only — these are the most visible and most affected by the zoom.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-All calls become e.g. `getOptimizedUrl(url, { quality: 50 })` instead of `getOptimizedUrl(url, { width: 40, quality: 50 })`.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
