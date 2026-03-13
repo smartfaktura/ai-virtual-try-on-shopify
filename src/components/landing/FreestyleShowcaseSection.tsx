@@ -7,15 +7,16 @@ import { Button } from '@/components/ui/button';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { cn } from '@/lib/utils';
 import { getLandingAssetUrl } from '@/lib/landingAssets';
+import { getOptimizedUrl } from '@/lib/imageOptimization';
 
 const PROMPT_TEXT_FULL = 'Shoot my white crop top on a basketball court, in a clean studio, and a sunny café';
 const PROMPT_TEXT_MOBILE = 'Shoot my crop top on a court, studio, and café';
 const CYCLE_MS = 8000;
 
 const MODEL_AVATARS = [
-  { name: 'Zara', src: getLandingAssetUrl('models/model-female-athletic-mixed.jpg') },
-  { name: 'Freya', src: getLandingAssetUrl('models/model-female-average-nordic.jpg') },
-  { name: 'Olivia', src: getLandingAssetUrl('models/model-035-olivia.jpg') },
+  { name: 'Zara', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-athletic-mixed.jpg'), { width: 40, quality: 50 }) },
+  { name: 'Freya', src: getOptimizedUrl(getLandingAssetUrl('models/model-female-average-nordic.jpg'), { width: 40, quality: 50 }) },
+  { name: 'Olivia', src: getOptimizedUrl(getLandingAssetUrl('models/model-035-olivia.jpg'), { width: 40, quality: 50 }) },
 ];
 
 const CHIPS = [
@@ -24,7 +25,7 @@ const CHIPS = [
     icon: Package,
     label: 'White Crop Top',
     mobileLabel: 'Crop Top',
-    thumb: '/images/source-crop-top.jpg',
+    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { width: 40, quality: 50 }),
     delay: 1500,
   },
   {
@@ -40,15 +41,15 @@ const CHIPS = [
     icon: Camera,
     label: 'Select scenes',
     mobileLabel: 'Scenes',
-    thumb: '/images/try-showcase/cafe-lifestyle.png',
+    thumb: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { width: 40, quality: 50 }),
     delay: 2200,
   },
 ];
 
 const RESULT_CARDS = [
-  { label: 'Studio', src: '/images/try-showcase/virtual-tryon-1.png' },
-  { label: 'Basketball Court', src: '/images/try-showcase/virtual-tryon-2.png' },
-  { label: 'Café', src: '/images/try-showcase/cafe-lifestyle.png' },
+  { label: 'Studio', src: getOptimizedUrl(getLandingAssetUrl('showcase/virtual-tryon-1.png'), { width: 400, quality: 60 }) },
+  { label: 'Basketball Court', src: getOptimizedUrl(getLandingAssetUrl('showcase/virtual-tryon-2.png'), { width: 400, quality: 60 }) },
+  { label: 'Café', src: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { width: 400, quality: 60 }) },
 ];
 
 type ChipKey = 'product' | 'model' | 'scene';
@@ -206,7 +207,9 @@ export function FreestyleShowcaseSection() {
                         <img
                           src={chip.thumb}
                           alt={chip.label}
-                          className="w-4 h-4 sm:w-5 sm:h-5 object-cover rounded shrink-0"
+                          width={20}
+                          height={20}
+                          className="w-4 h-4 sm:w-5 sm:h-5 object-cover rounded ring-1 ring-border/40 bg-muted shrink-0"
                         />
                       ) : (
                         <Icon className="w-3.5 h-3.5 shrink-0" />

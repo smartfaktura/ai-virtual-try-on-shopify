@@ -1,39 +1,30 @@
 
 
-## Fix Missing Chip Thumbnails + Optimize
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-**Problem**: The product and scene chip thumbnails (`/images/source-crop-top.jpg` and `/images/try-showcase/cafe-lifestyle.png`) aren't displaying in the chips. They're served from local `/public` but should use Supabase Storage like the model avatars for consistency and optimization.
+### Issues Found
 
-**File**: `src/components/landing/FreestyleShowcaseSection.tsx`
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Changes
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-1. **Move chip thumbnail URLs to Supabase Storage** — use `getLandingAssetUrl()` + `getOptimizedUrl()` with `width: 40, quality: 50` (tiny 20px chips at 2x DPR = 40px is plenty):
+### Plan
 
-```ts
-import { getOptimizedUrl } from '@/lib/imageOptimization';
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-// In CHIPS array:
-thumb: getOptimizedUrl(getLandingAssetUrl('showcase/source-crop-top.jpg'), { width: 40, quality: 50 }),
-// and for scene:
-thumb: getOptimizedUrl(getLandingAssetUrl('showcase/cafe-lifestyle.png'), { width: 40, quality: 50 }),
-```
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-> Note: If these assets aren't yet in the `landing-assets` bucket, we'll keep the local paths but still add `getOptimizedUrl` handling and visual fixes.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-2. **Add visible border + background to chip thumbnails** so they're never invisible even while loading (line ~206-210):
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-```tsx
-<img
-  src={chip.thumb}
-  alt={chip.label}
-  width={20}
-  height={20}
-  className="w-4 h-4 sm:w-5 sm:h-5 object-cover rounded ring-1 ring-border/40 bg-muted shrink-0"
-/>
-```
-
-3. **Also optimize model avatar images** with `getOptimizedUrl()` at `width: 40, quality: 50` since they're equally tiny.
-
-4. **Also optimize RESULT_CARDS** — these are larger but still use local paths. Apply `getOptimizedUrl` with `width: 400, quality: 60`.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
