@@ -3367,7 +3367,7 @@ export default function Generate() {
                       <p className="text-xs text-muted-foreground">Tap a style to select it</p>
                     ) : (
                       <p className="text-xs text-muted-foreground">
-                        1 style selected
+                        {selectedVariationIndices.size} style{selectedVariationIndices.size !== 1 ? 's' : ''} selected
                       </p>
                     )
                   ) : (
@@ -3713,7 +3713,7 @@ export default function Generate() {
                     disabled={selectedVariationIndices.size === 0}
                     className={balance < creditCost && selectedVariationIndices.size > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
                   >
-                    {balance >= creditCost ? (isInteriorDesign ? 'Generate 1 Image' : `Generate ${workflowImageCount * multiProductCount} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
+                    {balance >= creditCost ? (isInteriorDesign ? `Generate ${selectedVariationIndices.size} Staging Image${selectedVariationIndices.size !== 1 ? 's' : ''}` : `Generate ${workflowImageCount * multiProductCount} ${activeWorkflow?.name} Images`) : 'Buy Credits'}
                   </Button>
                 </div>
               </>
@@ -3915,10 +3915,10 @@ export default function Generate() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">
                     {batchState.allDone
-                      ? `All ${batchState.totalJobs} batches complete`
-                      : `Image ${Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...`}
+                      ? isInteriorDesign ? `All ${batchState.totalJobs} styles complete` : `All ${batchState.totalJobs} batches complete`
+                      : isInteriorDesign ? `Style ${Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...` : `Image ${Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...`}
                   </span>
-                  <span className="text-muted-foreground">{batchState.readyImages} images ready</span>
+                  <span className="text-muted-foreground">{batchState.readyImages} image{batchState.readyImages !== 1 ? 's' : ''} ready</span>
                 </div>
                 <Progress value={(batchState.completedJobs + batchState.failedJobs) / batchState.totalJobs * 100} className="h-2" />
                 {batchState.failedJobs > 0 && (
