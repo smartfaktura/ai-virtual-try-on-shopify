@@ -93,7 +93,7 @@ export function MultiProductProgressBanner({
 
       {/* Time estimate */}
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Est. ~{estLowMin}-{estHighMin} min for {totalProducts} product{totalProducts !== 1 ? 's' : ''}</span>
+        <span>Est. ~{estLowMin}-{estHighMin} min for {totalImages} image{totalImages !== 1 ? 's' : ''}</span>
         <span>{generatingProgress}%</span>
       </div>
 
