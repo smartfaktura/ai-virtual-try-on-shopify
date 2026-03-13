@@ -7,9 +7,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// --- Previous config (kept for rollback) ---
+// const RESOLUTION_CONFIG = {
+//   "2k": { maxPx: 2048, label: "2K", model: "Standard V2", sharpen: 0.85, fix_compression: 0.6, denoise: 0.05, strength: 0.85, face_enhancement: true, face_enhancement_strength: 0.6, face_enhancement_creativity: 0.2 },
+//   "4k": { maxPx: 4096, label: "4K", model: "High Fidelity V2", sharpen: 0.9, fix_compression: 0.65, denoise: 0.03, strength: 0.9, face_enhancement: true, face_enhancement_strength: 0.7, face_enhancement_creativity: 0.2 },
+// };
+
 const RESOLUTION_CONFIG: Record<string, { maxPx: number; label: string; model: string; sharpen: number; fix_compression: number; denoise: number; strength: number; face_enhancement: boolean; face_enhancement_strength: number; face_enhancement_creativity: number }> = {
-  "2k": { maxPx: 2048, label: "2K", model: "Standard V2", sharpen: 0.85, fix_compression: 0.6, denoise: 0.05, strength: 0.85, face_enhancement: true, face_enhancement_strength: 0.6, face_enhancement_creativity: 0.2 },
-  "4k": { maxPx: 4096, label: "4K", model: "High Fidelity V2", sharpen: 0.9, fix_compression: 0.65, denoise: 0.03, strength: 0.9, face_enhancement: true, face_enhancement_strength: 0.7, face_enhancement_creativity: 0.2 },
+  "2k": { maxPx: 2048, label: "2K", model: "Wonder", sharpen: 0.5, fix_compression: 0.4, denoise: 0.03, strength: 0.85, face_enhancement: true, face_enhancement_strength: 0.6, face_enhancement_creativity: 0.3 },
+  "4k": { maxPx: 4096, label: "4K", model: "Wonder", sharpen: 0.5, fix_compression: 0.4, denoise: 0.03, strength: 0.9, face_enhancement: true, face_enhancement_strength: 0.7, face_enhancement_creativity: 0.3 },
 };
 
 const TOPAZ_BASE = "https://api.topazlabs.com/image/v1";
