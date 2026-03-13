@@ -1426,6 +1426,7 @@ export const pricingPlans: PricingPlan[] = [
       'All workflows',
       'Freestyle generation',
       'All Models & Scenes',
+      'Upscale to 2K & 4K',
       '1 Brand Profile',
       '1 product upload',
     ],
