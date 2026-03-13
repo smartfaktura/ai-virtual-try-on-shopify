@@ -21,6 +21,7 @@ import {
   Sparkles, Search, Loader2,
   Zap, CreditCard, Clock, RocketIcon, Repeat, Plus, Trash2, ChevronDown, Package, Info,
   LayoutGrid, List, Shuffle, Leaf, Sun, Snowflake, Heart, ShoppingBag, GraduationCap, TreePine,
+  AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -279,6 +280,11 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         for (const wfId of selectedWorkflowIds) {
           const wf = workflows.find(w => w.id === wfId);
           const uiConfig = (wf?.generation_config as any)?.ui_config;
+          const variations = (wf?.generation_config as any)?.variation_strategy?.variations || [];
+          // Require at least one scene selected (or random enabled) if workflow has scenes
+          if (variations.length > 0 && !wf?.uses_tryon) {
+            if (!randomScenes[wfId] && (!workflowSceneSelections[wfId] || workflowSceneSelections[wfId].size === 0)) return false;
+          }
           if (wf?.uses_tryon || uiConfig?.show_model_picker) {
             if (!randomModels[wfId] && !workflowModelSelections[wfId]?.length) return false;
           }
@@ -301,6 +307,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         for (const wfId of selectedWorkflowIds) {
           const wf = workflows.find(w => w.id === wfId);
           const uiConfig = (wf?.generation_config as any)?.ui_config;
+          const variations = (wf?.generation_config as any)?.variation_strategy?.variations || [];
+          if (variations.length > 0 && !wf?.uses_tryon) {
+            if (!randomScenes[wfId] && (!workflowSceneSelections[wfId] || workflowSceneSelections[wfId].size === 0)) {
+              return `"${wf?.name}" needs at least one scene (or enable Random)`;
+            }
+          }
           if (wf?.uses_tryon || uiConfig?.show_model_picker) {
             if (!randomModels[wfId] && !workflowModelSelections[wfId]?.length) {
               return `"${wf?.name}" requires at least one model (or enable Random)`;
@@ -811,21 +823,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             next.delete(wf.id);
                           } else {
                             next.add(wf.id);
+                            // Initialize empty scene set — user must pick explicitly
                             if (variations.length > 0 && !workflowSceneSelections[wf.id]) {
                               setWorkflowSceneSelections(prev => ({
                                 ...prev,
-                                [wf.id]: new Set(variations.map((v: { label: string }) => v.label)),
+                                [wf.id]: new Set<string>(),
                               }));
-                            }
-                            const firstSection = (variations.length > 0 && !wf.uses_tryon)
-                              ? 'scenes'
-                              : showPosePicker
-                                ? 'poses'
-                                : needsModels
-                                  ? 'models'
-                                  : null;
-                            if (firstSection) {
-                              setExpandedSection(prev => ({ ...prev, [wf.id]: firstSection }));
                             }
                           }
                           setSelectedWorkflowIds(next);
@@ -854,6 +857,14 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           </div>
                         </div>
                       </button>
+
+                      {/* Configure hint when selected but no scenes picked */}
+                      {isSelected && variations.length > 0 && !wf.uses_tryon && !isRandomScenes && (!workflowSceneSelections[wf.id] || workflowSceneSelections[wf.id].size === 0) && (
+                        <div className="flex items-center gap-1.5 mt-1.5 ml-1 text-xs text-amber-600 dark:text-amber-400 animate-fade-in">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>Configure scenes below to continue</span>
+                        </div>
+                      )}
 
                       {/* ── Expanded per-workflow config — collapsible sections ── */}
                       {isSelected && (
