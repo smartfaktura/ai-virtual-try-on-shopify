@@ -5,6 +5,7 @@ export interface WorkflowCostConfig {
   workflowName: string;
   hasModel: boolean;
   hasCustomScene: boolean;
+  formatCount?: number;
 }
 
 export interface CreditBreakdown {
@@ -13,6 +14,7 @@ export interface CreditBreakdown {
   imageCount: number;
   costPerImage: number;
   subtotal: number;
+  formatCount?: number;
 }
 
 export interface DropCostEstimate {
@@ -43,23 +45,24 @@ export function calculateDropCredits(
     return { breakdown: [], totalCredits: 0, totalImages: 0, monthlyProjection: 0 };
   }
 
-  // Each workflow runs for each product — multiply accordingly
   const effectiveProductCount = Math.max(productCount, 1);
 
   const breakdown: CreditBreakdown[] = workflows.map((wf) => {
     const costPerImage = getCostPerImage(wf.workflowId, wf.hasModel, wf.hasCustomScene);
+    const formatCount = Math.max(wf.formatCount || 1, 1);
     const imageCount = imagesPerDrop * effectiveProductCount;
     return {
       workflowId: wf.workflowId,
       workflowName: wf.workflowName,
       imageCount,
       costPerImage,
-      subtotal: imageCount * costPerImage,
+      subtotal: imageCount * costPerImage * formatCount,
+      formatCount,
     };
   });
 
   const totalCredits = breakdown.reduce((sum, b) => sum + b.subtotal, 0);
-  const totalImages = breakdown.reduce((sum, b) => sum + b.imageCount, 0);
+  const totalImages = breakdown.reduce((sum, b) => sum + b.imageCount * (b.formatCount || 1), 0);
 
   const frequencyMultiplier: Record<string, number> = {
     weekly: 4,
