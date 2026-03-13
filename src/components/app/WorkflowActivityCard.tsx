@@ -86,24 +86,33 @@ export function WorkflowActivityCard({
                     {group.workflow_name ?? 'Workflow generation'}
                     {group.product_name ? ` — ${group.product_name}` : ''}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {isBatch ? (
-                      <>
-                        {group.completedCount} of {group.totalCount} batches complete · {elapsed}
-                      </>
-                    ) : isProcessing ? (
-                      <>Generating… {elapsed}</>
-                    ) : (
-                      <>Queued · waiting {elapsed}</>
-                    )}
-                  </p>
-                  {isProcessing && (() => {
-                    const isProModel = group.job_type === 'tryon' || group.quality === 'high';
+                  {(() => {
+                    const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
+                    const unitLabel = isStagingWorkflow ? 'style' : 'batch';
+                    const unitLabelPlural = isStagingWorkflow ? 'styles' : 'batches';
                     return (
-                      <p className="text-[11px] text-muted-foreground/70">
-                        {isProModel ? 'Pro' : 'Standard'} model — est. ~{isProModel ? '60-120s' : '15-30s'} per image
-                        {isBatch && group.totalCount > 1 && ` · ~${Math.ceil(group.totalCount * (isProModel ? 1 : 0.25))}-${Math.ceil(group.totalCount * (isProModel ? 2 : 0.5))} min total`}
-                      </p>
+                      <>
+                        <p className="text-xs text-muted-foreground">
+                          {isBatch ? (
+                            <>
+                              {group.completedCount} of {group.totalCount} {unitLabelPlural} complete · {elapsed}
+                            </>
+                          ) : isProcessing ? (
+                            <>Generating… {elapsed}</>
+                          ) : (
+                            <>Queued · waiting {elapsed}</>
+                          )}
+                        </p>
+                        {isProcessing && (() => {
+                          const isProModel = group.job_type === 'tryon' || group.quality === 'high';
+                          return (
+                            <p className="text-[11px] text-muted-foreground/70">
+                              {isProModel ? 'Pro' : 'Standard'} model — est. ~{isProModel ? '60-120s' : '15-30s'} per {isStagingWorkflow ? 'style' : 'image'}
+                              {isBatch && group.totalCount > 1 && ` · ~${Math.ceil(group.totalCount * (isProModel ? 1 : 0.25))}-${Math.ceil(group.totalCount * (isProModel ? 2 : 0.5))} min total`}
+                            </p>
+                          );
+                        })()}
+                      </>
                     );
                   })()}
                 </div>
