@@ -58,7 +58,7 @@ const featureMap: Record<string, string[]> = {
     'AI-powered 2K & 4K resolution enhancement',
     'Face recovery & texture sharpening',
     'Works with any product or uploaded image',
-    '8 credits for 2K, 12 credits for 4K',
+    '10 credits for 2K, 15 credits for 4K',
   ],
 };
 
