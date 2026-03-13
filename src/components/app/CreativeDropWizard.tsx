@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 
@@ -15,13 +15,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
+import { Progress } from '@/components/ui/progress';
 
 import {
   ArrowLeft, ArrowRight, Check, CalendarIcon,
   Sparkles, Search, Loader2,
   Zap, CreditCard, Clock, RocketIcon, Repeat, Plus, Trash2, ChevronDown, Package, Info,
   LayoutGrid, List, Shuffle, Leaf, Sun, Snowflake, Heart, ShoppingBag, GraduationCap, TreePine,
-  AlertCircle,
+  Settings2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,13 +40,11 @@ const WORKFLOW_FALLBACK_IMAGES: Record<string, string> = {
   'Flat Lay Set': getLandingAssetUrl('workflows/workflow-flat-lay.jpg'),
 };
 
-// Workflows to hide from Creative Drops (utility, not content generation)
 const HIDDEN_WORKFLOW_NAMES = new Set([
   'Interior / Exterior Staging',
   'Image Upscaling',
 ]);
 
-// Seasonal campaign presets
 const SEASONAL_PRESETS = [
   { id: 'none', label: 'None', icon: null, instructions: '' },
   { id: 'spring', label: 'Spring', icon: Leaf, instructions: 'Fresh spring vibes — soft pastels, blooming flowers, light fabrics, airy outdoor settings with natural greenery and gentle morning light.' },
@@ -84,7 +83,6 @@ interface CreativeDropWizardProps {
   editingScheduleId?: string;
 }
 
-const STEPS = ['Details', 'Products', 'Workflows', 'Schedule', 'Review'];
 const IMAGE_PRESETS = [10, 25, 50, 100];
 const ASPECT_RATIOS = [
   { id: '1:1', label: '1:1', w: 1, h: 1 },
@@ -93,12 +91,10 @@ const ASPECT_RATIOS = [
   { id: '16:9', label: '16:9', w: 16, h: 9 },
 ];
 
-// Fashion-relevant poses for Virtual Try-On
-const fashionPoses = mockTryOnPoses.filter(p => 
+const fashionPoses = mockTryOnPoses.filter(p =>
   ['studio', 'lifestyle', 'editorial', 'streetwear'].includes(p.category)
 );
 
-// All models (mock + custom merged later)
 const mockModelItems = mockModels.map(m => ({
   id: m.modelId,
   name: m.name,
@@ -119,7 +115,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
 
-  // Step 1: Theme
+  // Step 1: Details
   const [name, setName] = useState(initialData?.name || '');
   const [theme, setTheme] = useState(initialData?.theme || 'custom');
   const [themeNotes, setThemeNotes] = useState(initialData?.themeNotes || '');
@@ -133,7 +129,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
   const [productSearch, setProductSearch] = useState('');
   const [productViewMode, setProductViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Step 3: Workflows + format (multi-format: string[])
+  // Step 3: Workflow selection
   const [selectedWorkflowIds, setSelectedWorkflowIds] = useState<Set<string>>(
     new Set(initialData?.selectedWorkflowIds || [])
   );
@@ -168,17 +164,16 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     initialData?.workflowCustomSettings || {}
   );
 
-  // Random toggles per workflow
   const [randomModels, setRandomModels] = useState<Record<string, boolean>>({});
   const [randomScenes, setRandomScenes] = useState<Record<string, boolean>>({});
 
-  // Step 3b: Freestyle prompts
+  // Freestyle
   const [includeFreestyle, setIncludeFreestyle] = useState(initialData?.includeFreestyle || false);
   const [freestylePrompts, setFreestylePrompts] = useState<string[]>(
     initialData?.freestylePrompts?.length ? initialData.freestylePrompts : ['']
   );
 
-  // Step 4: Delivery & Volume
+  // Schedule
   const [deliveryMode, setDeliveryMode] = useState<'now' | 'scheduled'>(initialData?.deliveryMode || 'now');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [frequency, setFrequency] = useState(initialData?.frequency || 'monthly');
@@ -213,7 +208,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     },
   });
 
-  // Filter out non-content workflows
   const workflows = rawWorkflows.filter(w => !HIDDEN_WORKFLOW_NAMES.has(w.name));
 
   const { data: customModels = [] } = useQuery({
@@ -225,7 +219,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     },
   });
 
-  // Merge mock models with custom models
   const allModels = [
     ...mockModelItems,
     ...(customModels || []).map((m: any) => ({
@@ -235,33 +228,53 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     })),
   ];
 
-  // Helper: get format count for a workflow
   const getWorkflowFormats = (id: string): string[] => workflowFormats[id]?.length ? workflowFormats[id] : ['1:1'];
 
-  // Credit calculation — uses per-workflow model selections
-  const workflowConfigs: WorkflowCostConfig[] = workflows
-    .filter(w => selectedWorkflowIds.has(w.id))
-    .map(w => ({
-      workflowId: w.id,
-      workflowName: w.name,
-      hasModel: w.uses_tryon || (workflowModelSelections[w.id]?.length > 0),
-      hasCustomScene: false,
-      formatCount: getWorkflowFormats(w.id).length,
-    }));
+  // Selected workflows in order
+  const selectedWorkflowsList = useMemo(
+    () => workflows.filter(w => selectedWorkflowIds.has(w.id)),
+    [workflows, selectedWorkflowIds]
+  );
+
+  // Dynamic steps: Details(0), Products(1), Select Workflows(2), [Config WF1, Config WF2, ...], Schedule, Review
+  const configStepCount = selectedWorkflowsList.length;
+  const totalSteps = 3 + configStepCount + 2; // Details, Products, Select, ...configs, Schedule, Review
+  const scheduleStepIndex = 3 + configStepCount;
+  const reviewStepIndex = 4 + configStepCount;
+
+  // Which workflow is being configured (if any)
+  const isConfigStep = step >= 3 && step < scheduleStepIndex;
+  const configWorkflowIndex = isConfigStep ? step - 3 : -1;
+  const configWorkflow = isConfigStep ? selectedWorkflowsList[configWorkflowIndex] : null;
+
+  // Step labels for progress
+  const getStepLabel = (s: number): string => {
+    if (s === 0) return 'Details';
+    if (s === 1) return 'Products';
+    if (s === 2) return 'Workflows';
+    if (s >= 3 && s < scheduleStepIndex) {
+      const wf = selectedWorkflowsList[s - 3];
+      return wf ? wf.name : 'Configure';
+    }
+    if (s === scheduleStepIndex) return 'Schedule';
+    if (s === reviewStepIndex) return 'Review';
+    return '';
+  };
+
+  const progressPercent = totalSteps > 1 ? Math.round((step / (totalSteps - 1)) * 100) : 0;
+
+  // Credit calculation
+  const workflowConfigs: WorkflowCostConfig[] = selectedWorkflowsList.map(w => ({
+    workflowId: w.id,
+    workflowName: w.name,
+    hasModel: w.uses_tryon || (workflowModelSelections[w.id]?.length > 0),
+    hasCustomScene: false,
+    formatCount: getWorkflowFormats(w.id).length,
+  }));
 
   const effectiveFrequency = deliveryMode === 'now' ? 'one-time' : frequency;
   const costEstimate = calculateDropCredits(workflowConfigs, imagesPerDrop, effectiveFrequency, selectedProductIds.size);
 
-  // Collapsible section state — tracks which section is open per workflow
-  const [expandedSection, setExpandedSection] = useState<Record<string, string | null>>({});
-  const toggleSection = (wfId: string, section: string) => {
-    setExpandedSection(prev => ({
-      ...prev,
-      [wfId]: prev[wfId] === section ? null : section,
-    }));
-  };
-
-  // Seasonal preset handler
   const handleSeasonalPreset = (presetId: string) => {
     setSeasonalPreset(presetId);
     const preset = SEASONAL_PRESETS.find(p => p.id === presetId);
@@ -270,63 +283,53 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     }
   };
 
-  // Validation per step
+  // Validation
   const canNext = (): boolean => {
-    switch (step) {
-      case 0: return name.trim().length > 0;
-      case 1: return selectedProductIds.size > 0;
-      case 2: {
-        if (selectedWorkflowIds.size === 0) return false;
-        for (const wfId of selectedWorkflowIds) {
-          const wf = workflows.find(w => w.id === wfId);
-          const uiConfig = (wf?.generation_config as any)?.ui_config;
-          const variations = (wf?.generation_config as any)?.variation_strategy?.variations || [];
-          // Require at least one scene selected (or random enabled) if workflow has scenes
-          if (variations.length > 0 && !wf?.uses_tryon) {
-            if (!randomScenes[wfId] && (!workflowSceneSelections[wfId] || workflowSceneSelections[wfId].size === 0)) return false;
-          }
-          if (wf?.uses_tryon || uiConfig?.show_model_picker) {
-            if (!randomModels[wfId] && !workflowModelSelections[wfId]?.length) return false;
-          }
-        }
-        return true;
+    if (step === 0) return name.trim().length > 0;
+    if (step === 1) return selectedProductIds.size > 0;
+    if (step === 2) return selectedWorkflowIds.size > 0;
+    if (isConfigStep && configWorkflow) {
+      const wf = configWorkflow;
+      const uiConfig = (wf.generation_config as any)?.ui_config;
+      const variations = (wf.generation_config as any)?.variation_strategy?.variations || [];
+      if (variations.length > 0 && !wf.uses_tryon) {
+        if (!randomScenes[wf.id] && (!workflowSceneSelections[wf.id] || workflowSceneSelections[wf.id].size === 0)) return false;
       }
-      case 3: return imagesPerDrop > 0 && (deliveryMode === 'now' || !!startDate);
-      case 4: return true;
-      default: return false;
+      if (wf.uses_tryon || uiConfig?.show_model_picker) {
+        if (!randomModels[wf.id] && !workflowModelSelections[wf.id]?.length) return false;
+      }
+      return true;
     }
+    if (step === scheduleStepIndex) return imagesPerDrop > 0 && (deliveryMode === 'now' || !!startDate);
+    if (step === reviewStepIndex) return true;
+    return false;
   };
 
   const getValidationHint = (): string | null => {
     if (!attempted) return null;
-    switch (step) {
-      case 0: return name.trim().length === 0 ? 'Give your drop a name to continue' : null;
-      case 1: return selectedProductIds.size === 0 ? 'Select at least one product' : null;
-      case 2: {
-        if (selectedWorkflowIds.size === 0) return 'Select at least one workflow';
-        for (const wfId of selectedWorkflowIds) {
-          const wf = workflows.find(w => w.id === wfId);
-          const uiConfig = (wf?.generation_config as any)?.ui_config;
-          const variations = (wf?.generation_config as any)?.variation_strategy?.variations || [];
-          if (variations.length > 0 && !wf?.uses_tryon) {
-            if (!randomScenes[wfId] && (!workflowSceneSelections[wfId] || workflowSceneSelections[wfId].size === 0)) {
-              return `"${wf?.name}" needs at least one scene (or enable Random)`;
-            }
-          }
-          if (wf?.uses_tryon || uiConfig?.show_model_picker) {
-            if (!randomModels[wfId] && !workflowModelSelections[wfId]?.length) {
-              return `"${wf?.name}" requires at least one model (or enable Random)`;
-            }
-          }
+    if (step === 0 && !name.trim()) return 'Give your drop a name to continue';
+    if (step === 1 && selectedProductIds.size === 0) return 'Select at least one product';
+    if (step === 2 && selectedWorkflowIds.size === 0) return 'Select at least one workflow';
+    if (isConfigStep && configWorkflow) {
+      const wf = configWorkflow;
+      const uiConfig = (wf.generation_config as any)?.ui_config;
+      const variations = (wf.generation_config as any)?.variation_strategy?.variations || [];
+      if (variations.length > 0 && !wf.uses_tryon) {
+        if (!randomScenes[wf.id] && (!workflowSceneSelections[wf.id] || workflowSceneSelections[wf.id].size === 0)) {
+          return `Select at least one scene or enable Random`;
         }
-        return null;
       }
-      case 3:
-        if (imagesPerDrop <= 0) return 'Choose how many images per drop';
-        if (deliveryMode === 'scheduled' && !startDate) return 'Pick a start date';
-        return null;
-      default: return null;
+      if (wf.uses_tryon || uiConfig?.show_model_picker) {
+        if (!randomModels[wf.id] && !workflowModelSelections[wf.id]?.length) {
+          return `Select at least one model or enable Random`;
+        }
+      }
     }
+    if (step === scheduleStepIndex) {
+      if (imagesPerDrop <= 0) return 'Choose how many images per drop';
+      if (deliveryMode === 'scheduled' && !startDate) return 'Pick a start date';
+    }
+    return null;
   };
 
   const handleNext = () => {
@@ -336,6 +339,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     }
     setAttempted(false);
     setStep(s => s + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBack = () => {
+    setAttempted(false);
+    setStep(s => s - 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -350,7 +359,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         nextRun = new Date(effectiveStartDate);
       }
 
-      // Known custom_settings -> generate-workflow field mapping
       const settingsFieldMap: Record<string, string> = {
         'Mood': 'ugc_mood',
         'Prop Style': 'prop_style',
@@ -384,7 +392,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
         sceneConfig[id] = {
           aspect_ratios: formats,
-          aspect_ratio: formats[0], // backward compat
+          aspect_ratio: formats[0],
           selected_scenes: randomScenes[id] ? ['__random__'] : selectedLabels,
           selected_variation_indices: randomScenes[id] ? [] : selectedVariationIndices,
           pose_ids: workflowPoseSelections[id] || [],
@@ -408,7 +416,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         selected_product_ids: Array.from(selectedProductIds),
         workflow_ids: Array.from(selectedWorkflowIds),
         model_ids: Array.from(new Set(
-          Array.from(selectedWorkflowIds).flatMap(id => 
+          Array.from(selectedWorkflowIds).flatMap(id =>
             randomModels[id] ? ['__random__'] : (workflowModelSelections[id] || [])
           )
         )),
@@ -470,59 +478,44 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
     p.title.toLowerCase().includes(productSearch.toLowerCase())
   );
 
-  const selectedWorkflows = workflows.filter(w => selectedWorkflowIds.has(w.id));
-
   const validationHint = getValidationHint();
-
-  // Find active seasonal preset label for review
   const activePreset = SEASONAL_PRESETS.find(p => p.id === seasonalPreset && p.id !== 'none');
+  const isLastStep = step === reviewStepIndex;
 
   return (
     <div className="space-y-0 touch-auto">
-      {/* Header — elegant step indicator */}
-      <div className="pb-6">
-        <h2 className="text-xl font-semibold tracking-tight mb-1">
-          {editingScheduleId ? 'Edit Schedule' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
-        </h2>
-        <p className="text-sm text-muted-foreground mb-6">{editingScheduleId ? 'Update your schedule settings' : 'Design and schedule your creative content generation'}</p>
-        <div className="flex items-center justify-center w-full max-w-md mx-auto">
-          {STEPS.map((s, i) => (
-            <div key={s} className={cn("flex items-center", i < STEPS.length - 1 ? "flex-1" : "")}>
-              <button
-                onClick={() => i < step && setStep(i)}
-                title={s}
-                aria-label={`Step ${i + 1}: ${s}`}
-                className={cn(
-                  'flex items-center gap-2 text-xs font-medium transition-all',
-                  i <= step ? 'text-foreground' : 'text-muted-foreground/50',
-                  i < step && 'cursor-pointer hover:text-primary',
-                )}
-              >
-                <div className={cn(
-                  'w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all border-2',
-                  i === step && 'bg-primary text-primary-foreground border-primary shadow-sm',
-                  i < step && 'bg-primary/10 text-primary border-primary/30',
-                  i > step && 'bg-muted text-muted-foreground/50 border-transparent',
-                )}>
-                  {i < step ? <Check className="w-3.5 h-3.5" /> : i + 1}
-                </div>
-                <span className="hidden sm:inline">{s}</span>
-              </button>
-              {i < STEPS.length - 1 && (
-                <div className={cn('flex-1 h-px mx-2', i < step ? 'bg-primary/30' : 'bg-border')} />
-              )}
-            </div>
-          ))}
+      {/* ── Progress Header ── */}
+      <div className="pb-5">
+        <div className="flex items-center justify-between mb-1.5">
+          <h2 className="text-xl font-semibold tracking-tight">
+            {editingScheduleId ? 'Edit Schedule' : initialData ? 'Duplicate Drop' : 'Create Your Drop'}
+          </h2>
+          <span className="text-xs text-muted-foreground font-mono">
+            {step + 1}/{totalSteps}
+          </span>
+        </div>
+
+        {/* Progress bar */}
+        <Progress value={progressPercent} className="h-1.5 mb-3" />
+
+        {/* Current step label */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground">{getStepLabel(step)}</span>
+          {isConfigStep && configStepCount > 1 && (
+            <Badge variant="secondary" className="text-[10px] rounded-full px-2">
+              {configWorkflowIndex + 1} of {configStepCount} workflows
+            </Badge>
+          )}
         </div>
       </div>
 
       <Separator />
 
-      {/* Content */}
-      <div className="pt-8 pb-4">
+      {/* ── Content ── */}
+      <div className="pt-6 pb-4">
         <div className="min-h-[380px]">
 
-          {/* ─── Step 1: Details ─── */}
+          {/* ─── Step 0: Details ─── */}
           {step === 0 && (
             <div className="space-y-8 animate-fade-in">
               <div className="space-y-2">
@@ -538,7 +531,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 )}
               </div>
 
-              {/* Seasonal Campaign Presets */}
               <div className="space-y-2">
                 <p className="section-label">Campaign Theme</p>
                 <p className="text-xs text-muted-foreground">Auto-fill style directions for a seasonal campaign</p>
@@ -608,7 +600,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             </div>
           )}
 
-          {/* ─── Step 2: Products ─── */}
+          {/* ─── Step 1: Products ─── */}
           {step === 1 && (
             <div className="space-y-6 animate-fade-in">
               {productsLoading ? (
@@ -625,74 +617,37 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   <Package className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm font-medium mb-1">No products yet</p>
                   <p className="text-xs text-muted-foreground mb-4">Add products first, then come back to create your drop.</p>
-                  <Button variant="outline" onClick={() => navigate('/app/products')}>
-                    Go to Products
-                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/app/products')}>Go to Products</Button>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-3">
                     <div className="relative flex-1">
                       <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search products..."
-                        value={productSearch}
-                        onChange={e => setProductSearch(e.target.value)}
-                        className="pl-10 h-12 rounded-xl"
-                      />
+                      <Input placeholder="Search products..." value={productSearch} onChange={e => setProductSearch(e.target.value)} className="pl-10 h-12 rounded-xl" />
                     </div>
-                    {/* View mode toggle */}
                     <div className="flex border rounded-lg overflow-hidden flex-shrink-0">
-                      <button
-                        onClick={() => setProductViewMode('grid')}
-                        className={cn(
-                          'p-2.5 transition-colors',
-                          productViewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted'
-                        )}
-                        title="Grid view"
-                      >
+                      <button onClick={() => setProductViewMode('grid')} className={cn('p-2.5 transition-colors', productViewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted')} title="Grid view">
                         <LayoutGrid className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => setProductViewMode('list')}
-                        className={cn(
-                          'p-2.5 transition-colors',
-                          productViewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted'
-                        )}
-                        title="List view"
-                      >
+                      <button onClick={() => setProductViewMode('list')} className={cn('p-2.5 transition-colors', productViewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted')} title="List view">
                         <List className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge variant="secondary" className="rounded-full px-3 py-1">{selectedProductIds.size} selected</Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs h-7 px-2"
-                      onClick={() => setSelectedProductIds(new Set(filteredProducts.map(p => p.id)))}
-                    >
-                      Select All
-                    </Button>
+                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => setSelectedProductIds(new Set(filteredProducts.map(p => p.id)))}>Select All</Button>
                     {selectedProductIds.size > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs h-7 px-2 text-muted-foreground"
-                        onClick={() => setSelectedProductIds(new Set())}
-                      >
-                        Clear
-                      </Button>
+                      <Button variant="ghost" size="sm" className="text-xs h-7 px-2 text-muted-foreground" onClick={() => setSelectedProductIds(new Set())}>Clear</Button>
                     )}
                   </div>
                   {attempted && selectedProductIds.size === 0 && (
                     <p className="text-xs text-destructive">Select at least one product</p>
                   )}
 
-                  {/* Grid View */}
                   {productViewMode === 'grid' && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[50vh] overflow-y-auto overscroll-contain pr-1">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {filteredProducts.map(product => {
                         const isSelected = selectedProductIds.has(product.id);
                         return (
@@ -705,9 +660,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             }}
                             className={cn(
                               'relative rounded-2xl border-2 p-2 transition-all text-left group',
-                              isSelected
-                                ? 'border-primary bg-primary/5 shadow-sm'
-                                : 'border-border hover:border-primary/40 hover:shadow-sm bg-card'
+                              isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40 hover:shadow-sm bg-card'
                             )}
                           >
                             {isSelected && (
@@ -725,9 +678,8 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     </div>
                   )}
 
-                  {/* List View */}
                   {productViewMode === 'list' && (
-                    <div className="space-y-1.5 max-h-[50vh] overflow-y-auto overscroll-contain pr-1">
+                    <div className="space-y-1.5">
                       {filteredProducts.map(product => {
                         const isSelected = selectedProductIds.has(product.id);
                         return (
@@ -740,15 +692,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             }}
                             className={cn(
                               'w-full flex items-center gap-3 p-2.5 rounded-xl border-2 transition-all text-left',
-                              isSelected
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/40 bg-card'
+                              isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 bg-card'
                             )}
                           >
-                            <div className={cn(
-                              'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all',
-                              isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
-                            )}>
+                            <div className={cn('w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all', isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30')}>
                               {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
                             </div>
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
@@ -756,9 +703,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{product.title}</p>
-                              {product.product_type && (
-                                <p className="text-xs text-muted-foreground truncate">{product.product_type}</p>
-                              )}
+                              {product.product_type && <p className="text-xs text-muted-foreground truncate">{product.product_type}</p>}
                             </div>
                           </button>
                         );
@@ -776,10 +721,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             </div>
           )}
 
-          {/* ─── Step 3: Workflows + Format ─── */}
+          {/* ─── Step 2: Select Workflows (simple checklist) ─── */}
           {step === 2 && (
-            <div className="space-y-6 animate-fade-in">
-              <p className="text-sm text-muted-foreground">Select visual styles, then configure scenes, models & settings for each.</p>
+            <div className="space-y-5 animate-fade-in">
+              <p className="text-sm text-muted-foreground">Choose which visual styles to include. You'll configure each one next.</p>
               {attempted && selectedWorkflowIds.size === 0 && (
                 <p className="text-xs text-destructive">Select at least one workflow</p>
               )}
@@ -796,39 +741,23 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   ))}
                 </div>
               ) : (
-              <div className="space-y-3">
-                {workflows.map(wf => {
-                  const isSelected = selectedWorkflowIds.has(wf.id);
-                  const genConfig = wf.generation_config;
-                  const variations = genConfig?.variation_strategy?.variations || [];
-                  const uiConfig = genConfig?.ui_config;
-                  const needsModels = wf.uses_tryon || uiConfig?.show_model_picker;
-                  const customSettings = uiConfig?.custom_settings || [];
-                  const lockAspectRatio = uiConfig?.lock_aspect_ratio;
-                  const showPosePicker = uiConfig?.show_pose_picker;
-                  const sceneSelections = workflowSceneSelections[wf.id] || new Set<string>();
-                  const wfModels = workflowModelSelections[wf.id] || [];
-                  const wfPoses = workflowPoseSelections[wf.id] || [];
-                  const wfSettings = workflowCustomSettings[wf.id] || {};
-                  const isRandomModels = !!randomModels[wf.id];
-                  const isRandomScenes = !!randomScenes[wf.id];
-                  const currentFormats = getWorkflowFormats(wf.id);
+                <div className="space-y-3">
+                  {workflows.map(wf => {
+                    const isSelected = selectedWorkflowIds.has(wf.id);
+                    const needsModels = wf.uses_tryon || wf.generation_config?.ui_config?.show_model_picker;
+                    const variations = wf.generation_config?.variation_strategy?.variations || [];
 
-                  return (
-                    <div key={wf.id} className="space-y-0">
+                    return (
                       <button
+                        key={wf.id}
                         onClick={() => {
                           const next = new Set(selectedWorkflowIds);
                           if (isSelected) {
                             next.delete(wf.id);
                           } else {
                             next.add(wf.id);
-                            // Initialize empty scene set — user must pick explicitly
                             if (variations.length > 0 && !workflowSceneSelections[wf.id]) {
-                              setWorkflowSceneSelections(prev => ({
-                                ...prev,
-                                [wf.id]: new Set<string>(),
-                              }));
+                              setWorkflowSceneSelections(prev => ({ ...prev, [wf.id]: new Set<string>() }));
                             }
                           }
                           setSelectedWorkflowIds(next);
@@ -846,418 +775,24 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold">{wf.name}</p>
                           <p className="text-xs text-muted-foreground truncate mt-0.5">{wf.description}</p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {needsModels && <Badge variant="secondary" className="text-xs rounded-full">Model</Badge>}
-                          <div className={cn(
-                            'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
-                            isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
-                          )}>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
+                          <div className="flex gap-1.5 mt-1.5">
+                            {needsModels && <Badge variant="secondary" className="text-[10px] rounded-full px-1.5 py-0">Model</Badge>}
+                            {variations.length > 0 && <Badge variant="secondary" className="text-[10px] rounded-full px-1.5 py-0">{variations.length} scenes</Badge>}
                           </div>
                         </div>
+                        <div className={cn(
+                          'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0',
+                          isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/30'
+                        )}>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
+                        </div>
                       </button>
-
-                      {/* Configure hint when selected but no scenes picked */}
-                      {isSelected && variations.length > 0 && !wf.uses_tryon && !isRandomScenes && (!workflowSceneSelections[wf.id] || workflowSceneSelections[wf.id].size === 0) && (
-                        <div className="flex items-center gap-1.5 mt-1.5 ml-1 text-xs text-amber-600 dark:text-amber-400 animate-fade-in">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          <span>Configure scenes below to continue</span>
-                        </div>
-                      )}
-
-                      {/* ── Expanded per-workflow config — collapsible sections ── */}
-                      {isSelected && (
-                        <div className="bg-muted/30 rounded-xl p-4 mt-2 space-y-2 animate-fade-in">
-                          {/* Multi-format selector */}
-                          {lockAspectRatio ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">Format:</span>
-                              <Badge variant="outline" className="text-xs rounded-full">1:1 (fixed)</Badge>
-                            </div>
-                          ) : (
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-xs text-muted-foreground mr-1">Formats:</span>
-                              {ASPECT_RATIOS.map(ar => {
-                                const isFormatSelected = currentFormats.includes(ar.id);
-                                return (
-                                  <button
-                                    key={ar.id}
-                                    onClick={() => {
-                                      setWorkflowFormats(prev => {
-                                        const current = prev[wf.id]?.length ? [...prev[wf.id]] : ['1:1'];
-                                        if (isFormatSelected) {
-                                          // Don't allow deselecting the last one
-                                          if (current.length <= 1) return prev;
-                                          return { ...prev, [wf.id]: current.filter(f => f !== ar.id) };
-                                        } else {
-                                          return { ...prev, [wf.id]: [...current, ar.id] };
-                                        }
-                                      });
-                                    }}
-                                    className={cn(
-                                      'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all',
-                                      isFormatSelected
-                                        ? 'border-primary bg-primary/10 text-primary'
-                                        : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
-                                    )}
-                                  >
-                                    <div
-                                      className={cn(
-                                        'rounded-[2px] border',
-                                        isFormatSelected ? 'border-primary' : 'border-muted-foreground/40',
-                                      )}
-                                      style={{ width: `${Math.round(ar.w / Math.max(ar.w, ar.h) * 12)}px`, height: `${Math.round(ar.h / Math.max(ar.w, ar.h) * 12)}px` }}
-                                    />
-                                    {ar.label}
-                                  </button>
-                                );
-                              })}
-                              {currentFormats.length > 1 && (
-                                <span className="text-[10px] text-muted-foreground ml-1">({currentFormats.length} formats × cost)</span>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Flat Lay clarification */}
-                          {wf.name === 'Flat Lay Set' && (
-                            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2.5">
-                              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                              <p>Each layout includes curated styling props arranged around your product. The AI selects contextual props based on your product type.</p>
-                            </div>
-                          )}
-
-                          {/* ── Collapsible: Scenes ── */}
-                          {variations.length > 0 && !wf.uses_tryon && (
-                            <div className="border-t border-border pt-2">
-                              <button
-                                onClick={() => toggleSection(wf.id, 'scenes')}
-                                className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
-                              >
-                                <span className="font-medium text-foreground">Scenes</span>
-                                <div className="flex items-center gap-2">
-                                  {isRandomScenes ? (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0"><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</Badge>
-                                  ) : (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{sceneSelections.size} of {variations.length}</Badge>
-                                  )}
-                                  <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform', expandedSection[wf.id] === 'scenes' && 'rotate-180')} />
-                                </div>
-                              </button>
-                              {expandedSection[wf.id] === 'scenes' && (
-                                <div className="space-y-2 pb-2 animate-fade-in">
-                                  {/* Random scenes toggle */}
-                                  <div className="flex items-center justify-between px-2">
-                                    <div className="flex items-center gap-2">
-                                      <Switch
-                                        checked={isRandomScenes}
-                                        onCheckedChange={(checked) => setRandomScenes(prev => ({ ...prev, [wf.id]: checked }))}
-                                        className="scale-90"
-                                      />
-                                      <span className="text-xs text-muted-foreground">
-                                        <Shuffle className="w-3 h-3 inline mr-1" />
-                                        Random / Diverse scenes
-                                      </span>
-                                    </div>
-                                    {!isRandomScenes && (
-                                      <button
-                                        className="text-xs text-primary hover:underline"
-                                        onClick={() => {
-                                          const allSelected = sceneSelections.size === variations.length;
-                                          setWorkflowSceneSelections(prev => ({
-                                            ...prev,
-                                            [wf.id]: allSelected ? new Set<string>() : new Set(variations.map(v => v.label)),
-                                          }));
-                                        }}
-                                      >
-                                        {sceneSelections.size === variations.length ? 'Deselect All' : 'Select All'}
-                                      </button>
-                                    )}
-                                  </div>
-                                  {isRandomScenes ? (
-                                    <div className="flex items-center gap-2 px-2 py-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-                                      <Shuffle className="w-4 h-4 text-primary" />
-                                      <span>The AI will randomly distribute across all {variations.length} scenes for visual variety.</span>
-                                    </div>
-                                  ) : (
-                                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-[40vh] sm:max-h-[200px] overflow-y-auto overscroll-contain pr-1">
-                                      {variations.map(v => {
-                                        const isSceneSelected = sceneSelections.has(v.label);
-                                        return (
-                                          <button
-                                            key={v.label}
-                                            onClick={() => {
-                                              setWorkflowSceneSelections(prev => {
-                                                const current = new Set(prev[wf.id] || []);
-                                                isSceneSelected ? current.delete(v.label) : current.add(v.label);
-                                                return { ...prev, [wf.id]: current };
-                                              });
-                                            }}
-                                            className={cn(
-                                              'relative rounded-lg overflow-hidden border-2 transition-all',
-                                              isSceneSelected
-                                                ? 'border-primary ring-1 ring-primary/20'
-                                                : 'border-border hover:border-primary/30'
-                                            )}
-                                          >
-                                            <div className="aspect-square w-full bg-muted overflow-hidden">
-                                              {v.preview_url ? (
-                                                <ShimmerImage src={v.preview_url} alt={v.label} className="w-full h-full object-cover" aspectRatio="1/1" />
-                                              ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
-                                                  <span className="text-[9px] text-muted-foreground/60 text-center px-1 leading-tight">{v.label}</span>
-                                                </div>
-                                              )}
-                                            </div>
-                                            {isSceneSelected && (
-                                              <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                                <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                                              </div>
-                                            )}
-                                            <div className="px-1 py-1">
-                                              <p className="text-[10px] text-foreground truncate text-center">{v.label}</p>
-                                            </div>
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* ── Collapsible: Pose / Scene Library ── */}
-                          {showPosePicker && (
-                            <div className="border-t border-border pt-2">
-                              <button
-                                onClick={() => toggleSection(wf.id, 'poses')}
-                                className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
-                              >
-                                <span className="font-medium text-foreground">Scene Library</span>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{wfPoses.length} selected</Badge>
-                                  <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform', expandedSection[wf.id] === 'poses' && 'rotate-180')} />
-                                </div>
-                              </button>
-                              {expandedSection[wf.id] === 'poses' && (
-                                <div className="space-y-2 pb-2 animate-fade-in">
-                                  {wfPoses.length > 0 && (
-                                    <div className="flex justify-end">
-                                      <button
-                                        className="text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => setWorkflowPoseSelections(prev => ({ ...prev, [wf.id]: [] }))}
-                                      >
-                                        Clear
-                                      </button>
-                                    </div>
-                                  )}
-                                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 max-h-[40vh] sm:max-h-[200px] overflow-y-auto overscroll-contain pr-1">
-                                    {fashionPoses.map(pose => {
-                                      const isPoseSelected = wfPoses.includes(pose.poseId);
-                                      return (
-                                        <button
-                                          key={pose.poseId}
-                                          onClick={() => {
-                                            setWorkflowPoseSelections(prev => {
-                                              const current = prev[wf.id] || [];
-                                              return {
-                                                ...prev,
-                                                [wf.id]: isPoseSelected
-                                                  ? current.filter(id => id !== pose.poseId)
-                                                  : [...current, pose.poseId],
-                                              };
-                                            });
-                                          }}
-                                          className={cn(
-                                            'relative rounded-lg overflow-hidden border-2 transition-all',
-                                            isPoseSelected
-                                              ? 'border-primary ring-1 ring-primary/20'
-                                              : 'border-border hover:border-primary/30'
-                                          )}
-                                        >
-                                          <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
-                                            <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
-                                          </div>
-                                          {isPoseSelected && (
-                                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                              <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                                            </div>
-                                          )}
-                                          <div className="absolute top-1 left-1">
-                                            <Badge className="text-[7px] px-1 py-0 bg-foreground/70 text-background border-0 backdrop-blur-sm">
-                                              {poseCategoryLabels[pose.category] || pose.category}
-                                            </Badge>
-                                          </div>
-                                          <div className="px-1 py-1">
-                                            <p className="text-[10px] text-foreground truncate text-center">{pose.name}</p>
-                                          </div>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* ── Collapsible: Models ── */}
-                          {needsModels && (
-                            <div className="border-t border-border pt-2">
-                              <button
-                                onClick={() => toggleSection(wf.id, 'models')}
-                                className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
-                              >
-                                <span className="font-medium text-foreground">Models</span>
-                                <div className="flex items-center gap-2">
-                                  {isRandomModels ? (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0"><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</Badge>
-                                  ) : (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{wfModels.length} selected</Badge>
-                                  )}
-                                  <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform', expandedSection[wf.id] === 'models' && 'rotate-180')} />
-                                </div>
-                              </button>
-                              {expandedSection[wf.id] === 'models' && (
-                                <div className="space-y-2 pb-2 animate-fade-in">
-                                  {/* Random models toggle */}
-                                  <div className="flex items-center justify-between px-2">
-                                    <div className="flex items-center gap-2">
-                                      <Switch
-                                        checked={isRandomModels}
-                                        onCheckedChange={(checked) => setRandomModels(prev => ({ ...prev, [wf.id]: checked }))}
-                                        className="scale-90"
-                                      />
-                                      <span className="text-xs text-muted-foreground">
-                                        <Shuffle className="w-3 h-3 inline mr-1" />
-                                        Random / Diverse models
-                                      </span>
-                                    </div>
-                                    {!isRandomModels && wfModels.length > 0 && (
-                                      <button
-                                        className="text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => setWorkflowModelSelections(prev => ({ ...prev, [wf.id]: [] }))}
-                                      >
-                                        Clear
-                                      </button>
-                                    )}
-                                  </div>
-                                  {isRandomModels ? (
-                                    <div className="flex items-center gap-2 px-2 py-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-                                      <Shuffle className="w-4 h-4 text-primary" />
-                                      <span>The AI will randomly select from all available models for visual diversity.</span>
-                                    </div>
-                                  ) : (
-                                    <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-8 gap-2 max-h-[40vh] sm:max-h-[200px] overflow-y-auto overscroll-contain pr-1">
-                                      {allModels.map(m => {
-                                        const isModelSelected = wfModels.includes(m.id);
-                                        return (
-                                          <button
-                                            key={m.id}
-                                            onClick={() => {
-                                              setWorkflowModelSelections(prev => {
-                                                const current = prev[wf.id] || [];
-                                                return {
-                                                  ...prev,
-                                                  [wf.id]: isModelSelected
-                                                    ? current.filter(id => id !== m.id)
-                                                    : [...current, m.id],
-                                                };
-                                              });
-                                            }}
-                                            className="flex flex-col items-center gap-1"
-                                          >
-                                            <div className={cn(
-                                              'w-10 h-10 rounded-full overflow-hidden border-2 transition-all',
-                                              isModelSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
-                                            )}>
-                                              <ShimmerImage src={m.image_url} alt={m.name} className="w-full h-full object-cover" aspectRatio="1/1" />
-                                            </div>
-                                            <p className={cn(
-                                              'text-[9px] truncate w-full text-center',
-                                              isModelSelected ? 'text-primary font-semibold' : 'text-muted-foreground'
-                                            )}>{m.name}</p>
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* ── Collapsible: Custom Settings ── */}
-                          {customSettings.length > 0 && (
-                            <div className="border-t border-border pt-2">
-                              <button
-                                onClick={() => toggleSection(wf.id, 'settings')}
-                                className="w-full flex items-center justify-between py-2.5 text-xs hover:bg-muted/50 rounded-lg px-2 transition-colors"
-                              >
-                                <span className="font-medium text-foreground">Settings</span>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                    {Object.keys(wfSettings).length}/{customSettings.length}
-                                  </Badge>
-                                  <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform', expandedSection[wf.id] === 'settings' && 'rotate-180')} />
-                                </div>
-                              </button>
-                              {expandedSection[wf.id] === 'settings' && (
-                                <div className="space-y-3 pb-2 animate-fade-in">
-                                  {customSettings.map(setting => (
-                                    <div key={setting.label} className="space-y-2">
-                                      <p className="text-xs font-medium text-foreground">{setting.label}</p>
-                                      {setting.type === 'select' && setting.options && (
-                                        <div className="flex flex-wrap gap-1.5">
-                                          {setting.options.map(opt => (
-                                            <button
-                                              key={opt}
-                                              onClick={() => {
-                                                setWorkflowCustomSettings(prev => ({
-                                                  ...prev,
-                                                  [wf.id]: { ...(prev[wf.id] || {}), [setting.label]: opt },
-                                                }));
-                                              }}
-                                              className={cn(
-                                                'px-3 py-1.5 rounded-full border text-xs font-medium transition-all',
-                                                (wfSettings[setting.label] || setting.options?.[0]) === opt
-                                                  ? 'border-primary bg-primary/10 text-primary'
-                                                  : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
-                                              )}
-                                            >
-                                              {opt}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              )}
-
-              {/* Compact sticky credit bar */}
-              {selectedWorkflowIds.size > 0 && (
-                <div className="bg-background/95 sm:sticky sm:bottom-0 backdrop-blur-sm border-t border-border pt-2 pb-1 z-10">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Zap className="w-3.5 h-3.5 text-primary" />
-                      {selectedWorkflowIds.size} workflow{selectedWorkflowIds.size > 1 ? 's' : ''} · {selectedProductIds.size} product{selectedProductIds.size !== 1 ? 's' : ''}
-                    </span>
-                    <span className="font-semibold">{costEstimate.totalCredits} credits / drop</span>
-                  </div>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* Freestyle Prompts Section */}
+              {/* Freestyle prompts */}
               <Separator />
               <Collapsible open={includeFreestyle} onOpenChange={setIncludeFreestyle}>
                 <div className="flex items-center justify-between">
@@ -1288,24 +823,14 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         className="h-10 rounded-xl text-base sm:text-sm flex-1"
                       />
                       {freestylePrompts.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 flex-shrink-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => setFreestylePrompts(prev => prev.filter((_, i) => i !== idx))}
-                        >
+                        <Button variant="ghost" size="icon" className="h-10 w-10 flex-shrink-0 text-muted-foreground hover:text-destructive" onClick={() => setFreestylePrompts(prev => prev.filter((_, i) => i !== idx))}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       )}
                     </div>
                   ))}
                   {freestylePrompts.length < 5 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs rounded-full"
-                      onClick={() => setFreestylePrompts(prev => [...prev, ''])}
-                    >
+                    <Button variant="outline" size="sm" className="text-xs rounded-full" onClick={() => setFreestylePrompts(prev => [...prev, ''])}>
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add Prompt
                     </Button>
                   )}
@@ -1314,11 +839,337 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             </div>
           )}
 
-          {/* ─── Step 4: Delivery & Volume ─── */}
-          {step === 3 && (
-            <div className="space-y-8 animate-fade-in">
+          {/* ─── Steps 3+: Per-Workflow Configuration (full page) ─── */}
+          {isConfigStep && configWorkflow && (() => {
+            const wf = configWorkflow;
+            const genConfig = wf.generation_config;
+            const variations = genConfig?.variation_strategy?.variations || [];
+            const uiConfig = genConfig?.ui_config;
+            const needsModels = wf.uses_tryon || uiConfig?.show_model_picker;
+            const customSettings = uiConfig?.custom_settings || [];
+            const lockAspectRatio = uiConfig?.lock_aspect_ratio;
+            const showPosePicker = uiConfig?.show_pose_picker;
+            const sceneSelections = workflowSceneSelections[wf.id] || new Set<string>();
+            const wfModels = workflowModelSelections[wf.id] || [];
+            const wfPoses = workflowPoseSelections[wf.id] || [];
+            const wfSettings = workflowCustomSettings[wf.id] || {};
+            const isRandomModels = !!randomModels[wf.id];
+            const isRandomScenes = !!randomScenes[wf.id];
+            const currentFormats = getWorkflowFormats(wf.id);
 
-              {/* Delivery mode */}
+            return (
+              <div className="space-y-8 animate-fade-in" key={wf.id}>
+                {/* Workflow identity */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-muted overflow-hidden flex-shrink-0">
+                    <ShimmerImage src={wf.preview_image_url || WORKFLOW_FALLBACK_IMAGES[wf.name] || ''} alt={wf.name} className="w-full h-full object-cover" aspectRatio="1/1" />
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold">{wf.name}</p>
+                    <p className="text-xs text-muted-foreground">{wf.description}</p>
+                  </div>
+                </div>
+
+                {/* ── Formats ── */}
+                <div className="space-y-3">
+                  <p className="section-label">Aspect Ratios</p>
+                  {lockAspectRatio ? (
+                    <Badge variant="outline" className="text-xs rounded-full">1:1 (fixed)</Badge>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {ASPECT_RATIOS.map(ar => {
+                        const isFormatSelected = currentFormats.includes(ar.id);
+                        return (
+                          <button
+                            key={ar.id}
+                            onClick={() => {
+                              setWorkflowFormats(prev => {
+                                const current = prev[wf.id]?.length ? [...prev[wf.id]] : ['1:1'];
+                                if (isFormatSelected) {
+                                  if (current.length <= 1) return prev;
+                                  return { ...prev, [wf.id]: current.filter(f => f !== ar.id) };
+                                } else {
+                                  return { ...prev, [wf.id]: [...current, ar.id] };
+                                }
+                              });
+                            }}
+                            className={cn(
+                              'flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all',
+                              isFormatSelected
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
+                            )}
+                          >
+                            <div
+                              className={cn('rounded-[3px] border-2', isFormatSelected ? 'border-primary' : 'border-muted-foreground/40')}
+                              style={{ width: `${Math.round(ar.w / Math.max(ar.w, ar.h) * 16)}px`, height: `${Math.round(ar.h / Math.max(ar.w, ar.h) * 16)}px` }}
+                            />
+                            {ar.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {currentFormats.length > 1 && (
+                    <p className="text-xs text-muted-foreground">Each additional format multiplies the credit cost.</p>
+                  )}
+                </div>
+
+                {/* Flat Lay info */}
+                {wf.name === 'Flat Lay Set' && (
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded-xl px-4 py-3">
+                    <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <p>Each layout includes curated styling props arranged around your product. The AI selects contextual props based on your product type.</p>
+                  </div>
+                )}
+
+                {/* ── Scenes (full grid, no collapsible) ── */}
+                {variations.length > 0 && !wf.uses_tryon && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="section-label">Scenes</p>
+                      <div className="flex items-center gap-3">
+                        {!isRandomScenes && (
+                          <button
+                            className="text-xs text-primary hover:underline font-medium"
+                            onClick={() => {
+                              const allSelected = sceneSelections.size === variations.length;
+                              setWorkflowSceneSelections(prev => ({
+                                ...prev,
+                                [wf.id]: allSelected ? new Set<string>() : new Set(variations.map(v => v.label)),
+                              }));
+                            }}
+                          >
+                            {sceneSelections.size === variations.length ? 'Deselect All' : 'Select All'}
+                          </button>
+                        )}
+                        <Badge variant="secondary" className="text-[10px] rounded-full">
+                          {isRandomScenes ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${sceneSelections.size}/${variations.length}`}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Random toggle */}
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
+                      <Switch
+                        checked={isRandomScenes}
+                        onCheckedChange={(checked) => setRandomScenes(prev => ({ ...prev, [wf.id]: checked }))}
+                      />
+                      <div>
+                        <p className="text-sm font-medium flex items-center gap-1.5">
+                          <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
+                        </p>
+                        <p className="text-xs text-muted-foreground">AI will randomly distribute across all {variations.length} scenes</p>
+                      </div>
+                    </div>
+
+                    {!isRandomScenes && (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                        {variations.map(v => {
+                          const isSceneSelected = sceneSelections.has(v.label);
+                          return (
+                            <button
+                              key={v.label}
+                              onClick={() => {
+                                setWorkflowSceneSelections(prev => {
+                                  const current = new Set(prev[wf.id] || []);
+                                  isSceneSelected ? current.delete(v.label) : current.add(v.label);
+                                  return { ...prev, [wf.id]: current };
+                                });
+                              }}
+                              className={cn(
+                                'relative rounded-xl overflow-hidden border-2 transition-all',
+                                isSceneSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
+                              )}
+                            >
+                              <div className="aspect-square w-full bg-muted overflow-hidden">
+                                {v.preview_url ? (
+                                  <ShimmerImage src={v.preview_url} alt={v.label} className="w-full h-full object-cover" aspectRatio="1/1" />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10 flex items-center justify-center">
+                                    <span className="text-[10px] text-muted-foreground/60 text-center px-1 leading-tight">{v.label}</span>
+                                  </div>
+                                )}
+                              </div>
+                              {isSceneSelected && (
+                                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                                  <Check className="w-3 h-3 text-primary-foreground" />
+                                </div>
+                              )}
+                              <div className="px-1.5 py-1.5">
+                                <p className="text-[11px] text-foreground truncate text-center font-medium">{v.label}</p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Pose / Scene Library ── */}
+                {showPosePicker && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="section-label">Scene Library</p>
+                      {wfPoses.length > 0 && (
+                        <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setWorkflowPoseSelections(prev => ({ ...prev, [wf.id]: [] }))}>
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                      {fashionPoses.map(pose => {
+                        const isPoseSelected = wfPoses.includes(pose.poseId);
+                        return (
+                          <button
+                            key={pose.poseId}
+                            onClick={() => {
+                              setWorkflowPoseSelections(prev => {
+                                const current = prev[wf.id] || [];
+                                return {
+                                  ...prev,
+                                  [wf.id]: isPoseSelected ? current.filter(id => id !== pose.poseId) : [...current, pose.poseId],
+                                };
+                              });
+                            }}
+                            className={cn(
+                              'relative rounded-xl overflow-hidden border-2 transition-all',
+                              isPoseSelected ? 'border-primary ring-1 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/30'
+                            )}
+                          >
+                            <div className="aspect-[4/5] w-full bg-muted overflow-hidden">
+                              <ShimmerImage src={pose.previewUrl} alt={pose.name} className="w-full h-full object-cover" aspectRatio="4/5" />
+                            </div>
+                            {isPoseSelected && (
+                              <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
+                                <Check className="w-3 h-3 text-primary-foreground" />
+                              </div>
+                            )}
+                            <div className="absolute top-1.5 left-1.5">
+                              <Badge className="text-[8px] px-1 py-0 bg-foreground/70 text-background border-0 backdrop-blur-sm">
+                                {poseCategoryLabels[pose.category] || pose.category}
+                              </Badge>
+                            </div>
+                            <div className="px-1.5 py-1.5">
+                              <p className="text-[11px] text-foreground truncate text-center font-medium">{pose.name}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Models ── */}
+                {needsModels && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="section-label">Models</p>
+                      <Badge variant="secondary" className="text-[10px] rounded-full">
+                        {isRandomModels ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random</> : `${wfModels.length} selected`}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
+                      <Switch
+                        checked={isRandomModels}
+                        onCheckedChange={(checked) => setRandomModels(prev => ({ ...prev, [wf.id]: checked }))}
+                      />
+                      <div>
+                        <p className="text-sm font-medium flex items-center gap-1.5">
+                          <Shuffle className="w-3.5 h-3.5" /> Random / Diverse
+                        </p>
+                        <p className="text-xs text-muted-foreground">AI will randomly select from all available models</p>
+                      </div>
+                    </div>
+
+                    {!isRandomModels && (
+                      <>
+                        {wfModels.length > 0 && (
+                          <div className="flex justify-end">
+                            <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setWorkflowModelSelections(prev => ({ ...prev, [wf.id]: [] }))}>
+                              Clear
+                            </button>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                          {allModels.map(m => {
+                            const isModelSelected = wfModels.includes(m.id);
+                            return (
+                              <button
+                                key={m.id}
+                                onClick={() => {
+                                  setWorkflowModelSelections(prev => {
+                                    const current = prev[wf.id] || [];
+                                    return {
+                                      ...prev,
+                                      [wf.id]: isModelSelected ? current.filter(id => id !== m.id) : [...current, m.id],
+                                    };
+                                  });
+                                }}
+                                className="flex flex-col items-center gap-1.5"
+                              >
+                                <div className={cn(
+                                  'w-12 h-12 rounded-full overflow-hidden border-2 transition-all',
+                                  isModelSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/30'
+                                )}>
+                                  <ShimmerImage src={m.image_url} alt={m.name} className="w-full h-full object-cover" aspectRatio="1/1" />
+                                </div>
+                                <p className={cn(
+                                  'text-[10px] truncate w-full text-center',
+                                  isModelSelected ? 'text-primary font-semibold' : 'text-muted-foreground'
+                                )}>{m.name}</p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Custom Settings ── */}
+                {customSettings.length > 0 && (
+                  <div className="space-y-4">
+                    <p className="section-label">Settings</p>
+                    {customSettings.map(setting => (
+                      <div key={setting.label} className="space-y-2">
+                        <p className="text-sm font-medium text-foreground">{setting.label}</p>
+                        {setting.type === 'select' && setting.options && (
+                          <div className="flex flex-wrap gap-2">
+                            {setting.options.map(opt => (
+                              <button
+                                key={opt}
+                                onClick={() => {
+                                  setWorkflowCustomSettings(prev => ({
+                                    ...prev,
+                                    [wf.id]: { ...(prev[wf.id] || {}), [setting.label]: opt },
+                                  }));
+                                }}
+                                className={cn(
+                                  'px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all',
+                                  (wfSettings[setting.label] || setting.options?.[0]) === opt
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-border hover:border-primary/30 text-muted-foreground bg-card'
+                                )}
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* ─── Schedule & Volume ─── */}
+          {step === scheduleStepIndex && (
+            <div className="space-y-8 animate-fade-in">
               <div className="space-y-3">
                 <p className="section-label">Delivery</p>
                 <div className="grid grid-cols-2 gap-3">
@@ -1326,9 +1177,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     onClick={() => setDeliveryMode('now')}
                     className={cn(
                       'flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all text-center',
-                      deliveryMode === 'now'
-                        ? 'border-primary bg-primary/5 shadow-sm'
-                        : 'border-border hover:border-primary/30 bg-card hover:shadow-sm'
+                      deliveryMode === 'now' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/30 bg-card hover:shadow-sm'
                     )}
                   >
                     <RocketIcon className={cn('w-5 h-5', deliveryMode === 'now' ? 'text-primary' : 'text-muted-foreground')} />
@@ -1339,9 +1188,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                     onClick={() => setDeliveryMode('scheduled')}
                     className={cn(
                       'flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all text-center',
-                      deliveryMode === 'scheduled'
-                        ? 'border-primary bg-primary/5 shadow-sm'
-                        : 'border-border hover:border-primary/30 bg-card hover:shadow-sm'
+                      deliveryMode === 'scheduled' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/30 bg-card hover:shadow-sm'
                     )}
                   >
                     <Clock className={cn('w-5 h-5', deliveryMode === 'scheduled' ? 'text-primary' : 'text-muted-foreground')} />
@@ -1351,7 +1198,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 </div>
               </div>
 
-              {/* Schedule options — only when scheduled */}
               {deliveryMode === 'scheduled' && (
                 <div className="space-y-6 animate-fade-in">
                   <div className="space-y-2">
@@ -1371,14 +1217,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={startDate}
-                          onSelect={setStartDate}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
-                        />
+                        <Calendar mode="single" selected={startDate} onSelect={setStartDate} disabled={(date) => date < new Date()} initialFocus className={cn("p-3 pointer-events-auto")} />
                       </PopoverContent>
                     </Popover>
                     {attempted && deliveryMode === 'scheduled' && !startDate && (
@@ -1394,12 +1233,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         { id: 'biweekly', label: 'Biweekly' },
                         { id: 'monthly', label: 'Monthly' },
                       ].map(f => (
-                        <Button
-                          key={f.id}
-                          variant={frequency === f.id ? 'default' : 'outline'}
-                          onClick={() => setFrequency(f.id)}
-                          className="h-11 rounded-xl text-sm"
-                        >
+                        <Button key={f.id} variant={frequency === f.id ? 'default' : 'outline'} onClick={() => setFrequency(f.id)} className="h-11 rounded-xl text-sm">
                           {f.label}
                         </Button>
                       ))}
@@ -1417,18 +1251,12 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
 
               <Separator />
 
-              {/* Images per drop */}
               <div className="space-y-3">
                 <p className="section-label">Images Per Workflow</p>
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {IMAGE_PRESETS.map(n => (
-                      <Button
-                        key={n}
-                        variant={imagesPerDrop === n && !customImageCount ? 'default' : 'outline'}
-                        onClick={() => { setImagesPerDrop(n); setCustomImageCount(''); }}
-                        className="h-11 rounded-xl"
-                      >
+                      <Button key={n} variant={imagesPerDrop === n && !customImageCount ? 'default' : 'outline'} onClick={() => { setImagesPerDrop(n); setCustomImageCount(''); }} className="h-11 rounded-xl">
                         {n}
                       </Button>
                     ))}
@@ -1447,7 +1275,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 </div>
               </div>
 
-              {/* Credit estimate */}
               <Card className="rounded-2xl border shadow-sm">
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-center gap-2">
@@ -1489,11 +1316,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             </div>
           )}
 
-          {/* ─── Step 5: Review ─── */}
-          {step === 4 && (
+          {/* ─── Review ─── */}
+          {step === reviewStepIndex && (
             <div className="space-y-6 animate-fade-in">
-
-              {/* Delivery card — prominent */}
               <Card className="rounded-2xl border-2 border-primary/20 bg-primary/[0.03] shadow-sm">
                 <CardContent className="p-5 flex items-center gap-4">
                   {deliveryMode === 'now' ? (
@@ -1507,30 +1332,21 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                   )}
                   <div>
                     <p className="text-sm font-semibold">
-                      {deliveryMode === 'now'
-                        ? 'Generates immediately after creation'
-                        : `First drop: ${startDate ? format(startDate, 'MMM d, yyyy') : '—'}`
-                      }
+                      {deliveryMode === 'now' ? 'Generates immediately after creation' : `First drop: ${startDate ? format(startDate, 'MMM d, yyyy') : '—'}`}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {deliveryMode === 'now'
-                        ? 'One-time generation — credits deducted now'
-                        : `Then every ${frequency.replace('-', ' ')} — credits deducted per drop`
-                      }
+                      {deliveryMode === 'now' ? 'One-time generation — credits deducted now' : `Then every ${frequency.replace('-', ' ')} — credits deducted per drop`}
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Summary */}
               <Card className="rounded-2xl shadow-sm">
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4" />
                     <span className="font-semibold">{name}</span>
-                    {activePreset && (
-                      <Badge variant="secondary" className="text-[10px] rounded-full ml-auto">{activePreset.label}</Badge>
-                    )}
+                    {activePreset && <Badge variant="secondary" className="text-[10px] rounded-full ml-auto">{activePreset.label}</Badge>}
                   </div>
                   <Separator />
                   <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1589,10 +1405,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                 </CardContent>
               </Card>
 
-              {/* Selected workflows with per-workflow details */}
+              {/* Workflow summaries */}
               <div className="space-y-2">
                 <p className="section-label">Workflows</p>
-                {selectedWorkflows.map(wf => {
+                {selectedWorkflowsList.map(wf => {
                   const sceneCount = randomScenes[wf.id] ? 'Random' : (workflowSceneSelections[wf.id] || new Set()).size;
                   const variations = wf.generation_config?.variation_strategy?.variations || [];
                   const modelCount = randomModels[wf.id] ? 'Random' : (workflowModelSelections[wf.id] || []).length;
@@ -1618,15 +1434,10 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           {costEstimate.breakdown.find(b => b.workflowId === wf.id)?.imageCount ?? 0} imgs
                         </span>
                       </div>
-                      {/* Detail badges */}
                       <div className="flex flex-wrap gap-1.5 pl-6">
                         {variations.length > 0 && !wf.uses_tryon && (
                           <Badge variant="secondary" className="text-[10px] rounded-full">
-                            {randomScenes[wf.id] ? (
-                              <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random scenes</>
-                            ) : (
-                              <>{sceneCount}/{variations.length} scenes</>
-                            )}
+                            {randomScenes[wf.id] ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random scenes</> : <>{sceneCount}/{variations.length} scenes</>}
                           </Badge>
                         )}
                         {showPosePicker && (
@@ -1634,21 +1445,13 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                         )}
                         {needsModels && (
                           <Badge variant="secondary" className="text-[10px] rounded-full">
-                            {randomModels[wf.id] ? (
-                              <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random models</>
-                            ) : (
-                              <>{modelCount} model{typeof modelCount === 'number' && modelCount !== 1 ? 's' : ''}</>
-                            )}
+                            {randomModels[wf.id] ? <><Shuffle className="w-3 h-3 mr-0.5 inline" />Random models</> : <>{modelCount} model{typeof modelCount === 'number' && modelCount !== 1 ? 's' : ''}</>}
                           </Badge>
-                        )}
-                        {formats.length > 1 && (
-                          <Badge variant="secondary" className="text-[10px] rounded-full">{formats.length} formats</Badge>
                         )}
                         {settingEntries.map(([k, v]) => (
                           <Badge key={k} variant="outline" className="text-[10px] rounded-full">{k}: {v}</Badge>
                         ))}
                       </div>
-                      {/* Selected scene names */}
                       {selectedSceneNames.length > 0 && (
                         <div className="flex flex-wrap gap-1 pl-6">
                           {selectedSceneNames.slice(0, 8).map(name => (
@@ -1659,7 +1462,6 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
                           )}
                         </div>
                       )}
-                      {/* Model names for workflows with models */}
                       {needsModels && !randomModels[wf.id] && typeof modelCount === 'number' && modelCount > 0 && (
                         <div className="flex gap-1 pl-6 flex-wrap">
                           {(workflowModelSelections[wf.id] || []).slice(0, 6).map(mId => {
@@ -1686,7 +1488,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         </div>
       </div>
 
-      {/* Footer — pill buttons + branding */}
+      {/* ── Footer ── */}
       <div className="pt-6 mt-4 pb-16 space-y-2 sm:border-t sm:pt-4 sm:mt-0 sm:pb-0">
         {validationHint && (
           <p className="text-[11px] text-destructive animate-fade-in text-center sm:hidden">{validationHint}</p>
@@ -1694,7 +1496,7 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={step === 0 ? onClose : () => { setStep(s => s - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onClick={step === 0 ? onClose : handleBack}
             className="rounded-full min-h-[44px] h-11 px-5 sm:px-6"
           >
             {step === 0 ? 'Cancel' : <><ArrowLeft className="w-4 h-4 mr-1.5" /> Back</>}
@@ -1709,10 +1511,9 @@ export function CreativeDropWizard({ onClose, initialData, editingScheduleId }: 
             )}
           </div>
 
-          {step < 4 ? (
+          {!isLastStep ? (
             <Button
               onClick={handleNext}
-              disabled={false}
               className="rounded-full min-h-[44px] h-11 px-5 sm:px-6 gap-1.5"
             >
               Next <ArrowRight className="w-4 h-4" />
