@@ -1484,6 +1484,7 @@ export const pricingPlans: PricingPlan[] = [
       'Freestyle generation',
       'All Models & Scenes',
       'Upscale to 2K & 4K',
+      'Priority queue',
       'Creative Drops',
       'Video Generation (coming soon)',
       'Unlimited profiles',
