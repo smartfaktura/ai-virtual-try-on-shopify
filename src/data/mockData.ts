@@ -1465,7 +1465,7 @@ export const pricingPlans: PricingPlan[] = [
       'Priority queue',
       'Creative Drops',
       '10 Brand Profiles',
-      'Up to 100 products',
+      'Up to 250 products',
     ],
     highlighted: true,
     badge: 'Most Popular',
