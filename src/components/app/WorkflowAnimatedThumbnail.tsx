@@ -434,92 +434,191 @@ function UpscaleThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
   );
 }
 
-/* ── Staging mode component ── */
+/* ── Staging mode component (before/after wipe slider) ── */
+
+type StagingPhase = 'empty-hold' | 'wiping-in' | 'styled-hold' | 'wiping-out';
+
+const STAGING_TIMINGS = {
+  'empty-hold': 2000,
+  'wiping-in': 1500,
+  'styled-hold': 2500,
+  'wiping-out': 1500,
+} as const;
 
 function StagingThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
   const backgrounds = scene.backgrounds ?? [scene.background];
   const labels = scene.slideLabels ?? backgrounds.map((_, i) => `Style ${i + 1}`);
-  const INTERVAL = 4000;
-  const [index, setIndex] = useState(0);
+  // styles = non-empty backgrounds (skip index 0 which is the empty room)
+  const styledBackgrounds = backgrounds.slice(1);
+  const styledLabels = labels.slice(1);
+  const emptyRoom = backgrounds[0];
+
+  const [styleIndex, setStyleIndex] = useState(0);
+  const [phase, setPhase] = useState<StagingPhase>('empty-hold');
   const [bgLoaded, setBgLoaded] = useState(false);
 
-  useEffect(() => {
-    if (!isActive || backgrounds.length <= 1) return;
-    const t = setInterval(() => {
-      setIndex((i) => (i + 1) % backgrounds.length);
-    }, INTERVAL);
-    return () => clearInterval(t);
-  }, [isActive, backgrounds.length]);
+  // Optimized URLs
+  const optimizedEmpty = useMemo(() => getOptimizedUrl(emptyRoom, { quality: 60 }), [emptyRoom]);
+  const optimizedStyled = useMemo(
+    () => styledBackgrounds.map((bg) => getOptimizedUrl(bg, { quality: 60 })),
+    [styledBackgrounds],
+  );
 
-  const prev = (index - 1 + backgrounds.length) % backgrounds.length;
-  const isFirstSlide = index === 0;
+  // Phase state machine
+  useEffect(() => {
+    if (!isActive || styledBackgrounds.length === 0) {
+      setPhase('empty-hold');
+      setStyleIndex(0);
+      return;
+    }
+
+    let timer: ReturnType<typeof setTimeout>;
+
+    function nextPhase(current: StagingPhase) {
+      switch (current) {
+        case 'empty-hold':
+          setPhase('wiping-in');
+          timer = setTimeout(() => nextPhase('wiping-in'), STAGING_TIMINGS['wiping-in']);
+          break;
+        case 'wiping-in':
+          setPhase('styled-hold');
+          timer = setTimeout(() => nextPhase('styled-hold'), STAGING_TIMINGS['styled-hold']);
+          break;
+        case 'styled-hold':
+          setPhase('wiping-out');
+          timer = setTimeout(() => nextPhase('wiping-out'), STAGING_TIMINGS['wiping-out']);
+          break;
+        case 'wiping-out':
+          setStyleIndex((prev) => (prev + 1) % styledBackgrounds.length);
+          setPhase('empty-hold');
+          timer = setTimeout(() => nextPhase('empty-hold'), STAGING_TIMINGS['empty-hold']);
+          break;
+      }
+    }
+
+    // Start the cycle
+    setPhase('empty-hold');
+    setStyleIndex(0);
+    timer = setTimeout(() => nextPhase('empty-hold'), STAGING_TIMINGS['empty-hold']);
+
+    return () => clearTimeout(timer);
+  }, [isActive, styledBackgrounds.length]);
+
+  const currentStyledSrc = optimizedStyled[styleIndex] || '';
+  const currentLabel = styledLabels[styleIndex] || '';
+  const showStyledLayer = phase === 'wiping-in' || phase === 'styled-hold' || phase === 'wiping-out';
+  const isEmptyPhase = phase === 'empty-hold';
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
+      {/* Shimmer placeholder */}
       {!bgLoaded && (
         <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
       )}
 
-      {/* Previous image */}
-      <img src={backgrounds[prev]} alt="" className="absolute inset-0 w-full h-full object-cover object-top" />
-
-      {/* Current image with crossfade */}
+      {/* Empty room — always visible as base layer */}
       <img
-        key={index}
-        src={backgrounds[index]}
+        src={optimizedEmpty}
         alt=""
-        className={`absolute inset-0 w-full h-full object-cover object-top ${bgLoaded ? '' : 'opacity-0'}`}
-        style={bgLoaded ? { animation: 'wf-staging-fade 0.8s ease-in-out forwards' } : {}}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         onLoad={() => setBgLoaded(true)}
       />
 
-      {/* Gradient overlay */}
-      <div
-        className="absolute inset-0 z-[1]"
-        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.1))' }}
-      />
-
-      {isActive && (
+      {isActive && bgLoaded && styledBackgrounds.length > 0 && (
         <>
-          {/* Dynamic label badge */}
+          {/* Styled layer — wipes in/out via clip-path */}
+          <img
+            key={styleIndex}
+            src={currentStyledSrc}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{
+              clipPath: phase === 'wiping-in'
+                ? undefined
+                : phase === 'styled-hold'
+                  ? 'inset(0 0% 0 0)'
+                  : phase === 'wiping-out'
+                    ? undefined
+                    : 'inset(0 100% 0 0)',
+              animation: phase === 'wiping-in'
+                ? `wf-staging-wipe-in ${STAGING_TIMINGS['wiping-in']}ms ease-in-out forwards`
+                : phase === 'wiping-out'
+                  ? `wf-staging-wipe-out ${STAGING_TIMINGS['wiping-out']}ms ease-in-out forwards`
+                  : undefined,
+              opacity: showStyledLayer ? 1 : 0,
+              transition: !showStyledLayer ? 'opacity 0.3s ease-out' : undefined,
+            }}
+          />
+
+          {/* Vertical divider line */}
+          {(phase === 'wiping-in' || phase === 'wiping-out') && (
+            <div
+              className="absolute top-0 bottom-0 w-[2px] bg-white/80 z-[15]"
+              style={{
+                animation: phase === 'wiping-in'
+                  ? `wf-staging-divider-in ${STAGING_TIMINGS['wiping-in']}ms ease-in-out forwards`
+                  : `wf-staging-divider-out ${STAGING_TIMINGS['wiping-out']}ms ease-in-out forwards`,
+                boxShadow: '0 0 8px rgba(255,255,255,0.5)',
+              }}
+            />
+          )}
+
+          {/* Gradient overlay */}
           <div
-            key={`label-${index}`}
+            className="absolute inset-0 z-[1] pointer-events-none"
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.4), rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.1))' }}
+          />
+
+          {/* "Empty Room" label — visible during empty-hold */}
+          <div
             className="absolute top-3 left-3 z-20"
-            style={{ animation: 'wf-staging-label 0.4s ease-out forwards' }}
+            style={{
+              opacity: isEmptyPhase ? 1 : 0,
+              transition: 'opacity 0.4s ease-in-out',
+            }}
           >
             <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full wf-card-shadow">
-              {isFirstSlide ? (
-                <Home className="w-3 h-3 text-muted-foreground" />
-              ) : (
-                <Sparkles className="w-3 h-3 text-primary" />
-              )}
-              <span className={`text-[11px] font-bold tracking-wide ${isFirstSlide ? 'text-muted-foreground' : 'text-primary'}`}>
-                {labels[index]}
-              </span>
+              <Home className="w-3 h-3 text-muted-foreground" />
+              <span className="text-[11px] font-bold tracking-wide text-muted-foreground">Empty Room</span>
             </div>
           </div>
 
-          {/* "Generated" badge on styled slides */}
-          {!isFirstSlide && (
-            <div
-              key={`gen-${index}`}
-              className="absolute bottom-7 right-3 z-20"
-              style={{ animation: 'wf-staging-badge 0.45s cubic-bezier(.34,1.56,.64,1) 0.2s forwards', opacity: 0 }}
-            >
-              <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full wf-card-shadow">
-                <Sparkles className="w-3 h-3 text-primary" />
-                <span className="text-[11px] font-bold text-primary tracking-wide">Generated</span>
-              </div>
+          {/* Style label — visible during styled-hold */}
+          <div
+            className="absolute top-3 left-3 z-20"
+            style={{
+              opacity: phase === 'styled-hold' ? 1 : 0,
+              transition: 'opacity 0.4s ease-in-out',
+            }}
+          >
+            <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full wf-card-shadow">
+              <Sparkles className="w-3 h-3 text-primary" />
+              <span className="text-[11px] font-bold tracking-wide text-primary">{currentLabel}</span>
             </div>
-          )}
+          </div>
 
-          {/* Progress dots */}
+          {/* "Generated" badge — visible during styled-hold */}
+          <div
+            className="absolute bottom-7 right-3 z-20"
+            style={{
+              opacity: phase === 'styled-hold' ? 1 : 0,
+              transform: phase === 'styled-hold' ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.8)',
+              transition: 'opacity 0.4s ease-in-out, transform 0.4s ease-in-out',
+            }}
+          >
+            <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full wf-card-shadow">
+              <Sparkles className="w-3 h-3 text-primary" />
+              <span className="text-[11px] font-bold text-primary tracking-wide">Generated</span>
+            </div>
+          </div>
+
+          {/* Progress dots — show which style is active */}
           <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-            {backgrounds.map((_, i) => (
+            {styledBackgrounds.map((_, i) => (
               <div
                 key={i}
                 className={`rounded-full transition-all duration-500 ${
-                  i === index ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'
+                  i === styleIndex ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'
                 }`}
               />
             ))}
@@ -528,18 +627,21 @@ function StagingThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive:
       )}
 
       <style>{`
-        @keyframes wf-staging-fade {
-          from { opacity: 0; }
-          to   { opacity: 1; }
+        @keyframes wf-staging-wipe-in {
+          from { clip-path: inset(0 100% 0 0); }
+          to   { clip-path: inset(0 0% 0 0); }
         }
-        @keyframes wf-staging-label {
-          from { opacity: 0; transform: translateY(-6px); }
-          to   { opacity: 1; transform: translateY(0); }
+        @keyframes wf-staging-wipe-out {
+          from { clip-path: inset(0 0% 0 0); }
+          to   { clip-path: inset(0 100% 0 0); }
         }
-        @keyframes wf-staging-badge {
-          0%   { opacity: 0; transform: translateY(8px) scale(0.6); }
-          70%  { opacity: 1; transform: translateY(-2px) scale(1.05); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes wf-staging-divider-in {
+          from { left: 0%; }
+          to   { left: calc(100% - 2px); }
+        }
+        @keyframes wf-staging-divider-out {
+          from { left: calc(100% - 2px); }
+          to   { left: 0%; }
         }
         .wf-card-shadow {
           box-shadow: 0 4px 20px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
