@@ -1,30 +1,24 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Improve Upload Step UX for Interior/Exterior Staging
 
-### Issues Found
+**Problem**: The upload step shows "Your Recent Uploads" (a grid of previous images, often irrelevant clothing photos) first, pushing the actual upload area to the bottom. For interior/exterior staging, the primary action should be uploading a new room photo.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes in `src/pages/Generate.tsx` (lines 1680-1713)
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**Reorder the upload step layout:**
 
-### Plan
+1. **Move `UploadSourceCard` (the drag-and-drop upload area) ABOVE the recent uploads gallery** — swap lines 1709-1713 to come before lines 1681-1707
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+2. **Make recent uploads a collapsible section** — wrap the previous uploads in a `Collapsible` component (already available via `@radix-ui/react-collapsible`) with a subtle trigger like "Or reuse a previous photo (X available)" so it doesn't dominate the view
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+3. **Reduce the recent uploads grid** — change from `grid-cols-4 sm:grid-cols-5 md:grid-cols-6` to `grid-cols-3 sm:grid-cols-4 md:grid-cols-5` with a max of 8 shown (add "Show more" if needed), so it stays compact
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**Resulting layout order:**
+1. Title + subtitle ("Upload Your Photo")
+2. Upload tips (interior/exterior contextual tips)
+3. **Upload area (drag & drop)** — primary action, immediately visible
+4. **Collapsible "Or reuse a previous photo"** — secondary action, collapsed by default
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+This ensures users see the upload action first and recent photos are accessible but not overwhelming.
 
