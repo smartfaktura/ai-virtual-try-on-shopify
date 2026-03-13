@@ -3880,6 +3880,7 @@ export default function Generate() {
                 generatingProgress={generatingProgress}
                 activeJob={activeJob}
                 onCancel={cancelQueue}
+                totalExpectedImages={productQueue.length * tryOnSceneCount}
               />
             )}
 
