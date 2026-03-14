@@ -534,7 +534,7 @@ export default function Freestyle() {
   }, []);
 
   const hasImages = savedImages.length > 0;
-  const hasBlocked = blockedEntries.length > 0;
+  const hasBlocked = blockedEntries.length > 0 || failedEntries.length > 0;
   const showLoading = isLoadingImages && !hasImages;
 
   const galleryImages = savedImages.map(img => ({
