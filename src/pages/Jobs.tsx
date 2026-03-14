@@ -92,7 +92,7 @@ export default function Jobs() {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery);
   const items = data?.pages.flatMap(p => p.items) ?? [];
   const { lastCompletedAt } = useGenerationQueue();
-  const columnCount = useColumnCount();
+  const { count: columnCount, options: columnOptions, setColumns } = useColumnCount();
 
   // Track which images are currently being upscaled
   const { data: upscalingSourceIds = new Set<string>() } = useQuery({
