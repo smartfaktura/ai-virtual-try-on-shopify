@@ -242,12 +242,18 @@ function polishUserPrompt(
       "SELFIE FRAMING: Subject's full head and hair must be fully visible within the frame with natural headroom above. Frame from mid-chest or shoulders upward — do NOT crop below the chin or above the forehead. Center the face in the upper-third of the frame following the rule of thirds."
     );
   } else {
-    layers.push(`Professional photography: ${rawPrompt}`);
-    // If user typed a prompt, default to people-mode — anatomy constraints are harmless
-    // for non-people subjects, but "No people" negatives destroy people-describing prompts.
-    // Only suppress people when there's truly no prompt text and no assets.
-    const wantsPeople = context.hasModel || context.hasProduct || !!rawPrompt.trim();
-    layers.push(wantsPeople ? buildPhotographyDNA() : buildGenericDNA());
+    const expert = isExpertPrompt(rawPrompt);
+    if (expert) {
+      // Expert prompt: user already specified camera/lighting — don't override with generic DNA
+      layers.push(rawPrompt);
+    } else {
+      layers.push(`Professional photography: ${rawPrompt}`);
+      // If user typed a prompt, default to people-mode — anatomy constraints are harmless
+      // for non-people subjects, but "No people" negatives destroy people-describing prompts.
+      // Only suppress people when there's truly no prompt text and no assets.
+      const wantsPeople = context.hasModel || context.hasProduct || !!rawPrompt.trim();
+      layers.push(wantsPeople ? buildPhotographyDNA() : buildGenericDNA());
+    }
   }
 
   // Brand profile layer
