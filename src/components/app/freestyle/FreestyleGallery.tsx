@@ -470,7 +470,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const [shareImg, setShareImg] = useState<{ url: string; prompt: string; aspectRatio?: string; id?: string } | null>(null);
   const [addToDiscoverImg, setAddToDiscoverImg] = useState<{ url: string; prompt: string; aspectRatio?: string } | null>(null);
 
-  const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0;
+  const hasContent = images.length > 0 || generatingCount > 0 || blockedEntries.length > 0 || failedEntries.length > 0;
 
   if (!hasContent) {
     return (
