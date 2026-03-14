@@ -118,6 +118,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
     initialPageParam: 0,
     enabled: !!user,
     staleTime: 60_000,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   });
 }
