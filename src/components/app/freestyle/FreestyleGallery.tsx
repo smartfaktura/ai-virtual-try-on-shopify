@@ -72,6 +72,9 @@ interface FreestyleGalleryProps {
   blockedEntries?: BlockedEntry[];
   onDismissBlocked?: (id: string) => void;
   onEditBlockedPrompt?: (prompt: string) => void;
+  failedEntries?: FailedEntry[];
+  onDismissFailed?: (id: string) => void;
+  onRetryFailed?: (prompt: string) => void;
   onLoadMore?: () => void;
   hasMore?: boolean;
   isFetchingMore?: boolean;
