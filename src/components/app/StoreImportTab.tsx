@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon } from 'lucide-react';
+import { Globe, Loader2, Check, AlertCircle, Image as ImageIcon, Upload, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 interface StoreImportTabProps {
   onProductAdded: () => void;
   onClose: () => void;
+  onSwitchToUpload?: () => void;
 }
 
 interface ExtractedProduct {
@@ -24,20 +25,81 @@ interface ExtractedProduct {
   dimensions?: string | null;
 }
 
-export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps) {
+interface ImportError {
+  code: string;
+  message: string;
+}
+
+const ERROR_INFO: Record<string, { title: string; explanation: string; tip: string }> = {
+  site_blocked: {
+    title: 'Import blocked by website',
+    explanation: 'This website has bot protection (like Cloudflare or similar) that prevents us from accessing the product page automatically.',
+    tip: 'Use the Upload tab to add this product manually — just save the product images from the website and upload them directly.',
+  },
+  no_product_data: {
+    title: 'No product found on this page',
+    explanation: "We couldn't detect any product data on this page. This usually means the link goes to a collection, homepage, or a page that doesn't contain a single product.",
+    tip: 'Make sure you are linking directly to a product page (e.g. myshop.com/products/cool-tee), not a collection or category page.',
+  },
+  images_protected: {
+    title: 'Product images are protected',
+    explanation: "We found the product but couldn't download its images. The site may be using hotlink protection or requiring authentication to access images.",
+    tip: 'Try right-click saving the product images from the website, then upload them via the Upload tab.',
+  },
+  extraction_failed: {
+    title: 'Could not read product page',
+    explanation: "This page uses dynamic rendering (like heavy JavaScript) that our importer can't process yet. Some modern websites load product data after the initial page load.",
+    tip: 'Try the Upload tab instead — it works with any product. You can also try a different URL for the same product.',
+  },
+  invalid_url: {
+    title: 'Invalid URL',
+    explanation: "The URL you entered doesn't appear to be a valid web address.",
+    tip: 'Make sure the URL starts with https:// and points to a real product page.',
+  },
+  unauthorized: {
+    title: 'Session expired',
+    explanation: 'Your session has expired and you need to sign in again.',
+    tip: 'Please refresh the page and sign in to continue importing.',
+  },
+  unknown: {
+    title: 'Something went wrong',
+    explanation: "An unexpected error occurred while importing this product. This might be a temporary issue.",
+    tip: 'Try again in a moment, or use the Upload tab to add the product manually.',
+  },
+};
+
+function getErrorInfo(code: string, rawMessage: string) {
+  // Try exact code match first
+  if (ERROR_INFO[code]) return ERROR_INFO[code];
+
+  // Fallback: pattern-match on message for older responses without error_code
+  const msg = rawMessage.toLowerCase();
+  if (msg.includes('403') || msg.includes('blocking automated') || msg.includes('could not access'))
+    return ERROR_INFO.site_blocked;
+  if (msg.includes('could not find product') || msg.includes('title or images'))
+    return ERROR_INFO.no_product_data;
+  if (msg.includes('could not download') || msg.includes('images may be protected'))
+    return ERROR_INFO.images_protected;
+  if (msg.includes('could not extract') || msg.includes('dynamic rendering'))
+    return ERROR_INFO.extraction_failed;
+
+  return ERROR_INFO.unknown;
+}
+
+export function StoreImportTab({ onProductAdded, onClose, onSwitchToUpload }: StoreImportTabProps) {
   const { user } = useAuth();
   const [url, setUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedProduct | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [importError, setImportError] = useState<ImportError | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const handleImport = async () => {
     if (!url.trim()) return;
     setIsImporting(true);
     setExtracted(null);
-    setError(null);
+    setImportError(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -50,14 +112,16 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
       if (response.error) throw new Error(response.error.message);
 
       const data = response.data;
-      if (data.error) throw new Error(data.error);
+      if (data.error) {
+        setImportError({ code: data.error_code || 'unknown', message: data.error });
+        return;
+      }
 
       setExtracted(data as ExtractedProduct);
       setSelectedImageIndex(0);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Import failed';
-      setError(msg);
-      toast.error(msg);
+      setImportError({ code: 'unknown', message: msg });
     } finally {
       setIsImporting(false);
     }
@@ -68,11 +132,9 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
     setIsSaving(true);
 
     try {
-      // Determine primary image from selection
       const imageUrls = extracted.image_urls || [extracted.image_url];
       const primaryImageUrl = imageUrls[selectedImageIndex] || extracted.image_url;
 
-      // Insert product record
       const { data: productData, error: insertError } = await supabase
         .from('user_products')
         .insert({
@@ -88,11 +150,9 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
 
       if (insertError) throw new Error(insertError.message);
 
-      // Insert all images — selected image gets position 0
       const storagePaths = extracted.storage_paths || [extracted.storage_path];
 
       const imageRows = imageUrls.map((imgUrl, i) => {
-        // Reorder so selectedImageIndex gets position 0
         let position = i;
         if (i === selectedImageIndex) position = 0;
         else if (i < selectedImageIndex) position = i + 1;
@@ -135,6 +195,8 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
   const platform = url ? detectPlatform(url) : null;
   const imageCount = extracted?.image_urls?.length || (extracted ? 1 : 0);
 
+  const errorInfo = importError ? getErrorInfo(importError.code, importError.message) : null;
+
   return (
     <div className="space-y-5">
       <div className="space-y-2">
@@ -146,7 +208,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
               id="store-url"
               placeholder="https://myshop.com/products/cool-tee"
               value={url}
-              onChange={(e) => { setUrl(e.target.value); setError(null); }}
+              onChange={(e) => { setUrl(e.target.value); setImportError(null); }}
               className="pl-9"
               disabled={isImporting}
             />
@@ -173,11 +235,47 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
         <span className="text-[11px] text-muted-foreground">+ any product page</span>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-          <span>{error}</span>
+      {/* Error card */}
+      {errorInfo && !isImporting && (
+        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-3 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertCircle className="w-4 h-4 text-destructive" />
+            </div>
+            <div className="space-y-1 min-w-0">
+              <p className="font-medium text-sm text-foreground">{errorInfo.title}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{errorInfo.explanation}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 bg-background/60 rounded-lg p-3 border border-border/50">
+            <Sparkles className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              <span className="font-medium text-foreground">VOVV.AI tip:</span>{' '}
+              {errorInfo.tip}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            {onSwitchToUpload && importError?.code !== 'unauthorized' && importError?.code !== 'invalid_url' && (
+              <Button
+                size="sm"
+                variant="default"
+                onClick={onSwitchToUpload}
+                className="gap-1.5"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Try Manual Upload
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setImportError(null); setUrl(''); }}
+            >
+              Try Another URL
+            </Button>
+          </div>
         </div>
       )}
 
@@ -272,7 +370,7 @@ export function StoreImportTab({ onProductAdded, onClose }: StoreImportTabProps)
         </div>
       )}
 
-      {!extracted && !isImporting && (
+      {!extracted && !isImporting && !importError && (
         <div className="flex justify-end pt-6">
           <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
         </div>

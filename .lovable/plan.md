@@ -1,43 +1,30 @@
 
 
-## Improve Product URL Import Error Handling
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The current error messages are raw/technical. We need friendly, branded messages from the VOVV.AI team that explain what happened and what to do next.
+### Issues Found
 
-### Changes
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**1. `src/components/app/StoreImportTab.tsx` — Better error display and messaging**
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-Replace the simple error `<div>` with a richer error card that maps known error patterns to friendly explanations:
+### Plan
 
-- **403 / "blocking automated requests"** → "This website has bot protection that prevents us from accessing the product page. Our team recommends using the Upload tab to add this product manually."
-- **"Could not find product title or images"** → "We couldn't detect product data on this page. Make sure you're linking directly to a product page (not a collection or homepage)."
-- **"Could not download any product images"** → "The product images on this site are protected. Try right-click saving the images and uploading them via the Upload tab."
-- **"Could not extract product data"** → "This page uses dynamic rendering that our importer can't read yet. Try the Upload tab instead."
-- **Generic fallback** → "Something went wrong during import. Try again or use manual upload."
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-Each error will show:
-- A clear title ("Import blocked by website")
-- A helpful explanation
-- A suggestion from the VOVV.AI team
-- A "Try Manual Upload" button that switches to the Upload tab (or prompts the user)
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**2. `supabase/functions/import-product/index.ts` — Add error codes to responses**
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-Add an `error_code` field alongside `error` messages so the frontend can pattern-match reliably instead of parsing strings:
-- `site_blocked` (HTTP 403/bot protection)
-- `no_product_data` (no title/images found)
-- `images_protected` (couldn't download images)
-- `extraction_failed` (AI parse failure)
-- `invalid_url` / `unauthorized`
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-**3. StoreImportTab — Add "Try Upload Instead" action button in error state**
-
-Include a button in the error card that either navigates to the Upload tab or calls a callback, making the recovery path obvious.
-
-### Files Modified
-| File | Change |
-|---|---|
-| `supabase/functions/import-product/index.ts` | Add `error_code` to all error responses |
-| `src/components/app/StoreImportTab.tsx` | Map error codes to friendly messages with team tips and recovery action |
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
