@@ -253,7 +253,7 @@ export function CreditProvider({ children }: CreditProviderProps) {
       return count * baseCost * multiplier;
     }
     if (mode === 'virtual-try-on') return count * 8;
-    if (hasModel || hasScene) return count * 8;
+    if (hasModel || hasScene || quality === 'high') return count * 8;
     return count * 4;
   }, []);
   
