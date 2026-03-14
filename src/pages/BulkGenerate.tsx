@@ -27,6 +27,7 @@ export default function BulkGenerate() {
   const location = useLocation();
   const { plan } = useCredits();
   const isFreeUser = plan === 'free';
+  const { filterVisible } = useHiddenScenes();
 
   const passedProducts = (location.state as { selectedProducts?: Product[] })?.selectedProducts;
   const hasPassedProducts = passedProducts && passedProducts.length >= 2;
