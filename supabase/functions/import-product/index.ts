@@ -331,7 +331,7 @@ Deno.serve(async (req) => {
     if (uploadedImages.length === 0) {
       return new Response(
         JSON.stringify({ error: "Could not download any product images.", error_code: "images_protected" }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
