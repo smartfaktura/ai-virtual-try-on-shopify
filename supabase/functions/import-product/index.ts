@@ -266,7 +266,7 @@ Deno.serve(async (req) => {
     if (!productData.title || imageUrls.length === 0) {
       return new Response(
         JSON.stringify({ error: "Could not find product title or images on this page.", error_code: "no_product_data" }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
