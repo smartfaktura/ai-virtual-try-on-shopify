@@ -44,6 +44,15 @@ export interface BlockedEntry {
   reason: string;
 }
 
+export type FailedErrorType = 'timeout' | 'rate_limit' | 'generic';
+
+export interface FailedEntry {
+  id: string;
+  prompt: string;
+  errorType: FailedErrorType;
+  message: string;
+}
+
 interface GalleryImage {
   id: string;
   url: string;
