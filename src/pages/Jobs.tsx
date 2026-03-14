@@ -248,8 +248,8 @@ export default function Jobs() {
         )}
 
         {/* Search + Sort + Select */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative max-w-md flex-1">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="relative w-full sm:max-w-md sm:flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
@@ -278,7 +278,7 @@ export default function Jobs() {
 
             <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
 
-            <div className="hidden sm:flex items-center gap-1">
+            <div className="flex items-center gap-1">
               <LayoutGrid className="w-3.5 h-3.5 text-muted-foreground mr-0.5" />
               {columnOptions.map(n => (
                 <button
