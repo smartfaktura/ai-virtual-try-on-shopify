@@ -515,7 +515,12 @@ export default function Discover() {
             toast.success('Deleted from Discover');
             queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
           } else {
-            const sceneId = (selectedItem.data as any).poseId?.replace('custom-', '') ?? (selectedItem.data as any).id;
+            const poseId = (selectedItem.data as any).poseId ?? '';
+            if (!poseId.startsWith('custom-')) {
+              toast.error('Built-in scenes cannot be deleted — they are part of the codebase');
+              return;
+            }
+            const sceneId = poseId.replace('custom-', '');
             const { error } = await supabase.from('custom_scenes').delete().eq('id', sceneId);
             if (error) { toast.error('Failed to delete scene'); return; }
             toast.success('Scene deleted');
