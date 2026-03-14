@@ -82,6 +82,20 @@ function detectFullBodyIntent(prompt: string): boolean {
   return FULL_BODY_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
+// ── Expert prompt detection — skip photography DNA for detailed technical prompts ──
+function isExpertPrompt(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  const signals = [
+    /\d+mm/, /f\/\d/, /iso\s*\d/i, /aperture/, /focal length/,
+    /shutter speed/, /depth of field/, /bokeh/, /lens\b/,
+    /color balance/, /color temperature/, /kelvin/,
+    /key light/, /rim light/, /fill light/, /backlight/,
+    /softbox/, /strobe/, /reflector/, /diffuser/,
+  ];
+  const matchCount = signals.filter(r => r.test(lower)).length;
+  return prompt.length > 300 && matchCount >= 2;
+}
+
 // ── Photography DNA (Pro camera style — for people/fashion shots) ─────────
 function buildPhotographyDNA(): string {
   return `Shot on 85mm f/2.8 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Razor-sharp focus, micro-contrast. Natural skin texture, visible material textures and fine stitching. Subtle film grain, elegant highlight roll-off.`;
