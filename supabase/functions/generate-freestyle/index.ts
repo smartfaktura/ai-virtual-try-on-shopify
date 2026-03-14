@@ -229,7 +229,10 @@ function polishUserPrompt(
     );
   } else {
     layers.push(`Professional photography: ${rawPrompt}`);
-    const wantsPeople = context.hasModel || context.hasProduct;
+    // If user typed a prompt, default to people-mode — anatomy constraints are harmless
+    // for non-people subjects, but "No people" negatives destroy people-describing prompts.
+    // Only suppress people when there's truly no prompt text and no assets.
+    const wantsPeople = context.hasModel || context.hasProduct || !!rawPrompt.trim();
     layers.push(wantsPeople ? buildPhotographyDNA() : buildGenericDNA());
   }
 
