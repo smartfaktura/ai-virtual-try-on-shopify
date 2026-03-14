@@ -732,6 +732,27 @@ export type Database = {
         }
         Relationships: []
       }
+      hidden_scenes: {
+        Row: {
+          created_at: string
+          hidden_by: string
+          id: string
+          scene_id: string
+        }
+        Insert: {
+          created_at?: string
+          hidden_by: string
+          id?: string
+          scene_id: string
+        }
+        Update: {
+          created_at?: string
+          hidden_by?: string
+          id?: string
+          scene_id?: string
+        }
+        Relationships: []
+      }
       mobile_upload_sessions: {
         Row: {
           created_at: string

@@ -1,61 +1,30 @@
 
 
-## Allow Admins to Hide Built-in Static Scenes
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-Built-in scenes (e.g. `scene_009`) are hardcoded in `mockData.ts` and don't exist in the database. The current delete logic correctly rejects them, but admins need a way to remove these from the platform.
+### Issues Found
 
-### Solution
-Create a `hidden_scenes` table to store scene IDs that admins have hidden. Filter out hidden scenes everywhere `mockTryOnPoses` is consumed.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Database Migration
-Create `hidden_scenes` table:
-```sql
-CREATE TABLE public.hidden_scenes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  scene_id text NOT NULL UNIQUE,
-  hidden_by uuid NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-ALTER TABLE public.hidden_scenes ENABLE ROW LEVEL SECURITY;
+### Plan
 
-CREATE POLICY "Admins can manage hidden scenes"
-  ON public.hidden_scenes FOR ALL TO authenticated
-  USING (has_role(auth.uid(), 'admin'::app_role))
-  WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-CREATE POLICY "Anyone can read hidden scenes"
-  ON public.hidden_scenes FOR SELECT TO authenticated
-  USING (true);
-```
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Code Changes
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**New hook: `src/hooks/useHiddenScenes.ts`**
-- Query `hidden_scenes` table to get list of hidden scene IDs
-- Provide `hideScene` mutation (insert) and `unhideScene` mutation (delete)
-- Export a helper to filter an array of poses by removing hidden ones
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-**`src/pages/Discover.tsx`** (~line 235, 511-528)
-- Import `useHiddenScenes`
-- Filter `mockTryOnPoses` through hidden scenes before building `allItems`
-- Update `onDelete` handler: for static scenes (no `custom-` prefix), insert into `hidden_scenes` instead of showing error toast. Show "Scene hidden" success toast.
-
-**`src/pages/PublicDiscover.tsx`** (~line 147)
-- Same filter: exclude hidden scenes from `allItems`
-
-**`src/components/app/freestyle/SceneSelectorChip.tsx`** (~line 40)
-- Filter `mockTryOnPoses` through hidden scenes before combining with custom poses
-
-**`src/pages/Generate.tsx`** (~line 480)
-- Filter `mockTryOnPoses` through hidden scenes in `posesByCategory`
-
-**`src/pages/Freestyle.tsx`** (~line 154)
-- Filter hidden scenes when matching scene from URL params
-
-**`src/pages/BulkGenerate.tsx`** (~lines 41, 164)
-- Filter hidden scenes from poses passed to bulk generation
-
-This ensures hidden built-in scenes disappear globally: Discover, Freestyle, Generate, and Bulk Generate.
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

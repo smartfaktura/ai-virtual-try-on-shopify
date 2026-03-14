@@ -5,6 +5,7 @@ import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 
 interface SceneSelectorChipProps {
@@ -36,8 +37,9 @@ const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
   const { asPoses: customPoses } = useCustomScenes();
+  const { filterVisible } = useHiddenScenes();
 
-  const allPoses = [...mockTryOnPoses, ...customPoses];
+  const allPoses = [...filterVisible(mockTryOnPoses), ...customPoses];
   const allCategories = Object.keys(poseCategoryLabels) as PoseCategory[];
   const visibleCategories = activeFilter === 'all'
     ? allCategories

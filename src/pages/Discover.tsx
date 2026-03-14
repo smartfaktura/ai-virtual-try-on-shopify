@@ -15,6 +15,7 @@ import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useAdminSubmissions } from '@/hooks/useDiscoverSubmissions';
 import { AdminSubmissionsPanel } from '@/components/app/AdminSubmissionsPanel';
 import { mockTryOnPoses } from '@/data/mockData';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -195,6 +196,7 @@ export default function Discover() {
   const { isFeatured, featuredMap } = useFeaturedItems();
   const toggleFeatured = useToggleFeatured();
   const { asPoses: customScenePoses } = useCustomScenes();
+  const { filterVisible, hideScene } = useHiddenScenes();
   const { pendingCount: adminPendingCount } = useAdminSubmissions();
   const columnCount = useColumnCount();
   const [searchQuery, setSearchQuery] = useState('');
@@ -232,7 +234,7 @@ export default function Discover() {
   // Build unified feed
   const allItems = useMemo<DiscoverItem[]>(() => {
     const presetItems: DiscoverItem[] = presets.map((p) => ({ type: 'preset', data: p }));
-    const sceneItems: DiscoverItem[] = [...mockTryOnPoses, ...customScenePoses].map((s) => ({ type: 'scene', data: s }));
+    const sceneItems: DiscoverItem[] = [...filterVisible(mockTryOnPoses), ...customScenePoses].map((s) => ({ type: 'scene', data: s }));
     return [...presetItems, ...sceneItems];
   }, [presets, customScenePoses]);
 
@@ -517,7 +519,10 @@ export default function Discover() {
           } else {
             const poseId = (selectedItem.data as any).poseId ?? '';
             if (!poseId.startsWith('custom-')) {
-              toast.error('Built-in scenes cannot be deleted — they are part of the codebase');
+              // Hide built-in scene via hidden_scenes table
+              await hideScene.mutateAsync(poseId);
+              toast.success('Scene hidden from feed');
+              setSelectedItem(null);
               return;
             }
             const sceneId = poseId.replace('custom-', '');

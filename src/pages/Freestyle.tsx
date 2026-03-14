@@ -23,6 +23,7 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockTryOnPoses } from '@/data/mockData';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { supabase } from '@/integrations/supabase/client';
 import type { ModelProfile, TryOnPose, FramingOption } from '@/types';
 import type { FreestyleAspectRatio } from '@/components/app/freestyle/FreestyleSettingsChips';
@@ -104,6 +105,7 @@ export default function Freestyle() {
   const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
+  const { filterVisible } = useHiddenScenes();
   const handleContentBlocked = useCallback((jobId: string, reason: string) => {
     setBlockedEntries(prev => [{
       id: crypto.randomUUID(),
@@ -151,7 +153,7 @@ export default function Freestyle() {
     }
     if (q === 'high') setQuality('high');
     if (sceneParam) {
-      const matchedScene = mockTryOnPoses.find((s) => s.poseId === sceneParam);
+      const matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
       if (matchedScene) {
         setSelectedScene(matchedScene);
         if (!localStorage.getItem('hideSceneAppliedHint')) {

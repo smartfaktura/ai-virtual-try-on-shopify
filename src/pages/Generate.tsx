@@ -70,6 +70,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { convertImageToBase64 } from '@/lib/imageUtils';
 import { mockProducts, mockTemplates, categoryLabels, mockModels, mockTryOnPoses } from '@/data/mockData';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import type { Product, Template, TemplateCategory, BrandTone, BackgroundStyle, AspectRatio, ImageQuality, GenerationMode, ModelProfile, TryOnPose, ModelGender, ModelBodyType, ModelAgeRange, PoseCategory, GenerationSourceType, ScratchUpload, FramingOption } from '@/types';
 import { toast } from 'sonner';
 import type { Workflow } from '@/types/workflow';
@@ -97,6 +98,7 @@ type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model'
 export default function Generate() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { filterVisible } = useHiddenScenes();
   const [searchParams] = useSearchParams();
   const workflowId = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
@@ -477,7 +479,7 @@ export default function Generate() {
   });
 
   const onModelCategories: PoseCategory[] = ['studio', 'lifestyle', 'editorial', 'streetwear'];
-  const posesByCategory = mockTryOnPoses.reduce((acc, pose) => {
+  const posesByCategory = filterVisible(mockTryOnPoses).reduce((acc, pose) => {
     // For Virtual Try-On, only show on-model categories
     if (activeWorkflow?.uses_tryon && !onModelCategories.includes(pose.category)) return acc;
     if (!acc[pose.category]) acc[pose.category] = [];

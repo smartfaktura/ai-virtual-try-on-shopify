@@ -13,6 +13,7 @@ import { BulkResultsView } from '@/components/app/BulkResultsView';
 import { useBulkGeneration } from '@/hooks/useBulkGeneration';
 import { useCredits } from '@/contexts/CreditContext';
 import { mockProducts, mockTemplates, mockModels, mockTryOnPoses, mockShop } from '@/data/mockData';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import type { BulkGenerationConfig } from '@/types/bulk';
 import type { Product } from '@/types';
 import { calculateBulkCredits, MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
@@ -26,6 +27,7 @@ export default function BulkGenerate() {
   const location = useLocation();
   const { plan } = useCredits();
   const isFreeUser = plan === 'free';
+  const { filterVisible } = useHiddenScenes();
 
   const passedProducts = (location.state as { selectedProducts?: Product[] })?.selectedProducts;
   const hasPassedProducts = passedProducts && passedProducts.length >= 2;
@@ -38,7 +40,7 @@ export default function BulkGenerate() {
 
   const bulkGeneration = useBulkGeneration({
     models: mockModels,
-    poses: mockTryOnPoses,
+    poses: filterVisible(mockTryOnPoses),
     templates: mockTemplates,
   });
 
@@ -161,7 +163,7 @@ export default function BulkGenerate() {
             selectedProducts={selectedProducts}
             templates={mockTemplates}
             models={mockModels}
-            poses={mockTryOnPoses}
+            poses={filterVisible(mockTryOnPoses)}
             creditsBalance={mockShop.creditsBalance}
             isFreeUser={isFreeUser}
           />
