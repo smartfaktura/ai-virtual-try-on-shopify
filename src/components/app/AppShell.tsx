@@ -130,7 +130,7 @@ export function AppShell({ children }: AppShellProps) {
     return (
       <div className="flex flex-col h-full">
         {/* Logo + Collapse Toggle */}
-        <div className={cn('flex items-center border-b border-white/[0.06] relative', isCollapsed ? 'justify-center px-3 pt-6 pb-5' : 'justify-center px-5 pt-6 pb-5')}>
+        <div className={cn('flex items-center border-b border-white/[0.06] relative', isCollapsed ? 'justify-center px-3 pt-6 pb-5' : 'justify-start px-5 pt-6 pb-5')}>
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/app')}>
             {!isCollapsed && (
               <span className="font-bold text-xl text-sidebar-foreground tracking-tight">VOVV.AI</span>
