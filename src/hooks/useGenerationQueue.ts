@@ -43,8 +43,11 @@ interface EnqueueResult {
   creditsCost: number;
 }
 
+export type FailedErrorType = 'timeout' | 'rate_limit' | 'generic';
+
 interface UseGenerationQueueOptions {
   onContentBlocked?: (jobId: string, reason: string) => void;
+  onGenerationFailed?: (jobId: string, message: string, errorType: FailedErrorType) => void;
   onCreditRefresh?: () => Promise<void> | void;
 }
 
