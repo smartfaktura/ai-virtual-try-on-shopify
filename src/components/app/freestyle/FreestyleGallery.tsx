@@ -517,7 +517,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     />
   ));
 
-  const count = images.length + generatingCount + blockedEntries.length;
+  const count = images.length + generatingCount + blockedEntries.length + failedEntries.length;
 
   const imageCards = (natural?: boolean) => images.map((img, idx) => (
     <ImageCard
