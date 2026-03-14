@@ -576,6 +576,9 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
           {blockedCards.map((card, i) => (
             <div key={`block-wrap-${i}`} className="max-h-[calc(100vh-400px)]">{card}</div>
           ))}
+          {failedCards.map((card, i) => (
+            <div key={`fail-wrap-${i}`} className="max-h-[calc(100vh-400px)]">{card}</div>
+          ))}
           {imageCards(true)}
         </div>
         {modals}
