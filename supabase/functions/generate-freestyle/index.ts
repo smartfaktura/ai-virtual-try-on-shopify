@@ -333,8 +333,8 @@ function polishUserPrompt(
       layers.push(
         "PORTRAIT QUALITY: Razor-sharp eye detail with individual eyelash rendering. Micro-contrast on skin texture — natural pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
       );
-      // Framing for standard portrait/model shots (only if no explicit framing override)
-      if (!framing) {
+      // Framing for standard portrait/model shots (only if no explicit framing override and not expert prompt)
+      if (!framing && !expert) {
         if (detectFullBodyIntent(rawPrompt)) {
           layers.push(
             `FRAMING: Full body shot, head to toe. Show the complete figure from head to feet with natural spacing. The entire body must be visible — do NOT crop at knees, waist, or shins.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`
