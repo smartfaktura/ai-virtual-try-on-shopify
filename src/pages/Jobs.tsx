@@ -32,21 +32,48 @@ const SORTS: { id: LibrarySortBy; label: string }[] = [
 ];
 
 
+type DeviceType = 'mobile' | 'tablet' | 'desktop';
+
+function getDeviceType(w: number): DeviceType {
+  if (w < 768) return 'mobile';
+  if (w < 1280) return 'tablet';
+  return 'desktop';
+}
+
+const COLUMN_OPTIONS: Record<DeviceType, number[]> = {
+  mobile: [1, 2],
+  tablet: [2, 3, 4],
+  desktop: [3, 4, 5],
+};
+
+const COLUMN_DEFAULTS: Record<DeviceType, number> = {
+  mobile: 2,
+  tablet: 3,
+  desktop: 5,
+};
+
 function useColumnCount() {
-  const [count, setCount] = useState(4);
+  const [device, setDevice] = useState<DeviceType>(() => getDeviceType(window.innerWidth));
+  const [userPref, setUserPref] = useState<number | null>(() => {
+    const stored = localStorage.getItem('library-columns');
+    return stored ? parseInt(stored, 10) : null;
+  });
+
   useEffect(() => {
-    const update = () => {
-      const w = window.innerWidth;
-      if (w < 640) setCount(2);
-      else if (w < 1024) setCount(3);
-      else if (w < 1280) setCount(4);
-      else setCount(5);
-    };
-    update();
+    const update = () => setDevice(getDeviceType(window.innerWidth));
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
-  return count;
+
+  const options = COLUMN_OPTIONS[device];
+  const count = userPref && options.includes(userPref) ? userPref : COLUMN_DEFAULTS[device];
+
+  const setColumns = (n: number) => {
+    setUserPref(n);
+    localStorage.setItem('library-columns', String(n));
+  };
+
+  return { count, options, setColumns };
 }
 
 export default function Jobs() {
