@@ -124,7 +124,8 @@ ${anatomyRules}
 - ${blurRule}
 - No AI-looking skin smoothing or plastic textures
 - No collage layouts or split-screen compositions
-- No compositing artifacts, no mismatched lighting between elements, no pasted-in look, no cut-out edges`;
+- No compositing artifacts, no mismatched lighting between elements, no pasted-in look, no cut-out edges
+- No black borders, black bars, letterboxing, pillarboxing, or padding around the image edges`;
 }
 
 // ── Context-aware prompt polish ───────────────────────────────────────────
