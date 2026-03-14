@@ -3885,26 +3885,61 @@ export default function Generate() {
             )}
 
             {/* Batch progress - enhanced (hidden in multi-product mode) */}
-            {batchState && batchState.totalJobs > 1 && !isMultiProductMode && (
+            {batchState && batchState.totalJobs > 1 && !isMultiProductMode && (() => {
+              const isVariationWorkflow = hasWorkflowConfig && variationStrategy?.variations?.length;
+              const sortedIndices = Array.from(selectedVariationIndices).sort((a, b) => a - b);
+              const variationLabel = isInteriorDesign ? 'style' : isVariationWorkflow ? 'variation' : 'image';
+              const doneCount = batchState.completedJobs + batchState.failedJobs;
+              return (
               <div className="w-full max-w-md space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">
                     {batchState.allDone
-                      ? isInteriorDesign ? `All ${batchState.totalJobs} styles complete` : `All ${batchState.totalJobs} batches complete`
-                      : isInteriorDesign ? `Style ${Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...` : `Image ${Math.min(batchState.completedJobs + batchState.failedJobs + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...`}
+                      ? `All ${batchState.totalJobs} ${variationLabel}s complete`
+                      : `${variationLabel.charAt(0).toUpperCase() + variationLabel.slice(1)} ${Math.min(doneCount + 1, batchState.totalJobs)} of ${batchState.totalJobs} generating...`}
                   </span>
-                  <span className="text-muted-foreground">{batchState.readyImages} image{batchState.readyImages !== 1 ? 's' : ''} ready</span>
+                  <span className="text-muted-foreground">
+                    {doneCount} of {batchState.totalJobs} done · {batchState.readyImages} image{batchState.readyImages !== 1 ? 's' : ''} ready
+                  </span>
                 </div>
-                <Progress value={(batchState.completedJobs + batchState.failedJobs) / batchState.totalJobs * 100} className="h-2" />
+                <Progress value={doneCount / batchState.totalJobs * 100} className="h-2" />
+                {/* Per-variation status chips */}
+                {isVariationWorkflow && sortedIndices.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {sortedIndices.map((varIdx, jobIdx) => {
+                      const label = variationStrategy!.variations[varIdx]?.label ?? `#${varIdx + 1}`;
+                      const job = batchState.jobs[jobIdx];
+                      const status = job?.status ?? 'queued';
+                      return (
+                        <div
+                          key={varIdx}
+                          className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] transition-all ${
+                            status === 'completed' ? 'border-primary/30 bg-primary/5 text-foreground' :
+                            status === 'processing' ? 'border-primary bg-primary/10 ring-1 ring-primary/30 text-foreground' :
+                            status === 'failed' ? 'border-destructive/30 bg-destructive/5 text-destructive' :
+                            'border-border bg-muted/30 text-muted-foreground opacity-70'
+                          }`}
+                        >
+                          {status === 'completed' && <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />}
+                          {status === 'processing' && <Loader2 className="w-3 h-3 text-primary animate-spin flex-shrink-0" />}
+                          {status === 'failed' && <X className="w-3 h-3 text-destructive flex-shrink-0" />}
+                          {status === 'queued' && <Clock className="w-3 h-3 text-muted-foreground flex-shrink-0" />}
+                          <span className="truncate max-w-[100px]">{label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
                 {batchState.failedJobs > 0 && (
-                  <p className="text-xs text-amber-600">{batchState.failedJobs} batch{batchState.failedJobs > 1 ? 'es' : ''} failed — credits refunded</p>
+                  <p className="text-xs text-amber-600">{batchState.failedJobs} {variationLabel}{batchState.failedJobs > 1 ? 's' : ''} failed — credits refunded</p>
                 )}
                 {/* Show active job indicator within batch */}
                 {activeJob && (
                   <QueuePositionIndicator job={activeJob} onCancel={cancelQueue} />
                 )}
               </div>
-            )}
+              );
+            })()}
 
             {/* Single job progress (hidden in multi-product mode) */}
             {(!batchState || batchState.totalJobs <= 1) && !isMultiProductMode && (
