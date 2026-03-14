@@ -12,6 +12,7 @@ import { useSavedItems } from '@/hooks/useSavedItems';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAuth } from '@/contexts/AuthContext';
 import { mockTryOnPoses } from '@/data/mockData';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { PageLayout } from '@/components/landing/PageLayout';
