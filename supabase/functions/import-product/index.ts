@@ -128,16 +128,20 @@ async function extractFromHtml(url: string, parsedUrl: URL): Promise<ProductData
   }
 
   if (!html) {
-    throw new Error(
-      `Could not access the product page (HTTP ${lastStatus}). The site may be blocking automated requests. Try removing any country/language prefix from the URL, or use manual upload instead.`
+    const error: any = new Error(
+      `Could not access the product page (HTTP ${lastStatus}). The site may be blocking automated requests.`
     );
+    error.error_code = lastStatus === 403 ? "site_blocked" : "site_blocked";
+    throw error;
   }
 
   const truncatedHtml = html.substring(0, 50000);
 
   const aiApiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!aiApiKey) {
-    throw new Error("AI service not configured");
+    const error: any = new Error("AI service not configured");
+    error.error_code = "extraction_failed";
+    throw error;
   }
 
   const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -181,7 +185,9 @@ If image URLs are relative, make them absolute using the page URL. Return ONLY t
 
   if (!aiResponse.ok) {
     console.error("AI extraction failed:", await aiResponse.text());
-    throw new Error("Could not extract product data. Try a different product URL or use manual upload.");
+    const error: any = new Error("Could not extract product data from this page.");
+    error.error_code = "extraction_failed";
+    throw error;
   }
 
   const aiResult = await aiResponse.json();
@@ -192,7 +198,9 @@ If image URLs are relative, make them absolute using the page URL. Return ONLY t
     return JSON.parse(cleanJson);
   } catch {
     console.error("Failed to parse AI response:", aiContent);
-    throw new Error("Could not extract product data from this page. The page may use dynamic rendering that prevents extraction.");
+    const error: any = new Error("Could not extract product data from this page.");
+    error.error_code = "extraction_failed";
+    throw error;
   }
 }
 
@@ -204,7 +212,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Unauthorized", error_code: "unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -219,7 +227,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Unauthorized", error_code: "unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -228,7 +236,7 @@ Deno.serve(async (req) => {
 
     const { url } = await req.json();
     if (!url || typeof url !== "string") {
-      return new Response(JSON.stringify({ error: "URL is required" }), {
+      return new Response(JSON.stringify({ error: "URL is required", error_code: "invalid_url" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -241,7 +249,7 @@ Deno.serve(async (req) => {
         throw new Error("Invalid protocol");
       }
     } catch {
-      return new Response(JSON.stringify({ error: "Invalid URL format" }), {
+      return new Response(JSON.stringify({ error: "Invalid URL format", error_code: "invalid_url" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -257,7 +265,7 @@ Deno.serve(async (req) => {
 
     if (!productData.title || imageUrls.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Could not find product title or images on this page. Try a direct product page URL." }),
+        JSON.stringify({ error: "Could not find product title or images on this page.", error_code: "no_product_data" }),
         { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -322,7 +330,7 @@ Deno.serve(async (req) => {
 
     if (uploadedImages.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Could not download any product images. The images may be protected or require authentication." }),
+        JSON.stringify({ error: "Could not download any product images.", error_code: "images_protected" }),
         { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -343,8 +351,9 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Import error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
+    const errorCode = (error as any)?.error_code || "unknown";
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: message, error_code: errorCode }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
