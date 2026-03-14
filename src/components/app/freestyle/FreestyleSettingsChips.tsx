@@ -176,7 +176,7 @@ export function FreestyleSettingsChips({
             ? 'border-primary/30 bg-primary/10 text-primary'
             : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
-          {quality === 'high' ? '✦ High' : 'Standard'}
+          {quality === 'high' ? 'Quality: ✦ High' : 'Quality: Standard'}
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
       </PopoverTrigger>
