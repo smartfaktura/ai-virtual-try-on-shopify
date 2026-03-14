@@ -1,30 +1,34 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Why the Timeout Happened
 
-### Issues Found
+From the logs, the freestyle generation used `google/gemini-3-pro-image-preview` with a source image + model image (high quality, pro camera). The AI gateway call timed out on **both attempts** (the function retries twice after the first failure).
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+**Root cause**: The `generateImage` function uses a **90-second timeout** per AI call (`AbortSignal.timeout(90_000)`). Pro image generation models with multiple input images (source + model + scene) regularly take 90-120+ seconds, especially under load. With `maxRetries = 2`, all 3 attempts can time out, consuming ~270s of the edge function's ~300s wall clock — and still failing.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**Why retries don't help here**: If the AI model is genuinely slow (not a transient error), retrying with the same 90s timeout will fail identically each time, just wasting time.
 
-### Plan
+---
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+## Plan to Prevent Timeouts
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+### 1. Increase timeout for pro model calls (`generate-freestyle/index.ts`)
+- Change the `AbortSignal.timeout` from **90s to 150s** for pro models (`gemini-3-pro-image-preview`, `gemini-3.1-pro-preview`)
+- Keep 90s for standard/flash models which are faster
+- Pass the model name into `generateImage` so it can pick the right timeout
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### 2. Reduce retries for timeout errors specifically
+- When the error is a `TimeoutError`, retry only **once** (not twice) — a second 150s attempt still fits within the edge function's wall clock
+- Keep 2 retries for other transient errors (500s, no-image responses)
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### 3. Better user-facing error message on timeout
+- Currently the user sees a generic "failed" message
+- Update the catch block to detect `TimeoutError` and set a specific error message: *"Generation timed out — the AI model took longer than expected. This can happen with complex prompts or multiple reference images. Please try again."*
+- This message will appear in the job's `error_message` field and propagate to the UI
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files Modified
+
+| File | Change |
+|---|---|
+| `supabase/functions/generate-freestyle/index.ts` | Dynamic timeout (150s pro / 90s standard), smarter retry for timeouts, descriptive error message |
 
