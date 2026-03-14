@@ -376,7 +376,8 @@ ${isSelfie ? `- SELFIE OVERRIDE: This is shot with the standard front-facing cam
   }
 
   // Build final negative prompt
-  const wantsPeople = context.hasModel || context.hasProduct;
+  // Same safe default: if user typed a prompt, don't inject "No people" negatives
+  const wantsPeople = context.hasModel || context.hasProduct || !!rawPrompt.trim();
   let negativeBlock = buildNegativePrompt(cameraStyle, wantsPeople);
   if (allNegatives.length > 0) {
     const dedupedNegatives = [...new Set(allNegatives.map(n => n.toLowerCase()))];
