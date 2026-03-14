@@ -658,6 +658,18 @@ async function completeQueueJob(
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
+  // Guard: if user already cancelled, skip completion to preserve refund
+  const { data: currentJob } = await supabase
+    .from("generation_queue")
+    .select("status")
+    .eq("id", jobId)
+    .single();
+
+  if (currentJob?.status === "cancelled") {
+    console.log(`[generate-workflow] Job ${jobId} was cancelled — skipping completion`);
+    return;
+  }
+
   const generatedCount = images.length;
 
   if (generatedCount === 0) {

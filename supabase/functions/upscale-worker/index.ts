@@ -258,15 +258,25 @@ serve(async (req) => {
       throw new Error("Failed to create upscaled record");
     }
 
-    // 6. Mark queue job as completed
-    await supabase
+    // 6. Check for cancellation before marking completed
+    const { data: currentJob } = await supabase
       .from("generation_queue")
-      .update({
-        status: "completed",
-        completed_at: new Date().toISOString(),
-        result: { imageUrl: newImageUrl, resolution },
-      })
-      .eq("id", jobId);
+      .select("status")
+      .eq("id", jobId)
+      .single();
+
+    if (currentJob?.status === "cancelled") {
+      console.log(`[upscale-worker] Job ${jobId} was cancelled — skipping completion`);
+    } else {
+      await supabase
+        .from("generation_queue")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+          result: { imageUrl: newImageUrl, resolution },
+        })
+        .eq("id", jobId);
+    }
 
     // 7. Clean up Topaz status (optional, free up their storage)
     fetch(`${TOPAZ_BASE}/status/${processId}`, {

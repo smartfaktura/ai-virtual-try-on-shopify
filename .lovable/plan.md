@@ -1,83 +1,30 @@
 
 
-## Root Cause: Credits Not Refunded on Cancel
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### What happened
+### Issues Found
 
-I traced your most recent cancel (job `09231917`) through the network logs:
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-1. Job was `processing` when you clicked Cancel
-2. The PATCH succeeded — status changed to `cancelled` in the response
-3. **But** the generation function (`generate-freestyle`) was still running and completed 27 seconds later, overwriting the status back to `completed`
-4. The refund trigger **did fire** (the trigger handles `queued` → `cancelled` AND `processing` → `cancelled`)
-5. **However**, the `completeQueueJob` function in the edge function then overwrote the status back to `completed` — the credits were refunded by the trigger, but then the job was marked `completed` (not `cancelled`), creating confusion
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**The real bug is deeper**: The cancellation trigger fires and refunds credits correctly. But the generation edge function doesn't check if the job was cancelled before writing its results. So:
-- Credits get refunded by the trigger ✓
-- Then `completeQueueJob` overwrites status to `completed` ✗
-- The UI sees `completed` and never shows "cancelled" feedback
-- `onCreditRefresh` may not fire because the cancel response looked fine but the subsequent state is ambiguous
+### Plan
 
-### Actually — let me verify the trigger condition more carefully
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-The trigger `trg_queue_cancel` has this WHEN clause:
-```sql
-WHEN (NEW.status = 'cancelled' AND OLD.status = 'queued')
-```
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**This is the bug.** The trigger only fires when `OLD.status = 'queued'`. When a job is in `processing` status and you cancel it, **the trigger does NOT fire** — no refund happens.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-The function body handles both:
-```sql
-IF NEW.status = 'cancelled' AND OLD.status IN ('queued', 'processing') THEN
-```
-But the trigger's WHEN clause restricts it to only `queued`.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-**Result**: Cancelling a `processing` job updates the status to `cancelled` but never refunds credits.
-
-### Fix Plan
-
-**1. Database migration — Fix the trigger WHEN clause**
-
-Drop and recreate the trigger so it fires for both `queued` AND `processing` cancellations:
-
-```sql
-DROP TRIGGER IF EXISTS trg_queue_cancel ON generation_queue;
-
-CREATE TRIGGER trg_queue_cancel
-  BEFORE UPDATE ON generation_queue
-  FOR EACH ROW
-  WHEN (NEW.status = 'cancelled' AND OLD.status IN ('queued', 'processing'))
-  EXECUTE FUNCTION handle_queue_cancellation();
-```
-
-**2. Edge functions — Check for cancellation before overwriting status**
-
-In all three generation functions (`generate-freestyle`, `generate-tryon`, `generate-workflow`), the `completeQueueJob` function must check if the job was already cancelled before writing `completed`/`failed`. This prevents the race condition where the function finishes after the user cancelled:
-
-```typescript
-// Before updating, check current status
-const { data: currentJob } = await supabase
-  .from("generation_queue")
-  .select("status")
-  .eq("id", jobId)
-  .single();
-
-if (currentJob?.status === 'cancelled') {
-  console.log(`[generate-*] Job ${jobId} was cancelled — skipping completion`);
-  return;
-}
-```
-
-**3. Frontend — already fixed** (the cancel logic with response verification is already in place from the previous implementation)
-
-### Files to modify
-
-| File | Change |
-|---|---|
-| Database migration | Fix trigger WHEN clause to include `processing` |
-| `supabase/functions/generate-freestyle/index.ts` | Add cancellation check in `completeQueueJob` |
-| `supabase/functions/generate-tryon/index.ts` | Add cancellation check in `completeQueueJob` |
-| `supabase/functions/generate-workflow/index.ts` | Add cancellation check in `completeQueueJob` |
-| `supabase/functions/upscale-worker/index.ts` | Add cancellation check before completion |
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
