@@ -98,6 +98,7 @@ type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model'
 export default function Generate() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { filterVisible } = useHiddenScenes();
   const [searchParams] = useSearchParams();
   const workflowId = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');

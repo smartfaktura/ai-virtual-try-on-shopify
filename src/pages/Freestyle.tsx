@@ -105,6 +105,7 @@ export default function Freestyle() {
   const promptRef = useRef(prompt);
   const [searchParams, setSearchParams] = useSearchParams();
   const { balance, openBuyModal, setBalanceFromServer, refreshBalance, plan } = useCredits();
+  const { filterVisible } = useHiddenScenes();
   const handleContentBlocked = useCallback((jobId: string, reason: string) => {
     setBlockedEntries(prev => [{
       id: crypto.randomUUID(),

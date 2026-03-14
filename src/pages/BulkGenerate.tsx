@@ -40,7 +40,7 @@ export default function BulkGenerate() {
 
   const bulkGeneration = useBulkGeneration({
     models: mockModels,
-    poses: mockTryOnPoses,
+    poses: filterVisible(mockTryOnPoses),
     templates: mockTemplates,
   });
 

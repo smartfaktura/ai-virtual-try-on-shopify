@@ -96,6 +96,7 @@ export default function PublicDiscover() {
   const { isSaved, toggleSave } = useSavedItems();
   const { isAdmin } = useIsAdmin();
   const columnCount = useColumnCount();
+  const { filterVisible } = useHiddenScenes();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItem, setSelectedItem] = useState<DiscoverItem | null>(null);
