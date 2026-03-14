@@ -1,30 +1,19 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Remove the "V" Icon from Navigation
 
-### Issues Found
+The square "V" icon next to the wordmark is redundant — "VOVV.AI" is already distinctive enough as a text logo. Removing it will clean up the nav and give the brand a more modern, minimal look.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Change
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+In `src/components/landing/LandingNav.tsx`, remove the `div` containing the "V" icon from the logo button (lines ~56-58), keeping only the `VOVV.AI` text span.
 
-### Plan
+The same logo pattern may also exist in `src/components/app/AppShell.tsx` (the internal dashboard sidebar logo). I'll check and apply the same removal there for consistency.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### Files to modify
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+| File | Change |
+|---|---|
+| `src/components/landing/LandingNav.tsx` | Remove the `div.w-8.h-8.rounded-xl` "V" icon element from the logo button |
+| `src/components/app/AppShell.tsx` | Remove matching "V" icon if present (for consistency) |
 
