@@ -352,9 +352,11 @@ Deno.serve(async (req) => {
     console.error("Import error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
     const errorCode = (error as any)?.error_code || "unknown";
+    const knownCodes = ["site_blocked", "extraction_failed", "no_product_data", "images_protected"];
+    const status = knownCodes.includes(errorCode) ? 200 : 500;
     return new Response(
       JSON.stringify({ error: message, error_code: errorCode }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

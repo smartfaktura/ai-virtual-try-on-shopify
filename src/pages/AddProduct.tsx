@@ -125,7 +125,7 @@ export default function AddProduct() {
               <ManualProductTab onProductAdded={handleDone} onClose={handleDone} />
             </TabsContent>
             <TabsContent value="store" className="mt-0">
-              <StoreImportTab onProductAdded={handleDone} onClose={handleDone} />
+              <StoreImportTab onProductAdded={handleDone} onClose={handleDone} onSwitchToUpload={() => setActiveTab('manual')} />
             </TabsContent>
             <TabsContent value="csv" className="mt-0">
               <CsvImportTab onProductAdded={handleDone} onClose={handleDone} />
