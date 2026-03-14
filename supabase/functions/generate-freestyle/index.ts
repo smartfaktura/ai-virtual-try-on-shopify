@@ -124,7 +124,8 @@ ${anatomyRules}
 - ${blurRule}
 - No AI-looking skin smoothing or plastic textures
 - No collage layouts or split-screen compositions
-- No compositing artifacts, no mismatched lighting between elements, no pasted-in look, no cut-out edges`;
+- No compositing artifacts, no mismatched lighting between elements, no pasted-in look, no cut-out edges
+- No black borders, black bars, letterboxing, pillarboxing, or padding around the image edges`;
 }
 
 // ── Context-aware prompt polish ───────────────────────────────────────────
@@ -857,7 +858,7 @@ serve(async (req) => {
       finalPrompt = unpolished;
     }
 
-    const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
+    const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}. CRITICAL: The image must fill the ENTIRE canvas edge-to-edge. Do NOT add any black borders, black bars, letterboxing, pillarboxing, padding, or margins around the image. The photograph must extend to all four edges with no empty space.`;
 
     const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage].filter(Boolean).length;
     const hasModelImage = !!body.modelImage;
