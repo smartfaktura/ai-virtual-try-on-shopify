@@ -130,18 +130,18 @@ export function AppShell({ children }: AppShellProps) {
     return (
       <div className="flex flex-col h-full">
         {/* Logo + Collapse Toggle */}
-        <div className={cn('flex items-center border-b border-white/[0.06]', isCollapsed ? 'justify-center px-3 pt-6 pb-5' : 'justify-between px-5 pt-6 pb-5')}>
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
+        <div className={cn('flex items-center border-b border-white/[0.06] relative', isCollapsed ? 'justify-center px-3 pt-6 pb-5' : 'justify-center px-5 pt-6 pb-5')}>
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/app')}>
             {!isCollapsed && (
-              <span className="font-bold text-xl text-sidebar-foreground tracking-tight">VOVV</span>
+              <span className="font-bold text-xl text-sidebar-foreground tracking-tight">VOVV.AI</span>
             )}
           </div>
           {!isMobile && (
             <button
               onClick={() => setCollapsed(c => !c)}
               className={cn(
-                'p-1.5 rounded-lg text-sidebar-foreground/30 hover:text-sidebar-foreground/60 hover:bg-white/[0.04] transition-colors',
-                isCollapsed && 'mt-3'
+                'absolute right-3 p-1.5 rounded-lg text-sidebar-foreground/30 hover:text-sidebar-foreground/60 hover:bg-white/[0.04] transition-colors',
+                isCollapsed && 'relative right-auto mt-3'
               )}
             >
               {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
