@@ -266,7 +266,7 @@ Deno.serve(async (req) => {
     if (!productData.title || imageUrls.length === 0) {
       return new Response(
         JSON.stringify({ error: "Could not find product title or images on this page.", error_code: "no_product_data" }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -331,7 +331,7 @@ Deno.serve(async (req) => {
     if (uploadedImages.length === 0) {
       return new Response(
         JSON.stringify({ error: "Could not download any product images.", error_code: "images_protected" }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -352,9 +352,11 @@ Deno.serve(async (req) => {
     console.error("Import error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
     const errorCode = (error as any)?.error_code || "unknown";
+    const knownCodes = ["site_blocked", "extraction_failed", "no_product_data", "images_protected"];
+    const status = knownCodes.includes(errorCode) ? 200 : 500;
     return new Response(
       JSON.stringify({ error: message, error_code: errorCode }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
