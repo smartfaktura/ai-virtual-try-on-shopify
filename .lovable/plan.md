@@ -1,30 +1,37 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Clearer Batch Progress for Multi-Variation Workflows (Mirror Selfie etc.)
 
-### Issues Found
+### Problem
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+When generating 3 Mirror Selfie variations, the progress UI shows:
+- `"Creating Mirror Selfie Set..."` + `"Generating 3 variations of 'Product Name'"`
+- Batch tracker: `"Image 1 of 3 generating..."` with `"0 images ready"`
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+This is vague — the user can't tell which variation is being worked on, which are done, and which are queued. The word "Image" is also misleading since each job generates a variation/scene, not just a single image.
 
-### Plan
+### Changes
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**`src/pages/Generate.tsx`** — Improve the batch progress section (lines 3887–3906):
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+1. **Use workflow-aware labels instead of "Image X of Y"**:
+   - For scene-based workflows (Mirror Selfie, Interior Staging already handled): show `"Variation X of Y"` instead of `"Image X of Y"`
+   - When `allDone`: `"All 3 variations complete"` instead of `"All 3 batches complete"`
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+2. **Show per-variation status chips** below the progress bar — small inline badges showing each selected variation label with a check, spinner, or pending dot:
+   ```
+   ✓ Hair Salon  ⟳ Hotel Lobby  ○ Entryway
+   ```
+   This uses `variationStrategy.variations` filtered by `selectedVariationIndices`, cross-referenced with `batchState.jobs` status.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+3. **Show completed image count more clearly**: `"2 of 3 done · 2 images ready"` instead of just `"0 images ready"`
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Implementation Detail
+
+The batch progress section currently uses generic text. We'll:
+- Check if `hasWorkflowConfig && variationStrategy` to determine if we should show variation labels
+- Map `batchState.jobs` array (ordered by variation index) to the corresponding variation label from `variationStrategy.variations`
+- Render small status chips with `CheckCircle` / `Loader2` / `Circle` icons matching the existing design language
+
+Only one file changes: `src/pages/Generate.tsx` (the batch progress rendering block, ~20 lines).
 
