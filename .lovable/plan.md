@@ -1,31 +1,30 @@
 
 
-## Center "VOVV.AI" Logo in Sidebar
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Change the sidebar header layout so the logo text is centered, and update the text from "VOVV" back to "VOVV.AI".
+### Issues Found
 
-### Changes in `src/components/app/AppShell.tsx`
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**1. Sidebar header (line ~133-138)** — Center the logo and add collapse toggle as absolute/right-positioned:
-```tsx
-<div className={cn('flex items-center border-b border-white/[0.06] relative', isCollapsed ? 'justify-center px-3 pt-6 pb-5' : 'justify-center px-5 pt-6 pb-5')}>
-  <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/app')}>
-    {!isCollapsed && (
-      <span className="font-bold text-xl text-sidebar-foreground tracking-tight">VOVV.AI</span>
-    )}
-  </div>
-  {!isMobile && (
-    <button ... className="absolute right-3 ..." />
-  )}
-</div>
-```
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**2. Mobile header (line ~317)** — Update text to "VOVV.AI".
+### Plan
 
-Note: The logo click will route to `/app` (dashboard) per existing convention.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### File
-| File | Change |
-|---|---|
-| `src/components/app/AppShell.tsx` | Center logo, rename to VOVV.AI |
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
