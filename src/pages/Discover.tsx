@@ -520,7 +520,7 @@ export default function Discover() {
             const poseId = (selectedItem.data as any).poseId ?? '';
             if (!poseId.startsWith('custom-')) {
               // Hide built-in scene via hidden_scenes table
-              await hideScene.mutateAsync({ sceneId: poseId, userId: '' });
+              await hideScene.mutateAsync(poseId);
               toast.success('Scene hidden from feed');
               setSelectedItem(null);
               return;

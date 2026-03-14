@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import type { TryOnPose } from '@/types';
 
 export function useHiddenScenes() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: hiddenIds = [], isLoading } = useQuery({
     queryKey: ['hidden-scenes'],
@@ -18,10 +20,10 @@ export function useHiddenScenes() {
   });
 
   const hideScene = useMutation({
-    mutationFn: async ({ sceneId, userId }: { sceneId: string; userId: string }) => {
+    mutationFn: async (sceneId: string) => {
       const { error } = await supabase
         .from('hidden_scenes' as any)
-        .insert({ scene_id: sceneId, hidden_by: userId } as any);
+        .insert({ scene_id: sceneId, hidden_by: user!.id } as any);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['hidden-scenes'] }),
