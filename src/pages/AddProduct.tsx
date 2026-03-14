@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Globe, FileSpreadsheet, Smartphone, ShoppingBag } from 'lucide-react';
 import { ManualProductTab } from '@/components/app/ManualProductTab';
