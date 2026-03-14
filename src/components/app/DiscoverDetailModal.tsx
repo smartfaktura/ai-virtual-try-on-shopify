@@ -291,7 +291,7 @@ export function DiscoverDetailModal({
                   {isFeatured ? 'Unfeature' : 'Feature'}
                 </button>
               )}
-              {isAdmin && onDelete && isPreset && (
+              {isAdmin && onDelete && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <button
