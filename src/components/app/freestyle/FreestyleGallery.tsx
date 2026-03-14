@@ -199,6 +199,89 @@ function ContentBlockedCard({
     </div>
   );
 }
+const FAILED_MESSAGES: Record<FailedErrorType, (name: string) => { title: string; body: string }> = {
+  timeout: (name) => ({
+    title: `${name} ran out of time on this one`,
+    body: 'Complex prompts with multiple references can take longer. Your credits have been refunded.',
+  }),
+  rate_limit: (name) => ({
+    title: `${name} is handling a lot right now`,
+    body: 'Try again in a moment. Credits refunded.',
+  }),
+  generic: (name) => ({
+    title: `${name} hit an unexpected issue`,
+    body: 'Credits have been refunded — give it another try.',
+  }),
+};
+
+function GenerationFailedCard({
+  entry,
+  onDismiss,
+  onRetry,
+  className,
+}: {
+  entry: FailedEntry;
+  onDismiss?: (id: string) => void;
+  onRetry?: (prompt: string) => void;
+  className?: string;
+}) {
+  const [crew] = useState(() => STUDIO_CREW[Math.floor(Math.random() * STUDIO_CREW.length)]);
+  const msg = FAILED_MESSAGES[entry.errorType](crew.name);
+
+  return (
+    <div
+      className={cn(
+        'rounded-xl overflow-hidden flex flex-col items-center justify-center gap-3 sm:gap-4 px-6',
+        'w-full',
+        'bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]',
+        className,
+      )}
+      style={{ aspectRatio: '1/1' }}
+    >
+      {/* Avatar */}
+      <div className="relative">
+        <div className="absolute -inset-1.5 rounded-full bg-amber-500/15 animate-[pulse_3s_ease-in-out_infinite]" />
+        <img
+          src={crew.avatar}
+          alt={crew.name}
+          className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover ring-2 ring-white/20"
+        />
+      </div>
+
+      {/* Copy */}
+      <div className="text-center space-y-1.5 max-w-[220px]">
+        <p className="text-xs sm:text-sm font-medium text-white/80">
+          {msg.title}
+        </p>
+        <p className="text-[10px] sm:text-xs text-white/40 leading-relaxed">
+          {msg.body}
+        </p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-col items-center gap-2 mt-1">
+        {onRetry && (
+          <button
+            onClick={() => onRetry(entry.prompt)}
+            className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold bg-white text-[#0f172a] hover:bg-white/90 transition-colors shadow-md"
+          >
+            <Wand2 className="w-3 h-3" />
+            Try again
+          </button>
+        )}
+        {onDismiss && (
+          <button
+            onClick={() => onDismiss(entry.id)}
+            className="text-[10px] sm:text-xs text-white/30 hover:text-white/50 transition-colors"
+          >
+            Dismiss
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ImageCard({
   img,
   idx,
