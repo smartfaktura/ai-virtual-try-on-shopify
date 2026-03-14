@@ -1,30 +1,26 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix: Error codes lost during product import
 
-### Issues Found
+### Root Cause
+The edge function returns HTTP 500/422 for application-level errors (site_blocked, no_product_data, etc.). `supabase.functions.invoke()` treats non-2xx as `response.error`, discarding the JSON body with `error_code`. The frontend only sees a generic error message.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Solution
+Change the edge function to return **HTTP 200** for all application-level errors, with `error` and `error_code` in the JSON body. The frontend already handles this pattern at line 115 (`if (data.error)`). Reserve non-200 only for auth errors (401) and invalid input (400).
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Changes
 
-### Plan
+**`supabase/functions/import-product/index.ts`**
+- Change the `no_product_data` response (line 267) from status 422 → 200
+- Change the `images_protected` response (line 332) from status 422 → 200  
+- Change the catch block (line 355) from status 500 → 200 for known error codes (`site_blocked`, `extraction_failed`)
+- Keep 401 for unauthorized, 400 for invalid URL (these are correctly handled)
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**`src/components/app/StoreImportTab.tsx`**  
+- Also add a fallback: when `response.error` exists, try to parse its context for `error_code` before throwing a generic error. This makes it resilient even if status codes change.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
-
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+| File | Change |
+|---|---|
+| `supabase/functions/import-product/index.ts` | Return 200 for app-level errors so frontend receives error_code |
+| `src/components/app/StoreImportTab.tsx` | Add fallback parsing of FunctionsHttpError context |
 
