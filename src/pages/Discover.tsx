@@ -515,7 +515,7 @@ export default function Discover() {
             toast.success('Deleted from Discover');
             queryClient.invalidateQueries({ queryKey: ['discover-presets'] });
           } else {
-            const sceneId = selectedItem.data.poseId?.replace('custom-', '') ?? selectedItem.data.id;
+            const sceneId = (selectedItem.data as any).poseId?.replace('custom-', '') ?? (selectedItem.data as any).id;
             const { error } = await supabase.from('custom_scenes').delete().eq('id', sceneId);
             if (error) { toast.error('Failed to delete scene'); return; }
             toast.success('Scene deleted');
