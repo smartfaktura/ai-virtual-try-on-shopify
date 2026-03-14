@@ -219,15 +219,17 @@ export function DiscoverDetailModal({
               )}
             </div>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-                {isPreset ? 'Prompt' : 'Description'}
-              </p>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {description}
-              </p>
-            </div>
+            {/* Prompt (presets only) */}
+            {isPreset && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+                  Prompt
+                </p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {description}
+                </p>
+              </div>
+            )}
 
             {/* Tags */}
             {isPreset && item.data.tags && item.data.tags.length > 0 && (
