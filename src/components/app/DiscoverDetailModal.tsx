@@ -304,7 +304,7 @@ export function DiscoverDetailModal({
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete from Discover?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will permanently remove "{title}" from the Discover feed. This action cannot be undone.
+                        This will permanently remove "{title}". This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
