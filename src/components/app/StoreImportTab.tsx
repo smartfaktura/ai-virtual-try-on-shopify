@@ -39,16 +39,16 @@ const ERROR_INFO: Record<string, { title: string; explanation: string; tip: stri
   no_product_data: {
     title: 'No product found on this page',
     explanation: "We couldn't detect any product data on this page. This usually means the link goes to a collection, homepage, or a page that doesn't contain a single product.",
-    tip: 'Make sure you're linking directly to a product page (e.g. myshop.com/products/cool-tee), not a collection or category page.',
+    tip: 'Make sure you are linking directly to a product page (e.g. myshop.com/products/cool-tee), not a collection or category page.',
   },
   images_protected: {
     title: 'Product images are protected',
-    explanation: 'We found the product but couldn't download its images. The site may be using hotlink protection or requiring authentication to access images.',
+    explanation: "We found the product but couldn't download its images. The site may be using hotlink protection or requiring authentication to access images.",
     tip: 'Try right-click saving the product images from the website, then upload them via the Upload tab.',
   },
   extraction_failed: {
     title: 'Could not read product page',
-    explanation: 'This page uses dynamic rendering (like heavy JavaScript) that our importer can't process yet. Some modern websites load product data after the initial page load.',
+    explanation: "This page uses dynamic rendering (like heavy JavaScript) that our importer can't process yet. Some modern websites load product data after the initial page load.",
     tip: 'Try the Upload tab instead — it works with any product. You can also try a different URL for the same product.',
   },
   invalid_url: {
