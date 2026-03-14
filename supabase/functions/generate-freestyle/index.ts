@@ -638,6 +638,15 @@ async function completeQueueJob(
 
   if (currentJob?.status === "cancelled") {
     console.log(`[generate-freestyle] Job ${jobId} was cancelled — skipping completion`);
+    // Clean up any freestyle_generations rows saved during this cancelled run
+    if (images.length > 0) {
+      await supabase
+        .from("freestyle_generations")
+        .delete()
+        .eq("user_id", userId)
+        .in("image_url", images);
+      console.log(`[generate-freestyle] Cleaned up ${images.length} freestyle_generations for cancelled job ${jobId}`);
+    }
     return;
   }
 
