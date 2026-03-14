@@ -858,7 +858,7 @@ serve(async (req) => {
       finalPrompt = unpolished;
     }
 
-    const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}`;
+    const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}. CRITICAL: The image must fill the ENTIRE canvas edge-to-edge. Do NOT add any black borders, black bars, letterboxing, pillarboxing, padding, or margins around the image. The photograph must extend to all four edges with no empty space.`;
 
     const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage].filter(Boolean).length;
     const hasModelImage = !!body.modelImage;
