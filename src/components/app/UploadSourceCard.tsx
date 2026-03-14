@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, X, Image as ImageIcon, Loader2, Sparkles, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import type { ScratchUpload } from '@/types';
 
 interface UploadSourceCardProps {
