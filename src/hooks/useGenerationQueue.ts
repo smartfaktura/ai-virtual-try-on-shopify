@@ -133,7 +133,7 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
         }
       }
     }
-  }, [stopPolling, onContentBlocked]);
+  }, [stopPolling, onContentBlocked, onGenerationFailed]);
 
   const pollJobStatus = useCallback((jobId: string) => {
     // Start a new poll session — any in-flight responses from the old session are ignored

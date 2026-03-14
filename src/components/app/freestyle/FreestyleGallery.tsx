@@ -590,6 +590,7 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   const allCards: React.ReactNode[] = [
     ...generatingCards,
     ...blockedCards,
+    ...failedCards,
     ...imageCards(),
   ];
   const columnCount = isMobile ? 2 : 3;

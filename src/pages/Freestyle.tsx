@@ -681,6 +681,9 @@ export default function Freestyle() {
               blockedEntries={blockedEntries}
               onDismissBlocked={handleDismissBlocked}
               onEditBlockedPrompt={handleEditBlockedPrompt}
+              failedEntries={failedEntries}
+              onDismissFailed={handleDismissFailed}
+              onRetryFailed={handleRetryFailed}
               onLoadMore={hasNextPage ? fetchNextPage : undefined}
               hasMore={hasNextPage}
               isFetchingMore={isFetchingNextPage}
