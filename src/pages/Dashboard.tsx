@@ -481,7 +481,7 @@ export default function Dashboard() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {job.status === 'completed' && (
-                            <Button size="sm" variant="outline" className="rounded-full" onClick={() => navigate(job.workflow_id ? `/app/generate?workflow=${job.workflow_id}` : '/app/library')}>
+                            <Button size="sm" variant="outline" className="rounded-full" onClick={() => navigate(`/app/library?search=${encodeURIComponent(job.user_products?.title || job.workflows?.name || '')}`)}>
                               View
                             </Button>
                           )}

@@ -80,7 +80,10 @@ export default function Jobs() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [sortBy, setSortBy] = useState<LibrarySortBy>('newest');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('search') || '';
+  });
   const [selectedItem, setSelectedItem] = useState<LibraryItem | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
