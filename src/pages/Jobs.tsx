@@ -273,6 +273,28 @@ export default function Jobs() {
               </button>
             ))}
 
+            <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
+
+            <div className="hidden sm:flex items-center gap-1">
+              <LayoutGrid className="w-3.5 h-3.5 text-muted-foreground mr-0.5" />
+              {columnOptions.map(n => (
+                <button
+                  key={n}
+                  onClick={() => setColumns(n)}
+                  className={cn(
+                    'w-7 h-7 rounded-full text-xs font-medium transition-all flex items-center justify-center',
+                    columnCount === n
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
+
             <button
               onClick={() => selectMode ? cancelSelect() : setSelectMode(true)}
               className={cn(
