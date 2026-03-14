@@ -11,7 +11,7 @@ import { SubmitToDiscoverModal } from '@/components/app/SubmitToDiscoverModal';
 import { QueuePositionIndicator } from '@/components/app/QueuePositionIndicator';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import { FreestyleGallery } from '@/components/app/freestyle/FreestyleGallery';
-import type { BlockedEntry } from '@/components/app/freestyle/FreestyleGallery';
+import type { BlockedEntry, FailedEntry } from '@/components/app/freestyle/FreestyleGallery';
 import { FreestylePromptPanel } from '@/components/app/freestyle/FreestylePromptPanel';
 import { FreestyleGuide, GUIDE_STEPS } from '@/components/app/freestyle/FreestyleGuide';
 import type { GuideStepKey } from '@/components/app/freestyle/FreestyleGuide';
@@ -72,6 +72,7 @@ export default function Freestyle() {
   const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
   const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
+  const [failedEntries, setFailedEntries] = useState<FailedEntry[]>([]);
   const [showSceneHint, setShowSceneHint] = useState(false);
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
@@ -110,8 +111,18 @@ export default function Freestyle() {
       reason,
     }, ...prev]);
   }, []);
+  const handleGenerationFailed = useCallback((jobId: string, message: string, errorType: 'timeout' | 'rate_limit' | 'generic') => {
+    setFailedEntries(prev => [{
+      id: crypto.randomUUID(),
+      prompt: promptRef.current,
+      errorType,
+      message,
+    }, ...prev]);
+  }, []);
+
   const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     onContentBlocked: handleContentBlocked,
+    onGenerationFailed: handleGenerationFailed,
     onCreditRefresh: refreshBalance,
   });
   const isLoading = isEnqueuing || isProcessing;
@@ -514,8 +525,16 @@ export default function Freestyle() {
     setPrompt(blockedPrompt);
   }, []);
 
+  const handleDismissFailed = useCallback((id: string) => {
+    setFailedEntries(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  const handleRetryFailed = useCallback((failedPrompt: string) => {
+    setPrompt(failedPrompt);
+  }, []);
+
   const hasImages = savedImages.length > 0;
-  const hasBlocked = blockedEntries.length > 0;
+  const hasBlocked = blockedEntries.length > 0 || failedEntries.length > 0;
   const showLoading = isLoadingImages && !hasImages;
 
   const galleryImages = savedImages.map(img => ({
@@ -662,6 +681,9 @@ export default function Freestyle() {
               blockedEntries={blockedEntries}
               onDismissBlocked={handleDismissBlocked}
               onEditBlockedPrompt={handleEditBlockedPrompt}
+              failedEntries={failedEntries}
+              onDismissFailed={handleDismissFailed}
+              onRetryFailed={handleRetryFailed}
               onLoadMore={hasNextPage ? fetchNextPage : undefined}
               hasMore={hasNextPage}
               isFetchingMore={isFetchingNextPage}

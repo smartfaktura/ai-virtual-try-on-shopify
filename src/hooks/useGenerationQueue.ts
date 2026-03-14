@@ -43,8 +43,11 @@ interface EnqueueResult {
   creditsCost: number;
 }
 
+export type FailedErrorType = 'timeout' | 'rate_limit' | 'generic';
+
 interface UseGenerationQueueOptions {
   onContentBlocked?: (jobId: string, reason: string) => void;
+  onGenerationFailed?: (jobId: string, message: string, errorType: FailedErrorType) => void;
   onCreditRefresh?: () => Promise<void> | void;
 }
 
@@ -68,7 +71,7 @@ async function getRestHeaders() {
 }
 
 export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGenerationQueueReturn {
-  const { onContentBlocked, onCreditRefresh } = options || {};
+  const { onContentBlocked, onGenerationFailed, onCreditRefresh } = options || {};
   const { user } = useAuth();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
@@ -110,15 +113,27 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
       if (isContentBlocked && onContentBlocked) {
         onContentBlocked(job.id, job.error_message || 'This prompt was flagged by our content safety system.');
-      } else if (/timed?\s*out|timeout/.test(msg)) {
-        toast.error('Generation timed out. Your credits have been refunded.');
-      } else if (/rate.?limit|concurrent|too many/.test(msg)) {
-        toast.error('Too many generations at once. Your credits have been refunded.');
+      } else if (onGenerationFailed) {
+        // Route to gallery card instead of toast
+        if (/timed?\s*out|timeout/.test(msg)) {
+          onGenerationFailed(job.id, job.error_message || 'Generation timed out', 'timeout');
+        } else if (/rate.?limit|concurrent|too many/.test(msg)) {
+          onGenerationFailed(job.id, job.error_message || 'Rate limit exceeded', 'rate_limit');
+        } else {
+          onGenerationFailed(job.id, job.error_message || 'Generation failed', 'generic');
+        }
       } else {
-        toast.error('Generation failed. Your credits have been refunded — try again.');
+        // Fallback toasts if no callback provided
+        if (/timed?\s*out|timeout/.test(msg)) {
+          toast.error('Generation timed out. Your credits have been refunded.');
+        } else if (/rate.?limit|concurrent|too many/.test(msg)) {
+          toast.error('Too many generations at once. Your credits have been refunded.');
+        } else {
+          toast.error('Generation failed. Your credits have been refunded — try again.');
+        }
       }
     }
-  }, [stopPolling, onContentBlocked]);
+  }, [stopPolling, onContentBlocked, onGenerationFailed]);
 
   const pollJobStatus = useCallback((jobId: string) => {
     // Start a new poll session — any in-flight responses from the old session are ignored
