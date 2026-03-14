@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { LibraryItem } from '@/components/app/LibraryImageCard';
@@ -118,6 +118,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
     initialPageParam: 0,
     enabled: !!user,
     staleTime: 60_000,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   });
 }
