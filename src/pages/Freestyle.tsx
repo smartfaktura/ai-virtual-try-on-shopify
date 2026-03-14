@@ -72,6 +72,7 @@ export default function Freestyle() {
   const [cameraStyle, setCameraStyle] = useState<'pro' | 'natural'>('pro');
   const [negativesPopoverOpen, setNegativesPopoverOpen] = useState(false);
   const [blockedEntries, setBlockedEntries] = useState<BlockedEntry[]>([]);
+  const [failedEntries, setFailedEntries] = useState<FailedEntry[]>([]);
   const [showSceneHint, setShowSceneHint] = useState(false);
   const [framing, setFraming] = useState<FramingOption | null>(null);
   const [framingPopoverOpen, setFramingPopoverOpen] = useState(false);
