@@ -525,6 +525,14 @@ export default function Freestyle() {
     setPrompt(blockedPrompt);
   }, []);
 
+  const handleDismissFailed = useCallback((id: string) => {
+    setFailedEntries(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  const handleRetryFailed = useCallback((failedPrompt: string) => {
+    setPrompt(failedPrompt);
+  }, []);
+
   const hasImages = savedImages.length > 0;
   const hasBlocked = blockedEntries.length > 0;
   const showLoading = isLoadingImages && !hasImages;
