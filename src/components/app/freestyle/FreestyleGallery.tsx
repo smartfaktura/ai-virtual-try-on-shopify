@@ -508,6 +508,15 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
     />
   ));
 
+  const failedCards = failedEntries.map(entry => (
+    <GenerationFailedCard
+      key={`failed-${entry.id}`}
+      entry={entry}
+      onDismiss={onDismissFailed}
+      onRetry={onRetryFailed}
+    />
+  ));
+
   const count = images.length + generatingCount + blockedEntries.length;
 
   const imageCards = (natural?: boolean) => images.map((img, idx) => (
