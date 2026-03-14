@@ -278,7 +278,7 @@ export default function Jobs() {
 
             <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
 
-            <div className="hidden sm:flex items-center gap-1">
+            <div className="flex items-center gap-1">
               <LayoutGrid className="w-3.5 h-3.5 text-muted-foreground mr-0.5" />
               {columnOptions.map(n => (
                 <button
