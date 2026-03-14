@@ -1,30 +1,42 @@
 
+Root cause confirmed: the generation was not actually slow; it finished in backend quickly, but the Freestyle UI got stuck on an old local `processing` state.
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+What I verified:
+- Recent job `631c2337...` completed in ~25s (backend timestamps).
+- During the stuck UI period, global active-job polling kept returning `[]` (no queued/processing jobs).
+- The per-job polling request (`generation_queue?id=eq.<jobId>`) was no longer firing, so local `activeJob` never transitioned to `completed`.
 
-### Issues Found
+Why this happens in code:
+1) `useGenerationQueue` uses `setInterval(async poll, 3000)` with no overlap protection.
+2) Overlapping polls can resolve out-of-order (older “processing” response can overwrite newer terminal state).
+3) `stopPolling()` may run, but stale `activeJob` can remain `processing`.
+4) Early returns on `!res.ok` / `rows.length === 0` do not trigger reconciliation, so UI can remain stale indefinitely.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+Implementation plan:
+1. Harden polling in `src/hooks/useGenerationQueue.ts`
+   - Replace `setInterval` with a single-flight recursive `setTimeout` loop.
+   - Add poll-session/version guard so stale async responses are ignored.
+   - Add `try/catch` around poll body and controlled retry/backoff.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+2. Add self-healing reconciliation in the same hook
+   - If polling misses terminal transition (or row is temporarily unavailable), run fallback checks:
+     - Query active jobs for the user.
+     - If no active jobs remain, fetch terminal state for tracked job (or infer completion) and update `activeJob`.
+   - Never leave `processing` forever without live backend confirmation.
 
-### Plan
+3. UX safety for client trust
+   - Add stale-state guard (e.g., after N failed sync cycles while showing `processing`): show “Re-syncing status…” and auto-refresh state.
+   - Trigger `onCreditRefresh` and completion flow after recovered terminal state.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+4. Keep fix global
+   - Because all generation pages use `useGenerationQueue`, this single hook fix protects Freestyle + Generate + other queue consumers.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+Files to update:
+- `src/hooks/useGenerationQueue.ts` (primary fix)
+- (Optional small UX text state where queue status is shown) `src/components/app/QueuePositionIndicator.tsx`
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
-
+Validation plan:
+- Reproduce with simulated delayed/out-of-order poll responses.
+- Verify terminal status is eventually reflected even if one poll fails/misses.
+- Verify no case remains stuck in `processing` when backend shows completed.
+- Verify credits/result refresh still behaves correctly on complete/failed/cancelled.
