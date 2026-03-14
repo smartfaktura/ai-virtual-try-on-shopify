@@ -171,8 +171,12 @@ export function UploadSourceCard({
             {dragOver ? <ImageIcon className="w-7 h-7" /> : <Upload className="w-7 h-7" />}
           </div>
           <div>
-            <p className="font-semibold">{dragOver ? 'Drop your image here' : 'Drag & drop or tap to upload'}</p>
+            <p className="font-semibold">{dragOver ? 'Drop your image here' : 'Drag & drop, paste, or tap to upload'}</p>
             <p className="text-sm text-muted-foreground">JPG, PNG, WEBP • Max 10MB</p>
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground/70 mt-1">
+              <ClipboardPaste className="w-3 h-3" />
+              ⌘V / Ctrl+V to paste from clipboard
+            </p>
           </div>
           <Button variant="outline" size="sm" disabled={dragOver}>Choose File</Button>
         </div>
