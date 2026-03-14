@@ -111,8 +111,18 @@ export default function Freestyle() {
       reason,
     }, ...prev]);
   }, []);
+  const handleGenerationFailed = useCallback((jobId: string, message: string, errorType: 'timeout' | 'rate_limit' | 'generic') => {
+    setFailedEntries(prev => [{
+      id: crypto.randomUUID(),
+      prompt: promptRef.current,
+      errorType,
+      message,
+    }, ...prev]);
+  }, []);
+
   const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     onContentBlocked: handleContentBlocked,
+    onGenerationFailed: handleGenerationFailed,
     onCreditRefresh: refreshBalance,
   });
   const isLoading = isEnqueuing || isProcessing;
