@@ -1,30 +1,50 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix: Stop Suppressing People in Prompt-Only Freestyle Generations
 
-### Issues Found
+### Problem
+When no Model/Product/Scene chips are selected, `wantsPeople` is `false`, causing:
+1. **Generic DNA** instead of Photography DNA (loses skin/portrait quality)
+2. **"No people, no human figures, no body parts"** injected into negatives — directly contradicting the user's prompt
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+A keyword list approach is brittle. Users can describe people in infinite ways ("young female," "a couple walking," "chef preparing food," etc.).
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Solution: Let the AI Decide via the Polish Step
 
-### Plan
+Instead of keyword detection, leverage the **existing AI polish call** (which already rewrites the prompt via LLM) to also classify people intent. This is zero-cost since the polish call already happens.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**How it works:**
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+In `supabase/functions/generate-freestyle/index.ts`:
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+1. **When `polishPrompt` is ON** (majority of generations): The polish LLM call already processes the user's prompt. Add a simple instruction to the system prompt asking it to prepend `[PEOPLE:YES]` or `[PEOPLE:NO]` before the polished output. Parse this tag from the response to set `wantsPeople`. The LLM understands natural language far better than any keyword list — it will correctly identify "young female model," "a couple," "chef," "someone wearing," etc.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+2. **When `polishPrompt` is OFF** (raw mode): For the unpolished path, use a lightweight heuristic but **flip the default** — assume people are wanted unless the prompt clearly describes only objects/scenes/architecture. This is safer because incorrectly adding anatomy constraints is harmless, while incorrectly injecting "No people" destroys the generation.
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+3. **Fallback**: If no assets AND no prompt text at all, keep current behavior (generic/no-people).
+
+### Changes in `generate-freestyle/index.ts`
+
+**A. Polish path (~line 232):**
+- Move `wantsPeople` determination to AFTER the polish step returns
+- In the polish system prompt, add: "Before your response, output exactly `[PEOPLE:YES]` if the scene includes any human subjects, or `[PEOPLE:NO]` if it's purely objects/architecture/landscape."
+- Parse the tag, strip it from the polished prompt, use result for DNA + negatives
+
+**B. Unpolished path (~line 376):**
+- Change default: when no assets are selected AND prompt exists, default `wantsPeople = true` (safe default — anatomy rules are harmless for non-people prompts, but "No people" kills people prompts)
+- Only set `wantsPeople = false` when prompt is empty or very short
+
+**C. `buildNegativePrompt` (line 96):**
+- No changes needed — it already accepts `hasPeople` param correctly
+
+### Why This Is Better Than Keywords
+- **LLM understands context**: "leather jacket on marble" = no people; "leather jacket on a tall man" = people
+- **Zero maintenance**: No keyword list to update
+- **Zero extra cost**: Piggybacks on the existing polish API call
+- **Language-agnostic**: Works regardless of how users phrase things
+
+### Files Changed
+| File | Change |
+|------|--------|
+| `supabase/functions/generate-freestyle/index.ts` | Add people-classification to polish prompt; parse `[PEOPLE:YES/NO]` tag; flip default for unpolished path |
 
