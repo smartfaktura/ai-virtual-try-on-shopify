@@ -931,6 +931,31 @@ serve(async (req) => {
 
           // Save to freestyle_generations DB when called from queue
           if (isQueueInternal) {
+            // Check if job was cancelled before saving
+            if (body.job_id) {
+              const cancelCheck = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+              const { data: jobCheck } = await cancelCheck
+                .from('generation_queue')
+                .select('status')
+                .eq('id', body.job_id)
+                .single();
+              if (jobCheck?.status === 'cancelled') {
+                console.log(`[generate-freestyle] Job ${body.job_id} cancelled — skipping save, breaking loop`);
+                // Remove the already-uploaded storage file
+                try {
+                  const urlObj = new URL(publicUrl);
+                  const pathParts = urlObj.pathname.split('/freestyle-images/');
+                  if (pathParts[1]) {
+                    const storagePath = decodeURIComponent(pathParts[1]);
+                    const storageClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+                    await storageClient.storage.from('freestyle-images').remove([storagePath]);
+                  }
+                } catch {}
+                // Remove this URL from images array so completeQueueJob cleanup is accurate
+                images.pop();
+                break;
+              }
+            }
             try {
               const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
                 auth: { persistSession: false },
