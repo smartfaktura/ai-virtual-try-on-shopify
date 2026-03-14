@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, X, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Loader2, Sparkles, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ScratchUpload } from '@/types';
 
