@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize } from 'lucide-react';
+import { Search, Image, Loader2, Download, CheckSquare, X, Sparkles, RefreshCw, Maximize, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LibraryImageCard, type LibraryItem } from '@/components/app/LibraryImageCard';
 import { TEAM_MEMBERS } from '@/data/teamData';
@@ -32,21 +32,48 @@ const SORTS: { id: LibrarySortBy; label: string }[] = [
 ];
 
 
+type DeviceType = 'mobile' | 'tablet' | 'desktop';
+
+function getDeviceType(w: number): DeviceType {
+  if (w < 768) return 'mobile';
+  if (w < 1280) return 'tablet';
+  return 'desktop';
+}
+
+const COLUMN_OPTIONS: Record<DeviceType, number[]> = {
+  mobile: [1, 2],
+  tablet: [2, 3, 4],
+  desktop: [3, 4, 5],
+};
+
+const COLUMN_DEFAULTS: Record<DeviceType, number> = {
+  mobile: 2,
+  tablet: 3,
+  desktop: 5,
+};
+
 function useColumnCount() {
-  const [count, setCount] = useState(4);
+  const [device, setDevice] = useState<DeviceType>(() => getDeviceType(window.innerWidth));
+  const [userPref, setUserPref] = useState<number | null>(() => {
+    const stored = localStorage.getItem('library-columns');
+    return stored ? parseInt(stored, 10) : null;
+  });
+
   useEffect(() => {
-    const update = () => {
-      const w = window.innerWidth;
-      if (w < 640) setCount(2);
-      else if (w < 1024) setCount(3);
-      else if (w < 1280) setCount(4);
-      else setCount(5);
-    };
-    update();
+    const update = () => setDevice(getDeviceType(window.innerWidth));
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
-  return count;
+
+  const options = COLUMN_OPTIONS[device];
+  const count = userPref && options.includes(userPref) ? userPref : COLUMN_DEFAULTS[device];
+
+  const setColumns = (n: number) => {
+    setUserPref(n);
+    localStorage.setItem('library-columns', String(n));
+  };
+
+  return { count, options, setColumns };
 }
 
 export default function Jobs() {
@@ -65,7 +92,7 @@ export default function Jobs() {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useLibraryItems(sortBy, searchQuery);
   const items = data?.pages.flatMap(p => p.items) ?? [];
   const { lastCompletedAt } = useGenerationQueue();
-  const columnCount = useColumnCount();
+  const { count: columnCount, options: columnOptions, setColumns } = useColumnCount();
 
   // Track which images are currently being upscaled
   const { data: upscalingSourceIds = new Set<string>() } = useQuery({
@@ -245,6 +272,28 @@ export default function Jobs() {
                 {s.label}
               </button>
             ))}
+
+            <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
+
+            <div className="hidden sm:flex items-center gap-1">
+              <LayoutGrid className="w-3.5 h-3.5 text-muted-foreground mr-0.5" />
+              {columnOptions.map(n => (
+                <button
+                  key={n}
+                  onClick={() => setColumns(n)}
+                  className={cn(
+                    'w-7 h-7 rounded-full text-xs font-medium transition-all flex items-center justify-center',
+                    columnCount === n
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-border/50 mx-1 hidden sm:block" />
 
             <button
               onClick={() => selectMode ? cancelSelect() : setSelectMode(true)}
