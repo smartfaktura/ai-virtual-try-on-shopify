@@ -20,7 +20,7 @@ const HOURLY_LIMITS: Record<string, number> = {
 function calculateCreditCost(
   jobType: string,
   imageCount: number,
-  _quality: string,
+  quality: string,
   hasModel: boolean = false,
   hasScene: boolean = false,
   _additionalProductCount: number = 0,
@@ -29,12 +29,11 @@ function calculateCreditCost(
   let perImage: number;
 
   if (jobType === "upscale") {
-    // Upscale: 8 credits for 2K, 12 credits for 4K
     perImage = resolution === "4k" ? 15 : 10;
   } else if (jobType === "workflow" || jobType === "tryon") {
     perImage = 8;
   } else {
-    perImage = (hasModel || hasScene) ? 8 : 4;
+    perImage = (hasModel || hasScene || quality === 'high') ? 8 : 4;
   }
 
   return imageCount * perImage;

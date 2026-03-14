@@ -176,14 +176,14 @@ export function FreestyleSettingsChips({
             ? 'border-primary/30 bg-primary/10 text-primary'
             : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
-          {quality === 'high' ? '✦ High' : 'Standard'}
+          {quality === 'high' ? 'Quality: ✦ High' : 'Quality: Standard'}
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-1.5" align="start">
         {([
           { value: 'standard' as const, label: 'Standard', desc: 'Fast generation at standard resolution. 4 credits per image.' },
-          { value: 'high' as const, label: '✦ High', desc: 'Higher detail and resolution output. 10 credits per image.' },
+          { value: 'high' as const, label: '✦ High', desc: 'Higher detail and resolution output. 8 credits per image.' },
         ]).map(opt => (
           <button
             key={opt.value}
