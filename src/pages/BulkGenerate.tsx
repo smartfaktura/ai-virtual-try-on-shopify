@@ -163,7 +163,7 @@ export default function BulkGenerate() {
             selectedProducts={selectedProducts}
             templates={mockTemplates}
             models={mockModels}
-            poses={mockTryOnPoses}
+            poses={filterVisible(mockTryOnPoses)}
             creditsBalance={mockShop.creditsBalance}
             isFreeUser={isFreeUser}
           />
