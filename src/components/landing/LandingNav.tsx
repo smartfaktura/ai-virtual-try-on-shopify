@@ -50,6 +50,9 @@ export function LandingNav() {
       >
         {/* Logo */}
         <button onClick={() => navigate('/')} className="flex items-center gap-2 group">
+          <div className="w-7 h-7 bg-gradient-to-br from-sidebar-foreground/20 to-sidebar-foreground/5 rounded-lg flex items-center justify-center border border-white/[0.08]">
+            <span className="text-sidebar-foreground font-bold text-sm">V</span>
+          </div>
           <span className="font-bold text-lg text-sidebar-foreground tracking-tight">VOVV.AI</span>
         </button>
 
