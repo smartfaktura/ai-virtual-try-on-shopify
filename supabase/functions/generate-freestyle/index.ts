@@ -82,6 +82,20 @@ function detectFullBodyIntent(prompt: string): boolean {
   return FULL_BODY_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
+// ── Expert prompt detection — skip photography DNA for detailed technical prompts ──
+function isExpertPrompt(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  const signals = [
+    /\d+mm/, /f\/\d/, /iso\s*\d/i, /aperture/, /focal length/,
+    /shutter speed/, /depth of field/, /bokeh/, /lens\b/,
+    /color balance/, /color temperature/, /kelvin/,
+    /key light/, /rim light/, /fill light/, /backlight/,
+    /softbox/, /strobe/, /reflector/, /diffuser/,
+  ];
+  const matchCount = signals.filter(r => r.test(lower)).length;
+  return prompt.length > 300 && matchCount >= 2;
+}
+
 // ── Photography DNA (Pro camera style — for people/fashion shots) ─────────
 function buildPhotographyDNA(): string {
   return `Shot on 85mm f/2.8 lens, fashion editorial quality. Professional studio lighting with sculpted shadows. Razor-sharp focus, micro-contrast. Natural skin texture, visible material textures and fine stitching. Subtle film grain, elegant highlight roll-off.`;
@@ -126,6 +140,7 @@ function polishUserPrompt(
 ): string {
   const layers: string[] = [];
   const isSelfie = detectSelfieIntent(rawPrompt);
+  const expert = isExpertPrompt(rawPrompt);
 
   // ── Condensed mode for multi-reference (2+ images) — mirrors Try-On architecture ──
   const refCount = [context.hasSource, context.hasProduct, context.hasModel, context.hasScene].filter(Boolean).length;
@@ -228,12 +243,17 @@ function polishUserPrompt(
       "SELFIE FRAMING: Subject's full head and hair must be fully visible within the frame with natural headroom above. Frame from mid-chest or shoulders upward — do NOT crop below the chin or above the forehead. Center the face in the upper-third of the frame following the rule of thirds."
     );
   } else {
-    layers.push(`Professional photography: ${rawPrompt}`);
-    // If user typed a prompt, default to people-mode — anatomy constraints are harmless
-    // for non-people subjects, but "No people" negatives destroy people-describing prompts.
-    // Only suppress people when there's truly no prompt text and no assets.
-    const wantsPeople = context.hasModel || context.hasProduct || !!rawPrompt.trim();
-    layers.push(wantsPeople ? buildPhotographyDNA() : buildGenericDNA());
+    if (expert) {
+      // Expert prompt: user already specified camera/lighting — don't override with generic DNA
+      layers.push(rawPrompt);
+    } else {
+      layers.push(`Professional photography: ${rawPrompt}`);
+      // If user typed a prompt, default to people-mode — anatomy constraints are harmless
+      // for non-people subjects, but "No people" negatives destroy people-describing prompts.
+      // Only suppress people when there's truly no prompt text and no assets.
+      const wantsPeople = context.hasModel || context.hasProduct || !!rawPrompt.trim();
+      layers.push(wantsPeople ? buildPhotographyDNA() : buildGenericDNA());
+    }
   }
 
   // Brand profile layer
@@ -313,8 +333,8 @@ function polishUserPrompt(
       layers.push(
         "PORTRAIT QUALITY: Razor-sharp eye detail with individual eyelash rendering. Micro-contrast on skin texture — natural pores and peach-fuzz visible without harshness. Crisp lashes, realistic hair texture with individual strands. Smooth luminous skin with clean highlight roll-off. Accurate body proportions, natural pose and expression. No heavy frequency-separation retouching, no plastic or airbrushed look."
       );
-      // Framing for standard portrait/model shots (only if no explicit framing override)
-      if (!framing) {
+      // Framing for standard portrait/model shots (only if no explicit framing override and not expert prompt)
+      if (!framing && !expert) {
         if (detectFullBodyIntent(rawPrompt)) {
           layers.push(
             `FRAMING: Full body shot, head to toe. Show the complete figure from head to feet with natural spacing. The entire body must be visible — do NOT crop at knees, waist, or shins.${context.hasModel ? ' The body must match the exact skin tone, age, and body characteristics of the person in [MODEL IMAGE].' : ''}`
