@@ -45,6 +45,7 @@ interface EnqueueResult {
 
 interface UseGenerationQueueOptions {
   onContentBlocked?: (jobId: string, reason: string) => void;
+  onCreditRefresh?: () => Promise<void> | void;
 }
 
 interface UseGenerationQueueReturn {
