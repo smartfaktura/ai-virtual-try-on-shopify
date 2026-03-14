@@ -518,7 +518,10 @@ export default function Discover() {
           } else {
             const poseId = (selectedItem.data as any).poseId ?? '';
             if (!poseId.startsWith('custom-')) {
-              toast.error('Built-in scenes cannot be deleted — they are part of the codebase');
+              // Hide built-in scene via hidden_scenes table
+              await hideScene.mutateAsync({ sceneId: poseId, userId: '' });
+              toast.success('Scene hidden from feed');
+              setSelectedItem(null);
               return;
             }
             const sceneId = poseId.replace('custom-', '');

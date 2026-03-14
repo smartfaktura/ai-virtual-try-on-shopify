@@ -477,7 +477,7 @@ export default function Generate() {
   });
 
   const onModelCategories: PoseCategory[] = ['studio', 'lifestyle', 'editorial', 'streetwear'];
-  const posesByCategory = mockTryOnPoses.reduce((acc, pose) => {
+  const posesByCategory = filterVisible(mockTryOnPoses).reduce((acc, pose) => {
     // For Virtual Try-On, only show on-model categories
     if (activeWorkflow?.uses_tryon && !onModelCategories.includes(pose.category)) return acc;
     if (!acc[pose.category]) acc[pose.category] = [];

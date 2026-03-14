@@ -13,6 +13,7 @@ import { BulkResultsView } from '@/components/app/BulkResultsView';
 import { useBulkGeneration } from '@/hooks/useBulkGeneration';
 import { useCredits } from '@/contexts/CreditContext';
 import { mockProducts, mockTemplates, mockModels, mockTryOnPoses, mockShop } from '@/data/mockData';
+import { useHiddenScenes } from '@/hooks/useHiddenScenes';
 import type { BulkGenerationConfig } from '@/types/bulk';
 import type { Product } from '@/types';
 import { calculateBulkCredits, MAX_PRODUCTS_PER_BATCH } from '@/types/bulk';
