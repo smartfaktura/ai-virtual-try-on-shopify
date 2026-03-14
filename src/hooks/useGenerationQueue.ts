@@ -58,162 +58,258 @@ interface UseGenerationQueueReturn {
   lastCompletedAt: string | null;
 }
 
+// Helper to get auth headers for REST calls
+async function getRestHeaders() {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const { data: session } = await supabase.auth.getSession();
+  const token = session?.session?.access_token || SUPABASE_KEY;
+  return { SUPABASE_URL, SUPABASE_KEY, token };
+}
+
 export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGenerationQueueReturn {
   const { onContentBlocked, onCreditRefresh } = options || {};
   const { user } = useAuth();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
   const [lastCompletedAt, setLastCompletedAt] = useState<string | null>(null);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const jobIdRef = useRef<string | null>(null);
-  const retriggeredRef = useRef(false);
 
-  // Cleanup polling on unmount
+  // Single-flight polling refs
+  const jobIdRef = useRef<string | null>(null);
+  const pollVersionRef = useRef(0); // Incremented on each new poll session; stale responses are ignored
+  const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retriggeredRef = useRef(false);
+  const missCountRef = useRef(0); // Consecutive poll misses for self-healing
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
+      pollVersionRef.current++;
+      if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current);
     };
   }, []);
 
-
   const stopPolling = useCallback(() => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
+    pollVersionRef.current++;
+    if (pollTimeoutRef.current) {
+      clearTimeout(pollTimeoutRef.current);
+      pollTimeoutRef.current = null;
     }
   }, []);
 
-  const pollJobStatus = useCallback((jobId: string) => {
+  const handleTerminalJob = useCallback((job: QueueJob) => {
     stopPolling();
 
-    const poll = async () => {
-      // Use raw fetch to query generation_queue since it's not in the generated types
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token || SUPABASE_KEY;
+    if (job.status === 'completed' && job.completed_at) {
+      setLastCompletedAt(job.completed_at);
+    }
 
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=id,status,result,error_message,created_at,started_at,completed_at,priority_score,job_type`,
-        {
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    if (job.status === 'failed') {
+      const msg = (job.error_message || '').toLowerCase();
+      const isContentBlocked = /content|safety|policy|prohibited|blocked|nsfw|inappropriate/.test(msg);
 
-      if (!res.ok) return;
-      const rows = await res.json();
-      if (!rows || rows.length === 0) return;
+      if (isContentBlocked && onContentBlocked) {
+        onContentBlocked(job.id, job.error_message || 'This prompt was flagged by our content safety system.');
+      } else if (/timed?\s*out|timeout/.test(msg)) {
+        toast.error('Generation timed out. Your credits have been refunded.');
+      } else if (/rate.?limit|concurrent|too many/.test(msg)) {
+        toast.error('Too many generations at once. Your credits have been refunded.');
+      } else {
+        toast.error('Generation failed. Your credits have been refunded — try again.');
+      }
+    }
+  }, [stopPolling, onContentBlocked]);
 
-      const row = rows[0];
-      const job: QueueJob = {
-        id: row.id,
-        status: row.status,
-        position: 0,
-        priority: row.priority_score,
-        result: row.result,
-        error_message: row.error_message,
-        created_at: row.created_at,
-        started_at: row.started_at,
-        completed_at: row.completed_at,
-        job_type: row.job_type,
-      };
+  const pollJobStatus = useCallback((jobId: string) => {
+    // Start a new poll session — any in-flight responses from the old session are ignored
+    stopPolling();
+    const sessionVersion = ++pollVersionRef.current;
+    missCountRef.current = 0;
+    retriggeredRef.current = false;
 
-      // Calculate position if still queued (count jobs ahead: lower priority_score, or same score but earlier created_at)
-      if (job.status === 'queued') {
-        // Stuck detection: if queued > 30s, re-trigger process-queue via retry-queue
-        const queuedDuration = Date.now() - new Date(job.created_at).getTime();
-        if (queuedDuration > 30_000 && !retriggeredRef.current) {
-          retriggeredRef.current = true;
-          console.warn(`[queue] Job ${job.id} stuck for ${Math.round(queuedDuration / 1000)}s, re-triggering`);
-          fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ trigger: 'stuck-retry' }),
-          }).catch(() => {});
-        }
+    const schedulePoll = (delayMs: number) => {
+      pollTimeoutRef.current = setTimeout(() => runPoll(), delayMs);
+    };
 
-        const posRes = await fetch(
-          `${SUPABASE_URL}/rest/v1/generation_queue?status=eq.queued&priority_score=lte.${job.priority}&id=neq.${job.id}&select=id`,
+    const runPoll = async () => {
+      // Abort if this session is stale
+      if (sessionVersion !== pollVersionRef.current) return;
+
+      try {
+        const { SUPABASE_URL, SUPABASE_KEY, token } = await getRestHeaders();
+        if (sessionVersion !== pollVersionRef.current) return; // Re-check after async
+
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobId}&select=id,status,result,error_message,created_at,started_at,completed_at,priority_score,job_type`,
           {
             headers: {
               apikey: SUPABASE_KEY,
               Authorization: `Bearer ${token}`,
-              Prefer: 'count=exact',
             },
           }
         );
-        const countHeader = posRes.headers.get('content-range');
-        if (countHeader) {
-          const match = countHeader.match(/\/(\d+)/);
-          job.position = match ? parseInt(match[1]) : 0;
-        }
-      }
 
-      // Stuck detection for processing jobs: if processing > 5 minutes, trigger cleanup
-      if (job.status === 'processing' && job.started_at) {
-        const processingDuration = Date.now() - new Date(job.started_at).getTime();
-        if (processingDuration > 5 * 60 * 1000 && !retriggeredRef.current) {
-          retriggeredRef.current = true;
-          console.warn(`[queue] Job ${job.id} processing for ${Math.round(processingDuration / 1000)}s, triggering cleanup`);
-          fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ trigger: 'stuck-processing-retry' }),
-          }).catch(() => {});
-        }
-      }
+        if (sessionVersion !== pollVersionRef.current) return;
 
-      setActiveJob(job);
-
-      // Stop polling on terminal states
-      if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
-        stopPolling();
-
-        if (job.status === 'completed' && job.completed_at) {
-          setLastCompletedAt(job.completed_at);
+        if (!res.ok) {
+          // Network error — retry with backoff
+          schedulePoll(5000);
+          return;
         }
 
-        if (job.status === 'failed') {
-          const msg = (job.error_message || '').toLowerCase();
-          const isContentBlocked = /content|safety|policy|prohibited|blocked|nsfw|inappropriate/.test(msg);
+        const rows = await res.json();
 
-          if (isContentBlocked && onContentBlocked) {
-            onContentBlocked(job.id, job.error_message || 'This prompt was flagged by our content safety system.');
-          } else if (/timed?\s*out|timeout/.test(msg)) {
-            toast.error('Generation timed out. Your credits have been refunded.');
-          } else if (/rate.?limit|concurrent|too many/.test(msg)) {
-            toast.error('Too many generations at once. Your credits have been refunded.');
-          } else {
-            toast.error('Generation failed. Your credits have been refunded — try again.');
+        if (sessionVersion !== pollVersionRef.current) return;
+
+        // Self-healing: if the row is missing or empty
+        if (!rows || rows.length === 0) {
+          missCountRef.current++;
+
+          // After 3 consecutive misses, check if user has ANY active jobs
+          if (missCountRef.current >= 3) {
+            const fallbackRes = await fetch(
+              `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user?.id}&status=in.(queued,processing)&limit=1&select=id`,
+              {
+                headers: {
+                  apikey: SUPABASE_KEY,
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (sessionVersion !== pollVersionRef.current) return;
+
+            const fallbackRows = await fallbackRes.json();
+            if (!fallbackRows || fallbackRows.length === 0) {
+              // No active jobs at all — the tracked job must have completed
+              console.warn(`[queue] Job ${jobId} vanished after ${missCountRef.current} misses — inferring completion`);
+              const inferredJob: QueueJob = {
+                id: jobId,
+                status: 'completed',
+                position: 0,
+                priority: 0,
+                result: null,
+                error_message: null,
+                created_at: new Date().toISOString(),
+                started_at: null,
+                completed_at: new Date().toISOString(),
+              };
+              setActiveJob(prev => ({ ...inferredJob, generationMeta: prev?.generationMeta }));
+              handleTerminalJob(inferredJob);
+              onCreditRefresh?.();
+              return;
+            }
+          }
+
+          // Keep polling
+          schedulePoll(3000);
+          return;
+        }
+
+        // Got data — reset miss counter
+        missCountRef.current = 0;
+
+        const row = rows[0];
+        const job: QueueJob = {
+          id: row.id,
+          status: row.status,
+          position: 0,
+          priority: row.priority_score,
+          result: row.result,
+          error_message: row.error_message,
+          created_at: row.created_at,
+          started_at: row.started_at,
+          completed_at: row.completed_at,
+          job_type: row.job_type,
+        };
+
+        // Calculate position if still queued
+        if (job.status === 'queued') {
+          // Stuck detection: if queued > 30s, re-trigger process-queue
+          const queuedDuration = Date.now() - new Date(job.created_at).getTime();
+          if (queuedDuration > 30_000 && !retriggeredRef.current) {
+            retriggeredRef.current = true;
+            console.warn(`[queue] Job ${job.id} stuck for ${Math.round(queuedDuration / 1000)}s, re-triggering`);
+            fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ trigger: 'stuck-retry' }),
+            }).catch(() => {});
+          }
+
+          const posRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/generation_queue?status=eq.queued&priority_score=lte.${job.priority}&id=neq.${job.id}&select=id`,
+            {
+              headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${token}`,
+                Prefer: 'count=exact',
+              },
+            }
+          );
+          if (sessionVersion !== pollVersionRef.current) return;
+
+          const countHeader = posRes.headers.get('content-range');
+          if (countHeader) {
+            const match = countHeader.match(/\/(\d+)/);
+            job.position = match ? parseInt(match[1]) : 0;
           }
         }
+
+        // Stuck detection for processing jobs
+        if (job.status === 'processing' && job.started_at) {
+          const processingDuration = Date.now() - new Date(job.started_at).getTime();
+          if (processingDuration > 5 * 60 * 1000 && !retriggeredRef.current) {
+            retriggeredRef.current = true;
+            console.warn(`[queue] Job ${job.id} processing for ${Math.round(processingDuration / 1000)}s, triggering cleanup`);
+            fetch(`${SUPABASE_URL}/functions/v1/retry-queue`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ trigger: 'stuck-processing-retry' }),
+            }).catch(() => {});
+          }
+        }
+
+        // Preserve generationMeta from local state
+        setActiveJob(prev => ({
+          ...job,
+          generationMeta: prev?.generationMeta,
+        }));
+
+        // Terminal state — stop polling
+        if (job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled') {
+          handleTerminalJob(job);
+          return;
+        }
+
+        // Schedule next poll (single-flight: only after this one finishes)
+        schedulePoll(3000);
+      } catch (err) {
+        console.error('[queue] Poll error:', err);
+        if (sessionVersion !== pollVersionRef.current) return;
+        // Retry with backoff on network errors
+        schedulePoll(5000);
       }
     };
 
-    // Poll immediately, then every 3 seconds
-    poll();
-    pollingRef.current = setInterval(poll, 3000);
-  }, [stopPolling]);
+    // Start immediately
+    runPoll();
+  }, [stopPolling, handleTerminalJob, user?.id, onCreditRefresh]);
 
   // Restore in-progress job on mount (e.g. after page refresh)
   useEffect(() => {
     if (!user) return;
 
     const restoreActiveJob = async () => {
-      if (jobIdRef.current) return; // Already tracking a job, don't restore
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token || SUPABASE_KEY;
+      if (jobIdRef.current) return;
+
+      const { SUPABASE_URL, SUPABASE_KEY, token } = await getRestHeaders();
 
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/generation_queue?user_id=eq.${user.id}&status=in.(queued,processing)&order=created_at.desc&limit=1&select=id,status,priority_score,error_message,created_at,started_at,completed_at,job_type`,
@@ -256,7 +352,6 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     }
 
     setIsEnqueuing(true);
-    // Stop polling any previous job — GlobalGenerationBar tracks all active jobs
     stopPolling();
 
     try {
@@ -310,7 +405,6 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
 
       const result: EnqueueResult = await response.json();
 
-      // Set initial active job state
       setActiveJob({
         id: result.jobId,
         status: 'queued',
@@ -325,8 +419,6 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
       });
 
       jobIdRef.current = result.jobId;
-      retriggeredRef.current = false;
-      // Start polling
       pollJobStatus(result.jobId);
 
       if (result.position > 0) {
@@ -341,15 +433,12 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     } finally {
       setIsEnqueuing(false);
     }
-  }, [user, pollJobStatus]);
+  }, [user, pollJobStatus, stopPolling]);
 
   const cancel = useCallback(async () => {
     if (!jobIdRef.current || !activeJob || (activeJob.status !== 'queued' && activeJob.status !== 'processing')) return;
 
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const { data: session } = await supabase.auth.getSession();
-    const token = session?.session?.access_token || SUPABASE_KEY;
+    const { SUPABASE_URL, SUPABASE_KEY, token } = await getRestHeaders();
 
     // Check current job status before attempting cancel
     const checkRes = await fetch(
