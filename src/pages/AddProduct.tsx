@@ -33,6 +33,7 @@ export default function AddProduct() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isEditing = !!id;
+  const [activeTab, setActiveTab] = useState('manual');
 
   const { data: editingProduct } = useQuery({
     queryKey: ['user-product', id],
