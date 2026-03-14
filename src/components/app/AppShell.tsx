@@ -314,9 +314,6 @@ export function AppShell({ children }: AppShellProps) {
       <div className="fixed top-0 left-0 right-0 z-40 lg:hidden p-3">
         <div className="flex items-center justify-between h-14 px-4 rounded-2xl border border-white/[0.06] bg-sidebar shadow-2xl shadow-black/20">
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-              <span className="text-primary-foreground font-bold text-sm">V</span>
-            </div>
             <span className="font-bold text-lg text-sidebar-foreground tracking-tight">VOVV.AI</span>
           </div>
           <div className="flex items-center gap-2">
