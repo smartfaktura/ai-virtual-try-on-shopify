@@ -351,8 +351,28 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
     const { data: session } = await supabase.auth.getSession();
     const token = session?.session?.access_token || SUPABASE_KEY;
 
-    // Cancel by updating status
-    await fetch(
+    // Check current job status before attempting cancel
+    const checkRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobIdRef.current}&select=status`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+    );
+    const checkRows = await checkRes.json();
+    const currentJob = Array.isArray(checkRows) ? checkRows[0] : null;
+
+    if (!currentJob || currentJob.status === 'completed') {
+      toast.info('Generation already completed!');
+      pollJobStatus(jobIdRef.current!);
+      return;
+    }
+    if (currentJob.status === 'failed' || currentJob.status === 'cancelled') {
+      toast.info('Generation already ended.');
+      stopPolling();
+      setActiveJob(prev => prev ? { ...prev, status: currentJob.status } : null);
+      return;
+    }
+
+    // Attempt cancel with return=representation to verify
+    const res = await fetch(
       `${SUPABASE_URL}/rest/v1/generation_queue?id=eq.${jobIdRef.current}`,
       {
         method: 'PATCH',
@@ -360,16 +380,23 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
           apikey: SUPABASE_KEY,
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
-          Prefer: 'return=minimal',
+          Prefer: 'return=representation',
         },
         body: JSON.stringify({ status: 'cancelled' }),
       }
     );
 
-    stopPolling();
-    setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
-    toast.info('Generation cancelled. Credits will be refunded.');
-  }, [activeJob, stopPolling]);
+    const updated = await res.json();
+    if (Array.isArray(updated) && updated.length > 0 && updated[0].status === 'cancelled') {
+      stopPolling();
+      setActiveJob(prev => prev ? { ...prev, status: 'cancelled' } : null);
+      toast.info('Generation cancelled. Credits refunded.');
+      onCreditRefresh?.();
+    } else {
+      toast.warning('Could not cancel — generation may have already completed.');
+      pollJobStatus(jobIdRef.current!);
+    }
+  }, [activeJob, stopPolling, pollJobStatus, onCreditRefresh]);
 
   const reset = useCallback(() => {
     stopPolling();

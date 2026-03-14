@@ -112,6 +112,7 @@ export default function Freestyle() {
   }, []);
   const { enqueue, activeJob, isEnqueuing, isProcessing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue({
     onContentBlocked: handleContentBlocked,
+    onCreditRefresh: refreshBalance,
   });
   const isLoading = isEnqueuing || isProcessing;
   const { user } = useAuth();
