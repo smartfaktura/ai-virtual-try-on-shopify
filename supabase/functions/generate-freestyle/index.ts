@@ -499,6 +499,10 @@ async function generateImage(
   aspectRatio?: string,
   maxRetries = 2
 ): Promise<GenerateResult> {
+  // Pro models need longer timeouts — they regularly take 90-120s with multiple images
+  const isProModel = /gemini-3-pro|gemini-3\.1-pro/i.test(model);
+  const timeoutMs = isProModel ? 150_000 : 90_000;
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch(
@@ -515,7 +519,7 @@ async function generateImage(
             modalities: ["image", "text"],
             ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
-          signal: AbortSignal.timeout(90_000), // 90s timeout per AI call (pro model is slower)
+          signal: AbortSignal.timeout(timeoutMs),
         }
       );
 
@@ -558,10 +562,16 @@ async function generateImage(
       if (typeof error === "object" && error !== null && "status" in error) {
         throw error;
       }
-      console.error(`Generation attempt ${attempt + 1} failed:`, error);
-      if (attempt < maxRetries) {
-        await new Promise((r) => setTimeout(r, 500));
+      const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
+      // For timeouts, only retry once — a slow model won't get faster on retry
+      const effectiveMaxRetries = isTimeout ? Math.min(maxRetries, 1) : maxRetries;
+      console.error(`Generation attempt ${attempt + 1} failed${isTimeout ? " (timeout)" : ""}:`, error);
+      if (attempt < effectiveMaxRetries) {
+        await new Promise((r) => setTimeout(r, isTimeout ? 1000 : 500));
         continue;
+      }
+      if (isTimeout) {
+        throw new Error("Generation timed out — the AI model took longer than expected. This can happen with complex prompts or multiple reference images. Please try again.");
       }
       throw error;
     }
