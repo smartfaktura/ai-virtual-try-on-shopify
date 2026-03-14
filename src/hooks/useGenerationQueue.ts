@@ -59,7 +59,7 @@ interface UseGenerationQueueReturn {
 }
 
 export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGenerationQueueReturn {
-  const { onContentBlocked } = options || {};
+  const { onContentBlocked, onCreditRefresh } = options || {};
   const { user } = useAuth();
   const [activeJob, setActiveJob] = useState<QueueJob | null>(null);
   const [isEnqueuing, setIsEnqueuing] = useState(false);
