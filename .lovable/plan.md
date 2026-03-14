@@ -1,30 +1,34 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add Column Count Selector to Library
 
-### Issues Found
+Add a grid density control to the Library toolbar that lets users choose how many columns to display, with device-appropriate options.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Column Options by Device
+- **Desktop (≥1280px)**: 3, 4, 5 columns
+- **Tablet (768–1279px)**: 2, 3, 4 columns  
+- **Mobile (<768px)**: 1, 2 columns
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Changes
 
-### Plan
+**`src/pages/Jobs.tsx`**
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+1. **Replace `useColumnCount` hook** with a stateful approach:
+   - Store user's column preference in `localStorage` (key: `library-columns`)
+   - Compute available column options based on viewport width (using resize listener)
+   - Default to current auto-detected value; clamp stored preference to valid range on resize
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+2. **Add column selector buttons** in the toolbar row (next to Sort/Select controls):
+   - Small `LayoutGrid` icon + pill buttons showing available column counts (e.g. `3 4 5`)
+   - Same pill styling as the existing Sort buttons (`bg-foreground text-background` for active, `bg-muted/40` for inactive)
+   - Place between Sort and Select controls with a subtle separator
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+3. **Update masonry layout** — the `columns` array and grid rendering already use `columnCount`, so it just works once the value changes.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### UI Mockup
+```text
+[Search...                    ] [Newest] [Oldest]  ⊞ [3] [4] [5]  [☐ Select]
+```
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+One file to modify: `src/pages/Jobs.tsx`.
 
