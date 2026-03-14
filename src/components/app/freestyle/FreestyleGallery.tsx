@@ -449,7 +449,7 @@ function ImageCard({
   );
 }
 
-export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, onLoadMore, hasMore, isFetchingMore }: FreestyleGalleryProps) {
+export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCopyPrompt, generatingCount = 0, generatingProgress = 0, generatingAspectRatio, blockedEntries = [], onDismissBlocked, onEditBlockedPrompt, failedEntries = [], onDismissFailed, onRetryFailed, onLoadMore, hasMore, isFetchingMore }: FreestyleGalleryProps) {
   const { isAdmin } = useIsAdmin();
   const isMobile = useIsMobile();
   const sentinelRef = useRef<HTMLDivElement>(null);
