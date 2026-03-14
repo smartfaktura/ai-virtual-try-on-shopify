@@ -50,8 +50,10 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
     />
   );
 
+  const [activeTab, setActiveTab] = useState('manual');
+
   const tabsContent = (
-    <Tabs defaultValue="manual" className="w-full flex flex-col flex-1 min-h-0">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
       <div className="shrink-0">
         <TabsList className="bg-muted/60 rounded-xl p-1 h-auto inline-flex gap-1 w-auto">
           <TabsTrigger
@@ -97,7 +99,7 @@ export function AddProductModal({ open, onOpenChange, onProductAdded, editingPro
           <ManualProductTab onProductAdded={onProductAdded} onClose={handleClose} />
         </TabsContent>
         <TabsContent value="store" className="mt-0">
-          <StoreImportTab onProductAdded={onProductAdded} onClose={handleClose} />
+          <StoreImportTab onProductAdded={onProductAdded} onClose={handleClose} onSwitchToUpload={() => setActiveTab('manual')} />
         </TabsContent>
         <TabsContent value="csv" className="mt-0">
           <CsvImportTab onProductAdded={onProductAdded} onClose={handleClose} />
