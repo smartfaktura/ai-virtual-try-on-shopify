@@ -1,32 +1,30 @@
 
 
-## Add "Expand" View to Scene Selector
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-Add a toggle button in the scene selector popover header that switches between the current compact popover view and an expanded full-screen dialog view for browsing scenes with larger thumbnails.
+### Issues Found
 
-### Approach
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**Single file change: `src/components/app/freestyle/SceneSelectorChip.tsx`**
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-1. **Add `expanded` state** — toggles between popover mode and dialog mode
-2. **Add expand button** in the popover header (next to "Clear selection") — an `Expand` (lucide) icon button
-3. **When expanded**, close the popover and open a `Dialog` instead, showing the same scene grid but with:
-   - Wider layout (`max-w-3xl`)
-   - Larger thumbnails in a 4-column grid (3 on mobile)
-   - Taller scroll area (`max-h-[70vh]`)
-   - Same filter tabs, same selection logic
-4. **Minimize button** in the dialog header to go back to popover mode
+### Plan
 
-The scene grid rendering logic will be extracted into a shared render function to avoid duplication between popover and dialog views. The only difference is container width, grid columns, and image size.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### UI Details
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-- Expand icon: `Maximize2` from lucide, placed in the header row
-- Dialog title: "Scene / Environment" (same as popover)
-- Grid: `grid-cols-3 sm:grid-cols-4` with `gap-2` for larger spacing
-- Images: `aspect-square` stays, but naturally larger due to wider container
-- Selecting a scene closes both dialog and popover
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### Files
-- `src/components/app/freestyle/SceneSelectorChip.tsx` — add expanded state, Dialog import, expand toggle button, shared grid renderer
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
