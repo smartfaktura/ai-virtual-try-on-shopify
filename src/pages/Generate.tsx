@@ -197,6 +197,38 @@ export default function Generate() {
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
 
+  // Fetch library items for "From Library" source
+  const { data: libraryItems = [], isLoading: isLoadingLibrary } = useQuery({
+    queryKey: ['generate-library-items', user?.id],
+    queryFn: async () => {
+      const [fsResult, jobsResult] = await Promise.all([
+        supabase.from('freestyle_generations').select('id, image_url, prompt, created_at').order('created_at', { ascending: false }).limit(50),
+        supabase.from('generation_jobs').select('id, results, created_at, status, prompt_final').eq('status', 'completed').order('created_at', { ascending: false }).limit(50),
+      ]);
+      const items: Array<{ id: string; imageUrl: string; label: string; createdAt: string }> = [];
+      if (fsResult.data) {
+        for (const f of fsResult.data) {
+          items.push({ id: `fs-${f.id}`, imageUrl: f.image_url, label: f.prompt?.slice(0, 60) || 'Freestyle', createdAt: f.created_at });
+        }
+      }
+      if (jobsResult.data) {
+        for (const job of jobsResult.data) {
+          const results = job.results as any;
+          if (!Array.isArray(results)) continue;
+          for (let i = 0; i < results.length; i++) {
+            const r = results[i];
+            const url = typeof r === 'string' ? r : r?.url || r?.image_url;
+            if (!url || url.startsWith('data:')) continue;
+            items.push({ id: `job-${job.id}-${i}`, imageUrl: url, label: job.prompt_final?.slice(0, 60) || 'Generated', createdAt: job.created_at });
+          }
+        }
+      }
+      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return items;
+    },
+    enabled: !!user?.id && sourceType === 'library',
+  });
+
   const { upload: uploadFile, isUploading } = useFileUpload();
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
