@@ -339,7 +339,7 @@ export function FreestyleSettingsChips({
                 modal={isMobile}
               />
             </div>
-            <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+            <div className={cn('shrink-0', highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <SceneSelectorChip
                 selectedScene={selectedScene}
                 open={scenePopoverOpen}
