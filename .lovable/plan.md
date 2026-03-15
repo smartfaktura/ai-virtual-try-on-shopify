@@ -1,23 +1,30 @@
 
 
-## Fix Perspectives Generating Error
+## Product Perspectives — Implemented ✅
 
-### Problem
-When enqueuing perspective jobs, hitting the 429 rate limit (max 4 concurrent) causes `break` to only exit the innermost ratio loop. The outer variation/product loops continue, triggering more failed enqueue attempts and error toasts. Additionally, `/app/perspectives` is not in `GlobalGenerationBar`'s `HIDDEN_PATHS`, so the global bar overlaps with the dedicated progress view.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Changes
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-#### 1. `src/hooks/useGeneratePerspectives.ts` -- Fix `break` to exit all loops on 402/429
-
-Replace the triple-nested loop with a `shouldStop` flag. When a 402 or 429 is received, set `shouldStop = true` and break. Check the flag at the start of each outer loop iteration to bail out entirely.
-
-#### 2. `src/components/app/GlobalGenerationBar.tsx` -- Hide on perspectives page
-
-Add `'/app/perspectives'` to `HIDDEN_PATHS` so the global generation bar doesn't show a duplicate progress indicator while the dedicated generating view is active.
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
 ### Files changed
-| File | Change |
-|------|--------|
-| `src/hooks/useGeneratePerspectives.ts` | Add `shouldStop` flag to break out of all loops on 402/429 |
-| `src/components/app/GlobalGenerationBar.tsx` | Add `/app/perspectives` to `HIDDEN_PATHS` |
-
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
