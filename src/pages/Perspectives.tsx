@@ -326,7 +326,9 @@ export default function Perspectives() {
     ? (directUploadUrl ? 1 : 0)
     : sourceType === 'product'
       ? selectedProductIds.size
-      : selectedLibraryIds.size;
+      : sourceType === 'library'
+        ? selectedLibraryIds.size
+        : 0;
 
   const perImageCost = 8;
   const totalImages = sourceCount * selectedVariations.size * selectedRatios.size;
