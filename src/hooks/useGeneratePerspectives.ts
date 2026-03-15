@@ -64,9 +64,9 @@ function getPhotographyDNA(category: PerspectiveCategory, label: string): string
     default: { // 'angle' — back, left, right, etc.
       const isBack = label.toLowerCase().includes('back');
       const sideNote = label.toLowerCase().includes('left')
-        ? 'Camera positioned at exact 90° to the product's left face. The left side panel fills the frame.'
+        ? 'Camera positioned at exact 90° to the product\'s left face. The left side panel fills the frame.'
         : label.toLowerCase().includes('right')
-          ? 'Camera positioned at exact 90° to the product's right face. The right side panel fills the frame.'
+          ? 'Camera positioned at exact 90° to the product\'s right face. The right side panel fills the frame.'
           : '';
 
       return `PHOTOGRAPHY DNA — PRODUCT ANGLE:
