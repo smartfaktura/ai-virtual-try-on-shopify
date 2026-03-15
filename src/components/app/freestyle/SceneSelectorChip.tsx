@@ -58,14 +58,17 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
     setIsExpanded(true);
   };
 
-  const renderFilterTabs = () => (
-    <div className="flex gap-1 mb-3 flex-wrap">
+  const renderFilterTabs = (expanded: boolean) => (
+    <div className={cn('flex gap-1 mb-3 flex-wrap', expanded && 'gap-2 mb-4')}>
       {filterTabs.map(tab => (
         <button
           key={tab.key}
           onClick={() => setActiveFilter(tab.key)}
           className={cn(
-            'px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors',
+            'rounded-full font-medium transition-colors',
+            expanded
+              ? 'px-4 py-2 text-sm'
+              : 'px-2.5 py-1 text-[10px]',
             activeFilter === tab.key
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-muted-foreground hover:bg-muted/80'
