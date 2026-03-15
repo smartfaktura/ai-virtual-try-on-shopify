@@ -1,38 +1,30 @@
 
 
-## Fix: Handle Large Perspective Batches (20+) Without Concurrent Limit Errors
+## Product Perspectives — Implemented ✅
 
-### Root Cause
-The DB `enqueue_generation` function checks concurrent **processing** jobs (Pro limit: 5). Jobs transition to "processing" almost instantly via `process-queue`, so by the time job #6 is enqueued, 5 are already processing → hard rejection with "Too many concurrent generations".
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-The burst-limit retry (added earlier) only catches errors with `burst_limit` in the response. The concurrent error has `max_concurrent` instead, so it triggers `shouldStop = true` and aborts the entire batch.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### Solution
-
-**Two-part fix:**
-
-#### 1. Client: Retry on concurrent-limit 429s too (`src/hooks/useGeneratePerspectives.ts`)
-In the 429 handler, also detect `max_concurrent` in the error response and retry with the same 10s backoff (jobs complete in ~30-60s, so 10s wait is reasonable). Increase `MAX_BURST_RETRIES` to 3 for concurrent retries since jobs take longer to free up.
-
-```
-if (response.status === 429) {
-  const isBurst = errorData.burst_limit !== undefined;
-  const isConcurrent = errorData.max_concurrent !== undefined;
-  if ((isBurst || isConcurrent) && attempt < MAX_BURST_RETRIES) {
-    await sleep(isConcurrent ? 15_000 : 10_000); // longer wait for concurrent
-    continue;
-  }
-}
-```
-
-#### 2. DB: Remove concurrent check from enqueue, let process-queue handle it (migration)
-The better fix: allow jobs to queue freely (they're "queued" not "processing"), and let the `process-queue` function control concurrency. Remove the concurrent check from `enqueue_generation` entirely — the burst limit already prevents spam.
-
-This way 25 jobs all enqueue immediately as "queued", and process-queue picks them up 5 at a time.
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
 ### Files changed
-| File | Change |
-|------|--------|
-| New migration SQL | Remove concurrent processing check from `enqueue_generation` |
-| `src/hooks/useGeneratePerspectives.ts` | Add concurrent-limit retry as fallback safety net |
-
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`

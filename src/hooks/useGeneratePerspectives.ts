@@ -382,10 +382,10 @@ export function useGeneratePerspectives() {
             payload.referenceAngleImage = referenceBase64;
           }
 
-          const MAX_BURST_RETRIES = 2;
+          const MAX_RETRIES = 3;
           let enqueued = false;
 
-          for (let attempt = 0; attempt <= MAX_BURST_RETRIES; attempt++) {
+          for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
               const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
                 method: 'POST',
@@ -411,19 +411,20 @@ export function useGeneratePerspectives() {
                 }
                 if (response.status === 429) {
                   const isBurst = errorData.burst_limit !== undefined;
-                  if (isBurst && attempt < MAX_BURST_RETRIES) {
-                    console.log(`[Perspectives] Burst limit hit, waiting 10s before retry ${attempt + 1}/${MAX_BURST_RETRIES}…`);
-                    await sleep(10_000);
-                    continue; // retry
+                  const isConcurrent = errorData.max_concurrent !== undefined;
+                  if ((isBurst || isConcurrent) && attempt < MAX_RETRIES) {
+                    const waitMs = isConcurrent ? 15_000 : 10_000;
+                    console.log(`[Perspectives] ${isConcurrent ? 'Concurrent' : 'Burst'} limit hit, waiting ${waitMs / 1000}s before retry ${attempt + 1}/${MAX_RETRIES}…`);
+                    await sleep(waitMs);
+                    continue;
                   }
-                  // Non-burst 429 (hourly rate limit) or exhausted retries
                   toast.error(errorData.error || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
                   shouldStop = true;
                   break;
                 }
 
                 toast.error(errorData.error || `Failed to enqueue job`);
-                break; // don't retry non-rate-limit errors
+                break;
               }
 
               const result = await response.json();
@@ -436,12 +437,14 @@ export function useGeneratePerspectives() {
               enqueuedCount++;
               enqueued = true;
               setProgress(Math.round((enqueuedCount / totalJobs) * 100));
-              break; // success, exit retry loop
+              break;
             } catch (err) {
               console.error('Enqueue error:', err);
               break;
             }
           }
+
+
 
           if (shouldStop) break;
 
