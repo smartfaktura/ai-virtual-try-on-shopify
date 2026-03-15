@@ -1,30 +1,40 @@
 
 
-## Product Perspectives — Implemented ✅
+## Add Proper Animation for Product Perspectives Workflow Card
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+The `workflowScenes` map in `workflowAnimationData.tsx` has no entry for `'Product Perspectives'`, so the WorkflowCard falls back to a static image (or broken thumbnail). Additionally, `WorkflowCard.tsx` has no feature list entry for it.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Solution
+Add a "recipe" mode animation scene (matching the style of Virtual Try-On, Product Listing, etc.) and a feature bullet list.
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+### Changes
+
+#### 1. `src/components/app/workflowAnimationData.tsx` — Add `'Product Perspectives'` scene
+
+Use the standard recipe animation mode with:
+- A product image chip (reuse an existing product asset like the cream jar)
+- Badge chips for the angle types: "4 Angles", "Close-up", "Back View"
+- A background result image (reuse a suitable existing asset or the workflow preview from the DB)
+- Standard slide-in animations with staggered delays
+
+Assets: Reuse `listingProduct` (cream jar) as the product chip and `listingResult` as background since perspectives generate product-only images in similar style.
+
+#### 2. `src/components/app/WorkflowCard.tsx` — Add feature list for `'Product Perspectives'`
+
+Add to `featureMap`:
+```
+'Product Perspectives': [
+  'Generate close-up, back, side & wide angles from one image',
+  'Strict identity preservation — no hallucinated details',
+  'High quality Pro model for maximum fidelity',
+  'All aspect ratios supported — portrait, square & landscape',
+]
+```
 
 ### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+| File | Change |
+|------|--------|
+| `src/components/app/workflowAnimationData.tsx` | Add `'Product Perspectives'` scene entry with recipe-mode badges |
+| `src/components/app/WorkflowCard.tsx` | Add feature list for Product Perspectives |
+
