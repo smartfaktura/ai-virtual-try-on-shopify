@@ -1015,7 +1015,7 @@ serve(async (req) => {
           ) {
             const statusError = error as { status: number; message: string };
             if (isQueueInternal && body.job_id) {
-              await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], totalToGenerate, [statusError.message], body as unknown as Record<string, unknown>);
+              await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], totalToGenerate, [statusError.message], { ...body, workflow_name: workflow.name, product_title: body.product?.title } as unknown as Record<string, unknown>);
             }
             return new Response(
               JSON.stringify({ error: statusError.message }),
