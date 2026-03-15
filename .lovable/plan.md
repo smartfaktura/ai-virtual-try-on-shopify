@@ -1,30 +1,30 @@
 
 
-## Fix Freestyle Pills Layout — Use Wrap with Consistent Chip Sizing
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The horizontal scroll approach doesn't feel right. A better solution: keep `flex-wrap` but prevent the layout jumps by giving chips a consistent minimum width and truncating long text.
+### Issues Found
 
-### Root Cause
-When "Product" becomes "Elevate You..." or "Model" becomes "Ashley K.", the chip grows, pushing siblings to new rows. The fix is to **cap chip widths** so they don't grow unboundedly.
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Approach
-Revert to `flex-wrap` but add `max-w-[120px]` (or similar) with `truncate` on the label text inside each chip. This way:
-- Chips wrap naturally to a second line when needed
-- But the **wrapping pattern stays stable** because chip widths don't vary wildly between "Product" and "Elevate You Athleisure..."
-- Selected state shows truncated name with ellipsis — users can still tap to see full name
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### Changes — `src/components/app/freestyle/FreestyleSettingsChips.tsx`
+### Plan
 
-1. **Revert rows back to `flex-wrap`**: Change `overflow-x-auto flex-nowrap scrollbar-none` back to `flex-wrap` on all three mobile rows. Remove `shrink-0` wrappers.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-2. **Add `max-w` + `truncate` to chip buttons**: Each chip component (ProductSelectorChip, ModelSelectorChip, SceneSelectorChip, etc.) renders a button with a label. Add `max-w-[130px] truncate` to the label `<span>` inside each chip so text gets ellipsized consistently.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Files
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-| File | Change |
-|---|---|
-| `src/components/app/freestyle/FreestyleSettingsChips.tsx` | Revert to `flex-wrap`, remove `shrink-0` wrappers |
-| `src/components/app/freestyle/ProductSelectorChip.tsx` | Add `max-w-[100px] truncate` to selected product name span |
-| `src/components/app/freestyle/ModelSelectorChip.tsx` | Add `max-w-[100px] truncate` to selected model name span |
-| `src/components/app/freestyle/SceneSelectorChip.tsx` | Add `max-w-[100px] truncate` to selected scene name span |
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
