@@ -257,7 +257,7 @@ export default function Freestyle() {
     const response = await fetch(base64Data);
     const blob = await response.blob();
 
-    const ext = mime.split('/')[1] || 'png';
+    const ext = (blob.type.split('/')[1]) || 'png';
     const fileName = `${user.id}/${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
     const { data, error } = await supabase.storage
