@@ -1,30 +1,32 @@
 
 
-## Product Perspectives — Implemented ✅
+## Fix Reference Upload Box & Remove Standard Quality
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Changes to `src/pages/Perspectives.tsx`
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+#### 1. Reference upload box — match parent card styling + add paste support
+The reference upload area (lines 568-605) is a small `ml-12` indented box with minimal styling. It needs to:
+- Remove `ml-12` indent so it visually aligns with the parent variation card
+- Match the parent card's width and border-radius styling (rounded-xl, proper padding)
+- Add a proper drag-and-drop zone with icon, text, and paste support (Cmd+V / Ctrl+V)
+- Show a proper preview when uploaded (larger thumbnail, better layout)
+- Add clipboard paste listener scoped to when a variation with ref upload is selected
+- Apply the same treatment to the non-recommended reference upload section (lines 608-642)
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+#### 2. Remove Standard quality option
+- Remove the entire "Step 4: Quality" section (lines 673-695)
+- Hardcode `quality` to `'high'` (already default)
+- Remove the `quality` state setter since it's always `'high'`
+- Update the cost display — `perImageCost` is always 8, no toggle needed
+- Renumber Step 3 (Aspect Ratios) stays as 3, the generate bar remains
+
+#### 3. Add paste event handler for reference images
+- Add a `useEffect` that listens for paste events when a variation with `referenceUpload` is selected
+- On paste, upload the pasted image as a reference for the most recently selected variation that still needs a reference
+- Show paste hint text in the upload zone (like the main UploadSourceCard does)
 
 ### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+| File | Change |
+|------|--------|
+| `src/pages/Perspectives.tsx` | Redesign reference upload zones, add paste support, remove quality section |
+
