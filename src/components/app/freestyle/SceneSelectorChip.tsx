@@ -247,7 +247,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
       </Popover>
 
       <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-5">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3 pr-8">
             <DialogTitle className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
               Scene / Environment
