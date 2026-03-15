@@ -9,7 +9,7 @@ import { useSceneSortOrder, useSaveSceneSortOrder } from '@/hooks/useSceneSortOr
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/app/PageHeader';
+import { useDeleteCustomScene } from '@/hooks/useCustomScenes';
 
 export default function AdminScenes() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export default function AdminScenes() {
   const { asPoses: customPoses, scenes: customScenesRaw } = useCustomScenes();
   const { sortMap } = useSceneSortOrder();
   const saveSortOrder = useSaveSceneSortOrder();
-  const { deleteScene } = useDeleteCustomScene();
+  const deleteSceneMutation = useDeleteCustomScene();
 
   // Redirect non-admins
   useEffect(() => {
