@@ -1,27 +1,30 @@
 
 
-## Add Workflow Scenes to Freestyle Scene Selector
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### What we're doing
-Adding 6 new scenes from the Workflows "Product Listing Set" into the freestyle `mockTryOnPoses` array, all under the `clean-studio` (Product Studio) category. Shadow Play already exists there.
+### Issues Found
 
-### Scenes to add (all as `clean-studio`)
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-| Scene | Status | Notes |
-|---|---|---|
-| Shadow Play | Already exists (scene_019) | No change needed |
-| Raw Concrete | New — add to mockData | Similar to "Concrete Slab" but different name/prompt |
-| Warm Wood Grain | New — add to mockData | Similar to "Wooden Table" but different name/prompt |
-| Linen & Fabric | New — add to mockData | Similar to "Linen Textile" but different name/prompt |
-| Bathroom Shelf | New — add to mockData | Lifestyle bathroom context |
-| Water Splash | New — add to mockData | Dynamic water photography |
-| Floating Levitation | New — add to mockData | Zero-gravity surreal editorial |
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-### File changes
+### Plan
 
-**`src/data/mockData.ts`**
-1. Add 6 new image URL constants using `getLandingAssetUrl('scenes/scene-*.jpg')` for each new scene
-2. Add 6 new entries to `mockTryOnPoses` array after the existing scenes, all with `category: 'clean-studio'`, using prompt hints from `generate-scene-previews/index.ts`
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-Scene IDs will continue from `scene_032` onward. Preview URLs will reference CDN assets (same pattern as existing scenes). The prompts will match what's already defined in the workflow edge function.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
+
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
