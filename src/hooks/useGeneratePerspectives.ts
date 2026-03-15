@@ -28,59 +28,122 @@ interface UseGeneratePerspectivesOptions {
 }
 
 /**
+ * Detect perspective category from the variation label.
+ */
+type PerspectiveCategory = 'macro' | 'angle' | 'context';
+
+function detectCategory(label: string): PerspectiveCategory {
+  const l = label.toLowerCase();
+  if (l.includes('close') || l.includes('macro')) return 'macro';
+  if (l.includes('wide') || l.includes('environment')) return 'context';
+  return 'angle'; // back, left, right, etc.
+}
+
+/**
+ * Per-perspective photography DNA — lens, DoF, lighting, and special direction.
+ */
+function getPhotographyDNA(category: PerspectiveCategory, label: string): string {
+  switch (category) {
+    case 'macro':
+      return `PHOTOGRAPHY DNA — MACRO/CLOSE-UP:
+- Lens: 100mm macro lens at f/4–f/5.6, focus-stacked for edge-to-edge sharpness across the product surface.
+- Lighting: Raking light at 15–30° to the surface to reveal material grain, texture weave, stitching thread, embossing depth, and micro-scratches. Secondary fill light opposite at 50% intensity.
+- Framing: Extreme tight crop — product fills 85–95% of the frame. Show a single defining detail region (zipper pull, logo deboss, fabric weave, clasp mechanism).
+- Depth: Visible micro-texture — individual thread counts on fabric, leather pore structure, metal brushing direction, paint flake edges.
+- DO NOT smooth textures. Preserve every imperfection visible in the source.`;
+
+    case 'context':
+      return `PHOTOGRAPHY DNA — WIDE/ENVIRONMENT:
+- Lens: 35mm at f/5.6, natural perspective with slight wide-angle depth.
+- Product-to-frame ratio: Product occupies 30–40% of the frame. It is the hero element but shown in spatial context.
+- Styling: Complementary lifestyle props and surfaces that match the product's category — a leather bag on a marble console, a sneaker on concrete steps, a watch on a wooden desk. Props support, never compete.
+- Lighting: Natural or mixed — soft directional window light with ambient fill. Slight depth-of-field fall-off on background elements.
+- Mood: Editorial lifestyle. The image should feel like a curated brand lookbook shot, not a catalog cutout.
+- DO NOT center the product rigidly. Use rule-of-thirds or golden-ratio placement.`;
+
+    default: { // 'angle' — back, left, right, etc.
+      const isBack = label.toLowerCase().includes('back');
+      const sideNote = label.toLowerCase().includes('left')
+        ? 'Camera positioned at exact 90° to the product's left face. The left side panel fills the frame.'
+        : label.toLowerCase().includes('right')
+          ? 'Camera positioned at exact 90° to the product's right face. The right side panel fills the frame.'
+          : '';
+
+      return `PHOTOGRAPHY DNA — PRODUCT ANGLE:
+- Lens: 85mm at f/8, deep depth-of-field ensuring the entire product is tack-sharp from nearest edge to farthest.
+- Camera height: Positioned at the product's vertical midpoint — not looking down, not looking up. Straight-on at the product center of mass.
+- Framing: Product fills 70–80% of the frame with consistent margins on all sides. Match the exact same scale as a front-facing hero shot.
+${isBack ? '- Back-specific: Show all rear construction details — back panel seams, interior lining edge, care labels if visible, rear pocket construction, heel counter on shoes. If the product has a label or tag on the back, it must be legible.' : ''}
+${sideNote ? `- Side-specific: ${sideNote}` : ''}
+- Lighting: Same key-light direction and intensity as a front-facing shot. Consistent shadow fall direction across all angles (light from upper-left at 45°).
+- DO NOT rotate or tilt the product — only the camera moves around the product.`;
+    }
+  }
+}
+
+/**
+ * Per-perspective environment rules.
+ */
+function getEnvironmentRules(category: PerspectiveCategory): string {
+  if (category === 'context') {
+    return `ENVIRONMENT — LIFESTYLE CONTEXT: Place the product in a curated, on-brand environment. The setting should feel intentional and editorial — a styled surface, a complementary interior, or an outdoor scene that elevates the product story. Use natural materials and neutral-warm tones. Maintain soft, directional lighting. The product must remain the clear visual hero despite the richer environment.`;
+  }
+  return `ENVIRONMENT — STUDIO CONSISTENCY: Clean, neutral surface (white, light gray, or off-white). Professional studio lighting — soft key light from upper-left at 45°, fill light opposite at 40% intensity, subtle rim light for edge separation. No colored gels, no dramatic shadows, no environmental props. The lighting direction, color temperature (5500K daylight), and background must be identical across all angle shots as if photographed in the same session.`;
+}
+
+/**
  * Build the full perspective prompt with strict product identity rules.
- * This replaces the generic polisher which conflicts with angle-specific directives.
+ * Angle-category-aware: different photography DNA per perspective type.
  */
 function buildPerspectivePrompt(
   variation: VariationInput,
   productTitle: string,
   hasReferenceImage: boolean,
 ): string {
+  const category = detectCategory(variation.label);
   const layers: string[] = [];
 
-  // System instructions — perspective-specific
+  // System instructions
   layers.push(
     `Generate a photorealistic product image from the specified angle/perspective. Maintain the exact product identity — shape, material, color, texture, logos, hardware, stitching — from the source product image. The ONLY change is the camera angle.`
   );
 
-  // Perspective directive — the specific angle instruction
+  // Perspective directive
   layers.push(
     `PERSPECTIVE DIRECTIVE: ${variation.instruction}\n\nProduct: "${productTitle}". Capture from the "${variation.label}" perspective exactly as described above.`
   );
 
-  // Strict product identity rules
+  // Strict product identity
   layers.push(
     `PRODUCT IDENTITY — STRICT: The product in this image must be the EXACT same product from [PRODUCT IMAGE]. Preserve every detail: shape, material, color, texture, logo placement, hardware, stitching, seams, proportions, and finish. Do NOT alter, simplify, stylize, or "reimagine" any design element. Do NOT add or remove any features. The ONLY change is the camera angle/perspective as described above.`
   );
 
-  // Reference image handling — angle-aware, not scene inspiration
+  // Reference image handling
   if (hasReferenceImage) {
     layers.push(
-      `ANGLE REFERENCE: [REFERENCE IMAGE] shows the same product from the requested angle. Use it to understand the product's appearance from this perspective — back construction, side profile shape, hidden details, etc. This is NOT scene or mood inspiration — it is a product identity reference for this specific angle. Match the product details visible in this reference while maintaining the exact same product identity from [PRODUCT IMAGE].`
+      category === 'context'
+        ? `ANGLE REFERENCE: [REFERENCE IMAGE] shows the product in context or from a similar pulled-back perspective. Use it to understand the product's appearance and proportions at this distance. Match the product details visible while creating an elevated lifestyle environment.`
+        : `ANGLE REFERENCE: [REFERENCE IMAGE] shows the same product from the requested angle. Use it to understand the product's appearance from this perspective — back construction, side profile shape, hidden details, etc. This is NOT scene or mood inspiration — it is a product identity reference for this specific angle. Match the product details visible in this reference while maintaining the exact same product identity from [PRODUCT IMAGE].`
     );
   }
 
-  // Cross-angle environment consistency
-  layers.push(
-    `ENVIRONMENT CONSISTENCY: Place the product on a clean, neutral surface in a professional studio environment. Use soft, even lighting with minimal shadows. The lighting direction, color temperature, and background must be consistent as if all angles were shot in the same photography session. No dramatic shadows, no colored gels, no environmental props.`
-  );
+  // Angle-specific photography DNA
+  layers.push(getPhotographyDNA(category, variation.label));
 
-  // Photography quality directives (embedded directly, no generic polisher)
-  layers.push(
-    `PHOTOGRAPHY QUALITY: Ultra high resolution, photorealistic rendering. Shot on 85mm f/2.8 macro lens. Razor-sharp focus across the product surface. Visible material textures — fabric weave, leather grain, metal brushing, stitching thread. Micro-contrast on surfaces. Clean highlight roll-off. Professional product photography lighting.`
-  );
+  // Category-aware environment rules
+  layers.push(getEnvironmentRules(category));
 
-  // Negatives — perspective-specific (no "reimagine" instructions)
+  // Negatives
   layers.push(
     `CRITICAL — DO NOT include any of the following:
 - No people, no human figures, no hands, no body parts
-- No blurry or out-of-focus areas
+- No blurry or out-of-focus areas${category === 'macro' ? ' (use focus stacking)' : ''}
 - No AI-looking smoothing or plastic textures on materials
 - No collage layouts or split-screen compositions
 - No compositing artifacts, no mismatched lighting, no pasted-in look
 - No black borders, black bars, letterboxing, pillarboxing, or padding
 - Do NOT change the product design, color, or any identifying features
-- Do NOT add props, accessories, or items not present on the original product
+- Do NOT add props, accessories, or items not present on the original product${category === 'context' ? ' (complementary styling props are allowed for context shots only)' : ''}
 - Do NOT alter proportions or scale of the product`
   );
 
