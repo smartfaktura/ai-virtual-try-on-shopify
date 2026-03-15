@@ -23,8 +23,16 @@ interface GenerateParams {
   quality: 'standard' | 'high';
 }
 
-interface UseGeneratePerspectivesOptions {
-  onComplete?: () => void;
+export interface PerspectiveJobInfo {
+  jobId: string;
+  variationLabel: string;
+  productTitle: string;
+  ratio: string;
+}
+
+export interface GenerateResult {
+  jobs: PerspectiveJobInfo[];
+  batchId: string;
 }
 
 /**
