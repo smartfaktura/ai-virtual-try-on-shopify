@@ -894,6 +894,7 @@ serve(async (req) => {
       hasProductImage: !!body.productImage,
       hasModelImage: !!body.modelImage,
       hasSceneImage: !!body.sceneImage,
+      hasReferenceAngleImage: !!referenceAngleImage,
       hasModelContext: !!body.modelContext,
       stylePresets: body.stylePresets,
       hasBrandProfile: !!body.brandProfile,
@@ -906,6 +907,7 @@ serve(async (req) => {
       quality: body.quality,
       model: aiModel,
       polished: body.polishPrompt,
+      isPerspective,
       isQueueInternal,
     });
 
