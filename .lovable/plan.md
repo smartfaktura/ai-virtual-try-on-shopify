@@ -1,30 +1,48 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Restructure Admin Scenes: Category Order Section First, Then Scene Items
 
-### Issues Found
+### Current Problem
+Category reorder arrows are embedded within each category's scene list, making it hard to manage the overall category arrangement. The user wants a clear two-section layout: first control category order, then manage individual scenes within each category.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Changes
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`src/pages/AdminScenes.tsx`**
 
-### Plan
+1. **Add "Category Order" section** at the top of the page (after the header). This is a compact card/list showing all active categories as draggable-style rows with:
+   - Category name + scene count
+   - Up/Down arrows to reorder
+   - Clean bordered card layout
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+2. **Remove category up/down arrows** from each category header in the scene items section below
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+3. **Layout structure**:
+```text
+Scene Manager                                    [Save Order]
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+── CATEGORY ORDER ──────────────────────────────
+| ≡  Studio Shots (7)                    ↑  ↓  |
+| ≡  Lifestyle (33)                      ↑  ↓  |
+| ≡  Editorial (12)                      ↑  ↓  |
+| ≡  Streetwear (5)                      ↑  ↓  |
+| ≡  Product Studio (4)                  ↑  ↓  |
+| ≡  Surface & Texture (3)              ↑  ↓  |
+| ...                                           |
+────────────────────────────────────────────────
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+── SCENES BY CATEGORY ──────────────────────────
+STUDIO SHOTS (7)
+  [img] Studio Front    [Studio ▼]       ↑ ↓ 🗑
+  [img] Studio Profile  [Studio ▼]       ↑ ↓ 🗑
+  ...
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+LIFESTYLE (33)
+  [img] Urban Walking   [Lifestyle ▼]    ↑ ↓ 🗑
+  ...
+```
+
+### Files
+| File | Change |
+|---|---|
+| `src/pages/AdminScenes.tsx` | Split into two sections: category order manager at top, scene items below (remove category arrows from scene headers) |
 
