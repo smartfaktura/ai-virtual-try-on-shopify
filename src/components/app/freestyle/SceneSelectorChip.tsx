@@ -68,6 +68,7 @@ interface SceneSelectorChipProps {
   onOpenChange: (open: boolean) => void;
   onSelect: (scene: TryOnPose | null) => void;
   modal?: boolean;
+  fullWidth?: boolean;
 }
 
 type SceneFilter = 'all' | 'on-model' | 'product';
