@@ -272,6 +272,33 @@ export default function Perspectives() {
     setUploadingRefIndex(null);
   };
 
+  // ── Clipboard paste for reference images ──────────────────────────────
+  // Find the first selected variation that has referenceUpload and no image yet
+  const pasteTargetIndex = useMemo(() => {
+    for (const i of selectedVariations) {
+      if (variations[i]?.referenceUpload && !referenceImages[i]) return i;
+    }
+    return null;
+  }, [selectedVariations, variations, referenceImages]);
+
+  useEffect(() => {
+    if (pasteTargetIndex === null) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) handleReferenceUpload(pasteTargetIndex, file);
+          return;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [pasteTargetIndex]);
+
   const handleGenerate = async () => {
     if (!canGenerate) return;
     if (totalCost > credits) {
