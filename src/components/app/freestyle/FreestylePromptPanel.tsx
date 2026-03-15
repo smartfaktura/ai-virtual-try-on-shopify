@@ -68,6 +68,9 @@ interface FreestylePromptPanelProps {
   onToggleCollapse?: () => void;
   // Guide highlight
   highlightedChip?: GuideStepKey | null;
+  // Reset
+  onReset?: () => void;
+  isDirty?: boolean;
 }
 
 export function FreestylePromptPanel({
