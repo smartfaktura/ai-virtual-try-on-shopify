@@ -13,6 +13,7 @@ interface ModelSelectorChipProps {
   onOpenChange: (open: boolean) => void;
   onSelect: (model: ModelProfile | null) => void;
   modal?: boolean;
+  fullWidth?: boolean;
 }
 
 type GenderFilter = 'all' | 'female' | 'male';
