@@ -1,30 +1,44 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Fix Library Sort Order
 
-### Issues Found
+### Problem
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+The library fetches from two separate tables (`generation_jobs` and `freestyle_generations`) using the same `range(from, to)` pagination, but each job can expand into **multiple** library items (one per result image). This causes a time-range mismatch between the two sources — 20 jobs covering March 1-15 might expand to 60 items, while 20 freestyles cover March 10-15 with only 20 items. The merge-sort within each page is correct, but **across pages** the ordering breaks because page boundaries don't align between the two sources.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Fix
 
-### Plan
+**`src/hooks/useLibraryItems.ts`** — Two changes:
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+1. **Over-fetch and trim**: Fetch more rows from `generation_jobs` (e.g., `PAGE_SIZE * 3`) since each job can produce multiple result images, then trim the merged list to `PAGE_SIZE` items after sorting.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+2. **Use cursor-based pagination instead of offset-based**: Track the last `created_at` timestamp from each source and use `.lt('created_at', lastTimestamp)` for the next page instead of `.range()`. This ensures correct chronological pagination across both tables.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+The simpler approach (option 1) is faster to implement:
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+```typescript
+// Over-fetch jobs since each can have multiple result images
+const JOB_FETCH_SIZE = PAGE_SIZE * 3;
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+const [jobsResult, freestyleResult] = await Promise.all([
+  supabase.from('generation_jobs')
+    .select(...)
+    .order('created_at', { ascending: sortBy === 'oldest' })
+    .range(from, to * 3),  // fetch more jobs
+  supabase.from('freestyle_generations')
+    .select(...)
+    .order('created_at', { ascending: sortBy === 'oldest' })
+    .range(from, to),
+]);
+
+// After merge-sort, trim to PAGE_SIZE
+const trimmed = rawItems.slice(0, PAGE_SIZE);
+```
+
+And update `hasMore` logic to check if we had more items than PAGE_SIZE after trimming.
+
+### Files modified
+| File | Change |
+|---|---|
+| `src/hooks/useLibraryItems.ts` | Over-fetch jobs, trim merged results to PAGE_SIZE |
 
