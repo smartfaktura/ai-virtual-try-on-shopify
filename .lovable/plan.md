@@ -1,30 +1,42 @@
 
 
-## Product Perspectives — Implemented ✅
+## Make All Perspectives Show Full Reference Upload Zone
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### What changes
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+**`src/pages/Perspectives.tsx`** — Two changes:
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+1. **Update `FALLBACK_VARIATIONS`** (lines 47-53): Give every variation a `referenceUpload` config with `recommended: true` so they all show the full drag-drop zone instead of the small text link. Currently `closeup` and `wide` have `referenceUpload: null`, and `left`/`right` have `recommended: false`.
+
+```typescript
+const FALLBACK_VARIATIONS: VariationType[] = [
+  { id: 'closeup', label: 'Close-up / Macro', instruction: '...', category: 'detail',
+    referenceUpload: { prompt: 'Upload a close-up reference of your product for best results (optional)', recommended: true } },
+  { id: 'back', label: 'Back Angle', instruction: '...', category: 'angle',
+    referenceUpload: { prompt: 'Upload a back view of your product for best results (optional)', recommended: true } },
+  { id: 'left', label: 'Left Side', instruction: '...', category: 'angle',
+    referenceUpload: { prompt: 'Upload a left side view of your product for best results (optional)', recommended: true } },
+  { id: 'right', label: 'Right Side', instruction: '...', category: 'angle',
+    referenceUpload: { prompt: 'Upload a right side view of your product for best results (optional)', recommended: true } },
+  { id: 'wide', label: 'Wide / Environment', instruction: '...', category: 'context',
+    referenceUpload: { prompt: 'Upload a wide/environment reference of your product for best results (optional)', recommended: true } },
+];
+```
+
+2. **Remove the non-recommended code path** (lines 936-970): Delete the entire `{hasRefUpload && !v.referenceUpload!.recommended && (...)}` block since all variations now use `recommended: true`.
+
+### Regarding whether reference images are sent to generation
+
+Yes, confirmed. The data flow works correctly:
+- `referenceImages[i]` is passed as `referenceImageUrl` on each variation (line 431)
+- In `useGeneratePerspectives.ts`, it's converted to base64 (line 357) and added to the payload as `referenceAngleImage` (line 391)
+- In `generate-freestyle/index.ts`, it's injected into the multimodal content array as `[REFERENCE IMAGE]` (lines 944-947)
+- The prompt already contains angle-specific `ANGLE REFERENCE` instructions when a reference is present (lines 253-267)
+
+No changes needed on the generation side — the reference images are already correctly wired end-to-end.
 
 ### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+| File | Change |
+|------|--------|
+| `src/pages/Perspectives.tsx` | Set all variations to `recommended: true` with proper prompts; remove non-recommended UI block |
+
