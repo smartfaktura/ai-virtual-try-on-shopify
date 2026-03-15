@@ -317,9 +317,9 @@ export function FreestyleSettingsChips({
       <TooltipProvider delayDuration={300}>
         <div className="space-y-2">
           {/* Row 1: Assets + Creative — OUTSIDE Collapsible */}
-          <div className="flex items-center gap-2 overflow-x-auto flex-nowrap scrollbar-none pb-1">
-            <div className="shrink-0">{uploadButton}</div>
-            <div className={cn('shrink-0', highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+          <div className="flex items-center gap-2 flex-wrap">
+            {uploadButton}
+            <div className={cn(highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <ProductSelectorChip
                 selectedProduct={selectedProduct}
                 open={productPopoverOpen}
@@ -330,7 +330,7 @@ export function FreestyleSettingsChips({
                 modal={isMobile}
               />
             </div>
-            <div className={cn('shrink-0', highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+            <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <ModelSelectorChip
                 selectedModel={selectedModel}
                 open={modelPopoverOpen}
@@ -339,7 +339,7 @@ export function FreestyleSettingsChips({
                 modal={isMobile}
               />
             </div>
-            <div className={cn('shrink-0', highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+            <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <SceneSelectorChip
                 selectedScene={selectedScene}
                 open={scenePopoverOpen}
@@ -348,13 +348,13 @@ export function FreestyleSettingsChips({
                 modal={isMobile}
               />
             </div>
-            <div className="shrink-0"><FramingSelectorChip
+            <FramingSelectorChip
               framing={framing}
               onFramingChange={onFramingChange}
               open={framingPopoverOpen}
               onOpenChange={onFramingPopoverChange}
               modal={isMobile}
-            /></div>
+            />
           </div>
 
           {/* Row 2 + Style — wrapped in Collapsible */}
