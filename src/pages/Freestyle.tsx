@@ -127,7 +127,8 @@ export default function Freestyle() {
     onGenerationFailed: handleGenerationFailed,
     onCreditRefresh: refreshBalance,
   });
-  const isLoading = isEnqueuing || isProcessing;
+  const [isUploading, setIsUploading] = useState(false);
+  const isLoading = isEnqueuing || isProcessing || isUploading;
   const { user } = useAuth();
 
   // Detect workflow job completion to show "View Library" banner
