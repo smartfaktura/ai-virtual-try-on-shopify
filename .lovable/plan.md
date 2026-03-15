@@ -1,30 +1,48 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Chip Label Tweaks + Row Consolidation
 
-### Issues Found
+### Changes
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+**1. Quality chip label — shorten on mobile** (lines 158-204)
+- When no model selected: show `Quality` as default label, `Standard` or `✦ High` only after selection
+- Current: `Quality: Standard` / `Quality: ✦ High` → New on mobile: just `Quality` when standard (default), `✦ High` when high is selected
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**2. Camera style chip — rename "Pro"** (lines 207-243)
+- "Pro" is ambiguous. Rename the chip trigger label to `Camera` as default state, showing `Pro` or `Natural` only as the selected value
+- Current: `Pro` / `Natural` → New on mobile: `Camera` as neutral label with chevron (like Quality), showing the selection inside the popover
 
-### Plan
+**3. Consolidate Row 1** — put Upload, Product, Model, Scene, and Framing all in one `flex-wrap` row instead of splitting across two rows. This packs more chips per line and reduces vertical whitespace.
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+### File: `src/components/app/freestyle/FreestyleSettingsChips.tsx`
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**Quality chip** (line 179):
+```
+// Before
+quality === 'high' ? 'Quality: ✦ High' : 'Quality: Standard'
+// After (mobile)
+quality === 'high' ? '✦ High' : 'Quality'
+```
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**Camera chip** (line 217):
+```
+// Before  
+cameraStyle === 'natural' ? 'Natural' : 'Pro'
+// After (mobile)
+'Camera' (always show neutral label, selection visible via icon change + highlight)
+```
+Actually better: show `Camera` as base, then selected value after colon only when non-default. Since `pro` is default → just `Camera`. When `natural` → icon changes + border highlights already signal it. Keep it as just the icon + `Camera` label always — the popover shows the options.
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+Wait — the user said "not correct to write Pro while selection is pro or natural — what can we write?" Let me think... The chip represents camera/photo style. Options are Pro (studio) and Natural (iPhone). A good neutral label: **"Look"** or **"Camera"**. Camera makes more sense since it's about the camera style. Show: `📷 Camera ▾` always, with highlight when non-default (natural).
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**Row consolidation** (lines 319-383):
+- Merge assets row and settings row into one single `flex-wrap` container
+- Order: Upload, Product, Model, Scene, Framing, Aspect, Quality, Camera, Style
+
+### Summary of changes — single file
+| What | Before | After |
+|---|---|---|
+| Quality label (mobile) | `Quality: Standard` / `Quality: ✦ High` | `Quality` / `✦ High` |
+| Camera label | `Pro` / `Natural` | `Camera` (always, highlight when natural) |
+| Mobile rows | 2 separate flex rows | 1 unified flex-wrap row + Style collapsible |
 
