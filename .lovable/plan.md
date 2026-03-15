@@ -1,21 +1,21 @@
 
 
-## Product Perspectives — Implemented ✅
+## Route Product Perspectives to Standalone Page
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+The Product Perspectives workflow currently goes through the generic Generate page (`/app/generate?workflow=...`) which uses a multi-step flow. The standalone `/app/perspectives` page has a better single-page layout with all sections visible at once (source, perspectives, ratios + sticky bottom bar). The user wants to use that layout instead.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+### Changes
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
+#### `src/pages/Workflows.tsx`
+- In `handleCreateVisualSet`, detect when workflow name is `'Product Perspectives'` and navigate to `/app/perspectives` instead of `/app/generate?workflow=...`
+
+#### `src/pages/Generate.tsx`  
+- Add a redirect: if the URL has a workflow query param that resolves to the Product Perspectives workflow (angle type), redirect to `/app/perspectives`
+- This ensures any deep links or bookmarks still work
+
+#### Cleanup
+- Remove the angle-workflow-specific code from Generate.tsx (the `isAngleWorkflow` branches, library picker for angle workflow, step mapping) since it's no longer needed there — keeps Generate.tsx cleaner
+
+This is a small routing change — the standalone Perspectives page already has all the functionality (3 source types, library picker, product picker, upload, angle checkboxes with reference uploads, multi-ratio, sticky generate bar).
+
