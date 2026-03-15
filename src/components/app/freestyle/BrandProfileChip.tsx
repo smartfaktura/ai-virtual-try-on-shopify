@@ -14,6 +14,7 @@ interface BrandProfileChipProps {
   onSelect: (profile: BrandProfile | null) => void;
   profiles: BrandProfile[];
   isLoading: boolean;
+  fullWidth?: boolean;
 }
 
 const toneEmoji: Record<string, string> = {
