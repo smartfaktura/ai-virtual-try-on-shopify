@@ -10,6 +10,7 @@ interface NegativesChipProps {
   onNegativesChange: (negatives: string[]) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  fullWidth?: boolean;
 }
 
 export function NegativesChip({ negatives, onNegativesChange, open, onOpenChange }: NegativesChipProps) {
