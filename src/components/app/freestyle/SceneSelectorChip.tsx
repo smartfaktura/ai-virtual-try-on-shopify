@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, ChevronDown, X, Maximize2, Minimize2 } from 'lucide-react';
+import { Camera, ChevronDown, X, Maximize2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
