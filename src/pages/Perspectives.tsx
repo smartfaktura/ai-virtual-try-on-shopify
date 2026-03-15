@@ -45,11 +45,11 @@ interface VariationType {
 }
 
 const FALLBACK_VARIATIONS: VariationType[] = [
-  { id: 'closeup', label: 'Close-up / Macro', instruction: 'Extreme close-up macro detail shot...', category: 'detail', referenceUpload: null },
+  { id: 'closeup', label: 'Close-up / Macro', instruction: 'Extreme close-up macro detail shot...', category: 'detail', referenceUpload: { prompt: 'Upload a close-up reference of your product for best results (optional)', recommended: true } },
   { id: 'back', label: 'Back Angle', instruction: 'Rear view...', category: 'angle', referenceUpload: { prompt: 'Upload a back view of your product for best results (optional)', recommended: true } },
-  { id: 'left', label: 'Left Side', instruction: 'Left side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a left side view for better accuracy (optional)', recommended: false } },
-  { id: 'right', label: 'Right Side', instruction: 'Right side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a right side view for better accuracy (optional)', recommended: false } },
-  { id: 'wide', label: 'Wide / Environment', instruction: 'Pulled-back contextual shot...', category: 'context', referenceUpload: null },
+  { id: 'left', label: 'Left Side', instruction: 'Left side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a left side view of your product for best results (optional)', recommended: true } },
+  { id: 'right', label: 'Right Side', instruction: 'Right side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a right side view of your product for best results (optional)', recommended: true } },
+  { id: 'wide', label: 'Wide / Environment', instruction: 'Pulled-back contextual shot...', category: 'context', referenceUpload: { prompt: 'Upload a wide/environment reference of your product for best results (optional)', recommended: true } },
 ];
 
 const VARIATION_ICONS: Record<string, typeof ZoomIn> = {
