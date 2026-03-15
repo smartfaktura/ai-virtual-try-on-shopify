@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Download, Trash2, Camera, User, X, Sparkles, Globe, Send, Trophy, Maximize, Layers } from 'lucide-react';
 import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -25,6 +26,7 @@ interface LibraryDetailModalProps {
 }
 
 export function LibraryDetailModal({ item, open, onClose, isUpscaling }: LibraryDetailModalProps) {
+  const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [sceneModalUrl, setSceneModalUrl] = useState<string | null>(null);
   const [modelModalUrl, setModelModalUrl] = useState<string | null>(null);
@@ -214,6 +216,15 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                     {upscaleLabel ? `Re-enhance (currently ${upscaleLabel})` : 'Enhance to 2K / 4K'}
                   </Button>
                 )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/app/perspectives?source=${encodeURIComponent(item.imageUrl)}`)}
+                  className="w-full h-11 rounded-xl text-sm font-medium"
+                >
+                  <Layers className="w-4 h-4 mr-2" />
+                  Generate Perspectives
+                </Button>
 
                 {item.source === 'freestyle' && (
                   <Button
