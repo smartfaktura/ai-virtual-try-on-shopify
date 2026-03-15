@@ -195,7 +195,9 @@ export function useGeneratePerspectives() {
     const jobs: PerspectiveJobInfo[] = [];
 
     // Enqueue sequentially to avoid credit race conditions
+    let shouldStop = false;
     for (const product of products) {
+      if (shouldStop) break;
       let productBase64: string | null = null;
       try {
         productBase64 = await convertImageToBase64(product.imageUrl);
@@ -205,6 +207,7 @@ export function useGeneratePerspectives() {
       }
 
       for (const variation of variations) {
+        if (shouldStop) break;
         let referenceBase64: string | null = null;
         if (variation.referenceImageUrl) {
           try {
