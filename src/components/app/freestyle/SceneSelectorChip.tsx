@@ -110,8 +110,8 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
   };
 
   const renderFilterTabs = (expanded: boolean) => (
-    <div className={cn('flex items-center mb-3 flex-wrap', expanded && 'mb-4 justify-between')}>
-      <div className={cn('flex gap-1', expanded && 'gap-2')}>
+    <div className={cn('flex items-center mb-3 flex-wrap gap-2', expanded && 'mb-4 justify-between')}>
+      <div className={cn('flex gap-1', expanded && 'gap-1.5 sm:gap-2')}>
         {filterTabs.map(tab => (
           <button
             key={tab.key}
@@ -119,7 +119,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             className={cn(
               'rounded-full font-medium transition-colors',
               expanded
-                ? 'px-4 py-2 text-sm'
+                ? 'px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm'
                 : 'px-2.5 py-1 text-[10px]',
               activeFilter === tab.key
                 ? 'bg-primary text-primary-foreground'
@@ -131,14 +131,14 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
         ))}
       </div>
       {expanded && (
-        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-full">
-          <LayoutGrid className="w-3.5 h-3.5 text-muted-foreground mx-1" />
+        <div className="flex items-center gap-0.5 sm:gap-1 bg-muted/50 p-0.5 sm:p-1 rounded-full">
+          <LayoutGrid className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground mx-0.5 sm:mx-1" />
           {columnOptions.map(n => (
             <button
               key={n}
               onClick={() => setExpandedColumns(n)}
               className={cn(
-                'w-7 h-7 rounded-full text-xs font-semibold transition-colors',
+                'w-6 h-6 sm:w-7 sm:h-7 rounded-full text-[10px] sm:text-xs font-semibold transition-colors',
                 expandedColumns === n
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted'
