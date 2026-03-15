@@ -73,7 +73,7 @@ export default function AdminScenes() {
     const isCustom = pose.poseId.startsWith('custom-');
     if (isCustom) {
       const realId = pose.poseId.replace('custom-', '');
-      deleteScene.mutate(realId, {
+      deleteSceneMutation.mutate(realId, {
         onSuccess: () => toast.success(`Deleted "${pose.name}"`),
         onError: () => toast.error('Failed to delete scene'),
       });
