@@ -876,10 +876,11 @@ serve(async (req) => {
 
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}. CRITICAL: The image must fill the ENTIRE canvas edge-to-edge. Do NOT add any black borders, black bars, letterboxing, pillarboxing, padding, or margins around the image. The photograph must extend to all four edges with no empty space.`;
 
-    const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage].filter(Boolean).length;
+    const forceProModel = !!(body as Record<string, unknown>).forceProModel;
+    const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage, referenceAngleImage].filter(Boolean).length;
     const hasModelImage = !!body.modelImage;
     const hasDualProductRef = !!body.productImage && !!body.sourceImage;
-    const aiModel = (hasModelImage || hasDualProductRef)
+    const aiModel = (forceProModel || isPerspective || hasModelImage || hasDualProductRef)
       ? "google/gemini-3-pro-image-preview"
       : isQueueInternal
         ? "google/gemini-3.1-flash-image-preview"
