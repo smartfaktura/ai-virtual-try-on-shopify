@@ -32,6 +32,7 @@ const CreativeDrops = lazy(() => import('@/pages/CreativeDrops'));
 const MobileUpload = lazy(() => import('@/pages/MobileUpload'));
 const VideoGenerate = lazy(() => import('@/pages/VideoGenerate'));
 const Freestyle = lazy(() => import('@/pages/Freestyle'));
+const AdminScenes = lazy(() => import('@/pages/AdminScenes'));
 const About = lazy(() => import('@/pages/About'));
 const Blog = lazy(() => import('@/pages/Blog'));
 const BlogPost = lazy(() => import('@/pages/BlogPost'));
@@ -144,6 +145,7 @@ const App = () => (
                       <Route path="/jobs/:id" element={<Jobs />} />
                       <Route path="/video" element={<VideoGenerate />} />
                       <Route path="/freestyle" element={<Freestyle />} />
+                      <Route path="/admin/scenes" element={<AdminScenes />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>

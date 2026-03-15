@@ -1,51 +1,30 @@
 
 
-## Admin Scene Manager Page
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Overview
-Create an admin-only page at `/app/admin/scenes` where you can view all scenes grouped by category, reorder them with drag-and-drop, and delete scenes (hide built-in / delete custom).
+### Issues Found
 
-### Database
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**New table: `scene_sort_order`**
-- `id` uuid PK
-- `scene_id` text NOT NULL UNIQUE — matches poseId
-- `sort_order` integer NOT NULL DEFAULT 0
-- `updated_by` uuid NOT NULL
-- `created_at` timestamptz DEFAULT now()
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-RLS: Admin-only for all operations, authenticated SELECT for reading order.
+### Plan
 
-### New Page: `src/pages/AdminScenes.tsx`
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-- Admin guard using `useIsAdmin()` — redirects non-admins
-- Fetches all scenes: static `mockTryOnPoses` + custom scenes from DB, filters out hidden
-- Groups by category using `poseCategoryLabels`
-- Each category section shows scenes as a vertical list with:
-  - Thumbnail (small), name, poseId
-  - Up/Down arrow buttons to reorder within category
-  - Delete button (red trash icon)
-- Delete action: inserts into `hidden_scenes` for built-in scenes, deletes from `custom_scenes` for custom ones
-- Save button persists sort order to `scene_sort_order` table
-- All consumers (`SceneSelectorChip`, `Generate`, `Discover`) will read sort order and apply it
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### New Hook: `src/hooks/useSceneSortOrder.ts`
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-- Fetches `scene_sort_order` rows
-- Returns a `sortScenes(poses: TryOnPose[]): TryOnPose[]` function that applies stored order within each category
-- Used by `SceneSelectorChip`, `Generate`, and `Discover` pages
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Route
-
-Add `/app/admin/scenes` route in `App.tsx`.
-
-### Files
-
-| File | Change |
-|---|---|
-| `src/pages/AdminScenes.tsx` | New admin page with category-grouped scene list, reorder + delete |
-| `src/hooks/useSceneSortOrder.ts` | New hook to fetch/apply sort order |
-| `src/App.tsx` | Add route for admin scenes page |
-| `src/components/app/freestyle/SceneSelectorChip.tsx` | Apply sort order from hook |
-| Migration | Create `scene_sort_order` table with RLS |
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

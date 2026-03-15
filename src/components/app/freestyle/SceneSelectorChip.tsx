@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 
 type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
@@ -89,8 +90,9 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
   const { columns: expandedColumns, setColumns: setExpandedColumns, options: columnOptions } = useExpandedColumns();
   const { asPoses: customPoses } = useCustomScenes();
   const { filterVisible } = useHiddenScenes();
+  const { sortScenes } = useSceneSortOrder();
 
-  const allPoses = [...filterVisible(mockTryOnPoses), ...customPoses];
+  const allPoses = sortScenes([...filterVisible(mockTryOnPoses), ...customPoses]);
   const allCategories = Object.keys(poseCategoryLabels) as PoseCategory[];
   const visibleCategories = activeFilter === 'all'
     ? allCategories
