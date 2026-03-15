@@ -174,10 +174,9 @@ export function WorkflowActivityCard({
                   {(() => {
                     const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
                     return isBatch
-                      ? `All ${group.totalCount} ${isStagingWorkflow ? 'styles' : 'batches'} complete`
-                      : 'Generation complete';
+                      ? `${group.totalCount} of ${group.totalCount} ${isStagingWorkflow ? 'styles' : 'images'} complete`
+                      : '1 image complete';
                   })()}
-                  {' · images ready'}
                 </p>
               </div>
               <Badge
