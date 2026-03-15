@@ -1,33 +1,30 @@
 
 
-## Move Reset Button to Better UX Position
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The current Reset button sits alone in the action bar row — visually orphaned and awkward, especially on mobile. Better approach: move it to the **top-right corner of the textarea area** as a small icon-only button (no label), appearing only when dirty. This follows the pattern of text field "clear" buttons (like search inputs with an X).
+### Issues Found
 
-### Change in `FreestylePromptPanel.tsx`
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**Remove** the Reset button from the action bar (lines 295-303).
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**Add** a small icon-only reset button positioned at the **top-right of the prompt textarea area** (Row 1, line ~243), floating as an absolute-positioned button:
+### Plan
 
-```tsx
-{/* Row 1 — Prompt Input */}
-<div className={`relative px-4 sm:px-5 ${...} pb-3`}>
-  <textarea ... />
-  {isDirty && onReset && (
-    <button
-      onClick={onReset}
-      className="absolute top-1 right-4 sm:right-5 p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/80 transition-colors"
-      aria-label="Reset all settings"
-    >
-      <RotateCcw className="w-3.5 h-3.5" />
-    </button>
-  )}
-</div>
-```
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-This is a small, unobtrusive icon that sits in the top-right of the textarea — visible when needed, out of the way otherwise. No label needed — the icon is universally understood, and we can add a tooltip for clarity.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-### Files
-- `src/components/app/freestyle/FreestylePromptPanel.tsx` — move reset button from action bar to textarea corner
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
