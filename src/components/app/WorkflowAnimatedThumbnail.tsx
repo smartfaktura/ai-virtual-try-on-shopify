@@ -60,7 +60,7 @@ interface Props {
 
 /* ── Floating element renderer ── */
 
-function FloatingEl({ element }: { element: SceneElement }) {
+const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement }) {
   const animName = {
     'slide-left': 'wf-slide-in-left',
     'slide-right': 'wf-slide-in-right',
