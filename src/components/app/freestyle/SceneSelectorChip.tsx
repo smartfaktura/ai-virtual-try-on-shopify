@@ -86,8 +86,7 @@ const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
   const [isExpanded, setIsExpanded] = useState(false);
-  const { asPoses: customPoses } = useCustomScenes();
-  const { filterVisible } = useHiddenScenes();
+  const { columns: expandedColumns, setColumns: setExpandedColumns, options: columnOptions } = useExpandedColumns();
 
   const allPoses = [...filterVisible(mockTryOnPoses), ...customPoses];
   const allCategories = Object.keys(poseCategoryLabels) as PoseCategory[];
