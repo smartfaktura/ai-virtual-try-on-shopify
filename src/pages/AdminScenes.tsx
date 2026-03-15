@@ -261,6 +261,9 @@ export default function AdminScenes() {
                     </Select>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0} onClick={() => movePoseToTop(pose.poseId)} title="Move to top">
+                      <ChevronsUp className="w-3.5 h-3.5" />
+                    </Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0} onClick={() => movePose(pose.poseId, 'up')}>
                       <ArrowUp className="w-3.5 h-3.5" />
                     </Button>
