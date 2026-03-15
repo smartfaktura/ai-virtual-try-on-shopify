@@ -312,29 +312,12 @@ export default function Freestyle() {
 
     let modelImageUrl: string | undefined;
     if (selectedModel) {
-      try {
-        const modelImg = await convertImageToBase64(selectedModel.previewUrl);
-        modelImageUrl = await uploadImageToStorage(modelImg, 'model');
-      } catch (err) {
-        console.error('Failed to upload model image:', err);
-        // Fall back to URL if it's already https
-        if (selectedModel.previewUrl.startsWith('https://')) {
-          modelImageUrl = selectedModel.previewUrl;
-        }
-      }
+      modelImageUrl = selectedModel.previewUrl;
     }
 
     let sceneImageUrl: string | undefined;
     if (selectedScene) {
-      try {
-        const sceneImg = await convertImageToBase64(selectedScene.previewUrl);
-        sceneImageUrl = await uploadImageToStorage(sceneImg, 'scene');
-      } catch (err) {
-        console.error('Failed to upload scene image:', err);
-        if (selectedScene.previewUrl.startsWith('https://')) {
-          sceneImageUrl = selectedScene.previewUrl;
-        }
-      }
+      sceneImageUrl = selectedScene.previewUrl;
     }
 
     // Auto-build prompt from assets if user left it empty
