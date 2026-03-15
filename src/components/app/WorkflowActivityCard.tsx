@@ -88,19 +88,18 @@ export function WorkflowActivityCard({
                   </p>
                   {(() => {
                     const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
-                    const unitLabel = isStagingWorkflow ? 'style' : 'batch';
-                    const unitLabelPlural = isStagingWorkflow ? 'styles' : 'batches';
+                    const unitLabelPlural = isStagingWorkflow ? 'styles' : 'images';
                     return (
                       <>
                         <p className="text-xs text-muted-foreground">
                           {isBatch ? (
                             <>
-                              {group.completedCount} of {group.totalCount} {unitLabelPlural} complete · {elapsed}
+                              {group.completedCount} of {group.totalCount} {unitLabelPlural} generated · {elapsed}
                             </>
                           ) : isProcessing ? (
-                            <>Generating… {elapsed}</>
+                            <>1 image · Generating… {elapsed}</>
                           ) : (
-                            <>Queued · waiting {elapsed}</>
+                            <>1 image · Queued · waiting {elapsed}</>
                           )}
                         </p>
                         {isProcessing && (() => {
