@@ -1455,6 +1455,13 @@ export default function Generate() {
     if (isInteriorDesign) {
       return [{ name: 'Type' }, { name: 'Upload Photo' }, { name: 'Style' }, { name: 'Results' }];
     }
+    if (isAngleWorkflow) {
+      return [
+        { name: sourceType === 'scratch' ? 'Source' : sourceType === 'library' ? 'Library' : 'Product(s)' },
+        { name: 'Settings' },
+        { name: 'Results' },
+      ];
+    }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
         return [{ name: sourceType === 'scratch' ? 'Source' : 'Product' }, { name: 'Brand' }, { name: 'Model' }, { name: 'Settings' }, { name: 'Results' }];
