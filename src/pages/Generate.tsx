@@ -2093,6 +2093,8 @@ export default function Generate() {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     } else if (isInteriorDesign) {
                       setCurrentStep('settings');
+                    } else if (isAngleWorkflow) {
+                      setCurrentStep('settings');
                     } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
