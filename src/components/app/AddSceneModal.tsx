@@ -40,7 +40,6 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
         body: { imageUrl },
       });
       if (error) throw error;
-      const data = await resp.json();
       setName(data.name || '');
       setDescription(data.description || '');
       if (CATEGORIES.includes(data.category)) setCategory(data.category);
