@@ -257,10 +257,10 @@ export function FreestylePromptPanel({
             {isDirty && onReset && (
               <button
                 onClick={onReset}
-                className="absolute top-1 right-4 sm:right-5 p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/80 transition-colors"
+                className="absolute top-1 right-4 sm:right-5 p-2.5 sm:p-1.5 rounded-lg sm:rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/80 transition-colors"
                 aria-label="Reset all settings"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-4.5 h-4.5 sm:w-3.5 sm:h-3.5" />
               </button>
             )}
           </div>
