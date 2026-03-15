@@ -35,7 +35,7 @@ export function BrandProfileChip({
           <PopoverTrigger asChild>
             <button
               className={cn(
-                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors min-w-0',
+                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors min-w-0 max-w-[140px]',
                 selectedProfile
                   ? 'border-primary/30 bg-primary/10 text-primary'
                   : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted',

@@ -182,7 +182,7 @@ export function FreestylePromptPanel({
   ) : (
     <button
       onClick={onUploadClick}
-      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors w-full sm:w-auto"
+      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors"
     >
       <Plus className="w-3.5 h-3.5 shrink-0" />
       <span className="truncate">Upload Image</span>
