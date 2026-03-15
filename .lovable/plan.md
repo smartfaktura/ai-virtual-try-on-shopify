@@ -1,30 +1,65 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Updated Plan: Product Perspectives — Reference Image Upload for Back Angle
 
-### Issues Found
+### The Problem
+When a user selects "Back Angle" as a variation, the AI has never seen the back of the product. Generating a back view from a front-facing image will produce hallucinated results. The user should be prompted to optionally upload a back reference image for that specific angle.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Design
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+In the **VariationsModal / Perspectives page**, when the user checks "Back Angle":
+- A conditional upload zone appears below the checkbox: *"Upload a back view of your product for best results (optional)"*
+- If they upload a reference image, it's sent as a secondary `referenceImages.back` in the generation payload alongside the main source image
+- If they skip it, the AI generates its best guess (with a disclaimer badge: "AI-imagined back view")
+- Same pattern could extend to Left/Right side if the user has a specific side image
 
-### Plan
+### Updated Variation Type Config
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+Each variation type gets a new `referenceUpload` config:
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+```typescript
+interface VariationType {
+  id: string;
+  label: string;
+  instruction: string;
+  icon: LucideIcon;
+  referenceUpload?: {
+    prompt: string;        // "Upload back view of your product"
+    recommended: boolean;  // true = show upload zone when checked
+  };
+}
+```
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+Only "Back Angle" gets `referenceUpload.recommended: true` initially. Left/Right sides get it as optional (not auto-shown).
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+### Flow
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+```text
+User checks "Back Angle" checkbox
+  → Upload zone slides in: "Upload back product image for best results (optional)"
+  → User uploads (or skips)
+  → On generate: payload includes { back_reference_url: "..." } if uploaded
+
+Edge function receives back_reference_url:
+  → Sends both source + back reference to the AI model
+  → Prompt: "Generate a back angle view. Use the provided back reference image for accurate product details."
+```
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/pages/Perspectives.tsx` | Add conditional upload zone per variation type when it has `referenceUpload` config |
+| `src/hooks/useGeneratePerspectives.ts` | Include `reference_images` map in payload |
+| `supabase/functions/generate-freestyle/index.ts` | Handle `reference_images` object — pass additional reference to AI model |
+| `src/hooks/useFileUpload.ts` | No changes needed — reuse existing hook |
+
+### Integration with Previous Plan
+This is an **addendum** to the existing Product Perspectives plan. The conditional upload zone is part of the Perspectives page UI. The full implementation order:
+
+1. Database migration (workflow row)
+2. Perspectives page with multi-product, multi-ratio, angle checkboxes, **+ conditional reference uploads**
+3. Hook for batch enqueue with reference images
+4. Edge function update for variation instructions + reference images
+5. Library button linking to Perspectives page
 
