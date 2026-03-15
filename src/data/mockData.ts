@@ -1252,7 +1252,7 @@ const sceneShadowPlay = getLandingAssetUrl('scenes/scene-shadow-play.jpg');
 const sceneColorBackdrop = getLandingAssetUrl('scenes/scene-color-backdrop.jpg');
 const sceneLinenTextile = getLandingAssetUrl('scenes/scene-linen-textile.jpg');
 const sceneTerrazzo = getLandingAssetUrl('scenes/scene-terrazzo.jpg');
-const sceneBrunchTable = getLandingAssetUrl('scenes/scene-brunch-table.jpg');
+
 const sceneMidcenturyConsole = getLandingAssetUrl('scenes/scene-midcentury-console.jpg');
 const sceneWindowSill = getLandingAssetUrl('scenes/scene-window-sill.jpg');
 const sceneSpaTowels = getLandingAssetUrl('scenes/scene-spa-towels.jpg');
@@ -1266,7 +1266,7 @@ const sceneRawConcrete = `${WORKFLOW_PREVIEW_BASE}/scene-6.png`;
 const sceneWarmWoodGrain = `${WORKFLOW_PREVIEW_BASE}/scene-7.png`;
 const sceneLinenFabric = `${WORKFLOW_PREVIEW_BASE}/scene-8.png`;
 const sceneBathroomShelf = `${WORKFLOW_PREVIEW_BASE}/scene-10.png`;
-const sceneWaterSplash = `${WORKFLOW_PREVIEW_BASE}/scene-16.png`;
+
 const sceneFloatingLevitation = `${WORKFLOW_PREVIEW_BASE}/scene-20.png`;
 
 export const mockModels: ModelProfile[] = [
@@ -1364,12 +1364,7 @@ export const mockTryOnPoses: TryOnPose[] = [
   { poseId: 'scene_003', name: 'Minimalist Platform', category: 'clean-studio', description: 'Clean pedestal or platform with soft shadows', promptHint: 'Clean pedestal or platform with soft shadows', previewUrl: templateUniversalClean },
   { poseId: 'scene_004', name: 'Marble Surface', category: 'surface', description: 'Polished marble surface with elegant reflections', promptHint: 'Polished marble surface with elegant reflections', previewUrl: showcaseSkincareSerumMarble },
   { poseId: 'scene_005', name: 'Wooden Table', category: 'surface', description: 'Warm rustic wood surface with natural grain texture', promptHint: 'Warm rustic wood surface with natural grain texture', previewUrl: showcaseFoodPastaRustic },
-  { poseId: 'scene_006', name: 'Concrete Slab', category: 'surface', description: 'Raw concrete surface for industrial-modern aesthetic', promptHint: 'Raw concrete surface for industrial-modern aesthetic', previewUrl: showcaseHomeConcrete },
-  { poseId: 'scene_007', name: 'Overhead Clean', category: 'flat-lay', description: 'Top-down view on clean surface, minimal props', promptHint: 'Top-down view on clean surface, minimal props', previewUrl: templateClothingFlatlay },
   { poseId: 'scene_008', name: 'Styled Flat Lay', category: 'flat-lay', description: 'Curated overhead arrangement with complementary props', promptHint: 'Curated overhead arrangement with complementary props', previewUrl: templateCosmeticsPastel },
-  { poseId: 'scene_009', name: 'Rustic Kitchen', category: 'kitchen', description: 'Farmhouse-style kitchen with warm natural light', promptHint: 'Farmhouse-style kitchen with warm natural light', previewUrl: showcaseFoodHoneyFarmhouse },
-  { poseId: 'scene_010', name: 'Bright Countertop', category: 'kitchen', description: 'Clean, bright kitchen countertop with modern styling', promptHint: 'Clean, bright kitchen countertop with modern styling', previewUrl: showcaseFoodBreadBakery },
-  { poseId: 'scene_011', name: 'Café Table', category: 'kitchen', description: 'Artisan café setting with coffee culture vibes', promptHint: 'Artisan café setting with coffee culture vibes', previewUrl: showcaseFoodCoffeeArtisan },
   { poseId: 'scene_012', name: 'Japandi Shelf', category: 'living-space', description: 'Zen-inspired minimal shelf with natural materials', promptHint: 'Zen-inspired minimal shelf with natural materials', previewUrl: showcaseHomeVasesJapandi },
   { poseId: 'scene_013', name: 'Cozy Evening', category: 'living-space', description: 'Warm candlelit interior with soft textiles', promptHint: 'Warm candlelit interior with soft textiles', previewUrl: showcaseHomeCandleEvening },
   { poseId: 'scene_014', name: 'Morning Bedroom', category: 'living-space', description: 'Bright morning light streaming into a styled bedroom', promptHint: 'Bright morning light streaming into a styled bedroom', previewUrl: showcaseHomeBedroomMorning },
@@ -1382,7 +1377,7 @@ export const mockTryOnPoses: TryOnPose[] = [
   { poseId: 'scene_020', name: 'Color Backdrop', category: 'clean-studio', description: 'Bold solid color background for vibrant product shots', promptHint: 'Bold solid color backdrop, vibrant and clean, modern studio lighting for eye-catching product photography', previewUrl: sceneColorBackdrop },
   { poseId: 'scene_021', name: 'Linen Textile', category: 'surface', description: 'Natural linen fabric surface with soft texture', promptHint: 'Natural linen textile surface with soft woven texture, warm neutral tones, minimalist product display', previewUrl: sceneLinenTextile },
   { poseId: 'scene_022', name: 'Terrazzo Surface', category: 'surface', description: 'Modern terrazzo speckled pattern surface', promptHint: 'Modern terrazzo surface with speckled pattern, clean contemporary aesthetic, product photography', previewUrl: sceneTerrazzo },
-  { poseId: 'scene_023', name: 'Modern Brunch Table', category: 'kitchen', description: 'Bright brunch spread with fresh foods and natural light', promptHint: 'Modern brunch table setting with bright natural light, fresh foods and drinks, clean kitchen aesthetic', previewUrl: sceneBrunchTable },
+  
   { poseId: 'scene_024', name: 'Mid-Century Console', category: 'living-space', description: 'Styled mid-century modern console with warm decor', promptHint: 'Mid-century modern console table styled with decorative objects, warm interior light, living room vignette', previewUrl: sceneMidcenturyConsole },
   { poseId: 'scene_025', name: 'Window Sill', category: 'living-space', description: 'Bright window sill with natural morning daylight', promptHint: 'Bright window sill with natural morning daylight, clean white frame, warm inviting product display', previewUrl: sceneWindowSill },
   { poseId: 'scene_026', name: 'Spa Towels', category: 'bathroom', description: 'White spa towels with serene bathroom aesthetic', promptHint: 'White spa towels rolled on clean surface, serene minimal bathroom aesthetic, skincare product display', previewUrl: sceneSpaTowels },
@@ -1396,7 +1391,7 @@ export const mockTryOnPoses: TryOnPose[] = [
   { poseId: 'scene_033', name: 'Warm Wood Grain', category: 'clean-studio', description: 'Warm natural oak wood grain surface', promptHint: 'Warm natural oak wood grain surface, organic warmth, eco-friendly aesthetic, natural tones', previewUrl: sceneWarmWoodGrain },
   { poseId: 'scene_034', name: 'Linen & Fabric', category: 'clean-studio', description: 'Soft draped natural linen fabric surface', promptHint: 'Soft draped natural linen fabric, organic texture, soft and tactile product display aesthetic', previewUrl: sceneLinenFabric },
   { poseId: 'scene_035', name: 'Bathroom Shelf', category: 'clean-studio', description: 'Styled white bathroom shelf with lifestyle context', promptHint: 'Styled white bathroom shelf with small plants and folded towel, lifestyle bathroom context, beauty and skincare setting', previewUrl: sceneBathroomShelf },
-  { poseId: 'scene_036', name: 'Water Splash', category: 'clean-studio', description: 'Dynamic water splash surrounding product', promptHint: 'Explosive burst of crystal-clear water surrounding product, dramatic water splashes frozen in mid-air, high-speed editorial water photography, refreshing aquatic mood', previewUrl: sceneWaterSplash },
+  
   { poseId: 'scene_037', name: 'Floating Levitation', category: 'clean-studio', description: 'Zero-gravity levitation with soft shadow below', promptHint: 'Product suspended mid-air defying gravity with soft diffused shadow below, clean white gradient background, zero gravity surreal editorial magic', previewUrl: sceneFloatingLevitation },
 ];
 
