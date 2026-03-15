@@ -394,7 +394,6 @@ export default function Perspectives() {
   }, [selectedVariations, variations, referenceImages]);
 
   useEffect(() => {
-    if (pasteTargetIndex === null) return;
     const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -402,14 +401,20 @@ export default function Perspectives() {
         if (item.type.startsWith('image/')) {
           e.preventDefault();
           const file = item.getAsFile();
-          if (file) handleReferenceUpload(pasteTargetIndex, file);
+          if (!file) return;
+          // Scratch upload takes priority when active and empty
+          if (sourceType === 'scratch' && !directUploadUrl) {
+            handleDirectFile(file);
+          } else if (pasteTargetIndex !== null) {
+            handleReferenceUpload(pasteTargetIndex, file);
+          }
           return;
         }
       }
     };
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
-  }, [pasteTargetIndex]);
+  }, [sourceType, directUploadUrl, pasteTargetIndex, handleDirectFile]);
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
