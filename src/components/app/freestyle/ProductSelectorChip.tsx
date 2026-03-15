@@ -20,7 +20,7 @@ interface ProductSelectorChipProps {
 }
 
 export function ProductSelectorChip({
-  selectedProduct, open, onOpenChange, onSelect, products, isLoading, modal,
+  selectedProduct, open, onOpenChange, onSelect, products, isLoading, modal, fullWidth,
 }: ProductSelectorChipProps) {
   const [search, setSearch] = useState('');
 
