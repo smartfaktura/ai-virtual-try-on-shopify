@@ -235,6 +235,9 @@ export function useGeneratePerspectives() {
             variation_instruction: variation.instruction,
             variation_label: variation.label,
             workflow_label: `Product Perspectives — ${variation.label}`,
+            workflow_id: 'perspectives',
+            workflow_name: 'Product Perspectives',
+            product_name: product.title,
           };
 
           if (referenceBase64) {
