@@ -367,6 +367,7 @@ export function FreestyleSettingsChips({
                     : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
                 )}>
                   <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+                  <span>More</span>
                   {advancedActiveCount > 0 && (
                     <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center shrink-0">
                       {advancedActiveCount}
