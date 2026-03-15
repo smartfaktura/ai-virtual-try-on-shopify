@@ -359,11 +359,11 @@ export function FreestyleSettingsChips({
 
           {/* Row 2 + Style — wrapped in Collapsible */}
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <div className="flex items-center gap-2 overflow-x-auto flex-nowrap scrollbar-none pb-1">
-              <div className="shrink-0">{aspectRatioChip}</div>
-              <div className="shrink-0">{qualityChip}</div>
-              <div className="shrink-0">{cameraStyleChip}</div>
-              <div className="shrink-0"><CollapsibleTrigger asChild>
+            <div className="flex items-center gap-2 flex-wrap">
+              {aspectRatioChip}
+              {qualityChip}
+              {cameraStyleChip}
+              <CollapsibleTrigger asChild>
                 <button className={cn(
                   'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
                   advancedActiveCount > 0
