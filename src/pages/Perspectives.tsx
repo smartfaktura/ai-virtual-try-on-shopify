@@ -120,7 +120,7 @@ export default function Perspectives() {
       const { data } = await supabase
         .from('workflows')
         .select('*')
-        .eq('name', 'Product Perspectives')
+        .eq('name', 'Picture Perspectives')
         .single();
       return data;
     },
