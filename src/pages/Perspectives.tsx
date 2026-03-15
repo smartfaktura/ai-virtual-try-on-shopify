@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
@@ -6,11 +6,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
-import { ShimmerImage } from '@/components/ui/shimmer-image';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import {
   Search, Upload, X, Sparkles, Layers, ZoomIn, RotateCcw,
   ArrowLeft, ArrowRight, Maximize, ImageIcon, Check, Plus, Loader2,
+  Package, Image as ImageLucide, Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,10 +19,11 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useQuery } from '@tanstack/react-query';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useGeneratePerspectives } from '@/hooks/useGeneratePerspectives';
-import { convertImageToBase64 } from '@/lib/imageUtils';
+import { toSignedUrls } from '@/lib/signedUrl';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
+type SourceType = 'library' | 'product' | 'scratch';
 
 // ── Variation type definitions ──────────────────────────────────────────
 
@@ -57,6 +58,14 @@ const VARIATION_ICONS: Record<string, typeof ZoomIn> = {
 
 const ASPECT_RATIOS = ['1:1', '3:4', '4:5', '9:16'] as const;
 
+// ── Library item type for the picker ────────────────────────────────────
+interface LibraryPickerItem {
+  id: string;
+  imageUrl: string;
+  title: string;
+  createdAt: string;
+}
+
 export default function Perspectives() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -65,18 +74,30 @@ export default function Perspectives() {
   const { upload, isUploading } = useFileUpload();
 
   // ── State ──────────────────────────────────────────────────────────────
+  const initialSource = searchParams.get('source') ? 'scratch' as SourceType : 'library' as SourceType;
+  const [sourceType, setSourceType] = useState<SourceType>(initialSource);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+  const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
   const [selectedVariations, setSelectedVariations] = useState<Set<number>>(new Set());
   const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set(['1:1']));
   const [quality, setQuality] = useState<'standard' | 'high'>('standard');
   const [productSearch, setProductSearch] = useState('');
+  const [librarySearch, setLibrarySearch] = useState('');
   const [referenceImages, setReferenceImages] = useState<Record<number, string>>({});
   const [uploadingRefIndex, setUploadingRefIndex] = useState<number | null>(null);
 
-  // Direct upload (not from product library)
+  // Direct upload (from scratch)
   const [directUploadUrl, setDirectUploadUrl] = useState<string | null>(
     searchParams.get('source') || null
   );
+
+  // ── Source type change handler ─────────────────────────────────────────
+  const handleSourceTypeChange = (type: SourceType) => {
+    setSourceType(type);
+    setSelectedProductIds(new Set());
+    setSelectedLibraryIds(new Set());
+    setDirectUploadUrl(null);
+  };
 
   // ── Fetch workflow config from DB ─────────────────────────────────────
   const { data: workflow } = useQuery({
@@ -109,11 +130,75 @@ export default function Perspectives() {
         .order('created_at', { ascending: false });
       return (data || []) as UserProduct[];
     },
-    enabled: !!user,
+    enabled: !!user && sourceType === 'product',
+  });
+
+  // ── Fetch library items ───────────────────────────────────────────────
+  const { data: libraryItems = [], isLoading: libraryLoading } = useQuery({
+    queryKey: ['perspectives-library-items'],
+    queryFn: async () => {
+      const [fsResult, jobsResult] = await Promise.all([
+        supabase
+          .from('freestyle_generations')
+          .select('id, image_url, prompt, created_at')
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('generation_jobs')
+          .select('id, results, created_at, status, workflows(name), user_products(title)')
+          .eq('status', 'completed')
+          .order('created_at', { ascending: false })
+          .limit(50),
+      ]);
+
+      const items: LibraryPickerItem[] = [];
+
+      // Freestyle items
+      for (const f of fsResult.data || []) {
+        items.push({
+          id: `fs-${f.id}`,
+          imageUrl: f.image_url,
+          title: f.prompt?.slice(0, 40) || 'Freestyle',
+          createdAt: f.created_at,
+        });
+      }
+
+      // Job items — flatten results array
+      for (const job of jobsResult.data || []) {
+        const results = job.results as any;
+        if (!Array.isArray(results)) continue;
+        for (let i = 0; i < results.length; i++) {
+          const r = results[i];
+          const url = typeof r === 'string' ? r : r?.url || r?.image_url;
+          if (!url || url.startsWith('data:')) continue;
+          const workflowName = (job.workflows as any)?.name || '';
+          const productTitle = (job.user_products as any)?.title || '';
+          items.push({
+            id: `job-${job.id}-${i}`,
+            imageUrl: url,
+            title: workflowName || productTitle || 'Generated',
+            createdAt: job.created_at,
+          });
+        }
+      }
+
+      // Sort by newest
+      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      // Sign URLs
+      const urls = await toSignedUrls(items.map(i => i.imageUrl));
+      return items.map((item, idx) => ({ ...item, imageUrl: urls[idx] }));
+    },
+    enabled: !!user && sourceType === 'library',
+    staleTime: 60_000,
   });
 
   const filteredProducts = products.filter(p =>
     p.title.toLowerCase().includes(productSearch.toLowerCase())
+  );
+
+  const filteredLibrary = libraryItems.filter(i =>
+    i.title.toLowerCase().includes(librarySearch.toLowerCase())
   );
 
   // ── Hook ──────────────────────────────────────────────────────────────
@@ -125,7 +210,12 @@ export default function Perspectives() {
   });
 
   // ── Derived ───────────────────────────────────────────────────────────
-  const sourceCount = directUploadUrl ? 1 : selectedProductIds.size;
+  const sourceCount = sourceType === 'scratch'
+    ? (directUploadUrl ? 1 : 0)
+    : sourceType === 'product'
+      ? selectedProductIds.size
+      : selectedLibraryIds.size;
+
   const perImageCost = quality === 'high' ? 8 : 4;
   const totalImages = sourceCount * selectedVariations.size * selectedRatios.size;
   const totalCost = totalImages * perImageCost;
@@ -136,7 +226,6 @@ export default function Perspectives() {
     const next = new Set(selectedVariations);
     if (next.has(index)) {
       next.delete(index);
-      // Remove reference image if deselected
       const newRefs = { ...referenceImages };
       delete newRefs[index];
       setReferenceImages(newRefs);
@@ -160,14 +249,18 @@ export default function Perspectives() {
     setSelectedProductIds(next);
   };
 
+  const toggleLibraryItem = (id: string) => {
+    const next = new Set(selectedLibraryIds);
+    if (next.has(id)) next.delete(id);
+    else if (next.size < 10) next.add(id);
+    setSelectedLibraryIds(next);
+  };
+
   const handleDirectUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = await upload(file);
-    if (url) {
-      setDirectUploadUrl(url);
-      setSelectedProductIds(new Set()); // Clear product selection when using direct upload
-    }
+    if (url) setDirectUploadUrl(url);
   };
 
   const handleReferenceUpload = async (variationIndex: number, file: File) => {
@@ -186,9 +279,17 @@ export default function Perspectives() {
       return;
     }
 
-    const selectedProducts = directUploadUrl
-      ? [{ id: 'direct', image_url: directUploadUrl, title: 'Uploaded Image' }]
-      : products.filter(p => selectedProductIds.has(p.id));
+    let selectedSources: Array<{ id: string; image_url: string; title: string }> = [];
+
+    if (sourceType === 'scratch' && directUploadUrl) {
+      selectedSources = [{ id: 'direct', image_url: directUploadUrl, title: 'Uploaded Image' }];
+    } else if (sourceType === 'product') {
+      selectedSources = products.filter(p => selectedProductIds.has(p.id));
+    } else if (sourceType === 'library') {
+      selectedSources = libraryItems
+        .filter(i => selectedLibraryIds.has(i.id))
+        .map(i => ({ id: i.id, image_url: i.imageUrl, title: i.title }));
+    }
 
     const selectedVarList = Array.from(selectedVariations).map(i => ({
       ...variations[i],
@@ -196,7 +297,7 @@ export default function Perspectives() {
     }));
 
     await generate({
-      products: selectedProducts.map(p => ({
+      products: selectedSources.map(p => ({
         id: p.id,
         imageUrl: p.image_url,
         title: p.title,
@@ -206,6 +307,13 @@ export default function Perspectives() {
       quality,
     });
   };
+
+  // ── Source type cards config ───────────────────────────────────────────
+  const sourceOptions: Array<{ id: SourceType; title: string; description: string; icon: typeof Package }> = [
+    { id: 'library', title: 'From Library', description: 'Select from your generated images', icon: ImageLucide },
+    { id: 'product', title: 'From Products', description: 'Select from your product catalog', icon: Package },
+    { id: 'scratch', title: 'From Scratch', description: 'Upload your own image file', icon: Upload },
+  ];
 
   return (
     <div className="min-h-screen">
@@ -233,36 +341,111 @@ export default function Perspectives() {
         <section className="space-y-4">
           <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">1</span>
-            Select Products
+            Choose Source
           </h2>
 
-          {/* Direct upload option */}
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 px-4 py-2.5 border border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
-              <Upload className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Upload new image</span>
-              <input type="file" accept="image/*" className="hidden" onChange={handleDirectUpload} disabled={isUploading} />
-            </label>
-            {isUploading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+          {/* Source type selector cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {sourceOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => handleSourceTypeChange(option.id)}
+                className={`p-4 rounded-xl border-2 transition-all duration-200 text-left cursor-pointer ${
+                  sourceType === option.id
+                    ? 'border-primary bg-primary/5 shadow-md'
+                    : 'border-border hover:border-primary/50 hover:bg-muted'
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    sourceType === option.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    <option.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">{option.title}</p>
+                    <p className="text-xs text-muted-foreground">{option.description}</p>
+                  </div>
+                  {sourceType === option.id && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      <span className="text-xs font-medium text-primary">Selected</span>
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
           </div>
 
-          {/* Direct upload preview */}
-          {directUploadUrl && (
-            <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
-              <img src={directUploadUrl} alt="Uploaded" className="w-16 h-16 rounded-lg object-cover" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">Uploaded Image</p>
-                <p className="text-xs text-muted-foreground">Direct upload</p>
+          {/* ── Library picker ─────────────────────────────────────────── */}
+          {sourceType === 'library' && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search generated images..."
+                  value={librarySearch}
+                  onChange={e => setLibrarySearch(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setDirectUploadUrl(null)}>
-                <X className="w-4 h-4" />
-              </Button>
+              <div className="flex gap-2 items-center">
+                <Badge variant={selectedLibraryIds.size > 0 ? 'default' : 'secondary'}>
+                  {selectedLibraryIds.size} selected
+                </Badge>
+                <span className="text-xs text-muted-foreground">(max 10)</span>
+              </div>
+              {libraryLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[360px] overflow-y-auto p-1">
+                  {filteredLibrary.map(item => {
+                    const isSelected = selectedLibraryIds.has(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => toggleLibraryItem(item.id)}
+                        className={`relative rounded-xl border-2 p-1.5 cursor-pointer transition-all ${
+                          isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          </div>
+                        )}
+                        <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+                          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground truncate mt-1 px-0.5">{item.title}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {!libraryLoading && filteredLibrary.length === 0 && (
+                <p className="text-center text-muted-foreground py-4 text-sm">
+                  No generated images found. Generate some images first in{' '}
+                  <button className="text-primary underline" onClick={() => navigate('/app/freestyle')}>Freestyle</button>.
+                </p>
+              )}
             </div>
           )}
 
-          {/* Product library picker */}
-          {!directUploadUrl && (
-            <div className="space-y-3">
+          {/* ── Product picker ─────────────────────────────────────────── */}
+          {sourceType === 'product' && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              {/* Info note about primary image */}
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+                <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  The <span className="font-medium text-foreground">primary product image</span> will be used as the source for perspective generation.
+                </p>
+              </div>
+
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -306,7 +489,43 @@ export default function Perspectives() {
                 })}
               </div>
               {filteredProducts.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">No products found. <button className="text-primary underline" onClick={() => navigate('/app/products/new')}>Add one</button></p>
+                <p className="text-center text-muted-foreground py-4 text-sm">
+                  No products found.{' '}
+                  <button className="text-primary underline" onClick={() => navigate('/app/products/new')}>Add one</button>
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ── From Scratch upload ────────────────────────────────────── */}
+          {sourceType === 'scratch' && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              {directUploadUrl ? (
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/30 bg-primary/5">
+                  <img src={directUploadUrl} alt="Uploaded" className="w-16 h-16 rounded-lg object-cover" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">Uploaded Image</p>
+                    <p className="text-xs text-muted-foreground">Ready for perspective generation</p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setDirectUploadUrl(null)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+                  {isUploading ? (
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-foreground">Upload an image</p>
+                        <p className="text-xs text-muted-foreground">Click to browse or drag and drop</p>
+                      </div>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleDirectUpload} disabled={isUploading} />
+                </label>
               )}
             </div>
           )}
@@ -345,7 +564,7 @@ export default function Perspectives() {
                     {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
                   </div>
 
-                  {/* Conditional reference upload */}
+                  {/* Conditional reference upload — recommended */}
                   {showRefUpload && (
                     <div className="ml-12 p-3 rounded-lg border border-dashed border-border bg-muted/30 animate-in slide-in-from-top-2 duration-200">
                       {referenceImages[i] ? (
@@ -485,7 +704,7 @@ export default function Perspectives() {
               </div>
               {sourceCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
-                  {sourceCount} product{sourceCount !== 1 ? 's' : ''} × {selectedVariations.size} angle{selectedVariations.size !== 1 ? 's' : ''} × {selectedRatios.size} ratio{selectedRatios.size !== 1 ? 's' : ''}
+                  {sourceCount} source{sourceCount !== 1 ? 's' : ''} × {selectedVariations.size} angle{selectedVariations.size !== 1 ? 's' : ''} × {selectedRatios.size} ratio{selectedRatios.size !== 1 ? 's' : ''}
                 </Badge>
               )}
             </div>
