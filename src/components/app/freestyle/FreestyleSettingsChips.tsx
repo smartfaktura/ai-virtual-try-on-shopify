@@ -354,7 +354,7 @@ export function FreestyleSettingsChips({
               open={framingPopoverOpen}
               onOpenChange={onFramingPopoverChange}
               modal={isMobile}
-            />
+            /></div>
           </div>
 
           {/* Row 2 + Style — wrapped in Collapsible */}
