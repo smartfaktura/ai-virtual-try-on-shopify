@@ -1,30 +1,45 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Make Scene Filter Tabs Larger in Expanded View
 
-### Issues Found
+The `renderFilterTabs()` function currently uses the same tiny sizing (`text-[10px]`, `px-2.5 py-1`) for both the popover and the expanded dialog. In the expanded dialog, these should be significantly larger for easy tapping.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Change
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**`src/components/app/freestyle/SceneSelectorChip.tsx`**
 
-### Plan
+Update `renderFilterTabs` to accept an `expanded` boolean parameter, then conditionally apply larger styles:
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+- **Compact (popover)**: Keep current `text-[10px] px-2.5 py-1`
+- **Expanded (dialog)**: Use `text-sm px-4 py-2` for bigger touch targets and better visual hierarchy
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+```tsx
+const renderFilterTabs = (expanded: boolean) => (
+  <div className={cn('flex gap-1 mb-3 flex-wrap', expanded && 'gap-2 mb-4')}>
+    {filterTabs.map(tab => (
+      <button
+        key={tab.key}
+        onClick={() => setActiveFilter(tab.key)}
+        className={cn(
+          'rounded-full font-medium transition-colors',
+          expanded
+            ? 'px-4 py-2 text-sm'
+            : 'px-2.5 py-1 text-[10px]',
+          activeFilter === tab.key
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+        )}
+      >
+        {tab.label}
+      </button>
+    ))}
+  </div>
+);
+```
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+Then update the two call sites:
+- Popover: `renderFilterTabs(false)`
+- Dialog: `renderFilterTabs(true)`
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+Single file change, minimal diff.
 
