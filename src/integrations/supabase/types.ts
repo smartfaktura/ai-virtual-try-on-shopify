@@ -925,6 +925,7 @@ export type Database = {
       }
       scene_sort_order: {
         Row: {
+          category_override: string | null
           created_at: string
           id: string
           scene_id: string
@@ -932,6 +933,7 @@ export type Database = {
           updated_by: string
         }
         Insert: {
+          category_override?: string | null
           created_at?: string
           id?: string
           scene_id: string
@@ -939,6 +941,7 @@ export type Database = {
           updated_by: string
         }
         Update: {
+          category_override?: string | null
           created_at?: string
           id?: string
           scene_id?: string
