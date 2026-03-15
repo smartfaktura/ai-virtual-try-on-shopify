@@ -323,6 +323,7 @@ export function useGeneratePerspectives() {
     const batchId = crypto.randomUUID();
     let enqueuedCount = 0;
     const jobs: PerspectiveJobInfo[] = [];
+    let lastNewBalance: number | null = null;
 
     let shouldStop = false;
     for (const product of products) {
