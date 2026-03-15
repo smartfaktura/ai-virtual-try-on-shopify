@@ -191,7 +191,8 @@ function getNegatives(category: PerspectiveCategory, mode: SceneMode): string {
 - No compositing artifacts, no mismatched lighting, no pasted-in look
 - No black borders, black bars, letterboxing, pillarboxing, or padding
 - Do NOT change the product design, color, or any identifying features
-- Do NOT alter proportions or scale of the product`;
+- Do NOT alter proportions or scale of the product
+- Do NOT change the background, environment, or surface from the source image`;
 
   if (mode === 'on-model') {
     return `CRITICAL — DO NOT include any of the following:
