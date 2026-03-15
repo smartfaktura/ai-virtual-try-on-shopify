@@ -216,13 +216,106 @@ export default function Perspectives() {
   );
 
   // ── Hook ──────────────────────────────────────────────────────────────
-  const { generate, isGenerating, progress } = useGeneratePerspectives({
-    onComplete: () => {
-      refreshCredits();
-      toast.success('Perspectives queued! Check your library for results.');
-      navigate('/app/library');
-    },
-  });
+  const { generate, isGenerating, progress } = useGeneratePerspectives();
+
+  // ── Generating progress polling ───────────────────────────────────────
+  const stopPolling = useCallback(() => {
+    pollVersionRef.current++;
+    if (pollRef.current) {
+      clearTimeout(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => stopPolling();
+  }, [stopPolling]);
+
+  // Elapsed timer during generating view
+  useEffect(() => {
+    if (!isGeneratingView) return;
+    const interval = setInterval(() => {
+      setGenElapsed(Math.floor((Date.now() - genStartRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isGeneratingView]);
+
+  // Team avatar rotation
+  useEffect(() => {
+    if (!isGeneratingView) return;
+    const interval = setInterval(() => {
+      setTeamIndex(prev => (prev + 1) % TEAM_MEMBERS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isGeneratingView]);
+
+  const startPolling = useCallback((jobs: PerspectiveJobInfo[]) => {
+    const version = ++pollVersionRef.current;
+    const jobIds = jobs.map(j => j.jobId);
+
+    const poll = async () => {
+      if (pollVersionRef.current !== version) return;
+
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token || SUPABASE_KEY;
+
+      const idsFilter = jobIds.map(id => `"${id}"`).join(',');
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,error_message`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+        );
+        if (!res.ok || pollVersionRef.current !== version) return;
+        const rows = await res.json();
+
+        const statuses: Record<string, { status: string; error?: string }> = {};
+        for (const row of rows) {
+          statuses[row.id] = { status: row.status, error: row.error_message || undefined };
+        }
+        // Fill missing as queued
+        for (const id of jobIds) {
+          if (!statuses[id]) statuses[id] = { status: 'queued' };
+        }
+
+        if (pollVersionRef.current !== version) return;
+        setJobStatuses(statuses);
+
+        const allDone = jobIds.every(id => {
+          const s = statuses[id]?.status;
+          return s === 'completed' || s === 'failed' || s === 'cancelled';
+        });
+
+        if (allDone) {
+          const completed = jobIds.filter(id => statuses[id]?.status === 'completed').length;
+          const failed = jobIds.filter(id => statuses[id]?.status === 'failed').length;
+          stopPolling();
+
+          refreshCredits();
+
+          if (completed > 0) {
+            toast.success(`${completed} perspective${completed > 1 ? 's' : ''} ready! ${failed > 0 ? `(${failed} failed)` : ''}`);
+            setTimeout(() => {
+              setIsGeneratingView(false);
+              navigate('/app/library');
+            }, 1500);
+          } else {
+            toast.error('All generations failed. Credits have been refunded.');
+          }
+          return;
+        }
+      } catch {
+        // Network error — keep polling
+      }
+
+      if (pollVersionRef.current === version) {
+        pollRef.current = setTimeout(poll, 3000);
+      }
+    };
+
+    poll();
+  }, [navigate, refreshCredits, stopPolling]);
 
   // ── Derived ───────────────────────────────────────────────────────────
   const sourceCount = sourceType === 'scratch'
