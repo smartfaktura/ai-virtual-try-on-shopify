@@ -268,6 +268,7 @@ export default function Generate() {
   // Flat Lay Set detection and state
   const isFlatLay = activeWorkflow?.name === 'Flat Lay Set';
   const isUpscale = activeWorkflow?.name === 'Image Upscaling';
+  const isAngleWorkflow = variationStrategy?.type === 'angle';
   const [flatLayPhase, setFlatLayPhase] = useState<'surfaces' | 'details'>('surfaces');
   const [upscaleResolution, setUpscaleResolution] = useState<'2k' | '4k'>('2k');
   const [stylingNotes, setStylingNotes] = useState('');
