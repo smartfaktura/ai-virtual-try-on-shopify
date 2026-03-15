@@ -433,6 +433,9 @@ export function useGeneratePerspectives() {
             });
             enqueuedCount++;
             setProgress(Math.round((enqueuedCount / totalJobs) * 100));
+
+            // Stagger enqueue calls to avoid hitting concurrency limits
+            if (enqueuedCount < totalJobs) await sleep(500);
           } catch (err) {
             console.error('Enqueue error:', err);
             continue;
