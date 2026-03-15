@@ -1,31 +1,30 @@
 
 
-## Update Picture Perspectives Carousel with Salt Flat Fashion Images
+## Product Perspectives — Implemented ✅
 
-### What
-Replace the current HA Cream product images in the Picture Perspectives workflow card with the uploaded salt flat fashion editorial images (4 angles: front, close-up, left side, back, right side — pick 4 best). Update the overlay badges to say "1 Photo, 4 Angles" instead of showing a product chip with "HA Cream."
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Images to use
-From the 5 uploaded images, select 4 for the carousel (matching the current 4-slide structure):
-1. **Front** — `Environment-a5ce06bd_2.png` (full front view)
-2. **Left Side** — `Picture_Perspectives_—_Left_Side-43481ef1.png`
-3. **Back** — `Picture_Perspectives_—_Back_Angle-951024d6.png`
-4. **Right Side** — `Picture_Perspectives_—_Right_Side-a9888d7d.png`
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-Copy these to `public/images/perspectives/` with clean names, optimized for web.
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-### Element changes
-- Remove the `product` chip element (no more "HA Cream" floating card)
-- Change badge from `"4 Angles"` to `"1 Photo, 4 Angles"` with a Sparkles icon
-- Add a second badge: `"One Click"` positioned bottom-right
-
-### Also fix
-The screenshot shows a broken image icon (top-left of the card) — this is likely the `listingProduct` image reference used in the product chip. Removing the product chip element fixes this.
-
-### Files
-
-| File | Change |
-|------|--------|
-| `public/images/perspectives/` | Copy 4 uploaded images here |
-| `src/components/app/workflowAnimationData.tsx` | Update `'Picture Perspectives'` entry: new local background paths, remove product element, update badge text |
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`

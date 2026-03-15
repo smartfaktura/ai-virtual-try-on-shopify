@@ -163,22 +163,21 @@ export const workflowScenes: Record<string, WorkflowScene> = {
 
   'Picture Perspectives': {
     mode: 'carousel',
-    background: listingResult,
+    background: '/images/perspectives/front.png',
     backgrounds: [
-      listingResult,
-      getLandingAssetUrl('workflows/perspectives-closeup.jpg'),
-      getLandingAssetUrl('workflows/perspectives-back.jpg'),
-      getLandingAssetUrl('workflows/perspectives-wide.jpg'),
+      '/images/perspectives/front.png',
+      '/images/perspectives/left-side.png',
+      '/images/perspectives/back.png',
+      '/images/perspectives/right-side.png',
     ],
     elements: [
       {
-        type: 'product', image: listingProduct, label: 'HA Cream', sublabel: 'Product',
-        icon: <Plus className="w-3 h-3" />,
+        type: 'badge', label: '1 Photo, 4 Angles', icon: <Sparkles className="w-3 h-3" />,
         position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
       },
       {
-        type: 'badge', label: '4 Angles', icon: <Camera className="w-3 h-3" />,
-        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
+        type: 'badge', label: 'One Click', icon: <Camera className="w-3 h-3" />,
+        position: { bottom: '18%', right: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },
