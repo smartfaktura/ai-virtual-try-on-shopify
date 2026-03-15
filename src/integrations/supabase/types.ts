@@ -923,6 +923,30 @@ export type Database = {
         }
         Relationships: []
       }
+      scene_sort_order: {
+        Row: {
+          created_at: string
+          id: string
+          scene_id: string
+          sort_order: number
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          scene_id: string
+          sort_order?: number
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          scene_id?: string
+          sort_order?: number
+          updated_by?: string
+        }
+        Relationships: []
+      }
       shopify_connections: {
         Row: {
           access_token: string
