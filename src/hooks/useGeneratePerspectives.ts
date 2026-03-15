@@ -430,6 +430,9 @@ export function useGeneratePerspectives() {
               }
 
               const result = await response.json();
+              if (result.newBalance !== undefined && result.newBalance !== null) {
+                lastNewBalance = result.newBalance;
+              }
               jobs.push({
                 jobId: result.jobId,
                 variationLabel: variation.label,
