@@ -1,30 +1,44 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Two Changes to Freestyle Prompt Panel
 
-### Issues Found
+### 1. Bigger textarea on mobile
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+Currently `rows={isMobile ? 2 : 3}` with `min-h-[48px]` — too small for editing long prompts on mobile.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+**Change in `FreestylePromptPanel.tsx` (line 243-244):**
+- Increase mobile rows from 2 → 4
+- Increase mobile `min-h` from `48px` → `100px`
+- Keep desktop at rows=3 / `min-h-[72px]`
 
-### Plan
+### 2. Reset button
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+Add a "Reset" button to the action bar (Row 3) that clears all prompt bar state in one click.
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**FreestylePromptPanel changes:**
+- Add a new `onReset` prop
+- Render a ghost button with a `RotateCcw` icon + "Reset" label in the action bar, left-aligned (`mr-auto`), only visible when there's something to reset (prompt has text, or any setting is non-default)
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+**Freestyle.tsx changes:**
+- Create a `handleReset` callback that resets all state to defaults:
+  - `prompt` → `''`
+  - `sourceImage` / `sourceImagePreview` → `null`
+  - `selectedModel` → `null`
+  - `selectedScene` → `null`
+  - `selectedProduct` → `null`
+  - `aspectRatio` → `'1:1'`
+  - `quality` → `'standard'`
+  - `stylePresets` → `[]`
+  - `negatives` → `[]`
+  - `cameraStyle` → `'pro'`
+  - `framing` → `null`
+  - `selectedBrandProfile` → `null`
+  - `polishPrompt` → `true`
+- Pass `onReset={handleReset}` to `FreestylePromptPanel`
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+The reset button appears on all viewports (mobile, tablet, desktop) and only shows when at least one setting differs from defaults.
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files to modify
+- `src/components/app/freestyle/FreestylePromptPanel.tsx`
+- `src/pages/Freestyle.tsx`
 
