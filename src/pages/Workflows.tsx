@@ -208,7 +208,7 @@ export default function Workflows() {
         const rowTime = new Date(row.created_at).getTime();
         if (currentGroup) {
           const groupTime = new Date(currentGroup.created_at).getTime();
-          if (Math.abs(rowTime - groupTime) <= 10 * 60 * 1000) {
+          if (Math.abs(rowTime - groupTime) <= 30 * 1000) {
             currentGroup.results.push({ url: row.image_url });
             continue;
           }
