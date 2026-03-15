@@ -750,6 +750,13 @@ export default function Perspectives() {
                   })}
                 </div>
               )}
+              {!libraryLoading && filteredLibrary.length > libraryVisibleCount && (
+                <div className="text-center pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setLibraryVisibleCount(c => c + 10)}>
+                    Load more ({filteredLibrary.length - libraryVisibleCount} remaining)
+                  </Button>
+                </div>
+              )}
               {!libraryLoading && filteredLibrary.length === 0 && (
                 <p className="text-center text-muted-foreground py-4 text-sm">
                   No generated images found. Generate some images first in{' '}
