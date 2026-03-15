@@ -225,11 +225,11 @@ function buildPerspectivePrompt(
   // System instruction — scene-mode aware
   if (mode === 'on-model') {
     layers.push(
-      `Reproduce this exact scene from a new camera angle. The scene contains a human model wearing/holding/interacting with a product. Preserve BOTH the product identity AND the human subject — same person, same pose intent, same styling, same garment fit. The ONLY change is the camera angle.`
+      `Reproduce this exact scene from a new camera angle. The scene contains a human model wearing/holding/interacting with a product. Preserve BOTH the product identity AND the human subject — same person, same pose intent, same styling, same garment fit. Preserve the EXACT same background, surface, lighting setup, and environment from [PRODUCT IMAGE]. The ONLY change is the camera angle.`
     );
   } else {
     layers.push(
-      `Generate a photorealistic product image from the specified angle/perspective. Maintain the exact product identity — shape, material, color, texture, logos, hardware, stitching — from the source product image. The ONLY change is the camera angle.`
+      `Generate a photorealistic product image from the specified angle/perspective. Maintain the exact product identity — shape, material, color, texture, logos, hardware, stitching — from the source product image. Preserve the EXACT same background, surface, lighting setup, and environment from [PRODUCT IMAGE]. The ONLY change is the camera angle.`
     );
   }
 
