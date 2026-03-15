@@ -172,7 +172,7 @@ export interface DashboardMetrics {
 }
 
 // Generation Source Types
-export type GenerationSourceType = 'product' | 'scratch';
+export type GenerationSourceType = 'product' | 'scratch' | 'library';
 
 export interface ScratchUpload {
   file: File;
