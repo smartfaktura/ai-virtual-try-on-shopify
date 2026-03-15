@@ -391,8 +391,8 @@ export function FreestyleSettingsChips({
                   onSelect={onBrandProfileSelect}
                   profiles={brandProfiles}
                   isLoading={isLoadingBrandProfiles}
-                />
-                <NegativesChip
+                /></div>
+                <div className="shrink-0"><NegativesChip
                   negatives={negatives}
                   onNegativesChange={onNegativesChange}
                   open={negativesPopoverOpen}
