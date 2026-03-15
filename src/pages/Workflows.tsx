@@ -245,6 +245,7 @@ export default function Workflows() {
   useEffect(() => {
     if (prevActiveCountRef.current > 0 && activeJobs.length === 0) {
       queryClient.invalidateQueries({ queryKey: ['workflow-recent-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-recent-perspectives'] });
       queryClient.invalidateQueries({ queryKey: ['workflow-failed-jobs'] });
       queryClient.invalidateQueries({ queryKey: ['workflow-recently-completed'] });
     }
