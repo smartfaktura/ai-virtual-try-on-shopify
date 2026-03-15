@@ -330,7 +330,7 @@ export function FreestyleSettingsChips({
                 modal={isMobile}
               />
             </div>
-            <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+            <div className={cn('shrink-0', highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <ModelSelectorChip
                 selectedModel={selectedModel}
                 open={modelPopoverOpen}
