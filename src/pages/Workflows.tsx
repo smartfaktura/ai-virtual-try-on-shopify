@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -158,7 +158,7 @@ export default function Workflows() {
   });
 
   // ── Recent completed workflow jobs ──
-  const { data: recentJobs = [], isLoading: isLoadingRecent } = useQuery({
+  const { data: recentWorkflowJobs = [], isLoading: isLoadingRecent } = useQuery({
     queryKey: ['workflow-recent-jobs'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -183,10 +183,69 @@ export default function Workflows() {
     staleTime: 30_000,
   });
 
+  // ── Recent Picture Perspectives from freestyle_generations ──
+  const { data: recentPerspectives = [] } = useQuery({
+    queryKey: ['workflow-recent-perspectives'],
+    queryFn: async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('freestyle_generations')
+        .select('id, created_at, image_url, workflow_label')
+        .like('workflow_label', 'Picture Perspectives%')
+        .gte('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+
+      // Group rows within 10 minutes of each other into synthetic "jobs"
+      const rows = data ?? [];
+      if (rows.length === 0) return [];
+
+      const groups: { id: string; created_at: string; results: { url: string }[] }[] = [];
+      let currentGroup: typeof groups[0] | null = null;
+
+      for (const row of rows) {
+        const rowTime = new Date(row.created_at).getTime();
+        if (currentGroup) {
+          const groupTime = new Date(currentGroup.created_at).getTime();
+          if (Math.abs(rowTime - groupTime) <= 10 * 60 * 1000) {
+            currentGroup.results.push({ url: row.image_url });
+            continue;
+          }
+        }
+        currentGroup = {
+          id: row.id,
+          created_at: row.created_at,
+          results: [{ url: row.image_url }],
+        };
+        groups.push(currentGroup);
+      }
+
+      return groups.map((g) => ({
+        id: g.id,
+        workflow_id: 'perspectives' as string | null,
+        workflow_name: 'Picture Perspectives',
+        created_at: g.created_at,
+        results: g.results,
+        requested_count: g.results.length,
+      }));
+    },
+    enabled: !!user,
+    staleTime: 30_000,
+  });
+
+  // Merge and sort recent jobs
+  const recentJobs = useMemo(() => {
+    const merged = [...recentWorkflowJobs, ...recentPerspectives];
+    merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return merged.slice(0, 8);
+  }, [recentWorkflowJobs, recentPerspectives]);
+
   // Auto-refresh recent jobs when active jobs complete
   useEffect(() => {
     if (prevActiveCountRef.current > 0 && activeJobs.length === 0) {
       queryClient.invalidateQueries({ queryKey: ['workflow-recent-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-recent-perspectives'] });
       queryClient.invalidateQueries({ queryKey: ['workflow-failed-jobs'] });
       queryClient.invalidateQueries({ queryKey: ['workflow-recently-completed'] });
     }

@@ -1,35 +1,30 @@
 
 
-## Show Picture Perspectives in Workflows Recent Creations
+## Product Perspectives — Implemented ✅
 
-### Problem
-Picture Perspectives results are stored in `freestyle_generations` (not `generation_jobs`), so the "Recent Creations" query on the Workflows page never finds them. The query only checks `generation_jobs.workflow_id IS NOT NULL`.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Solution
-Add a second query for recent perspective generations from `freestyle_generations`, group them into "jobs" by time proximity, and merge them into the `recentJobs` array.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### Changes
-
-**`src/pages/Workflows.tsx`** — Add a new query + merge logic:
-
-1. **New query `workflow-recent-perspectives`**: Query `freestyle_generations` where `workflow_label` starts with `'Picture Perspectives'`, ordered by `created_at desc`, limit 50, from the last 7 days.
-
-2. **Group into synthetic jobs**: Group consecutive `freestyle_generations` rows that share the same `workflow_label` prefix ("Picture Perspectives") and are within 10 minutes of each other into a single "job" object matching the `RecentJob` interface:
-   - `id`: first row's id
-   - `workflow_id`: `'perspectives'`
-   - `workflow_name`: `'Picture Perspectives'`
-   - `created_at`: earliest in group
-   - `results`: array of `{ url: image_url }` from all rows in the group
-   - `requested_count`: actual count of images in the group
-
-3. **Merge & sort**: Combine `recentJobs` (from `generation_jobs`) with the grouped perspective jobs, sort by `created_at desc`, and take the top 5-8.
-
-**`src/components/app/WorkflowRecentRow.tsx`** — Fix image count badge:
-- Line 95: Change `{job.requested_count} imgs` to use `results` array length when available (since `requested_count` may differ from actual completed count). Use: `{(Array.isArray(job.results) ? (job.results as unknown[]).length : job.requested_count)} imgs`
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
 ### Files changed
-| File | Change |
-|------|--------|
-| `src/pages/Workflows.tsx` | Add `freestyle_generations` query for perspectives, group + merge into `recentJobs` |
-| `src/components/app/WorkflowRecentRow.tsx` | Show actual image count from results array |
-
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
