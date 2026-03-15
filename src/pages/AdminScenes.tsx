@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUp, ArrowDown, Trash2, Save, Loader2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, ChevronsUp, Trash2, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
@@ -101,6 +101,19 @@ export default function AdminScenes() {
       const result = [...prev];
       result[globalIdxA] = swapPose;
       result[globalIdxB] = pose;
+      return result;
+    });
+    setDirty(true);
+  };
+
+  const movePoseToTop = (poseId: string) => {
+    setOrderedPoses(prev => {
+      const pose = prev.find(p => p.poseId === poseId);
+      if (!pose) return prev;
+      const withoutPose = prev.filter(p => p.poseId !== poseId);
+      const firstCatIdx = withoutPose.findIndex(p => p.category === pose.category);
+      const result = [...withoutPose];
+      result.splice(firstCatIdx >= 0 ? firstCatIdx : 0, 0, pose);
       return result;
     });
     setDirty(true);
@@ -248,6 +261,9 @@ export default function AdminScenes() {
                     </Select>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0} onClick={() => movePoseToTop(pose.poseId)} title="Move to top">
+                      <ChevronsUp className="w-3.5 h-3.5" />
+                    </Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0} onClick={() => movePose(pose.poseId, 'up')}>
                       <ArrowUp className="w-3.5 h-3.5" />
                     </Button>
