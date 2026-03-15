@@ -1,32 +1,30 @@
 
 
-## Fix Picture Perspectives Carousel Transition
+## Product Perspectives — Implemented ✅
 
-### Problem
-The current carousel has a broken crossfade mechanism:
-- `bgLoaded` is set to `true` once on first load and never resets, so subsequent slides skip the loading state
-- Using `key={index}` remounts the `<img>` element each time, causing a flash before the fade animation kicks in
-- The "previous" image layer and "current" image layer don't smoothly blend — there's a visible pop/jump between slides
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Solution
-Replace the current approach with a proper dual-layer crossfade:
-- Render **two** `<img>` elements stacked on top of each other
-- Track `currentIndex` and `prevIndex` as separate state
-- The bottom layer shows the previous image at full opacity
-- The top layer fades in the new image using a CSS transition (`opacity` from 0→1 over 1.2s)
-- No `key` remounting — instead toggle a class/style when index changes
-- Remove the `bgLoaded` gating for the crossfade (it was only needed for initial load shimmer)
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### Changes
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-**`src/components/app/WorkflowAnimatedThumbnail.tsx`** — `CarouselThumbnail`:
-- Replace single `index` state with `{ current, prev }` pattern
-- Render two `<img>` tags: bottom (prev) and top (current) with `transition: opacity 1.2s ease-in-out`
-- On interval tick: move current→prev, advance to next index
-- Remove the `wf-carousel-fade` keyframe animation in favor of CSS transition
-- Keep shimmer only for initial load, reset `bgLoaded` properly
-
-| File | Change |
-|------|--------|
-| `src/components/app/WorkflowAnimatedThumbnail.tsx` | Rewrite `CarouselThumbnail` crossfade logic with dual-layer smooth transition |
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`

@@ -151,9 +151,11 @@ function FloatingEl({ element }: { element: SceneElement }) {
 function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
   const backgrounds = scene.backgrounds ?? [scene.background];
   const INTERVAL = 5000;
-  const [index, setIndex] = useState(0);
+  const [current, setCurrent] = useState(0);
+  const [prev, setPrev] = useState(0);
+  const [showCurrent, setShowCurrent] = useState(true);
   const [progressKey, setProgressKey] = useState(0);
-  const [bgLoaded, setBgLoaded] = useState(false);
+  const [initialLoaded, setInitialLoaded] = useState(false);
 
   // Preload only the element images (small chips)
   const elementUrls = useMemo(
@@ -167,37 +169,46 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
   useEffect(() => {
     if (!isActive || backgrounds.length <= 1) return;
     const t = setInterval(() => {
-      setIndex((i) => (i + 1) % backgrounds.length);
+      setPrev(current);
+      setShowCurrent(false);
+      // Small delay to ensure prev is rendered before we swap src
+      requestAnimationFrame(() => {
+        setCurrent((c) => (c + 1) % backgrounds.length);
+        // Allow the new image to start loading, then fade in
+        requestAnimationFrame(() => {
+          setShowCurrent(true);
+        });
+      });
       setProgressKey((k) => k + 1);
     }, INTERVAL);
     return () => clearInterval(t);
-  }, [isActive, backgrounds.length]);
-
-  const prev = (index - 1 + backgrounds.length) % backgrounds.length;
+  }, [isActive, backgrounds.length, current]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
       {/* Shimmer placeholder */}
-      {!bgLoaded && (
+      {!initialLoaded && (
         <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
       )}
 
-      {/* Previous image (underneath) */}
+      {/* Bottom layer — previous image */}
       <img
         src={backgrounds[prev]}
         alt=""
         className="absolute inset-0 w-full h-full object-cover object-top"
       />
-      {/* Current image (crossfade in) */}
+      {/* Top layer — current image with crossfade */}
       <img
-        key={index}
-        src={backgrounds[index]}
+        src={backgrounds[current]}
         alt=""
-        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className="absolute inset-0 w-full h-full object-cover object-top"
         style={{
-          ...(bgLoaded ? { animation: `wf-carousel-fade 1s ease-in-out forwards` } : {}),
+          opacity: showCurrent ? 1 : 0,
+          transition: 'opacity 1.2s ease-in-out',
         }}
-        onLoad={() => setBgLoaded(true)}
+        onLoad={() => {
+          if (!initialLoaded) setInitialLoaded(true);
+        }}
       />
 
       {/* Gradient overlay */}
@@ -239,10 +250,6 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
         }
         .wf-card-shadow {
           box-shadow: 0 4px 20px -4px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.5);
-        }
-        @keyframes wf-carousel-fade {
-          from { opacity: 0; }
-          to   { opacity: 1; }
         }
         @keyframes wf-progress-fill {
           from { width: 0%; }
