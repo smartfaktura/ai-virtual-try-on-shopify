@@ -792,33 +792,40 @@ export default function Perspectives() {
                 </Badge>
                 <span className="text-xs text-muted-foreground">(max 10)</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[320px] overflow-y-auto p-1">
-                {filteredProducts.map(product => {
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
+                {filteredProducts.slice(0, productVisibleCount).map(product => {
                   const isSelected = selectedProductIds.has(product.id);
                   return (
                     <div
                       key={product.id}
                       onClick={() => toggleProduct(product.id)}
-                      className={`relative rounded-xl border-2 p-2 cursor-pointer transition-all ${
+                      className={`relative rounded-xl border-2 p-1.5 cursor-pointer transition-all ${
                         isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                       }`}
                     >
                       <div className="absolute top-1.5 left-1.5 z-10 bg-background/90 rounded shadow-sm p-0.5">
                         <Checkbox checked={isSelected} onCheckedChange={() => toggleProduct(product.id)} />
                       </div>
-                      <div className="aspect-square rounded-lg overflow-hidden mb-2 bg-muted">
+                      <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                         {product.image_url ? (
                           <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
                         )}
                       </div>
-                      <p className="text-xs font-medium truncate">{product.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{product.product_type}</p>
+                      <p className="text-[10px] font-medium truncate mt-1">{product.title}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{product.product_type}</p>
                     </div>
                   );
                 })}
               </div>
+              {filteredProducts.length > productVisibleCount && (
+                <div className="text-center pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 10)}>
+                    Load more ({filteredProducts.length - productVisibleCount} remaining)
+                  </Button>
+                </div>
+              )}
               {filteredProducts.length === 0 && (
                 <p className="text-center text-muted-foreground py-4 text-sm">
                   No products found.{' '}
