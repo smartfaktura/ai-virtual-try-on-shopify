@@ -212,7 +212,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
       {isActive && elementsReady && (
         <div className="absolute inset-0 z-10" style={{ animation: 'wf-fade-in 0.4s ease-out forwards' }}>
           {scene.elements.map((el, i) => (
-            <FloatingEl key={i} element={{ ...el, enterDelay: 0, animation: 'pop' }} />
+            <FloatingEl key={i} element={el} />
           ))}
         </div>
       )}

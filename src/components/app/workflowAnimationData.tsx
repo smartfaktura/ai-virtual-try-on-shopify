@@ -173,11 +173,11 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     elements: [
       {
         type: 'badge', label: '1 Photo, 4 Angles', icon: <Sparkles className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
+        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
       },
       {
         type: 'badge', label: 'One Click', icon: <Camera className="w-3 h-3" />,
-        position: { bottom: '18%', right: '6%' }, enterDelay: 0, animation: 'slide-up',
+        position: { bottom: '8%', left: '6%' }, enterDelay: 0.8, animation: 'slide-up',
       },
     ],
   },
