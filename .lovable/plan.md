@@ -1,48 +1,30 @@
 
 
-## Fix: Library not loading all images / missing "Load More" button
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Root Cause
+### Issues Found
 
-The current pagination is fundamentally broken. Here's why:
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**Page 1** (pageParam=0): Fetches jobs 0-59 and freestyle 0-19, expands jobs into ~80+ individual images, merges, sorts, then **trims to 20**. The remaining ~60+ items are discarded.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**Page 2** (pageParam=1): Fetches jobs 60-119 and freestyle 20-39 — completely **new ranges**. The ~60 items trimmed from page 1 are permanently lost. They were fetched, discarded, and never fetched again.
+### Plan
 
-Additionally, if page 2 returns fewer than 20 combined items after trimming, `hasMore` becomes `false` and the "Load More" button disappears — even though dozens of items were skipped.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Fix: Cursor-based pagination
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-Instead of offset-based `.range()`, use the `createdAt` timestamp of the last item returned as a cursor for the next page.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-**`src/hooks/useLibraryItems.ts`**
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-1. Change `pageParam` from a page number to a cursor object: `{ jobCursor?: string; fsCursor?: string }` (ISO timestamps)
-2. Replace `.range()` with `.lt('created_at', cursor)` (or `.gt` for oldest-first) + `.limit()`
-3. Return the last timestamps from each source as the next cursor
-4. `hasMore` = true when either source returned a full batch
-
-```text
-Page 1:  jobs WHERE created_at < NOW  LIMIT 60  →  expand → merge with freestyle LIMIT 20  →  trim to 20
-         Return cursor = { jobCursor: lastJobTime, fsCursor: lastFsTime }
-
-Page 2:  jobs WHERE created_at < jobCursor  LIMIT 60  →  expand → merge with freestyle WHERE < fsCursor  →  trim to 20
-         No items lost between pages
-```
-
-### Key changes
-
-| Area | Change |
-|---|---|
-| `pageParam` type | `number` → `{ jobCursor?: string; fsCursor?: string }` |
-| Query filters | `.range(from, to)` → `.lt('created_at', cursor).limit(N)` (flip to `.gt` for oldest-first) |
-| `getNextPageParam` | Return cursor timestamps from last items of each source |
-| `hasMore` logic | `true` if either query returned its full limit |
-| `initialPageParam` | `0` → `{}` |
-
-### Files modified
-| File | Change |
-|---|---|
-| `src/hooks/useLibraryItems.ts` | Switch from offset to cursor-based pagination |
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
