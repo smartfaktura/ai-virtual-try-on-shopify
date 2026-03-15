@@ -7,6 +7,7 @@ import { toSignedUrls } from '@/lib/signedUrl';
 export type LibrarySortBy = 'newest' | 'oldest';
 
 const PAGE_SIZE = 20;
+const JOB_FETCH_SIZE = PAGE_SIZE * 3; // Jobs can expand into multiple images
 
 export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
   const { user } = useAuth();
@@ -17,20 +18,22 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
       try {
         const items: LibraryItem[] = [];
         const q = searchQuery.toLowerCase();
-        const from = pageParam * PAGE_SIZE;
-        const to = from + PAGE_SIZE - 1;
+        const jobFrom = pageParam * JOB_FETCH_SIZE;
+        const jobTo = jobFrom + JOB_FETCH_SIZE - 1;
+        const fsFrom = pageParam * PAGE_SIZE;
+        const fsTo = fsFrom + PAGE_SIZE - 1;
 
         const [jobsResult, freestyleResult] = await Promise.all([
           supabase
             .from('generation_jobs')
             .select('id, results, created_at, status, ratio, quality, prompt_final, workflows(name), user_products(title)')
             .order('created_at', { ascending: sortBy === 'oldest' })
-            .range(from, to),
+            .range(jobFrom, jobTo),
           supabase
             .from('freestyle_generations')
             .select('id, image_url, prompt, aspect_ratio, quality, created_at')
             .order('created_at', { ascending: sortBy === 'oldest' })
-            .range(from, to),
+            .range(fsFrom, fsTo),
         ]);
 
         if (jobsResult.error) throw jobsResult.error;
@@ -99,15 +102,18 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
           return sortBy === 'oldest' ? -diff : diff;
         });
 
-        // Sign all URLs in parallel
-        const signedUrls = await toSignedUrls(rawItems.map(r => r.url));
+        // Trim to PAGE_SIZE after sorting
+        const trimmed = rawItems.slice(0, PAGE_SIZE);
 
-        for (let i = 0; i < rawItems.length; i++) {
-          items.push({ ...rawItems[i].item, imageUrl: signedUrls[i] } as LibraryItem);
+        // Sign all URLs in parallel
+        const signedUrls = await toSignedUrls(trimmed.map(r => r.url));
+
+        for (let i = 0; i < trimmed.length; i++) {
+          items.push({ ...trimmed[i].item, imageUrl: signedUrls[i] } as LibraryItem);
         }
 
-        const totalFetched = (jobsResult.data?.length ?? 0) + (freestyleResult.data?.length ?? 0);
-        return { items, hasMore: totalFetched >= PAGE_SIZE };
+        const hasMoreItems = rawItems.length > PAGE_SIZE;
+        return { items, hasMore: hasMoreItems };
       } catch (err) {
         console.error('[Library] Query failed:', err);
         throw err;
