@@ -1,39 +1,30 @@
 
 
-## Improve Admin Scene Saving + Category Updates
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Summary
-Three changes: (1) rename "Clean Studio" to "Product Studio", (2) add new "Product Editorial" category, (3) redesign the AddSceneModal to include a scene-type toggle (On-Model vs Product) and show only relevant categories for each type.
+### Issues Found
 
-### Changes
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-**1. Update `PoseCategory` type** (`src/types/index.ts`)
-- Add `'product-editorial'` to the union type
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**2. Update `poseCategoryLabels`** (`src/data/mockData.ts`)
-- Rename `'clean-studio'` → label `'Product Studio'` (keep the key as `clean-studio` to avoid breaking existing data)
-- Add `'product-editorial': 'Product Editorial'`
+### Plan
 
-**3. Update `filterCategoryMap`** (`src/components/app/freestyle/SceneSelectorChip.tsx`)
-- Add `'product-editorial'` to the `product` filter array
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**4. Redesign `AddSceneModal`** (`src/components/app/AddSceneModal.tsx`)
-- Add a **scene type toggle** at the top: "On-Model" vs "Product" (two big selectable cards or radio-style chips)
-- Based on selection, show only relevant categories:
-  - On-Model: `studio`, `lifestyle`, `editorial`, `streetwear`
-  - Product: `clean-studio` (labeled "Product Studio"), `surface`, `flat-lay`, `product-editorial`
-- Remove irrelevant categories (`kitchen`, `living-space`, `bathroom`, `botanical`) from the modal since the filter tabs no longer surface them
-- Keep outdoor if needed or remove — will remove to match the simplified 3-tab system
-- Update `CATEGORIES` constant to be derived from the scene type selection
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-**5. Update `AddSceneModal` categories display**
-- Show human-readable labels from `poseCategoryLabels` instead of raw slugs on the category chips
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-### Files modified
-| File | Change |
-|---|---|
-| `src/types/index.ts` | Add `product-editorial` to `PoseCategory` |
-| `src/data/mockData.ts` | Rename clean-studio label, add product-editorial label |
-| `src/components/app/freestyle/SceneSelectorChip.tsx` | Add `product-editorial` to product filter |
-| `src/components/app/AddSceneModal.tsx` | Add scene type toggle, filter categories by type, use readable labels |
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
