@@ -830,7 +830,11 @@ export default function Perspectives() {
                   </Button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+                <label
+                  onDrop={(e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file?.type.startsWith('image/')) handleDirectFile(file); }}
+                  onDragOver={(e) => e.preventDefault()}
+                  className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
+                >
                   {isUploading ? (
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   ) : (
@@ -838,7 +842,11 @@ export default function Perspectives() {
                       <Upload className="w-8 h-8 text-muted-foreground" />
                       <div className="text-center">
                         <p className="text-sm font-medium text-foreground">Upload an image</p>
-                        <p className="text-xs text-muted-foreground">Click to browse or drag and drop</p>
+                        <p className="text-xs text-muted-foreground">Drag & drop, paste, or click to browse</p>
+                        <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/60 mt-1.5">
+                          <ClipboardPaste className="w-3 h-3" />
+                          ⌘V / Ctrl+V to paste from clipboard
+                        </p>
                       </div>
                     </>
                   )}
