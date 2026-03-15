@@ -28,7 +28,7 @@ const filterTabs: { key: SceneFilter; label: string }[] = [
 const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
   all: [],
   'on-model': ['studio', 'lifestyle', 'editorial', 'streetwear'],
-  product: ['clean-studio', 'surface', 'flat-lay'],
+  product: ['clean-studio', 'surface', 'flat-lay', 'product-editorial'],
 };
 
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal }: SceneSelectorChipProps) {

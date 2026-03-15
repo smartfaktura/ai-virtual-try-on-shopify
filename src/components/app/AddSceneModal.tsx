@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, Sparkles } from 'lucide-react';
+import { X, Loader2, Sparkles, User, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useAddCustomScene } from '@/hooks/useCustomScenes';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { poseCategoryLabels } from '@/data/mockData';
 
-const CATEGORIES = [
-  'studio', 'lifestyle', 'editorial', 'streetwear', 'clean-studio',
-  'surface', 'flat-lay', 'kitchen', 'living-space', 'bathroom', 'botanical',
-];
+type SceneType = 'on-model' | 'product';
+
+const CATEGORIES_BY_TYPE: Record<SceneType, string[]> = {
+  'on-model': ['studio', 'lifestyle', 'editorial', 'streetwear'],
+  product: ['clean-studio', 'surface', 'flat-lay', 'product-editorial'],
+};
 
 interface AddSceneModalProps {
   open: boolean;
@@ -22,7 +25,8 @@ interface AddSceneModalProps {
 export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('lifestyle');
+  const [sceneType, setSceneType] = useState<SceneType>('on-model');
+  const [category, setCategory] = useState('studio');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const addScene = useAddCustomScene();
 
@@ -33,6 +37,14 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, imageUrl]);
 
+  // Reset category when scene type changes
+  useEffect(() => {
+    const cats = CATEGORIES_BY_TYPE[sceneType];
+    if (!cats.includes(category)) {
+      setCategory(cats[0]);
+    }
+  }, [sceneType, category]);
+
   const analyzeImage = async () => {
     setIsAnalyzing(true);
     try {
@@ -42,7 +54,16 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
       if (error) throw error;
       setName(data.name || '');
       setDescription(data.description || '');
-      if (CATEGORIES.includes(data.category)) setCategory(data.category);
+      const allCats = [...CATEGORIES_BY_TYPE['on-model'], ...CATEGORIES_BY_TYPE.product];
+      if (allCats.includes(data.category)) {
+        // Auto-detect scene type from returned category
+        if (CATEGORIES_BY_TYPE.product.includes(data.category)) {
+          setSceneType('product');
+        } else {
+          setSceneType('on-model');
+        }
+        setCategory(data.category);
+      }
     } catch {
       toast.error('AI analysis failed — fill in manually');
     } finally {
@@ -63,6 +84,8 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
 
   if (!open) return null;
 
+  const visibleCategories = CATEGORIES_BY_TYPE[sceneType];
+
   return createPortal(
     <div className="fixed inset-0 z-[300] flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -76,7 +99,7 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Preview */}
+          {/* Preview + fields */}
           <div className="flex gap-4">
             <img src={imageUrl} alt="Scene preview" className="w-28 h-28 rounded-xl object-cover border border-border/30" />
             <div className="flex-1 space-y-3">
@@ -101,12 +124,47 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
             </div>
           </div>
 
+          {/* Scene Type Toggle */}
+          {!isAnalyzing && (
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Scene Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { key: 'on-model' as SceneType, label: 'On-Model', icon: User, desc: 'Fashion & people' },
+                  { key: 'product' as SceneType, label: 'Product', icon: Package, desc: 'Product photography' },
+                ]).map(({ key, label, icon: Icon, desc }) => (
+                  <button
+                    key={key}
+                    onClick={() => setSceneType(key)}
+                    className={cn(
+                      'flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left',
+                      sceneType === key
+                        ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                        : 'border-border/40 hover:border-border bg-muted/30'
+                    )}
+                  >
+                    <div className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center',
+                      sceneType === key ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                    )}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className={cn('text-sm font-medium', sceneType === key ? 'text-foreground' : 'text-muted-foreground')}>{label}</p>
+                      <p className="text-[10px] text-muted-foreground/60">{desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Category */}
           {!isAnalyzing && (
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 block">Category</label>
               <div className="flex flex-wrap gap-1.5">
-                {CATEGORIES.map(cat => (
+                {visibleCategories.map(cat => (
                   <button
                     key={cat}
                     onClick={() => setCategory(cat)}
@@ -117,7 +175,7 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
                         : 'bg-muted/60 text-muted-foreground hover:bg-muted'
                     )}
                   >
-                    {cat}
+                    {poseCategoryLabels[cat] || cat}
                   </button>
                 ))}
               </div>
