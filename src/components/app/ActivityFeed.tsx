@@ -21,6 +21,7 @@ const getTeamAvatar = (activityId: string) => {
   if (activityId.startsWith('job-')) return { src: teamAvatar('avatar-sophia.jpg'), name: 'Sophia' };
   if (activityId.startsWith('product-')) return { src: teamAvatar('avatar-max.jpg'), name: 'Max' };
   if (activityId.startsWith('brand-')) return { src: teamAvatar('avatar-sienna.jpg'), name: 'Sienna' };
+  if (activityId.startsWith('perspectives-')) return { src: teamAvatar('avatar-kenji.jpg'), name: 'Kenji' };
   if (activityId.startsWith('freestyle-')) {
     const hash = activityId.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
     const pick = FREESTYLE_AVATARS[hash % FREESTYLE_AVATARS.length];
