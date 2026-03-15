@@ -443,62 +443,8 @@ export function useGeneratePerspectives() {
               break;
             }
           }
-            try {
-              const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  jobType: 'freestyle',
-                  payload,
-                  imageCount: 1,
-                  quality,
-                }),
-              });
 
-              if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
 
-                if (response.status === 402) {
-                  toast.error(`Insufficient credits. ${enqueuedCount} of ${totalJobs} queued.`);
-                  shouldStop = true;
-                  break;
-                }
-                if (response.status === 429) {
-                  const isBurst = errorData.burst_limit !== undefined;
-                  if (isBurst && attempt < MAX_BURST_RETRIES) {
-                    console.log(`[Perspectives] Burst limit hit, waiting 10s before retry ${attempt + 1}/${MAX_BURST_RETRIES}…`);
-                    await sleep(10_000);
-                    continue; // retry
-                  }
-                  // Non-burst 429 (hourly rate limit) or exhausted retries
-                  toast.error(errorData.error || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
-                  shouldStop = true;
-                  break;
-                }
-
-                toast.error(errorData.error || `Failed to enqueue job`);
-                break; // don't retry non-rate-limit errors
-              }
-
-              const result = await response.json();
-              jobs.push({
-                jobId: result.jobId,
-                variationLabel: variation.label,
-                productTitle: product.title,
-                ratio,
-              });
-              enqueuedCount++;
-              enqueued = true;
-              setProgress(Math.round((enqueuedCount / totalJobs) * 100));
-              break; // success, exit retry loop
-            } catch (err) {
-              console.error('Enqueue error:', err);
-              break;
-            }
-          }
 
           if (shouldStop) break;
 
