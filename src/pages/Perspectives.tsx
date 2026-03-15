@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
@@ -6,11 +6,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import {
   Search, Upload, X, Sparkles, Layers, ZoomIn, RotateCcw,
   ArrowLeft, ArrowRight, Maximize, ImageIcon, Check, Plus, Loader2,
-  Package, Image as ImageLucide, Info, ClipboardPaste,
+  Package, Image as ImageLucide, Info, ClipboardPaste, CheckCircle, XCircle,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,7 +21,9 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useQuery } from '@tanstack/react-query';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useGeneratePerspectives } from '@/hooks/useGeneratePerspectives';
+import type { PerspectiveJobInfo } from '@/hooks/useGeneratePerspectives';
 import { toSignedUrls } from '@/lib/signedUrl';
+import { TEAM_MEMBERS } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
