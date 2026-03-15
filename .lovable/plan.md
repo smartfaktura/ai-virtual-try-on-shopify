@@ -1,30 +1,28 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Revert Mobile Pills to Inline Flow Layout
 
-### Issues Found
+The user wants pills arranged pill-by-pill in a flowing line (like the desktop layout), not in a rigid 2-column or 4-column grid. The grid creates too much whitespace and looks unnatural.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Approach
+Revert the mobile layout back to `flex-wrap` flow — but keep the `fullWidth` removal and truncation fixes so chips don't jump too much. The key difference from the grid: chips will be inline, content-sized, and wrap naturally to the next line like tags/badges do.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+### Changes
 
-### Plan
+**`src/components/app/freestyle/FreestyleSettingsChips.tsx`** — Mobile section (lines 314-420):
+- Replace `grid grid-cols-2 gap-2` and `grid grid-cols-4 gap-2` with `flex items-center gap-2 flex-wrap`
+- Remove `min-w-0` wrapper divs — just render chips directly (or keep highlight wrappers only)
+- Remove `fullWidth` prop from all chip usages in mobile
+- Keep the Style collapsible and advanced section structure
+- Style trigger: remove `w-full`, keep as inline chip
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**Chip components** (`ProductSelectorChip`, `ModelSelectorChip`, `SceneSelectorChip`, `FramingSelectorChip`, `BrandProfileChip`, `NegativesChip`):
+- Keep the `fullWidth` prop support but don't pass it on mobile anymore
+- Keep truncation (`max-w-[80px] truncate` or similar) on selected labels to prevent excessive width changes
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+This gives the original pill-by-pill flow where chips sit next to each other and naturally wrap, without the rigid grid whitespace.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+| File | Change |
+|---|---|
+| `FreestyleSettingsChips.tsx` | Revert mobile from grid to `flex flex-wrap`, remove `fullWidth` from chip usage |
 
