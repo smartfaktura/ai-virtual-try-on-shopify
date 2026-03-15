@@ -372,9 +372,9 @@ export function useGeneratePerspectives() {
             forceProModel: true,
             variation_instruction: variation.instruction,
             variation_label: variation.label,
-            workflow_label: `Product Perspectives — ${variation.label}`,
+            workflow_label: `Picture Perspectives — ${variation.label}`,
             workflow_id: 'perspectives',
-            workflow_name: 'Product Perspectives',
+            workflow_name: 'Picture Perspectives',
             product_name: product.title,
           };
 

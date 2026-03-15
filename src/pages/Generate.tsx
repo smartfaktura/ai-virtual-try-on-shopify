@@ -140,7 +140,7 @@ export default function Generate() {
     enabled: !!workflowId,
   });
 
-  // Redirect angle workflows (Product Perspectives) to the standalone page
+  // Redirect angle workflows (Picture Perspectives) to the standalone page
   useEffect(() => {
     if (activeWorkflow?.generation_config) {
       const config = activeWorkflow.generation_config as any;

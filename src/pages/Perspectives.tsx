@@ -645,9 +645,9 @@ export default function Perspectives() {
               <Layers className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Product Perspectives</h1>
+              <h1 className="text-2xl font-bold text-foreground">Picture Perspectives</h1>
               <p className="text-sm text-muted-foreground">
-                Generate close-ups, back views, side angles, and wide shots for a complete visual set.
+                Generate angle and detail variations — close-ups, back views, side angles, and wide shots from any image.
               </p>
             </div>
           </div>
