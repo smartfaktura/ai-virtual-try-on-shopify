@@ -16,6 +16,7 @@ interface ProductSelectorChipProps {
   products: UserProduct[];
   isLoading: boolean;
   modal?: boolean;
+  fullWidth?: boolean;
 }
 
 export function ProductSelectorChip({
