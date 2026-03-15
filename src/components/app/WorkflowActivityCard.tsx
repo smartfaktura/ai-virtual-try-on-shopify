@@ -223,8 +223,8 @@ export function WorkflowActivityCard({
               </p>
               <p className="text-xs text-muted-foreground truncate">
                 {group.totalCount > 1
-                  ? `${group.failedCount} of ${group.totalCount} batches failed`
-                  : 'Generation failed'}
+                  ? `${group.failedCount} of ${group.totalCount} images failed`
+                  : '1 image failed'}
                 {group.jobs[0]?.error_message
                   ? ` · ${group.jobs[0].error_message.slice(0, 60)}`
                   : ''}
