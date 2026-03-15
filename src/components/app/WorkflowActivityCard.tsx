@@ -148,7 +148,12 @@ export function WorkflowActivityCard({
               </div>
 
               {isBatch && (
-                <Progress value={progressPct} className="h-1.5" />
+                <div className="relative">
+                  <Progress value={progressPct} className="h-1.5" />
+                  <span className="absolute right-0 -top-4 text-[10px] text-muted-foreground font-medium">
+                    {group.completedCount}/{group.totalCount}
+                  </span>
+                </div>
               )}
             </CardContent>
           </Card>
