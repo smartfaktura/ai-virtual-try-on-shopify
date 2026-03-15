@@ -87,6 +87,8 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
   const [isExpanded, setIsExpanded] = useState(false);
   const { columns: expandedColumns, setColumns: setExpandedColumns, options: columnOptions } = useExpandedColumns();
+  const { asPoses: customPoses } = useCustomScenes();
+  const { filterVisible } = useHiddenScenes();
 
   const allPoses = [...filterVisible(mockTryOnPoses), ...customPoses];
   const allCategories = Object.keys(poseCategoryLabels) as PoseCategory[];
