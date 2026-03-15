@@ -314,6 +314,20 @@ export function useGeneratePerspectives() {
       return null;
     }
 
+    // Pre-flight: check active jobs to avoid 429s
+    const { count: activeJobCount } = await supabase
+      .from('generation_queue')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['queued', 'processing'])
+      .eq('user_id', user.id);
+
+    if ((activeJobCount || 0) + totalJobs > 4) {
+      toast.error(`You have ${activeJobCount} active jobs. Wait for them to finish before starting ${totalJobs} more.`);
+      setIsGenerating(false);
+      return null;
+    }
+
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
     const batchId = crypto.randomUUID();
     let enqueuedCount = 0;
     const jobs: PerspectiveJobInfo[] = [];
@@ -401,7 +415,7 @@ export function useGeneratePerspectives() {
                 break;
               }
               if (response.status === 429) {
-                toast.error(errorData.message || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
+                toast.error(errorData.error || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
                 shouldStop = true;
                 break;
               }
@@ -419,6 +433,9 @@ export function useGeneratePerspectives() {
             });
             enqueuedCount++;
             setProgress(Math.round((enqueuedCount / totalJobs) * 100));
+
+            // Stagger enqueue calls to avoid hitting concurrency limits
+            if (enqueuedCount < totalJobs) await sleep(500);
           } catch (err) {
             console.error('Enqueue error:', err);
             continue;

@@ -1,53 +1,30 @@
 
 
-## Fix: Perspectives 429 Rate Limit Crash
+## Product Perspectives — Implemented ✅
 
-### Problem
-When generating perspectives, all 4 jobs are enqueued rapidly back-to-back. If the user has any existing running/processing jobs, or if the enqueue endpoint processes them faster than expected, the concurrency limit of 4 is hit and subsequent enqueue calls return 429. While the `shouldStop` flag prevents further attempts, the rapid-fire enqueue causes partial failures and the Lovable error overlay fires.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Root Cause
-The hook fires all `fetch` calls to `enqueue-generation` in a tight loop with no delay between them. The backend counts concurrent jobs and rejects when >= 4 are active.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### Solution
-Two changes:
-
-#### 1. `src/hooks/useGeneratePerspectives.ts` — Add delay between enqueue calls + pre-flight queue check
-
-- **Pre-flight check**: Before the enqueue loop, query the `generation_queue` table for active jobs (`status in ('queued', 'processing')`). If count >= max (4), show a toast and bail early instead of starting and failing.
-- **Staggered enqueue**: Add a 500ms `await sleep()` between each enqueue call to prevent rapid-fire 429s. The backend needs time to register each job before the next one arrives.
-
-```typescript
-// Pre-flight check
-const { count } = await supabase
-  .from('generation_queue')
-  .select('*', { count: 'exact', head: true })
-  .in('status', ['queued', 'processing'])
-  .eq('user_id', user.id);
-
-if ((count || 0) + totalJobs > 4) {
-  toast.error(`You have ${count} active jobs. Wait for them to finish before starting ${totalJobs} more.`);
-  return null;
-}
-
-// Between enqueue calls
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-// ... after each successful enqueue:
-await sleep(500);
-```
-
-#### 2. `src/hooks/useGeneratePerspectives.ts` — Better 429 error message
-
-Change the toast from `errorData.message` (which is undefined — the response has `error`, not `message`) to `errorData.error`:
-
-```typescript
-// Before:
-toast.error(errorData.message || `Rate limit reached...`);
-// After:
-toast.error(errorData.error || `Rate limit reached...`);
-```
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
 ### Files changed
-| File | Change |
-|------|--------|
-| `src/hooks/useGeneratePerspectives.ts` | Add pre-flight queue check, stagger enqueue calls with 500ms delay, fix error field name |
-
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
