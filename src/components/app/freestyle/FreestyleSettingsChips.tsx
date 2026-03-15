@@ -214,7 +214,7 @@ export function FreestyleSettingsChips({
             : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
           {cameraStyle === 'natural' ? <Smartphone className="w-3.5 h-3.5" /> : <Camera className="w-3.5 h-3.5" />}
-          {cameraStyle === 'natural' ? 'Natural' : 'Pro'}
+          Camera
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
       </PopoverTrigger>
