@@ -989,7 +989,7 @@ serve(async (req) => {
               const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
                 auth: { persistSession: false },
               });
-              await supabase.from('freestyle_generations').insert({
+              const { error: insertErr } = await supabase.from('freestyle_generations').insert({
                 user_id: userId,
                 image_url: publicUrl,
                 prompt: body.prompt || '',
@@ -999,7 +999,11 @@ serve(async (req) => {
                 scene_id: body.sceneId || null,
                 product_id: body.productId || null,
               });
-              console.log(`Saved freestyle_generations record for image ${i + 1}`);
+              if (insertErr) {
+                console.error(`Failed to save freestyle_generations:`, insertErr.message);
+              } else {
+                console.log(`Saved freestyle_generations record for image ${i + 1}`);
+              }
             } catch (dbErr) {
               console.error(`Failed to save freestyle_generations record:`, dbErr);
             }

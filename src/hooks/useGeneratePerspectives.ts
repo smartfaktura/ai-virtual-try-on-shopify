@@ -224,7 +224,8 @@ export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions
             polishPrompt: false, // Skip generic polisher — prompt is fully built
             imageCount: 1,
             batch_id: batchId,
-            productId: product.id === 'direct' ? null : product.id,
+            // Nullify synthetic IDs (library/scratch) that aren't real user_products UUIDs
+            productId: ['direct', 'fs-', 'job-'].some(prefix => product.id.startsWith(prefix)) ? null : product.id,
             // Perspective-specific flags
             isPerspective: true,
             forceProModel: true,
