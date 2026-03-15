@@ -101,20 +101,29 @@ export function ActivityFeed() {
       // Recent freestyle generations
       const { data: freestyles } = await supabase
         .from('freestyle_generations')
-        .select('id, prompt, quality, created_at')
+        .select('id, prompt, quality, created_at, workflow_label')
         .order('created_at', { ascending: false })
         .limit(3);
 
       for (const f of freestyles ?? []) {
-        const truncated = f.prompt.length > 30 ? f.prompt.slice(0, 30) + '…' : f.prompt;
         const isUpscaled = f.quality?.startsWith('upscaled_');
         const resolution = f.quality?.includes('4k') ? '4K' : '2K';
+        const hasWorkflowLabel = f.workflow_label && f.workflow_label.length > 0;
+        const truncated = f.prompt.length > 30 ? f.prompt.slice(0, 30) + '…' : f.prompt;
+
+        let text: string;
+        if (isUpscaled) {
+          text = `Enhanced to ${resolution} — "${truncated}"`;
+        } else if (hasWorkflowLabel) {
+          text = `${f.workflow_label} completed`;
+        } else {
+          text = `Freestyle "${truncated}" generated`;
+        }
+
         items.push({
-          id: `freestyle-${f.id}`,
-          icon: isUpscaled ? Sparkles : Sparkles,
-          text: isUpscaled
-            ? `Enhanced to ${resolution} — "${truncated}"`
-            : `Freestyle "${truncated}" generated`,
+          id: hasWorkflowLabel ? `perspectives-${f.id}` : `freestyle-${f.id}`,
+          icon: Sparkles,
+          text,
           time: formatDistanceToNow(new Date(f.created_at), { addSuffix: true }),
           sortDate: new Date(f.created_at),
         });
