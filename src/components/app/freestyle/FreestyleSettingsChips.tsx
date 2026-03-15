@@ -331,6 +331,7 @@ export function FreestyleSettingsChips({
                   modal={isMobile}
                 />
               </div>
+              {aspectRatioChip}
               <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
                 <ModelSelectorChip
                   selectedModel={selectedModel}
@@ -356,18 +357,16 @@ export function FreestyleSettingsChips({
                 onOpenChange={onFramingPopoverChange}
                 modal={isMobile}
               />
-              {aspectRatioChip}
               {qualityChip}
               {cameraStyleChip}
               <CollapsibleTrigger asChild>
                 <button className={cn(
-                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                  'inline-flex items-center gap-1 h-8 px-2 rounded-full text-xs font-medium border transition-colors',
                   advancedActiveCount > 0
                     ? 'border-primary/30 bg-primary/10 text-primary'
                     : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
                 )}>
                   <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-                  <span>Style</span>
                   {advancedActiveCount > 0 && (
                     <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center shrink-0">
                       {advancedActiveCount}
