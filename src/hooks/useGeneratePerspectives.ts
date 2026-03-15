@@ -264,10 +264,12 @@ export function useGeneratePerspectives() {
 
               if (response.status === 402) {
                 toast.error(`Insufficient credits. ${enqueuedCount} of ${totalJobs} queued.`);
+                shouldStop = true;
                 break;
               }
               if (response.status === 429) {
                 toast.error(errorData.message || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
+                shouldStop = true;
                 break;
               }
 
