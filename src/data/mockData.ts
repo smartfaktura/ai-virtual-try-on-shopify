@@ -1261,6 +1261,12 @@ const sceneTropicalLeaves = getLandingAssetUrl('scenes/scene-tropical-leaves.jpg
 const sceneDriedFlowers = getLandingAssetUrl('scenes/scene-dried-flowers.jpg');
 const sceneBeachSand = getLandingAssetUrl('scenes/scene-beach-sand.jpg');
 const sceneStonePath = getLandingAssetUrl('scenes/scene-stone-path.jpg');
+const sceneRawConcrete = getLandingAssetUrl('scenes/scene-raw-concrete.jpg');
+const sceneWarmWoodGrain = getLandingAssetUrl('scenes/scene-warm-wood-grain.jpg');
+const sceneLinenFabric = getLandingAssetUrl('scenes/scene-linen-fabric.jpg');
+const sceneBathroomShelf = getLandingAssetUrl('scenes/scene-bathroom-shelf.jpg');
+const sceneWaterSplash = getLandingAssetUrl('scenes/scene-water-splash.jpg');
+const sceneFloatingLevitation = getLandingAssetUrl('scenes/scene-floating-levitation.jpg');
 
 export const mockModels: ModelProfile[] = [
   // Priority sequence matching landing page marquee ROW_1
