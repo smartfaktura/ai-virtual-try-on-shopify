@@ -53,7 +53,26 @@ export function useSceneSortOrder() {
     });
   };
 
-  return { sortMap, categoryMap, sortScenes, isLoading };
+  const applyCategoryOverrides = <T extends TryOnPose>(poses: T[]): T[] => {
+    if (categoryMap.size === 0) return poses;
+    return poses.map(p => {
+      const override = categoryMap.get(p.poseId);
+      return override ? { ...p, category: override as T['category'] } : p;
+    });
+  };
+
+  const deriveCategoryOrder = <T extends TryOnPose>(poses: T[]): string[] => {
+    if (sortMap.size === 0) return [];
+    const catMin = new Map<string, number>();
+    poses.forEach(p => {
+      const order = sortMap.get(p.poseId) ?? 9999;
+      const cur = catMin.get(p.category);
+      if (cur === undefined || order < cur) catMin.set(p.category, order);
+    });
+    return [...catMin.entries()].sort((a, b) => a[1] - b[1]).map(([cat]) => cat);
+  };
+
+  return { sortMap, categoryMap, sortScenes, applyCategoryOverrides, deriveCategoryOrder, isLoading };
 }
 
 export function useSaveSceneSortOrder() {
