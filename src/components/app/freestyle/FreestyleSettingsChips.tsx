@@ -379,7 +379,7 @@ export function FreestyleSettingsChips({
                   )}
                   <ChevronDown className={cn('w-3 h-3 opacity-40 transition-transform', advancedOpen && 'rotate-180')} />
                 </button>
-              </CollapsibleTrigger></div>
+              </CollapsibleTrigger>
             </div>
 
             <CollapsibleContent className="pt-2">
