@@ -45,11 +45,11 @@ interface VariationType {
 }
 
 const FALLBACK_VARIATIONS: VariationType[] = [
-  { id: 'closeup', label: 'Close-up / Macro', instruction: 'Extreme close-up macro detail shot...', category: 'detail', referenceUpload: null },
+  { id: 'closeup', label: 'Close-up / Macro', instruction: 'Extreme close-up macro detail shot...', category: 'detail', referenceUpload: { prompt: 'Upload a close-up reference of your product for best results (optional)', recommended: true } },
   { id: 'back', label: 'Back Angle', instruction: 'Rear view...', category: 'angle', referenceUpload: { prompt: 'Upload a back view of your product for best results (optional)', recommended: true } },
-  { id: 'left', label: 'Left Side', instruction: 'Left side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a left side view for better accuracy (optional)', recommended: false } },
-  { id: 'right', label: 'Right Side', instruction: 'Right side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a right side view for better accuracy (optional)', recommended: false } },
-  { id: 'wide', label: 'Wide / Environment', instruction: 'Pulled-back contextual shot...', category: 'context', referenceUpload: null },
+  { id: 'left', label: 'Left Side', instruction: 'Left side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a left side view of your product for best results (optional)', recommended: true } },
+  { id: 'right', label: 'Right Side', instruction: 'Right side profile...', category: 'angle', referenceUpload: { prompt: 'Upload a right side view of your product for best results (optional)', recommended: true } },
+  { id: 'wide', label: 'Wide / Environment', instruction: 'Pulled-back contextual shot...', category: 'context', referenceUpload: { prompt: 'Upload a wide/environment reference of your product for best results (optional)', recommended: true } },
 ];
 
 const VARIATION_ICONS: Record<string, typeof ZoomIn> = {
@@ -933,41 +933,6 @@ export default function Perspectives() {
                     </div>
                   )}
 
-                  {/* Non-recommended reference upload (show toggle) */}
-                  {hasRefUpload && !v.referenceUpload!.recommended && (
-                    <div className="mt-2">
-                      {referenceImages[i] ? (
-                        <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-muted/30">
-                          <img src={referenceImages[i]} alt="Reference" className="w-16 h-16 rounded-xl object-cover border border-border" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">Reference uploaded</p>
-                          </div>
-                          <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={() => {
-                            const newRefs = { ...referenceImages };
-                            delete newRefs[i];
-                            setReferenceImages(newRefs);
-                          }}>
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted/50">
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Add reference image (optional)</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={e => {
-                              const file = e.target.files?.[0];
-                              if (file) handleReferenceUpload(i, file);
-                            }}
-                            disabled={uploadingRefIndex === i}
-                          />
-                        </label>
-                      )}
-                    </div>
-                  )}
                 </div>
               );
             })}
