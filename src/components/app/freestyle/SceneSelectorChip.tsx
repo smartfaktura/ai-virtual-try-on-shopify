@@ -213,7 +213,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             <ChevronDown className="w-3 h-3 opacity-40" />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-96 p-3" align="start">
+        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-3" align="start">
           <div className="flex items-center justify-between mb-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
               Scene / Environment
