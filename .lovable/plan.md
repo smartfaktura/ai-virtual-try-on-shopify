@@ -1,35 +1,21 @@
 
 
-## Fix Product Perspectives in Generate Page
+## Product Perspectives — Implemented ✅
 
-### Problems
-1. **Missing "From Library" source option** — The `SourceTypeSelector` component only has "From Product(s)" and "From Scratch". The Product Perspectives workflow needs a third "From Library" option to let users pick from previously generated images.
-2. **Brand step shouldn't appear** — The stepper shows "Brand" as step 2, but brand selection isn't relevant for the Perspectives workflow. The flow should go: Source → Settings → Results.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Changes
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
 
-#### 1. `src/components/app/SourceTypeSelector.tsx`
-- Add a `showLibrary` prop (default `false`)
-- When `true`, add a third card: "From Library" with `id: 'library'` and an `ImageIcon` icon
-- Update `GenerationSourceType` in `src/types/index.ts` to include `'library'` if not already there
-
-#### 2. `src/types/index.ts`
-- Check if `GenerationSourceType` includes `'library'` — add it if missing
-
-#### 3. `src/pages/Generate.tsx`
-- For the Product Perspectives workflow (variation strategy type `'angle'`), pass `showLibrary={true}` to `SourceTypeSelector`
-- Skip the `brand-profile` step for this workflow — after product/library/upload selection, go directly to `settings`
-- Update `getSteps()` to return `[Source, Settings, Results]` for angle-type workflows (no Brand step)
-- Update `getStepNumber()` accordingly
-- When `sourceType === 'library'`, show a library image picker grid (similar to the one in `Perspectives.tsx`) — fetch from `freestyle_generations` and `generation_jobs`, allow multi-select up to 10
-- Wire the selected library items into the generation payload the same way products are handled
-
-#### 4. Step flow for Product Perspectives
-```
-Source (product / library / scratch) → Settings (angle checkboxes + ratios) → Results
-```
-No brand step. The `handleProductSelect` and upload continue handlers should skip `brand-profile` when the workflow is Product Perspectives (angle type).
-
-### Summary
-Two targeted fixes: add "From Library" as a third source card option, and skip the Brand step for angle-type workflows. The library picker reuses the query pattern already built in `Perspectives.tsx`.
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route

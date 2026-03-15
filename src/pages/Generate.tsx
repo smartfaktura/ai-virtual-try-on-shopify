@@ -93,7 +93,7 @@ const FLAT_LAY_AESTHETICS = [
   { id: 'seasonal', label: 'Seasonal', hint: 'seasonal elements matching current time of year' },
 ];
 
-type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
+type Step = 'source' | 'product' | 'upload' | 'library' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
 export default function Generate() {
   const navigate = useNavigate();
@@ -194,6 +194,40 @@ export default function Generate() {
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
+  const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
+  const [librarySearchQuery, setLibrarySearchQuery] = useState('');
+
+  // Fetch library items for "From Library" source
+  const { data: libraryItems = [], isLoading: isLoadingLibrary } = useQuery({
+    queryKey: ['generate-library-items', user?.id],
+    queryFn: async () => {
+      const [fsResult, jobsResult] = await Promise.all([
+        supabase.from('freestyle_generations').select('id, image_url, prompt, created_at').order('created_at', { ascending: false }).limit(50),
+        supabase.from('generation_jobs').select('id, results, created_at, status, prompt_final').eq('status', 'completed').order('created_at', { ascending: false }).limit(50),
+      ]);
+      const items: Array<{ id: string; imageUrl: string; label: string; createdAt: string }> = [];
+      if (fsResult.data) {
+        for (const f of fsResult.data) {
+          items.push({ id: `fs-${f.id}`, imageUrl: f.image_url, label: f.prompt?.slice(0, 60) || 'Freestyle', createdAt: f.created_at });
+        }
+      }
+      if (jobsResult.data) {
+        for (const job of jobsResult.data) {
+          const results = job.results as any;
+          if (!Array.isArray(results)) continue;
+          for (let i = 0; i < results.length; i++) {
+            const r = results[i];
+            const url = typeof r === 'string' ? r : r?.url || r?.image_url;
+            if (!url || url.startsWith('data:')) continue;
+            items.push({ id: `job-${job.id}-${i}`, imageUrl: url, label: job.prompt_final?.slice(0, 60) || 'Generated', createdAt: job.created_at });
+          }
+        }
+      }
+      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return items;
+    },
+    enabled: !!user?.id && sourceType === 'library',
+  });
 
   const { upload: uploadFile, isUploading } = useFileUpload();
 
@@ -268,6 +302,7 @@ export default function Generate() {
   // Flat Lay Set detection and state
   const isFlatLay = activeWorkflow?.name === 'Flat Lay Set';
   const isUpscale = activeWorkflow?.name === 'Image Upscaling';
+  const isAngleWorkflow = variationStrategy?.type === 'angle';
   const [flatLayPhase, setFlatLayPhase] = useState<'surfaces' | 'details'>('surfaces');
   const [upscaleResolution, setUpscaleResolution] = useState<'2k' | '4k'>('2k');
   const [stylingNotes, setStylingNotes] = useState('');
@@ -543,6 +578,11 @@ export default function Generate() {
     if (detectedFraming) setFraming(detectedFraming);
     // Upscale workflow: skip straight to settings
     if (isUpscale) {
+      setCurrentStep('settings');
+      return;
+    }
+    // Angle workflow: skip brand profile, go straight to settings
+    if (isAngleWorkflow) {
       setCurrentStep('settings');
       return;
     }
@@ -1394,6 +1434,10 @@ export default function Generate() {
       const map: Record<string, number> = { source: 1, upload: 2, settings: 3, generating: 4, results: 4 };
       return map[currentStep] || 1;
     }
+    if (isAngleWorkflow) {
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, library: 1, settings: 2, generating: 3, results: 3 };
+      return map[currentStep] || 1;
+    }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
         const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, settings: 4, generating: 5, results: 5 };
@@ -1447,6 +1491,13 @@ export default function Generate() {
     }
     if (isInteriorDesign) {
       return [{ name: 'Type' }, { name: 'Upload Photo' }, { name: 'Style' }, { name: 'Results' }];
+    }
+    if (isAngleWorkflow) {
+      return [
+        { name: sourceType === 'scratch' ? 'Source' : sourceType === 'library' ? 'Library' : 'Product(s)' },
+        { name: 'Settings' },
+        { name: 'Results' },
+      ];
     }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
@@ -1627,10 +1678,10 @@ export default function Generate() {
                 </button>
               </div>
             ) : (
-              <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); }} />
+              <SourceTypeSelector sourceType={sourceType} onChange={type => { setSourceType(type); setSelectedProduct(null); setScratchUpload(null); setSelectedLibraryIds(new Set()); }} showLibrary={isAngleWorkflow} />
             )}
             <div className="flex justify-end">
-              <Button onClick={() => setCurrentStep(sourceType === 'product' ? 'product' : 'upload')}>Continue</Button>
+              <Button onClick={() => setCurrentStep(sourceType === 'product' ? 'product' : sourceType === 'library' ? 'library' as Step : 'upload')}>Continue</Button>
             </div>
           </CardContent></Card>
         )}
@@ -2042,6 +2093,8 @@ export default function Generate() {
                       setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'model');
                     } else if (isInteriorDesign) {
                       setCurrentStep('settings');
+                    } else if (isAngleWorkflow) {
+                      setCurrentStep('settings');
                     } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.skip_template && hasWorkflowConfig) {
@@ -2079,6 +2132,15 @@ export default function Generate() {
               </div>
               <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
             </div>
+
+            {isAngleWorkflow && (
+              <Alert className="border-primary/20 bg-primary/5">
+                <Info className="w-4 h-4 text-primary" />
+                <AlertDescription className="text-xs text-muted-foreground">
+                  The primary product image will be used as the source for perspective generation.
+                </AlertDescription>
+              </Alert>
+            )}
 
             {/* Show real DB products for all workflows */}
             {isLoadingUserProducts ? (
@@ -2512,6 +2574,8 @@ export default function Generate() {
                     if (cat) setSelectedCategory(cat);
                     if (isUpscale) {
                        setCurrentStep('settings');
+                     } else if (isAngleWorkflow) {
+                       setCurrentStep('settings');
                      } else if (brandProfiles.length > 0) {
                        setCurrentStep('brand-profile');
                      } else if (uiConfig?.show_model_picker) {
@@ -2535,6 +2599,8 @@ export default function Generate() {
                     if (cat) setSelectedCategory(cat);
                     if (isUpscale) {
                       setCurrentStep('settings');
+                    } else if (isAngleWorkflow) {
+                      setCurrentStep('settings');
                     } else if (brandProfiles.length > 0) {
                       setCurrentStep('brand-profile');
                     } else if (uiConfig?.show_model_picker) {
@@ -2550,6 +2616,123 @@ export default function Generate() {
                 }
               }}>
                 {selectedProductIds.size === 0 ? 'Select at least 1' : activeWorkflow?.uses_tryon ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : isFlatLay ? `Continue with ${selectedProductIds.size} product${selectedProductIds.size > 1 ? 's' : ''}` : selectedProductIds.size === 1 ? 'Continue with 1 product' : `Continue with ${selectedProductIds.size} products`}
+              </Button>
+            </div>
+          </CardContent></Card>
+        )}
+
+        {/* Library Selection Step */}
+        {currentStep === 'library' && (
+          <Card><CardContent className="p-5 space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold">Select from Library</h2>
+                <p className="text-sm text-muted-foreground">Choose up to 10 previously generated images to create new perspectives from.</p>
+              </div>
+              <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search by prompt..."
+                value={librarySearchQuery}
+                onChange={e => setLibrarySearchQuery(e.target.value)}
+                className="h-8 text-xs pl-8"
+              />
+            </div>
+
+            {selectedLibraryIds.size > 0 && (
+              <div className="flex gap-2 items-center">
+                <Badge variant="default">{selectedLibraryIds.size} selected</Badge>
+                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setSelectedLibraryIds(new Set())}>Clear</Button>
+              </div>
+            )}
+
+            {isLoadingLibrary ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : libraryItems.length === 0 ? (
+              <div className="text-center py-10 space-y-3">
+                <Image className="w-12 h-12 mx-auto text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">No generated images in your library yet.</p>
+                <p className="text-xs text-muted-foreground">Generate some images first, then come back here to create new perspectives.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                {libraryItems
+                  .filter(item => !librarySearchQuery || item.label.toLowerCase().includes(librarySearchQuery.toLowerCase()))
+                  .map(item => {
+                    const isSelected = selectedLibraryIds.has(item.id);
+                    const isDisabled = !isSelected && selectedLibraryIds.size >= 10;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          const newSet = new Set(selectedLibraryIds);
+                          if (newSet.has(item.id)) { newSet.delete(item.id); }
+                          else if (newSet.size < 10) { newSet.add(item.id); }
+                          setSelectedLibraryIds(newSet);
+                        }}
+                        disabled={isDisabled}
+                        className={cn(
+                          'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
+                          isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
+                          isDisabled && 'opacity-40 cursor-not-allowed'
+                        )}
+                      >
+                        <div className={cn(
+                          'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
+                          isSelected
+                            ? 'border-primary bg-primary text-primary-foreground shadow-md'
+                            : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
+                        )}>
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                        <img src={item.imageUrl} alt={item.label} className="w-full aspect-square object-cover rounded-t-md" loading="lazy" />
+                        <div className="px-1.5 py-1.5 bg-card">
+                          <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{item.label}</p>
+                          <p className="text-[9px] text-muted-foreground truncate mt-0.5">
+                            {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
+              <Button disabled={selectedLibraryIds.size === 0} onClick={() => {
+                // Map selected library items to products for the generation pipeline
+                const selected = libraryItems.filter(item => selectedLibraryIds.has(item.id));
+                if (selected.length === 1) {
+                  const item = selected[0];
+                  setSelectedProduct({
+                    id: item.id, title: item.label, vendor: 'Library', productType: 'Generated',
+                    tags: [], description: '', images: [{ id: item.id, url: item.imageUrl }],
+                    status: 'active', createdAt: item.createdAt, updatedAt: item.createdAt,
+                  });
+                  setSelectedSourceImages(new Set([item.id]));
+                  setCurrentStep('settings');
+                } else {
+                  const mappedProducts = selected.map(item => ({
+                    id: item.id, title: item.label, vendor: 'Library', productType: 'Generated',
+                    tags: [] as string[], description: '', images: [{ id: item.id, url: item.imageUrl }],
+                    status: 'active' as const, createdAt: item.createdAt, updatedAt: item.createdAt,
+                  }));
+                  setProductQueue(mappedProducts);
+                  setCurrentProductIndex(0);
+                  setMultiProductResults(new Map());
+                  setSelectedProduct(mappedProducts[0]);
+                  setSelectedSourceImages(new Set([mappedProducts[0].images[0].id]));
+                  setCurrentStep('settings');
+                }
+              }}>
+                {selectedLibraryIds.size === 0 ? 'Select at least 1' : `Continue with ${selectedLibraryIds.size} image${selectedLibraryIds.size > 1 ? 's' : ''}`}
               </Button>
             </div>
           </CardContent></Card>

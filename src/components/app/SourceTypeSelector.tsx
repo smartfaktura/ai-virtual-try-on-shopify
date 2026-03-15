@@ -1,18 +1,25 @@
-import { Package, Upload } from 'lucide-react';
+import { Package, Upload, ImageIcon } from 'lucide-react';
 import type { GenerationSourceType } from '@/types';
 
 interface SourceTypeSelectorProps {
   sourceType: GenerationSourceType;
   onChange: (sourceType: GenerationSourceType) => void;
+  showLibrary?: boolean;
 }
 
-export function SourceTypeSelector({ sourceType, onChange }: SourceTypeSelectorProps) {
+export function SourceTypeSelector({ sourceType, onChange, showLibrary = false }: SourceTypeSelectorProps) {
   const options: Array<{
     id: GenerationSourceType;
     title: string;
     description: string;
     icon: typeof Package;
   }> = [
+    ...(showLibrary ? [{
+      id: 'library' as GenerationSourceType,
+      title: 'From Library',
+      description: 'Select from your previously generated images',
+      icon: ImageIcon,
+    }] : []),
     {
       id: 'product',
       title: 'From Product(s)',
@@ -28,7 +35,7 @@ export function SourceTypeSelector({ sourceType, onChange }: SourceTypeSelectorP
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className={`grid grid-cols-1 ${showLibrary ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-4`}>
       {options.map((option) => (
         <button
           key={option.id}
