@@ -28,7 +28,7 @@ interface FramingSelectorChipProps {
   fullWidth?: boolean;
 }
 
-export function FramingSelectorChip({ framing, onFramingChange, open, onOpenChange, modal }: FramingSelectorChipProps) {
+export function FramingSelectorChip({ framing, onFramingChange, open, onOpenChange, modal, fullWidth }: FramingSelectorChipProps) {
   const selectedOption = FRAMING_OPTIONS.find(o => o.value === framing);
 
   return (
