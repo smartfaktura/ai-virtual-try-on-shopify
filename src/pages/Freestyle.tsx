@@ -99,6 +99,25 @@ export default function Freestyle() {
     localStorage.setItem('freestyle_guide_dismissed', 'true');
   }, []);
 
+  const handleReset = useCallback(() => {
+    setPrompt('');
+    setSourceImage(null);
+    setSourceImagePreview(null);
+    setSelectedModel(null);
+    setSelectedScene(null);
+    setSelectedProduct(null);
+    setAspectRatio('1:1');
+    setQuality('standard');
+    setPolishPrompt(true);
+    setStylePresets([]);
+    setNegatives([]);
+    setCameraStyle('pro');
+    setFraming(null);
+    setSelectedBrandProfile(null);
+  }, []);
+
+  const isDirty = prompt !== '' || sourceImage !== null || sourceImagePreview !== null || selectedModel !== null || selectedScene !== null || selectedProduct !== null || aspectRatio !== '1:1' || quality !== 'standard' || !polishPrompt || stylePresets.length > 0 || negatives.length > 0 || cameraStyle !== 'pro' || framing !== null || selectedBrandProfile !== null;
+
   const highlightedChip: GuideStepKey | null = showGuide ? GUIDE_STEPS[guideStep]?.key ?? null : null;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -585,6 +604,8 @@ export default function Freestyle() {
     isCollapsed: isPromptCollapsed,
     onToggleCollapse: () => setIsPromptCollapsed(prev => !prev),
     highlightedChip,
+    onReset: handleReset,
+    isDirty,
   };
 
   return (
