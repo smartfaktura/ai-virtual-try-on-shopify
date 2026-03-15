@@ -1266,7 +1266,7 @@ const sceneRawConcrete = `${WORKFLOW_PREVIEW_BASE}/scene-6.png`;
 const sceneWarmWoodGrain = `${WORKFLOW_PREVIEW_BASE}/scene-7.png`;
 const sceneLinenFabric = `${WORKFLOW_PREVIEW_BASE}/scene-8.png`;
 const sceneBathroomShelf = `${WORKFLOW_PREVIEW_BASE}/scene-10.png`;
-const sceneWaterSplash = `${WORKFLOW_PREVIEW_BASE}/scene-16.png`;
+
 const sceneFloatingLevitation = `${WORKFLOW_PREVIEW_BASE}/scene-20.png`;
 
 export const mockModels: ModelProfile[] = [
