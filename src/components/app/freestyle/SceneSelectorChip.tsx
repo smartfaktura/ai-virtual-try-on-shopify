@@ -157,7 +157,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
   );
 
   const renderGrid = (expanded: boolean) => (
-    <div className={cn('overflow-y-auto space-y-3 pr-1', expanded ? 'max-h-[70vh]' : 'max-h-72')}>
+    <div className={cn('overflow-y-auto space-y-3 pr-1', expanded ? 'max-h-[70vh]' : 'max-h-72 lg:max-h-96')}>
       {visibleCategories.map(cat => {
         const poses = allPoses.filter(p => p.category === cat);
         if (poses.length === 0) return null;
@@ -166,7 +166,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5 px-1">
               {poseCategoryLabels[cat]}
             </p>
-            <div className={cn('grid gap-1.5', expanded ? `gap-2` : 'grid-cols-3')} style={expanded ? { gridTemplateColumns: `repeat(${expandedColumns}, minmax(0, 1fr))` } : undefined}>
+            <div className={cn('grid gap-1.5', expanded ? `gap-2` : 'grid-cols-3 lg:gap-2')} style={expanded ? { gridTemplateColumns: `repeat(${expandedColumns}, minmax(0, 1fr))` } : undefined}>
               {poses.map(pose => (
                 <button
                   key={pose.poseId}
@@ -180,7 +180,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
                 >
                   <img src={pose.previewUrl} alt={pose.name} className="w-full aspect-[4/5] object-cover" />
                   <div className="px-1.5 py-1 bg-background">
-                    <p className={cn('font-medium text-foreground leading-tight truncate', expanded ? 'text-[10px]' : 'text-[9px]')}>{pose.name}</p>
+                    <p className={cn('font-medium text-foreground leading-tight truncate', expanded ? 'text-[10px]' : 'text-[9px] lg:text-[11px]')}>{pose.name}</p>
                   </div>
                 </button>
               ))}
@@ -217,7 +217,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             <ChevronDown className="w-3 h-3 opacity-40" />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-3" align="start">
+        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 lg:w-[480px] p-3" align="start">
           <div className="flex items-center justify-between mb-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
               Scene / Environment
