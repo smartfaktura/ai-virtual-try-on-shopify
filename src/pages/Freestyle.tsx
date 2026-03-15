@@ -604,6 +604,8 @@ export default function Freestyle() {
     isCollapsed: isPromptCollapsed,
     onToggleCollapse: () => setIsPromptCollapsed(prev => !prev),
     highlightedChip,
+    onReset: handleReset,
+    isDirty,
   };
 
   return (
