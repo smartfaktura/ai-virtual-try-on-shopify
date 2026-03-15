@@ -148,7 +148,7 @@ export default function Perspectives() {
         .order('created_at', { ascending: false });
       return (data || []) as UserProduct[];
     },
-    enabled: !!user && sourceType === 'product',
+    enabled: !!user,
   });
 
   // ── Fetch library items ───────────────────────────────────────────────
