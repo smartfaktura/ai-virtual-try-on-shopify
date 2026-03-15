@@ -1,35 +1,30 @@
 
 
-## Improve BuyCreditsModal Header for Paid Subscribers
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-The modal header currently shows just the balance number and plan badge, but lacks key subscription info like renewal date and billing interval. For paid users, this is a missed opportunity to show plan context.
+### Issues Found
 
-### Change: Enhanced header in `BuyCreditsModal.tsx`
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-Replace the current balance header (lines 116-138) with a richer version for paid users that shows:
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-1. **Balance + plan badge** (keep existing)
-2. **Renewal info line** below the balance: "Renews [date] · [monthly/annual]" using `currentPeriodEnd` and `billingInterval` from `useCredits()`
-3. **Canceling status**: If `subscriptionStatus === 'canceling'`, show "Cancels on [date]" in amber/warning color instead
+### Plan
 
-For free users, keep the current simple header unchanged.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-**Implementation detail:**
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-```tsx
-{/* Below the balance row, inside the header div */}
-{isPaidUser && currentPeriodEnd && (
-  <p className="text-[11px] text-muted-foreground mt-1">
-    {subscriptionStatus === 'canceling' 
-      ? `Cancels ${currentPeriodEnd.toLocaleDateString(...)}`
-      : `Renews ${currentPeriodEnd.toLocaleDateString(...)} · billed ${effectiveInterval || 'monthly'}`
-    }
-  </p>
-)}
-```
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
 
-The `currentPeriodEnd` and `billingInterval` are already available from `useCredits()` and already destructured on line 16. No new data fetching needed.
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
 
-### Files
-- `src/components/app/BuyCreditsModal.tsx` — add renewal info to header
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

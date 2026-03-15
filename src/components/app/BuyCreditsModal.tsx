@@ -13,7 +13,7 @@ import type { PricingPlan } from '@/types';
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
 
 export function BuyCreditsModal() {
-  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, billingInterval, startCheckout, openCustomerPortal } = useCredits();
+  const { balance, plan, planConfig, buyModalOpen, closeBuyModal, subscriptionStatus, billingInterval, currentPeriodEnd, startCheckout, openCustomerPortal } = useCredits();
   const navigate = useNavigate();
 
   const effectiveInterval = billingInterval || (plan !== 'free' ? 'monthly' : null);
@@ -118,9 +118,19 @@ export function BuyCreditsModal() {
               <div className="p-2 rounded-xl bg-muted">
                 <Wallet className="w-4 h-4 text-foreground" />
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight">{balance.toLocaleString()}</span>
-                <span className="text-xs text-muted-foreground">credits</span>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold tracking-tight">{balance.toLocaleString()}</span>
+                  <span className="text-xs text-muted-foreground">credits</span>
+                </div>
+                {isPaidUser && currentPeriodEnd && (
+                  <p className={`text-[11px] mt-0.5 ${subscriptionStatus === 'canceling' ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                    {subscriptionStatus === 'canceling'
+                      ? `Cancels ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                      : `Renews ${currentPeriodEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · billed ${effectiveInterval || 'monthly'}`
+                    }
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
