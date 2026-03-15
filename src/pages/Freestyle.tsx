@@ -281,6 +281,8 @@ export default function Freestyle() {
       openBuyModal();
       return;
     }
+    setIsUploading(true);
+    try {
 
     // Upload images to storage instead of embedding base64 in payload
     // sourceImage = user-uploaded reference image (independent)
