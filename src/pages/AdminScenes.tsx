@@ -185,5 +185,3 @@ export default function AdminScenes() {
   );
 }
 
-// Re-export for use within this file
-import { useDeleteCustomScene } from '@/hooks/useCustomScenes';
