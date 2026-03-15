@@ -383,8 +383,8 @@ export function FreestyleSettingsChips({
             </div>
 
             <CollapsibleContent className="pt-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <BrandProfileChip
+              <div className="flex items-center gap-2 overflow-x-auto flex-nowrap scrollbar-none pb-1">
+                <div className="shrink-0"><BrandProfileChip
                   selectedProfile={selectedBrandProfile}
                   open={brandProfilePopoverOpen}
                   onOpenChange={onBrandProfilePopoverChange}
