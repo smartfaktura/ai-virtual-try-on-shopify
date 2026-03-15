@@ -36,9 +36,9 @@ export async function downloadDropAsZip(
       const contentType = response.headers.get('content-type');
       const ext = getExtensionFromContentType(contentType);
       const arrayBuffer = await response.arrayBuffer();
-      const folder = img.workflow_name || 'General';
+      const folder = (img.workflow_name || 'General').replace(/\//g, '–');
       const fileName = img.scene_name
-        ? `${img.scene_name}_${i + 1}${ext}`
+        ? `${img.scene_name.replace(/\//g, '–')}_${i + 1}${ext}`
         : `image_${i + 1}${ext}`;
       zip.file(`${folder}/${fileName}`, arrayBuffer, { binary: true });
     } catch {
