@@ -92,7 +92,7 @@ function ThumbnailCard({ job, signedUrl, onSelect }: { job: RecentJob; signedUrl
         </div>
 
         <span className="absolute bottom-1.5 right-1.5 bg-background/80 backdrop-blur text-[10px] font-semibold px-1.5 py-0.5 rounded">
-          {job.requested_count} imgs
+          {Array.isArray(job.results) ? (job.results as unknown[]).length : job.requested_count} imgs
         </span>
       </div>
       <div className="space-y-0.5 px-0.5">
