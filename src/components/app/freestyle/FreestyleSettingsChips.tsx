@@ -383,23 +383,23 @@ export function FreestyleSettingsChips({
             </div>
 
             <CollapsibleContent className="pt-2">
-              <div className="flex items-center gap-2 overflow-x-auto flex-nowrap scrollbar-none pb-1">
-                <div className="shrink-0"><BrandProfileChip
+              <div className="flex items-center gap-2 flex-wrap">
+                <BrandProfileChip
                   selectedProfile={selectedBrandProfile}
                   open={brandProfilePopoverOpen}
                   onOpenChange={onBrandProfilePopoverChange}
                   onSelect={onBrandProfileSelect}
                   profiles={brandProfiles}
                   isLoading={isLoadingBrandProfiles}
-                /></div>
-                <div className="shrink-0"><NegativesChip
+                />
+                <NegativesChip
                   negatives={negatives}
                   onNegativesChange={onNegativesChange}
                   open={negativesPopoverOpen}
                   onOpenChange={onNegativesPopoverChange}
-                /></div>
-                <div className="shrink-0">{polishChip}</div>
-                <div className="shrink-0">{presetsChip}</div>
+                />
+                {polishChip}
+                {presetsChip}
               </div>
             </CollapsibleContent>
           </Collapsible>
