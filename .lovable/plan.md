@@ -1,30 +1,29 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Add Column Selector to Expanded Scene Dialog
 
-### Issues Found
+Add a grid density toggle to the expanded (maximized) scene selector dialog, following the same pattern as the Library page's column selector.
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+### Column options per device
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+| Device | Options | Default |
+|---|---|---|
+| Desktop (≥1024px) | 4, 3, 2 | 4 |
+| Tablet (768-1023px) | 3, 2 | 3 |
+| Mobile (<768px) | 3, 2, 1 | 3 |
 
-### Plan
+### Changes
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**`src/components/app/freestyle/SceneSelectorChip.tsx`**
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+1. Add state for `expandedColumns` (persisted to `localStorage` key `scene-grid-columns`)
+2. Add viewport-aware column options using the same `getDeviceType` pattern from Jobs.tsx
+3. Render small column-count buttons (e.g., `[2] [3] [4]`) in the expanded dialog header, right-aligned next to "Clear selection"
+4. Pass `expandedColumns` to `renderGrid` and use it for the grid class: `grid-cols-{n}` instead of the current hardcoded `grid-cols-3 sm:grid-cols-4`
+5. Compact popover grid stays unchanged (always 3 columns)
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
-
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
-
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+### Files modified
+| File | Change |
+|---|---|
+| `src/components/app/freestyle/SceneSelectorChip.tsx` | Add column selector UI + state to expanded dialog |
 
