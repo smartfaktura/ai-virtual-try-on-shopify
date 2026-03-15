@@ -929,13 +929,22 @@ serve(async (req) => {
 
         const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
 
+        // For perspective jobs, inject referenceAngleImage as [REFERENCE IMAGE]
+        // with angle-aware semantics (the prompt already handles the labeling)
+        const effectiveSourceImage = isPerspective ? undefined : body.sourceImage;
         const contentArray = buildContentArray(
           promptWithVariation,
-          body.sourceImage,
+          effectiveSourceImage,
           body.productImage,
           body.modelImage,
           body.sceneImage,
         );
+
+        // Append referenceAngleImage as [REFERENCE IMAGE] for perspective jobs
+        if (isPerspective && referenceAngleImage) {
+          contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
+          contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
+        }
 
         const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
 
