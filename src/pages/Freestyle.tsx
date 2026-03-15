@@ -253,14 +253,9 @@ export default function Freestyle() {
     // If it's already a URL (not base64), return as-is
     if (!base64Data.startsWith('data:')) return base64Data;
 
-    // Convert base64 to blob
-    const [header, raw] = base64Data.split(',');
-    const mime = header.match(/:(.*?);/)?.[1] || 'image/png';
-    const byteString = atob(raw);
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-    const blob = new Blob([ab], { type: mime });
+    // Convert base64 to blob using non-blocking browser-native fetch
+    const response = await fetch(base64Data);
+    const blob = await response.blob();
 
     const ext = mime.split('/')[1] || 'png';
     const fileName = `${user.id}/${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
