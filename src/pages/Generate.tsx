@@ -581,6 +581,11 @@ export default function Generate() {
       setCurrentStep('settings');
       return;
     }
+    // Angle workflow: skip brand profile, go straight to settings
+    if (isAngleWorkflow) {
+      setCurrentStep('settings');
+      return;
+    }
     // Go to brand profile step if profiles exist
     if (brandProfiles.length > 0) {
       setCurrentStep('brand-profile');
