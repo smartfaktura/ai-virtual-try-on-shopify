@@ -194,6 +194,8 @@ export default function Generate() {
   const [scratchUpload, setScratchUpload] = useState<ScratchUpload | null>(null);
   const [assignToProduct, setAssignToProduct] = useState<Product | null>(null);
   const [productAssignmentModalOpen, setProductAssignmentModalOpen] = useState(false);
+  const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
+  const [librarySearchQuery, setLibrarySearchQuery] = useState('');
 
   const { upload: uploadFile, isUploading } = useFileUpload();
 
