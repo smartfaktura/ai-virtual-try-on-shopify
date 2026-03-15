@@ -2133,6 +2133,15 @@ export default function Generate() {
               <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
             </div>
 
+            {isAngleWorkflow && (
+              <Alert className="border-primary/20 bg-primary/5">
+                <Info className="w-4 h-4 text-primary" />
+                <AlertDescription className="text-xs text-muted-foreground">
+                  The primary product image will be used as the source for perspective generation.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Show real DB products for all workflows */}
             {isLoadingUserProducts ? (
               <div className="flex items-center justify-center py-12">
