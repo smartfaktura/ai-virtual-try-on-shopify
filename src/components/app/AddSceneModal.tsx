@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useAddCustomScene } from '@/hooks/useCustomScenes';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORIES = [
   'studio', 'lifestyle', 'editorial', 'streetwear', 'clean-studio',
