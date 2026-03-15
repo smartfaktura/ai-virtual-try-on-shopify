@@ -161,25 +161,24 @@ export const workflowScenes: Record<string, WorkflowScene> = {
     elements: [],
   },
 
-  'Product Perspectives': {
+  'Picture Perspectives': {
+    mode: 'carousel',
     background: listingResult,
+    backgrounds: [
+      listingResult,
+      getLandingAssetUrl('workflows/perspectives-closeup.jpg'),
+      getLandingAssetUrl('workflows/perspectives-back.jpg'),
+      getLandingAssetUrl('workflows/perspectives-wide.jpg'),
+    ],
     elements: [
       {
         type: 'product', image: listingProduct, label: 'HA Cream', sublabel: 'Product',
         icon: <Plus className="w-3 h-3" />,
-        position: { top: '10%', left: '6%' }, enterDelay: 0.3, animation: 'slide-left',
+        position: { top: '10%', left: '6%' }, enterDelay: 0, animation: 'slide-left',
       },
       {
         type: 'badge', label: '4 Angles', icon: <Camera className="w-3 h-3" />,
-        position: { top: '38%', right: '8%' }, enterDelay: 1.0, animation: 'slide-right',
-      },
-      {
-        type: 'badge', label: 'Close-up', icon: <Maximize2 className="w-3 h-3" />,
-        position: { bottom: '32%', left: '6%' }, enterDelay: 1.6, animation: 'slide-up',
-      },
-      {
-        type: 'badge', label: 'Back View', icon: <Star className="w-3 h-3" />,
-        position: { bottom: '14%', right: '8%' }, enterDelay: 2.2, animation: 'slide-right',
+        position: { bottom: '18%', left: '6%' }, enterDelay: 0, animation: 'slide-up',
       },
     ],
   },

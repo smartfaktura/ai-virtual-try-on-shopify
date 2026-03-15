@@ -60,8 +60,8 @@ const featureMap: Record<string, string[]> = {
     'Works with any product or uploaded image',
     '10 credits for 2K, 15 credits for 4K',
   ],
-  'Product Perspectives': [
-    'Generate close-up, back, side & wide angles from one image',
+  'Picture Perspectives': [
+    'Generate close-up, back, side & wide angles from any picture',
     'Strict identity preservation — no hallucinated details',
     'High quality Pro model for maximum fidelity',
     'All aspect ratios supported — portrait, square & landscape',

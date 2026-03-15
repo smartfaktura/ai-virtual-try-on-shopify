@@ -120,7 +120,7 @@ export default function Perspectives() {
       const { data } = await supabase
         .from('workflows')
         .select('*')
-        .eq('name', 'Product Perspectives')
+        .eq('name', 'Picture Perspectives')
         .single();
       return data;
     },
@@ -475,7 +475,7 @@ export default function Perspectives() {
   const genTotalCount = generatingJobs.length;
   const genAllDone = genTotalCount > 0 && Object.values(jobStatuses).every(s => s.status === 'completed' || s.status === 'failed' || s.status === 'cancelled');
   const genProgressPercent = genTotalCount > 0 ? (genCompletedCount / genTotalCount) * 100 : 0;
-  const estimatedSecondsPerImage = 90; // Pro model
+  const estimatedSecondsPerImage = 45; // Pro model
   const estimatedTotal = genTotalCount * estimatedSecondsPerImage;
 
   function formatTime(s: number) {
@@ -497,7 +497,7 @@ export default function Perspectives() {
             <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
               <Layers className="w-7 h-7 text-primary animate-pulse" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Creating Product Perspectives…</h1>
+            <h1 className="text-2xl font-bold text-foreground">Creating Picture Perspectives…</h1>
             <p className="text-sm text-muted-foreground">
               Generating {genTotalCount} angle{genTotalCount !== 1 ? 's' : ''}
               {generatingJobs[0] ? ` of ${generatingJobs[0].productTitle}` : ''}
@@ -635,7 +635,7 @@ export default function Perspectives() {
 
   return (
     <div className="min-h-screen">
-      <SEOHead title="Product Perspectives" description="Generate angle and detail variations of your product images." />
+      <SEOHead title="Picture Perspectives" description="Generate angle and detail variations from any image." />
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
@@ -645,9 +645,9 @@ export default function Perspectives() {
               <Layers className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Product Perspectives</h1>
+              <h1 className="text-2xl font-bold text-foreground">Picture Perspectives</h1>
               <p className="text-sm text-muted-foreground">
-                Generate close-ups, back views, side angles, and wide shots for a complete visual set.
+                Generate angle and detail variations — close-ups, back views, side angles, and wide shots from any image.
               </p>
             </div>
           </div>

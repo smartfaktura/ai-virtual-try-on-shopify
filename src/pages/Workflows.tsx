@@ -273,8 +273,8 @@ export default function Workflows() {
     recentJobs.length > 0;
 
   const handleCreateVisualSet = (workflow: Workflow) => {
-    // Product Perspectives uses its standalone single-page layout
-    if (workflow.name === 'Product Perspectives') {
+    // Picture Perspectives uses its standalone single-page layout
+    if (workflow.name === 'Picture Perspectives') {
       navigate('/app/perspectives');
       return;
     }
