@@ -97,6 +97,8 @@ export function FreestylePromptPanel({
   isCollapsed,
   onToggleCollapse,
   highlightedChip,
+  onReset,
+  isDirty,
 }: FreestylePromptPanelProps) {
   const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
