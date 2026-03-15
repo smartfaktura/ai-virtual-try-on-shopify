@@ -1,30 +1,71 @@
 
 
-## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
+## Refined Plan: Fix Mobile UI Freeze in Freestyle
 
-### Issues Found
+### Root Cause (confirmed)
 
-1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
+Lines 256-262 of `Freestyle.tsx` — the `uploadImageToStorage` function uses a synchronous `atob` + charCode loop to convert base64 to a Blob. For a 5-10MB mobile photo, this runs millions of iterations on the main thread, freezing the UI.
 
-2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
+Additionally, lines 318-319 and 332-333 do **unnecessary work**: model/scene images are already HTTPS URLs, but the code converts them to base64 via `convertImageToBase64`, then immediately converts back to blob for upload — a pointless round-trip that compounds the freeze.
 
-### Plan
+### Is the previous plan good? Mostly — but with refinements:
 
-**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
+**What was right:**
+- Replacing `atob` + loop with `fetch(dataUrl).then(r => r.blob())` — correct, this is the standard modern approach
+- Adding `isUploading` state for immediate feedback — correct
 
-**File: `src/pages/Generate.tsx`** (~line 2344-2357)
-- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
-- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
-- This visually distinguishes it as a premium AI-powered option
+**What needs adjustment:**
+- Storing raw `File` objects is unnecessary complexity. The simpler fix: just replace the blob conversion method inside `uploadImageToStorage` (3 lines changed vs. a full refactor)
+- Model/scene images: skip the `convertImageToBase64` call entirely — they're already HTTPS URLs, just pass them through. The edge function can fetch them directly.
 
-**2. Update AI Creative Pick instruction for bright aesthetic bias**
+### Refined plan (minimal, surgical)
 
-**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
-- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
-- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
-- "The image should feel vibrant, inviting, and commercially appealing"
+**File: `src/pages/Freestyle.tsx`**
 
-### Files Changed — 1 file + 1 migration
-- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
-- Database migration — Update AI Creative Pick instruction text
+**Change 1** — `uploadImageToStorage` (lines 256-262): Replace the blocking `atob` loop with browser-native `fetch`:
+
+```typescript
+// OLD (blocks main thread for seconds on mobile):
+const byteString = atob(raw);
+const ab = new ArrayBuffer(byteString.length);
+const ia = new Uint8Array(ab);
+for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+const blob = new Blob([ab], { type: mime });
+
+// NEW (non-blocking, browser-native):
+const response = await fetch(base64Data);
+const blob = await response.blob();
+```
+
+This eliminates the `[header, raw]` split, `atob`, and loop entirely — just 2 lines.
+
+**Change 2** — `handleGenerate` model upload (lines 317-327): Skip `convertImageToBase64` — pass the URL directly:
+
+```typescript
+// OLD:
+const modelImg = await convertImageToBase64(selectedModel.previewUrl);
+modelImageUrl = await uploadImageToStorage(modelImg, 'model');
+
+// NEW:
+modelImageUrl = selectedModel.previewUrl; // Already HTTPS, pass directly
+```
+
+**Change 3** — `handleGenerate` scene upload (lines 330-339): Same fix:
+
+```typescript
+sceneImageUrl = selectedScene.previewUrl; // Already HTTPS, pass directly
+```
+
+**Change 4** — Add `isUploading` state (line 130): Show immediate feedback when Generate is tapped:
+
+```typescript
+const [isUploading, setIsUploading] = useState(false);
+const isLoading = isEnqueuing || isProcessing || isUploading;
+```
+
+Set `isUploading = true` at top of `handleGenerate`, `false` in finally block.
+
+### Summary
+
+4 surgical changes in 1 file. No new files, no architectural changes. The main fix (Change 1) replaces a blocking loop with a 2-line browser-native call. Changes 2-3 eliminate unnecessary image processing entirely. Change 4 prevents double-taps.
 
