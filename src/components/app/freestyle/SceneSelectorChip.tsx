@@ -157,7 +157,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
   );
 
   const renderGrid = (expanded: boolean) => (
-    <div className={cn('overflow-y-auto space-y-3 pr-1', expanded ? 'max-h-[70vh]' : 'max-h-72')}>
+    <div className={cn('overflow-y-auto space-y-3 pr-1', expanded ? 'max-h-[70vh]' : 'max-h-72 lg:max-h-96')}>
       {visibleCategories.map(cat => {
         const poses = allPoses.filter(p => p.category === cat);
         if (poses.length === 0) return null;
