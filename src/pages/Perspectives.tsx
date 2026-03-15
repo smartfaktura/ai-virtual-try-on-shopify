@@ -782,7 +782,7 @@ export default function Perspectives() {
                 <Input
                   placeholder="Search products..."
                   value={productSearch}
-                  onChange={e => setProductSearch(e.target.value)}
+                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(10); }}
                   className="pl-9"
                 />
               </div>
