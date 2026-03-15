@@ -35,22 +35,98 @@ export interface GenerateResult {
   batchId: string;
 }
 
-/**
- * Detect perspective category from the variation label.
- */
+// ---------------------------------------------------------------------------
+// Scene classification
+// ---------------------------------------------------------------------------
+
+type SceneMode = 'product-only' | 'on-model';
+
+async function classifyScene(imageBase64: string, token: string): Promise<SceneMode> {
+  try {
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/classify-scene`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ imageBase64 }),
+    });
+    if (!res.ok) return 'product-only';
+    const data = await res.json();
+    return data.hasPeople ? 'on-model' : 'product-only';
+  } catch {
+    return 'product-only';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Perspective category detection
+// ---------------------------------------------------------------------------
+
 type PerspectiveCategory = 'macro' | 'angle' | 'context';
 
 function detectCategory(label: string): PerspectiveCategory {
   const l = label.toLowerCase();
   if (l.includes('close') || l.includes('macro')) return 'macro';
   if (l.includes('wide') || l.includes('environment')) return 'context';
-  return 'angle'; // back, left, right, etc.
+  return 'angle';
 }
 
-/**
- * Per-perspective photography DNA — lens, DoF, lighting, and special direction.
- */
-function getPhotographyDNA(category: PerspectiveCategory, label: string): string {
+// ---------------------------------------------------------------------------
+// Photography DNA — scene-mode aware
+// ---------------------------------------------------------------------------
+
+function getPhotographyDNA(category: PerspectiveCategory, label: string, mode: SceneMode): string {
+  if (mode === 'on-model') {
+    return getOnModelPhotographyDNA(category, label);
+  }
+  return getProductOnlyPhotographyDNA(category, label);
+}
+
+function getOnModelPhotographyDNA(category: PerspectiveCategory, label: string): string {
+  switch (category) {
+    case 'macro':
+      return `PHOTOGRAPHY DNA — MACRO/CLOSE-UP (ON-MODEL):
+- Lens: 100mm macro at f/4–f/5.6, focus-stacked on the product area.
+- Framing: Extreme tight crop on the product detail zone. The person's body may be partially visible (hand, torso, shoulder, wrist) providing natural context for the product.
+- Show fabric weave on skin, clasp against wrist, stitching detail on a worn garment, texture of material as it drapes over the body.
+- The human skin/body visible in frame must match the source image exactly — same skin tone, same body area.
+- Lighting: Raking light at 15–30° to reveal material texture. Skin should look natural, not over-smoothed.`;
+
+    case 'context':
+      return `PHOTOGRAPHY DNA — WIDE/ENVIRONMENT (ON-MODEL):
+- Lens: 35mm at f/5.6, natural perspective.
+- Person-to-frame ratio: The model and product together occupy 40–60% of the frame, shown in a lifestyle environment.
+- The model's full or three-quarter body is visible. Same pose intent as source, adapted for the wider framing.
+- Styling: Complementary lifestyle environment that matches the product category and brand tone.
+- Lighting: Natural or mixed — soft directional window light with ambient fill.
+- Mood: Editorial lifestyle lookbook. The model is the hero, the environment supports the story.
+- DO NOT center rigidly. Use rule-of-thirds or golden-ratio placement.`;
+
+    default: {
+      const isBack = label.toLowerCase().includes('back');
+      const sideNote = label.toLowerCase().includes('left')
+        ? 'Camera positioned at exact 90° to the model\'s left side. Left profile of face and body visible.'
+        : label.toLowerCase().includes('right')
+          ? 'Camera positioned at exact 90° to the model\'s right side. Right profile of face and body visible.'
+          : '';
+
+      return `PHOTOGRAPHY DNA — ON-MODEL ANGLE:
+- Lens: 85mm at f/8, deep depth-of-field ensuring both the model and product are tack-sharp.
+- Camera height: At the model's torso midpoint — straight-on, not looking down or up.
+- Framing: Model fills 70–80% of the frame. Same body coverage as the source (full body, upper body, etc.).
+- The model rotates naturally to present the requested angle — the camera moves around the model.
+${isBack ? '- Back-specific: Model\'s back is facing camera. Show rear construction of garment, back panel, any visible labels, the way fabric falls across the back and shoulders. The model\'s head may be slightly turned or facing away.' : ''}
+${sideNote ? `- Side-specific: ${sideNote}` : ''}
+- Pose: Same pose INTENT as source — if standing with weight on one hip, maintain that. If arms are at sides, keep them. Adapt naturally for the new angle but preserve the energy and stance.
+- Lighting: Same key-light direction as source. Consistent shadow fall across all angles.
+- DO NOT change the model's body position dramatically — only rotate the camera viewpoint.`;
+    }
+  }
+}
+
+function getProductOnlyPhotographyDNA(category: PerspectiveCategory, label: string): string {
   switch (category) {
     case 'macro':
       return `PHOTOGRAPHY DNA — MACRO/CLOSE-UP:
@@ -69,7 +145,7 @@ function getPhotographyDNA(category: PerspectiveCategory, label: string): string
 - Mood: Editorial lifestyle. The image should feel like a curated brand lookbook shot, not a catalog cutout.
 - DO NOT center the product rigidly. Use rule-of-thirds or golden-ratio placement.`;
 
-    default: { // 'angle' — back, left, right, etc.
+    default: {
       const isBack = label.toLowerCase().includes('back');
       const sideNote = label.toLowerCase().includes('left')
         ? 'Camera positioned at exact 90° to the product\'s left face. The left side panel fills the frame.'
@@ -89,74 +165,122 @@ ${sideNote ? `- Side-specific: ${sideNote}` : ''}
   }
 }
 
-/**
- * Per-perspective environment rules.
- */
-function getEnvironmentRules(category: PerspectiveCategory): string {
+// ---------------------------------------------------------------------------
+// Environment rules — scene-mode aware
+// ---------------------------------------------------------------------------
+
+function getEnvironmentRules(category: PerspectiveCategory, mode: SceneMode): string {
   if (category === 'context') {
-    return `ENVIRONMENT — LIFESTYLE CONTEXT: Place the product in a curated, on-brand environment. The setting should feel intentional and editorial — a styled surface, a complementary interior, or an outdoor scene that elevates the product story. Use natural materials and neutral-warm tones. Maintain soft, directional lighting. The product must remain the clear visual hero despite the richer environment.`;
+    return mode === 'on-model'
+      ? `ENVIRONMENT — LIFESTYLE CONTEXT (ON-MODEL): Place the model and product in a curated, on-brand environment. The setting should feel intentional and editorial. The model interacts naturally with the space. Maintain soft, directional lighting. The model + product must remain the clear visual hero.`
+      : `ENVIRONMENT — LIFESTYLE CONTEXT: Place the product in a curated, on-brand environment. The setting should feel intentional and editorial — a styled surface, a complementary interior, or an outdoor scene that elevates the product story. Use natural materials and neutral-warm tones. Maintain soft, directional lighting. The product must remain the clear visual hero despite the richer environment.`;
   }
-  return `ENVIRONMENT — STUDIO CONSISTENCY: Clean, neutral surface (white, light gray, or off-white). Professional studio lighting — soft key light from upper-left at 45°, fill light opposite at 40% intensity, subtle rim light for edge separation. No colored gels, no dramatic shadows, no environmental props. The lighting direction, color temperature (5500K daylight), and background must be identical across all angle shots as if photographed in the same session.`;
+  return mode === 'on-model'
+    ? `ENVIRONMENT — STUDIO CONSISTENCY (ON-MODEL): Clean, neutral backdrop. Professional studio lighting — soft key light from upper-left at 45°, fill light opposite at 40% intensity, subtle rim light for edge separation on both the model and the product. The lighting direction, color temperature (5500K daylight), and background must be identical across all angle shots as if photographed in the same session. The model stands/poses on the same surface throughout.`
+    : `ENVIRONMENT — STUDIO CONSISTENCY: Clean, neutral surface (white, light gray, or off-white). Professional studio lighting — soft key light from upper-left at 45°, fill light opposite at 40% intensity, subtle rim light for edge separation. No colored gels, no dramatic shadows, no environmental props. The lighting direction, color temperature (5500K daylight), and background must be identical across all angle shots as if photographed in the same session.`;
 }
 
-/**
- * Build the full perspective prompt with strict product identity rules.
- * Angle-category-aware: different photography DNA per perspective type.
- */
+// ---------------------------------------------------------------------------
+// Negatives — scene-mode aware
+// ---------------------------------------------------------------------------
+
+function getNegatives(category: PerspectiveCategory, mode: SceneMode): string {
+  const shared = `- No blurry or out-of-focus areas${category === 'macro' ? ' (use focus stacking)' : ''}
+- No AI-looking smoothing or plastic textures on materials
+- No collage layouts or split-screen compositions
+- No compositing artifacts, no mismatched lighting, no pasted-in look
+- No black borders, black bars, letterboxing, pillarboxing, or padding
+- Do NOT change the product design, color, or any identifying features
+- Do NOT alter proportions or scale of the product`;
+
+  if (mode === 'on-model') {
+    return `CRITICAL — DO NOT include any of the following:
+${shared}
+- Do NOT change the model's face, body type, skin tone, hair style/color, or clothing fit
+- Do NOT remove the person from the scene
+- Do NOT add additional people who were not in the source
+- Do NOT swap, age, or alter the model's appearance in any way
+- Maintain the same styling, accessories, and overall aesthetic from the source`;
+  }
+
+  return `CRITICAL — DO NOT include any of the following:
+- No people, no human figures, no hands, no body parts
+${shared}
+- Do NOT add props, accessories, or items not present on the original product${category === 'context' ? ' (complementary styling props are allowed for context shots only)' : ''}`;
+}
+
+// ---------------------------------------------------------------------------
+// Full prompt builder — scene-mode aware
+// ---------------------------------------------------------------------------
+
 function buildPerspectivePrompt(
   variation: VariationInput,
   productTitle: string,
   hasReferenceImage: boolean,
+  mode: SceneMode,
 ): string {
   const category = detectCategory(variation.label);
   const layers: string[] = [];
 
-  // System instructions
-  layers.push(
-    `Generate a photorealistic product image from the specified angle/perspective. Maintain the exact product identity — shape, material, color, texture, logos, hardware, stitching — from the source product image. The ONLY change is the camera angle.`
-  );
+  // System instruction — scene-mode aware
+  if (mode === 'on-model') {
+    layers.push(
+      `Reproduce this exact scene from a new camera angle. The scene contains a human model wearing/holding/interacting with a product. Preserve BOTH the product identity AND the human subject — same person, same pose intent, same styling, same garment fit. The ONLY change is the camera angle.`
+    );
+  } else {
+    layers.push(
+      `Generate a photorealistic product image from the specified angle/perspective. Maintain the exact product identity — shape, material, color, texture, logos, hardware, stitching — from the source product image. The ONLY change is the camera angle.`
+    );
+  }
 
   // Perspective directive
   layers.push(
     `PERSPECTIVE DIRECTIVE: ${variation.instruction}\n\nProduct: "${productTitle}". Capture from the "${variation.label}" perspective exactly as described above.`
   );
 
-  // Strict product identity
-  layers.push(
-    `PRODUCT IDENTITY — STRICT: The product in this image must be the EXACT same product from [PRODUCT IMAGE]. Preserve every detail: shape, material, color, texture, logo placement, hardware, stitching, seams, proportions, and finish. Do NOT alter, simplify, stylize, or "reimagine" any design element. Do NOT add or remove any features. The ONLY change is the camera angle/perspective as described above.`
-  );
-
-  // Reference image handling
-  if (hasReferenceImage) {
+  // Identity block — scene-mode aware
+  if (mode === 'on-model') {
     layers.push(
-      category === 'context'
-        ? `ANGLE REFERENCE: [REFERENCE IMAGE] shows the product in context or from a similar pulled-back perspective. Use it to understand the product's appearance and proportions at this distance. Match the product details visible while creating an elevated lifestyle environment.`
-        : `ANGLE REFERENCE: [REFERENCE IMAGE] shows the same product from the requested angle. Use it to understand the product's appearance from this perspective — back construction, side profile shape, hidden details, etc. This is NOT scene or mood inspiration — it is a product identity reference for this specific angle. Match the product details visible in this reference while maintaining the exact same product identity from [PRODUCT IMAGE].`
+      `SCENE IDENTITY — STRICT: Preserve the EXACT product from [SOURCE IMAGE] — shape, material, color, texture, logos, hardware, stitching, seams, proportions, and finish. ALSO preserve the human subject — same apparent age, ethnicity, skin tone, hair style/color, body type, and facial features. The garment/product must fit and drape identically on the model's body. Do NOT swap, age, or alter the model. Do NOT change the product design. The ONLY change is the camera angle/perspective.`
+    );
+  } else {
+    layers.push(
+      `PRODUCT IDENTITY — STRICT: The product in this image must be the EXACT same product from [PRODUCT IMAGE]. Preserve every detail: shape, material, color, texture, logo placement, hardware, stitching, seams, proportions, and finish. Do NOT alter, simplify, stylize, or "reimagine" any design element. Do NOT add or remove any features. The ONLY change is the camera angle/perspective as described above.`
     );
   }
 
-  // Angle-specific photography DNA
-  layers.push(getPhotographyDNA(category, variation.label));
+  // Reference image handling
+  if (hasReferenceImage) {
+    if (mode === 'on-model') {
+      layers.push(
+        category === 'context'
+          ? `ANGLE REFERENCE: [REFERENCE IMAGE] shows the model and product from a similar perspective. Use it to understand how the model and product appear at this distance and angle. Match both the product details and the model's appearance.`
+          : `ANGLE REFERENCE: [REFERENCE IMAGE] shows the same model and product from the requested angle. Use it to understand how the garment drapes, how the model's body appears from this perspective, and any construction details visible from this angle. Match both identities.`
+      );
+    } else {
+      layers.push(
+        category === 'context'
+          ? `ANGLE REFERENCE: [REFERENCE IMAGE] shows the product in context or from a similar pulled-back perspective. Use it to understand the product's appearance and proportions at this distance. Match the product details visible while creating an elevated lifestyle environment.`
+          : `ANGLE REFERENCE: [REFERENCE IMAGE] shows the same product from the requested angle. Use it to understand the product's appearance from this perspective — back construction, side profile shape, hidden details, etc. This is NOT scene or mood inspiration — it is a product identity reference for this specific angle. Match the product details visible in this reference while maintaining the exact same product identity from [PRODUCT IMAGE].`
+      );
+    }
+  }
 
-  // Category-aware environment rules
-  layers.push(getEnvironmentRules(category));
+  // Photography DNA — scene-mode aware
+  layers.push(getPhotographyDNA(category, variation.label, mode));
 
-  // Negatives
-  layers.push(
-    `CRITICAL — DO NOT include any of the following:
-- No people, no human figures, no hands, no body parts
-- No blurry or out-of-focus areas${category === 'macro' ? ' (use focus stacking)' : ''}
-- No AI-looking smoothing or plastic textures on materials
-- No collage layouts or split-screen compositions
-- No compositing artifacts, no mismatched lighting, no pasted-in look
-- No black borders, black bars, letterboxing, pillarboxing, or padding
-- Do NOT change the product design, color, or any identifying features
-- Do NOT add props, accessories, or items not present on the original product${category === 'context' ? ' (complementary styling props are allowed for context shots only)' : ''}
-- Do NOT alter proportions or scale of the product`
-  );
+  // Environment rules — scene-mode aware
+  layers.push(getEnvironmentRules(category, mode));
+
+  // Negatives — scene-mode aware
+  layers.push(getNegatives(category, mode));
 
   return layers.join('\n\n');
 }
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
 
 export function useGeneratePerspectives() {
   const { user } = useAuth();
@@ -194,10 +318,10 @@ export function useGeneratePerspectives() {
     let enqueuedCount = 0;
     const jobs: PerspectiveJobInfo[] = [];
 
-    // Enqueue sequentially to avoid credit race conditions
     let shouldStop = false;
     for (const product of products) {
       if (shouldStop) break;
+
       let productBase64: string | null = null;
       try {
         productBase64 = await convertImageToBase64(product.imageUrl);
@@ -206,8 +330,13 @@ export function useGeneratePerspectives() {
         continue;
       }
 
+      // Classify scene once per product image
+      const sceneMode = await classifyScene(productBase64, token);
+      console.log(`[Perspectives] Scene classification for "${product.title}": ${sceneMode}`);
+
       for (const variation of variations) {
         if (shouldStop) break;
+
         let referenceBase64: string | null = null;
         if (variation.referenceImageUrl) {
           try {
@@ -222,6 +351,7 @@ export function useGeneratePerspectives() {
             variation,
             product.title,
             !!referenceBase64,
+            sceneMode,
           );
 
           const payload: Record<string, unknown> = {
