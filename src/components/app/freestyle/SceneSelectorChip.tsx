@@ -85,7 +85,7 @@ const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
   product: ['clean-studio', 'surface', 'flat-lay', 'product-editorial'],
 };
 
-export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal }: SceneSelectorChipProps) {
+export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal, fullWidth }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
   const [isExpanded, setIsExpanded] = useState(false);
   const { columns: expandedColumns, setColumns: setExpandedColumns, options: columnOptions } = useExpandedColumns();
