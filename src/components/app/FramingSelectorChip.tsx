@@ -25,6 +25,7 @@ interface FramingSelectorChipProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   modal?: boolean;
+  fullWidth?: boolean;
 }
 
 export function FramingSelectorChip({ framing, onFramingChange, open, onOpenChange, modal }: FramingSelectorChipProps) {
