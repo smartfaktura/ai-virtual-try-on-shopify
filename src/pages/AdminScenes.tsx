@@ -106,6 +106,19 @@ export default function AdminScenes() {
     setDirty(true);
   };
 
+  const movePoseToTop = (poseId: string) => {
+    setOrderedPoses(prev => {
+      const pose = prev.find(p => p.poseId === poseId);
+      if (!pose) return prev;
+      const withoutPose = prev.filter(p => p.poseId !== poseId);
+      const firstCatIdx = withoutPose.findIndex(p => p.category === pose.category);
+      const result = [...withoutPose];
+      result.splice(firstCatIdx >= 0 ? firstCatIdx : 0, 0, pose);
+      return result;
+    });
+    setDirty(true);
+  };
+
   const changePoseCategory = (poseId: string, newCategory: PoseCategory) => {
     setOrderedPoses(prev =>
       prev.map(p => p.poseId === poseId ? { ...p, category: newCategory } : p)
