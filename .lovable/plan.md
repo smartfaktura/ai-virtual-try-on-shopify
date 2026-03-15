@@ -1,32 +1,30 @@
 
 
-## Don't Pre-select Source + Smaller Product Cards + Load More Button
+## Product Perspectives — Implemented ✅
 
-### Changes (all in `src/pages/Perspectives.tsx`)
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-#### 1. No source pre-selected on load
-- Change `SourceType` to allow `null`: `SourceType | null`
-- Set initial state to `null` (keep `'scratch'` only when `?source=` query param is present)
-- Update `handleSourceTypeChange` to accept `SourceType | null`
-- When `sourceType === null`, don't render any picker below the source cards, just show the 3 unselected cards
-- Update the "Selected" indicator and styling to not highlight any card when `null`
-- Update downstream totalImages / generate button logic to treat `null` like no source (already works since no items will be selected)
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-#### 2. Smaller product cards
-- Change the product grid from `grid-cols-2 sm:grid-cols-3 md:grid-cols-4` to `grid-cols-3 sm:grid-cols-4 md:grid-cols-5` (matching library grid)
-- Remove `mb-2` spacing and reduce padding from `p-2` to `p-1.5`
-- Change product image aspect from `aspect-square` to a smaller fixed size or keep aspect-square with the smaller grid
-
-#### 3. Load More button (for both library and products)
-- Add `libraryVisibleCount` state (default: 10, which is ~2 rows of 5 columns)
-- Add `productVisibleCount` state (default: 10)
-- Slice `filteredLibrary` and `filteredProducts` to visible count
-- Remove `max-h-[360px] overflow-y-auto` from both grids (no more scroll container)
-- Add a "Load more" button below each grid when there are more items than visible count, incrementing by 10 on click
-- Reset visible counts when search text changes
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
 ### Files changed
-| File | Change |
-|------|--------|
-| `src/pages/Perspectives.tsx` | All three changes above |
-
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`

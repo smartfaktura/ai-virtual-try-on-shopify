@@ -78,8 +78,8 @@ export default function Perspectives() {
   const { upload, isUploading } = useFileUpload();
 
   // ── State ──────────────────────────────────────────────────────────────
-  const initialSource = searchParams.get('source') ? 'scratch' as SourceType : 'library' as SourceType;
-  const [sourceType, setSourceType] = useState<SourceType>(initialSource);
+  const initialSource: SourceType | null = searchParams.get('source') ? 'scratch' : null;
+  const [sourceType, setSourceType] = useState<SourceType | null>(initialSource);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
   const [selectedVariations, setSelectedVariations] = useState<Set<number>>(new Set());
@@ -87,6 +87,8 @@ export default function Perspectives() {
   const quality = 'high' as const;
   const [productSearch, setProductSearch] = useState('');
   const [librarySearch, setLibrarySearch] = useState('');
+  const [libraryVisibleCount, setLibraryVisibleCount] = useState(10);
+  const [productVisibleCount, setProductVisibleCount] = useState(10);
   const [referenceImages, setReferenceImages] = useState<Record<number, string>>({});
   const [uploadingRefIndex, setUploadingRefIndex] = useState<number | null>(null);
 
@@ -106,11 +108,13 @@ export default function Perspectives() {
   const pollVersionRef = useRef(0);
 
   // ── Source type change handler ─────────────────────────────────────────
-  const handleSourceTypeChange = (type: SourceType) => {
+  const handleSourceTypeChange = (type: SourceType | null) => {
     setSourceType(type);
     setSelectedProductIds(new Set());
     setSelectedLibraryIds(new Set());
     setDirectUploadUrl(null);
+    setLibraryVisibleCount(10);
+    setProductVisibleCount(10);
   };
 
   // ── Fetch workflow config from DB ─────────────────────────────────────
@@ -144,7 +148,7 @@ export default function Perspectives() {
         .order('created_at', { ascending: false });
       return (data || []) as UserProduct[];
     },
-    enabled: !!user && sourceType === 'product',
+    enabled: !!user,
   });
 
   // ── Fetch library items ───────────────────────────────────────────────
@@ -203,7 +207,7 @@ export default function Perspectives() {
       const urls = await toSignedUrls(items.map(i => i.imageUrl));
       return items.map((item, idx) => ({ ...item, imageUrl: urls[idx] }));
     },
-    enabled: !!user && sourceType === 'library',
+    enabled: !!user,
     staleTime: 60_000,
   });
 
@@ -322,7 +326,9 @@ export default function Perspectives() {
     ? (directUploadUrl ? 1 : 0)
     : sourceType === 'product'
       ? selectedProductIds.size
-      : selectedLibraryIds.size;
+      : sourceType === 'library'
+        ? selectedLibraryIds.size
+        : 0;
 
   const perImageCost = 8;
   const totalImages = sourceCount * selectedVariations.size * selectedRatios.size;
@@ -704,7 +710,7 @@ export default function Perspectives() {
                 <Input
                   placeholder="Search generated images..."
                   value={librarySearch}
-                  onChange={e => setLibrarySearch(e.target.value)}
+                  onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(10); }}
                   className="pl-9"
                 />
               </div>
@@ -719,8 +725,8 @@ export default function Perspectives() {
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[360px] overflow-y-auto p-1">
-                  {filteredLibrary.map(item => {
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
+                  {filteredLibrary.slice(0, libraryVisibleCount).map(item => {
                     const isSelected = selectedLibraryIds.has(item.id);
                     return (
                       <div
@@ -742,6 +748,13 @@ export default function Perspectives() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+              {!libraryLoading && filteredLibrary.length > libraryVisibleCount && (
+                <div className="text-center pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setLibraryVisibleCount(c => c + 10)}>
+                    Load more ({filteredLibrary.length - libraryVisibleCount} remaining)
+                  </Button>
                 </div>
               )}
               {!libraryLoading && filteredLibrary.length === 0 && (
@@ -769,7 +782,7 @@ export default function Perspectives() {
                 <Input
                   placeholder="Search products..."
                   value={productSearch}
-                  onChange={e => setProductSearch(e.target.value)}
+                  onChange={e => { setProductSearch(e.target.value); setProductVisibleCount(10); }}
                   className="pl-9"
                 />
               </div>
@@ -779,33 +792,40 @@ export default function Perspectives() {
                 </Badge>
                 <span className="text-xs text-muted-foreground">(max 10)</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[320px] overflow-y-auto p-1">
-                {filteredProducts.map(product => {
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
+                {filteredProducts.slice(0, productVisibleCount).map(product => {
                   const isSelected = selectedProductIds.has(product.id);
                   return (
                     <div
                       key={product.id}
                       onClick={() => toggleProduct(product.id)}
-                      className={`relative rounded-xl border-2 p-2 cursor-pointer transition-all ${
+                      className={`relative rounded-xl border-2 p-1.5 cursor-pointer transition-all ${
                         isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                       }`}
                     >
                       <div className="absolute top-1.5 left-1.5 z-10 bg-background/90 rounded shadow-sm p-0.5">
                         <Checkbox checked={isSelected} onCheckedChange={() => toggleProduct(product.id)} />
                       </div>
-                      <div className="aspect-square rounded-lg overflow-hidden mb-2 bg-muted">
+                      <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                         {product.image_url ? (
                           <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No image</div>
                         )}
                       </div>
-                      <p className="text-xs font-medium truncate">{product.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{product.product_type}</p>
+                      <p className="text-[10px] font-medium truncate mt-1">{product.title}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{product.product_type}</p>
                     </div>
                   );
                 })}
               </div>
+              {filteredProducts.length > productVisibleCount && (
+                <div className="text-center pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setProductVisibleCount(c => c + 10)}>
+                    Load more ({filteredProducts.length - productVisibleCount} remaining)
+                  </Button>
+                </div>
+              )}
               {filteredProducts.length === 0 && (
                 <p className="text-center text-muted-foreground py-4 text-sm">
                   No products found.{' '}
