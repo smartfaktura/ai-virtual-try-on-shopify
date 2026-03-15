@@ -321,7 +321,7 @@ export function useGeneratePerspectives() {
       .in('status', ['queued', 'processing'])
       .eq('user_id', user.id);
 
-    if ((activeJobCount || 0) + totalJobs > 4) {
+    if ((activeJobCount || 0) + totalJobs > 5) {
       toast.error(`You have ${activeJobCount} active jobs. Wait for them to finish before starting ${totalJobs} more.`);
       setIsGenerating(false);
       return null;
