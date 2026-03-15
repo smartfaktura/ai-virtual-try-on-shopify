@@ -173,7 +173,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
 
       <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-5">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 pr-8">
             <DialogTitle className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
               Scene / Environment
             </DialogTitle>
@@ -186,13 +186,6 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
                   Clear selection
                 </button>
               )}
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                title="Minimize view"
-              >
-                <Minimize2 className="w-3.5 h-3.5" />
-              </button>
             </div>
           </div>
 
