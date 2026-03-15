@@ -1,0 +1,1 @@
+ALTER TABLE public.freestyle_generations ADD COLUMN workflow_label text DEFAULT NULL;

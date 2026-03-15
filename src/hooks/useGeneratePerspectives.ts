@@ -231,6 +231,8 @@ export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions
             forceProModel: true,
             variation_instruction: variation.instruction,
             variation_label: variation.label,
+            // Clean label for library display (not "Freestyle")
+            workflow_label: `Product Perspectives — ${variation.label}`,
           };
 
           // Pass reference as referenceAngleImage (not sourceImage)
