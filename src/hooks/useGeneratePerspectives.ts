@@ -33,6 +33,7 @@ export interface PerspectiveJobInfo {
 export interface GenerateResult {
   jobs: PerspectiveJobInfo[];
   batchId: string;
+  newBalance: number | null;
 }
 
 // ---------------------------------------------------------------------------
