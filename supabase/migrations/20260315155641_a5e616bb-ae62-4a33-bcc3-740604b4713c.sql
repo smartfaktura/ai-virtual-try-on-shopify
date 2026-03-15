@@ -1,0 +1,1 @@
+ALTER TABLE public.scene_sort_order ADD COLUMN IF NOT EXISTS category_override text;
