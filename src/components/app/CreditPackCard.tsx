@@ -11,7 +11,7 @@ interface CreditPackCardProps {
   disabled?: boolean;
 }
 
-export function CreditPackCard({ pack, onPurchase }: CreditPackCardProps) {
+export function CreditPackCard({ pack, onPurchase, isLoading, disabled }: CreditPackCardProps) {
   const pricePerCredit = (pack.pricePerCredit * 100).toFixed(1);
 
   return (
