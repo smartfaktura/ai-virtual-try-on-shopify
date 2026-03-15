@@ -710,7 +710,7 @@ export default function Perspectives() {
                 <Input
                   placeholder="Search generated images..."
                   value={librarySearch}
-                  onChange={e => setLibrarySearch(e.target.value)}
+                  onChange={e => { setLibrarySearch(e.target.value); setLibraryVisibleCount(10); }}
                   className="pl-9"
                 />
               </div>
