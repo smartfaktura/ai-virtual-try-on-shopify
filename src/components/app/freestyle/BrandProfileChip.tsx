@@ -26,7 +26,7 @@ const toneEmoji: Record<string, string> = {
 };
 
 export function BrandProfileChip({
-  selectedProfile, open, onOpenChange, onSelect, profiles, isLoading,
+  selectedProfile, open, onOpenChange, onSelect, profiles, isLoading, fullWidth,
 }: BrandProfileChipProps) {
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
