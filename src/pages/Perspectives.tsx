@@ -497,7 +497,7 @@ export default function Perspectives() {
             <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
               <Layers className="w-7 h-7 text-primary animate-pulse" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Creating Product Perspectives…</h1>
+            <h1 className="text-2xl font-bold text-foreground">Creating Picture Perspectives…</h1>
             <p className="text-sm text-muted-foreground">
               Generating {genTotalCount} angle{genTotalCount !== 1 ? 's' : ''}
               {generatingJobs[0] ? ` of ${generatingJobs[0].productTitle}` : ''}
