@@ -144,7 +144,7 @@ const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement
     default:
       return null;
   }
-}
+});
 
 /* ── Carousel mode component ── */
 
