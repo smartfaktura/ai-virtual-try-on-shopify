@@ -356,7 +356,7 @@ async function completeQueueJob(
         fetch(`${supabaseUrl}/functions/v1/send-email`, {
           method: "POST",
           headers: { Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "generation_failed", to: profile.email, data: { jobType: "tryon", errorMessage: errors.join("; "), displayName: profile.display_name } }),
+          body: JSON.stringify({ type: "generation_failed", to: profile.email, data: { jobType: "tryon", errorMessage: errors.join("; "), displayName: profile.display_name, productName: ((payload as any).product?.title) || undefined, modelName: ((payload as any).model?.name) || undefined, sceneName: ((payload as any).pose?.name) || undefined } }),
         }).catch((e) => console.warn("[generate-tryon] Failed email send failed:", e.message));
       }
     } catch (e) { console.warn("[generate-tryon] Failed email lookup failed:", e); }

@@ -689,7 +689,7 @@ async function completeQueueJob(
         fetch(`${supabaseUrl}/functions/v1/send-email`, {
           method: "POST",
           headers: { Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "generation_failed", to: profile.email, data: { jobType: "workflow", errorMessage: errors.join("; "), displayName: profile.display_name } }),
+          body: JSON.stringify({ type: "generation_failed", to: profile.email, data: { jobType: "workflow", errorMessage: errors.join("; "), displayName: profile.display_name, workflowName: (payload.workflow_name as string) || undefined, productName: (payload.product_title as string) || undefined, prompt: (payload.prompt as string) || undefined } }),
         }).catch((e) => console.warn("[generate-workflow] Failed email send failed:", e.message));
       }
     } catch (e) { console.warn("[generate-workflow] Failed email lookup failed:", e); }

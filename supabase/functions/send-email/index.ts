@@ -192,7 +192,7 @@ function contactFormEmail(data: { name?: string; email?: string; message?: strin
   `);
 }
 
-function generationFailedEmail(data: { jobType?: string; errorMessage?: string; displayName?: string }): string {
+function generationFailedEmail(data: { jobType?: string; errorMessage?: string; displayName?: string; prompt?: string; productName?: string; modelName?: string; sceneName?: string; workflowName?: string }): string {
   const typeMap: Record<string, string> = {
     freestyle: "Freestyle",
     tryon: "Virtual Try-On",
@@ -200,6 +200,34 @@ function generationFailedEmail(data: { jobType?: string; errorMessage?: string; 
   };
   const typeName = typeMap[data.jobType || "freestyle"] || "Generation";
   const errorDetail = data.errorMessage || "An unexpected error occurred during image generation.";
+
+  // Build optional context rows
+  const contextRows: string[] = [];
+  const rowStyle = `font-family:'Inter',sans-serif;font-size:13px;padding:4px 0;`;
+  const labelStyle = `${rowStyle}color:${BRAND.muted};`;
+  const valueStyle = `${rowStyle}color:${BRAND.navy};font-weight:500;`;
+
+  contextRows.push(`<tr><td style="${labelStyle}">Type</td><td align="right" style="${valueStyle}">${typeName}</td></tr>`);
+
+  if (data.workflowName) {
+    contextRows.push(`<tr><td style="${labelStyle}">Workflow</td><td align="right" style="${valueStyle}">${data.workflowName}</td></tr>`);
+  }
+  if (data.productName) {
+    contextRows.push(`<tr><td style="${labelStyle}">Product</td><td align="right" style="${valueStyle}">${data.productName}</td></tr>`);
+  }
+  if (data.modelName) {
+    contextRows.push(`<tr><td style="${labelStyle}">Model</td><td align="right" style="${valueStyle}">${data.modelName}</td></tr>`);
+  }
+  if (data.sceneName) {
+    contextRows.push(`<tr><td style="${labelStyle}">Scene</td><td align="right" style="${valueStyle}">${data.sceneName}</td></tr>`);
+  }
+  if (data.prompt) {
+    const truncated = data.prompt.length > 80 ? data.prompt.slice(0, 80) + "…" : data.prompt;
+    const escaped = truncated.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    contextRows.push(`<tr><td style="${labelStyle}vertical-align:top;">Prompt</td><td align="right" style="${rowStyle}color:${BRAND.muted};font-style:italic;">"${escaped}"</td></tr>`);
+  }
+  contextRows.push(`<tr><td style="${labelStyle}">Details</td><td align="right" style="${valueStyle}">${errorDetail.slice(0, 100)}</td></tr>`);
+
   return emailWrapper(`
     <h1 style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700;color:${BRAND.navy};margin:0 0 16px 0;letter-spacing:-0.02em;">
       Something went wrong
@@ -209,14 +237,7 @@ function generationFailedEmail(data: { jobType?: string; errorMessage?: string; 
     </p>
     <div style="background-color:${BRAND.stone};border-radius:8px;padding:20px;margin:0 0 8px 0;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:4px 0;">Type</td>
-          <td align="right" style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.navy};font-weight:500;padding:4px 0;">${typeName}</td>
-        </tr>
-        <tr>
-          <td style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.muted};padding:4px 0;">Details</td>
-          <td align="right" style="font-family:'Inter',sans-serif;font-size:13px;color:${BRAND.navy};font-weight:500;padding:4px 0;">${errorDetail.slice(0, 100)}</td>
-        </tr>
+        ${contextRows.join("\n        ")}
       </table>
     </div>
     ${ctaButton("Try Again", "https://vovv.ai/app")}
