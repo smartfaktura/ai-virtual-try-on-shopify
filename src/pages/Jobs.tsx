@@ -155,7 +155,8 @@ export default function Jobs() {
       for (const item of selected) {
         const res = await fetch(item.imageUrl);
         const blob = await res.blob();
-        zip.file(`${item.label}-${item.id.slice(0, 8)}.png`, blob);
+        const safeLabel = item.label.replace(/\//g, '–');
+        zip.file(`${safeLabel}-${item.id.slice(0, 8)}.png`, blob);
       }
       const content = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(content);
