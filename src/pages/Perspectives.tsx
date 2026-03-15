@@ -87,6 +87,8 @@ export default function Perspectives() {
   const quality = 'high' as const;
   const [productSearch, setProductSearch] = useState('');
   const [librarySearch, setLibrarySearch] = useState('');
+  const [libraryVisibleCount, setLibraryVisibleCount] = useState(10);
+  const [productVisibleCount, setProductVisibleCount] = useState(10);
   const [referenceImages, setReferenceImages] = useState<Record<number, string>>({});
   const [uploadingRefIndex, setUploadingRefIndex] = useState<number | null>(null);
 
