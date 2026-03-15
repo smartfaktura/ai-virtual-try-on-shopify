@@ -127,7 +127,8 @@ export default function Freestyle() {
     onGenerationFailed: handleGenerationFailed,
     onCreditRefresh: refreshBalance,
   });
-  const isLoading = isEnqueuing || isProcessing;
+  const [isUploading, setIsUploading] = useState(false);
+  const isLoading = isEnqueuing || isProcessing || isUploading;
   const { user } = useAuth();
 
   // Detect workflow job completion to show "View Library" banner
@@ -252,16 +253,11 @@ export default function Freestyle() {
     // If it's already a URL (not base64), return as-is
     if (!base64Data.startsWith('data:')) return base64Data;
 
-    // Convert base64 to blob
-    const [header, raw] = base64Data.split(',');
-    const mime = header.match(/:(.*?);/)?.[1] || 'image/png';
-    const byteString = atob(raw);
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-    const blob = new Blob([ab], { type: mime });
+    // Convert base64 to blob using non-blocking browser-native fetch
+    const response = await fetch(base64Data);
+    const blob = await response.blob();
 
-    const ext = mime.split('/')[1] || 'png';
+    const ext = (blob.type.split('/')[1]) || 'png';
     const fileName = `${user.id}/${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
     const { data, error } = await supabase.storage
@@ -285,6 +281,8 @@ export default function Freestyle() {
       openBuyModal();
       return;
     }
+    setIsUploading(true);
+    try {
 
     // Upload images to storage instead of embedding base64 in payload
     // sourceImage = user-uploaded reference image (independent)
@@ -314,29 +312,12 @@ export default function Freestyle() {
 
     let modelImageUrl: string | undefined;
     if (selectedModel) {
-      try {
-        const modelImg = await convertImageToBase64(selectedModel.previewUrl);
-        modelImageUrl = await uploadImageToStorage(modelImg, 'model');
-      } catch (err) {
-        console.error('Failed to upload model image:', err);
-        // Fall back to URL if it's already https
-        if (selectedModel.previewUrl.startsWith('https://')) {
-          modelImageUrl = selectedModel.previewUrl;
-        }
-      }
+      modelImageUrl = selectedModel.previewUrl;
     }
 
     let sceneImageUrl: string | undefined;
     if (selectedScene) {
-      try {
-        const sceneImg = await convertImageToBase64(selectedScene.previewUrl);
-        sceneImageUrl = await uploadImageToStorage(sceneImg, 'scene');
-      } catch (err) {
-        console.error('Failed to upload scene image:', err);
-        if (selectedScene.previewUrl.startsWith('https://')) {
-          sceneImageUrl = selectedScene.previewUrl;
-        }
-      }
+      sceneImageUrl = selectedScene.previewUrl;
     }
 
     // Auto-build prompt from assets if user left it empty
@@ -445,6 +426,9 @@ export default function Freestyle() {
     if (enqueueResult) {
       // Update balance from server response
       setBalanceFromServer(enqueueResult.newBalance);
+    }
+    } finally {
+      setIsUploading(false);
     }
   }, [canSubmit, hasEnoughCredits, openBuyModal, selectedModel, selectedScene, selectedProduct, selectedBrandProfile, negatives, enqueue, prompt, sourceImage, aspectRatio, quality, polishPrompt, setBalanceFromServer, saveImages, stylePresets, uploadImageToStorage, user]);
 
