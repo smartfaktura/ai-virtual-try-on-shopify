@@ -2605,6 +2605,123 @@ export default function Generate() {
           </CardContent></Card>
         )}
 
+        {/* Library Selection Step */}
+        {currentStep === 'library' && (
+          <Card><CardContent className="p-5 space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold">Select from Library</h2>
+                <p className="text-sm text-muted-foreground">Choose up to 10 previously generated images to create new perspectives from.</p>
+              </div>
+              <Button variant="link" onClick={() => setCurrentStep('source')}>Change source</Button>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search by prompt..."
+                value={librarySearchQuery}
+                onChange={e => setLibrarySearchQuery(e.target.value)}
+                className="h-8 text-xs pl-8"
+              />
+            </div>
+
+            {selectedLibraryIds.size > 0 && (
+              <div className="flex gap-2 items-center">
+                <Badge variant="default">{selectedLibraryIds.size} selected</Badge>
+                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setSelectedLibraryIds(new Set())}>Clear</Button>
+              </div>
+            )}
+
+            {isLoadingLibrary ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : libraryItems.length === 0 ? (
+              <div className="text-center py-10 space-y-3">
+                <Image className="w-12 h-12 mx-auto text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">No generated images in your library yet.</p>
+                <p className="text-xs text-muted-foreground">Generate some images first, then come back here to create new perspectives.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                {libraryItems
+                  .filter(item => !librarySearchQuery || item.label.toLowerCase().includes(librarySearchQuery.toLowerCase()))
+                  .map(item => {
+                    const isSelected = selectedLibraryIds.has(item.id);
+                    const isDisabled = !isSelected && selectedLibraryIds.size >= 10;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          const newSet = new Set(selectedLibraryIds);
+                          if (newSet.has(item.id)) { newSet.delete(item.id); }
+                          else if (newSet.size < 10) { newSet.add(item.id); }
+                          setSelectedLibraryIds(newSet);
+                        }}
+                        disabled={isDisabled}
+                        className={cn(
+                          'group relative flex flex-col rounded-lg overflow-hidden border-2 transition-all text-left',
+                          isSelected ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-border',
+                          isDisabled && 'opacity-40 cursor-not-allowed'
+                        )}
+                      >
+                        <div className={cn(
+                          'absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all',
+                          isSelected
+                            ? 'border-primary bg-primary text-primary-foreground shadow-md'
+                            : 'border-background/80 bg-background/60 opacity-0 group-hover:opacity-100'
+                        )}>
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                        <img src={item.imageUrl} alt={item.label} className="w-full aspect-square object-cover rounded-t-md" loading="lazy" />
+                        <div className="px-1.5 py-1.5 bg-card">
+                          <p className="text-[10px] font-medium text-foreground leading-tight line-clamp-2">{item.label}</p>
+                          <p className="text-[9px] text-muted-foreground truncate mt-0.5">
+                            {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep('source')}>Back</Button>
+              <Button disabled={selectedLibraryIds.size === 0} onClick={() => {
+                // Map selected library items to products for the generation pipeline
+                const selected = libraryItems.filter(item => selectedLibraryIds.has(item.id));
+                if (selected.length === 1) {
+                  const item = selected[0];
+                  setSelectedProduct({
+                    id: item.id, title: item.label, vendor: 'Library', productType: 'Generated',
+                    tags: [], description: '', images: [{ id: item.id, url: item.imageUrl }],
+                    status: 'active', createdAt: item.createdAt, updatedAt: item.createdAt,
+                  });
+                  setSelectedSourceImages(new Set([item.id]));
+                  setCurrentStep('settings');
+                } else {
+                  const mappedProducts = selected.map(item => ({
+                    id: item.id, title: item.label, vendor: 'Library', productType: 'Generated',
+                    tags: [] as string[], description: '', images: [{ id: item.id, url: item.imageUrl }],
+                    status: 'active' as const, createdAt: item.createdAt, updatedAt: item.createdAt,
+                  }));
+                  setProductQueue(mappedProducts);
+                  setCurrentProductIndex(0);
+                  setMultiProductResults(new Map());
+                  setSelectedProduct(mappedProducts[0]);
+                  setSelectedSourceImages(new Set([mappedProducts[0].images[0].id]));
+                  setCurrentStep('settings');
+                }
+              }}>
+                {selectedLibraryIds.size === 0 ? 'Select at least 1' : `Continue with ${selectedLibraryIds.size} image${selectedLibraryIds.size > 1 ? 's' : ''}`}
+              </Button>
+            </div>
+          </CardContent></Card>
+        )}
+
         {/* Brand Profile Selection - NEW STEP */}
         {currentStep === 'brand-profile' && (
           <Card><CardContent className="p-5 space-y-5">
