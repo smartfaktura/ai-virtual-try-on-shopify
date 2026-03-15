@@ -1,30 +1,25 @@
 
 
-## Product Perspectives — Implemented ✅
+## Improve Picture Perspectives Carousel Animation
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problems
+1. **Too fast** — carousel interval is 3000ms, transitions are 300–600ms. Images flash by before you can appreciate them.
+2. **"One Click" badge** positioned at `bottom: 18%, right: 6%` — overlaps with the "Generated" badge at `bottom: 7, right: 4` creating visual clutter.
+3. **No staggered entry** — both badges have `enterDelay: 0` and `animation: 'pop'`, so they appear simultaneously without storytelling.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Changes
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+**`src/components/app/WorkflowAnimatedThumbnail.tsx`** — CarouselThumbnail:
+- Increase `INTERVAL` from `3000` to `5000` (5 seconds per slide)
+- Increase crossfade duration from `0.6s` to `1s` for smoother transitions
+- Remove the hardcoded "Generated" badge from carousel mode (it adds clutter for Perspectives)
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+**`src/components/app/workflowAnimationData.tsx`** — Picture Perspectives entry:
+- Move "One Click" badge to `bottom: 8%, left: 6%` (bottom-left, away from progress bar)
+- Add staggered `enterDelay`: "1 Photo, 4 Angles" at `0.3s` with `slide-left`, "One Click" at `0.8s` with `slide-up`
+
+| File | Change |
+|------|--------|
+| `src/components/app/WorkflowAnimatedThumbnail.tsx` | Slow carousel interval to 5s, longer crossfade, remove "Generated" badge from carousel mode |
+| `src/components/app/workflowAnimationData.tsx` | Reposition "One Click" badge, add staggered entry delays |
+
