@@ -315,18 +315,8 @@ export function useGeneratePerspectives() {
       return null;
     }
 
-    // Pre-flight: check active jobs to avoid 429s
-    const { count: activeJobCount } = await supabase
-      .from('generation_queue')
-      .select('*', { count: 'exact', head: true })
-      .in('status', ['queued', 'processing'])
-      .eq('user_id', user.id);
-
-    if ((activeJobCount || 0) + totalJobs > 5) {
-      toast.error(`You have ${activeJobCount} active jobs. Wait for them to finish before starting ${totalJobs} more.`);
-      setIsGenerating(false);
-      return null;
-    }
+    // No pre-flight limit — the DB function enforces burst & concurrency limits.
+    // The client retries on burst-limit 429s with backoff.
 
     const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
     const batchId = crypto.randomUUID();
@@ -392,55 +382,71 @@ export function useGeneratePerspectives() {
             payload.referenceAngleImage = referenceBase64;
           }
 
-          try {
-            const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                jobType: 'freestyle',
-                payload,
-                imageCount: 1,
-                quality,
-              }),
-            });
+          const MAX_BURST_RETRIES = 2;
+          let enqueued = false;
 
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
+          for (let attempt = 0; attempt <= MAX_BURST_RETRIES; attempt++) {
+            try {
+              const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  jobType: 'freestyle',
+                  payload,
+                  imageCount: 1,
+                  quality,
+                }),
+              });
 
-              if (response.status === 402) {
-                toast.error(`Insufficient credits. ${enqueuedCount} of ${totalJobs} queued.`);
-                shouldStop = true;
-                break;
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+
+                if (response.status === 402) {
+                  toast.error(`Insufficient credits. ${enqueuedCount} of ${totalJobs} queued.`);
+                  shouldStop = true;
+                  break;
+                }
+                if (response.status === 429) {
+                  const isBurst = errorData.burst_limit !== undefined;
+                  if (isBurst && attempt < MAX_BURST_RETRIES) {
+                    console.log(`[Perspectives] Burst limit hit, waiting 10s before retry ${attempt + 1}/${MAX_BURST_RETRIES}…`);
+                    await sleep(10_000);
+                    continue; // retry
+                  }
+                  // Non-burst 429 (hourly rate limit) or exhausted retries
+                  toast.error(errorData.error || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
+                  shouldStop = true;
+                  break;
+                }
+
+                toast.error(errorData.error || `Failed to enqueue job`);
+                break; // don't retry non-rate-limit errors
               }
-              if (response.status === 429) {
-                toast.error(errorData.error || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
-                shouldStop = true;
-                break;
-              }
 
-              toast.error(errorData.error || `Failed to enqueue job`);
-              continue;
+              const result = await response.json();
+              jobs.push({
+                jobId: result.jobId,
+                variationLabel: variation.label,
+                productTitle: product.title,
+                ratio,
+              });
+              enqueuedCount++;
+              enqueued = true;
+              setProgress(Math.round((enqueuedCount / totalJobs) * 100));
+              break; // success, exit retry loop
+            } catch (err) {
+              console.error('Enqueue error:', err);
+              break;
             }
-
-            const result = await response.json();
-            jobs.push({
-              jobId: result.jobId,
-              variationLabel: variation.label,
-              productTitle: product.title,
-              ratio,
-            });
-            enqueuedCount++;
-            setProgress(Math.round((enqueuedCount / totalJobs) * 100));
-
-            // Stagger enqueue calls to avoid hitting concurrency limits
-            if (enqueuedCount < totalJobs) await sleep(500);
-          } catch (err) {
-            console.error('Enqueue error:', err);
-            continue;
           }
+
+          if (shouldStop) break;
+
+          // Stagger enqueue calls to avoid hitting concurrency limits
+          if (enqueued && enqueuedCount < totalJobs) await sleep(500);
         }
       }
     }
