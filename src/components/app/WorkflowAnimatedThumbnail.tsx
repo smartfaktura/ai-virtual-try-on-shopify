@@ -150,7 +150,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
 
 function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
   const backgrounds = scene.backgrounds ?? [scene.background];
-  const INTERVAL = 3000;
+  const INTERVAL = 5000;
   const [index, setIndex] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
