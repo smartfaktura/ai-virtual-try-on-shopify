@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import {
   Search, Upload, X, Sparkles, Layers, ZoomIn, RotateCcw,
   ArrowLeft, ArrowRight, Maximize, ImageIcon, Check, Plus, Loader2,
-  Package, Image as ImageLucide, Info,
+  Package, Image as ImageLucide, Info, ClipboardPaste,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -80,7 +80,7 @@ export default function Perspectives() {
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
   const [selectedVariations, setSelectedVariations] = useState<Set<number>>(new Set());
   const [selectedRatios, setSelectedRatios] = useState<Set<string>>(new Set(['1:1']));
-  const [quality, setQuality] = useState<'standard' | 'high'>('high');
+  const quality = 'high' as const;
   const [productSearch, setProductSearch] = useState('');
   const [librarySearch, setLibrarySearch] = useState('');
   const [referenceImages, setReferenceImages] = useState<Record<number, string>>({});
@@ -216,7 +216,7 @@ export default function Perspectives() {
       ? selectedProductIds.size
       : selectedLibraryIds.size;
 
-  const perImageCost = quality === 'high' ? 8 : 4;
+  const perImageCost = 8;
   const totalImages = sourceCount * selectedVariations.size * selectedRatios.size;
   const totalCost = totalImages * perImageCost;
   const canGenerate = sourceCount > 0 && selectedVariations.size > 0 && selectedRatios.size > 0 && !isGenerating;
@@ -271,6 +271,33 @@ export default function Perspectives() {
     }
     setUploadingRefIndex(null);
   };
+
+  // ── Clipboard paste for reference images ──────────────────────────────
+  // Find the first selected variation that has referenceUpload and no image yet
+  const pasteTargetIndex = useMemo(() => {
+    for (const i of selectedVariations) {
+      if (variations[i]?.referenceUpload && !referenceImages[i]) return i;
+    }
+    return null;
+  }, [selectedVariations, variations, referenceImages]);
+
+  useEffect(() => {
+    if (pasteTargetIndex === null) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) handleReferenceUpload(pasteTargetIndex, file);
+          return;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [pasteTargetIndex]);
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
@@ -566,30 +593,49 @@ export default function Perspectives() {
 
                   {/* Conditional reference upload — recommended */}
                   {showRefUpload && (
-                    <div className="ml-12 p-3 rounded-lg border border-dashed border-border bg-muted/30 animate-in slide-in-from-top-2 duration-200">
+                    <div className="mt-2 animate-in slide-in-from-top-2 duration-200">
                       {referenceImages[i] ? (
-                        <div className="flex items-center gap-3">
-                          <img src={referenceImages[i]} alt="Reference" className="w-12 h-12 rounded-lg object-cover" />
-                          <div className="flex-1">
-                            <p className="text-xs font-medium text-foreground">Reference uploaded</p>
-                            <p className="text-xs text-muted-foreground">This will improve accuracy</p>
+                        <div className="flex items-center gap-4 p-4 rounded-xl border border-primary/30 bg-primary/5">
+                          <img src={referenceImages[i]} alt="Reference" className="w-20 h-20 rounded-xl object-cover border border-border" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">Reference uploaded ✓</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">This will improve angle accuracy</p>
                           </div>
-                          <Button variant="ghost" size="sm" onClick={() => {
+                          <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={() => {
                             const newRefs = { ...referenceImages };
                             delete newRefs[i];
                             setReferenceImages(newRefs);
                           }}>
-                            <X className="w-3 h-3" />
+                            <X className="w-4 h-4" />
                           </Button>
                         </div>
                       ) : (
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label
+                          className="relative flex flex-col items-center justify-center gap-2.5 p-6 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const file = e.dataTransfer.files[0];
+                            if (file?.type.startsWith('image/')) handleReferenceUpload(i, file);
+                          }}
+                          onDragOver={(e) => e.preventDefault()}
+                        >
                           {uploadingRefIndex === i ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
                           ) : (
-                            <Upload className="w-4 h-4 text-muted-foreground" />
+                            <>
+                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                                <Upload className="w-5 h-5 text-muted-foreground" />
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm font-medium text-foreground">{v.referenceUpload!.prompt}</p>
+                                <p className="text-xs text-muted-foreground mt-1">Drag & drop, paste, or click to upload</p>
+                                <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/60 mt-1.5">
+                                  <ClipboardPaste className="w-3 h-3" />
+                                  ⌘V / Ctrl+V to paste from clipboard
+                                </p>
+                              </div>
+                            </>
                           )}
-                          <span className="text-xs text-muted-foreground">{v.referenceUpload!.prompt}</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -607,24 +653,24 @@ export default function Perspectives() {
 
                   {/* Non-recommended reference upload (show toggle) */}
                   {hasRefUpload && !v.referenceUpload!.recommended && (
-                    <div className="ml-12">
+                    <div className="mt-2">
                       {referenceImages[i] ? (
-                        <div className="p-3 rounded-lg border border-dashed border-border bg-muted/30 flex items-center gap-3">
-                          <img src={referenceImages[i]} alt="Reference" className="w-12 h-12 rounded-lg object-cover" />
-                          <div className="flex-1">
-                            <p className="text-xs font-medium text-foreground">Reference uploaded</p>
+                        <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-muted/30">
+                          <img src={referenceImages[i]} alt="Reference" className="w-16 h-16 rounded-xl object-cover border border-border" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">Reference uploaded</p>
                           </div>
-                          <Button variant="ghost" size="sm" onClick={() => {
+                          <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={() => {
                             const newRefs = { ...referenceImages };
                             delete newRefs[i];
                             setReferenceImages(newRefs);
                           }}>
-                            <X className="w-3 h-3" />
+                            <X className="w-4 h-4" />
                           </Button>
                         </div>
                       ) : (
-                        <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors">
-                          <Plus className="w-3 h-3" />
+                        <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted/50">
+                          <Plus className="w-3.5 h-3.5" />
                           <span>Add reference image (optional)</span>
                           <input
                             type="file"
@@ -670,29 +716,13 @@ export default function Perspectives() {
           </div>
         </section>
 
-        {/* Step 4: Quality */}
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">4</span>
-            Quality
-          </h2>
-
-          <div className="flex gap-3">
-            {(['standard', 'high'] as const).map(q => (
-              <button
-                key={q}
-                onClick={() => setQuality(q)}
-                className={`px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
-                  quality === q
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border text-muted-foreground hover:border-primary/40'
-                }`}
-              >
-                {q === 'standard' ? `Standard (${4} cr/img)` : `High (${8} cr/img)`}
-              </button>
-            ))}
-          </div>
-        </section>
+        {/* Quality note */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
+          <Sparkles className="w-4 h-4 text-primary shrink-0" />
+          <p className="text-xs text-muted-foreground">
+            All perspectives are generated in <span className="font-semibold text-foreground">High Quality</span> (8 credits/image) for maximum product fidelity.
+          </p>
+        </div>
 
         {/* Generate bar */}
         <div className="sticky bottom-4 z-50">
