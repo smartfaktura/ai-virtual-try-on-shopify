@@ -301,15 +301,6 @@ export function FreestylePromptPanel({
 
           {/* Row 3 — Action Bar */}
           <div className="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-            {isDirty && onReset && (
-              <button
-                onClick={onReset}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors mr-auto"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Reset
-              </button>
-            )}
             {(() => {
               const hasEnoughCredits = creditBalance === undefined || creditBalance >= creditCost;
               const showInsufficientCredits = canGenerate && !hasEnoughCredits;
