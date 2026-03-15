@@ -17,22 +17,18 @@ interface SceneSelectorChipProps {
   modal?: boolean;
 }
 
-type SceneFilter = 'all' | 'on-model' | 'product' | 'food-home' | 'beauty';
+type SceneFilter = 'all' | 'on-model' | 'product';
 
 const filterTabs: { key: SceneFilter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'on-model', label: 'On-Model' },
   { key: 'product', label: 'Product' },
-  { key: 'food-home', label: 'Food & Home' },
-  { key: 'beauty', label: 'Beauty' },
 ];
 
 const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
   all: [],
   'on-model': ['studio', 'lifestyle', 'editorial', 'streetwear'],
   product: ['clean-studio', 'surface', 'flat-lay'],
-  'food-home': ['kitchen', 'living-space'],
-  beauty: ['bathroom', 'botanical'],
 };
 
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal }: SceneSelectorChipProps) {
