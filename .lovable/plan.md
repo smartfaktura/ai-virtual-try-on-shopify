@@ -1,27 +1,30 @@
 
 
-## Fix: Picture Perspectives Missing from Dashboard
+## Product Perspectives — Implemented ✅
 
-### Root Cause
-Picture Perspectives stores results in `freestyle_generations` (with `workflow_label` like `"Picture Perspectives — Front"`), not in `generation_jobs`. The Dashboard has two blind spots:
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-1. **Recent Jobs table** — only queries `generation_jobs`, never sees Perspectives
-2. **Activity Feed** — queries `freestyle_generations` but doesn't fetch `workflow_label`, so Perspectives appear as generic "Freestyle" entries with ugly raw prompts
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### Changes
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-**`src/pages/Dashboard.tsx`** — Recent Jobs section:
-- Add a second query fetching recent `freestyle_generations` that have a `workflow_label` starting with `"Picture Perspectives"`
-- Merge these into the `recentJobs` display as virtual job rows (with workflow name "Picture Perspectives", status "completed", credits from quality)
-- Sort merged list by `created_at` descending, keep limit 5
-
-**`src/components/app/ActivityFeed.tsx`** — Freestyle section:
-- Add `workflow_label` to the freestyle query select
-- When `workflow_label` exists, use it as the display text instead of "Freestyle" + raw prompt (e.g., `"Picture Perspectives — Front completed"`)
-- Use a dedicated avatar for perspectives entries (e.g., prefix `perspectives-` to get a distinct team avatar)
-
-| File | Change |
-|------|--------|
-| `src/pages/Dashboard.tsx` | Fetch perspectives from `freestyle_generations` and merge into Recent Jobs table |
-| `src/components/app/ActivityFeed.tsx` | Include `workflow_label` in query; display it instead of raw prompt for workflow items |
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`

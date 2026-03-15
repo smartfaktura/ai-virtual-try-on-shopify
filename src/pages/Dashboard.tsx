@@ -131,17 +131,46 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  // Fetch recent jobs
+  // Fetch recent jobs (generation_jobs + Picture Perspectives from freestyle_generations)
   const { data: recentJobs = [], isLoading: jobsLoading } = useQuery({
     queryKey: ['dashboard-recent-jobs', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('generation_jobs')
-        .select('*, user_products(title, image_url), workflows(name)')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      if (error) throw error;
-      return data ?? [];
+      const [jobsRes, perspRes] = await Promise.all([
+        supabase
+          .from('generation_jobs')
+          .select('*, user_products(title, image_url), workflows(name)')
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('freestyle_generations')
+          .select('id, workflow_label, image_url, quality, created_at')
+          .not('workflow_label', 'is', null)
+          .ilike('workflow_label', 'Picture Perspectives%')
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ]);
+      if (jobsRes.error) throw jobsRes.error;
+
+      const genJobs = (jobsRes.data ?? []).map(j => ({ ...j, _source: 'job' as const }));
+      const perspJobs = (perspRes.data ?? []).map(p => ({
+        id: p.id,
+        created_at: p.created_at,
+        status: 'completed',
+        credits_used: p.quality === 'high' ? 8 : 4,
+        results: [p.image_url],
+        user_products: null,
+        workflows: { name: 'Picture Perspectives' },
+        workflow_id: null,
+        product_id: null,
+        _source: 'perspectives' as const,
+        _label: p.workflow_label,
+        _image_url: p.image_url,
+      }));
+
+      const merged = [...genJobs, ...perspJobs]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5);
+      return merged;
     },
     enabled: !!user,
   });
@@ -437,12 +466,13 @@ export default function Dashboard() {
                 </TableHeader>
                 <TableBody>
                   {recentJobs.map(job => {
+                    const isPerspectives = '_source' in job && job._source === 'perspectives';
                     const firstResult = Array.isArray(job.results) ? (job.results as string[])[0] : null;
-                    const thumbUrl = firstResult || job.user_products?.image_url;
+                    const thumbUrl = isPerspectives ? (job as any)._image_url : (firstResult || job.user_products?.image_url);
                     const displayUrl = getOptimizedUrl(thumbUrl, { quality: 50 }) || '/placeholder.svg';
                     const hoverUrl = getOptimizedUrl(thumbUrl, { quality: 70 }) || '/placeholder.svg';
                     const toSentenceCase = (str: string) => str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-                    const sourceLabel = toSentenceCase(job.user_products?.title || job.workflows?.name || 'Generation');
+                    const sourceLabel = isPerspectives ? ((job as any)._label || 'Picture Perspectives') : toSentenceCase(job.user_products?.title || job.workflows?.name || 'Generation');
                     return (
                     <TableRow key={job.id}>
                       <TableCell>
