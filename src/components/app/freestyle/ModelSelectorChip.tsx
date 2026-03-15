@@ -33,7 +33,7 @@ const BODY_FILTERS: { value: BodyFilter; label: string }[] = [
   { value: 'plus-size', label: 'Plus' },
 ];
 
-export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect, modal }: ModelSelectorChipProps) {
+export function ModelSelectorChip({ selectedModel, open, onOpenChange, onSelect, modal, fullWidth }: ModelSelectorChipProps) {
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [bodyFilter, setBodyFilter] = useState<BodyFilter>('all');
   const { asProfiles: customModels } = useCustomModels();
