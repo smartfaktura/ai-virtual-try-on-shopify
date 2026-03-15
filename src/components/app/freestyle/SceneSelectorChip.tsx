@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+import { useSceneSortOrder } from '@/hooks/useSceneSortOrder';
 
 type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
