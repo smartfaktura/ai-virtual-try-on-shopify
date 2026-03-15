@@ -207,7 +207,7 @@ export default function Perspectives() {
       const urls = await toSignedUrls(items.map(i => i.imageUrl));
       return items.map((item, idx) => ({ ...item, imageUrl: urls[idx] }));
     },
-    enabled: !!user && sourceType === 'library',
+    enabled: !!user,
     staleTime: 60_000,
   });
 
