@@ -1,30 +1,32 @@
 
 
-## Product Perspectives — Implemented ✅
+## Show Perspective Jobs in Workflows Activity
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+The Workflows page filters all active/completed/failed jobs by checking `payload.workflow_id != null` (lines 57, 96, 135 of `Workflows.tsx`). Perspective jobs don't include a `workflow_id` in their payload — they only set `isPerspective: true` and `workflow_label`. So they're invisible in the Workflows activity section.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Fix
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+#### 1. `src/hooks/useGeneratePerspectives.ts` — Add workflow metadata to payload
+
+Add `workflow_id` and `workflow_name` to the payload so the existing Workflows page filters pick them up:
+
+```typescript
+payload: {
+  ...existing fields,
+  workflow_id: 'perspectives',           // synthetic but consistent ID
+  workflow_name: 'Product Perspectives', // used by WorkflowActivityCard for display
+}
+```
+
+Also pass `product` object with `title` so `product_name` extraction works in the activity card mapping (lines 69, 109, 149).
+
+#### 2. No changes needed to `Workflows.tsx`
+
+The existing filter `p?.workflow_id != null` and the mapping logic (`workflow_name`, `product_name`, `batch_id`, `quality`) will all work automatically once the payload includes these fields. The `WorkflowActivityCard` will display them identically to other workflow jobs.
 
 ### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+| File | Change |
+|------|--------|
+| `src/hooks/useGeneratePerspectives.ts` | Add `workflow_id`, `workflow_name`, and `product` object to the enqueue payload |
+
