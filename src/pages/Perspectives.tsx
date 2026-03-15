@@ -216,7 +216,7 @@ export default function Perspectives() {
       ? selectedProductIds.size
       : selectedLibraryIds.size;
 
-  const perImageCost = quality === 'high' ? 8 : 4;
+  const perImageCost = 8;
   const totalImages = sourceCount * selectedVariations.size * selectedRatios.size;
   const totalCost = totalImages * perImageCost;
   const canGenerate = sourceCount > 0 && selectedVariations.size > 0 && selectedRatios.size > 0 && !isGenerating;
