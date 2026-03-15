@@ -689,7 +689,7 @@ async function completeQueueJob(
         fetch(`${supabaseUrl}/functions/v1/send-email`, {
           method: "POST",
           headers: { Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "generation_failed", to: profile.email, data: { jobType: "workflow", errorMessage: errors.join("; "), displayName: profile.display_name } }),
+          body: JSON.stringify({ type: "generation_failed", to: profile.email, data: { jobType: "workflow", errorMessage: errors.join("; "), displayName: profile.display_name, workflowName: (payload.workflow_name as string) || undefined, productName: (payload.product_title as string) || undefined, prompt: (payload.prompt as string) || undefined } }),
         }).catch((e) => console.warn("[generate-workflow] Failed email send failed:", e.message));
       }
     } catch (e) { console.warn("[generate-workflow] Failed email lookup failed:", e); }
@@ -1015,7 +1015,7 @@ serve(async (req) => {
           ) {
             const statusError = error as { status: number; message: string };
             if (isQueueInternal && body.job_id) {
-              await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], totalToGenerate, [statusError.message], body as unknown as Record<string, unknown>);
+              await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], totalToGenerate, [statusError.message], { ...body, workflow_name: workflow.name, product_title: body.product?.title } as unknown as Record<string, unknown>);
             }
             return new Response(
               JSON.stringify({ error: statusError.message }),
@@ -1045,7 +1045,7 @@ serve(async (req) => {
 
     // Queue self-completion
     if (isQueueInternal && body.job_id) {
-      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, imageUrls, totalToGenerate, errors, body as unknown as Record<string, unknown>);
+      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, imageUrls, totalToGenerate, errors, { ...body, workflow_name: workflow.name, product_title: body.product?.title } as unknown as Record<string, unknown>);
     }
 
     if (images.length === 0) {

@@ -691,7 +691,7 @@ async function completeQueueJob(
           fetch(`${supabaseUrl}/functions/v1/send-email`, {
             method: "POST",
             headers: { Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ type: "generation_failed", to: profile.email, data: { jobType: "freestyle", errorMessage: errors.join("; "), displayName: profile.display_name } }),
+            body: JSON.stringify({ type: "generation_failed", to: profile.email, data: { jobType: "freestyle", errorMessage: errors.join("; "), displayName: profile.display_name, prompt: (payload.prompt as string) || undefined, modelName: (payload.modelContext as string) || undefined, sceneName: (payload.sceneId as string) || undefined } }),
           }).catch((e) => console.warn("[generate-freestyle] Failed email send failed:", e.message));
         }
       } catch (e) { console.warn("[generate-freestyle] Failed email lookup failed:", e); }
