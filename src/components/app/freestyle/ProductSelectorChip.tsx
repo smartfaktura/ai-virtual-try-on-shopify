@@ -16,10 +16,11 @@ interface ProductSelectorChipProps {
   products: UserProduct[];
   isLoading: boolean;
   modal?: boolean;
+  fullWidth?: boolean;
 }
 
 export function ProductSelectorChip({
-  selectedProduct, open, onOpenChange, onSelect, products, isLoading, modal,
+  selectedProduct, open, onOpenChange, onSelect, products, isLoading, modal, fullWidth,
 }: ProductSelectorChipProps) {
   const [search, setSearch] = useState('');
 
@@ -31,25 +32,28 @@ export function ProductSelectorChip({
   return (
     <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
       <PopoverTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
+        <button className={cn(
+          "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors min-w-0",
+          fullWidth && "w-full"
+        )}>
           {selectedProduct ? (
             <>
-              <img src={selectedProduct.image_url} alt="" className="w-4 h-4 rounded object-cover" />
-              <span className="max-w-[80px] truncate">{selectedProduct.title}</span>
+              <img src={selectedProduct.image_url} alt="" className="w-4 h-4 rounded object-cover shrink-0" />
+              <span className="truncate flex-1 min-w-0 text-left">{selectedProduct.title}</span>
               <button
                 onClick={e => { e.stopPropagation(); onSelect(null); }}
-                className="ml-0.5 w-3.5 h-3.5 rounded-full bg-muted-foreground/20 flex items-center justify-center hover:bg-muted-foreground/30 transition-colors"
+                className="ml-0.5 w-3.5 h-3.5 rounded-full bg-muted-foreground/20 flex items-center justify-center hover:bg-muted-foreground/30 transition-colors shrink-0"
               >
                 <X className="w-2.5 h-2.5" />
               </button>
             </>
           ) : (
             <>
-              <Package className="w-3.5 h-3.5" />
-              Add Product
+              <Package className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">Add Product</span>
             </>
           )}
-          <ChevronDown className="w-3 h-3 opacity-40" />
+          <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-3" align="start">
