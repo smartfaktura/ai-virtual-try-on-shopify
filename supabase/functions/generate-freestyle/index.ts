@@ -795,6 +795,10 @@ serve(async (req) => {
     const maxRetries = isQueueInternal ? 1 : 2;
     const effectiveImageCount = isQueueInternal ? 1 : Math.min(body.imageCount || 1, 4);
 
+    // ── Perspective mode: skip all generic prompt logic ──────────────────
+    const isPerspective = !!(body as Record<string, unknown>).isPerspective;
+    const referenceAngleImage = (body as Record<string, unknown>).referenceAngleImage as string | undefined;
+
     let enrichedPrompt = body.prompt?.trim() || "Professional commercial photography of the provided subject";
     if (body.modelContext) {
       enrichedPrompt = `${enrichedPrompt}\n\nModel reference: ${body.modelContext}`;
@@ -802,7 +806,6 @@ serve(async (req) => {
 
     if (body.stylePresets && body.stylePresets.length > 0) {
       if (body.cameraStyle === 'natural') {
-        // Filter out keywords that conflict with Natural camera style (deep DOF, no grain)
         const conflicting = ['shallow depth of field', 'bokeh', 'film grain'];
         const filtered = body.stylePresets.filter((kw: string) =>
           !conflicting.some(c => kw.toLowerCase().includes(c))
@@ -823,7 +826,10 @@ serve(async (req) => {
     };
 
     let finalPrompt: string;
-    if (body.polishPrompt) {
+    if (isPerspective) {
+      // Perspective jobs: prompt is fully built by the hook — use as-is
+      finalPrompt = enrichedPrompt;
+    } else if (body.polishPrompt) {
       finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing, body.productDimensions);
     } else {
       let unpolished = enrichedPrompt;
@@ -870,10 +876,11 @@ serve(async (req) => {
 
     const aspectPrompt = `${finalPrompt}\n\nOutput aspect ratio: ${body.aspectRatio}. CRITICAL: The image must fill the ENTIRE canvas edge-to-edge. Do NOT add any black borders, black bars, letterboxing, pillarboxing, padding, or margins around the image. The photograph must extend to all four edges with no empty space.`;
 
-    const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage].filter(Boolean).length;
+    const forceProModel = !!(body as Record<string, unknown>).forceProModel;
+    const refCount = [body.sourceImage, body.productImage, body.modelImage, body.sceneImage, referenceAngleImage].filter(Boolean).length;
     const hasModelImage = !!body.modelImage;
     const hasDualProductRef = !!body.productImage && !!body.sourceImage;
-    const aiModel = (hasModelImage || hasDualProductRef)
+    const aiModel = (forceProModel || isPerspective || hasModelImage || hasDualProductRef)
       ? "google/gemini-3-pro-image-preview"
       : isQueueInternal
         ? "google/gemini-3.1-flash-image-preview"
@@ -887,6 +894,7 @@ serve(async (req) => {
       hasProductImage: !!body.productImage,
       hasModelImage: !!body.modelImage,
       hasSceneImage: !!body.sceneImage,
+      hasReferenceAngleImage: !!referenceAngleImage,
       hasModelContext: !!body.modelContext,
       stylePresets: body.stylePresets,
       hasBrandProfile: !!body.brandProfile,
@@ -899,6 +907,7 @@ serve(async (req) => {
       quality: body.quality,
       model: aiModel,
       polished: body.polishPrompt,
+      isPerspective,
       isQueueInternal,
     });
 
@@ -920,13 +929,22 @@ serve(async (req) => {
 
         const promptWithVariation = `${aspectPrompt}${variationSuffix}`;
 
+        // For perspective jobs, inject referenceAngleImage as [REFERENCE IMAGE]
+        // with angle-aware semantics (the prompt already handles the labeling)
+        const effectiveSourceImage = isPerspective ? undefined : body.sourceImage;
         const contentArray = buildContentArray(
           promptWithVariation,
-          body.sourceImage,
+          effectiveSourceImage,
           body.productImage,
           body.modelImage,
           body.sceneImage,
         );
+
+        // Append referenceAngleImage as [REFERENCE IMAGE] for perspective jobs
+        if (isPerspective && referenceAngleImage) {
+          contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
+          contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
+        }
 
         const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
 
