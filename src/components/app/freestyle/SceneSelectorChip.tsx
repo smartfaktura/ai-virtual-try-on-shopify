@@ -139,7 +139,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5 px-1">
               {poseCategoryLabels[cat]}
             </p>
-            <div className={cn('grid gap-1.5', expanded ? 'grid-cols-3 sm:grid-cols-4 gap-2' : 'grid-cols-3')}>
+            <div className={cn('grid gap-1.5', expanded ? `gap-2` : 'grid-cols-3')} style={expanded ? { gridTemplateColumns: `repeat(${expandedColumns}, minmax(0, 1fr))` } : undefined}>
               {poses.map(pose => (
                 <button
                   key={pose.poseId}
