@@ -1045,7 +1045,7 @@ serve(async (req) => {
 
     // Queue self-completion
     if (isQueueInternal && body.job_id) {
-      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, imageUrls, totalToGenerate, errors, body as unknown as Record<string, unknown>);
+      await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, imageUrls, totalToGenerate, errors, { ...body, workflow_name: workflow.name, product_title: body.product?.title } as unknown as Record<string, unknown>);
     }
 
     if (images.length === 0) {
