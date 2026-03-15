@@ -317,9 +317,9 @@ export function FreestyleSettingsChips({
       <TooltipProvider delayDuration={300}>
         <div className="space-y-2">
           {/* Row 1: Assets + Creative — OUTSIDE Collapsible */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {uploadButton}
-            <div className={cn(highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+          <div className="flex items-center gap-2 overflow-x-auto flex-nowrap scrollbar-none pb-1">
+            <div className="shrink-0">{uploadButton}</div>
+            <div className={cn('shrink-0', highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <ProductSelectorChip
                 selectedProduct={selectedProduct}
                 open={productPopoverOpen}
@@ -330,7 +330,7 @@ export function FreestyleSettingsChips({
                 modal={isMobile}
               />
             </div>
-            <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+            <div className={cn('shrink-0', highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <ModelSelectorChip
                 selectedModel={selectedModel}
                 open={modelPopoverOpen}
@@ -339,7 +339,7 @@ export function FreestyleSettingsChips({
                 modal={isMobile}
               />
             </div>
-            <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+            <div className={cn('shrink-0', highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <SceneSelectorChip
                 selectedScene={selectedScene}
                 open={scenePopoverOpen}
@@ -348,22 +348,22 @@ export function FreestyleSettingsChips({
                 modal={isMobile}
               />
             </div>
-            <FramingSelectorChip
+            <div className="shrink-0"><FramingSelectorChip
               framing={framing}
               onFramingChange={onFramingChange}
               open={framingPopoverOpen}
               onOpenChange={onFramingPopoverChange}
               modal={isMobile}
-            />
+            /></div>
           </div>
 
           {/* Row 2 + Style — wrapped in Collapsible */}
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <div className="flex items-center gap-2 flex-wrap">
-              {aspectRatioChip}
-              {qualityChip}
-              {cameraStyleChip}
-              <CollapsibleTrigger asChild>
+            <div className="flex items-center gap-2 overflow-x-auto flex-nowrap scrollbar-none pb-1">
+              <div className="shrink-0">{aspectRatioChip}</div>
+              <div className="shrink-0">{qualityChip}</div>
+              <div className="shrink-0">{cameraStyleChip}</div>
+              <div className="shrink-0"><CollapsibleTrigger asChild>
                 <button className={cn(
                   'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
                   advancedActiveCount > 0
@@ -379,27 +379,27 @@ export function FreestyleSettingsChips({
                   )}
                   <ChevronDown className={cn('w-3 h-3 opacity-40 transition-transform', advancedOpen && 'rotate-180')} />
                 </button>
-              </CollapsibleTrigger>
+              </CollapsibleTrigger></div>
             </div>
 
             <CollapsibleContent className="pt-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <BrandProfileChip
+              <div className="flex items-center gap-2 overflow-x-auto flex-nowrap scrollbar-none pb-1">
+                <div className="shrink-0"><BrandProfileChip
                   selectedProfile={selectedBrandProfile}
                   open={brandProfilePopoverOpen}
                   onOpenChange={onBrandProfilePopoverChange}
                   onSelect={onBrandProfileSelect}
                   profiles={brandProfiles}
                   isLoading={isLoadingBrandProfiles}
-                />
-                <NegativesChip
+                /></div>
+                <div className="shrink-0"><NegativesChip
                   negatives={negatives}
                   onNegativesChange={onNegativesChange}
                   open={negativesPopoverOpen}
                   onOpenChange={onNegativesPopoverChange}
-                />
-                {polishChip}
-                {presetsChip}
+                /></div>
+                <div className="shrink-0">{polishChip}</div>
+                <div className="shrink-0">{presetsChip}</div>
               </div>
             </CollapsibleContent>
           </Collapsible>
