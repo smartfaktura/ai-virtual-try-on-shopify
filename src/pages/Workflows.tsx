@@ -273,6 +273,11 @@ export default function Workflows() {
     recentJobs.length > 0;
 
   const handleCreateVisualSet = (workflow: Workflow) => {
+    // Product Perspectives uses its standalone single-page layout
+    if (workflow.name === 'Product Perspectives') {
+      navigate('/app/perspectives');
+      return;
+    }
     navigate(`/app/generate?workflow=${workflow.id}`);
   };
 

@@ -140,6 +140,16 @@ export default function Generate() {
     enabled: !!workflowId,
   });
 
+  // Redirect angle workflows (Product Perspectives) to the standalone page
+  useEffect(() => {
+    if (activeWorkflow?.generation_config) {
+      const config = activeWorkflow.generation_config as any;
+      if (config?.variation_strategy?.type === 'angle') {
+        navigate('/app/perspectives', { replace: true });
+      }
+    }
+  }, [activeWorkflow, navigate]);
+
   const { data: brandProfiles = [] } = useQuery({
     queryKey: ['brand-profiles'],
     queryFn: async () => {
@@ -302,7 +312,7 @@ export default function Generate() {
   // Flat Lay Set detection and state
   const isFlatLay = activeWorkflow?.name === 'Flat Lay Set';
   const isUpscale = activeWorkflow?.name === 'Image Upscaling';
-  const isAngleWorkflow = variationStrategy?.type === 'angle';
+  const isAngleWorkflow = false; // Angle workflows redirect to /app/perspectives
   const [flatLayPhase, setFlatLayPhase] = useState<'surfaces' | 'details'>('surfaces');
   const [upscaleResolution, setUpscaleResolution] = useState<'2k' | '4k'>('2k');
   const [stylingNotes, setStylingNotes] = useState('');
