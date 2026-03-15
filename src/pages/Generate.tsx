@@ -140,6 +140,16 @@ export default function Generate() {
     enabled: !!workflowId,
   });
 
+  // Redirect angle workflows (Product Perspectives) to the standalone page
+  useEffect(() => {
+    if (activeWorkflow?.generation_config) {
+      const config = activeWorkflow.generation_config as any;
+      if (config?.variation_strategy?.type === 'angle') {
+        navigate('/app/perspectives', { replace: true });
+      }
+    }
+  }, [activeWorkflow, navigate]);
+
   const { data: brandProfiles = [] } = useQuery({
     queryKey: ['brand-profiles'],
     queryFn: async () => {
