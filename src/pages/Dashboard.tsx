@@ -466,12 +466,13 @@ export default function Dashboard() {
                 </TableHeader>
                 <TableBody>
                   {recentJobs.map(job => {
+                    const isPerspectives = '_source' in job && job._source === 'perspectives';
                     const firstResult = Array.isArray(job.results) ? (job.results as string[])[0] : null;
-                    const thumbUrl = firstResult || job.user_products?.image_url;
+                    const thumbUrl = isPerspectives ? (job as any)._image_url : (firstResult || job.user_products?.image_url);
                     const displayUrl = getOptimizedUrl(thumbUrl, { quality: 50 }) || '/placeholder.svg';
                     const hoverUrl = getOptimizedUrl(thumbUrl, { quality: 70 }) || '/placeholder.svg';
                     const toSentenceCase = (str: string) => str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-                    const sourceLabel = toSentenceCase(job.user_products?.title || job.workflows?.name || 'Generation');
+                    const sourceLabel = isPerspectives ? ((job as any)._label || 'Picture Perspectives') : toSentenceCase(job.user_products?.title || job.workflows?.name || 'Generation');
                     return (
                     <TableRow key={job.id}>
                       <TableCell>
