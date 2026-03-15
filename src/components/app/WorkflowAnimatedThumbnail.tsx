@@ -150,7 +150,7 @@ function FloatingEl({ element }: { element: SceneElement }) {
 
 function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
   const backgrounds = scene.backgrounds ?? [scene.background];
-  const INTERVAL = 3000;
+  const INTERVAL = 5000;
   const [index, setIndex] = useState(0);
   const [progressKey, setProgressKey] = useState(0);
   const [bgLoaded, setBgLoaded] = useState(false);
@@ -193,9 +193,9 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
         key={index}
         src={backgrounds[index]}
         alt=""
-        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-300 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
-          ...(bgLoaded ? { animation: `wf-carousel-fade 0.6s ease-in-out forwards` } : {}),
+          ...(bgLoaded ? { animation: `wf-carousel-fade 1s ease-in-out forwards` } : {}),
         }}
         onLoad={() => setBgLoaded(true)}
       />
@@ -212,21 +212,8 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
       {isActive && elementsReady && (
         <div className="absolute inset-0 z-10" style={{ animation: 'wf-fade-in 0.4s ease-out forwards' }}>
           {scene.elements.map((el, i) => (
-            <FloatingEl key={i} element={{ ...el, enterDelay: 0, animation: 'pop' }} />
+            <FloatingEl key={i} element={el} />
           ))}
-        </div>
-      )}
-
-      {/* "Generated" badge */}
-      {isActive && (
-        <div
-          className="absolute bottom-7 right-4 z-20"
-          style={{ animation: 'wf-fade-in 0.4s ease-out 0.2s forwards', opacity: 0 }}
-        >
-          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full wf-card-shadow">
-            <Sparkles className="w-3 h-3 text-primary" />
-            <span className="text-[11px] font-bold text-primary tracking-wide">Generated</span>
-          </div>
         </div>
       )}
 
