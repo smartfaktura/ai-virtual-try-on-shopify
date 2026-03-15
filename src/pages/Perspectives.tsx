@@ -108,11 +108,13 @@ export default function Perspectives() {
   const pollVersionRef = useRef(0);
 
   // ── Source type change handler ─────────────────────────────────────────
-  const handleSourceTypeChange = (type: SourceType) => {
+  const handleSourceTypeChange = (type: SourceType | null) => {
     setSourceType(type);
     setSelectedProductIds(new Set());
     setSelectedLibraryIds(new Set());
     setDirectUploadUrl(null);
+    setLibraryVisibleCount(10);
+    setProductVisibleCount(10);
   };
 
   // ── Fetch workflow config from DB ─────────────────────────────────────
