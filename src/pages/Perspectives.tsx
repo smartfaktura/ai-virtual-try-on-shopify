@@ -933,41 +933,6 @@ export default function Perspectives() {
                     </div>
                   )}
 
-                  {/* Non-recommended reference upload (show toggle) */}
-                  {hasRefUpload && !v.referenceUpload!.recommended && (
-                    <div className="mt-2">
-                      {referenceImages[i] ? (
-                        <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-muted/30">
-                          <img src={referenceImages[i]} alt="Reference" className="w-16 h-16 rounded-xl object-cover border border-border" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground">Reference uploaded</p>
-                          </div>
-                          <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={() => {
-                            const newRefs = { ...referenceImages };
-                            delete newRefs[i];
-                            setReferenceImages(newRefs);
-                          }}>
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted/50">
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Add reference image (optional)</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={e => {
-                              const file = e.target.files?.[0];
-                              if (file) handleReferenceUpload(i, file);
-                            }}
-                            disabled={uploadingRefIndex === i}
-                          />
-                        </label>
-                      )}
-                    </div>
-                  )}
                 </div>
               );
             })}
