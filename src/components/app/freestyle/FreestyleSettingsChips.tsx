@@ -397,9 +397,9 @@ export function FreestyleSettingsChips({
                   onNegativesChange={onNegativesChange}
                   open={negativesPopoverOpen}
                   onOpenChange={onNegativesPopoverChange}
-                />
-                {polishChip}
-                {presetsChip}
+                /></div>
+                <div className="shrink-0">{polishChip}</div>
+                <div className="shrink-0">{presetsChip}</div>
               </div>
             </CollapsibleContent>
           </Collapsible>
