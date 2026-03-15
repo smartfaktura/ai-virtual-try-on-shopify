@@ -252,33 +252,14 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             <DialogTitle className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
               Scene / Environment
             </DialogTitle>
-            <div className="flex items-center gap-2">
-              {selectedScene && (
-                <button
-                  onClick={() => handleSelect(null)}
-                  className="text-[10px] text-primary hover:underline"
-                >
-                  Clear selection
-                </button>
-              )}
-              <div className="flex items-center gap-0.5 rounded-md border border-border p-0.5">
-                <LayoutGrid className="w-3 h-3 text-muted-foreground mr-1" />
-                {columnOptions.map(n => (
-                  <button
-                    key={n}
-                    onClick={() => setExpandedColumns(n)}
-                    className={cn(
-                      'w-6 h-6 rounded text-[10px] font-semibold transition-colors',
-                      expandedColumns === n
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted'
-                    )}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {selectedScene && (
+              <button
+                onClick={() => handleSelect(null)}
+                className="text-[10px] text-primary hover:underline"
+              >
+                Clear selection
+              </button>
+            )}
           </div>
 
           {renderFilterTabs(true)}
