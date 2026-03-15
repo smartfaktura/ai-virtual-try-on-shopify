@@ -364,11 +364,15 @@ export default function Perspectives() {
     setSelectedLibraryIds(next);
   };
 
+  const handleDirectFile = useCallback(async (file: File) => {
+    const url = await upload(file);
+    if (url) setDirectUploadUrl(url);
+  }, [upload]);
+
   const handleDirectUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = await upload(file);
-    if (url) setDirectUploadUrl(url);
+    handleDirectFile(file);
   };
 
   const handleReferenceUpload = async (variationIndex: number, file: File) => {
