@@ -1,14 +1,17 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
 import type { CreditPack } from '@/types';
 
 interface CreditPackCardProps {
   pack: CreditPack;
   onPurchase: (packId: string) => void;
+  isLoading?: boolean;
+  disabled?: boolean;
 }
 
-export function CreditPackCard({ pack, onPurchase }: CreditPackCardProps) {
+export function CreditPackCard({ pack, onPurchase, isLoading, disabled }: CreditPackCardProps) {
   const pricePerCredit = (pack.pricePerCredit * 100).toFixed(1);
 
   return (
@@ -35,8 +38,9 @@ export function CreditPackCard({ pack, onPurchase }: CreditPackCardProps) {
             variant={pack.popular ? 'default' : 'outline'}
             className="w-full min-h-[44px]"
             onClick={() => onPurchase(pack.packId)}
+            disabled={disabled || isLoading}
           >
-            Buy Credits
+            {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Redirecting…</> : 'Buy Credits'}
           </Button>
         </CardContent>
       </Card>

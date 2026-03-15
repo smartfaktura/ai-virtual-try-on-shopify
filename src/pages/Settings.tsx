@@ -166,10 +166,17 @@ export default function Settings() {
     }
   };
 
-  const handleCreditPurchase = (packId: string) => {
+  const [topUpLoadingId, setTopUpLoadingId] = useState<string | null>(null);
+
+  const handleCreditPurchase = async (packId: string) => {
     const pack = creditPacks.find(p => p.packId === packId);
     if (pack?.stripePriceId) {
-      startCheckout(pack.stripePriceId, 'payment');
+      setTopUpLoadingId(packId);
+      try {
+        await startCheckout(pack.stripePriceId, 'payment');
+      } catch {
+        setTopUpLoadingId(null);
+      }
     }
   };
 
@@ -358,7 +365,7 @@ export default function Settings() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {creditPacks.map(pack => (
-                <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} />
+                <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} isLoading={topUpLoadingId === pack.packId} disabled={!!topUpLoadingId} />
               ))}
             </div>
           </CardContent>
