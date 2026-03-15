@@ -1261,12 +1261,13 @@ const sceneTropicalLeaves = getLandingAssetUrl('scenes/scene-tropical-leaves.jpg
 const sceneDriedFlowers = getLandingAssetUrl('scenes/scene-dried-flowers.jpg');
 const sceneBeachSand = getLandingAssetUrl('scenes/scene-beach-sand.jpg');
 const sceneStonePath = getLandingAssetUrl('scenes/scene-stone-path.jpg');
-const sceneRawConcrete = getLandingAssetUrl('scenes/scene-raw-concrete.jpg');
-const sceneWarmWoodGrain = getLandingAssetUrl('scenes/scene-warm-wood-grain.jpg');
-const sceneLinenFabric = getLandingAssetUrl('scenes/scene-linen-fabric.jpg');
-const sceneBathroomShelf = getLandingAssetUrl('scenes/scene-bathroom-shelf.jpg');
-const sceneWaterSplash = getLandingAssetUrl('scenes/scene-water-splash.jpg');
-const sceneFloatingLevitation = getLandingAssetUrl('scenes/scene-floating-levitation.jpg');
+const WORKFLOW_PREVIEW_BASE = 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/workflow-previews/bf124e8b-aabc-484a-bc81-d29a9ccec885';
+const sceneRawConcrete = `${WORKFLOW_PREVIEW_BASE}/scene-6.png`;
+const sceneWarmWoodGrain = `${WORKFLOW_PREVIEW_BASE}/scene-7.png`;
+const sceneLinenFabric = `${WORKFLOW_PREVIEW_BASE}/scene-8.png`;
+const sceneBathroomShelf = `${WORKFLOW_PREVIEW_BASE}/scene-10.png`;
+const sceneWaterSplash = `${WORKFLOW_PREVIEW_BASE}/scene-16.png`;
+const sceneFloatingLevitation = `${WORKFLOW_PREVIEW_BASE}/scene-20.png`;
 
 export const mockModels: ModelProfile[] = [
   // Priority sequence matching landing page marquee ROW_1
