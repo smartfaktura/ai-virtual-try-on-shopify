@@ -61,7 +61,7 @@ export default function Perspectives() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { credits, refreshCredits } = useCredits();
+  const { balance: credits, refreshBalance: refreshCredits } = useCredits();
   const { upload, isUploading } = useFileUpload();
 
   // ── State ──────────────────────────────────────────────────────────────
