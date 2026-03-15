@@ -1397,6 +1397,10 @@ export default function Generate() {
       const map: Record<string, number> = { source: 1, upload: 2, settings: 3, generating: 4, results: 4 };
       return map[currentStep] || 1;
     }
+    if (isAngleWorkflow) {
+      const map: Record<string, number> = { source: 1, product: 1, upload: 1, library: 1, settings: 2, generating: 3, results: 3 };
+      return map[currentStep] || 1;
+    }
     if (hasWorkflowConfig && uiConfig?.skip_template) {
       if (uiConfig?.show_model_picker) {
         const map: Record<string, number> = { source: 1, product: 1, upload: 1, 'brand-profile': 2, mode: 2, model: 3, settings: 4, generating: 5, results: 5 };
