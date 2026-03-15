@@ -116,7 +116,10 @@ export default function AdminScenes() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <PageHeader title="Scene Manager" subtitle="Reorder and manage all scenes across categories" />
+        <div>
+          <h1 className="text-lg font-semibold">Scene Manager</h1>
+          <p className="text-xs text-muted-foreground">Reorder and manage all scenes across categories</p>
+        </div>
         <Button
           onClick={handleSave}
           disabled={!dirty || saveSortOrder.isPending}
