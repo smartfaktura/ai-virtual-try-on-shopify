@@ -460,6 +460,170 @@ export default function Perspectives() {
     { id: 'scratch', title: 'From Scratch', description: 'Upload your own image file', icon: Upload },
   ];
 
+  // ── Generating view helpers ─────────────────────────────────────────────
+  const genCompletedCount = Object.values(jobStatuses).filter(s => s.status === 'completed').length;
+  const genFailedCount = Object.values(jobStatuses).filter(s => s.status === 'failed').length;
+  const genTotalCount = generatingJobs.length;
+  const genAllDone = genTotalCount > 0 && Object.values(jobStatuses).every(s => s.status === 'completed' || s.status === 'failed' || s.status === 'cancelled');
+  const genProgressPercent = genTotalCount > 0 ? (genCompletedCount / genTotalCount) * 100 : 0;
+  const estimatedSecondsPerImage = 90; // Pro model
+  const estimatedTotal = genTotalCount * estimatedSecondsPerImage;
+
+  function formatTime(s: number) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+  }
+
+  const currentMember = TEAM_MEMBERS[teamIndex % TEAM_MEMBERS.length];
+
+  // ── Generating progress view ──────────────────────────────────────────
+  if (isGeneratingView) {
+    return (
+      <div className="min-h-screen">
+        <SEOHead title="Generating Perspectives…" description="Your product perspectives are being created." />
+        <div className="max-w-2xl mx-auto px-4 py-12 space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+              <Layers className="w-7 h-7 text-primary animate-pulse" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Creating Product Perspectives…</h1>
+            <p className="text-sm text-muted-foreground">
+              Generating {genTotalCount} angle{genTotalCount !== 1 ? 's' : ''}
+              {generatingJobs[0] ? ` of ${generatingJobs[0].productTitle}` : ''}
+            </p>
+          </div>
+
+          {/* Progress card */}
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
+            {/* Progress bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {genCompletedCount} of {genTotalCount} complete
+                  {genFailedCount > 0 && <span className="text-destructive ml-1">({genFailedCount} failed)</span>}
+                </span>
+                <span className="font-mono text-muted-foreground">{formatTime(genElapsed)}</span>
+              </div>
+              <Progress
+                value={genAllDone ? 100 : Math.max(genProgressPercent, 5)}
+                className="h-2 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
+              />
+              <p className="text-xs text-muted-foreground">
+                Est. {formatTime(Math.round(estimatedTotal * 0.8))} – {formatTime(Math.round(estimatedTotal * 1.2))} total
+              </p>
+            </div>
+
+            {/* Per-variation chips */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Perspectives</p>
+              <div className="flex flex-wrap gap-2">
+                {generatingJobs.map(job => {
+                  const s = jobStatuses[job.jobId];
+                  const status = s?.status || 'queued';
+                  const Icon = VARIATION_ICONS[job.variationLabel] || ImageIcon;
+
+                  return (
+                    <div
+                      key={job.jobId}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all ${
+                        status === 'completed'
+                          ? 'border-green-500/30 bg-green-500/5 text-green-700 dark:text-green-400'
+                          : status === 'failed'
+                            ? 'border-destructive/30 bg-destructive/5 text-destructive'
+                            : status === 'processing'
+                              ? 'border-primary/30 bg-primary/5 text-primary'
+                              : 'border-border bg-muted/30 text-muted-foreground'
+                      }`}
+                    >
+                      {status === 'completed' ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : status === 'failed' ? (
+                        <XCircle className="w-4 h-4" />
+                      ) : status === 'processing' ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Clock className="w-4 h-4" />
+                      )}
+                      <Icon className="w-3.5 h-3.5" />
+                      <span className="font-medium">{job.variationLabel}</span>
+                      {job.ratio !== '1:1' && (
+                        <span className="text-xs opacity-60">{job.ratio}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Team avatar rotation */}
+            <div className="flex items-center gap-3 pt-2 border-t border-border">
+              <Avatar className="w-8 h-8 border border-border">
+                <AvatarImage src={currentMember.avatar} alt={currentMember.name} />
+                <AvatarFallback className="text-xs">{currentMember.name[0]}</AvatarFallback>
+              </Avatar>
+              <p className="text-sm text-muted-foreground italic">
+                {currentMember.name} is {currentMember.statusMessage.toLowerCase()}
+              </p>
+            </div>
+
+            {/* Overtime message */}
+            {genElapsed > estimatedTotal && !genAllDone && (
+              <p className="text-xs text-muted-foreground text-center">
+                Taking a bit longer than usual — high-quality Pro model results are worth the wait…
+              </p>
+            )}
+          </div>
+
+          {/* Cancel button */}
+          {!genAllDone && (
+            <div className="text-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  stopPolling();
+                  setIsGeneratingView(false);
+                  toast.info('Generation continues in the background. Check your library for results.');
+                }}
+                className="text-muted-foreground"
+              >
+                Continue in background
+              </Button>
+            </div>
+          )}
+
+          {/* All done — manual nav */}
+          {genAllDone && genCompletedCount > 0 && (
+            <div className="text-center">
+              <Button
+                onClick={() => {
+                  setIsGeneratingView(false);
+                  navigate('/app/library');
+                }}
+                className="h-11 px-6 rounded-xl"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                View in Library
+              </Button>
+            </div>
+          )}
+
+          {/* All failed */}
+          {genAllDone && genCompletedCount === 0 && (
+            <div className="text-center space-y-3">
+              <p className="text-sm text-destructive">All generations failed. Credits have been refunded.</p>
+              <Button variant="outline" onClick={() => setIsGeneratingView(false)}>
+                Try Again
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <SEOHead title="Product Perspectives" description="Generate angle and detail variations of your product images." />
