@@ -78,8 +78,8 @@ export default function Perspectives() {
   const { upload, isUploading } = useFileUpload();
 
   // ── State ──────────────────────────────────────────────────────────────
-  const initialSource = searchParams.get('source') ? 'scratch' as SourceType : 'library' as SourceType;
-  const [sourceType, setSourceType] = useState<SourceType>(initialSource);
+  const initialSource: SourceType | null = searchParams.get('source') ? 'scratch' : null;
+  const [sourceType, setSourceType] = useState<SourceType | null>(initialSource);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
   const [selectedVariations, setSelectedVariations] = useState<Set<number>>(new Set());
