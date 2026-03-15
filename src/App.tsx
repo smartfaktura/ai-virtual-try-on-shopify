@@ -146,6 +146,7 @@ const App = () => (
                       <Route path="/jobs/:id" element={<Jobs />} />
                       <Route path="/video" element={<VideoGenerate />} />
                       <Route path="/freestyle" element={<Freestyle />} />
+                      <Route path="/perspectives" element={<Perspectives />} />
                       <Route path="/admin/scenes" element={<AdminScenes />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
