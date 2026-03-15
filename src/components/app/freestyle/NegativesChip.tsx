@@ -23,10 +23,11 @@ export function NegativesChip({ negatives, onNegativesChange, open, onOpenChange
           <PopoverTrigger asChild>
             <button
               className={cn(
-                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors min-w-0',
                 hasItems
                   ? 'border-destructive/30 bg-destructive/10 text-destructive'
-                  : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+                  : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted',
+                fullWidth && 'w-full'
               )}
             >
               <Ban className="w-3.5 h-3.5" />

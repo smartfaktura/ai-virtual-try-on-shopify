@@ -35,17 +35,18 @@ export function FramingSelectorChip({ framing, onFramingChange, open, onOpenChan
     <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
       <PopoverTrigger asChild>
         <button className={cn(
-          'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+          'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors min-w-0',
           framing
             ? 'border-primary/30 bg-primary/10 text-primary'
-            : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+            : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted',
+          fullWidth && 'w-full'
         )}>
           <FramingThumbnail framing={framing} size={16} />
-          {selectedOption ? selectedOption.label : 'Framing'}
+          <span className="truncate flex-1 min-w-0 text-left">{selectedOption ? selectedOption.label : 'Framing'}</span>
           {framing && (
             <span
               onClick={(e) => { e.stopPropagation(); onFramingChange(null); }}
-              className="ml-0.5 hover:text-destructive"
+              className="ml-0.5 hover:text-destructive shrink-0"
             >
               <X className="w-3 h-3" />
             </span>

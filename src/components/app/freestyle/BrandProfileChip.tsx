@@ -35,27 +35,28 @@ export function BrandProfileChip({
           <PopoverTrigger asChild>
             <button
               className={cn(
-                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
+                'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors min-w-0',
                 selectedProfile
                   ? 'border-primary/30 bg-primary/10 text-primary'
-                  : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
+                  : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted',
+                fullWidth && 'w-full'
               )}
             >
-              <Palette className="w-3.5 h-3.5" />
+              <Palette className="w-3.5 h-3.5 shrink-0" />
               {selectedProfile ? (
                 <>
-                  <span className="max-w-[80px] truncate">{selectedProfile.name}</span>
+                  <span className="truncate flex-1 min-w-0 text-left">{selectedProfile.name}</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); onSelect(null); }}
-                    className="ml-0.5 hover:text-destructive"
+                    className="ml-0.5 hover:text-destructive shrink-0"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </>
               ) : (
                 <>
-                  Brand
-                  <ChevronDown className="w-3 h-3 opacity-40" />
+                  <span className="truncate">Brand</span>
+                  <ChevronDown className="w-3 h-3 opacity-40 shrink-0" />
                 </>
               )}
             </button>
