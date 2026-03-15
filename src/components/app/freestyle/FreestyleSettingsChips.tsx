@@ -311,17 +311,15 @@ export function FreestyleSettingsChips({
     </Popover>
   );
 
-  // --- Mobile: deterministic grid layout ---
+  // --- Mobile: inline flow layout ---
   if (isMobile) {
     return (
       <TooltipProvider delayDuration={300}>
         <div className="space-y-2">
-          {/* Row 1: Assets — 2-column grid */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="min-w-0">
-              {uploadButton}
-            </div>
-            <div className={cn('min-w-0', highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+          {/* Row 1: Assets */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {uploadButton}
+            <div className={cn(highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <ProductSelectorChip
                 selectedProduct={selectedProduct}
                 open={productPopoverOpen}
@@ -330,58 +328,50 @@ export function FreestyleSettingsChips({
                 products={products}
                 isLoading={isLoadingProducts}
                 modal={isMobile}
-                fullWidth
               />
             </div>
-            <div className={cn('min-w-0', highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+            <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <ModelSelectorChip
                 selectedModel={selectedModel}
                 open={modelPopoverOpen}
                 onOpenChange={onModelPopoverChange}
                 onSelect={onModelSelect}
                 modal={isMobile}
-                fullWidth
               />
             </div>
-            <div className={cn('min-w-0', highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+            <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
               <SceneSelectorChip
                 selectedScene={selectedScene}
                 open={scenePopoverOpen}
                 onOpenChange={onScenePopoverChange}
                 onSelect={onSceneSelect}
                 modal={isMobile}
-                fullWidth
               />
             </div>
           </div>
 
-          {/* Row 2: Settings — wrapped in Collapsible */}
+          {/* Row 2: Settings + Style collapsible */}
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <FramingSelectorChip
                 framing={framing}
                 onFramingChange={onFramingChange}
                 open={framingPopoverOpen}
                 onOpenChange={onFramingPopoverChange}
                 modal={isMobile}
-                fullWidth
               />
               {aspectRatioChip}
               {qualityChip}
               {cameraStyleChip}
-            </div>
-
-            {/* Style trigger — full width */}
-            <div className="mt-2">
               <CollapsibleTrigger asChild>
                 <button className={cn(
-                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors w-full',
+                  'inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border transition-colors',
                   advancedActiveCount > 0
                     ? 'border-primary/30 bg-primary/10 text-primary'
                     : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
                 )}>
                   <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-                  <span className="flex-1 text-left">Style</span>
+                  <span>Style</span>
                   {advancedActiveCount > 0 && (
                     <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center shrink-0">
                       {advancedActiveCount}
@@ -393,7 +383,7 @@ export function FreestyleSettingsChips({
             </div>
 
             <CollapsibleContent className="pt-2">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <BrandProfileChip
                   selectedProfile={selectedBrandProfile}
                   open={brandProfilePopoverOpen}
@@ -401,14 +391,12 @@ export function FreestyleSettingsChips({
                   onSelect={onBrandProfileSelect}
                   profiles={brandProfiles}
                   isLoading={isLoadingBrandProfiles}
-                  fullWidth
                 />
                 <NegativesChip
                   negatives={negatives}
                   onNegativesChange={onNegativesChange}
                   open={negativesPopoverOpen}
                   onOpenChange={onNegativesPopoverChange}
-                  fullWidth
                 />
                 {polishChip}
                 {presetsChip}
