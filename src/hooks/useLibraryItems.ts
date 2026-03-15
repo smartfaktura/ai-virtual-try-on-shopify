@@ -190,7 +190,7 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
         throw err;
       }
     },
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: {} as Cursor,
     enabled: !!user,
     staleTime: 60_000,
