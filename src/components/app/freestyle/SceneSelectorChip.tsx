@@ -165,7 +165,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             </div>
           </div>
 
-          {renderFilterTabs()}
+          {renderFilterTabs(false)}
           {renderGrid(false)}
 
           <div className="mt-2">
