@@ -316,43 +316,39 @@ export function FreestyleSettingsChips({
     return (
       <TooltipProvider delayDuration={300}>
         <div className="space-y-2">
-          {/* Row 1: Assets */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {uploadButton}
-            <div className={cn(highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
-              <ProductSelectorChip
-                selectedProduct={selectedProduct}
-                open={productPopoverOpen}
-                onOpenChange={onProductPopoverChange}
-                onSelect={onProductSelect}
-                products={products}
-                isLoading={isLoadingProducts}
-                modal={isMobile}
-              />
-            </div>
-            <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
-              <ModelSelectorChip
-                selectedModel={selectedModel}
-                open={modelPopoverOpen}
-                onOpenChange={onModelPopoverChange}
-                onSelect={onModelSelect}
-                modal={isMobile}
-              />
-            </div>
-            <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
-              <SceneSelectorChip
-                selectedScene={selectedScene}
-                open={scenePopoverOpen}
-                onOpenChange={onScenePopoverChange}
-                onSelect={onSceneSelect}
-                modal={isMobile}
-              />
-            </div>
-          </div>
-
-          {/* Row 2: Settings + Style collapsible */}
+          {/* All chips in one flow */}
           <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
             <div className="flex items-center gap-2 flex-wrap">
+              {uploadButton}
+              <div className={cn(highlightedChip === 'product' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+                <ProductSelectorChip
+                  selectedProduct={selectedProduct}
+                  open={productPopoverOpen}
+                  onOpenChange={onProductPopoverChange}
+                  onSelect={onProductSelect}
+                  products={products}
+                  isLoading={isLoadingProducts}
+                  modal={isMobile}
+                />
+              </div>
+              <div className={cn(highlightedChip === 'model' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+                <ModelSelectorChip
+                  selectedModel={selectedModel}
+                  open={modelPopoverOpen}
+                  onOpenChange={onModelPopoverChange}
+                  onSelect={onModelSelect}
+                  modal={isMobile}
+                />
+              </div>
+              <div className={cn(highlightedChip === 'scene' && 'ring-2 ring-primary/50 rounded-full animate-pulse')}>
+                <SceneSelectorChip
+                  selectedScene={selectedScene}
+                  open={scenePopoverOpen}
+                  onOpenChange={onScenePopoverChange}
+                  onSelect={onSceneSelect}
+                  modal={isMobile}
+                />
+              </div>
               <FramingSelectorChip
                 framing={framing}
                 onFramingChange={onFramingChange}
