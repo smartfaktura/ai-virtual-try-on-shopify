@@ -506,6 +506,7 @@ export type Database = {
           quality: string
           scene_id: string | null
           user_id: string
+          workflow_label: string | null
         }
         Insert: {
           aspect_ratio?: string
@@ -518,6 +519,7 @@ export type Database = {
           quality?: string
           scene_id?: string | null
           user_id: string
+          workflow_label?: string | null
         }
         Update: {
           aspect_ratio?: string
@@ -530,6 +532,7 @@ export type Database = {
           quality?: string
           scene_id?: string | null
           user_id?: string
+          workflow_label?: string | null
         }
         Relationships: [
           {
