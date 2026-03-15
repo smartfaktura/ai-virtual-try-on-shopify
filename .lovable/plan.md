@@ -1,30 +1,30 @@
 
 
-## Show Selected Values + Add Label to Style Icon
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Changes — `FreestyleSettingsChips.tsx`
+### Issues Found
 
-**1. Camera chip — show selected value**
-Line 217: Change static `Camera` to show the selected value:
-- Default (pro): `Camera` (unchanged, since pro is default)
-- When natural selected: `Natural` (the icon already changes to Smartphone, plus highlight)
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-Actually better: always show the value so user knows what's active:
-- `Pro` when pro, `Natural` when natural — but prefix with icon. The icon already differentiates. Since "Pro" was the original complaint, use short labels: show `📷 Pro ▾` or `📱 Natural ▾`. The icon handles context, the word confirms the selection.
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**2. Quality chip — show "Standard" when selected**
-Line 179: Change mobile label from just `Quality` to `Standard` when standard is selected (it's still the value), and `✦ High` when high. This way both states show the selected value.
+### Plan
 
-**3. Style icon — add short word**
-Line 364-376: Add a short label like `More` next to the sliders icon to make it less orphaned. This fills the visual gap on the last row.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-### Summary
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-| Chip | Before (mobile) | After (mobile) |
-|---|---|---|
-| Quality (standard) | `Quality` | `Standard` |
-| Quality (high) | `✦ High` | `✦ High` |
-| Camera (pro) | `📷 Camera` | `📷 Pro` |
-| Camera (natural) | `📱 Camera` | `📱 Natural` |
-| Style trigger | `⚙ [badge] ▾` | `⚙ More [badge] ▾` |
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 

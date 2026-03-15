@@ -176,7 +176,7 @@ export function FreestyleSettingsChips({
             ? 'border-primary/30 bg-primary/10 text-primary'
             : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
-          {quality === 'high' ? (isMobile ? '✦ High' : 'Quality: ✦ High') : (isMobile ? 'Quality' : 'Quality: Standard')}
+          {quality === 'high' ? (isMobile ? '✦ High' : 'Quality: ✦ High') : (isMobile ? 'Standard' : 'Quality: Standard')}
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
       </PopoverTrigger>
@@ -214,7 +214,7 @@ export function FreestyleSettingsChips({
             : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
         )}>
           {cameraStyle === 'natural' ? <Smartphone className="w-3.5 h-3.5" /> : <Camera className="w-3.5 h-3.5" />}
-          Camera
+          {cameraStyle === 'natural' ? 'Natural' : 'Pro'}
           <ChevronDown className="w-3 h-3 opacity-40" />
         </button>
       </PopoverTrigger>
@@ -367,6 +367,7 @@ export function FreestyleSettingsChips({
                     : 'border-border bg-muted/50 text-foreground/70 hover:bg-muted'
                 )}>
                   <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+                  <span>More</span>
                   {advancedActiveCount > 0 && (
                     <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center shrink-0">
                       {advancedActiveCount}
