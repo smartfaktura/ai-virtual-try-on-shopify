@@ -62,6 +62,23 @@ export default function AdminScenes() {
   useEffect(() => {
     if (allPoses.length > 0) {
       setOrderedPoses(allPoses);
+      // Derive category order from saved sort data
+      if (sortMap.size > 0) {
+        const catMinOrder = new Map<string, number>();
+        allPoses.forEach(p => {
+          const order = sortMap.get(p.poseId) ?? 9999;
+          const current = catMinOrder.get(p.category);
+          if (current === undefined || order < current) {
+            catMinOrder.set(p.category, order);
+          }
+        });
+        const derived = [...catMinOrder.entries()]
+          .sort((a, b) => a[1] - b[1])
+          .map(([cat]) => cat as PoseCategory);
+        // Add any categories not in saved data
+        const remaining = defaultCategoryOrder.filter(c => !derived.includes(c));
+        setCategoryOrder([...derived, ...remaining]);
+      }
       setDirty(false);
       setInitialized(true);
     }
