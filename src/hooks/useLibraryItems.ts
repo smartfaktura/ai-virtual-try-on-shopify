@@ -102,15 +102,18 @@ export function useLibraryItems(sortBy: LibrarySortBy, searchQuery: string) {
           return sortBy === 'oldest' ? -diff : diff;
         });
 
-        // Sign all URLs in parallel
-        const signedUrls = await toSignedUrls(rawItems.map(r => r.url));
+        // Trim to PAGE_SIZE after sorting
+        const trimmed = rawItems.slice(0, PAGE_SIZE);
 
-        for (let i = 0; i < rawItems.length; i++) {
-          items.push({ ...rawItems[i].item, imageUrl: signedUrls[i] } as LibraryItem);
+        // Sign all URLs in parallel
+        const signedUrls = await toSignedUrls(trimmed.map(r => r.url));
+
+        for (let i = 0; i < trimmed.length; i++) {
+          items.push({ ...trimmed[i].item, imageUrl: signedUrls[i] } as LibraryItem);
         }
 
-        const totalFetched = (jobsResult.data?.length ?? 0) + (freestyleResult.data?.length ?? 0);
-        return { items, hasMore: totalFetched >= PAGE_SIZE };
+        const hasMoreItems = rawItems.length > PAGE_SIZE;
+        return { items, hasMore: hasMoreItems };
       } catch (err) {
         console.error('[Library] Query failed:', err);
         throw err;
