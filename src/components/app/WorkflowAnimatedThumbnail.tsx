@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, useRef, memo, type ReactNode } from 'react';
 import { Sparkles, Home } from 'lucide-react';
 import { getOptimizedUrl } from '@/lib/imageOptimization';
 
