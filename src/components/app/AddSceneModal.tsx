@@ -36,15 +36,10 @@ export function AddSceneModal({ open, onClose, imageUrl }: AddSceneModalProps) {
   const analyzeImage = async () => {
     setIsAnalyzing(true);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-scene-from-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ imageUrl }),
+      const { data, error } = await supabase.functions.invoke('create-scene-from-image', {
+        body: { imageUrl },
       });
-      if (!resp.ok) throw new Error('Analysis failed');
+      if (error) throw error;
       const data = await resp.json();
       setName(data.name || '');
       setDescription(data.description || '');
