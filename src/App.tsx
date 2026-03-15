@@ -33,6 +33,7 @@ const MobileUpload = lazy(() => import('@/pages/MobileUpload'));
 const VideoGenerate = lazy(() => import('@/pages/VideoGenerate'));
 const Freestyle = lazy(() => import('@/pages/Freestyle'));
 const AdminScenes = lazy(() => import('@/pages/AdminScenes'));
+const Perspectives = lazy(() => import('@/pages/Perspectives'));
 const About = lazy(() => import('@/pages/About'));
 const Blog = lazy(() => import('@/pages/Blog'));
 const BlogPost = lazy(() => import('@/pages/BlogPost'));
