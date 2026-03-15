@@ -180,7 +180,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
                 >
                   <img src={pose.previewUrl} alt={pose.name} className="w-full aspect-[4/5] object-cover" />
                   <div className="px-1.5 py-1 bg-background">
-                    <p className={cn('font-medium text-foreground leading-tight truncate', expanded ? 'text-[10px]' : 'text-[9px]')}>{pose.name}</p>
+                    <p className={cn('font-medium text-foreground leading-tight truncate', expanded ? 'text-[10px]' : 'text-[9px] lg:text-[11px]')}>{pose.name}</p>
                   </div>
                 </button>
               ))}
