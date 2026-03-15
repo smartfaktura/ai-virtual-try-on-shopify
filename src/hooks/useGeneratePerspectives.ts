@@ -27,6 +27,66 @@ interface UseGeneratePerspectivesOptions {
   onComplete?: () => void;
 }
 
+/**
+ * Build the full perspective prompt with strict product identity rules.
+ * This replaces the generic polisher which conflicts with angle-specific directives.
+ */
+function buildPerspectivePrompt(
+  variation: VariationInput,
+  productTitle: string,
+  hasReferenceImage: boolean,
+): string {
+  const layers: string[] = [];
+
+  // System instructions — perspective-specific
+  layers.push(
+    `Generate a photorealistic product image from the specified angle/perspective. Maintain the exact product identity — shape, material, color, texture, logos, hardware, stitching — from the source product image. The ONLY change is the camera angle.`
+  );
+
+  // Perspective directive — the specific angle instruction
+  layers.push(
+    `PERSPECTIVE DIRECTIVE: ${variation.instruction}\n\nProduct: "${productTitle}". Capture from the "${variation.label}" perspective exactly as described above.`
+  );
+
+  // Strict product identity rules
+  layers.push(
+    `PRODUCT IDENTITY — STRICT: The product in this image must be the EXACT same product from [PRODUCT IMAGE]. Preserve every detail: shape, material, color, texture, logo placement, hardware, stitching, seams, proportions, and finish. Do NOT alter, simplify, stylize, or "reimagine" any design element. Do NOT add or remove any features. The ONLY change is the camera angle/perspective as described above.`
+  );
+
+  // Reference image handling — angle-aware, not scene inspiration
+  if (hasReferenceImage) {
+    layers.push(
+      `ANGLE REFERENCE: [REFERENCE IMAGE] shows the same product from the requested angle. Use it to understand the product's appearance from this perspective — back construction, side profile shape, hidden details, etc. This is NOT scene or mood inspiration — it is a product identity reference for this specific angle. Match the product details visible in this reference while maintaining the exact same product identity from [PRODUCT IMAGE].`
+    );
+  }
+
+  // Cross-angle environment consistency
+  layers.push(
+    `ENVIRONMENT CONSISTENCY: Place the product on a clean, neutral surface in a professional studio environment. Use soft, even lighting with minimal shadows. The lighting direction, color temperature, and background must be consistent as if all angles were shot in the same photography session. No dramatic shadows, no colored gels, no environmental props.`
+  );
+
+  // Photography quality directives (embedded directly, no generic polisher)
+  layers.push(
+    `PHOTOGRAPHY QUALITY: Ultra high resolution, photorealistic rendering. Shot on 85mm f/2.8 macro lens. Razor-sharp focus across the product surface. Visible material textures — fabric weave, leather grain, metal brushing, stitching thread. Micro-contrast on surfaces. Clean highlight roll-off. Professional product photography lighting.`
+  );
+
+  // Negatives — perspective-specific (no "reimagine" instructions)
+  layers.push(
+    `CRITICAL — DO NOT include any of the following:
+- No people, no human figures, no hands, no body parts
+- No blurry or out-of-focus areas
+- No AI-looking smoothing or plastic textures on materials
+- No collage layouts or split-screen compositions
+- No compositing artifacts, no mismatched lighting, no pasted-in look
+- No black borders, black bars, letterboxing, pillarboxing, or padding
+- Do NOT change the product design, color, or any identifying features
+- Do NOT add props, accessories, or items not present on the original product
+- Do NOT alter proportions or scale of the product`
+  );
+
+  return layers.join('\n\n');
+}
+
 export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions) {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -86,26 +146,33 @@ export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions
         }
 
         for (const ratio of ratios) {
-          const variationPrompt = `${variation.instruction}\n\nProduct: ${product.title}. Maintain the exact product identity from the source image. Generate from the "${variation.label}" perspective.`;
+          // Build the full perspective-specific prompt (replaces generic polisher)
+          const perspectivePrompt = buildPerspectivePrompt(
+            variation,
+            product.title,
+            !!referenceBase64,
+          );
 
           const payload: Record<string, unknown> = {
-            prompt: variationPrompt,
+            prompt: perspectivePrompt,
             productImage: productBase64,
             aspectRatio: ratio,
             quality,
-            polishPrompt: true,
+            polishPrompt: false, // Skip generic polisher — prompt is fully built
             imageCount: 1,
             batch_id: batchId,
             productId: product.id === 'direct' ? null : product.id,
-            // Perspective-specific fields
+            // Perspective-specific flags
+            isPerspective: true,
+            forceProModel: true,
             variation_instruction: variation.instruction,
             variation_label: variation.label,
           };
 
-          // If a reference image was uploaded for this angle, pass it as sourceImage
-          // This makes it act as [REFERENCE IMAGE] in the prompt builder
+          // Pass reference as referenceAngleImage (not sourceImage)
+          // so the edge function treats it as product identity, not scene inspiration
           if (referenceBase64) {
-            payload.sourceImage = referenceBase64;
+            payload.referenceAngleImage = referenceBase64;
           }
 
           try {

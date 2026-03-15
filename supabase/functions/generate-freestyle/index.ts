@@ -795,6 +795,10 @@ serve(async (req) => {
     const maxRetries = isQueueInternal ? 1 : 2;
     const effectiveImageCount = isQueueInternal ? 1 : Math.min(body.imageCount || 1, 4);
 
+    // ── Perspective mode: skip all generic prompt logic ──────────────────
+    const isPerspective = !!(body as Record<string, unknown>).isPerspective;
+    const referenceAngleImage = (body as Record<string, unknown>).referenceAngleImage as string | undefined;
+
     let enrichedPrompt = body.prompt?.trim() || "Professional commercial photography of the provided subject";
     if (body.modelContext) {
       enrichedPrompt = `${enrichedPrompt}\n\nModel reference: ${body.modelContext}`;
@@ -802,7 +806,6 @@ serve(async (req) => {
 
     if (body.stylePresets && body.stylePresets.length > 0) {
       if (body.cameraStyle === 'natural') {
-        // Filter out keywords that conflict with Natural camera style (deep DOF, no grain)
         const conflicting = ['shallow depth of field', 'bokeh', 'film grain'];
         const filtered = body.stylePresets.filter((kw: string) =>
           !conflicting.some(c => kw.toLowerCase().includes(c))
@@ -823,7 +826,10 @@ serve(async (req) => {
     };
 
     let finalPrompt: string;
-    if (body.polishPrompt) {
+    if (isPerspective) {
+      // Perspective jobs: prompt is fully built by the hook — use as-is
+      finalPrompt = enrichedPrompt;
+    } else if (body.polishPrompt) {
       finalPrompt = polishUserPrompt(enrichedPrompt, polishContext, body.brandProfile, body.negatives, body.modelContext, body.cameraStyle, body.framing, body.productDimensions);
     } else {
       let unpolished = enrichedPrompt;
