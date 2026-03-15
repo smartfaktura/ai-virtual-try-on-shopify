@@ -93,7 +93,7 @@ const FLAT_LAY_AESTHETICS = [
   { id: 'seasonal', label: 'Seasonal', hint: 'seasonal elements matching current time of year' },
 ];
 
-type Step = 'source' | 'product' | 'upload' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
+type Step = 'source' | 'product' | 'upload' | 'library' | 'brand-profile' | 'mode' | 'model' | 'pose' | 'template' | 'settings' | 'generating' | 'results';
 
 export default function Generate() {
   const navigate = useNavigate();
