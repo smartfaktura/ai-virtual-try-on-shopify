@@ -156,6 +156,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
   const [showCurrent, setShowCurrent] = useState(true);
   const [progressKey, setProgressKey] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
+  const currentRef = useRef(0);
 
   // Preload only the element images (small chips)
   const elementUrls = useMemo(
@@ -169,12 +170,13 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
   useEffect(() => {
     if (!isActive || backgrounds.length <= 1) return;
     const t = setInterval(() => {
-      setPrev(current);
+      const cur = currentRef.current;
+      const next = (cur + 1) % backgrounds.length;
+      setPrev(cur);
       setShowCurrent(false);
-      // Small delay to ensure prev is rendered before we swap src
       requestAnimationFrame(() => {
-        setCurrent((c) => (c + 1) % backgrounds.length);
-        // Allow the new image to start loading, then fade in
+        currentRef.current = next;
+        setCurrent(next);
         requestAnimationFrame(() => {
           setShowCurrent(true);
         });
@@ -182,7 +184,7 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
       setProgressKey((k) => k + 1);
     }, INTERVAL);
     return () => clearInterval(t);
-  }, [isActive, backgrounds.length, current]);
+  }, [isActive, backgrounds.length]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-muted">
