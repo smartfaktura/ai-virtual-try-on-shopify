@@ -1391,7 +1391,7 @@ export const mockTryOnPoses: TryOnPose[] = [
   { poseId: 'scene_033', name: 'Warm Wood Grain', category: 'clean-studio', description: 'Warm natural oak wood grain surface', promptHint: 'Warm natural oak wood grain surface, organic warmth, eco-friendly aesthetic, natural tones', previewUrl: sceneWarmWoodGrain },
   { poseId: 'scene_034', name: 'Linen & Fabric', category: 'clean-studio', description: 'Soft draped natural linen fabric surface', promptHint: 'Soft draped natural linen fabric, organic texture, soft and tactile product display aesthetic', previewUrl: sceneLinenFabric },
   { poseId: 'scene_035', name: 'Bathroom Shelf', category: 'clean-studio', description: 'Styled white bathroom shelf with lifestyle context', promptHint: 'Styled white bathroom shelf with small plants and folded towel, lifestyle bathroom context, beauty and skincare setting', previewUrl: sceneBathroomShelf },
-  { poseId: 'scene_036', name: 'Water Splash', category: 'clean-studio', description: 'Dynamic water splash surrounding product', promptHint: 'Explosive burst of crystal-clear water surrounding product, dramatic water splashes frozen in mid-air, high-speed editorial water photography, refreshing aquatic mood', previewUrl: sceneWaterSplash },
+  
   { poseId: 'scene_037', name: 'Floating Levitation', category: 'clean-studio', description: 'Zero-gravity levitation with soft shadow below', promptHint: 'Product suspended mid-air defying gravity with soft diffused shadow below, clean white gradient background, zero gravity surreal editorial magic', previewUrl: sceneFloatingLevitation },
 ];
 
