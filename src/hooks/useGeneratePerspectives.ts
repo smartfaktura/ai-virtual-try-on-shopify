@@ -172,12 +172,12 @@ ${sideNote ? `- Side-specific: ${sideNote}` : ''}
 function getEnvironmentRules(category: PerspectiveCategory, mode: SceneMode): string {
   if (category === 'context') {
     return mode === 'on-model'
-      ? `ENVIRONMENT — LIFESTYLE CONTEXT (ON-MODEL): Place the model and product in a curated, on-brand environment. The setting should feel intentional and editorial. The model interacts naturally with the space. Maintain soft, directional lighting. The model + product must remain the clear visual hero.`
-      : `ENVIRONMENT — LIFESTYLE CONTEXT: Place the product in a curated, on-brand environment. The setting should feel intentional and editorial — a styled surface, a complementary interior, or an outdoor scene that elevates the product story. Use natural materials and neutral-warm tones. Maintain soft, directional lighting. The product must remain the clear visual hero despite the richer environment.`;
+      ? `ENVIRONMENT — PRESERVE SOURCE CONTEXT (ON-MODEL): Maintain the same environmental style, mood, and setting from the source image. If the source shows a street, interior, studio, or outdoor scene, stay in that EXACT same type of environment with consistent materials, tones, and props. The model interacts naturally with the space. Maintain the same lighting direction and color temperature as the source. The model + product must remain the clear visual hero.`
+      : `ENVIRONMENT — PRESERVE SOURCE CONTEXT: Maintain the same environmental style, mood, and setting from the source image. If the source has a specific background (street, studio, interior, outdoor), stay in that EXACT same type of environment with consistent materials, tones, and surface. Do NOT introduce a new or different background. Maintain the same lighting direction and color temperature as the source. The product must remain the clear visual hero.`;
   }
   return mode === 'on-model'
-    ? `ENVIRONMENT — STUDIO CONSISTENCY (ON-MODEL): Clean, neutral backdrop. Professional studio lighting — soft key light from upper-left at 45°, fill light opposite at 40% intensity, subtle rim light for edge separation on both the model and the product. The lighting direction, color temperature (5500K daylight), and background must be identical across all angle shots as if photographed in the same session. The model stands/poses on the same surface throughout.`
-    : `ENVIRONMENT — STUDIO CONSISTENCY: Clean, neutral surface (white, light gray, or off-white). Professional studio lighting — soft key light from upper-left at 45°, fill light opposite at 40% intensity, subtle rim light for edge separation. No colored gels, no dramatic shadows, no environmental props. The lighting direction, color temperature (5500K daylight), and background must be identical across all angle shots as if photographed in the same session.`;
+    ? `ENVIRONMENT — MATCH SOURCE EXACTLY (ON-MODEL): Match the EXACT background, surface, and environment from [PRODUCT IMAGE]. Same backdrop color/texture, same surface material, same lighting setup. Professional studio lighting — soft key light from upper-left at 45°, fill light opposite at 40% intensity, subtle rim light for edge separation. The lighting direction, color temperature (5500K daylight), and background must be identical to the source image. The model stands/poses on the same surface as in the source.`
+    : `ENVIRONMENT — MATCH SOURCE EXACTLY: Match the EXACT background, surface, and environment from [PRODUCT IMAGE]. Same backdrop color/texture, same surface material, same lighting setup. Do NOT introduce a new background or studio setup. Professional studio lighting — soft key light from upper-left at 45°, fill light opposite at 40% intensity, subtle rim light for edge separation. The lighting direction, color temperature (5500K daylight), and background must be identical to the source image as if photographed in the same session.`;
 }
 
 // ---------------------------------------------------------------------------
@@ -191,7 +191,8 @@ function getNegatives(category: PerspectiveCategory, mode: SceneMode): string {
 - No compositing artifacts, no mismatched lighting, no pasted-in look
 - No black borders, black bars, letterboxing, pillarboxing, or padding
 - Do NOT change the product design, color, or any identifying features
-- Do NOT alter proportions or scale of the product`;
+- Do NOT alter proportions or scale of the product
+- Do NOT change the background, environment, or surface from the source image`;
 
   if (mode === 'on-model') {
     return `CRITICAL — DO NOT include any of the following:
@@ -225,11 +226,11 @@ function buildPerspectivePrompt(
   // System instruction — scene-mode aware
   if (mode === 'on-model') {
     layers.push(
-      `Reproduce this exact scene from a new camera angle. The scene contains a human model wearing/holding/interacting with a product. Preserve BOTH the product identity AND the human subject — same person, same pose intent, same styling, same garment fit. The ONLY change is the camera angle.`
+      `Reproduce this exact scene from a new camera angle. The scene contains a human model wearing/holding/interacting with a product. Preserve BOTH the product identity AND the human subject — same person, same pose intent, same styling, same garment fit. Preserve the EXACT same background, surface, lighting setup, and environment from [PRODUCT IMAGE]. The ONLY change is the camera angle.`
     );
   } else {
     layers.push(
-      `Generate a photorealistic product image from the specified angle/perspective. Maintain the exact product identity — shape, material, color, texture, logos, hardware, stitching — from the source product image. The ONLY change is the camera angle.`
+      `Generate a photorealistic product image from the specified angle/perspective. Maintain the exact product identity — shape, material, color, texture, logos, hardware, stitching — from the source product image. Preserve the EXACT same background, surface, lighting setup, and environment from [PRODUCT IMAGE]. The ONLY change is the camera angle.`
     );
   }
 

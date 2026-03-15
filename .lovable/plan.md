@@ -1,27 +1,30 @@
 
 
-## Fix: Preserve Source Background/Environment Across All Perspectives
+## Product Perspectives — Implemented ✅
 
-### Problem
-The prompts say "the ONLY change is the camera angle" but the environment rules override this by requesting generic "clean, neutral surface" or "curated lifestyle" settings instead of preserving the actual background from the source image. The AI generates new backgrounds for each angle instead of keeping the original one.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Solution
-Update the prompt layers in `src/hooks/useGeneratePerspectives.ts` to explicitly instruct the AI to preserve the exact background/environment from the source image.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-#### Changes in `buildPerspectivePrompt` and `getEnvironmentRules`:
-
-1. **System instruction** (lines 226-234): Add explicit environment preservation language to both on-model and product-only modes:
-   - *"Preserve the EXACT same background, surface, lighting setup, and environment from [PRODUCT IMAGE]."*
-
-2. **`getEnvironmentRules` function** (lines 172-181): Replace the generic studio/lifestyle descriptions with source-matching instructions:
-   - **Non-context angles**: Instead of "Clean, neutral surface (white, light gray...)", say: *"Match the EXACT background, surface, and environment from the source image. Same backdrop color/texture, same surface material, same lighting setup. Do NOT introduce a new background or studio setup."*
-   - **Context angles**: Instead of "Place the product in a curated environment", say: *"Maintain the same environmental style and mood from the source image. If the source has a specific setting (street, studio, interior), stay in that same type of environment with consistent materials and tones."*
-   - Keep the lighting consistency instructions (5500K, same key-light direction).
-
-3. **Negatives** (lines 187-210): Add a new negative line: *"Do NOT change the background, environment, or surface from the source image"*
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
 ### Files changed
-| File | Change |
-|------|--------|
-| `src/hooks/useGeneratePerspectives.ts` | Update system instructions, environment rules, and negatives to enforce source background preservation |
-
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
