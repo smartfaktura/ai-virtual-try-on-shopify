@@ -1,30 +1,35 @@
 
 
-## Product Perspectives — Implemented ✅
+## Fix: ZIP Download Creates Random Folders
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Root Cause
+Variation labels `"Close-up / Macro"` and `"Wide / Environment"` contain `/` characters. When used in ZIP filenames (e.g., `"Picture Perspectives — Close-up / Macro-abc123.png"`), JSZip interprets the `/` as a directory separator, creating unwanted nested folders like `Close-up` → `Macro-abc123.png`.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Solution
+Sanitize filenames in both ZIP download paths to replace `/` with `–` (en-dash).
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+### Changes
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+| File | Change |
+|------|--------|
+| `src/pages/Jobs.tsx` | In `handleBulkDownload` (~line 158), sanitize `item.label` by replacing `/` before passing to `zip.file()` |
+| `src/lib/dropDownload.ts` | In `downloadDropAsZip`, sanitize `folder` and `fileName` values to strip `/` characters |
+
+**Jobs.tsx** (line 158):
+```typescript
+// Before:
+zip.file(`${item.label}-${item.id.slice(0, 8)}.png`, blob);
+// After:
+const safeLabel = item.label.replace(/\//g, '–');
+zip.file(`${safeLabel}-${item.id.slice(0, 8)}.png`, blob);
+```
+
+**dropDownload.ts** (lines 36-40):
+```typescript
+// Sanitize folder and fileName to prevent unintended subdirectories
+const folder = (img.workflow_name || 'General').replace(/\//g, '–');
+const fileName = img.scene_name
+  ? `${img.scene_name.replace(/\//g, '–')}_${i + 1}${ext}`
+  : `image_${i + 1}${ext}`;
+```
+
