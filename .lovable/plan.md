@@ -1,30 +1,25 @@
 
 
-## Product Perspectives — Implemented ✅
+## Fix: Perspectives grouping merges separate batches
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+In `src/pages/Workflows.tsx` (lines 200–222), Picture Perspectives results from `freestyle_generations` are grouped by a **10-minute time window**. If you generate two separate Perspectives batches within 10 minutes (e.g., hoodie + crop top), all their images get merged into one preview card showing 10 mixed images instead of two separate cards of 5 each.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Root Cause
+The grouping only checks `Math.abs(rowTime - groupTime) <= 10 * 60 * 1000` but doesn't differentiate by product or batch. The `freestyle_generations` table stores a `workflow_label` like `"Picture Perspectives — Close-up Detail"` which contains the variation name but not a batch identifier.
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+### Solution
+Use the `batch_id` field that is already stored on the `generation_queue` jobs. The `freestyle_generations` table likely doesn't have a `batch_id`, but the `workflow_label` contains the product context. We should group by **workflow_label prefix** (the part before the " — " variation suffix) AND the time window, so two different products within 10 minutes stay separate.
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+**Better approach**: The `workflow_label` format is `"Picture Perspectives — [Variation]"` — all variations from the same batch share the same product but we can't distinguish products from labels alone. Instead, reduce the time window from **10 minutes to 30 seconds** (matching the typical enqueue duration of a batch with 500ms stagger × ~5–10 images = 2.5–5s). This is a simple, reliable fix.
+
+### Changes
+
+**`src/pages/Workflows.tsx`** — In the Perspectives grouping loop (~line 211):
+- Change the time window from `10 * 60 * 1000` (10 min) to `30 * 1000` (30 seconds)
+- This ensures only images enqueued in the same rapid burst get grouped together, while separate batches (even a minute apart) remain distinct cards
+
+| File | Change |
+|------|--------|
+| `src/pages/Workflows.tsx` | Reduce Perspectives grouping window from 10 min to 30 seconds |
+
