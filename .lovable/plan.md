@@ -1,26 +1,30 @@
 
 
-## Fix Mobile Menu Animation Glitch in LandingNav
+## Fix AI Creative Pick Thumbnail + Bright Aesthetic Priority
 
-### Problem
-The mobile menu uses `max-h-0 → max-h-80` combined with `opacity-0 → opacity-100` in a single `transition-all duration-300`. This causes two issues:
+### Issues Found
 
-1. **Opacity and height animate simultaneously** — the content fades in while still expanding, creating a "transparent flash" where you briefly see semi-transparent content sliding into place
-2. **`backdrop-blur-xl`** on the inner div is expensive to animate, causing jank on mobile GPUs
-3. **`transition-all`** transitions every property (border, shadow, opacity, max-height) at once, which is heavy
+1. **AI Creative Pick has no preview thumbnail** — In the `workflows` table, the Product Listing Set's `generation_config.variation_strategy.variations[0]` (AI Creative Pick) has `preview_url: null`. All other 29 scenes have preview images stored in the `workflow-previews` bucket.
 
-### Fix
+2. **AI Creative Pick instruction needs bright aesthetic priority** — The current instruction says "autonomously choose the SINGLE most compelling scene" but doesn't bias toward bright, clean, high-impact visuals.
 
-**`src/components/landing/LandingNav.tsx`** (~lines 87-92):
+### Plan
 
-1. **Remove opacity animation entirely** — keep content always `opacity-100`. The `max-h` + `overflow-hidden` already hides the content; fading it too causes the transparent glitch.
-2. **Replace `transition-all`** with explicit `transition-[max-height]`** — only animate the height, not border/shadow/opacity. This is much cheaper.
-3. **Use `will-change-[max-height]`** on the container to hint the GPU.
-4. **Move `backdrop-blur-xl`** to the outer container (or remove the double-nesting) so the blur isn't being composited during the height animation.
+**1. Generate a preview thumbnail for AI Creative Pick** — Create a dedicated icon/placeholder card in the frontend for the "AI Creative Pick" scene since it's intentionally dynamic (no fixed preview). Instead of a generic Package icon, render a branded Sparkles icon with a distinctive gradient that signals "AI picks for you."
 
-The closed state becomes: `max-h-0 border-transparent shadow-none` (no opacity-0).
-The open state becomes: `max-h-80` (no opacity-100).
-Transition: `transition-[max-height] duration-300 ease-in-out`.
+**File: `src/pages/Generate.tsx`** (~line 2344-2357)
+- In the scene card grid, detect when a variation is the "AI Creative Pick" (by label match or index 0 with no preview_url)
+- Render a special card with a Sparkles icon, a colorful gradient background, and a subtle shimmer effect instead of the generic Package icon
+- This visually distinguishes it as a premium AI-powered option
 
-This eliminates the opacity flash and reduces the number of properties being animated, fixing the lag.
+**2. Update AI Creative Pick instruction for bright aesthetic bias**
+
+**Database migration** — Update the Product Listing Set workflow's `generation_config` to modify the AI Creative Pick variation's instruction. Add emphasis on:
+- "Prioritize bright, clean, visually striking scenes with abundant natural or studio light"
+- "Favor luminous, airy, high-key aesthetics over dark or moody setups"
+- "The image should feel vibrant, inviting, and commercially appealing"
+
+### Files Changed — 1 file + 1 migration
+- `src/pages/Generate.tsx` — Special AI Creative Pick card rendering
+- Database migration — Update AI Creative Pick instruction text
 
