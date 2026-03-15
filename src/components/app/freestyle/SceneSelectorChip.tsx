@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Camera, ChevronDown, X, Maximize2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Camera, ChevronDown, X, Maximize2, LayoutGrid } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
@@ -7,6 +7,58 @@ import { cn } from '@/lib/utils';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+
+type DeviceType = 'mobile' | 'tablet' | 'desktop';
+
+const COLUMN_OPTIONS: Record<DeviceType, number[]> = {
+  desktop: [4, 3, 2],
+  tablet: [3, 2],
+  mobile: [3, 2, 1],
+};
+
+const COLUMN_DEFAULTS: Record<DeviceType, number> = {
+  desktop: 4,
+  tablet: 3,
+  mobile: 3,
+};
+
+function getDeviceType(): DeviceType {
+  const w = window.innerWidth;
+  if (w >= 1024) return 'desktop';
+  if (w >= 768) return 'tablet';
+  return 'mobile';
+}
+
+function useExpandedColumns() {
+  const [device, setDevice] = useState<DeviceType>(getDeviceType);
+  const [columns, setColumns] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('scene-grid-columns');
+      if (saved) return Number(saved);
+    } catch {}
+    return COLUMN_DEFAULTS[getDeviceType()];
+  });
+
+  useEffect(() => {
+    const onResize = () => {
+      const d = getDeviceType();
+      setDevice(d);
+      setColumns(prev => {
+        const opts = COLUMN_OPTIONS[d];
+        return opts.includes(prev) ? prev : COLUMN_DEFAULTS[d];
+      });
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const set = useCallback((n: number) => {
+    setColumns(n);
+    try { localStorage.setItem('scene-grid-columns', String(n)); } catch {}
+  }, []);
+
+  return { columns, setColumns: set, options: COLUMN_OPTIONS[device] };
+}
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 
 interface SceneSelectorChipProps {
@@ -34,6 +86,7 @@ const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
   const [isExpanded, setIsExpanded] = useState(false);
+  const { columns: expandedColumns, setColumns: setExpandedColumns, options: columnOptions } = useExpandedColumns();
   const { asPoses: customPoses } = useCustomScenes();
   const { filterVisible } = useHiddenScenes();
 
@@ -86,7 +139,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5 px-1">
               {poseCategoryLabels[cat]}
             </p>
-            <div className={cn('grid gap-1.5', expanded ? 'grid-cols-3 sm:grid-cols-4 gap-2' : 'grid-cols-3')}>
+            <div className={cn('grid gap-1.5', expanded ? `gap-2` : 'grid-cols-3')} style={expanded ? { gridTemplateColumns: `repeat(${expandedColumns}, minmax(0, 1fr))` } : undefined}>
               {poses.map(pose => (
                 <button
                   key={pose.poseId}
@@ -176,7 +229,7 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
             <DialogTitle className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
               Scene / Environment
             </DialogTitle>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               {selectedScene && (
                 <button
                   onClick={() => handleSelect(null)}
@@ -185,6 +238,23 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
                   Clear selection
                 </button>
               )}
+              <div className="flex items-center gap-0.5 rounded-md border border-border p-0.5">
+                <LayoutGrid className="w-3 h-3 text-muted-foreground mr-1" />
+                {columnOptions.map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setExpandedColumns(n)}
+                    className={cn(
+                      'w-6 h-6 rounded text-[10px] font-semibold transition-colors',
+                      expandedColumns === n
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:bg-muted'
+                    )}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
