@@ -725,8 +725,8 @@ export default function Perspectives() {
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[360px] overflow-y-auto p-1">
-                  {filteredLibrary.map(item => {
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-1">
+                  {filteredLibrary.slice(0, libraryVisibleCount).map(item => {
                     const isSelected = selectedLibraryIds.has(item.id);
                     return (
                       <div
