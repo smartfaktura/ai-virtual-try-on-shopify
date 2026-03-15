@@ -431,7 +431,7 @@ export default function Perspectives() {
       referenceImageUrl: referenceImages[i] || null,
     }));
 
-    await generate({
+    const result = await generate({
       products: selectedSources.map(p => ({
         id: p.id,
         imageUrl: p.image_url,
@@ -441,6 +441,16 @@ export default function Perspectives() {
       ratios: Array.from(selectedRatios),
       quality,
     });
+
+    if (result && result.jobs.length > 0) {
+      setGeneratingJobs(result.jobs);
+      setJobStatuses(Object.fromEntries(result.jobs.map(j => [j.jobId, { status: 'queued' }])));
+      genStartRef.current = Date.now();
+      setGenElapsed(0);
+      setTeamIndex(0);
+      setIsGeneratingView(true);
+      startPolling(result.jobs);
+    }
   };
 
   // ── Source type cards config ───────────────────────────────────────────
