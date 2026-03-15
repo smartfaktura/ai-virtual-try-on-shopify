@@ -166,10 +166,17 @@ export default function Settings() {
     }
   };
 
-  const handleCreditPurchase = (packId: string) => {
+  const [topUpLoadingId, setTopUpLoadingId] = useState<string | null>(null);
+
+  const handleCreditPurchase = async (packId: string) => {
     const pack = creditPacks.find(p => p.packId === packId);
     if (pack?.stripePriceId) {
-      startCheckout(pack.stripePriceId, 'payment');
+      setTopUpLoadingId(packId);
+      try {
+        await startCheckout(pack.stripePriceId, 'payment');
+      } catch {
+        setTopUpLoadingId(null);
+      }
     }
   };
 

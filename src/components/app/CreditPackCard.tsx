@@ -1,11 +1,14 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
 import type { CreditPack } from '@/types';
 
 interface CreditPackCardProps {
   pack: CreditPack;
   onPurchase: (packId: string) => void;
+  isLoading?: boolean;
+  disabled?: boolean;
 }
 
 export function CreditPackCard({ pack, onPurchase }: CreditPackCardProps) {
