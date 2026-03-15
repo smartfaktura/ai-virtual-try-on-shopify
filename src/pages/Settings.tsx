@@ -365,7 +365,7 @@ export default function Settings() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {creditPacks.map(pack => (
-                <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} />
+                <CreditPackCard key={pack.packId} pack={pack} onPurchase={handleCreditPurchase} isLoading={topUpLoadingId === pack.packId} disabled={!!topUpLoadingId} />
               ))}
             </div>
           </CardContent>

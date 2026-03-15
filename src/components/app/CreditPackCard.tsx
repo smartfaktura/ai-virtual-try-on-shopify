@@ -38,8 +38,9 @@ export function CreditPackCard({ pack, onPurchase, isLoading, disabled }: Credit
             variant={pack.popular ? 'default' : 'outline'}
             className="w-full min-h-[44px]"
             onClick={() => onPurchase(pack.packId)}
+            disabled={disabled || isLoading}
           >
-            Buy Credits
+            {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Redirecting…</> : 'Buy Credits'}
           </Button>
         </CardContent>
       </Card>
