@@ -23,8 +23,16 @@ interface GenerateParams {
   quality: 'standard' | 'high';
 }
 
-interface UseGeneratePerspectivesOptions {
-  onComplete?: () => void;
+export interface PerspectiveJobInfo {
+  jobId: string;
+  variationLabel: string;
+  productTitle: string;
+  ratio: string;
+}
+
+export interface GenerateResult {
+  jobs: PerspectiveJobInfo[];
+  batchId: string;
 }
 
 /**
@@ -150,15 +158,15 @@ function buildPerspectivePrompt(
   return layers.join('\n\n');
 }
 
-export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions) {
+export function useGeneratePerspectives() {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const generate = useCallback(async (params: GenerateParams) => {
+  const generate = useCallback(async (params: GenerateParams): Promise<GenerateResult | null> => {
     if (!user) {
       toast.error('Please sign in to generate');
-      return;
+      return null;
     }
 
     const { products, variations, ratios, quality } = params;
@@ -166,7 +174,7 @@ export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions
 
     if (totalJobs === 0) {
       toast.error('Select at least one product, angle, and ratio');
-      return;
+      return null;
     }
 
     setIsGenerating(true);
@@ -179,15 +187,15 @@ export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions
     if (!token) {
       toast.error('Authentication required');
       setIsGenerating(false);
-      return;
+      return null;
     }
 
     const batchId = crypto.randomUUID();
     let enqueuedCount = 0;
+    const jobs: PerspectiveJobInfo[] = [];
 
     // Enqueue sequentially to avoid credit race conditions
     for (const product of products) {
-      // Convert product image to base64 once per product
       let productBase64: string | null = null;
       try {
         productBase64 = await convertImageToBase64(product.imageUrl);
@@ -197,19 +205,16 @@ export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions
       }
 
       for (const variation of variations) {
-        // Convert reference image if provided
         let referenceBase64: string | null = null;
         if (variation.referenceImageUrl) {
           try {
             referenceBase64 = await convertImageToBase64(variation.referenceImageUrl);
           } catch {
-            // Non-critical — proceed without reference
             console.warn('Failed to load reference image:', variation.referenceImageUrl);
           }
         }
 
         for (const ratio of ratios) {
-          // Build the full perspective-specific prompt (replaces generic polisher)
           const perspectivePrompt = buildPerspectivePrompt(
             variation,
             product.title,
@@ -221,22 +226,17 @@ export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions
             productImage: productBase64,
             aspectRatio: ratio,
             quality,
-            polishPrompt: false, // Skip generic polisher — prompt is fully built
+            polishPrompt: false,
             imageCount: 1,
             batch_id: batchId,
-            // Nullify synthetic IDs (library/scratch) that aren't real user_products UUIDs
             productId: ['direct', 'fs-', 'job-'].some(prefix => product.id.startsWith(prefix)) ? null : product.id,
-            // Perspective-specific flags
             isPerspective: true,
             forceProModel: true,
             variation_instruction: variation.instruction,
             variation_label: variation.label,
-            // Clean label for library display (not "Freestyle")
             workflow_label: `Product Perspectives — ${variation.label}`,
           };
 
-          // Pass reference as referenceAngleImage (not sourceImage)
-          // so the edge function treats it as product identity, not scene inspiration
           if (referenceBase64) {
             payload.referenceAngleImage = referenceBase64;
           }
@@ -272,6 +272,13 @@ export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions
               continue;
             }
 
+            const result = await response.json();
+            jobs.push({
+              jobId: result.jobId,
+              variationLabel: variation.label,
+              productTitle: product.title,
+              ratio,
+            });
             enqueuedCount++;
             setProgress(Math.round((enqueuedCount / totalJobs) * 100));
           } catch (err) {
@@ -282,16 +289,17 @@ export function useGeneratePerspectives(options?: UseGeneratePerspectivesOptions
       }
     }
 
-    if (enqueuedCount > 0) {
-      toast.success(`${enqueuedCount} perspective${enqueuedCount > 1 ? 's' : ''} queued!`);
-      options?.onComplete?.();
-    } else {
-      toast.error('No images were queued');
-    }
-
     setIsGenerating(false);
     setProgress(0);
-  }, [user, options]);
+
+    if (jobs.length === 0) {
+      toast.error('No images were queued');
+      return null;
+    }
+
+    toast.success(`${jobs.length} perspective${jobs.length > 1 ? 's' : ''} queued!`);
+    return { jobs, batchId };
+  }, [user]);
 
   return { generate, isGenerating, progress };
 }

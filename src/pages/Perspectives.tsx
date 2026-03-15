@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SEOHead } from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
@@ -6,11 +6,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { LowCreditsBanner } from '@/components/app/LowCreditsBanner';
 import {
   Search, Upload, X, Sparkles, Layers, ZoomIn, RotateCcw,
   ArrowLeft, ArrowRight, Maximize, ImageIcon, Check, Plus, Loader2,
-  Package, Image as ImageLucide, Info, ClipboardPaste,
+  Package, Image as ImageLucide, Info, ClipboardPaste, CheckCircle, XCircle,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,7 +21,9 @@ import { useCredits } from '@/contexts/CreditContext';
 import { useQuery } from '@tanstack/react-query';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useGeneratePerspectives } from '@/hooks/useGeneratePerspectives';
+import type { PerspectiveJobInfo } from '@/hooks/useGeneratePerspectives';
 import { toSignedUrls } from '@/lib/signedUrl';
+import { TEAM_MEMBERS } from '@/data/teamData';
 import type { Tables } from '@/integrations/supabase/types';
 
 type UserProduct = Tables<'user_products'>;
@@ -90,6 +94,16 @@ export default function Perspectives() {
   const [directUploadUrl, setDirectUploadUrl] = useState<string | null>(
     searchParams.get('source') || null
   );
+
+  // ── Generating progress state ─────────────────────────────────────────
+  const [isGeneratingView, setIsGeneratingView] = useState(false);
+  const [generatingJobs, setGeneratingJobs] = useState<PerspectiveJobInfo[]>([]);
+  const [jobStatuses, setJobStatuses] = useState<Record<string, { status: string; error?: string }>>({});
+  const [genElapsed, setGenElapsed] = useState(0);
+  const [teamIndex, setTeamIndex] = useState(0);
+  const genStartRef = useRef<number>(0);
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollVersionRef = useRef(0);
 
   // ── Source type change handler ─────────────────────────────────────────
   const handleSourceTypeChange = (type: SourceType) => {
@@ -202,13 +216,106 @@ export default function Perspectives() {
   );
 
   // ── Hook ──────────────────────────────────────────────────────────────
-  const { generate, isGenerating, progress } = useGeneratePerspectives({
-    onComplete: () => {
-      refreshCredits();
-      toast.success('Perspectives queued! Check your library for results.');
-      navigate('/app/library');
-    },
-  });
+  const { generate, isGenerating, progress } = useGeneratePerspectives();
+
+  // ── Generating progress polling ───────────────────────────────────────
+  const stopPolling = useCallback(() => {
+    pollVersionRef.current++;
+    if (pollRef.current) {
+      clearTimeout(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => stopPolling();
+  }, [stopPolling]);
+
+  // Elapsed timer during generating view
+  useEffect(() => {
+    if (!isGeneratingView) return;
+    const interval = setInterval(() => {
+      setGenElapsed(Math.floor((Date.now() - genStartRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isGeneratingView]);
+
+  // Team avatar rotation
+  useEffect(() => {
+    if (!isGeneratingView) return;
+    const interval = setInterval(() => {
+      setTeamIndex(prev => (prev + 1) % TEAM_MEMBERS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isGeneratingView]);
+
+  const startPolling = useCallback((jobs: PerspectiveJobInfo[]) => {
+    const version = ++pollVersionRef.current;
+    const jobIds = jobs.map(j => j.jobId);
+
+    const poll = async () => {
+      if (pollVersionRef.current !== version) return;
+
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token || SUPABASE_KEY;
+
+      const idsFilter = jobIds.map(id => `"${id}"`).join(',');
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/generation_queue?id=in.(${idsFilter})&select=id,status,error_message`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+        );
+        if (!res.ok || pollVersionRef.current !== version) return;
+        const rows = await res.json();
+
+        const statuses: Record<string, { status: string; error?: string }> = {};
+        for (const row of rows) {
+          statuses[row.id] = { status: row.status, error: row.error_message || undefined };
+        }
+        // Fill missing as queued
+        for (const id of jobIds) {
+          if (!statuses[id]) statuses[id] = { status: 'queued' };
+        }
+
+        if (pollVersionRef.current !== version) return;
+        setJobStatuses(statuses);
+
+        const allDone = jobIds.every(id => {
+          const s = statuses[id]?.status;
+          return s === 'completed' || s === 'failed' || s === 'cancelled';
+        });
+
+        if (allDone) {
+          const completed = jobIds.filter(id => statuses[id]?.status === 'completed').length;
+          const failed = jobIds.filter(id => statuses[id]?.status === 'failed').length;
+          stopPolling();
+
+          refreshCredits();
+
+          if (completed > 0) {
+            toast.success(`${completed} perspective${completed > 1 ? 's' : ''} ready! ${failed > 0 ? `(${failed} failed)` : ''}`);
+            setTimeout(() => {
+              setIsGeneratingView(false);
+              navigate('/app/library');
+            }, 1500);
+          } else {
+            toast.error('All generations failed. Credits have been refunded.');
+          }
+          return;
+        }
+      } catch {
+        // Network error — keep polling
+      }
+
+      if (pollVersionRef.current === version) {
+        pollRef.current = setTimeout(poll, 3000);
+      }
+    };
+
+    poll();
+  }, [navigate, refreshCredits, stopPolling]);
 
   // ── Derived ───────────────────────────────────────────────────────────
   const sourceCount = sourceType === 'scratch'
@@ -324,7 +431,7 @@ export default function Perspectives() {
       referenceImageUrl: referenceImages[i] || null,
     }));
 
-    await generate({
+    const result = await generate({
       products: selectedSources.map(p => ({
         id: p.id,
         imageUrl: p.image_url,
@@ -334,6 +441,16 @@ export default function Perspectives() {
       ratios: Array.from(selectedRatios),
       quality,
     });
+
+    if (result && result.jobs.length > 0) {
+      setGeneratingJobs(result.jobs);
+      setJobStatuses(Object.fromEntries(result.jobs.map(j => [j.jobId, { status: 'queued' }])));
+      genStartRef.current = Date.now();
+      setGenElapsed(0);
+      setTeamIndex(0);
+      setIsGeneratingView(true);
+      startPolling(result.jobs);
+    }
   };
 
   // ── Source type cards config ───────────────────────────────────────────
@@ -342,6 +459,170 @@ export default function Perspectives() {
     { id: 'product', title: 'From Products', description: 'Select from your product catalog', icon: Package },
     { id: 'scratch', title: 'From Scratch', description: 'Upload your own image file', icon: Upload },
   ];
+
+  // ── Generating view helpers ─────────────────────────────────────────────
+  const genCompletedCount = Object.values(jobStatuses).filter(s => s.status === 'completed').length;
+  const genFailedCount = Object.values(jobStatuses).filter(s => s.status === 'failed').length;
+  const genTotalCount = generatingJobs.length;
+  const genAllDone = genTotalCount > 0 && Object.values(jobStatuses).every(s => s.status === 'completed' || s.status === 'failed' || s.status === 'cancelled');
+  const genProgressPercent = genTotalCount > 0 ? (genCompletedCount / genTotalCount) * 100 : 0;
+  const estimatedSecondsPerImage = 90; // Pro model
+  const estimatedTotal = genTotalCount * estimatedSecondsPerImage;
+
+  function formatTime(s: number) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+  }
+
+  const currentMember = TEAM_MEMBERS[teamIndex % TEAM_MEMBERS.length];
+
+  // ── Generating progress view ──────────────────────────────────────────
+  if (isGeneratingView) {
+    return (
+      <div className="min-h-screen">
+        <SEOHead title="Generating Perspectives…" description="Your product perspectives are being created." />
+        <div className="max-w-2xl mx-auto px-4 py-12 space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+              <Layers className="w-7 h-7 text-primary animate-pulse" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">Creating Product Perspectives…</h1>
+            <p className="text-sm text-muted-foreground">
+              Generating {genTotalCount} angle{genTotalCount !== 1 ? 's' : ''}
+              {generatingJobs[0] ? ` of ${generatingJobs[0].productTitle}` : ''}
+            </p>
+          </div>
+
+          {/* Progress card */}
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
+            {/* Progress bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {genCompletedCount} of {genTotalCount} complete
+                  {genFailedCount > 0 && <span className="text-destructive ml-1">({genFailedCount} failed)</span>}
+                </span>
+                <span className="font-mono text-muted-foreground">{formatTime(genElapsed)}</span>
+              </div>
+              <Progress
+                value={genAllDone ? 100 : Math.max(genProgressPercent, 5)}
+                className="h-2 [&>div]:transition-all [&>div]:duration-1000 [&>div]:ease-linear"
+              />
+              <p className="text-xs text-muted-foreground">
+                Est. {formatTime(Math.round(estimatedTotal * 0.8))} – {formatTime(Math.round(estimatedTotal * 1.2))} total
+              </p>
+            </div>
+
+            {/* Per-variation chips */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Perspectives</p>
+              <div className="flex flex-wrap gap-2">
+                {generatingJobs.map(job => {
+                  const s = jobStatuses[job.jobId];
+                  const status = s?.status || 'queued';
+                  const Icon = VARIATION_ICONS[job.variationLabel] || ImageIcon;
+
+                  return (
+                    <div
+                      key={job.jobId}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all ${
+                        status === 'completed'
+                          ? 'border-green-500/30 bg-green-500/5 text-green-700 dark:text-green-400'
+                          : status === 'failed'
+                            ? 'border-destructive/30 bg-destructive/5 text-destructive'
+                            : status === 'processing'
+                              ? 'border-primary/30 bg-primary/5 text-primary'
+                              : 'border-border bg-muted/30 text-muted-foreground'
+                      }`}
+                    >
+                      {status === 'completed' ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : status === 'failed' ? (
+                        <XCircle className="w-4 h-4" />
+                      ) : status === 'processing' ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Clock className="w-4 h-4" />
+                      )}
+                      <Icon className="w-3.5 h-3.5" />
+                      <span className="font-medium">{job.variationLabel}</span>
+                      {job.ratio !== '1:1' && (
+                        <span className="text-xs opacity-60">{job.ratio}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Team avatar rotation */}
+            <div className="flex items-center gap-3 pt-2 border-t border-border">
+              <Avatar className="w-8 h-8 border border-border">
+                <AvatarImage src={currentMember.avatar} alt={currentMember.name} />
+                <AvatarFallback className="text-xs">{currentMember.name[0]}</AvatarFallback>
+              </Avatar>
+              <p className="text-sm text-muted-foreground italic">
+                {currentMember.name} is {currentMember.statusMessage.toLowerCase()}
+              </p>
+            </div>
+
+            {/* Overtime message */}
+            {genElapsed > estimatedTotal && !genAllDone && (
+              <p className="text-xs text-muted-foreground text-center">
+                Taking a bit longer than usual — high-quality Pro model results are worth the wait…
+              </p>
+            )}
+          </div>
+
+          {/* Cancel button */}
+          {!genAllDone && (
+            <div className="text-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  stopPolling();
+                  setIsGeneratingView(false);
+                  toast.info('Generation continues in the background. Check your library for results.');
+                }}
+                className="text-muted-foreground"
+              >
+                Continue in background
+              </Button>
+            </div>
+          )}
+
+          {/* All done — manual nav */}
+          {genAllDone && genCompletedCount > 0 && (
+            <div className="text-center">
+              <Button
+                onClick={() => {
+                  setIsGeneratingView(false);
+                  navigate('/app/library');
+                }}
+                className="h-11 px-6 rounded-xl"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                View in Library
+              </Button>
+            </div>
+          )}
+
+          {/* All failed */}
+          {genAllDone && genCompletedCount === 0 && (
+            <div className="text-center space-y-3">
+              <p className="text-sm text-destructive">All generations failed. Credits have been refunded.</p>
+              <Button variant="outline" onClick={() => setIsGeneratingView(false)}>
+                Try Again
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
