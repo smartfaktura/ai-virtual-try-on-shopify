@@ -88,19 +88,18 @@ export function WorkflowActivityCard({
                   </p>
                   {(() => {
                     const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
-                    const unitLabel = isStagingWorkflow ? 'style' : 'batch';
-                    const unitLabelPlural = isStagingWorkflow ? 'styles' : 'batches';
+                    const unitLabelPlural = isStagingWorkflow ? 'styles' : 'images';
                     return (
                       <>
                         <p className="text-xs text-muted-foreground">
                           {isBatch ? (
                             <>
-                              {group.completedCount} of {group.totalCount} {unitLabelPlural} complete · {elapsed}
+                              {group.completedCount} of {group.totalCount} {unitLabelPlural} generated · {elapsed}
                             </>
                           ) : isProcessing ? (
-                            <>Generating… {elapsed}</>
+                            <>1 image · Generating… {elapsed}</>
                           ) : (
-                            <>Queued · waiting {elapsed}</>
+                            <>1 image · Queued · waiting {elapsed}</>
                           )}
                         </p>
                         {isProcessing && (() => {
@@ -149,7 +148,12 @@ export function WorkflowActivityCard({
               </div>
 
               {isBatch && (
-                <Progress value={progressPct} className="h-1.5" />
+                <div className="relative">
+                  <Progress value={progressPct} className="h-1.5" />
+                  <span className="absolute right-0 -top-4 text-[10px] text-muted-foreground font-medium">
+                    {group.completedCount}/{group.totalCount}
+                  </span>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -175,10 +179,9 @@ export function WorkflowActivityCard({
                   {(() => {
                     const isStagingWorkflow = /interior|staging/i.test(group.workflow_name ?? '');
                     return isBatch
-                      ? `All ${group.totalCount} ${isStagingWorkflow ? 'styles' : 'batches'} complete`
-                      : 'Generation complete';
+                      ? `${group.totalCount} of ${group.totalCount} ${isStagingWorkflow ? 'styles' : 'images'} complete`
+                      : '1 image complete';
                   })()}
-                  {' · images ready'}
                 </p>
               </div>
               <Badge
@@ -225,8 +228,8 @@ export function WorkflowActivityCard({
               </p>
               <p className="text-xs text-muted-foreground truncate">
                 {group.totalCount > 1
-                  ? `${group.failedCount} of ${group.totalCount} batches failed`
-                  : 'Generation failed'}
+                  ? `${group.failedCount} of ${group.totalCount} images failed`
+                  : '1 image failed'}
                 {group.jobs[0]?.error_message
                   ? ` · ${group.jobs[0].error_message.slice(0, 60)}`
                   : ''}

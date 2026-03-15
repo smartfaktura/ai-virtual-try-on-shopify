@@ -1,40 +1,30 @@
 
 
-## Improve Activity Card: Show "X of Y images" with Workflow Name
+## Product Perspectives — Implemented ✅
 
-### Problem
-The activity card currently says "X of Y batches complete" which is confusing — users think in terms of **images**, not batches. For single-job groups it just says "Generating…" with no count context. The screenshot shows "Picture Perspectives — Generating... 2m 50s" with no image count.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Changes (`src/components/app/WorkflowActivityCard.tsx`)
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-#### Active groups (processing/queued)
-- Replace "X of Y batches/styles complete" with **"X of Y images · Generating…"** for multi-job batches
-- For single jobs: show **"1 image · Generating…"** instead of just "Generating…"
-- Keep the elapsed timer and Pro model estimate line
-- Use "images" universally instead of "batches" (except staging workflows keep "styles")
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-#### Completed groups
-- Replace "All X batches complete · images ready" with **"X of X images complete"**
-
-#### Failed groups  
-- Replace "X of Y batches failed" with **"X of Y images failed"**
-
-#### Progress bar
-- Always show progress bar for multi-image groups (already does), but also show the fraction as text on the bar like "3/8"
-
-### Specific text changes
-
-| State | Current | New |
-|-------|---------|-----|
-| Multi-job active | "2 of 8 batches complete · 1m 30s" | "2 of 8 images generated · 1m 30s" |
-| Single-job active | "Generating… 45s" | "1 image · Generating… 45s" |
-| Single-job queued | "Queued · waiting 10s" | "1 image · Queued · waiting 10s" |
-| Multi-job completed | "All 8 batches complete · images ready" | "8 of 8 images complete" |
-| Multi-job failed | "3 of 8 batches failed" | "3 of 8 images failed" |
-| Staging active | "2 of 5 styles complete · 1m" | "2 of 5 styles generated · 1m" |
-
-### File
-| File | Change |
-|------|--------|
-| `src/components/app/WorkflowActivityCard.tsx` | Update progress text for active, completed, and failed groups to show image counts clearly |
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
