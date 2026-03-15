@@ -13,7 +13,7 @@ interface NegativesChipProps {
   fullWidth?: boolean;
 }
 
-export function NegativesChip({ negatives, onNegativesChange, open, onOpenChange }: NegativesChipProps) {
+export function NegativesChip({ negatives, onNegativesChange, open, onOpenChange, fullWidth }: NegativesChipProps) {
   const hasItems = negatives.length > 0;
 
   return (
