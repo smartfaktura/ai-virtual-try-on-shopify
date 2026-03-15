@@ -217,6 +217,15 @@ export function LibraryDetailModal({ item, open, onClose, isUpscaling }: Library
                   </Button>
                 )}
 
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/app/perspectives?source=${encodeURIComponent(item.imageUrl)}`)}
+                  className="w-full h-11 rounded-xl text-sm font-medium"
+                >
+                  <Layers className="w-4 h-4 mr-2" />
+                  Generate Perspectives
+                </Button>
+
                 {item.source === 'freestyle' && (
                   <Button
                     variant="ghost"
