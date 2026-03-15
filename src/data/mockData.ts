@@ -1252,7 +1252,7 @@ const sceneShadowPlay = getLandingAssetUrl('scenes/scene-shadow-play.jpg');
 const sceneColorBackdrop = getLandingAssetUrl('scenes/scene-color-backdrop.jpg');
 const sceneLinenTextile = getLandingAssetUrl('scenes/scene-linen-textile.jpg');
 const sceneTerrazzo = getLandingAssetUrl('scenes/scene-terrazzo.jpg');
-const sceneBrunchTable = getLandingAssetUrl('scenes/scene-brunch-table.jpg');
+
 const sceneMidcenturyConsole = getLandingAssetUrl('scenes/scene-midcentury-console.jpg');
 const sceneWindowSill = getLandingAssetUrl('scenes/scene-window-sill.jpg');
 const sceneSpaTowels = getLandingAssetUrl('scenes/scene-spa-towels.jpg');
