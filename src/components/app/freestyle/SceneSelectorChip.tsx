@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Camera, ChevronDown, X, Maximize2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Camera, ChevronDown, X, Maximize2, LayoutGrid } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
@@ -7,6 +7,58 @@ import { cn } from '@/lib/utils';
 import type { TryOnPose, PoseCategory } from '@/types';
 import { useCustomScenes } from '@/hooks/useCustomScenes';
 import { useHiddenScenes } from '@/hooks/useHiddenScenes';
+
+type DeviceType = 'mobile' | 'tablet' | 'desktop';
+
+const COLUMN_OPTIONS: Record<DeviceType, number[]> = {
+  desktop: [4, 3, 2],
+  tablet: [3, 2],
+  mobile: [3, 2, 1],
+};
+
+const COLUMN_DEFAULTS: Record<DeviceType, number> = {
+  desktop: 4,
+  tablet: 3,
+  mobile: 3,
+};
+
+function getDeviceType(): DeviceType {
+  const w = window.innerWidth;
+  if (w >= 1024) return 'desktop';
+  if (w >= 768) return 'tablet';
+  return 'mobile';
+}
+
+function useExpandedColumns() {
+  const [device, setDevice] = useState<DeviceType>(getDeviceType);
+  const [columns, setColumns] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('scene-grid-columns');
+      if (saved) return Number(saved);
+    } catch {}
+    return COLUMN_DEFAULTS[getDeviceType()];
+  });
+
+  useEffect(() => {
+    const onResize = () => {
+      const d = getDeviceType();
+      setDevice(d);
+      setColumns(prev => {
+        const opts = COLUMN_OPTIONS[d];
+        return opts.includes(prev) ? prev : COLUMN_DEFAULTS[d];
+      });
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const set = useCallback((n: number) => {
+    setColumns(n);
+    try { localStorage.setItem('scene-grid-columns', String(n)); } catch {}
+  }, []);
+
+  return { columns, setColumns: set, options: COLUMN_OPTIONS[device] };
+}
 import { MissingRequestBanner } from '@/components/app/MissingRequestBanner';
 
 interface SceneSelectorChipProps {
