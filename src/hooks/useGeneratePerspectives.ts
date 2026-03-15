@@ -382,10 +382,67 @@ export function useGeneratePerspectives() {
             payload.referenceAngleImage = referenceBase64;
           }
 
-          const MAX_BURST_RETRIES = 2;
+          const MAX_RETRIES = 3;
           let enqueued = false;
 
-          for (let attempt = 0; attempt <= MAX_BURST_RETRIES; attempt++) {
+          for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+              const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  jobType: 'freestyle',
+                  payload,
+                  imageCount: 1,
+                  quality,
+                }),
+              });
+
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+
+                if (response.status === 402) {
+                  toast.error(`Insufficient credits. ${enqueuedCount} of ${totalJobs} queued.`);
+                  shouldStop = true;
+                  break;
+                }
+                if (response.status === 429) {
+                  const isBurst = errorData.burst_limit !== undefined;
+                  const isConcurrent = errorData.max_concurrent !== undefined;
+                  if ((isBurst || isConcurrent) && attempt < MAX_RETRIES) {
+                    const waitMs = isConcurrent ? 15_000 : 10_000;
+                    console.log(`[Perspectives] ${isConcurrent ? 'Concurrent' : 'Burst'} limit hit, waiting ${waitMs / 1000}s before retry ${attempt + 1}/${MAX_RETRIES}…`);
+                    await sleep(waitMs);
+                    continue;
+                  }
+                  toast.error(errorData.error || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
+                  shouldStop = true;
+                  break;
+                }
+
+                toast.error(errorData.error || `Failed to enqueue job`);
+                break;
+              }
+
+              const result = await response.json();
+              jobs.push({
+                jobId: result.jobId,
+                variationLabel: variation.label,
+                productTitle: product.title,
+                ratio,
+              });
+              enqueuedCount++;
+              enqueued = true;
+              setProgress(Math.round((enqueuedCount / totalJobs) * 100));
+              break;
+            } catch (err) {
+              console.error('Enqueue error:', err);
+              break;
+            }
+          }
             try {
               const response = await fetch(`${SUPABASE_URL}/functions/v1/enqueue-generation`, {
                 method: 'POST',
