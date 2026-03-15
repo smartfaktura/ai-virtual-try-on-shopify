@@ -90,10 +90,14 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
   const { columns: expandedColumns, setColumns: setExpandedColumns, options: columnOptions } = useExpandedColumns();
   const { asPoses: customPoses } = useCustomScenes();
   const { filterVisible } = useHiddenScenes();
-  const { sortScenes } = useSceneSortOrder();
+  const { sortScenes, applyCategoryOverrides, deriveCategoryOrder } = useSceneSortOrder();
 
-  const allPoses = sortScenes([...filterVisible(mockTryOnPoses), ...customPoses]);
-  const allCategories = Object.keys(poseCategoryLabels) as PoseCategory[];
+  const rawPoses = applyCategoryOverrides([...filterVisible(mockTryOnPoses), ...customPoses]);
+  const allPoses = sortScenes(rawPoses);
+  const derivedOrder = deriveCategoryOrder(allPoses);
+  const allCategories: PoseCategory[] = derivedOrder.length > 0
+    ? derivedOrder as PoseCategory[]
+    : Object.keys(poseCategoryLabels) as PoseCategory[];
   const visibleCategories = activeFilter === 'all'
     ? allCategories
     : filterCategoryMap[activeFilter];
