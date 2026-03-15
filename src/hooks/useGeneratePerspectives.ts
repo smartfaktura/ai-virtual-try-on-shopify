@@ -415,7 +415,7 @@ export function useGeneratePerspectives() {
                 break;
               }
               if (response.status === 429) {
-                toast.error(errorData.message || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
+                toast.error(errorData.error || `Rate limit reached. ${enqueuedCount} of ${totalJobs} queued.`);
                 shouldStop = true;
                 break;
               }
