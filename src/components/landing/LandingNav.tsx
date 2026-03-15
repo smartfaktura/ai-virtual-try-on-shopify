@@ -85,30 +85,28 @@ export function LandingNav() {
 
       {/* Mobile menu with smooth animation */}
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out mt-1 rounded-2xl border border-white/[0.06] shadow-2xl shadow-black/20 ${
-          mobileOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0 border-transparent shadow-none'
+        className={`lg:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out will-change-[max-height] mt-1 rounded-2xl bg-sidebar/95 backdrop-blur-xl ${
+          mobileOpen ? 'max-h-80 border border-white/[0.06] shadow-2xl shadow-black/20' : 'max-h-0'
         }`}
       >
-        <div className="bg-sidebar/95 backdrop-blur-xl rounded-2xl">
-          <div className="px-4 py-3 flex flex-col divide-y divide-white/[0.06]">
-            {navLinks.map((link) => (
-              <button
-                key={link.href}
-                onClick={() => handleNavClick(link)}
-                className="text-left text-sm font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors py-3"
-              >
-                {link.label}
-              </button>
-            ))}
-            <div className="pt-3">
-              <Button
-                size="sm"
-                className="rounded-full w-full font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
-                onClick={() => navigate(user ? '/app' : '/auth')}
-              >
-                {user ? 'My Dashboard' : 'Start Free'}
-              </Button>
-            </div>
+        <div className="px-4 py-3 flex flex-col divide-y divide-white/[0.06]">
+          {navLinks.map((link) => (
+            <button
+              key={link.href}
+              onClick={() => handleNavClick(link)}
+              className="text-left text-sm font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors py-3"
+            >
+              {link.label}
+            </button>
+          ))}
+          <div className="pt-3">
+            <Button
+              size="sm"
+              className="rounded-full w-full font-semibold bg-sidebar-foreground text-sidebar hover:bg-sidebar-foreground/90"
+              onClick={() => navigate(user ? '/app' : '/auth')}
+            >
+              {user ? 'My Dashboard' : 'Start Free'}
+            </Button>
           </div>
         </div>
       </div>
