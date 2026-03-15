@@ -193,9 +193,9 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
         key={index}
         src={backgrounds[index]}
         alt=""
-        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-300 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ${bgLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{
-          ...(bgLoaded ? { animation: `wf-carousel-fade 0.6s ease-in-out forwards` } : {}),
+          ...(bgLoaded ? { animation: `wf-carousel-fade 1s ease-in-out forwards` } : {}),
         }}
         onLoad={() => setBgLoaded(true)}
       />
