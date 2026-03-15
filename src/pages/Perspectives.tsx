@@ -206,6 +206,7 @@ export default function Perspectives() {
     onComplete: () => {
       refreshCredits();
       toast.success('Perspectives queued! Check your library for results.');
+      navigate('/app/library');
     },
   });
 
