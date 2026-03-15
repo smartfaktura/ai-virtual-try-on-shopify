@@ -458,6 +458,9 @@ export default function Perspectives() {
     });
 
     if (result && result.jobs.length > 0) {
+      if (result.newBalance !== null) {
+        setBalanceFromServer(result.newBalance);
+      }
       setGeneratingJobs(result.jobs);
       setJobStatuses(Object.fromEntries(result.jobs.map(j => [j.jobId, { status: 'queued' }])));
       genStartRef.current = Date.now();
