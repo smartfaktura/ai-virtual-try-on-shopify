@@ -33,6 +33,7 @@ export interface PerspectiveJobInfo {
 export interface GenerateResult {
   jobs: PerspectiveJobInfo[];
   batchId: string;
+  newBalance: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -322,6 +323,7 @@ export function useGeneratePerspectives() {
     const batchId = crypto.randomUUID();
     let enqueuedCount = 0;
     const jobs: PerspectiveJobInfo[] = [];
+    let lastNewBalance: number | null = null;
 
     let shouldStop = false;
     for (const product of products) {
@@ -428,6 +430,9 @@ export function useGeneratePerspectives() {
               }
 
               const result = await response.json();
+              if (result.newBalance !== undefined && result.newBalance !== null) {
+                lastNewBalance = result.newBalance;
+              }
               jobs.push({
                 jobId: result.jobId,
                 variationLabel: variation.label,
@@ -463,7 +468,7 @@ export function useGeneratePerspectives() {
     }
 
     toast.success(`${jobs.length} perspective${jobs.length > 1 ? 's' : ''} queued!`);
-    return { jobs, batchId };
+    return { jobs, batchId, newBalance: lastNewBalance };
   }, [user]);
 
   return { generate, isGenerating, progress };
