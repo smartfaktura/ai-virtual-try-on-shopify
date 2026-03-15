@@ -348,7 +348,7 @@ export function FreestyleSettingsChips({
                 modal={isMobile}
               />
             </div>
-            <FramingSelectorChip
+            <div className="shrink-0"><FramingSelectorChip
               framing={framing}
               onFramingChange={onFramingChange}
               open={framingPopoverOpen}
