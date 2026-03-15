@@ -697,29 +697,13 @@ export default function Perspectives() {
           </div>
         </section>
 
-        {/* Step 4: Quality */}
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">4</span>
-            Quality
-          </h2>
-
-          <div className="flex gap-3">
-            {(['standard', 'high'] as const).map(q => (
-              <button
-                key={q}
-                onClick={() => setQuality(q)}
-                className={`px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
-                  quality === q
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border text-muted-foreground hover:border-primary/40'
-                }`}
-              >
-                {q === 'standard' ? `Standard (${4} cr/img)` : `High (${8} cr/img)`}
-              </button>
-            ))}
-          </div>
-        </section>
+        {/* Quality note */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
+          <Sparkles className="w-4 h-4 text-primary shrink-0" />
+          <p className="text-xs text-muted-foreground">
+            All perspectives are generated in <span className="font-semibold text-foreground">High Quality</span> (8 credits/image) for maximum product fidelity.
+          </p>
+        </div>
 
         {/* Generate bar */}
         <div className="sticky bottom-4 z-50">
