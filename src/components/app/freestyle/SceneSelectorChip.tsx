@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Camera, ChevronDown, X } from 'lucide-react';
+import { Camera, ChevronDown, X, Maximize2, Minimize2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { mockTryOnPoses, poseCategoryLabels } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import type { TryOnPose, PoseCategory } from '@/types';
@@ -36,6 +37,7 @@ const filterCategoryMap: Record<SceneFilter, PoseCategory[]> = {
 
 export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect, modal }: SceneSelectorChipProps) {
   const [activeFilter, setActiveFilter] = useState<SceneFilter>('all');
+  const [isExpanded, setIsExpanded] = useState(false);
   const { asPoses: customPoses } = useCustomScenes();
   const { filterVisible } = useHiddenScenes();
 
@@ -45,101 +47,163 @@ export function SceneSelectorChip({ selectedScene, open, onOpenChange, onSelect,
     ? allCategories
     : filterCategoryMap[activeFilter];
 
-  return (
-    <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
-      <PopoverTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
-          {selectedScene ? (
-            <>
-              <img src={selectedScene.previewUrl} alt="" className="w-4 h-4 rounded-full object-cover" />
-              <span className="max-w-[80px] truncate">{selectedScene.name}</span>
-              <span
-                role="button"
-                onClick={(e) => { e.stopPropagation(); onSelect(null); }}
-                className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"
-              >
-                <X className="w-3 h-3" />
-              </span>
-            </>
-          ) : (
-            <>
-              <Camera className="w-3.5 h-3.5" />
-              Scene
-            </>
+  const handleSelect = (scene: TryOnPose | null) => {
+    onSelect(scene);
+    onOpenChange(false);
+    setIsExpanded(false);
+  };
+
+  const handleExpand = () => {
+    onOpenChange(false);
+    setIsExpanded(true);
+  };
+
+  const renderFilterTabs = () => (
+    <div className="flex gap-1 mb-3 flex-wrap">
+      {filterTabs.map(tab => (
+        <button
+          key={tab.key}
+          onClick={() => setActiveFilter(tab.key)}
+          className={cn(
+            'px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors',
+            activeFilter === tab.key
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
           )}
-          <ChevronDown className="w-3 h-3 opacity-40" />
+        >
+          {tab.label}
         </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-96 p-3" align="start">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
-            Scene / Environment
-          </p>
-          {selectedScene && (
-            <button
-              onClick={() => { onSelect(null); onOpenChange(false); }}
-              className="text-[10px] text-primary hover:underline"
-            >
-              Clear selection
-            </button>
-          )}
-        </div>
+      ))}
+    </div>
+  );
 
-        {/* Filter Tabs */}
-        <div className="flex gap-1 mb-3 flex-wrap">
-          {filterTabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveFilter(tab.key)}
-              className={cn(
-                'px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors',
-                activeFilter === tab.key
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+  const renderGrid = (expanded: boolean) => (
+    <div className={cn('overflow-y-auto space-y-3 pr-1', expanded ? 'max-h-[70vh]' : 'max-h-72')}>
+      {visibleCategories.map(cat => {
+        const poses = allPoses.filter(p => p.category === cat);
+        if (poses.length === 0) return null;
+        return (
+          <div key={cat}>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5 px-1">
+              {poseCategoryLabels[cat]}
+            </p>
+            <div className={cn('grid gap-1.5', expanded ? 'grid-cols-3 sm:grid-cols-4 gap-2' : 'grid-cols-3')}>
+              {poses.map(pose => (
+                <button
+                  key={pose.poseId}
+                  onClick={() => handleSelect(pose)}
+                  className={cn(
+                    'rounded-lg overflow-hidden border-2 transition-all',
+                    selectedScene?.poseId === pose.poseId
+                      ? 'border-primary ring-2 ring-primary/30'
+                      : 'border-transparent hover:border-border'
+                  )}
+                >
+                  <img src={pose.previewUrl} alt={pose.name} className="w-full aspect-square object-cover" />
+                  <div className="px-1.5 py-1 bg-background">
+                    <p className={cn('font-medium text-foreground leading-tight truncate', expanded ? 'text-[10px]' : 'text-[9px]')}>{pose.name}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <>
+      <Popover open={open} onOpenChange={onOpenChange} modal={modal}>
+        <PopoverTrigger asChild>
+          <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-foreground/70 hover:bg-muted transition-colors">
+            {selectedScene ? (
+              <>
+                <img src={selectedScene.previewUrl} alt="" className="w-4 h-4 rounded-full object-cover" />
+                <span className="max-w-[80px] truncate">{selectedScene.name}</span>
+                <span
+                  role="button"
+                  onClick={(e) => { e.stopPropagation(); onSelect(null); }}
+                  className="ml-0.5 rounded-full hover:bg-foreground/10 p-0.5"
+                >
+                  <X className="w-3 h-3" />
+                </span>
+              </>
+            ) : (
+              <>
+                <Camera className="w-3.5 h-3.5" />
+                Scene
+              </>
+            )}
+            <ChevronDown className="w-3 h-3 opacity-40" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 p-3" align="start">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/60">
+              Scene / Environment
+            </p>
+            <div className="flex items-center gap-1.5">
+              {selectedScene && (
+                <button
+                  onClick={() => handleSelect(null)}
+                  className="text-[10px] text-primary hover:underline"
+                >
+                  Clear selection
+                </button>
               )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+              <button
+                onClick={handleExpand}
+                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                title="Expand view"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
 
-        <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
-          {visibleCategories.map(cat => {
-            const poses = allPoses.filter(p => p.category === cat);
-            if (poses.length === 0) return null;
-            return (
-              <div key={cat}>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50 mb-1.5 px-1">
-                  {poseCategoryLabels[cat]}
-                </p>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {poses.map(pose => (
-                    <button
-                      key={pose.poseId}
-                      onClick={() => { onSelect(pose); onOpenChange(false); }}
-                      className={cn(
-                        'rounded-lg overflow-hidden border-2 transition-all',
-                        selectedScene?.poseId === pose.poseId
-                          ? 'border-primary ring-2 ring-primary/30'
-                          : 'border-transparent hover:border-border'
-                      )}
-                    >
-                      <img src={pose.previewUrl} alt={pose.name} className="w-full aspect-square object-cover" />
-                      <div className="px-1.5 py-1 bg-background">
-                        <p className="text-[9px] font-medium text-foreground leading-tight truncate">{pose.name}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+          {renderFilterTabs()}
+          {renderGrid(false)}
 
-        <div className="mt-2">
-          <MissingRequestBanner category="scene" compact />
-        </div>
-      </PopoverContent>
-    </Popover>
+          <div className="mt-2">
+            <MissingRequestBanner category="scene" compact />
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-5">
+          <div className="flex items-center justify-between mb-3">
+            <DialogTitle className="text-sm font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
+              Scene / Environment
+            </DialogTitle>
+            <div className="flex items-center gap-1.5">
+              {selectedScene && (
+                <button
+                  onClick={() => handleSelect(null)}
+                  className="text-[10px] text-primary hover:underline"
+                >
+                  Clear selection
+                </button>
+              )}
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                title="Minimize view"
+              >
+                <Minimize2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {renderFilterTabs()}
+          {renderGrid(true)}
+
+          <div className="mt-2">
+            <MissingRequestBanner category="scene" compact />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
