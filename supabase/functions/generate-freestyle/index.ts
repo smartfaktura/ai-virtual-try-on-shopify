@@ -989,7 +989,7 @@ serve(async (req) => {
               const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
                 auth: { persistSession: false },
               });
-              const { error: insertErr } = await supabase.from('freestyle_generations').insert({
+              const insertData: Record<string, unknown> = {
                 user_id: userId,
                 image_url: publicUrl,
                 prompt: body.prompt || '',
@@ -998,7 +998,11 @@ serve(async (req) => {
                 model_id: body.modelId || null,
                 scene_id: body.sceneId || null,
                 product_id: body.productId || null,
-              });
+              };
+              if (body.workflow_label) {
+                insertData.workflow_label = body.workflow_label;
+              }
+              const { error: insertErr } = await supabase.from('freestyle_generations').insert(insertData);
               if (insertErr) {
                 console.error(`Failed to save freestyle_generations:`, insertErr.message);
               } else {
