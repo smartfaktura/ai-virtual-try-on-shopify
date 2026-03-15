@@ -1,26 +1,30 @@
 
 
-## Bugs Found in Picture Perspectives
+## Product Perspectives — Implemented ✅
 
-### 1. Console Error: "Function components cannot be given refs"
-**File**: `WorkflowAnimatedThumbnail.tsx`, line 226
-React warns because `FloatingEl` is a plain function component. While no explicit ref is passed, React's reconciliation can attempt to attach refs internally. This is a dev-mode warning but indicates a code smell.
-**Fix**: Wrap `FloatingEl` with `React.forwardRef` (or `React.memo` which also resolves this in some React versions), or simply ensure no ref forwarding is attempted.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### 2. Carousel Interval Resets Every Slide (Stale Closure)
-**File**: `WorkflowAnimatedThumbnail.tsx`, lines 169-185
-The `useEffect` that creates the carousel interval has `current` in its dependency array. Every time the slide changes, React tears down and recreates the interval — resetting the 5-second timer. This causes unpredictable timing.
-**Fix**: Remove `current` from deps. Use a ref to track the current index, or use functional updaters: `setPrev(() => currentRef.current)` with a `useRef` for `current`.
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### 3. No Functional Issues Found on the Perspectives Page
-The `/app/perspectives` page, `useGeneratePerspectives` hook, and edge functions all look correct. No data-flow or logic bugs detected.
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
----
-
-### Changes
-
-| File | Change |
-|------|--------|
-| `WorkflowAnimatedThumbnail.tsx` | Fix carousel interval: use a `useRef` for `current` index to avoid stale closures and interval resets. Remove `current` from `useEffect` deps. |
-| `WorkflowAnimatedThumbnail.tsx` | Fix ref warning: convert `FloatingEl` to use `React.memo` wrapper |
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
