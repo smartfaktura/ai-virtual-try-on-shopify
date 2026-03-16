@@ -1080,6 +1080,37 @@ serve(async (req) => {
       } catch (error: unknown) {
         if (typeof error === "object" && error !== null && "status" in error) {
           const statusError = error as { status: number; message: string };
+
+          // For 429, try the alternate model before giving up (rate limits are often per-model)
+          if (statusError.status === 429) {
+            const fallbackModel = aiModel.includes("flash")
+              ? "google/gemini-3-pro-image-preview"
+              : "google/gemini-3.1-flash-image-preview";
+            console.warn(`429 on ${aiModel} — trying fallback model ${fallbackModel}`);
+            try {
+              const contentArray = buildContentArray(
+                finalPrompt,
+                isPerspective ? undefined : body.sourceImage,
+                body.productImage,
+                body.modelImage,
+                body.sceneImage,
+              );
+              if (isPerspective && referenceAngleImage) {
+                contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
+                contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
+              }
+              const fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0);
+              if (typeof fallbackResult === "string") {
+                const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+                images.push(publicUrl);
+                console.log(`Fallback model succeeded for image ${i + 1}`);
+                continue;
+              }
+            } catch (fallbackErr) {
+              console.error(`Fallback model also failed:`, fallbackErr);
+            }
+          }
+
           if (isQueueInternal && body.job_id) {
             await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>);
           }
