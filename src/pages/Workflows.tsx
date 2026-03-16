@@ -350,7 +350,7 @@ export default function Workflows() {
     >
       {/* ── Quick-nav pills ── */}
       {!isLoading && workflows.length > 0 && (
-        <div className="flex flex-wrap gap-2 -mt-2 mb-2">
+        <div className="flex flex-wrap gap-2 mb-2">
           {workflows.map((wf) => (
             <button
               key={wf.id}
