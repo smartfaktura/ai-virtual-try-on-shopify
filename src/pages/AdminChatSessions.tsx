@@ -119,7 +119,7 @@ export default function AdminChatSessions() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Chat Sessions" subtitle="View all user chat conversations" />
+      <PageHeader title="Chat Sessions" subtitle="View all user chat conversations">{null}</PageHeader>
 
       {/* Search */}
       <div className="relative max-w-sm">
