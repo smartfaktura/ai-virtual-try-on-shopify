@@ -1,23 +1,52 @@
 
 
-## Plan: Replace Dashboard preset preview with Discover-style split modal
+## Product Perspectives — Implemented ✅
 
-### Problem
-The "What You Can Create" gallery on the Dashboard opens presets in a small `Dialog` (standard centered card). It should use the same full-screen split-layout modal as the Discover page — large image on the left, controls panel on the right.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Fix
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-**`src/components/app/RecentCreationsGallery.tsx`**
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-Replace the current `Dialog`/`DialogContent` implementation (lines 232-298) with a custom full-screen overlay matching `DiscoverDetailModal`'s pattern:
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-- Remove the `Dialog`/`DialogContent` import and usage
-- Add body scroll lock + Escape key handler (same as DiscoverDetailModal)
-- Render a `fixed inset-0 z-[200]` overlay with `bg-black/90` backdrop and `fade-in duration-150`
-- **Left panel (60%)**: Full image showcase with `object-contain`
-- **Right panel (40%)**: Title, category, workflow badge, prompt text, tags, "Copy Prompt" + "Use This Style" + optional "Try Workflow" buttons, close X button
-- On mobile: stack vertically (image 45vh top, controls 55vh bottom) — same as Discover modal
-- Keep existing `handleCopyPrompt`, `handleUseStyle` handlers
 
-No new components needed — just inline the split layout in the same file, reusing the exact same CSS classes from `DiscoverDetailModal`.
+## Image Optimization for AI Generation — Implemented ✅
 
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
+
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
