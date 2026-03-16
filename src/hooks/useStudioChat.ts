@@ -34,7 +34,8 @@ async function persistSession(
       if (error || !data) return null;
       return data.id;
     }
-  } catch {
+  } catch (e) {
+    console.error('persistSession error:', e);
     return sessionId;
   }
 }
