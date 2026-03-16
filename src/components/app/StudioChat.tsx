@@ -203,10 +203,13 @@ export function StudioChat() {
                   <AvatarImage src={avatarSophia} alt="Team" />
                   <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">V</AvatarFallback>
                 </Avatar>
-                <div className="bg-muted rounded-2xl rounded-bl-md px-3.5 py-3 flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="bg-muted rounded-2xl rounded-bl-md px-3.5 py-3">
+                  <p className="text-[10px] text-muted-foreground mb-1.5">Sophia is thinking…</p>
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
                 </div>
               </div>
             )}
