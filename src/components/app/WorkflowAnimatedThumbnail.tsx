@@ -663,7 +663,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
       />
 
       {isActive && elementsReady && (
-        <>
+        <div key={iteration}>
           {/* Light gradient overlay */}
           <div
             className="absolute inset-0 z-[1]"
