@@ -67,7 +67,12 @@ const s = (path: string) => getLandingAssetUrl(`showcase/${path}`);
 const CATEGORIES: CategoryCardProps[] = [
   {
     label: 'Fashion & Apparel',
-    images: [s('fashion-blazer-golden.jpg'), s('fashion-activewear-bright.jpg'), s('fashion-dress-botanical.jpg'), s('fashion-street-denim.jpg'), s('fashion-cashmere-cafe.jpg')],
+    images: [
+      '/images/showcase/fashion-camel-coat.png',
+      '/images/showcase/fashion-white-suit.png',
+      '/images/showcase/fashion-knit-loft.png',
+      '/images/showcase/fashion-activewear-gym.png',
+    ],
     cycleDuration: 7000,
   },
   {
