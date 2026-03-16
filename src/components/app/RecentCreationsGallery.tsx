@@ -169,7 +169,7 @@ export function RecentCreationsGallery() {
           </h2>
           <p className="text-sm text-muted-foreground mt-0.5">
             {isPlaceholder
-              ? 'Copy any style, scene, or prompt to create your own.'
+              ? 'Explore scenes and styles to get started.'
               : 'Your latest generated visuals.'}
           </p>
         </div>
