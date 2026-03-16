@@ -558,6 +558,11 @@ async function generateImage(
 
       if (!response.ok) {
         if (response.status === 429) {
+          console.warn(`AI Gateway 429 (attempt ${attempt + 1}/${maxRetries + 1}) — backing off`);
+          if (attempt < maxRetries) {
+            await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
+            continue;
+          }
           throw { status: 429, message: "Rate limit exceeded. Please wait and try again." };
         }
         if (response.status === 402) {
@@ -593,6 +598,11 @@ async function generateImage(
       return imageUrl;
     } catch (error: unknown) {
       if (typeof error === "object" && error !== null && "status" in error) {
+        const statusErr = error as { status: number };
+        // For 429, don't re-throw — let the per-image loop handle it as a soft error
+        if (statusErr.status === 429) {
+          throw error;
+        }
         throw error;
       }
       const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
@@ -1070,6 +1080,41 @@ serve(async (req) => {
       } catch (error: unknown) {
         if (typeof error === "object" && error !== null && "status" in error) {
           const statusError = error as { status: number; message: string };
+
+          // For 429, try the alternate model before giving up (rate limits are often per-model)
+          if (statusError.status === 429) {
+            const fallbackModel = aiModel.includes("flash")
+              ? "google/gemini-3-pro-image-preview"
+              : "google/gemini-3.1-flash-image-preview";
+            console.warn(`429 on ${aiModel} — trying fallback model ${fallbackModel}`);
+            try {
+              const fallbackPrompt = `${aspectPrompt}${batchConsistency}`;
+              const contentArray = buildContentArray(
+                fallbackPrompt,
+                isPerspective ? undefined : body.sourceImage,
+                body.productImage,
+                body.modelImage,
+                body.sceneImage,
+              );
+              if (isPerspective && referenceAngleImage) {
+                contentArray.push({ type: "text", text: "[REFERENCE IMAGE]" });
+                contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
+              }
+              const fallbackResult = await generateImage(contentArray, LOVABLE_API_KEY, fallbackModel, body.aspectRatio, 0);
+              if (typeof fallbackResult === "string") {
+                const publicUrl = await uploadBase64ToStorage(fallbackResult, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+                images.push(publicUrl);
+                console.log(`Fallback model succeeded for image ${i + 1}`);
+                continue;
+              }
+            } catch (fallbackErr) {
+              console.error(`Fallback model also failed:`, fallbackErr);
+            }
+            // 429 with failed fallback — treat as soft error, continue with remaining images
+            errors.push(`Image ${i + 1}: Rate limited on both models`);
+            continue;
+          }
+
           if (isQueueInternal && body.job_id) {
             await completeQueueJob(body.job_id, body.user_id!, body.credits_reserved!, [], effectiveImageCount, [statusError.message], body as unknown as Record<string, unknown>);
           }
