@@ -72,7 +72,12 @@ const CATEGORIES: CategoryCardProps[] = [
   },
   {
     label: 'Skincare',
-    images: [s('skincare-serum-morning.jpg'), s('skincare-cream-botanical.jpg'), s('skincare-oil-lifestyle.jpg'), s('skincare-retinol-model.jpg'), s('skincare-set-minimal.jpg')],
+    images: [
+      '/images/showcase/skincare-serum-model.png',
+      '/images/showcase/skincare-serum-marble.png',
+      '/images/showcase/skincare-model-light.png',
+      '/images/showcase/skincare-perfume-vanity.png',
+    ],
     cycleDuration: 8500,
   },
   {
