@@ -327,7 +327,7 @@ export default function Dashboard() {
                 <DashboardWorkflowCard
                   key={workflow.id}
                   workflow={workflow}
-                  onNavigate={(slug) => navigate(`/app/generate/${slug}`)}
+                  onNavigate={(slug) => navigate(slug ? `/app/generate/${slug}` : `/app/workflows`)}
                 />
               ))}
             </div>
