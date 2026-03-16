@@ -11,8 +11,8 @@ const tryonScene = getLandingAssetUrl('poses/pose-editorial-minimal.jpg');
 const tryonResult = getLandingAssetUrl('workflows/workflow-tryon-result.png');
 
 // Product Listing Set
-const listingProduct = getLandingAssetUrl('products/cream-hyaluronic.jpg');
-const listingResult = getLandingAssetUrl('workflows/workflow-product-listing.jpg');
+import listingProduct from '@/assets/workflows/product-listing-product.png';
+import listingResult from '@/assets/workflows/product-listing-result.png';
 
 // Selfie / UGC Set
 const ugcProduct = getLandingAssetUrl('products/ice-roller-white.png');
