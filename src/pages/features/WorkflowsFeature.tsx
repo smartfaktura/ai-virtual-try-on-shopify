@@ -1,10 +1,13 @@
 import { useNavigate } from 'react-router-dom';
+import { useRef, useEffect, useState } from 'react';
 import { ArrowRight, Layers, Zap, Palette, Settings2, Users, ShoppingBag, Camera, Layout, Home, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageLayout } from '@/components/landing/PageLayout';
 import { SEOHead } from '@/components/SEOHead';
 import { SITE_URL } from '@/lib/constants';
+import { WorkflowAnimatedThumbnail } from '@/components/app/WorkflowAnimatedThumbnail';
+import { workflowScenes } from '@/components/app/workflowAnimationData';
 
 const workflows = [
   {
