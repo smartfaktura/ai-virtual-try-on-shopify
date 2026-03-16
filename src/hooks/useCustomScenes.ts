@@ -64,9 +64,10 @@ export function useAddCustomScene() {
 
   return useMutation({
     mutationFn: async (scene: { name: string; description: string; category: string; image_url: string }) => {
+      const optimized = buildOptimizedUrl(scene.image_url);
       const { data, error } = await supabase
         .from('custom_scenes' as any)
-        .insert({ ...scene, created_by: user!.id })
+        .insert({ ...scene, created_by: user!.id, optimized_image_url: optimized })
         .select()
         .single();
       if (error) throw error;
