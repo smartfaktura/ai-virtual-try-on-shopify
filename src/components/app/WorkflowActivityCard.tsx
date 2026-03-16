@@ -247,7 +247,11 @@ export function WorkflowActivityCard({
               className="shrink-0 gap-1.5"
               onClick={() =>
                 navigate(
-                  `/app/generate${group.workflow_id ? `?workflow=${group.workflow_id}` : ''}`,
+                  group.workflow_slug
+                    ? `/app/generate/${group.workflow_slug}`
+                    : group.workflow_id
+                      ? `/app/generate?workflow=${group.workflow_id}`
+                      : '/app/generate',
                 )
               }
             >
