@@ -1082,6 +1082,7 @@ export type Database = {
           preview_image_url: string | null
           recommended_ratios: string[]
           required_inputs: string[]
+          slug: string
           sort_order: number
           template_ids: string[]
           uses_tryon: boolean
@@ -1097,6 +1098,7 @@ export type Database = {
           preview_image_url?: string | null
           recommended_ratios?: string[]
           required_inputs?: string[]
+          slug: string
           sort_order?: number
           template_ids?: string[]
           uses_tryon?: boolean
@@ -1112,6 +1114,7 @@ export type Database = {
           preview_image_url?: string | null
           recommended_ratios?: string[]
           required_inputs?: string[]
+          slug?: string
           sort_order?: number
           template_ids?: string[]
           uses_tryon?: boolean
