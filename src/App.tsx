@@ -15,7 +15,7 @@ import Landing from '@/pages/Landing';
 // Lazy-loaded routes for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Generate = lazy(() => import('@/pages/Generate'));
-const BulkGenerate = lazy(() => import('@/pages/BulkGenerate'));
+
 const Templates = lazy(() => import('@/pages/Templates'));
 const Discover = lazy(() => import('@/pages/Discover'));
 const Jobs = lazy(() => import('@/pages/Jobs'));
