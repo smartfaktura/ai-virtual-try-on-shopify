@@ -1,30 +1,23 @@
 
 
-## Product Perspectives — Implemented ✅
+## Improve mobile "not enough credits" UX in Freestyle
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+On mobile, when the user lacks credits, the text just says "Not enough credits" without showing the cost or the shortfall. The user has no idea how many credits are needed.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Fix
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+**File: `src/components/app/freestyle/FreestylePromptPanel.tsx`** — Lines 314-318
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+Replace the mobile-only vague text with a clear breakdown showing cost, balance, and shortfall on all screen sizes:
+
+```tsx
+) : showInsufficientCredits ? (
+  <p className="text-xs text-muted-foreground mr-auto w-full sm:w-auto">
+    <span className="hidden sm:inline">Need {creditCost - (creditBalance ?? 0)} more credits</span>
+    <span className="sm:hidden">Need {creditCost - (creditBalance ?? 0)} more credits ({creditBalance ?? 0}/{creditCost})</span>
+  </p>
+```
+
+This changes the mobile text from "Not enough credits" to something like "Need 6 more credits (2/8)" — showing the shortfall, current balance, and total cost in a compact format.
+
