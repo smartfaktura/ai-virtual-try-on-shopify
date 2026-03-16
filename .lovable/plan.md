@@ -1,55 +1,52 @@
 
 
-## Update Environment Showcase: Replace scenes + add new ones + optimize images
+## Product Perspectives — Implemented ✅
 
-### What changes
-**`src/components/landing/EnvironmentShowcaseSection.tsx`** — Complete refresh of both marquee rows with the requested replacements and additions, plus image optimization via `getOptimizedUrl`.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Replacements
-| Current | New |
-|---------|-----|
-| Night Neon | Velvet Draped Elegance |
-| Rooftop City | Natural Light Loft |
-| Editorial Movement | Amber Glow Studio |
-| Airport Transit | Earthy Woodland Product |
-| Editorial Artistic | Poolside Chic |
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### New additions
-Coastal Horizon, Night Drive Glam, Sunlit Botanical Surface, Marble Console Vignette, Prism Glow Showcase, Desert Horizon, Golden Radiance Product, Desert Sunset
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-### Final layout (two rows, opposite directions)
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-**ROW_1** (left marquee, ~10 cards):
-1. Earthy Woodland Product
-2. Poolside Chic
-3. Natural Light Loft
-4. Salt Flat Serenity
-5. Brutalist Urban Steps
-6. Amber Glow Studio
-7. Urban Dusk Portrait
-8. Coastal Horizon
-9. Velvet Draped Elegance
-10. Studio Movement
 
-**ROW_2** (right marquee, ~10 cards):
-1. Night Drive Glam
-2. Sunlit Botanical Surface
-3. Marble Console Vignette
-4. Prism Glow Showcase
-5. Desert Horizon
-6. Golden Radiance Product
-7. Desert Sunset
-8. Garden Natural
-9. Studio Close-Up
-10. Studio Crossed Arms Male
+## Image Optimization for AI Generation — Implemented ✅
 
-### Image optimization
-- Import `getOptimizedUrl` from `@/lib/imageOptimization`
-- Wrap every image URL through `getOptimizedUrl(url, { width: 400, quality: 60 })` in the render — these cards are max 208px (lg:w-52) so 400px width at 2x DPR is sufficient
-- Apply optimization in the `ShimmerImage` `src` prop inline
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
-### Implementation
-- All scene URLs already exist in the `freestyle-images` storage bucket (confirmed via DB query)
-- The `d()` helper handles direct URLs; keep `e()` for any remaining `landing-assets/poses/` images
-- No new files, no DB changes — single file edit
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
 
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
+
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
