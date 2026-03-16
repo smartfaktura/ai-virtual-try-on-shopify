@@ -2886,7 +2886,7 @@ export default function Generate() {
                 placeholder="Describe the model you'd like us to create…"
               />
             </CardContent></Card>
-            <div className="fixed bottom-4 left-0 right-0 z-50 px-4">
+            <div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
               <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
                 <Button variant="outline" onClick={() => {
                   if (isMirrorSelfie) {
@@ -2937,7 +2937,7 @@ export default function Generate() {
                 placeholder="Describe the scene or environment you'd like…"
               />
             </CardContent></Card>
-            <div className="fixed bottom-4 left-0 right-0 z-50 px-4">
+            <div className="fixed bottom-4 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 px-4">
               <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
                 <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
                 <Button disabled={selectedPoses.size === 0} onClick={() => setCurrentStep('settings')}>
