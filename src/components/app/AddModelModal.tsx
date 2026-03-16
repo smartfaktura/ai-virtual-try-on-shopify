@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useAddCustomModel } from '@/hooks/useCustomModels';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const GENDERS = ['female', 'male'];
 const BODY_TYPES = ['slim', 'athletic', 'average', 'plus-size'];
