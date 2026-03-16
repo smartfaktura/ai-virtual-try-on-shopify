@@ -14,6 +14,7 @@ interface WorkflowRowProps {
   workflow: Workflow;
   onSelect: () => void;
   reversed?: boolean;
+  id?: string;
 }
 
 const featureMap: Record<string, string[]> = {
@@ -68,7 +69,7 @@ const featureMap: Record<string, string[]> = {
   ],
 };
 
-export function WorkflowCard({ workflow, onSelect, reversed }: WorkflowRowProps) {
+export function WorkflowCard({ workflow, onSelect, reversed, id }: WorkflowRowProps) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -88,6 +89,7 @@ export function WorkflowCard({ workflow, onSelect, reversed }: WorkflowRowProps)
 
   return (
     <Card
+      id={id}
       ref={ref}
       className="group overflow-hidden border hover:shadow-lg transition-shadow duration-300"
     >
