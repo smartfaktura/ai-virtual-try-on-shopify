@@ -11,6 +11,7 @@ export interface CustomModel {
   ethnicity: string;
   age_range: string;
   image_url: string;
+  optimized_image_url: string | null;
   created_by: string;
   is_active: boolean;
   created_at: string;
