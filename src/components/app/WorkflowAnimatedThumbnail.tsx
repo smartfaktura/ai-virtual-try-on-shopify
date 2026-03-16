@@ -716,7 +716,7 @@ export function WorkflowAnimatedThumbnail({ scene, isActive = true }: Props) {
               <span className="text-[11px] font-bold text-primary tracking-wide">Generated</span>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       <style>{`
