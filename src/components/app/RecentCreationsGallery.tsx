@@ -154,10 +154,6 @@ export function RecentCreationsGallery() {
     }
   };
 
-  const handleCopyPrompt = (prompt: string) => {
-    navigator.clipboard.writeText(prompt);
-    toast.success('Prompt copied to clipboard');
-  };
 
   const handleUseStyle = (preset: DiscoverPreset) => {
     setSelectedPreset(null);
