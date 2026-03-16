@@ -90,8 +90,8 @@ interface WorkflowSettingsPanelProps {
   setMirrorSettingsPhase: (p: 'scenes' | 'final') => void;
 
   // UGC state
-  ugcMood: string;
-  setUgcMood: (m: string) => void;
+  ugcMood: UgcMood;
+  setUgcMood: (m: UgcMood) => void;
 
   // Settings
   quality: ImageQuality;
