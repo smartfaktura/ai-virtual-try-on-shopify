@@ -2924,6 +2924,11 @@ export default function Generate() {
               {Object.entries(posesByCategory).map(([category, poses]) => (
                 <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseIds={selectedPoses} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} maxSelectable={isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT} />
               ))}
+              <MissingRequestBanner
+                category="scene"
+                title="Missing a scene? Tell us and we'll create it."
+                placeholder="Describe the scene or environment you'd like…"
+              />
             </CardContent></Card>
             <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm border-t border-border px-5 py-3 flex justify-between rounded-b-lg">
               <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
