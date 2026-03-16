@@ -10,6 +10,7 @@ interface OnboardingChecklistProps {
   productCount: number;
   brandProfileCount: number;
   jobCount: number;
+  freestyleCount: number;
 }
 
 const steps = [
