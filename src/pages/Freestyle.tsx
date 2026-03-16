@@ -207,6 +207,34 @@ export default function Freestyle() {
   const { images: savedImages, isLoading: isLoadingImages, saveImages, deleteImage, refreshImages, fetchNextPage, hasNextPage, isFetchingNextPage } = useFreestyleImages();
   const [isSaving, setIsSaving] = useState(false);
 
+  // Auto-refresh images while processing to self-heal stuck queue state
+  const imageCountRef = useRef(savedImages.length);
+  useEffect(() => {
+    imageCountRef.current = savedImages.length;
+  }, [savedImages.length]);
+
+  useEffect(() => {
+    if (!isProcessing) return;
+    const interval = setInterval(async () => {
+      await refreshImages();
+      // Check after refresh — if new images appeared, the queue likely completed
+      // We use a small delay to let React state settle
+      setTimeout(() => {
+        // Re-read from ref since state may not be updated yet in this closure
+      }, 500);
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [isProcessing, refreshImages]);
+
+  // Detect new images arriving while processing → force-reset queue
+  useEffect(() => {
+    if (!isProcessing) return;
+    if (savedImages.length > imageCountRef.current) {
+      console.warn('[freestyle] New images detected while still processing — resetting queue');
+      resetQueue();
+    }
+  }, [savedImages.length, isProcessing, resetQueue]);
+
   // Auto-dismiss scene hint
   useEffect(() => {
     if (!showSceneHint) return;

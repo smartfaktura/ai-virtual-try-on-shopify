@@ -700,17 +700,25 @@ async function completeQueueJob(
     // Content blocked: mark as completed with contentBlocked flag so UI shows the blocked card
     if (contentBlocked) {
       const result = { images: [], generatedCount: 0, requestedCount, contentBlocked: true, blockReason };
-      await supabase.from("generation_queue").update({
+      const { error: cbErr } = await supabase.from("generation_queue").update({
         status: "completed",
         result,
         completed_at: new Date().toISOString(),
       }).eq("id", jobId);
+      if (cbErr) {
+        console.error(`[generate-freestyle] Queue update (content-blocked) failed for ${jobId}:`, cbErr.message);
+        await supabase.from("generation_queue").update({ status: "completed", result, completed_at: new Date().toISOString() }).eq("id", jobId);
+      }
     } else {
-      await supabase.from("generation_queue").update({
+      const { error: failErr } = await supabase.from("generation_queue").update({
         status: "failed",
         error_message: errors.join("; ") || "Failed to generate any images",
         completed_at: new Date().toISOString(),
       }).eq("id", jobId);
+      if (failErr) {
+        console.error(`[generate-freestyle] Queue update (failed) failed for ${jobId}:`, failErr.message);
+        await supabase.from("generation_queue").update({ status: "failed", error_message: errors.join("; ") || "Failed to generate any images", completed_at: new Date().toISOString() }).eq("id", jobId);
+      }
     }
     await supabase.rpc("refund_credits", { p_user_id: userId, p_amount: creditsReserved });
     console.log(`[generate-freestyle] Refunded ${creditsReserved} credits for ${contentBlocked ? "blocked" : "failed"} job ${jobId}`);
@@ -734,11 +742,16 @@ async function completeQueueJob(
 
   const result = { images, generatedCount, requestedCount, errors: errors.length > 0 ? errors : undefined };
 
-  await supabase.from("generation_queue").update({
+  const { error: completeErr } = await supabase.from("generation_queue").update({
     status: "completed",
     result,
     completed_at: new Date().toISOString(),
   }).eq("id", jobId);
+  if (completeErr) {
+    console.error(`[generate-freestyle] Queue update (completed) failed for ${jobId}:`, completeErr.message);
+    const { error: retryErr } = await supabase.from("generation_queue").update({ status: "completed", result, completed_at: new Date().toISOString() }).eq("id", jobId);
+    if (retryErr) console.error(`[generate-freestyle] Queue update retry also failed for ${jobId}:`, retryErr.message);
+  }
 
   // Freestyle saves its own records in freestyle_generations (done inline),
   // but we still need a generation_jobs record for credit tracking

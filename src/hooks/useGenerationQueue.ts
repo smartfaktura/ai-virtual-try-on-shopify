@@ -288,6 +288,35 @@ export function useGenerationQueue(options?: UseGenerationQueueOptions): UseGene
               },
               body: JSON.stringify({ trigger: 'stuck-processing-retry' }),
             }).catch(() => {});
+
+            // Self-heal: check if images already exist for this user after job started
+            try {
+              const imgRes = await fetch(
+                `${SUPABASE_URL}/rest/v1/freestyle_generations?user_id=eq.${user?.id}&created_at=gte.${job.started_at}&limit=1&select=id`,
+                {
+                  headers: {
+                    apikey: SUPABASE_KEY,
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
+              if (sessionVersion !== pollVersionRef.current) return;
+              const imgRows = await imgRes.json();
+              if (Array.isArray(imgRows) && imgRows.length > 0) {
+                console.warn(`[queue] Job ${job.id} stuck but images already saved — force-completing`);
+                const syntheticJob: QueueJob = {
+                  ...job,
+                  status: 'completed',
+                  completed_at: new Date().toISOString(),
+                };
+                setActiveJob(prev => ({ ...syntheticJob, generationMeta: prev?.generationMeta }));
+                handleTerminalJob(syntheticJob);
+                onCreditRefresh?.();
+                return;
+              }
+            } catch (e) {
+              console.warn('[queue] Image check failed:', e);
+            }
           }
         }
 
