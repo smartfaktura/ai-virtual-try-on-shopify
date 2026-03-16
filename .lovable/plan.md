@@ -1,26 +1,52 @@
 
 
-## Plan: Fix chat session persistence (silent error swallowing)
+## Product Perspectives — Implemented ✅
 
-### Problem
-Chat messages are sent and received successfully, but sessions are not being saved to the `chat_sessions` table. The `persistSession` function has a `catch` block that silently swallows all errors, making it impossible to diagnose the failure.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Root cause (most likely)
-The `persistSession` function catches all errors and returns without logging. The insert could be failing due to:
-- An RLS policy issue (though the policies look correct)
-- A data serialization issue with the JSONB `messages` column
-- The `setMessages` callback pattern triggering persist before auth state is ready
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-### Fix
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-**`src/hooks/useStudioChat.ts`** — Two changes:
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
 
-1. **Add error logging** in `persistSession` catch block — replace the silent `catch {}` with `catch (e) { console.error('persistSession error:', e); }` so failures are visible in the console.
 
-2. **Move persist out of `setMessages` callback** — The current pattern uses `setMessages(prev => { persistSession(...); return prev; })` which is a React anti-pattern (side effects inside state updaters). Instead, capture the current messages after the finally block and call `persistSession` directly. This ensures the persist call happens cleanly outside React's state update cycle.
+## Image Optimization for AI Generation — Implemented ✅
 
-Also log errors on the insert path (line 34) — if `error` is truthy, log it before returning null.
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
 
-### Changes summary
-- `src/hooks/useStudioChat.ts`: Add `console.error` in catch blocks, move persist call out of `setMessages`, and log insert/update errors explicitly.
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
 
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
+
+### Changes
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null

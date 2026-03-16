@@ -20,10 +20,11 @@ async function persistSession(
     if (!session?.user?.id) return sessionId;
 
     if (sessionId) {
-      await supabase
+      const { error } = await supabase
         .from('chat_sessions')
         .update({ messages: JSON.parse(JSON.stringify(messages)), updated_at: new Date().toISOString() })
         .eq('id', sessionId);
+      if (error) console.error('persistSession update error:', error);
       return sessionId;
     } else {
       const { data, error } = await supabase
@@ -31,10 +32,14 @@ async function persistSession(
         .insert({ user_id: session.user.id, messages: JSON.parse(JSON.stringify(messages)), page_url: pageUrl })
         .select('id')
         .single();
-      if (error || !data) return null;
-      return data.id;
+      if (error) {
+        console.error('persistSession insert error:', error);
+        return null;
+      }
+      return data?.id ?? null;
     }
-  } catch {
+  } catch (e) {
+    console.error('persistSession error:', e);
     return sessionId;
   }
 }
@@ -183,17 +188,18 @@ export function useStudioChat(pageUrl?: string) {
     } finally {
       setIsLoading(false);
       abortRef.current = null;
-
-      // Persist session to database
-      setMessages(prev => {
-        if (prev.length > 0) {
-          persistSession(sessionIdRef.current, prev, pageUrl ?? null).then(id => {
-            sessionIdRef.current = id;
-          });
-        }
-        return prev;
-      });
     }
+
+    // Persist session to database (outside React state updater)
+    setMessages(prev => {
+      const currentMessages = prev;
+      if (currentMessages.length > 0) {
+        persistSession(sessionIdRef.current, currentMessages, pageUrl ?? null).then(id => {
+          if (id) sessionIdRef.current = id;
+        }).catch(e => console.error('persistSession failed:', e));
+      }
+      return prev;
+    });
   }, [messages, pageUrl]);
 
   const cancelStream = useCallback(() => {
