@@ -569,15 +569,15 @@ export function FreestyleGallery({ images, onDownload, onExpand, onDelete, onCop
   if (count <= 3) {
     return (
       <>
-        <div className="flex items-stretch justify-center gap-2 px-3 lg:px-1">
+        <div className="flex flex-col sm:flex-row items-center sm:items-stretch justify-center gap-2 px-3 lg:px-1">
           {generatingCards.map((card, i) => (
-            <div key={`gen-wrap-${i}`} className="max-h-[calc(100vh-400px)]">{card}</div>
+            <div key={`gen-wrap-${i}`} className="w-full sm:w-auto max-w-full sm:max-w-[45%] max-h-[50vh] sm:max-h-[calc(100vh-400px)]">{card}</div>
           ))}
           {blockedCards.map((card, i) => (
-            <div key={`block-wrap-${i}`} className="max-h-[calc(100vh-400px)]">{card}</div>
+            <div key={`block-wrap-${i}`} className="w-full sm:w-auto max-w-full sm:max-w-[45%] max-h-[50vh] sm:max-h-[calc(100vh-400px)]">{card}</div>
           ))}
           {failedCards.map((card, i) => (
-            <div key={`fail-wrap-${i}`} className="max-h-[calc(100vh-400px)]">{card}</div>
+            <div key={`fail-wrap-${i}`} className="w-full sm:w-auto max-w-full sm:max-w-[45%] max-h-[50vh] sm:max-h-[calc(100vh-400px)]">{card}</div>
           ))}
           {imageCards(true)}
         </div>
