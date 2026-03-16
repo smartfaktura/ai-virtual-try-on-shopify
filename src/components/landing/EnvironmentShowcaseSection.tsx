@@ -74,7 +74,7 @@ function MarqueeRow({ items, direction = 'left' }: { items: EnvironmentCard[]; d
           <div key={`${env.name}-${i}`} className="flex flex-col items-center gap-2 flex-shrink-0">
             <div className="w-36 h-48 sm:w-44 sm:h-56 lg:w-52 lg:h-64 rounded-xl overflow-hidden border border-border bg-card shadow-sm">
               <ShimmerImage
-                 src={getOptimizedUrl(env.image, { width: 400, quality: 60 })}
+                 src={getOptimizedUrl(env.image, { quality: 60 })}
                  alt={env.name}
                  className="w-full h-full object-cover"
                  decoding="async"
