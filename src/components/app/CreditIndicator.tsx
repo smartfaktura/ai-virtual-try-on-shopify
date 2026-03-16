@@ -45,13 +45,9 @@ export function CreditIndicator() {
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-sm font-bold text-sidebar-foreground">{balance.toLocaleString()}</span>
-            {hasBonus ? (
-              <span className="text-[10px] font-medium text-emerald-400">+{bonusAmount.toLocaleString()}</span>
-            ) : (
-              <span className="text-[10px] text-sidebar-foreground/40">
-                / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
-              </span>
-            )}
+            <span className="text-[10px] text-sidebar-foreground/40">
+              / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
+            </span>
           </div>
         </div>
         <button
