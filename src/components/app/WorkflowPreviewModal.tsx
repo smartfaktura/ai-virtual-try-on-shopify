@@ -41,6 +41,7 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
   const [downloading, setDownloading] = useState(false);
   const [downloadPct, setDownloadPct] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [upscaleOpen, setUpscaleOpen] = useState(false);
 
   const rawUrls = job ? extractUrls(job.results) : [];
   const count = rawUrls.length;
