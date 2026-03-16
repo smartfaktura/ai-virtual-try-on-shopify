@@ -1,4 +1,4 @@
-// Force redeploy: sync deployed code with fixed version (2026-03-11)
+// Force redeploy: image optimization v1 (2026-03-16)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -7,6 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// ── Optimize Supabase Storage images for AI input (model & scene only) ────
+function optimizeImageForAI(url: string): string {
+  const STORAGE_MARKER = '/storage/v1/object/';
+  const RENDER_MARKER = '/storage/v1/render/image/';
+  if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return url || '';
+  const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
+  const sep = transformed.includes('?') ? '&' : '?';
+  return `${transformed}${sep}width=1536&quality=80`;
+}
 
 // Color Feel mapping (matches brandPromptBuilder.ts)
 const COLOR_FEEL_DESCRIPTIONS: Record<string, string> = {
@@ -517,6 +527,7 @@ async function generateImage(
             model,
             messages: [{ role: "user", content }],
             modalities: ["image", "text"],
+            max_tokens: 8192,
             ...(aspectRatio ? { image_config: { aspect_ratio: aspectRatio } } : {}),
           }),
           signal: AbortSignal.timeout(timeoutMs),
@@ -613,12 +624,12 @@ function buildContentArray(
 
   if (modelImage) {
     content.push({ type: "text", text: "[MODEL IMAGE]" });
-    content.push({ type: "image_url", image_url: { url: modelImage } });
+    content.push({ type: "image_url", image_url: { url: optimizeImageForAI(modelImage) } });
   }
 
   if (sceneImage) {
     content.push({ type: "text", text: "[SCENE IMAGE]" });
-    content.push({ type: "image_url", image_url: { url: sceneImage } });
+    content.push({ type: "image_url", image_url: { url: optimizeImageForAI(sceneImage) } });
   }
 
   return content;
@@ -946,7 +957,13 @@ serve(async (req) => {
           contentArray.push({ type: "image_url", image_url: { url: referenceAngleImage } });
         }
 
-        const result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
+        let result = await generateImage(contentArray, LOVABLE_API_KEY, aiModel, body.aspectRatio, maxRetries);
+
+        // Fallback: if Pro model returned null (no image), try Flash model once
+        if (result === null && /gemini-3-pro|gemini-3\.1-pro/i.test(aiModel)) {
+          console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview`);
+          result = await generateImage(contentArray, LOVABLE_API_KEY, "google/gemini-3.1-flash-image-preview", body.aspectRatio, 0);
+        }
 
         if (result && typeof result === "object" && "blocked" in result) {
           contentBlocked = true;

@@ -1,57 +1,52 @@
 
 
-## Updated plan: optimize only model & scene images
+## Product Perspectives — Implemented ✅
 
-### What to optimize (1536px, quality 80)
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
+
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+
+
+## Image Optimization for AI Generation — Implemented ✅
+
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+
+### What gets optimized (1536px, quality 80)
 - `modelImage` — AI model reference (pose/body only)
 - `sceneImage` — environment/mood reference
 
 ### What stays full resolution (untouched)
 - `productImage` — product details, text, labels
 - `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle (perspective mode)
+- `referenceAngleImage` — user's product from a specific angle
 
 ### Changes
-
-**1. Database migration**
-```sql
-ALTER TABLE public.custom_models ADD COLUMN optimized_image_url text;
-ALTER TABLE public.custom_scenes ADD COLUMN optimized_image_url text;
-```
-
-**2. `src/hooks/useCustomModels.ts`**
-- Add `optimized_image_url` to interface and `toModelProfile()` output
-- In `useAddCustomModel`, compute optimized render URL on save and store it
-
-**3. `src/hooks/useCustomScenes.ts`**
-- Same: add field, compute on save
-
-**4. `supabase/functions/generate-freestyle/index.ts`**
-- Add `optimizeImageForAI()` helper (1536px, quality 80)
-- In `buildContentArray()`: wrap `modelImage` and `sceneImage` only
-- `productImage`, `sourceImage`, `referenceAngleImage` — **no optimization**
-- Add `max_tokens: 8192` to API request body
-- Add fallback: if Pro model returns null, retry once with `gemini-3.1-flash-image-preview`
-
-**5. `supabase/functions/generate-tryon/index.ts`**
-- Same helper, wrap only model and scene URLs
-- Product stays full-res
-
-### Helper (added to both edge functions)
-```typescript
-function optimizeImageForAI(url: string): string {
-  const STORAGE_MARKER = '/storage/v1/object/';
-  const RENDER_MARKER = '/storage/v1/render/image/';
-  if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return url || '';
-  const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
-  const sep = transformed.includes('?') ? '&' : '?';
-  return `${transformed}${sep}width=1536&quality=80`;
-}
-```
-
-### Flow for new models/scenes
-1. Admin uploads image → stored at full resolution
-2. On save, hook computes optimized render URL → saved to `optimized_image_url`
-3. Generation hooks prefer `optimized_image_url`, fall back to `image_url`
-4. Edge function has runtime `optimizeImageForAI()` as safety net for old records
-
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null

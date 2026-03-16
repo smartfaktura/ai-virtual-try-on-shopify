@@ -9,9 +9,19 @@ export interface CustomScene {
   description: string;
   category: string;
   image_url: string;
+  optimized_image_url: string | null;
   created_by: string;
   is_active: boolean;
   created_at: string;
+}
+
+function buildOptimizedUrl(url: string): string | null {
+  const STORAGE_MARKER = '/storage/v1/object/';
+  const RENDER_MARKER = '/storage/v1/render/image/';
+  if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return null;
+  const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
+  const sep = transformed.includes('?') ? '&' : '?';
+  return `${transformed}${sep}width=1536&quality=80`;
 }
 
 function toTryOnPose(scene: CustomScene): TryOnPose {
@@ -22,6 +32,7 @@ function toTryOnPose(scene: CustomScene): TryOnPose {
     description: scene.description,
     promptHint: scene.description,
     previewUrl: scene.image_url,
+    optimizedImageUrl: scene.optimized_image_url || undefined,
   };
 }
 
@@ -53,9 +64,10 @@ export function useAddCustomScene() {
 
   return useMutation({
     mutationFn: async (scene: { name: string; description: string; category: string; image_url: string }) => {
+      const optimized = buildOptimizedUrl(scene.image_url);
       const { data, error } = await supabase
         .from('custom_scenes' as any)
-        .insert({ ...scene, created_by: user!.id })
+        .insert({ ...scene, created_by: user!.id, optimized_image_url: optimized })
         .select()
         .single();
       if (error) throw error;

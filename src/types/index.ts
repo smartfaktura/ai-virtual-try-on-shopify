@@ -150,6 +150,7 @@ export interface ModelProfile {
   ethnicity: string;
   ageRange: ModelAgeRange;
   previewUrl: string;
+  optimizedImageUrl?: string;
 }
 
 export interface TryOnPose {
@@ -160,6 +161,7 @@ export interface TryOnPose {
   promptHint: string;
   previewUrl: string;
   previewUrlMale?: string;
+  optimizedImageUrl?: string;
 }
 
 // Dashboard metrics

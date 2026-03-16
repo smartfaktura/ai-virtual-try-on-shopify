@@ -7,6 +7,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Optimize Supabase Storage images for AI input (model & scene only) ────
+function optimizeImageForAI(url: string): string {
+  const STORAGE_MARKER = '/storage/v1/object/';
+  const RENDER_MARKER = '/storage/v1/render/image/';
+  if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return url || '';
+  const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
+  const sep = transformed.includes('?') ? '&' : '?';
+  return `${transformed}${sep}width=1536&quality=80`;
+}
+
 interface TryOnRequest {
   product: {
     title: string;
@@ -236,6 +246,18 @@ async function generateImage(
   aspectRatio: string,
   sceneImageUrl?: string
 ): Promise<string | null> {
+  return generateImageWithModel(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio, "google/gemini-3-pro-image-preview", sceneImageUrl);
+}
+
+async function generateImageWithModel(
+  prompt: string,
+  productImageUrl: string,
+  modelImageUrl: string,
+  apiKey: string,
+  aspectRatio: string,
+  aiModel: string,
+  sceneImageUrl?: string
+): Promise<string | null> {
   const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -249,14 +271,14 @@ async function generateImage(
         { type: "text", text: "[PRODUCT IMAGE]:" },
         { type: "image_url", image_url: { url: productImageUrl } },
         { type: "text", text: "[MODEL IMAGE]:" },
-        { type: "image_url", image_url: { url: modelImageUrl } },
+        { type: "image_url", image_url: { url: optimizeImageForAI(modelImageUrl) } },
       ];
 
       // Add scene image as third reference if provided
       if (sceneImageUrl) {
         contentParts.push(
           { type: "text", text: "[SCENE IMAGE]:" },
-          { type: "image_url", image_url: { url: sceneImageUrl } }
+          { type: "image_url", image_url: { url: optimizeImageForAI(sceneImageUrl) } }
         );
       }
 
@@ -269,7 +291,7 @@ async function generateImage(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-3-pro-image-preview",
+            model: aiModel,
             messages: [
               {
                 role: "user",
@@ -277,6 +299,7 @@ async function generateImage(
               },
             ],
             modalities: ["image", "text"],
+            max_tokens: 8192,
             image_config: { aspect_ratio: aspectRatio },
           }),
         }
@@ -480,7 +503,13 @@ serve(async (req) => {
             ? prompt
             : `${prompt}\n\nVariation ${i + 1}: Slightly different angle and lighting while maintaining the same high quality.`;
 
-        const base64Url = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", body.pose.imageUrl);
+        let base64Url = await generateImage(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", body.pose.imageUrl);
+
+        // Fallback: if Pro model returned null, retry once with Flash model
+        if (base64Url === null) {
+          console.warn(`Pro model returned null — falling back to gemini-3.1-flash-image-preview for image ${i + 1}`);
+          base64Url = await generateImageWithModel(variationPrompt, body.product.imageUrl, body.model.imageUrl, LOVABLE_API_KEY, body.aspectRatio || "1:1", "google/gemini-3.1-flash-image-preview", body.pose.imageUrl);
+        }
 
         if (base64Url) {
           const publicUrl = await uploadBase64ToStorage(base64Url, userId, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

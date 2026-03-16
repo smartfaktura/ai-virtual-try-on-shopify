@@ -246,6 +246,7 @@ export type Database = {
           image_url: string
           is_active: boolean
           name: string
+          optimized_image_url: string | null
         }
         Insert: {
           age_range?: string
@@ -258,6 +259,7 @@ export type Database = {
           image_url: string
           is_active?: boolean
           name: string
+          optimized_image_url?: string | null
         }
         Update: {
           age_range?: string
@@ -270,6 +272,7 @@ export type Database = {
           image_url?: string
           is_active?: boolean
           name?: string
+          optimized_image_url?: string | null
         }
         Relationships: []
       }
@@ -283,6 +286,7 @@ export type Database = {
           image_url: string
           is_active: boolean
           name: string
+          optimized_image_url: string | null
         }
         Insert: {
           category?: string
@@ -293,6 +297,7 @@ export type Database = {
           image_url: string
           is_active?: boolean
           name: string
+          optimized_image_url?: string | null
         }
         Update: {
           category?: string
@@ -303,6 +308,7 @@ export type Database = {
           image_url?: string
           is_active?: boolean
           name?: string
+          optimized_image_url?: string | null
         }
         Relationships: []
       }

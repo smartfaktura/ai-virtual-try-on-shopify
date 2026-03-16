@@ -11,9 +11,19 @@ export interface CustomModel {
   ethnicity: string;
   age_range: string;
   image_url: string;
+  optimized_image_url: string | null;
   created_by: string;
   is_active: boolean;
   created_at: string;
+}
+
+function buildOptimizedUrl(url: string): string | null {
+  const STORAGE_MARKER = '/storage/v1/object/';
+  const RENDER_MARKER = '/storage/v1/render/image/';
+  if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return null;
+  const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
+  const sep = transformed.includes('?') ? '&' : '?';
+  return `${transformed}${sep}width=1536&quality=80`;
 }
 
 function toModelProfile(m: CustomModel): ModelProfile {
@@ -25,6 +35,7 @@ function toModelProfile(m: CustomModel): ModelProfile {
     ethnicity: m.ethnicity,
     ageRange: (m.age_range || 'adult') as any,
     previewUrl: m.image_url,
+    optimizedImageUrl: m.optimized_image_url || undefined,
   };
 }
 
@@ -56,9 +67,10 @@ export function useAddCustomModel() {
 
   return useMutation({
     mutationFn: async (model: { name: string; gender: string; body_type: string; ethnicity: string; age_range: string; image_url: string }) => {
+      const optimized = buildOptimizedUrl(model.image_url);
       const { data, error } = await supabase
         .from('custom_models' as any)
-        .insert({ ...model, created_by: user!.id })
+        .insert({ ...model, created_by: user!.id, optimized_image_url: optimized })
         .select()
         .single();
       if (error) throw error;
