@@ -102,8 +102,10 @@ export default function Generate() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { filterVisible } = useHiddenScenes();
+  const { workflowSlug } = useParams<{ workflowSlug: string }>();
   const [searchParams] = useSearchParams();
-  const workflowId = searchParams.get('workflow');
+  // Support both slug-based routes and legacy query param
+  const workflowIdFromQuery = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue();
