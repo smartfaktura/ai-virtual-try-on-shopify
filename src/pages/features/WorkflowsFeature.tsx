@@ -163,53 +163,15 @@ export default function WorkflowsFeature() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           {workflows.map((wf, i) => {
             const reversed = i % 2 === 1;
+            const scene = workflowScenes[wf.name];
             return (
-              <div
+              <WorkflowFeatureCard
                 key={wf.name}
-                className="rounded-2xl border bg-card overflow-hidden"
-              >
-                <div className={`flex flex-col lg:flex-row ${reversed ? 'lg:flex-row-reverse' : ''}`}>
-                  {/* Visual side */}
-                  <div className={`relative w-full lg:w-[40%] shrink-0 bg-gradient-to-br ${wf.gradient} flex items-center justify-center p-12 lg:p-16`}>
-                    <div className={`w-24 h-24 rounded-3xl ${wf.iconBg} flex items-center justify-center`}>
-                      <wf.icon className="w-12 h-12 text-primary" />
-                    </div>
-                  </div>
-
-                  {/* Content side */}
-                  <div className="flex flex-col justify-center gap-5 p-6 lg:p-10 flex-1">
-                    <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
-                      {wf.name}
-                    </h2>
-                    <p className="text-base font-medium text-foreground/80">
-                      {wf.tagline}
-                    </p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {wf.description}
-                    </p>
-
-                    <ul className="space-y-2.5">
-                      {wf.features.map((f) => (
-                        <li key={f} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                          <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                          <span>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <div className="pt-2">
-                      <Button
-                        size="lg"
-                        className="rounded-full font-semibold gap-2 h-11 px-8"
-                        onClick={() => navigate('/auth')}
-                      >
-                        Try {wf.name} Free
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                wf={wf}
+                scene={scene}
+                reversed={reversed}
+                onCta={() => navigate('/auth')}
+              />
             );
           })}
         </div>
