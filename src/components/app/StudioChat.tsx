@@ -49,7 +49,8 @@ export function StudioChat() {
 
   const hideOnMobile = isMobile && (
     location.pathname === '/app/creative-drops' ||
-    location.pathname === '/app/freestyle'
+    location.pathname === '/app/freestyle' ||
+    location.pathname === '/app/perspectives'
   );
 
   if (hideOnMobile) return null;
