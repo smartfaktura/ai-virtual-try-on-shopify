@@ -1,30 +1,33 @@
 
 
-## Product Perspectives — Implemented ✅
+## Improve sticky navigation bar to floating design
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### Problem
+The current fixed bottom bars in the Virtual Try-On model and scene steps are full-width with transparent background, overlapping the customer support icon. Need to match the Perspectives flow's floating bar design.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+### Changes
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+**File: `src/pages/Generate.tsx`** — Two bars (model step ~line 2884, scene step ~line 2935)
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+Replace both full-width fixed bars with the same floating pattern used in Perspectives:
+
+**Before (both bars):**
+```tsx
+<div className="fixed bottom-0 left-0 right-0 lg:left-[var(--sidebar-offset)] z-50 bg-background/95 backdrop-blur-sm border-t border-border">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between">
+```
+
+**After (both bars):**
+```tsx
+<div className="sticky bottom-4 z-50 max-w-3xl mx-auto">
+  <div className="bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
+```
+
+Key differences from current:
+- `sticky bottom-4` instead of `fixed bottom-0 left-0 right-0` — floats within content flow, no sidebar offset needed
+- `max-w-3xl` — narrower, won't overlap support icon
+- `bg-background` — full opacity, no transparency
+- `rounded-2xl shadow-lg` — floating card look matching Perspectives
+- Remove `border-t` → use `border` all around
+- Remove the `pb-20` padding on wrapper divs (no longer needed with sticky vs fixed)
+
