@@ -1,56 +1,30 @@
 
 
-## Analysis: Should We Split Generate.tsx?
+## Product Perspectives — Implemented ✅
 
-### Current State
-`Generate.tsx` is **4,376 lines** — a single monolithic component handling every workflow type (Try-On, Product Listing, UGC, Flat Lay, Mirror Selfie, Staging, Upscaling). It declares **50+ useState hooks** and runs multiple database queries on mount regardless of which workflow is active.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Does It Actually Cause Performance Problems?
-**Not as much as you'd think**, because:
-- The page is already **lazy-loaded** — its bundle only downloads when you navigate to `/app/generate`
-- Most database queries use `enabled` flags (e.g., `previousUploads` only fires for Staging workflow)
-- React doesn't re-render unused JSX branches
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-**But it does hurt** in two ways:
-1. **Bundle size**: All 4,376 lines (+ imports for every workflow's UI components) ship as one chunk. Even if you open a simple Product Listing workflow, the browser parses/compiles code for Flat Lay aesthetics, UGC moods, Mirror Selfie phases, etc.
-2. **Memory**: 50+ `useState` calls initialize state for features that aren't relevant to the current workflow
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-### Recommended Approach
-Rather than creating separate routes (which would duplicate a lot of shared wizard logic), **extract workflow-specific panels into lazy-loaded sub-components** while keeping the shared wizard shell.
-
-### Changes
-
-| File | Change |
-|------|--------|
-| `src/pages/Generate.tsx` | Slim down to ~800 lines: shared wizard shell (steps, navigation, product picker, results view) + dynamic import of workflow panel |
-| `src/components/app/generate/TryOnPanel.tsx` | **New** — Extract Try-On specific state, model/pose pickers, UGC moods (~800 lines) |
-| `src/components/app/generate/ProductListingPanel.tsx` | **New** — Extract scene selection, template picker, settings for product-only workflows (~600 lines) |
-| `src/components/app/generate/FlatLayPanel.tsx` | **New** — Extract flat lay aesthetics, multi-product selector, surface/detail phases (~400 lines) |
-| `src/components/app/generate/StagingPanel.tsx` | **New** — Extract room upload, style selector for Interior/Exterior (~300 lines) |
-| `src/components/app/generate/UpscalePanel.tsx` | **New** — Extract upscale resolution picker, simple upload flow (~200 lines) |
-| `src/components/app/generate/MirrorSelfiePanel.tsx` | **New** — Extract mirror selfie scene picker + model picker (~300 lines) |
-| `src/components/app/generate/useGenerateSharedState.ts` | **New** — Custom hook for shared state (product, source, brand profile, aspect ratio, results) used by all panels |
-| `src/components/app/generate/types.ts` | **New** — Shared types/interfaces for panel props |
-
-### How It Works
-
-```text
-Generate.tsx (shell)
-├── Shared: product picker, source selector, brand profile, results view
-├── workflowId → lazy(() => import('./generate/TryOnPanel'))
-├── workflowId → lazy(() => import('./generate/ProductListingPanel'))
-├── workflowId → lazy(() => import('./generate/FlatLayPanel'))
-└── ... etc
-```
-
-Each panel receives shared state via props (or a context) and manages only its own workflow-specific state internally. The shell handles step navigation, generation submission, and results display.
-
-### Impact
-- **~70% smaller initial parse** for any single workflow
-- Each workflow panel loads only when that workflow is selected
-- Shared logic (product picker, results, credits) stays in one place — no duplication
-- No route changes needed — still `/app/generate?workflow=X`
-
-### Risk
-This is a large refactor touching the biggest file in the project. It should be done incrementally — start with one panel (e.g., `UpscalePanel` since it's the simplest), verify it works, then extract the others one at a time.
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
