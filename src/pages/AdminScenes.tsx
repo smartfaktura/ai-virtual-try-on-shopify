@@ -20,10 +20,6 @@ export default function AdminScenes() {
   const saveSortOrder = useSaveSceneSortOrder();
   const deleteSceneMutation = useDeleteCustomScene();
 
-  if (adminLoading) return null;
-  if (!isAdmin) return <Navigate to="/app" replace />;
-
-
   // Stable deps: serialize hiddenIds and sortMap to avoid recreating allPoses on every render
   const hiddenKey = JSON.stringify(hiddenIds);
   const sortKey = JSON.stringify([...sortMap.entries()]);
@@ -33,13 +29,11 @@ export default function AdminScenes() {
   const allPoses = useMemo(() => {
     const visible = mockTryOnPoses.filter(p => !hiddenIds.includes(p.poseId));
     const combined = [...visible, ...customPoses];
-    // Apply category overrides
     const withOverrides = combined.map(p => {
       const override = categoryMap.get(p.poseId);
       if (override) return { ...p, category: override as PoseCategory };
       return p;
     });
-    // Apply stored sort order
     return [...withOverrides].sort((a, b) => {
       const sa = sortMap.get(a.poseId) ?? 9999;
       const sb = sortMap.get(b.poseId) ?? 9999;
@@ -60,7 +54,6 @@ export default function AdminScenes() {
   useEffect(() => {
     if (allPoses.length > 0) {
       setOrderedPoses(allPoses);
-      // Derive category order from saved sort data
       if (sortMap.size > 0) {
         const catMinOrder = new Map<string, number>();
         allPoses.forEach(p => {
@@ -73,7 +66,6 @@ export default function AdminScenes() {
         const derived = [...catMinOrder.entries()]
           .sort((a, b) => a[1] - b[1])
           .map(([cat]) => cat as PoseCategory);
-        // Add any categories not in saved data
         const remaining = defaultCategoryOrder.filter(c => !derived.includes(c));
         setCategoryOrder([...derived, ...remaining]);
       }
@@ -81,6 +73,10 @@ export default function AdminScenes() {
       setInitialized(true);
     }
   }, [allPoses]);
+
+  // Guard: redirect non-admins after all hooks
+  if (adminLoading) return null;
+  if (!isAdmin) return <Navigate to="/app" replace />;
 
   const movePose = (poseId: string, direction: 'up' | 'down') => {
     setOrderedPoses(prev => {
