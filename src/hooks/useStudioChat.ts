@@ -31,8 +31,11 @@ async function persistSession(
         .insert({ user_id: session.user.id, messages: JSON.parse(JSON.stringify(messages)), page_url: pageUrl })
         .select('id')
         .single();
-      if (error || !data) return null;
-      return data.id;
+      if (error) {
+        console.error('persistSession insert error:', error);
+        return null;
+      }
+      return data?.id ?? null;
     }
   } catch (e) {
     console.error('persistSession error:', e);
