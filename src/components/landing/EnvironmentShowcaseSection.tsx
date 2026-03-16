@@ -9,17 +9,18 @@ interface EnvironmentCard {
 }
 
 const e = (name: string, file: string): EnvironmentCard => ({ name, image: getLandingAssetUrl(`poses/${file}`) });
+const d = (name: string, url: string): EnvironmentCard => ({ name, image: url });
 
 const ROW_1: EnvironmentCard[] = [
   e('Studio Movement', 'pose-studio-movement.jpg'),
-  e('Urban Walking', 'pose-lifestyle-walking.jpg'),
+  d('Airport Transit', 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/2de1b917-d422-4436-bd56-50dc7bc065fe.png'),
   e('Editorial Artistic', 'pose-editorial-artistic.jpg'),
   e('Rooftop City', 'pose-lifestyle-rooftop.jpg'),
   e('Night Neon', 'pose-streetwear-neon.jpg'),
-  e('Studio Back View', 'pose-studio-back.jpg'),
-  e('Beach Sunset', 'pose-lifestyle-beach.jpg'),
+  d('Salt Flat Serenity', 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/04bdae15-0326-4e58-98f8-ffecb6574008.png'),
+  d('Brutalist Urban Steps', 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/0682905a-1a17-46cd-a0d8-33fc40ee422e.png'),
   e('Editorial Movement', 'pose-editorial-motion.jpg'),
-  e('Urban Stairs Male', 'pose-streetwear-stairs-male.jpg'),
+  d('Urban Dusk Portrait', 'https://azwiljtrbtaupofwmpzb.supabase.co/storage/v1/object/public/freestyle-images/fe45fd27-2b2d-48ac-b1fe-f6ab8fffcbfc/171d852b-2a0b-4989-8143-bbd2c6ce90f1.png'),
 ];
 
 const ROW_2: EnvironmentCard[] = [
