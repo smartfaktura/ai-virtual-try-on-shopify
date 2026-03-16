@@ -1,30 +1,30 @@
 
 
-## Optimize scene images in the Freestyle scene selector
+## Product Perspectives — Implemented ✅
 
-### Problem
-Scene thumbnails in `SceneSelectorChip.tsx` (line 182) use raw `<img>` tags with full-size Supabase Storage URLs — no size optimization and no shimmer loading state. This causes heavy downloads and blank spaces while images load.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Changes
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-**File: `src/components/app/freestyle/SceneSelectorChip.tsx`**
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-1. **Import** `getOptimizedUrl` from `@/lib/imageOptimization` and `ShimmerImage` from `@/components/ui/shimmer-image`
-
-2. **Replace the raw `<img>` tag** (line 182) with `ShimmerImage` + optimized URL:
-```tsx
-// Before
-<img src={pose.previewUrl} alt={pose.name} className="w-full aspect-[4/5] object-cover" />
-
-// After
-<ShimmerImage
-  src={getOptimizedUrl(pose.previewUrl, { width: 240, quality: 60 })}
-  alt={pose.name}
-  className="w-full aspect-[4/5] object-cover"
-  aspectRatio="4/5"
-  loading="lazy"
-/>
-```
-
-This applies `width=240` thumbnails (sufficient for the 3-col grid) with `quality=60` compression via Supabase's on-the-fly transform, and wraps each image in the existing `ShimmerImage` component for a shimmer placeholder during load.
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
