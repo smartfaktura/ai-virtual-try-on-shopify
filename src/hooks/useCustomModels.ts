@@ -17,6 +17,15 @@ export interface CustomModel {
   created_at: string;
 }
 
+function buildOptimizedUrl(url: string): string | null {
+  const STORAGE_MARKER = '/storage/v1/object/';
+  const RENDER_MARKER = '/storage/v1/render/image/';
+  if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return null;
+  const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
+  const sep = transformed.includes('?') ? '&' : '?';
+  return `${transformed}${sep}width=1536&quality=80`;
+}
+
 function toModelProfile(m: CustomModel): ModelProfile {
   return {
     modelId: `custom-${m.id}`,
@@ -26,6 +35,7 @@ function toModelProfile(m: CustomModel): ModelProfile {
     ethnicity: m.ethnicity,
     ageRange: (m.age_range || 'adult') as any,
     previewUrl: m.image_url,
+    optimizedImageUrl: m.optimized_image_url || undefined,
   };
 }
 
