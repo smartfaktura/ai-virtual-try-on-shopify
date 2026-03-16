@@ -1,55 +1,52 @@
 
 
-## Plan: Admin System Status Dashboard
+## Product Perspectives — Implemented ✅
 
-### What we're building
-A new `/app/admin/status` page showing generation system health metrics across 24h / 7d / 30d time ranges — success rates, failure counts, average generation times, stuck jobs, and recent failures. Admin-only access using the existing `useIsAdmin` hook pattern.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
+
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+
+
+## Image Optimization for AI Generation — Implemented ✅
+
+### What was built
+**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+
+### What gets optimized (1536px, quality 80)
+- `modelImage` — AI model reference (pose/body only)
+- `sceneImage` — environment/mood reference
+
+### What stays full resolution (untouched)
+- `productImage` — product details, text, labels
+- `sourceImage` — user's own product photo
+- `referenceAngleImage` — user's product from a specific angle
 
 ### Changes
-
-**1. New page: `src/pages/AdminStatus.tsx`**
-- Admin guard using `useIsAdmin` (redirects non-admins)
-- Time range toggle: 24h / 7d / 30d
-- Stat cards at the top: Total jobs, Completed, Failed, Cancelled, Success rate, Avg generation time, Max generation time, Currently stuck
-- Table of recent failed jobs (last 20) showing job type, error message, timestamp, user plan
-- All data fetched from `generation_queue` table via Supabase client queries (no new DB functions needed — the table is readable by authenticated users but we'll use the admin role check in the UI)
-
-**2. `src/App.tsx`** — Add lazy import + route at `/app/admin/status`
-
-### Data queries (all client-side from `generation_queue`)
-- Stats: count by status, filtered by `created_at` for the selected range
-- Avg/max generation time: `completed_at - started_at` for completed jobs
-- Stuck jobs: status = 'processing' AND `started_at` < now - 5 min
-- Recent failures: status = 'failed', ordered by `created_at` desc, limit 20
-
-### Security
-- RLS on `generation_queue` only allows users to see their own jobs
-- We need a DB function `admin_generation_stats` (security definer) that returns aggregated stats for admins, since the admin can't query all users' jobs via RLS
-- Alternative: Create a simple edge function or DB function that checks admin role and returns stats
-
-### Revised approach — DB function
-Create a `admin_generation_stats` security definer function that:
-1. Checks `has_role(auth.uid(), 'admin')`
-2. Returns aggregated stats (counts by status, avg/max times) for a given time range
-3. Returns recent failed jobs
-
-This keeps it clean and avoids RLS issues.
-
-### Database migration
-One new function: `admin_generation_stats(p_hours integer)` returning JSONB with:
-- `total`, `completed`, `failed`, `cancelled`, `stuck`
-- `avg_seconds`, `max_seconds`
-- `recent_failures` (array of {id, job_type, error_message, created_at, user_plan})
-
-### File summary
-| File | Change |
-|------|--------|
-| Migration | New `admin_generation_stats` function |
-| `src/pages/AdminStatus.tsx` | New admin dashboard page |
-| `src/App.tsx` | Add route + lazy import |
-
-### No impact on existing functionality
-- Read-only queries on `generation_queue`
-- New page behind admin guard
-- No changes to generation logic
-
+1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
+2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
+3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
+4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
+5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
