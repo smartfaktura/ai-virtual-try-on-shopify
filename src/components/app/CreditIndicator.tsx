@@ -8,13 +8,10 @@ export function CreditIndicator() {
 
   const monthlyCredits = planConfig.monthlyCredits;
   const isInfinite = monthlyCredits === Infinity;
-  const hasBonus = !isInfinite && balance > monthlyCredits;
-  const bonusAmount = hasBonus ? balance - monthlyCredits : 0;
 
-  const displayTotal = hasBonus ? balance : monthlyCredits;
   const usagePercent = isInfinite
     ? 100
-    : Math.min(100, Math.max(3, (balance / (displayTotal || 1)) * 100));
+    : Math.min(100, Math.max(3, (balance / (monthlyCredits || 1)) * 100));
 
   const isFree = plan === 'free';
 
@@ -48,13 +45,9 @@ export function CreditIndicator() {
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-sm font-bold text-sidebar-foreground">{balance.toLocaleString()}</span>
-            {hasBonus ? (
-              <span className="text-[10px] font-medium text-emerald-400">+{bonusAmount.toLocaleString()}</span>
-            ) : (
-              <span className="text-[10px] text-sidebar-foreground/40">
-                / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
-              </span>
-            )}
+            <span className="text-[10px] text-sidebar-foreground/40">
+              / {isInfinite ? '∞' : monthlyCredits.toLocaleString()}
+            </span>
           </div>
         </div>
         <button
