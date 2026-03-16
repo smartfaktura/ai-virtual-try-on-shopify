@@ -181,6 +181,7 @@ export function GlobalGenerationBar() {
                         <p className="text-xs font-medium truncate">
                           {isUpscale
                             ? `${luna?.name ?? 'Luna'} is upscaling to ${group.resolution === '4k' ? '4K' : '2K'}`
+                            : group.job_type === 'freestyle' ? 'Freestyle'
                             : (group.workflow_name ?? 'Generation')}
                           {group.product_name ? ` — ${group.product_name}` : ''}
                         </p>
