@@ -2880,9 +2880,14 @@ export default function Generate() {
                   <ModelSelectorCard key={model.modelId} model={model} isSelected={selectedModel?.modelId === model.modelId} onSelect={() => handleSelectModel(model)} />
                 ))}
               </div>
+              <MissingRequestBanner
+                category="model"
+                title="Missing a model? Tell us and we'll create it."
+                placeholder="Describe the model you'd like us to create…"
+              />
             </CardContent></Card>
-            <div className="sticky bottom-4 z-50 max-w-3xl mx-auto">
-              <div className="bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
+            <div className="fixed bottom-4 left-0 right-0 z-50 px-4">
+              <div className="max-w-3xl mx-auto bg-background border border-border rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
                 <Button variant="outline" onClick={() => {
                   if (isMirrorSelfie) {
                     setMirrorSettingsPhase('scenes');
