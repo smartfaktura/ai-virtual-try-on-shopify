@@ -273,7 +273,7 @@ export default function WorkflowSettingsPanel(props: WorkflowSettingsPanelProps)
             onClick={() => {
               const maxSelect = isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT;
               const currentMax = Math.min(maxSelect, variationStrategy?.variations.length || 0);
-              if (selectedVariationIndices.size === currentMax) {
+              if (selectedVariationIndices.size > 0) {
                 setSelectedVariationIndices(new Set());
               } else {
                 setSelectedVariationIndices(new Set(variationStrategy?.variations.slice(0, currentMax).map((_, i) => i)));
