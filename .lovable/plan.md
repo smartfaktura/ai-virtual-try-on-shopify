@@ -1,26 +1,32 @@
 
 
-## Shorten all custom scene descriptions to 5-7 words
+## Sticky navigation bar for Scene selection step
 
 ### Problem
-The custom scenes pulled from the database have descriptions that are too long (full sentences like "Warm, intimate evening cafe with strung lights and soft, inviting ambiance perfect for fashion"). The hardcoded `mockTryOnPoses` already have short 5-7 word descriptions — the custom scenes need to match.
+The "Back" and "Continue to Settings" buttons are at the bottom of the scene grid. With many scenes, users must scroll past the entire list to proceed.
 
 ### Change
-Run a single database migration to UPDATE the `description` column on every row in `custom_scenes` to a concise 5-7 word phrase. This covers all ~60+ custom scenes. No code changes needed — the descriptions are rendered as-is from the DB.
 
-**Examples of before → after:**
+**File: `src/pages/Generate.tsx`** (lines ~2926-2931)
 
-| Scene | Before | After |
-|-------|--------|-------|
-| 1990s Disposable Camera | Warm, intimate evening cafe with strung lights and soft, inviting ambiance... | Retro café with warm string lights |
-| Amber Glow Studio | Dramatic warm light contrasts a cool blue background... | Warm light on cool blue backdrop |
-| Clean White Studio | Bright, even studio lighting with a seamless white background... | Clean white seamless studio backdrop |
-| Crimson Spotlight | A striking red studio environment with dramatic, directional lighting... | Bold red studio with dramatic light |
-| Dark Rock Display | Product presented on textured dark rocks, dramatic lighting... | Textured dark rocks with moody light |
-| Cloudy Sky Dream | Product nestled in soft clouds under a dramatic blue sky... | Dreamy clouds under dramatic blue sky |
-| Industrial Concrete | A dark, moody studio environment with subtle lighting... | Dark moody studio with concrete elements |
-| Elegant Vanity Setup | Luxurious, bright, and clean environment with soft, natural lighting... | Luxurious vanity with soft natural light |
-| Golden Radiance Product | Dynamic, high-contrast lighting on a metallic gradient background... | Metallic gradient with golden highlights |
+Move the Back / Continue buttons out of the scrollable card content into a **sticky bottom bar** that stays visible regardless of scroll position:
 
-All ~60+ scenes will be updated in a single SQL `UPDATE ... CASE` statement.
+1. Extract the navigation buttons from inside the `<CardContent>` into a sticky footer `<div>` positioned below the card
+2. Apply `sticky bottom-0` with a background and border-top so it floats above content as the user scrolls
+3. Add `z-10` and a subtle top shadow for visual separation
+
+```tsx
+{/* Close CardContent and Card before the sticky bar */}
+</CardContent></Card>
+
+{/* Sticky bottom navigation */}
+<div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm border-t border-border px-5 py-3 flex justify-between -mx-0 rounded-b-lg">
+  <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
+  <Button disabled={selectedPoses.size === 0} onClick={() => setCurrentStep('settings')}>
+    Continue to Settings {selectedPoses.size > 0 && `(${selectedPoses.size} scene${selectedPoses.size > 1 ? 's' : ''})`}
+  </Button>
+</div>
+```
+
+This keeps the action buttons always visible while browsing scenes, eliminating the need to scroll to the bottom.
 
