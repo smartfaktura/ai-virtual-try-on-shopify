@@ -150,11 +150,8 @@ const FloatingEl = memo(function FloatingEl({ element }: { element: SceneElement
 
 function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive: boolean }) {
   const backgrounds = scene.backgrounds ?? [scene.background];
-  const INTERVAL = 5000;
+  const INTERVAL = 1000;
   const [current, setCurrent] = useState(0);
-  const [prev, setPrev] = useState(0);
-  const [showCurrent, setShowCurrent] = useState(true);
-  const [progressKey, setProgressKey] = useState(0);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const currentRef = useRef(0);
 
@@ -170,18 +167,9 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
   useEffect(() => {
     if (!isActive || backgrounds.length <= 1) return;
     const t = setInterval(() => {
-      const cur = currentRef.current;
-      const next = (cur + 1) % backgrounds.length;
-      setPrev(cur);
-      setShowCurrent(false);
-      requestAnimationFrame(() => {
-        currentRef.current = next;
-        setCurrent(next);
-        requestAnimationFrame(() => {
-          setShowCurrent(true);
-        });
-      });
-      setProgressKey((k) => k + 1);
+      const next = (currentRef.current + 1) % backgrounds.length;
+      currentRef.current = next;
+      setCurrent(next);
     }, INTERVAL);
     return () => clearInterval(t);
   }, [isActive, backgrounds.length]);
@@ -193,21 +181,11 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
         <div className="absolute inset-0 bg-gradient-to-r from-muted/40 via-muted/70 to-muted/40 bg-[length:200%_100%] animate-shimmer" />
       )}
 
-      {/* Bottom layer — previous image */}
-      <img
-        src={backgrounds[prev]}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover object-top"
-      />
-      {/* Top layer — current image with crossfade */}
+      {/* Single image — instant swap */}
       <img
         src={backgrounds[current]}
         alt=""
         className="absolute inset-0 w-full h-full object-cover object-top"
-        style={{
-          opacity: showCurrent ? 1 : 0,
-          transition: 'opacity 1.2s ease-in-out',
-        }}
         onLoad={() => {
           if (!initialLoaded) setInitialLoaded(true);
         }}
@@ -227,19 +205,6 @@ function CarouselThumbnail({ scene, isActive }: { scene: WorkflowScene; isActive
           {scene.elements.map((el, i) => (
             <FloatingEl key={i} element={el} />
           ))}
-        </div>
-      )}
-
-      {/* Progress bar */}
-      {isActive && backgrounds.length > 1 && (
-        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/10 z-20">
-          <div
-            key={progressKey}
-            className="h-full bg-white/50 rounded-r-full"
-            style={{
-              animation: `wf-progress-fill ${INTERVAL}ms linear forwards`,
-            }}
-          />
         </div>
       )}
 
