@@ -289,6 +289,7 @@ export default function Dashboard() {
             productCount={productCount}
             brandProfileCount={brandProfileCount}
             jobCount={totalJobCount}
+            freestyleCount={freestyleCount}
           />
         </div>
 

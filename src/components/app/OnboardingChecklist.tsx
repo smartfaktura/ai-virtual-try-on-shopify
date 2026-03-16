@@ -52,13 +52,14 @@ const steps = [
   },
 ] as const;
 
-export function OnboardingChecklist({ productCount, brandProfileCount, jobCount }: OnboardingChecklistProps) {
+export function OnboardingChecklist({ productCount, brandProfileCount, jobCount, freestyleCount }: OnboardingChecklistProps) {
   const navigate = useNavigate();
 
   const completionMap: Record<string, boolean> = {
     products: productCount > 0,
     brand: brandProfileCount > 0,
     generate: jobCount > 0,
+    freestyle: freestyleCount > 0,
   };
 
   const completedCount = Object.values(completionMap).filter(Boolean).length;
