@@ -1,37 +1,30 @@
 
 
-## Audit Results: Slug-Based Workflow URLs
+## Plan: Remove Dead Bulk Generation Code & Fix Route Order
 
-### What's correct
-1. **Database migration** — `slug` column added with unique constraint and backfill ✅
-2. **Generate.tsx** — Reads `workflowSlug` from `useParams`, queries by slug, falls back to legacy `?workflow=` query param ✅
-3. **Workflows.tsx** — Navigates to `/app/generate/${workflow.slug}` ✅
-4. **Dashboard.tsx** — Navigates to `/app/generate/${slug}` ✅
-5. **No legacy `?workflow=` links remain** anywhere in the codebase ✅
-6. **Workflow type** updated with `slug` property ✅
+### Confirmed
 
-### Issues found
+No file in the codebase navigates to `/app/generate/bulk`. The route, page, and supporting components are dead code.
 
-**1. Route ordering bug — `/generate/bulk` is unreachable**
+### Changes
 
-In `App.tsx` lines 137-139:
+| Action | File |
+|--------|------|
+| **Edit** | `src/App.tsx` — Remove `BulkGenerate` import and `/generate/bulk` route. Fix route order: `/generate` before `/generate/:workflowSlug`. |
+| **Delete** | `src/pages/BulkGenerate.tsx` |
+| **Delete** | `src/components/app/BulkSettingsCard.tsx` |
+| **Delete** | `src/components/app/BulkProgressTracker.tsx` |
+| **Delete** | `src/components/app/BulkResultsView.tsx` |
+| **Delete** | `src/hooks/useBulkGeneration.ts` |
+| **Keep** | `src/types/bulk.ts` — still imported by `Generate.tsx` |
+
+### Route fix in App.tsx
+
 ```
-<Route path="/generate/:workflowSlug" />   ← catches "bulk" as a slug
-<Route path="/generate" />
-<Route path="/generate/bulk" />            ← never reached
+// After cleanup
+<Route path="/generate" element={<Generate />} />
+<Route path="/generate/:workflowSlug" element={<Generate />} />
 ```
 
-The dynamic `:workflowSlug` route matches the literal `"bulk"` path before it can reach the static `/generate/bulk` route. **Fix**: Move `/generate/bulk` above `/generate/:workflowSlug`.
-
-**2. Console warning — `AspectRatioSelector` ref forwarding**
-
-`WorkflowSettingsPanel` passes a ref to `AspectRatioSelector` which is a function component without `forwardRef`. This is a pre-existing issue (not caused by the slug refactor) but worth noting — it's a React warning, not a crash.
-
-### Plan
-
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Reorder: move `/generate/bulk` route **before** `/generate/:workflowSlug` |
-
-That's the only fix needed. Everything else was implemented correctly.
+Removes ~200 lines of dead code and eliminates the route shadowing issue.
 
