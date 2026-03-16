@@ -87,7 +87,13 @@ const CATEGORIES: CategoryCardProps[] = [
   },
   {
     label: 'Food & Drinks',
-    images: [s('food-pasta-artisan.jpg'), s('food-coffee-pourover.jpg'), s('food-honey-golden.jpg'), s('food-acai-bright.jpg'), s('food-bread-bakery.jpg')],
+    images: [
+      '/images/showcase/food-cocktail-bar.png',
+      '/images/showcase/food-avocado-toast.png',
+      '/images/showcase/food-pavlova-berries.png',
+      '/images/showcase/food-raspberry-dessert.png',
+      '/images/showcase/food-cocktail-rocks.png',
+    ],
     cycleDuration: 6000,
   },
   {
