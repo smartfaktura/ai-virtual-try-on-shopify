@@ -598,6 +598,11 @@ async function generateImage(
       return imageUrl;
     } catch (error: unknown) {
       if (typeof error === "object" && error !== null && "status" in error) {
+        const statusErr = error as { status: number };
+        // For 429, don't re-throw — let the per-image loop handle it as a soft error
+        if (statusErr.status === 429) {
+          throw error;
+        }
         throw error;
       }
       const isTimeout = error instanceof DOMException && error.name === "TimeoutError";
