@@ -98,7 +98,13 @@ const CATEGORIES: CategoryCardProps[] = [
   },
   {
     label: 'Home & Living',
-    images: [s('home-candle-evening.jpg'), s('home-vases-shelf.jpg'), s('home-lamp-evening.jpg'), s('home-bedroom-morning.jpg'), s('home-pendant-kitchen.jpg')],
+    images: [
+      '/images/showcase/home-candle-evening.png',
+      '/images/showcase/home-vases-shelf.png',
+      '/images/showcase/home-lamp-evening.png',
+      '/images/showcase/home-bedroom-morning.png',
+      '/images/showcase/home-pendant-kitchen.png',
+    ],
     cycleDuration: 7500,
   },
 ];
