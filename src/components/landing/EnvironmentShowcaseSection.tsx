@@ -11,27 +11,27 @@ interface EnvironmentCard {
 const e = (name: string, file: string): EnvironmentCard => ({ name, image: getLandingAssetUrl(`poses/${file}`) });
 
 const ROW_1: EnvironmentCard[] = [
-  e('Studio Classic', 'pose-studio-front.jpg'),
-  e('Gym', 'pose-lifestyle-gym.jpg'),
-  e('Editorial Dark', 'pose-editorial-dramatic.jpg'),
-  e('Resort', 'pose-lifestyle-resort.jpg'),
-  e('Coffee Shop', 'pose-lifestyle-coffee.jpg'),
-  e('Gallery', 'pose-editorial-gallery.jpg'),
-  e('Urban Male', 'pose-streetwear-urban-male.jpg'),
-  e('Window Light', 'pose-editorial-window.jpg'),
-  e('Autumn', 'pose-lifestyle-autumn.jpg'),
+  e('Studio Movement', 'pose-studio-movement.jpg'),
+  e('Urban Walking', 'pose-lifestyle-walking.jpg'),
+  e('Editorial Artistic', 'pose-editorial-artistic.jpg'),
+  e('Rooftop City', 'pose-lifestyle-rooftop.jpg'),
+  e('Night Neon', 'pose-streetwear-neon.jpg'),
+  e('Studio Back View', 'pose-studio-back.jpg'),
+  e('Beach Sunset', 'pose-lifestyle-beach.jpg'),
+  e('Editorial Movement', 'pose-editorial-motion.jpg'),
+  e('Urban Stairs Male', 'pose-streetwear-stairs-male.jpg'),
 ];
 
 const ROW_2: EnvironmentCard[] = [
-  e('Studio Profile Male', 'pose-studio-profile-male.jpg'),
-  e('Minimal White', 'pose-editorial-minimal.jpg'),
-  e('Shopping', 'pose-streetwear-shopping.jpg'),
-  e('Warehouse', 'pose-editorial-warehouse.jpg'),
-  e('Park', 'pose-lifestyle-park.jpg'),
-  e('Moody Editorial', 'pose-editorial-moody.jpg'),
-  e('Beach Male', 'pose-lifestyle-beach-male.jpg'),
-  e('Café Seated', 'pose-lifestyle-seated.jpg'),
-  e('Garden Male', 'pose-lifestyle-garden-male.jpg'),
+  e('Studio Crossed Arms Male', 'pose-studio-arms-male.jpg'),
+  e('Garden Natural', 'pose-lifestyle-garden.jpg'),
+  e('Basketball Court', 'pose-streetwear-basketball.jpg'),
+  e('Studio Close-Up', 'pose-studio-closeup.jpg'),
+  e('Industrial Underpass', 'pose-streetwear-underpass.jpg'),
+  e('Rooftop Male', 'pose-lifestyle-rooftop-male.jpg'),
+  e('Editorial Dramatic Male', 'pose-editorial-dramatic-male.jpg'),
+  e('Studio Movement Male', 'pose-studio-movement-male.jpg'),
+  e('Autumn Male', 'pose-lifestyle-autumn-male.jpg'),
 ];
 
 function MarqueeRow({ items, direction = 'left' }: { items: EnvironmentCard[]; direction?: 'left' | 'right' }) {
