@@ -175,7 +175,11 @@ export default function Freestyle() {
     }
     if (q === 'high') setQuality('high');
     if (sceneParam) {
-      const matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
+      let matchedScene = filterVisible(mockTryOnPoses).find((s) => s.poseId === sceneParam);
+      // Check custom scenes (e.g. custom-{uuid} from dashboard)
+      if (!matchedScene && sceneParam.startsWith('custom-')) {
+        matchedScene = customScenePoses.find((s) => s.poseId === sceneParam);
+      }
       if (matchedScene) {
         setSelectedScene(matchedScene);
         if (!localStorage.getItem('hideSceneAppliedHint')) {
