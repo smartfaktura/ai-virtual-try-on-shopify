@@ -69,7 +69,7 @@ const featureMap: Record<string, string[]> = {
   ],
 };
 
-export function WorkflowCard({ workflow, onSelect, reversed }: WorkflowRowProps) {
+export function WorkflowCard({ workflow, onSelect, reversed, id }: WorkflowRowProps) {
   const scene = workflowScenes[workflow.name];
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
