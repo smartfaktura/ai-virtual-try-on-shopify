@@ -1,30 +1,37 @@
 
 
-## Product Perspectives — Implemented ✅
+## Plan: Human-Readable Workflow URLs
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+### What Changes
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+Replace the UUID-based query parameter (`/app/generate?workflow=021146a4-...`) with clean, slug-based nested routes (`/app/generate/virtual-try-on`).
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+### How It Works
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+1. **Add a `slug` column to the `workflows` table** via migration. Populate it from existing workflow names (e.g., "Virtual Try-On Set" → `virtual-try-on-set`). Add a unique constraint.
+
+2. **Add nested routes** in `App.tsx`:
+   ```
+   /app/generate/:slug   →  Generate page, looks up workflow by slug
+   /app/generate          →  Redirects to /app/workflows (workflow picker)
+   ```
+
+3. **Update `Generate.tsx`** to read `slug` from `useParams()` instead of `searchParams.get('workflow')`. Query the workflow by slug instead of ID.
+
+4. **Update navigation calls** in `Workflows.tsx` and `Dashboard.tsx` to use `/app/generate/${workflow.slug}` instead of `?workflow=${id}`.
+
+### Changes Summary
+
+| File | Change |
+|------|--------|
+| **Migration** | Add `slug TEXT UNIQUE` column to `workflows`, backfill from `name` |
+| `src/App.tsx` | Change route from `/generate` to `/generate/:workflowSlug` |
+| `src/pages/Generate.tsx` | Use `useParams().workflowSlug`, query by `slug` column |
+| `src/pages/Workflows.tsx` | Navigate to `/app/generate/${workflow.slug}` |
+| `src/pages/Dashboard.tsx` | Same navigation update |
+| `src/components/app/WorkflowCard.tsx` | Pass slug in `onNavigate` if needed |
+
+### Result
+
+URLs become: `/app/generate/virtual-try-on-set`, `/app/generate/product-listing-set`, `/app/generate/image-upscaling`, etc.
+
