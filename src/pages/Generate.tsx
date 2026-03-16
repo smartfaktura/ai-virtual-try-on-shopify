@@ -1056,6 +1056,8 @@ export default function Generate() {
           aspectRatio, imageCount: parseInt(imageCount),
           framing: framing || undefined,
           workflow_id: activeWorkflow?.id || null,
+          workflow_name: activeWorkflow?.name || null,
+          workflow_slug: activeWorkflow?.slug || null,
           product_id: product.id || null,
           product_name: product.title,
           brand_profile_id: selectedBrandProfileId || null,
