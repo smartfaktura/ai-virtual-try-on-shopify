@@ -1,4 +1,4 @@
-// Force redeploy: sync deployed code with fixed version (2026-03-11)
+// Force redeploy: image optimization v1 (2026-03-16)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -7,6 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// ── Optimize Supabase Storage images for AI input (model & scene only) ────
+function optimizeImageForAI(url: string): string {
+  const STORAGE_MARKER = '/storage/v1/object/';
+  const RENDER_MARKER = '/storage/v1/render/image/';
+  if (!url || !url.includes(STORAGE_MARKER) || url.includes(RENDER_MARKER)) return url || '';
+  const transformed = url.replace(STORAGE_MARKER, RENDER_MARKER);
+  const sep = transformed.includes('?') ? '&' : '?';
+  return `${transformed}${sep}width=1536&quality=80`;
+}
 
 // Color Feel mapping (matches brandPromptBuilder.ts)
 const COLOR_FEEL_DESCRIPTIONS: Record<string, string> = {
