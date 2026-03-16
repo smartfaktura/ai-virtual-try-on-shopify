@@ -1,52 +1,32 @@
 
 
-## Product Perspectives — Implemented ✅
+## Analysis: Is the optimization reducing generation detail?
 
-### What was built
-A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
+**Short answer**: Likely yes, but only slightly. The `optimizeImageForAI` helper reduces model and scene reference images to **1536px width, quality 80**. While these are reference images (not the output), Gemini uses them to understand fine details like facial features, pose, and environment texture. Lower-quality inputs can subtly reduce the AI's ability to reproduce those details in output.
 
-### Key features
-- **Multi-product support**: Select multiple products from library, each generates its own batch
-- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
-- **Direct upload**: Upload a new image instead of picking from product library
-- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
-- **Left/Right side optional references**: Available via "Add reference image" link
-- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
-- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
+The optimization is correct in principle (saves tokens, prevents timeouts), but the settings may be too aggressive for model images where facial likeness and pose accuracy matter most.
 
-### Prompt Engineering Fixes (v2) ✅
-- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
-- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
-- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
-- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
-- **Default quality**: Changed from `standard` to `high`
+### Proposed fix
 
-### Files changed
-- **Database migration**: Inserted "Product Perspectives" workflow row
-- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
-- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
-- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
-- `src/App.tsx` — Added `/app/perspectives` route
-- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`
+Increase quality and add model-specific sizing in the `optimizeImageForAI` helper across both edge functions:
 
+**`supabase/functions/generate-freestyle/index.ts`** and **`supabase/functions/generate-tryon/index.ts`**:
 
-## Image Optimization for AI Generation — Implemented ✅
+```typescript
+// Before (current)
+function optimizeImageForAI(url: string): string {
+  ...
+  return `${transformed}${sep}width=1536&quality=80`;
+}
 
-### What was built
-**"Optimize once, use forever"** strategy for model & scene images sent to AI generation. Product images stay full-resolution to preserve text, labels, and fine details.
+// After — higher quality, no width constraint for better detail
+function optimizeImageForAI(url: string): string {
+  ...
+  return `${transformed}${sep}quality=85`;
+}
+```
 
-### What gets optimized (1536px, quality 80)
-- `modelImage` — AI model reference (pose/body only)
-- `sceneImage` — environment/mood reference
+The key change: **remove the `width=1536` constraint entirely** and only apply light quality compression (`85`). This preserves the original resolution (important for model face/body detail) while still reducing file size by ~30-40% vs raw PNG. The token savings from quality compression alone are meaningful since most uploaded images are high-res PNGs.
 
-### What stays full resolution (untouched)
-- `productImage` — product details, text, labels
-- `sourceImage` — user's own product photo
-- `referenceAngleImage` — user's product from a specific angle
+This is a minimal, safe change — 2 lines in 2 files.
 
-### Changes
-1. **Database**: Added `optimized_image_url` column to `custom_models` and `custom_scenes`
-2. **Hooks**: `useCustomModels.ts` and `useCustomScenes.ts` compute optimized render URL on save
-3. **Types**: `ModelProfile` and `TryOnPose` now carry `optimizedImageUrl?`
-4. **Edge functions**: `generate-freestyle` and `generate-tryon` apply `optimizeImageForAI()` to model & scene URLs only
-5. **Reliability**: `max_tokens: 8192` added to both functions; automatic fallback to `gemini-3.1-flash-image-preview` if Pro model returns null
