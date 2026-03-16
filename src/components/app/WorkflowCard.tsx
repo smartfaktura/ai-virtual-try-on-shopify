@@ -24,9 +24,9 @@ const featureMap: Record<string, string[]> = {
     'All aspect ratios supported — portrait, square & landscape',
   ],
   'Product Listing Set': [
-    '30 diverse scenes from white studio to lifestyle & beyond',
+    '30+ diverse scenes from white studio to lifestyle & beyond',
     'Category-aware lighting and composition',
-    'No people — pure product focus',
+    '1 click to generate multiple images',
     'Optimized for Amazon, Shopify & social commerce',
   ],
   'Selfie / UGC Set': [
