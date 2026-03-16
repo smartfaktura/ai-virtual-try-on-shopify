@@ -623,12 +623,12 @@ function buildContentArray(
 
   if (modelImage) {
     content.push({ type: "text", text: "[MODEL IMAGE]" });
-    content.push({ type: "image_url", image_url: { url: modelImage } });
+    content.push({ type: "image_url", image_url: { url: optimizeImageForAI(modelImage) } });
   }
 
   if (sceneImage) {
     content.push({ type: "text", text: "[SCENE IMAGE]" });
-    content.push({ type: "image_url", image_url: { url: sceneImage } });
+    content.push({ type: "image_url", image_url: { url: optimizeImageForAI(sceneImage) } });
   }
 
   return content;
