@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Home, Package, Palette, Layers, Calendar, Image, Film, Compass,
   LayoutTemplate, Settings, LogOut, Menu, X, ChevronLeft, ChevronRight,
-  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff,
+  Sparkles, Wand2, ChevronUp, ArrowUpRight, Eye, EyeOff, MessageSquare,
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useAdminView } from '@/contexts/AdminViewContext';
