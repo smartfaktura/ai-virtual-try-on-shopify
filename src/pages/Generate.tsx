@@ -2896,6 +2896,9 @@ export default function Generate() {
                     setCurrentStep(brandProfiles.length > 0 ? 'brand-profile' : 'product');
                   }
                 }}>Back</Button>
+                {!selectedModel && (
+                  <span className="text-xs text-muted-foreground text-center flex-1">Select a model to continue</span>
+                )}
                 {isMirrorSelfie ? (
                   <Button disabled={!selectedModel} onClick={() => { setMirrorSettingsPhase('final'); setCurrentStep('settings'); }}>Continue to Settings</Button>
                 ) : isSelfieUgc || (uiConfig?.show_model_picker && !activeWorkflow?.uses_tryon) ? (
