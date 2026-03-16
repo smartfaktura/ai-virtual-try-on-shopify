@@ -1,32 +1,30 @@
 
 
-## Sticky navigation bar for Scene selection step
+## Product Perspectives — Implemented ✅
 
-### Problem
-The "Back" and "Continue to Settings" buttons are at the bottom of the scene grid. With many scenes, users must scroll past the entire list to proceed.
+### What was built
+A new **Product Perspectives** workflow that generates angle and detail variations (Close-up, Back, Left Side, Right Side, Wide/Environment) from existing product images.
 
-### Change
+### Key features
+- **Multi-product support**: Select multiple products from library, each generates its own batch
+- **Multi-ratio support**: Select multiple aspect ratios (1:1, 3:4, 4:5, 9:16)
+- **Direct upload**: Upload a new image instead of picking from product library
+- **Conditional reference uploads**: When "Back Angle" is selected, an upload zone appears for the user to optionally provide a back reference image for accuracy
+- **Left/Right side optional references**: Available via "Add reference image" link
+- **Credits**: 4 credits/image (standard), 8 credits/image (high quality)
+- **Standalone routing**: Workflow card routes to `/app/perspectives` instead of generic Generate page
 
-**File: `src/pages/Generate.tsx`** (lines ~2926-2931)
+### Prompt Engineering Fixes (v2) ✅
+- **Skip generic polisher**: `polishPrompt: false` — full prompt built in the hook with strict product identity rules
+- **Force Pro model**: `forceProModel: true` + `isPerspective: true` flags ensure `gemini-3-pro-image-preview` is always used
+- **Angle-aware reference images**: `referenceAngleImage` field (not `sourceImage`) so references are treated as product identity, not scene inspiration
+- **Cross-angle consistency**: Explicit studio lighting and neutral background instructions across all angles
+- **Default quality**: Changed from `standard` to `high`
 
-Move the Back / Continue buttons out of the scrollable card content into a **sticky bottom bar** that stays visible regardless of scroll position:
-
-1. Extract the navigation buttons from inside the `<CardContent>` into a sticky footer `<div>` positioned below the card
-2. Apply `sticky bottom-0` with a background and border-top so it floats above content as the user scrolls
-3. Add `z-10` and a subtle top shadow for visual separation
-
-```tsx
-{/* Close CardContent and Card before the sticky bar */}
-</CardContent></Card>
-
-{/* Sticky bottom navigation */}
-<div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm border-t border-border px-5 py-3 flex justify-between -mx-0 rounded-b-lg">
-  <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
-  <Button disabled={selectedPoses.size === 0} onClick={() => setCurrentStep('settings')}>
-    Continue to Settings {selectedPoses.size > 0 && `(${selectedPoses.size} scene${selectedPoses.size > 1 ? 's' : ''})`}
-  </Button>
-</div>
-```
-
-This keeps the action buttons always visible while browsing scenes, eliminating the need to scroll to the bottom.
-
+### Files changed
+- **Database migration**: Inserted "Product Perspectives" workflow row
+- `src/pages/Perspectives.tsx` — Full page with product picker, angle checkboxes, ratio multi-select, conditional reference uploads
+- `src/hooks/useGeneratePerspectives.ts` — Multi-product × multi-ratio × multi-angle batch enqueue with strict perspective prompt builder
+- `src/components/app/LibraryDetailModal.tsx` — Added "Generate Perspectives" button
+- `src/App.tsx` — Added `/app/perspectives` route
+- `supabase/functions/generate-freestyle/index.ts` — Perspective detection, skip polish, force pro model, handle `referenceAngleImage`

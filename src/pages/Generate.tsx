@@ -2923,13 +2923,13 @@ export default function Generate() {
               {Object.entries(posesByCategory).map(([category, poses]) => (
                 <PoseCategorySection key={category} category={category as PoseCategory} poses={poses} selectedPoseIds={selectedPoses} onSelectPose={handleSelectPose} selectedGender={selectedModel?.gender} maxSelectable={isFreeUser ? FREE_SCENE_LIMIT : PAID_SCENE_LIMIT} />
               ))}
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
-                <Button disabled={selectedPoses.size === 0} onClick={() => setCurrentStep('settings')}>
-                  Continue to Settings {selectedPoses.size > 0 && `(${selectedPoses.size} scene${selectedPoses.size > 1 ? 's' : ''})`}
-                </Button>
-              </div>
             </CardContent></Card>
+            <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm border-t border-border px-5 py-3 flex justify-between rounded-b-lg">
+              <Button variant="outline" onClick={() => setCurrentStep('model')}>Back</Button>
+              <Button disabled={selectedPoses.size === 0} onClick={() => setCurrentStep('settings')}>
+                Continue to Settings {selectedPoses.size > 0 && `(${selectedPoses.size} scene${selectedPoses.size > 1 ? 's' : ''})`}
+              </Button>
+            </div>
           </div>
         )}
 
