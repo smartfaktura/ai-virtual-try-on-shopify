@@ -30,7 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { FeedbackBanner } from '@/components/app/FeedbackBanner';
 
 /* ── Inline card with IntersectionObserver for animations ── */
-function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (id: string) => void }) {
+function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; onNavigate: (slug: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -75,7 +75,7 @@ function DashboardWorkflowCard({ workflow, onNavigate }: { workflow: Workflow; o
         <Button
           size="sm"
           className="w-full rounded-xl font-semibold gap-1.5 mt-3 text-xs min-h-[44px]"
-          onClick={() => onNavigate(workflow.id)}
+          onClick={() => onNavigate(workflow.slug)}
         >
           Create Set
           <ArrowRight className="w-3 h-3" />
@@ -327,7 +327,7 @@ export default function Dashboard() {
                 <DashboardWorkflowCard
                   key={workflow.id}
                   workflow={workflow}
-                  onNavigate={(id) => navigate(`/app/generate?workflow=${id}`)}
+                  onNavigate={(slug) => navigate(`/app/generate/${slug}`)}
                 />
               ))}
             </div>

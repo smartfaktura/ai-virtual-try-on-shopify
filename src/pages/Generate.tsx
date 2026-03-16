@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { SEOHead } from '@/components/SEOHead';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams, Link } from 'react-router-dom';
 import { useGenerationBatch } from '@/hooks/useGenerationBatch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AddProductModal } from '@/components/app/AddProductModal';
@@ -102,8 +102,10 @@ export default function Generate() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { filterVisible } = useHiddenScenes();
+  const { workflowSlug } = useParams<{ workflowSlug: string }>();
   const [searchParams] = useSearchParams();
-  const workflowId = searchParams.get('workflow');
+  // Support both slug-based routes and legacy query param
+  const workflowIdFromQuery = searchParams.get('workflow');
   const initialTemplateId = searchParams.get('template');
   const { balance, isEmpty, openBuyModal, deductCredits, calculateCost, setBalanceFromServer, refreshBalance, plan } = useCredits();
   const { enqueue, activeJob, isProcessing: isQueueProcessing, isEnqueuing, reset: resetQueue, cancel: cancelQueue } = useGenerationQueue();
@@ -132,16 +134,25 @@ export default function Generate() {
   };
 
   // Workflow & Brand Profile from DB
+  const workflowLookupKey = workflowSlug || workflowIdFromQuery;
+
   const { data: activeWorkflow } = useQuery({
-    queryKey: ['workflow', workflowId],
+    queryKey: ['workflow', workflowLookupKey],
     queryFn: async () => {
-      if (!workflowId) return null;
-      const { data, error } = await supabase.from('workflows').select('*').eq('id', workflowId).single();
+      if (!workflowLookupKey) return null;
+      // If we have a slug from the route, query by slug; otherwise by id (legacy)
+      const query = workflowSlug
+        ? supabase.from('workflows').select('*').eq('slug', workflowSlug).single()
+        : supabase.from('workflows').select('*').eq('id', workflowIdFromQuery!).single();
+      const { data, error } = await query;
       if (error) return null;
       return data as unknown as Workflow;
     },
-    enabled: !!workflowId,
+    enabled: !!workflowLookupKey,
   });
+
+  // Derive workflowId for downstream usage
+  const workflowId = activeWorkflow?.id ?? workflowIdFromQuery;
 
   // Redirect angle workflows (Picture Perspectives) to the standalone page
   useEffect(() => {

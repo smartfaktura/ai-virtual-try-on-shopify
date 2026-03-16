@@ -134,6 +134,7 @@ const App = () => (
                       <Route path="/brand-profiles/:id/edit" element={<BrandProfileWizard />} />
                       <Route path="/workflows" element={<Workflows />} />
                       <Route path="/creative-drops" element={<CreativeDrops />} />
+                      <Route path="/generate/:workflowSlug" element={<Generate />} />
                       <Route path="/generate" element={<Generate />} />
                       <Route path="/generate/bulk" element={<BulkGenerate />} />
                       <Route path="/library" element={<Jobs />} />

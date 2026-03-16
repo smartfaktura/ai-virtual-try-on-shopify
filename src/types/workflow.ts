@@ -48,6 +48,7 @@ export interface WorkflowGenerationConfig {
 export interface Workflow {
   id: string;
   name: string;
+  slug: string;
   description: string;
   default_image_count: number;
   required_inputs: string[];
