@@ -55,6 +55,8 @@ const CreativeDropsFeature = lazy(() => import('@/pages/features/CreativeDropsFe
 const BrandProfilesFeature = lazy(() => import('@/pages/features/BrandProfilesFeature'));
 const AIModelsBackgroundsFeature = lazy(() => import('@/pages/features/AIModelsBackgroundsFeature'));
 const ShopifyImageGenerator = lazy(() => import('@/pages/features/ShopifyImageGenerator'));
+const UpscaleFeature = lazy(() => import('@/pages/features/UpscaleFeature'));
+const PerspectivesFeature = lazy(() => import('@/pages/features/PerspectivesFeature'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const TryFree = lazy(() => import('@/pages/TryFree'));
 
