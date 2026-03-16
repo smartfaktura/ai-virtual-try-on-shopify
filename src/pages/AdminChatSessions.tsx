@@ -68,7 +68,7 @@ export default function AdminChatSessions() {
 
       const enriched: ChatSession[] = (sessions || []).map(s => ({
         ...s,
-        messages: (Array.isArray(s.messages) ? s.messages : []) as ChatMessage[],
+        messages: (Array.isArray(s.messages) ? s.messages : []) as unknown as ChatMessage[],
         email: emailMap[s.user_id] || s.user_id,
       }));
 
