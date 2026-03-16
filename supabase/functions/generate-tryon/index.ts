@@ -238,6 +238,17 @@ async function uploadBase64ToStorage(
   return urlData.publicUrl;
 }
 
+async function generateImage(
+  prompt: string,
+  productImageUrl: string,
+  modelImageUrl: string,
+  apiKey: string,
+  aspectRatio: string,
+  sceneImageUrl?: string
+): Promise<string | null> {
+  return generateImageWithModel(prompt, productImageUrl, modelImageUrl, apiKey, aspectRatio, "google/gemini-3-pro-image-preview", sceneImageUrl);
+}
+
 async function generateImageWithModel(
   prompt: string,
   productImageUrl: string,
@@ -247,7 +258,7 @@ async function generateImageWithModel(
   aiModel: string,
   sceneImageUrl?: string
 ): Promise<string | null> {
-  const maxRetries = 0;
+  const maxRetries = 2;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
