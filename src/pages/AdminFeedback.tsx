@@ -143,7 +143,7 @@ export default function AdminFeedback() {
   const totalPages = Math.ceil((data?.total || 0) / PAGE_SIZE);
 
   if (adminLoading) return null;
-  if (!isAdmin) { navigate('/app'); return null; }
+  if (!isAdmin) return <Navigate to="/app" replace />;
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });

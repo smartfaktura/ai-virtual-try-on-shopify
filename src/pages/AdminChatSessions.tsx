@@ -100,10 +100,7 @@ export default function AdminChatSessions() {
   const totalPages = Math.ceil((data?.total || 0) / PAGE_SIZE);
 
   if (adminLoading) return null;
-  if (!isAdmin) {
-    navigate('/app');
-    return null;
-  }
+  if (!isAdmin) return <Navigate to="/app" replace />;
 
   const getLastUserMessage = (messages: ChatMessage[]) => {
     const userMsgs = messages.filter(m => m.role === 'user');

@@ -13,7 +13,6 @@ import { toast } from 'sonner';
 import { useDeleteCustomScene } from '@/hooks/useCustomScenes';
 
 export default function AdminScenes() {
-  const navigate = useNavigate();
   const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const { hiddenIds, hideScene, unhideScene, filterVisible } = useHiddenScenes();
   const { asPoses: customPoses, scenes: customScenesRaw } = useCustomScenes();
@@ -21,10 +20,8 @@ export default function AdminScenes() {
   const saveSortOrder = useSaveSceneSortOrder();
   const deleteSceneMutation = useDeleteCustomScene();
 
-  // Redirect non-admins
-  useEffect(() => {
-    if (!adminLoading && !isAdmin) navigate('/app');
-  }, [adminLoading, isAdmin, navigate]);
+  if (adminLoading) return null;
+  if (!isAdmin) return <Navigate to="/app" replace />;
 
   // Stable deps: serialize hiddenIds and sortMap to avoid recreating allPoses on every render
   const hiddenKey = JSON.stringify(hiddenIds);
