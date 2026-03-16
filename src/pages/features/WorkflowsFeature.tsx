@@ -134,7 +134,7 @@ const steps = [
 
 function WorkflowFeatureCard({ wf, scene, reversed, onCta }: {
   wf: typeof workflows[number];
-  scene: ReturnType<typeof Object.values<typeof workflowScenes>>[number] | undefined;
+  scene: (typeof workflowScenes)[keyof typeof workflowScenes] | undefined;
   reversed: boolean;
   onCta: () => void;
 }) {
