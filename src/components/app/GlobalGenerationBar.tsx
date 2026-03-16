@@ -240,22 +240,25 @@ export function GlobalGenerationBar() {
               ))}
             </div>
 
-            {visibleActive.length > 0 && (
+              {visibleActive.length > 0 && (
               <div className="border-t border-border/40 px-3 py-2 flex justify-end">
                 {(() => {
-                  const hasUpscale = visibleActive.some((g) => g.job_type === 'upscale');
-                  return (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1 h-7 text-[11px]"
-                      onClick={() => navigate(hasUpscale ? '/app/library' : '/app/workflows')}
-                    >
-                      {hasUpscale ? 'View in Library' : 'View in Workflows'}
-                      <ArrowRight className="w-3 h-3" />
-                    </Button>
-                  );
-                })()}
+                   const hasUpscale = visibleActive.some((g) => g.job_type === 'upscale');
+                   const hasFreestyle = visibleActive.some((g) => g.job_type === 'freestyle');
+                   const targetPath = hasUpscale ? '/app/library' : hasFreestyle ? '/app/freestyle' : '/app/workflows';
+                   const targetLabel = hasUpscale ? 'View in Library' : hasFreestyle ? 'View in Freestyle' : 'View in Workflows';
+                   return (
+                     <Button
+                       size="sm"
+                       variant="outline"
+                       className="gap-1 h-7 text-[11px]"
+                       onClick={() => navigate(targetPath)}
+                     >
+                       {targetLabel}
+                       <ArrowRight className="w-3 h-3" />
+                     </Button>
+                   );
+                 })()}
               </div>
             )}
           </div>
