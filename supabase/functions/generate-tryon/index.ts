@@ -291,7 +291,7 @@ async function generateImageWithModel(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-3-pro-image-preview",
+            model: aiModel,
             messages: [
               {
                 role: "user",
