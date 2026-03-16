@@ -89,6 +89,7 @@ export function WorkflowCard({ workflow, onSelect, reversed, id }: WorkflowRowPr
 
   return (
     <Card
+      id={id}
       ref={ref}
       className="group overflow-hidden border hover:shadow-lg transition-shadow duration-300"
     >
