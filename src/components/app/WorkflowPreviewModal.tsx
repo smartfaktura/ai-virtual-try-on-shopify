@@ -276,6 +276,30 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
               </button>
             )}
 
+            {/* Upscale & Perspectives */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => !isLoading && setUpscaleOpen(true)}
+                disabled={isLoading}
+                className="flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all disabled:opacity-50"
+              >
+                <Maximize className="w-3.5 h-3.5" />
+                Upscale
+              </button>
+              <button
+                onClick={() => {
+                  if (!currentUrl) return;
+                  onClose();
+                  navigate(`/app/perspectives?source=${encodeURIComponent(currentUrl)}`);
+                }}
+                disabled={isLoading}
+                className="flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-medium text-muted-foreground bg-muted/30 backdrop-blur-sm border border-border/30 hover:bg-muted/50 hover:text-foreground transition-all disabled:opacity-50"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                Perspectives
+              </button>
+            </div>
+
             {/* View in Library */}
             <button
               onClick={() => {
@@ -290,6 +314,20 @@ export function WorkflowPreviewModal({ open, onOpenChange, job }: WorkflowPrevie
           </div>
         </div>
       </div>
+
+      {/* Upscale modal */}
+      {currentUrl && job && (
+        <UpscaleModal
+          open={upscaleOpen}
+          onClose={() => setUpscaleOpen(false)}
+          items={[{
+            imageUrl: currentUrl,
+            sourceType: 'generation',
+            sourceId: job.id,
+          }]}
+          onComplete={() => setUpscaleOpen(false)}
+        />
+      )}
     </div>
   );
 }
